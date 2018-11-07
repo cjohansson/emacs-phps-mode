@@ -1,0 +1,400 @@
+;;; KEYWORDS
+;; -----------------
+;; Keyword terminals
+;; -----------------
+
+;; Generate a keyword analyzer
+;; https://secure.php.net/manual/en/reserved.keywords.php
+;; https://secure.php.net/manual/en/language.constants.predefined.php
+
+%type  <keyword> ;;syntax "\\(\\sw\\|\\s_\\)+" matchdatatype keyword
+
+%keyword __CLASS__ "__CLASS__"
+%put __CLASS__ summary
+"The class name. The class name includes the namespace it was declared in (e.g. Foo\\Bar)."
+
+%keyword __CONSTRUCT "__construct"
+%put     __CONSTRUCT summary
+"Class constructor method"
+
+%keyword __DIR__ "__DIR__"
+%put __DIR__ summary
+"The directory of the file."
+
+%keyword __FILE__ "__FILE__"
+%put __FILE__ summary
+"The full path and filename of the file with symlinks resolved."
+
+%keyword __FUNCTION__ "__FUNCTION__"
+%put __FUNCTION__ summary
+"The current function name."
+
+%keyword __LINE__ "__LINE__"
+%put __LINE__ summary
+"The current line number of the file."
+
+%keyword __METHOD__ "__METHOD__"
+%put __METHOD__ summary
+"The current method name."
+
+%keyword __NAMESPACE__ "__NAMESPACE__"
+%put __NAMESPACE__ summary
+"The current namespace name."
+
+%keyword __TRAIT__ "__TRAIT__"
+%put __TRAIT__ summary
+"The trait name. The trait name includes the namespace it was declared in (e.g. Foo\\Bar)."
+
+%keyword HALT_COMPILER     "__halt_compiler"
+%put     HALT_COMPILER summary
+"Halts the execution of the compiler. This can be useful to embed data in PHP scripts, like the installation files."
+
+%keyword ABSTRACT     "abstract"
+%put     ABSTRACT summary
+"Class|Method declaration modifier: abstract {class <name>|<name>} <name> ..." ;; TODO Methods too?
+
+%keyword AND2     "and"
+%put     AND2 summary
+"<expr> and <expr>"
+
+%keyword ARRAY     "array"
+%put     ARRAY summary
+"array(<expr>)"
+
+%keyword AS     "as"
+%put     AS summary
+"foreach(<expr> as <expr) | use <expr> as <expr>"
+
+%keyword BREAK        "break"
+%put     BREAK summary
+"break[ <levels>];"
+
+%keyword CALLABLE         "callable"
+%put     CALLABLE summary
+"callable $<stmt>"
+
+%keyword CASE         "case"
+%put     CASE summary
+"switch(<expr>) {case <const-expr>: <stmts> ... }"
+
+%keyword CATCH        "catch"
+%put     CATCH summary
+"try {<stmts>} catch(<parm>) {<stmts>} ... "
+
+%keyword CLASS        "class"
+%put     CLASS summary
+"Class declaration: class <name> { <exprs> }"
+
+%keyword CLONE        "clone"
+%put     CLONE summary
+"<stmt> = clone <stmt>;"
+
+%keyword CONST        "const"
+%put     CONST summary
+"const <stmt> = <stmt>;"
+
+%keyword CONTINUE     "continue"
+%put     CONTINUE summary
+"continue[ <levels>];"
+
+%keyword DECLARE      "declare"
+%put     DECLARE summary
+"declare (<expr>) { <stmts> }"
+
+%keyword DEFAULT      "default"
+%put     DEFAULT summary
+"switch(<expr>) { case <expr> { ... } default: { <stmts> } }"
+
+%keyword DIE           "die"
+%put     DIE summary
+"die([<stmt>]);"
+
+%keyword DO           "do"
+%put     DO summary
+"do { <stmts> } while (<expr>);"
+
+%keyword ECHO       "echo"
+%put     ECHO summary
+"echo <stmts>;"
+
+%keyword ELSE         "else"
+%put     ELSE summary
+"if (<expr>) { <stmt> } else { <stmt> }"
+
+%keyword ELSEIF         "elseif"
+%put     ELSEIF summary
+"if (<expr>) { <stmt> } elseif { <stmt> }"
+
+%keyword EMPTY         "empty"
+%put     EMPTY summary
+"empty(<stmt>): bool"
+
+%keyword ENDDECLARE "enddeclare"
+%put     ENDDECLARE summary
+"declare(<expr>): <exprs> enddeclare;"
+
+%keyword ENDFOR "endfor"
+%put     ENDFOR summary
+"for (<start>; <condition>; <increment>): <exprs>; endfor;"
+
+%keyword ENDFOREACH "endforeach"
+%put     ENDFOREACH summary
+"foreach (<stmt> as <expr>): <exprs>; endforeach;"
+
+%keyword ENDIF "endif"
+%put     ENDIF summary
+"if (<stmt>): <exprs>; endif;"
+
+%keyword ENDSWITCH "endswitch"
+%put     ENDSWITCH summary
+"switch (<stmt>): <exprs>; endswitch;"
+
+%keyword ENDWHILE "endwhile"
+%put     ENDWHILE summary
+"while (<stmt>): <exprs>; endwhile;"
+
+%keyword EVAL "eval"
+%put     EVAL summary
+"eval(<exprs>)"
+
+%keyword EXIT "exit"
+%put     EXIT summary
+"exit[ <code>];"
+
+%keyword EXTENDS      "extends"
+%put     EXTENDS summary
+"SuperClass|SuperInterfaces declaration: extends <name> [, ...]"
+
+%keyword FINAL        "final"
+%put     FINAL summary
+"Class|Member declaration modifier: final {class|<type>} <name> ..."
+
+%keyword FINALLY      "finally"
+%put     FINALLY summary
+"try {<stmts>} ... finally {<stmts>}"
+
+%keyword FOR          "for"
+%put     FOR summary
+"for ([<init-expr>]; [<expr>]; [<update-expr>]) { <stmts> }"
+
+%keyword FOREACH          "foreach"
+%put     FOREACH summary
+"foreach (<expr> as <expr>) { <exprs> }"
+
+%keyword FUNCTION          "function"
+%put     FUNCTION summary
+"function <name>(<args>) { <exprs> }"
+
+%keyword GOTO         "goto"
+%put     GOTO summary
+"goto <stmt>;"
+
+%keyword IF           "if"
+%put     IF summary
+"if (<expr>) { <stmts> } [else { <stmt> }]"
+
+%keyword IMPLEMENTS   "implements"
+%put     IMPLEMENTS summary
+"Class SuperInterfaces declaration: implements <name> [, ...]"
+
+%keyword INCLUDE       "include"
+%put     INCLUDE summary
+"include(<stmt>);"
+
+%keyword INCLUDE_ONCE       "include_once"
+%put     INCLUDE_ONCE summary
+"include_once(<stmt>);"
+
+%keyword INSTANCEOF   "instanceof"
+%put     INSTANCEOF summary
+"<expr> instanceof <expr>"
+
+%keyword INSTEADOF   "insteadof"
+%put     INSTEADOF summary
+"<expr> insteadof <expr>"
+
+%keyword INTERFACE    "interface"
+%put     INTERFACE summary
+"Interface declaration: interface <name>"
+
+%keyword ISSET    "isset"
+%put     ISSET summary
+"isset(<expr>): bool"
+
+%keyword LIST    "list"
+%put     LIST summary
+"list(<stmt>[, <stmts]) = $list;"
+
+%keyword NAMESPACE      "namespace"
+%put     NAMESPACE summary
+"Namespace declaration: namespace <stmt>"
+
+%keyword NEW          "new"
+%put     NEW summary
+"new <type>"
+
+%keyword OR           "or"
+%put     OR summary
+"(<stmt> or <stmt>): bool"
+
+%keyword PRINT           "print"
+%put     PRINT summary
+"print <stmt>[,<stmt>,...];"
+
+%keyword PRIVATE      "private"
+%put     PRIVATE summary
+"Access level modifier: private {method|field} ..."
+
+%keyword PROTECTED    "protected"
+%put     PROTECTED summary
+"Access level modifier: protected {method|field} ..."
+
+%keyword PUBLIC       "public"
+%put     PUBLIC summary
+"Access level modifier: public {method|field} ..."
+
+%keyword REQUIRE       "require"
+%put     REQUIRE summary
+"require(<expr>);"
+
+%keyword REQUIRE_ONCE       "require_once"
+%put     REQUIRE_ONCE summary
+"require_once(<expr>);"
+
+%keyword RETURN       "return"
+%put     RETURN summary
+"return [<expr>];"
+
+%keyword SELF       "self"
+%put     SELF summary
+"Reference to current object" ;; TODO Update description
+
+%keyword STATIC       "static"
+%put     STATIC summary
+"Declaration modifier: static {method|field} ..."
+
+%keyword SWITCH       "switch"
+%put     SWITCH summary
+"switch(<expr>) {[case <const-expr>: <stmts> ...] [default: <stmts>]}"
+
+%keyword THIS         "$this"
+%put     THIS summary
+"Reference to current object"
+
+%keyword THROW        "throw"
+%put     THROW summary
+"throw <expr> ;"
+
+%keyword TRAIT        "trait"
+%put     TRAIT summary
+"trait <stmt> { <stmts> }"
+
+%keyword TRY          "try"
+%put     TRY summary
+"try {<stmts>} [catch(<parm>) {<stmts>} ...] [finally {<stmts>}]"
+
+%keyword UNSET         "unset"
+%put     UNSET summary
+"unset(<stmt>[, <stmt>, ...])"
+
+%keyword USE     "use"
+%put     USE summary
+"use <stmt>[ as <expr>];"
+
+%keyword VAR     "var"
+%put     VAR summary
+"Public field declaration. var <stmt> = <expr>"
+
+%keyword WHILE        "while"
+%put     WHILE summary
+"while (<expr>) <stmt> | do <stmt> while (<expr>);"
+
+%keyword XOR        "xor"
+%put     XOR summary
+"(<stmt> xor <stmt>): bool"
+
+%keyword YIELD        "yield"
+%put     YIELD summary
+"yield <expr>;"
+
+;; --------------------------
+;; Official PHPDoc line tags
+;; --------------------------
+
+;; PHPDoc tags are identified by a 'phpdoc' keyword property.  The
+;; value of this property must be itself a property list where the
+;; following properties are recognized:
+;;
+;; - `seq' (mandatory) is the tag sequence number used to check if tags
+;;   are correctly ordered in a PHPDoc comment block.
+;;
+;; - `usage' (mandatory) is the list of token categories for which this
+;;   documentation tag is allowed.
+;;
+;; - `opt' (optional) if non-nil indicates this is an optional tag.
+;;   By default tags are mandatory.
+;;
+;; - `with-name' (optional) if non-nil indicates that this tag is
+;;   followed by an identifier like in "@param <var-name> description"
+;;   or "@exception <class-name> description".
+;;
+;; - `with-ref' (optional) if non-nil indicates that the tag is
+;;   followed by a reference like in "@see <reference>".
+
+;; https://docs.phpdoc.org/references/phpdoc/index.html
+;; TODO Verify parameters below
+
+%keyword _API          "@api"
+%put     _API          phpdoc (seq 1 usage (type))
+%keyword _AUTHOR       "@author"
+%put     _AUTHOR       phpdoc (seq 1 usage (type))
+%keyword _CATEGORY     "@category"
+%put     _CATEGORY      phpdoc (seq 1 usage (type))
+%keyword _EXAMPLE      "@example"
+%put     _EXAMPLE      phpdoc (seq 1 usage (type))
+%keyword _FILESOURCE   "@filesource"
+%put     _FILESOURCE   phpdoc (seq 1 usage (type))
+%keyword _GLOBAL       "@global"
+%put     _GLOBAL       phpdoc (seq 2 usage (type))
+%keyword _IGNORE       "@ignore"
+%put     _IGNORE       phpdoc (seq 2 usage (type))
+%keyword _INTERNAL     "@internal"
+%put     _INTERNAL     phpdoc (seq 2 usage (type))
+%keyword _LICENSE     "@license"
+%put     _LICENSE     phpdoc (seq 2 usage (type))
+%keyword _LINK        "@link"
+%put     _LINK        phpdoc (seq 2 usage (type))
+%keyword _METHOD      "@method"
+%put     _METHOD      phpdoc (seq 2 usage (type))
+%keyword _PACKAGE     "@package"
+%put     _PACKAGE     phpdoc (seq 2 usage (type))
+%keyword _PARAM       "@param"
+%put     _PARAM       phpdoc (seq 3 usage (function) with-name t)
+%keyword _PROPERTY    "@property"
+%put     _PROPERTY    phpdoc (seq 3 usage (function) with-name t)
+%keyword _PROPERTY_READ   "@property-read"
+%put     _PROPERTY_READ    phpdoc (seq 3 usage (function) with-name t)
+%keyword _PROPERTY_WRITE   "@property-write"
+%put     _PROPERTY_WRITE    phpdoc (seq 3 usage (function) with-name t)
+%keyword _RETURN      "@return"
+%put     _RETURN      phpdoc (seq 4 usage (function))
+%keyword _SEE         "@see"
+%put     _SEE         phpdoc (seq 7 usage (type function variable) opt t with-ref t)
+%keyword _SINCE       "@since"
+%put     _SINCE       phpdoc (seq 8 usage (type function variable) opt t)
+%keyword _SOURCE      "@source"
+%put     _SOURCE      phpdoc (seq 8 usage (type function variable) opt t)
+%keyword _SUBPACKAGE  "@subpackage"
+%put     _SUBPACKAGE  phpdoc (seq 8 usage (type function variable) opt t)
+%keyword _THROWS      "@throws"
+%put     _THROWS      phpdoc (seq 6 usage (function) with-name t)
+%keyword _TODO      "@todo"
+%put     _TODO      phpdoc (seq 6 usage (function) with-name t)
+%keyword _USES      "@uses"
+%put     _USES      phpdoc (seq 6 usage (function) with-name t)
+%keyword _USED_BY   "@used-by"
+%put     _USES_BY   phpdoc (seq 6 usage (function) with-name t)
+%keyword _VAR   "@var"
+%put     _VAR   phpdoc (seq 6 usage (function) with-name t)
+%keyword _VERSION     "@version"
+%put     _VERSION     phpdoc (seq 2 usage (type))
