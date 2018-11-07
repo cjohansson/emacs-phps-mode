@@ -189,7 +189,6 @@
   "Move forward to POSITION."
   (setq semantic-lex-end-point position))
 
-;; TODO Use font-lock-syntactic-face-function instead?
 (defun phps-mode/COLOR_SYNTAX (token start end)
   "Syntax coloring for TOKEN from START to END."
   ;; Syntax coloring
@@ -213,7 +212,7 @@
     (overlay-put (make-overlay start end) 'font-lock-face 'font-lock-variable-name-face))
 
    ((string= token 'T_COMMENT)
-    (add-text-properties start end '(font-lock-face font-lock-comment-face)))
+    (overlay-put (make-overlay start end) 'font-lock-face 'font-lock-comment-face))
 
    ((string= token 'T_DOC_COMMENT)
     (overlay-put (make-overlay start end) 'font-lock-face 'font-lock-comment-delimiter-face))

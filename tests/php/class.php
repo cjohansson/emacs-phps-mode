@@ -1,7 +1,7 @@
 <?php
 /**
  * Some comments here
- *  @todo was here
+ * @todo was here
  */
 
 class MyClass {
