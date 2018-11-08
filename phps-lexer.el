@@ -831,13 +831,17 @@
         (if string-start
             (progn
               ;; (message "Single quoted string %s" (buffer-substring start string-start))
-              (phps-mode/RETURN_TOKEN 'T_CONSTANT_ENCAPSED_STRING start (+ string-start 1)))
+              (phps-mode/RETURN_TOKEN 'T_CONSTANT_ENCAPSED_STRING start string-start))
           (progn
-            ;; Unclosed single quotes
-            ;; (message "Single quoted string never ends..")
-            (phps-mode/RETURN_TOKEN 'T_ENCAPSED_AND_WHITESPACE start (point-max))
-            (phps-mode/MOVE_FORWARD (point-max))
-            )))))
+            ;; Handle the '' case
+            (if (looking-at-p "'")
+                (phps-mode/RETURN_TOKEN 'T_CONSTANT_ENCAPSED_STRING start (+ end 1))
+              (progn
+                ;; Unclosed single quotes
+                (message "Single quoted string never ends..")
+                (phps-mode/RETURN_TOKEN 'T_ENCAPSED_AND_WHITESPACE start (point-max))
+                (phps-mode/MOVE_FORWARD (point-max))
+                )))))))
 
    ;; Double quoted string
    ((looking-at "\"")
@@ -862,18 +866,19 @@
                     (let ((double-quoted-string (buffer-substring start (+ string-start 2))))
                       ;; (message "Double quoted string: %s" double-quoted-string)
                       (phps-mode/RETURN_TOKEN 'T_CONSTANT_ENCAPSED_STRING start (+ string-start 2))))
-                  (progn
-                    ;; (message "Found variable after '%s'" (buffer-substring start (point)))
-                    (phps-mode/BEGIN phps-mode/ST_DOUBLE_QUOTES)
-                    (phps-mode/RETURN_TOKEN "\"" start (+ start 1))
-                    (phps-mode/RETURN_TOKEN 'T_ENCAPSED_AND_WHITESPACE (+ start 1) string-start)
-                    )
-                ))
+                (progn
+                  ;; (message "Found variable after '%s'" (buffer-substring start (point)))
+                  (phps-mode/BEGIN phps-mode/ST_DOUBLE_QUOTES)
+                  (phps-mode/RETURN_TOKEN "\"" start (+ start 1))
+                  (phps-mode/RETURN_TOKEN 'T_ENCAPSED_AND_WHITESPACE (+ start 1) string-start))))
           (progn
-            ;; (message "Found no ending quote, skipping to end")
-            (phps-mode/RETURN_TOKEN 'T_ERROR start (point-max))
-            (phps-mode/MOVE_FORWARD (point-max))
-            )))))
+            ;; Handle the "" case
+            (if (looking-at-p "\"")
+                (phps-mode/RETURN_TOKEN 'T_CONSTANT_ENCAPSED_STRING start (+ end 1))
+              (progn
+                ;; (message "Found no ending quote, skipping to end")
+                (phps-mode/RETURN_TOKEN 'T_ERROR start (point-max))
+                (phps-mode/MOVE_FORWARD (point-max)))))))))
 
    ((looking-at "[`]")
     ;; (message "Begun backquote at %s-%s" (match-beginning 0) (match-end 0))
