@@ -44,6 +44,10 @@
 ;; Make sure `semantic-lex-syntax-modifications' is correct since lexer is dependent on Emacs syntax-table
 
 
+(defvar phps-mode/lexer-tokens nil
+  "Last lexer tokens.")
+
+
 ;; SETTINGS
 
 
@@ -158,7 +162,7 @@
 (defun phps-mode/BEGIN (state)
   "Begin STATE."
   (setq phps-mode/STATE state)
-  (message "Begun state %s" state)
+  ;; (message "Begun state %s" state)
   )
 
 ;; _yy_push_state
@@ -170,7 +174,7 @@
     (if (not phps-mode/state_stack)
         (setq phps-mode/state_stack (list old-state))
       (push old-state phps-mode/state_stack))
-    (message "Added state %s to stack" old-state)
+    ;; (message "Added state %s to stack" old-state)
     )
   (phps-mode/BEGIN state))
 
@@ -178,8 +182,8 @@
   "Pop current state from stack."
   (let* ((old-state (pop phps-mode/state_stack))
          (new-state (car phps-mode/state_stack)))
-    (message "Going back to poppped state %s" old-state)
-    (message "Ended state %s, going back to %s" old-state new-state)
+    ;; (message "Going back to poppped state %s" old-state)
+    ;; (message "Ended state %s, going back to %s" old-state new-state)
     (if old-state
         (phps-mode/BEGIN old-state)
       (display-warning "phps-mode" "PHPs Lexer Error - Going back to nil?"))
@@ -356,7 +360,7 @@
     (overlay-put (make-overlay start end) 'font-lock-face 'font-lock-constant-face))
 
    ((string= token 'T_ERROR)
-    (overlay-put (make-overlay start end)  'font-lock-face 'font-lock-warning-face))
+    (overlay-put (make-overlay start end) 'font-lock-face 'font-lock-warning-face))
 
    ))
 
@@ -367,9 +371,11 @@
   (when (and
          phps-mode/prepend_trailing_brace
          (> end (- (point-max) 2)))
-    (message "Adding trailing brace")
+    ;; (message "Adding trailing brace")
     (setq phps-mode/prepend_trailing_brace nil)
     (phps-mode/RETURN_TOKEN "}" (- end 1) end))
+
+  ;; (message "Added token %s %s %s" token start end)
 
   (semantic-lex-push-token
    (semantic-lex-token token start end)))
@@ -392,7 +398,7 @@
     (let ((start (match-beginning 0))
           (end (match-end 0)))
       (phps-mode/BEGIN phps-mode/ST_IN_SCRIPTING)
-      (message "Starting scripting after <?=")
+      ;; (message "Starting scripting after <?=")
       (when phps-mode/PARSER_MODE
         (phps-mode/RETURN_TOKEN 'T_ECHO start end))
       (phps-mode/RETURN_TOKEN 'T_OPEN_TAG_WITH_ECHO start end)))
@@ -401,7 +407,7 @@
     (let ((start (match-beginning 0))
           (end (match-end 0)))
       (phps-mode/BEGIN phps-mode/ST_IN_SCRIPTING)
-      (message "Starting scripting after <?php")
+      ;; (message "Starting scripting after <?php")
       (when phps-mode/EXPECTED
         (phps-mode/SKIP_TOKEN 'T_OPEN_TAG start end))
       (phps-mode/RETURN_TOKEN 'T_OPEN_TAG start end)))
@@ -413,7 +419,7 @@
         (phps-mode/BEGIN phps-mode/ST_IN_SCRIPTING)
         (when phps-mode/EXPECTED
           (phps-mode/SKIP_TOKEN 'T_OPEN_TAG start end))
-        (message "Starting scripting after <?")
+        ;; (message "Starting scripting after <?")
         (phps-mode/RETURN_TOKEN 'T_OPEN_TAG start end))))
 
    ;; NOTE: mimics inline_char_handler
@@ -773,7 +779,9 @@
             position)
         (if string-start
             (setq position string-start)
-          (setq position (point-max)))
+          (progn
+            (setq position (point-max))
+            (phps-mode/MOVE_FORWARD (point-max))))
         (phps-mode/RETURN_TOKEN 'T_DOC_COMMENT start position)
         )))
 
@@ -785,7 +793,9 @@
             position)
         (if string-start
             (setq position string-start)
-          (setq position (point-max)))
+          (progn
+            (setq position (point-max))
+            (phps-mode/MOVE_FORWARD (point-max))))
         (phps-mode/RETURN_TOKEN 'T_COMMENT start position)
         )))
 
@@ -826,6 +836,7 @@
             ;; Unclosed single quotes
             ;; (message "Single quoted string never ends..")
             (phps-mode/RETURN_TOKEN 'T_ENCAPSED_AND_WHITESPACE start (point-max))
+            (phps-mode/MOVE_FORWARD (point-max))
             )))))
 
    ;; Double quoted string
@@ -861,6 +872,7 @@
           (progn
             ;; (message "Found no ending quote, skipping to end")
             (phps-mode/RETURN_TOKEN 'T_ERROR start (point-max))
+            (phps-mode/MOVE_FORWARD (point-max))
             )))))
 
    ((looking-at "[`]")
@@ -881,7 +893,8 @@
 
    ((looking-at phps-mode/ANY_CHAR)
     ;; Unexpected character
-    (phps-mode/RETURN_TOKEN 'T_ERROR (match-beginning 0) (point-max)))
+    (phps-mode/RETURN_TOKEN 'T_ERROR (match-beginning 0) (point-max))
+    (phps-mode/MOVE_FORWARD (point-max)))
 
    ))
 
@@ -919,7 +932,7 @@
           (end (match-end 0)))
       (phps-mode/yy_pop_state)
       ;; TODO goto restart here?
-      (message "Restart here")
+      ;; (message "Restart here")
       (phps-mode/MOVE_FORWARD end)
       ))
 
@@ -975,14 +988,15 @@
                   (progn
                     (let ((variable-start (+ start (match-beginning 0))))
                       (phps-mode/RETURN_TOKEN 'T_CONSTANT_ENCAPSED_STRING start variable-start)
-                    ))
+                      ))
                 (progn
                   (phps-mode/RETURN_TOKEN 'T_CONSTANT_ENCAPSED_STRING start end)
                   ;; (message "Found end of quote at %s-%s, moving ahead after '%s'" start end (buffer-substring start end))
                   )))
           (progn
             ;; "Found no end of double-quoted region
-            (phps-mode/RETURN_TOKEN 'T_ERROR start (point-max)))))))
+            (phps-mode/RETURN_TOKEN 'T_ERROR start (point-max))
+            (phps-mode/MOVE_FORWARD (point-max)))))))
 
    ))
 
@@ -1031,7 +1045,8 @@ ANY_CHAR'
                   )
               (progn
                 ;; (message "Found no end of backquote.. skipping to end from %s" (buffer-substring (point) (point-max)))
-                (phps-mode/RETURN_TOKEN 'T_ERROR old-start (point-max))))))
+                (phps-mode/RETURN_TOKEN 'T_ERROR old-start (point-max))
+                (phps-mode/MOVE_FORWARD (point-max))))))
 
          )))
 
@@ -1082,7 +1097,7 @@ ANY_CHAR'
               (cond
 
                ((string-match (concat "\n" heredoc_label ";?\n") data)
-                ;, (message "Found heredoc end at %s-%s" start end)
+                                        ;, (message "Found heredoc end at %s-%s" start end)
                 (phps-mode/BEGIN phps-mode/ST_END_HEREDOC)
                 (phps-mode/RETURN_TOKEN 'T_ENCAPSED_AND_WHITESPACE old-start start))
 
@@ -1095,6 +1110,7 @@ ANY_CHAR'
           (progn
             ;; (message "Found no ending of heredoc at %s '%s'" heredoc_label (buffer-substring (point) (point-max)))
             (phps-mode/RETURN_TOKEN 'T_ERROR old-start (point-max))
+            (phps-mode/MOVE_FORWARD (point-max))
             ))))
 
      )))
@@ -1122,6 +1138,7 @@ ANY_CHAR'
           (progn
             ;; (message "Found no ending of nowdoc at %s '%s'" heredoc_label (buffer-substring (point) (point-max)))
             (phps-mode/RETURN_TOKEN 'T_ERROR old-start (point-max))
+            (phps-mode/MOVE_FORWARD (point-max))
             ))))
      )))
 
@@ -1209,7 +1226,8 @@ ANY_CHAR'
 
    ((looking-at phps-mode/ANY_CHAR)
     ;; Unexpected character
-    (phps-mode/RETURN_TOKEN 'T_ERROR (match-beginning 0) (point-max)))
+    (phps-mode/RETURN_TOKEN 'T_ERROR (match-beginning 0) (point-max))
+    (phps-mode/MOVE_FORWARD (point-max)))
 
    ))
 
@@ -1232,53 +1250,11 @@ ANY_CHAR'
 
 (defun phps-mode/lexer-init ()
   "Initialize lexer."
-
-  (let ((phps-mode-syntax-table (make-syntax-table)))
-
-    ;; This is added so entity names with underscores can be more easily parsed as one word
-    (modify-syntax-entry ?_ "w" phps-mode-syntax-table)
-
-    ;; Comment styles are same as C++
-    (modify-syntax-entry ?/ ". 124b"  phps-mode-syntax-table)
-    (modify-syntax-entry ?* ". 23" phps-mode-syntax-table)
-    (modify-syntax-entry ?\n "> b" phps-mode-syntax-table)
-
-    (setq semantic-lex-syntax-table phps-mode-syntax-table))
-
+  (when (boundp 'phps-mode/syntax-table)
+    (setq semantic-lex-syntax-table phps-mode/syntax-table))
   (phps-mode/BEGIN phps-mode/ST_INITIAL)
-
-  (setq
-
-   ;; Syntax table modifications
-   ;; TODO Understand this
-   ;; semantic-lex-syntax-modifications
-   ;; '(
-   ;;   (?= ".")
-   ;;   (?& ".")
-   ;;   (?+ ".")
-   ;;   (?- ".")
-   ;;   (?| ".")
-   ;;   (?< ".")
-   ;;   (?> ".")
-   ;;   (?% ".")
-   ;;   (?' "\"")
-   ;;   (?\" "\"")
-   ;;   (?` "\"")
-   ;;   (?_ "w")
-   ;;   (?$ "_")
-   ;;   (?/ ". 124b")
-   ;;   (?* ". 23")
-   ;;   (?\n "> b")
-   ;;   (?# "< b"))
-
-   ;; Lexical analysis
-   semantic-lex-analyzer 'phps-mode/tags-lexer
-
-   )
-
-  (semantic-lex-buffer)
-
-  )
+  (setq semantic-lex-analyzer #'phps-mode/tags-lexer)
+  (setq phps-mode/lexer-tokens (semantic-lex-buffer)))
 
 (provide 'phps-mode/lexer)
 
