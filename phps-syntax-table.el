@@ -65,7 +65,6 @@
 
 (defun phps-mode/syntax-table-init ()
   "Apply syntax table."
-  ;; (setq font-lock-keywords-only t)
   (set-syntax-table phps-mode/syntax-table))
 
 (provide 'phps-mode/syntax-table)

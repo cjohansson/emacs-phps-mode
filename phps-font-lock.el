@@ -32,102 +32,12 @@
 
 ;;; Commentary:
 
-;; Please see README.md from the same repository for extended documentation.
 
-;;; Commentary:
+;; Please see README.md from the same repository for extended documentation.
 
 
 ;;; Code:
 
-
-(defconst phps-mode/keywords
-  (list
-     "__halt_compiler"
-     "abstract"
-     "and"
-     "array"
-     "as"
-     "break"
-     "callable"
-     "case"
-     "catch"
-     "class"
-     "clone"
-     "const"
-     "continue"
-     "declare"
-     "default"
-     "die"
-     "do"
-     "echo"
-     "else"
-     "elseif"
-     "empty"
-     "enddeclare"
-     "endfor"
-     "endforeach"
-     "endif"
-     "endswitch"
-     "endwhile"
-     "eval"
-     "exit"
-     "extends"
-     "final"
-     "finally"
-     "for"
-     "foreach"
-     "function"
-     "global"
-     "goto"
-     "if"
-     "implements"
-     "include"
-     "include_once"
-     "instanceof"
-     "insteadof"
-     "interface"
-     "isset"
-     "list"
-     "namespace"
-     "new"
-     "or"
-     "print"
-     "private"
-     "protected"
-     "public"
-     "require"
-     "require_once"
-     "return"
-     "static"
-     "switch"
-     "throw"
-     "trait"
-     "try"
-     "unset"
-     "use"
-     "var"
-     "while"
-     "xor"
-     "yield"
-
-     ;; Compile-time constants here
-     "__CLASS__"
-     "__DIR__"
-     "__FILE__"
-     "__FUNCTION__"
-     "__LINE__"
-     "__METHOD__"
-     "__NAMESPACE__"
-     "__TRAIT__"
-   )
-  "Use list of keywords to build regular expression for syntax highlighting.")
-
-(defconst phps-mode/font-lock-keywords
-  (let ((regex (concat "\\<" (regexp-opt phps-mode/keywords t) "\\>")))
-    (list
-     `(,regex . font-lock-builtin-face)
-     '("\\('\\w*'\\)" . font-lock-variable-name-face)))
-  "Minimal highlighting expressions for major mode.")
 
 (defun phps-mode/font-lock-init ()
   "Apply font-lock."
@@ -137,7 +47,6 @@
   ;; This makes it possible to have full control over syntax coloring from the lexer
   (set (make-local-variable 'font-lock-defaults) '(nil t))
 
-  ;; (set (make-local-variable 'font-lock-defaults) '(phps-mode/font-lock-keywords))
   )
 
 (provide 'phps-mode/font-lock)

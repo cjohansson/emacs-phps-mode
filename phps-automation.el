@@ -1,7 +1,8 @@
-;;; phps-automation --- Genereate a Wisent Parser file
+;;; phps-automation --- Generate a Wisent Parser file
 
 
 ;;; Commentary:
+
 
 ;;; Uses a parser to convert LALR Yacc grammar to Wisent grammar
 
@@ -9,6 +10,7 @@
 
 
 ;;; Code:
+
 
 (add-to-list 'load-path (expand-file-name "~/.emacs.d/emacs-wisent-grammar-converter/"))
 (require 'emacs-wisent-grammar-converter)
@@ -28,5 +30,5 @@
   (emacs-wisent-grammar-converter/generate-grammar-from-filename php-yacc-file wisent-destination)
   (message "Automation completed"))
 
-(provide 'phps-automation2)
-;;; phps-automation2.el ends here
+(provide 'phps-automation)
+;;; phps-automation.el ends here
