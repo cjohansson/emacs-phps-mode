@@ -158,7 +158,7 @@
 (defun phps-mode/BEGIN (state)
   "Begin STATE."
   (setq phps-mode/STATE state)
-  ;; (message "Begun state %s" state)
+  (message "Begun state %s" state)
   )
 
 ;; _yy_push_state
@@ -170,7 +170,7 @@
     (if (not phps-mode/state_stack)
         (setq phps-mode/state_stack (list old-state))
       (push old-state phps-mode/state_stack))
-    ;; (message "Added state %s to stack" old-state)
+    (message "Added state %s to stack" old-state)
     )
   (phps-mode/BEGIN state))
 
@@ -178,8 +178,8 @@
   "Pop current state from stack."
   (let* ((old-state (pop phps-mode/state_stack))
          (new-state (car phps-mode/state_stack)))
-    ;; (message "Going back to poppped state %s" old-state)
-    ;; (message "Ended state %s, going back to %s" old-state new-state)
+    (message "Going back to poppped state %s" old-state)
+    (message "Ended state %s, going back to %s" old-state new-state)
     (if old-state
         (phps-mode/BEGIN old-state)
       (display-warning "phps-mode" "PHPs Lexer Error - Going back to nil?"))
@@ -362,19 +362,21 @@
 
 (defun phps-mode/RETURN_TOKEN (token start end)
   "Push TOKEN to list with START and END."
-
   (phps-mode/COLOR_SYNTAX token start end)
 
   (when (and
-       phps-mode/prepend_trailing_brace
-       (> end (- (point-max) 2)))
-    ;; (message "Adding trailing brace")
+         phps-mode/prepend_trailing_brace
+         (> end (- (point-max) 2)))
+    (message "Adding trailing brace")
     (setq phps-mode/prepend_trailing_brace nil)
     (phps-mode/RETURN_TOKEN "}" (- end 1) end))
 
   (semantic-lex-push-token
-   (semantic-lex-token token start end))
+   (semantic-lex-token token start end)))
 
+;; TODO Figure out what this does
+(defun phps-mode/SKIP_TOKEN (token start end)
+  "Skip TOKEN to list with START and END."
   )
 
 
@@ -390,29 +392,31 @@
     (let ((start (match-beginning 0))
           (end (match-end 0)))
       (phps-mode/BEGIN phps-mode/ST_IN_SCRIPTING)
-      (if phps-mode/PARSER_MODE
-          (phps-mode/RETURN_TOKEN 'T_ECHO start end))
-        (phps-mode/RETURN_TOKEN 'T_OPEN_TAG_WITH_ECHO start end)
-      ))
+      (message "Starting scripting after <?=")
+      (when phps-mode/PARSER_MODE
+        (phps-mode/RETURN_TOKEN 'T_ECHO start end))
+      (phps-mode/RETURN_TOKEN 'T_OPEN_TAG_WITH_ECHO start end)))
 
    ((looking-at "<\\?php\\([ \t]\\|\n\\)")
     (let ((start (match-beginning 0))
           (end (match-end 0)))
       (phps-mode/BEGIN phps-mode/ST_IN_SCRIPTING)
+      (message "Starting scripting after <?php")
       (when phps-mode/EXPECTED
-          ;; skip-token?
-          )
-      (phps-mode/RETURN_TOKEN 'T_OPEN_TAG start end)
-      ))
+        (phps-mode/SKIP_TOKEN 'T_OPEN_TAG start end))
+      (phps-mode/RETURN_TOKEN 'T_OPEN_TAG start end)))
 
    ((looking-at "<\\?")
     (when phps-mode/SHORT_TAGS
       (let ((start (match-beginning 0))
             (end (match-end 0)))
         (phps-mode/BEGIN phps-mode/ST_IN_SCRIPTING)
-        (phps-mode/RETURN_TOKEN 'T_OPEN_TAG start end)
-        )))
+        (when phps-mode/EXPECTED
+          (phps-mode/SKIP_TOKEN 'T_OPEN_TAG start end))
+        (message "Starting scripting after <?")
+        (phps-mode/RETURN_TOKEN 'T_OPEN_TAG start end))))
 
+   ;; NOTE: mimics inline_char_handler
    ((looking-at phps-mode/ANY_CHAR)
     (let ((string-start (search-forward "<?" nil t)))
       (if string-start

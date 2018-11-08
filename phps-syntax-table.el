@@ -44,6 +44,7 @@
 
     ;; This is added so entity names with underscores can be more easily parsed as one word
     (modify-syntax-entry ?_ "_" phps-mode/syntax-table)
+
     ;; (modify-syntax-entry ?_ "w" phps-mode/syntax-table)
 
     ;; Comment styles are same as C++

@@ -38,7 +38,7 @@
 
 
 (autoload 'phps-mode "phps-mode")
-(autoload 'phps-mode/lexer "phps-lexer")
+(autoload 'phps-mode/lexer-init "phps-lexer")
 
 (require 'ert)
 
@@ -50,7 +50,6 @@
      (goto-char 0)
      ;;,(message "\nTesting buffer:\n'%s'\n" source)
      (phps-mode)
-     (phps-mode/lexer-init)
      ,@body
      (kill-buffer test-buffer)
      ))
@@ -66,10 +65,10 @@
   "Run test for lexer."
 
   (phps-mode/with-test-buffer
-   "<?php\texit;\t?>"
+   "<?php\t$var=1; exit $var;\t?>"
    (let* ((tokens (semantic-lex-buffer))
           (string-tokens (phps-mode/token-stream-to-string tokens)))
-     (should (equal string-tokens " T_OPEN_TAG T_EXIT ; ; T_CLOSE_TAG"))))
+     (should (equal string-tokens " T_OPEN_TAG T_VARIABLE = T_LNUMBER ; T_EXIT T_VARIABLE ; ; T_CLOSE_TAG"))))
 
   (phps-mode/with-test-buffer
    "<?php\nexit;\n?>"
@@ -104,7 +103,6 @@
    "<?php $var EXIT die function return yield from yield try catch finally throw if elseif endif else while endwhile do for endfor foreach endforeach declare enddeclare instanceof as switch endswitch case default break continue goto echo print class interface trait extends implements :: \\ ... ?? new clone var (int) (integer) (real) (double) (float) (string) (binary) (array) (object) (boolean) (bool) (unset) eval include include_once require require_once namespace use insteadof global isset empty __halt_compiler static abstract final private protected public unset => list array callable ++ -- === !== == != <> <= >= <=> += -= *= *\\*= *\\* /= .= %= <<= >>= &= |= ^= || && OR AND XOR << >> { } 0xAF 0b10 200 2147483650 2.5 2.5e10 __CLASS__ __TRAIT__ __FUNCTION__ __METHOD__ __LINE__ __FILE__ __DIR__ __NAMESPACE__\n// My comment \n# My comment 2\n/*blaha blaha2*/ /** blaha\n blaha2 **/ 'test' 'my first \\'comment\\' really' \"sentence\" \"words \\\\comment\\\" really\" 'this single quoted string never ends"
    (let* ((tokens (semantic-lex-buffer))
           (string-tokens (phps-mode/token-stream-to-string tokens)))
-     ;; (message "Tokens %s" string-tokens)
      (should (equal string-tokens " T_OPEN_TAG T_VARIABLE T_EXIT T_DIE T_FUNCTION T_RETURN T_YIELD_FROM T_YIELD T_TRY T_CATCH T_FINALLY T_THROW T_IF T_ELSEIF T_ENDIF T_ELSE T_WHILE T_ENDWHILE T_DO T_FOR T_ENDFOR T_FOREACH T_ENDFOREACH T_DECLARE T_ENDDECLARE T_INSTANCEOF T_AS T_SWITCH T_ENDSWITCH T_CASE T_DEFAULT T_BREAK T_CONTINUE T_GOTO T_ECHO T_PRINT T_CLASS T_INTERFACE T_TRAIT T_EXTENDS T_IMPLEMENTS T_PAAMAYIM_NEKUDOTAYIM T_NS_SEPARATOR T_ELLIPSIS T_COALESCE T_NEW T_CLONE T_VAR T_INT_CAST T_INT_CAST T_DOUBLE_CAST T_DOUBLE_CAST T_DOUBLE_CAST T_STRING_CAST T_STRING_CAST T_ARRAY_CAST T_OBJECT_CAST T_BOOL_CAST T_BOOL_CAST T_UNSET_CAST T_EVAL T_INCLUDE T_INCLUDE_ONCE T_REQUIRE T_REQUIRE_ONCE T_NAMESPACE T_USE T_INSTEADOF T_GLOBAL T_ISSET T_EMPTY T_HALT_COMPILER T_STATIC T_ABSTRACT T_FINAL T_PRIVATE T_PROTECTED T_PUBLIC T_UNSET T_DOUBLE_ARROW T_LIST T_ARRAY T_CALLABLE T_INC T_DEC T_IS_IDENTICAL T_IS_NOT_IDENTICAL T_IS_EQUAL T_IS_NOT_EQUAL T_IS_NOT_EQUAL T_IS_SMALLER_OR_EQUAL T_IS_GREATER_OR_EQUAL T_SPACESHIP T_PLUS_EQUAL T_MINUS_EQUAL T_MUL_EQUAL T_POW_EQUAL T_POW T_DIV_EQUAL T_CONCAT_EQUAL T_MOD_EQUAL T_SL_EQUAL T_SR_EQUAL T_AND_EQUAL T_OR_EQUAL T_XOR_EQUAL T_BOOLEAN_OR T_BOOLEAN_AND T_LOGICAL_OR T_LOGICAL_AND T_LOGICAL_XOR T_SL T_SR { } T_LNUMBER T_LNUMBER T_LNUMBER T_DNUMBER T_DNUMBER T_DNUMBER T_CLASS_C T_TRAIT_C T_FUNC_C T_METHOD_C T_LINE T_FILE T_DIR T_NS_C T_COMMENT T_COMMENT T_COMMENT T_DOC_COMMENT T_CONSTANT_ENCAPSED_STRING T_CONSTANT_ENCAPSED_STRING T_CONSTANT_ENCAPSED_STRING T_CONSTANT_ENCAPSED_STRING T_ENCAPSED_AND_WHITESPACE"))))
 
   )
@@ -228,11 +226,11 @@
   "Run test for lexer."
   ;; (message "-- Running all tests for lexer... --\n")
   ;; (setq debug-on-error t)
-  (phps-mode/test-lexer--script-boundaries)
+  ;; (phps-mode/test-lexer--script-boundaries)
   (phps-mode/test-lexer--simple-tokens)
-  (phps-mode/test-lexer--complex-tokens)
-  (phps-mode/test-lexer--namespaces)
-  (phps-mode/test-lexer--errors)
+  ;; (phps-mode/test-lexer--complex-tokens)
+  ;; (phps-mode/test-lexer--namespaces)
+  ;; (phps-mode/test-lexer--errors)
   ;; (message "\n-- Ran all tests for lexer. --")
   )
 
