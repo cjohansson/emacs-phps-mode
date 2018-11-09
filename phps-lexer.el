@@ -835,7 +835,10 @@
           (progn
             ;; Handle the '' case
             (if (looking-at-p "'")
-                (phps-mode/RETURN_TOKEN 'T_CONSTANT_ENCAPSED_STRING start (+ end 1))
+                (progn
+                  ;; (message "Empty single quoted string from %s to %s" end (+ end 1))
+                  (phps-mode/RETURN_TOKEN 'T_CONSTANT_ENCAPSED_STRING end (+ end 1))
+                  (forward-char))
               (progn
                 ;; Unclosed single quotes
                 ;; (message "Single quoted string never ends..")
@@ -874,7 +877,10 @@
           (progn
             ;; Handle the "" case
             (if (looking-at-p "\"")
-                (phps-mode/RETURN_TOKEN 'T_CONSTANT_ENCAPSED_STRING start (+ end 1))
+                (progn
+                  ;; (message "Empty double quoted string from %s to %s" end (+ end 1))
+                  (phps-mode/RETURN_TOKEN 'T_CONSTANT_ENCAPSED_STRING end (+ end 1))
+                  (forward-char))
               (progn
                 ;; (message "Found no ending quote, skipping to end")
                 (phps-mode/RETURN_TOKEN 'T_ERROR start (point-max))
