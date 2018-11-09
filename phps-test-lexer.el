@@ -117,12 +117,17 @@
           (string-tokens (phps-mode/token-stream-to-string tokens)))
      (should (equal string-tokens " T_OPEN_TAG T_ECHO T_VARIABLE = T_ARRAY ( T_CONSTANT_ENCAPSED_STRING T_DOUBLE_ARROW T_CONSTANT_ENCAPSED_STRING ) ;"))))
 
-  ;; TODO Fix this
+  (phps-mode/with-test-buffer
+   "<?php $var = []; "
+   (let* ((tokens phps-mode/lexer-tokens)
+          (string-tokens (phps-mode/token-stream-to-string tokens)))
+     (should (equal string-tokens " T_OPEN_TAG T_VARIABLE = [ ] ;"))))
+
   (phps-mode/with-test-buffer
    "<?php echo isset($backtrace[1]['file']) ? 'yes' : 'no'; "
    (let* ((tokens phps-mode/lexer-tokens)
           (string-tokens (phps-mode/token-stream-to-string tokens)))
-     (should (equal string-tokens " T_OPEN_TAG T_ECHO T_ISSET ( T_VARIABLE TODO HERE"))))
+     (should (equal string-tokens " T_OPEN_TAG T_ECHO T_ISSET ( T_VARIABLE [ T_LNUMBER ] [ T_CONSTANT_ENCAPSED_STRING ] ) ? T_CONSTANT_ENCAPSED_STRING : T_CONSTANT_ENCAPSED_STRING ;"))))
 
   (phps-mode/with-test-buffer
    "<?php $var EXIT die function return yield from yield try catch finally throw if elseif endif else while endwhile do for endfor foreach endforeach declare enddeclare instanceof as switch endswitch case default break continue goto echo print class interface trait extends implements :: \\ ... ?? new clone var (int) (integer) (real) (double) (float) (string) (binary) (array) (object) (boolean) (bool) (unset) eval include include_once require require_once namespace use insteadof global isset empty __halt_compiler static abstract final private protected public unset => list array callable ++ -- === !== == != <> <= >= <=> += -= *= *\\*= *\\* /= .= %= <<= >>= &= |= ^= || && OR AND XOR << >> { } 0xAF 0b10 200 2147483650 2.5 2.5e10 __CLASS__ __TRAIT__ __FUNCTION__ __METHOD__ __LINE__ __FILE__ __DIR__ __NAMESPACE__\n// My comment \n# My comment 2\n/*blaha blaha2*/ /** blaha\n blaha2 **/ 'test' 'my first \\'comment\\' really' \"sentence\" \"words \\\\comment\\\" really\" 'this single quoted string never ends"

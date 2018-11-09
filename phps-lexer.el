@@ -146,7 +146,7 @@
 (defvar phps-mode/TABS_AND_SPACES "[ \t]*"
   "Tabs and whitespaces.")
 
-(defvar phps-mode/TOKENS "[;\\:,.()^&+-/*=%!~\\$<>?@]"
+(defvar phps-mode/TOKENS "[][;\\:,\.()|^&+-/*=%!~\\$<>?@]"
   "Tokens.")
 
 (defvar phps-mode/ANY_CHAR ".\\|\n"
@@ -838,7 +838,7 @@
                 (phps-mode/RETURN_TOKEN 'T_CONSTANT_ENCAPSED_STRING start (+ end 1))
               (progn
                 ;; Unclosed single quotes
-                (message "Single quoted string never ends..")
+                ;; (message "Single quoted string never ends..")
                 (phps-mode/RETURN_TOKEN 'T_ENCAPSED_AND_WHITESPACE start (point-max))
                 (phps-mode/MOVE_FORWARD (point-max))
                 )))))))
@@ -896,8 +896,12 @@
    ((looking-at phps-mode/LABEL)
     (phps-mode/RETURN_TOKEN 'T_STRING (match-beginning 0) (match-end 0)))
 
+   ((looking-at phps-mode/TOKENS)
+    (phps-mode/RETURN_TOKEN (match-string 0) (match-beginning 0) (match-end 0)))
+
    ((looking-at phps-mode/ANY_CHAR)
     ;; Unexpected character
+    ;; (message "Unexpected character '%s'" (buffer-substring (match-beginning 0) (match-end 0)))
     (phps-mode/RETURN_TOKEN 'T_ERROR (match-beginning 0) (point-max))
     (phps-mode/MOVE_FORWARD (point-max)))
 
