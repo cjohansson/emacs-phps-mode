@@ -106,6 +106,12 @@
      (should (equal string-tokens " T_OPEN_TAG T_ECHO T_VARIABLE = T_ARRAY ( T_CONSTANT_ENCAPSED_STRING ) ;"))))
 
   (phps-mode/with-test-buffer
+   "<?php if (empty($parameters[self::PARAMETER_CONFIGURATION_INTERNAL_FILENAME])) { $parameters[self::PARAMETER_CONFIGURATION_INTERNAL_FILENAME] = ''; }"
+   (let* ((tokens phps-mode/lexer-tokens)
+          (string-tokens (phps-mode/token-stream-to-string tokens)))
+     (should (equal string-tokens " T_OPEN_TAG T_IF ( T_EMPTY ( T_VARIABLE [ T_STRING T_PAAMAYIM_NEKUDOTAYIM T_STRING ] ) ) { T_VARIABLE [ T_STRING T_PAAMAYIM_NEKUDOTAYIM T_STRING ] = T_CONSTANT_ENCAPSED_STRING ; }"))))
+
+  (phps-mode/with-test-buffer
    "<?php echo $var = array(\"\");"
    (let* ((tokens phps-mode/lexer-tokens)
           (string-tokens (phps-mode/token-stream-to-string tokens)))
