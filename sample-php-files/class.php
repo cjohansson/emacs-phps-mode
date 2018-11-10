@@ -24,6 +24,7 @@ class MyClass {
         if (!empty($this->var)) {
             $this->var = '';
         }
+        $this->var = 'abc';
     }
 
 }

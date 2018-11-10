@@ -447,15 +447,15 @@
    ((looking-at "return")
     (phps-mode/RETURN_TOKEN 'T_RETURN (match-beginning 0) (match-end 0)))
    ((looking-at (concat "yield" phps-mode/WHITESPACE "from" "[^a-zA-Z0-9_\x80-\xff]"))
-      (phps-mode/RETURN_TOKEN 'T_YIELD_FROM (match-beginning 0) (match-end 0)))
+    (phps-mode/RETURN_TOKEN 'T_YIELD_FROM (match-beginning 0) (match-end 0)))
    ((looking-at "yield")
-      (phps-mode/RETURN_TOKEN 'T_YIELD (match-beginning 0) (match-end 0)))
+    (phps-mode/RETURN_TOKEN 'T_YIELD (match-beginning 0) (match-end 0)))
    ((looking-at "try")
     (phps-mode/RETURN_TOKEN 'T_TRY (match-beginning 0) (match-end 0)))
    ((looking-at "catch")
-      (phps-mode/RETURN_TOKEN 'T_CATCH (match-beginning 0) (match-end 0)))
+    (phps-mode/RETURN_TOKEN 'T_CATCH (match-beginning 0) (match-end 0)))
    ((looking-at "finally")
-      (phps-mode/RETURN_TOKEN 'T_FINALLY (match-beginning 0) (match-end 0)))
+    (phps-mode/RETURN_TOKEN 'T_FINALLY (match-beginning 0) (match-end 0)))
    ((looking-at "throw")
     (phps-mode/RETURN_TOKEN 'T_THROW (match-beginning 0) (match-end 0)))
    ((looking-at "if")
@@ -471,7 +471,7 @@
    ((looking-at "endwhile")
     (phps-mode/RETURN_TOKEN 'T_ENDWHILE (match-beginning 0) (match-end 0)))
    ((looking-at "do")
-      (phps-mode/RETURN_TOKEN 'T_DO (match-beginning 0) (match-end 0)))
+    (phps-mode/RETURN_TOKEN 'T_DO (match-beginning 0) (match-end 0)))
    ((looking-at "foreach")
     (phps-mode/RETURN_TOKEN 'T_FOREACH (match-beginning 0) (match-end 0)))
    ((looking-at "endforeach")
@@ -557,7 +557,7 @@
       (phps-mode/RETURN_TOKEN 'T_START_HEREDOC start end)))
 
    ((looking-at "::")
-      (phps-mode/RETURN_TOKEN 'T_PAAMAYIM_NEKUDOTAYIM (match-beginning 0) (match-end 0)))
+    (phps-mode/RETURN_TOKEN 'T_PAAMAYIM_NEKUDOTAYIM (match-beginning 0) (match-end 0)))
    ((looking-at "\\\\")
     (phps-mode/RETURN_TOKEN 'T_NS_SEPARATOR (match-beginning 0) (match-end 0)))
    ((looking-at "\\.\\.\\.")
@@ -827,24 +827,23 @@
            (data (buffer-substring-no-properties start end))
            (found nil))
       (forward-char)
-      (let ((string-start (search-forward-regexp "[^\\\\]'" nil t)))
-        (if string-start
-            (progn
-              ;; (message "Single quoted string %s" (buffer-substring-no-properties start string-start))
-              (phps-mode/RETURN_TOKEN 'T_CONSTANT_ENCAPSED_STRING start string-start))
+      ;; Handle the '' case
+      (if (looking-at-p "'")
           (progn
-            ;; Handle the '' case
-            (if (looking-at-p "'")
-                (progn
-                  ;; (message "Empty single quoted string from %s to %s" start (+ start 2))
-                  (phps-mode/RETURN_TOKEN 'T_CONSTANT_ENCAPSED_STRING start (+ start 2))
-                  (forward-char))
+            ;; (message "Empty single quoted string from %s to %s" start (+ start 2))
+            (phps-mode/RETURN_TOKEN 'T_CONSTANT_ENCAPSED_STRING start (+ start 2))
+            (forward-char))
+        (let ((string-start (search-forward-regexp "[^\\\\]'" nil t)))
+          (if string-start
               (progn
-                ;; Unclosed single quotes
-                ;; (message "Single quoted string never ends..")
-                (phps-mode/RETURN_TOKEN 'T_ENCAPSED_AND_WHITESPACE start (point-max))
-                (phps-mode/MOVE_FORWARD (point-max))
-                )))))))
+                ;; (message "Single quoted string %s" (buffer-substring-no-properties start string-start))
+                (phps-mode/RETURN_TOKEN 'T_CONSTANT_ENCAPSED_STRING start string-start))
+            (progn
+              ;; Unclosed single quotes
+              ;; (message "Single quoted string never ends..")
+              (phps-mode/RETURN_TOKEN 'T_ENCAPSED_AND_WHITESPACE start (point-max))
+              (phps-mode/MOVE_FORWARD (point-max))
+              ))))))
 
    ;; Double quoted string
    ((looking-at "\"")
@@ -852,39 +851,38 @@
            (end (match-end 0))
            (data (buffer-substring-no-properties start end)))
       (forward-char)
-      (let ((string-start (search-forward-regexp (concat
-                                                  "\\([^\\\\]\""
-                                                  "\\|\\$" phps-mode/LABEL
-                                                  "\\|\\${" phps-mode/LABEL
-                                                  "\\|{\\$" phps-mode/LABEL "\\)")
-                                                 nil t)))
-        ;; Do we find a ending double quote or starting variable?
-        (if string-start
-            (let ((string-start (match-beginning 0)))
-              ;; (message "Double quoted string %s" double-quoted-string)
-              ;; Do we find variable inside quote?
-              (goto-char string-start)
-              (if (looking-at "[^\\\\]\"")
-                  (progn
-                    (let ((double-quoted-string (buffer-substring-no-properties start (+ string-start 2))))
-                      ;; (message "Double quoted string: %s" double-quoted-string)
-                      (phps-mode/RETURN_TOKEN 'T_CONSTANT_ENCAPSED_STRING start (+ string-start 2))))
-                (progn
-                  ;; (message "Found variable after '%s'" (buffer-substring-no-properties start (point)))
-                  (phps-mode/BEGIN phps-mode/ST_DOUBLE_QUOTES)
-                  (phps-mode/RETURN_TOKEN "\"" start (+ start 1))
-                  (phps-mode/RETURN_TOKEN 'T_ENCAPSED_AND_WHITESPACE (+ start 1) string-start))))
+      ;; Handle the "" case
+      (if (looking-at-p "\"")
           (progn
-            ;; Handle the "" case
-            (if (looking-at-p "\"")
-                (progn
-                  ;; (message "Empty double quoted string from %s to %s" start (+ start 2))
-                  (phps-mode/RETURN_TOKEN 'T_CONSTANT_ENCAPSED_STRING start (+ start 2))
-                  (forward-char))
-              (progn
-                ;; (message "Found no ending quote, skipping to end")
-                (phps-mode/RETURN_TOKEN 'T_ERROR start (point-max))
-                (phps-mode/MOVE_FORWARD (point-max)))))))))
+            ;; (message "Empty double quoted string from %s to %s" start (+ start 2))
+            (phps-mode/RETURN_TOKEN 'T_CONSTANT_ENCAPSED_STRING start (+ start 2))
+            (forward-char))
+        (let ((string-start (search-forward-regexp (concat
+                                                    "\\([^\\\\]\""
+                                                    "\\|\\$" phps-mode/LABEL
+                                                    "\\|\\${" phps-mode/LABEL
+                                                    "\\|{\\$" phps-mode/LABEL "\\)")
+                                                   nil t)))
+          ;; Do we find a ending double quote or starting variable?
+          (if string-start
+              (let ((string-start (match-beginning 0)))
+                ;; (message "Double quoted string %s" double-quoted-string)
+                ;; Do we find variable inside quote?
+                (goto-char string-start)
+                (if (looking-at "[^\\\\]\"")
+                    (progn
+                      (let ((double-quoted-string (buffer-substring-no-properties start (+ string-start 2))))
+                        ;; (message "Double quoted string: %s" double-quoted-string)
+                        (phps-mode/RETURN_TOKEN 'T_CONSTANT_ENCAPSED_STRING start (+ string-start 2))))
+                  (progn
+                    ;; (message "Found variable after '%s'" (buffer-substring-no-properties start (point)))
+                    (phps-mode/BEGIN phps-mode/ST_DOUBLE_QUOTES)
+                    (phps-mode/RETURN_TOKEN "\"" start (+ start 1))
+                    (phps-mode/RETURN_TOKEN 'T_ENCAPSED_AND_WHITESPACE (+ start 1) string-start))))
+            (progn
+              ;; (message "Found no ending quote, skipping to end")
+              (phps-mode/RETURN_TOKEN 'T_ERROR start (point-max))
+              (phps-mode/MOVE_FORWARD (point-max))))))))
 
    ((looking-at "[`]")
     ;; (message "Begun backquote at %s-%s" (match-beginning 0) (match-end 0))
