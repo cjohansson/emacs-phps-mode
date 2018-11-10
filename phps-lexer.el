@@ -533,7 +533,7 @@
    ((looking-at (concat "<<<" phps-mode/TABS_AND_SPACES "\\(" phps-mode/LABEL "\\|'" phps-mode/LABEL "'\\|\"" phps-mode/LABEL "\"\\)" phps-mode/NEWLINE))
     (let* ((start (match-beginning 0))
            (end (match-end 0))
-           (data (buffer-substring (match-beginning 1) (match-end 1)))
+           (data (buffer-substring-no-properties (match-beginning 1) (match-end 1)))
            (heredoc_label))
 
       ;; Determine if it's HEREDOC or NOWDOC and extract label here
@@ -548,7 +548,7 @@
           (phps-mode/BEGIN phps-mode/ST_HEREDOC)))
 
       ;; Check for ending label on the next line
-      (when (string= (buffer-substring end (+ end (length heredoc_label))) heredoc_label)
+      (when (string= (buffer-substring-no-properties end (+ end (length heredoc_label))) heredoc_label)
         (phps-mode/BEGIN phps-mode/ST_END_HEREDOC))
 
       (push heredoc_label phps-mode/heredoc_label_stack)
@@ -706,7 +706,7 @@
    ((looking-at phps-mode/BNUM)
     (let* ((start (match-beginning 0))
            (end (match-end 0))
-           (data (buffer-substring (+ start 2) end))
+           (data (buffer-substring-no-properties (+ start 2) end))
            (long-number (string-to-number data 2)))
       ;; (message "Binary number %s from %s" long-number data)
       (if (> long-number phps-mode/long-limit)
@@ -716,7 +716,7 @@
    ((looking-at phps-mode/HNUM)
     (let* ((start (match-beginning 0))
            (end (match-end 0))
-           (data (buffer-substring (+ start 2) end))
+           (data (buffer-substring-no-properties (+ start 2) end))
            (long-number (string-to-number data 16)))
       ;; (message "Hexadecimal number %s from %s" long-number data)
       (if (> long-number phps-mode/long-limit)
@@ -727,14 +727,14 @@
         (looking-at phps-mode/DNUM))
     (let* ((start (match-beginning 0))
            (end (match-end 0))
-           (data (buffer-substring start end)))
+           (data (buffer-substring-no-properties start end)))
       ;; (message "Exponent/double at: %s" data)
       (phps-mode/RETURN_TOKEN 'T_DNUMBER start end)))
 
    ((looking-at phps-mode/LNUM)
     (let* ((start (match-beginning 0))
            (end (match-end 0))
-           (data (string-to-number (buffer-substring start end))))
+           (data (string-to-number (buffer-substring-no-properties start end))))
       ;; (message "Long number: %d" data)
       (if (> data phps-mode/long-limit)
           (phps-mode/RETURN_TOKEN 'T_DNUMBER start end)
@@ -760,8 +760,8 @@
    ((looking-at "\\(//\\|#\\)")
     (let* ((start (match-beginning 0))
            (end (match-end 0))
-           (data (buffer-substring start end))
-           (line (buffer-substring (line-beginning-position) (line-end-position))))
+           (data (buffer-substring-no-properties start end))
+           (line (buffer-substring-no-properties (line-beginning-position) (line-end-position))))
       (if (string-match "\\?>" line)
           (progn
             (phps-mode/RETURN_TOKEN 'T_COMMENT start (match-end 0))
@@ -774,7 +774,7 @@
    ((looking-at (concat "/\\*\\*" phps-mode/WHITESPACE))
     (let* ((start (match-beginning 0))
            (end (match-end 0))
-           (data (buffer-substring start end)))
+           (data (buffer-substring-no-properties start end)))
       (let ((string-start (search-forward "*/" nil t))
             position)
         (if string-start
@@ -788,7 +788,7 @@
    ((looking-at "/\\*")
     (let* ((start (match-beginning 0))
            (end (match-end 0))
-           (data (buffer-substring start end)))
+           (data (buffer-substring-no-properties start end)))
       (let ((string-start (search-forward "*/" nil t))
             position)
         (if string-start
@@ -807,7 +807,7 @@
    ((looking-at phps-mode/TOKENS)
     (let* ((start (match-beginning 0))
            (end (match-end 0))
-           (data (buffer-substring start end))
+           (data (buffer-substring-no-properties start end))
            (use-brace nil))
       ;; (message "Found token '%s'" data)
       (when phps-mode/declaring_namespace
@@ -824,13 +824,13 @@
    ((looking-at "'")
     (let* ((start (match-beginning 0))
            (end (match-end 0))
-           (data (buffer-substring start end))
+           (data (buffer-substring-no-properties start end))
            (found nil))
       (forward-char)
       (let ((string-start (search-forward-regexp "[^\\\\]'" nil t)))
         (if string-start
             (progn
-              ;; (message "Single quoted string %s" (buffer-substring start string-start))
+              ;; (message "Single quoted string %s" (buffer-substring-no-properties start string-start))
               (phps-mode/RETURN_TOKEN 'T_CONSTANT_ENCAPSED_STRING start string-start))
           (progn
             ;; Handle the '' case
@@ -850,7 +850,7 @@
    ((looking-at "\"")
     (let* ((start (match-beginning 0))
            (end (match-end 0))
-           (data (buffer-substring start end)))
+           (data (buffer-substring-no-properties start end)))
       (forward-char)
       (let ((string-start (search-forward-regexp (concat
                                                   "\\([^\\\\]\""
@@ -866,11 +866,11 @@
               (goto-char string-start)
               (if (looking-at "[^\\\\]\"")
                   (progn
-                    (let ((double-quoted-string (buffer-substring start (+ string-start 2))))
+                    (let ((double-quoted-string (buffer-substring-no-properties start (+ string-start 2))))
                       ;; (message "Double quoted string: %s" double-quoted-string)
                       (phps-mode/RETURN_TOKEN 'T_CONSTANT_ENCAPSED_STRING start (+ string-start 2))))
                 (progn
-                  ;; (message "Found variable after '%s'" (buffer-substring start (point)))
+                  ;; (message "Found variable after '%s'" (buffer-substring-no-properties start (point)))
                   (phps-mode/BEGIN phps-mode/ST_DOUBLE_QUOTES)
                   (phps-mode/RETURN_TOKEN "\"" start (+ start 1))
                   (phps-mode/RETURN_TOKEN 'T_ENCAPSED_AND_WHITESPACE (+ start 1) string-start))))
@@ -894,7 +894,7 @@
    ((looking-at phps-mode/WHITESPACE)
     (let* ((start (match-beginning 0))
            (end (match-end 0))
-           (data (buffer-substring start end)))
+           (data (buffer-substring-no-properties start end)))
       (if phps-mode/PARSER_MODE
           (phps-mode/MOVE_FORWARD end)
         (phps-mode/RETURN_TOKEN data start end))))
@@ -907,7 +907,7 @@
 
    ((looking-at phps-mode/ANY_CHAR)
     ;; Unexpected character
-    ;; (message "Unexpected character '%s'" (buffer-substring (match-beginning 0) (match-end 0)))
+    ;; (message "Unexpected character '%s'" (buffer-substring-no-properties (match-beginning 0) (match-end 0)))
     (phps-mode/RETURN_TOKEN 'T_ERROR (match-beginning 0) (point-max))
     (phps-mode/MOVE_FORWARD (point-max)))
 
@@ -926,7 +926,7 @@
    ((looking-at phps-mode/WHITESPACE)
     (let* ((start (match-beginning 0))
            (end (match-end 0))
-           (data (buffer-substring start end)))
+           (data (buffer-substring-no-properties start end)))
       (if phps-mode/PARSER_MODE
           (phps-mode/MOVE_FORWARD end)
         (phps-mode/RETURN_TOKEN 'T_WHITESPACE start end))
@@ -995,7 +995,7 @@
       (let ((string-start (search-forward-regexp "[^\\\\]\"" nil t)))
         (if string-start
             (let* ((end (- (match-end 0) 1))
-                   (double-quoted-string (buffer-substring start end)))
+                   (double-quoted-string (buffer-substring-no-properties start end)))
               ;; Do we find variable inside quote?
               (if (or (string-match (concat "\\$" phps-mode/LABEL) double-quoted-string)
                       (string-match (concat "\\${" phps-mode/LABEL) double-quoted-string)
@@ -1006,7 +1006,7 @@
                       ))
                 (progn
                   (phps-mode/RETURN_TOKEN 'T_CONSTANT_ENCAPSED_STRING start end)
-                  ;; (message "Found end of quote at %s-%s, moving ahead after '%s'" start end (buffer-substring start end))
+                  ;; (message "Found end of quote at %s-%s, moving ahead after '%s'" start end (buffer-substring-no-properties start end))
                   )))
           (progn
             ;; "Found no end of double-quoted region
@@ -1055,11 +1055,11 @@ ANY_CHAR'
           (let ((string-start (search-forward-regexp "\\([^\\\\]`\\|\\$\\|{\\)" nil t)))
             (if string-start
                 (let ((start (- (match-end 0) 1)))
-                  ;; (message "Skipping backquote forward over %s" (buffer-substring old-start start))
+                  ;; (message "Skipping backquote forward over %s" (buffer-substring-no-properties old-start start))
                   (phps-mode/RETURN_TOKEN 'T_CONSTANT_ENCAPSED_STRING old-start start)
                   )
               (progn
-                ;; (message "Found no end of backquote.. skipping to end from %s" (buffer-substring (point) (point-max)))
+                ;; (message "Found no end of backquote.. skipping to end from %s" (buffer-substring-no-properties (point) (point-max)))
                 (phps-mode/RETURN_TOKEN 'T_ERROR old-start (point-max))
                 (phps-mode/MOVE_FORWARD (point-max))))))
 
@@ -1100,13 +1100,13 @@ ANY_CHAR'
       (phps-mode/RETURN_TOKEN 'T_CURLY_OPEN (match-beginning 0) (- (match-end 0) 1)))
 
      ((looking-at phps-mode/ANY_CHAR)
-      ;; (message "Found nothing useful at '%s' looking at {$ %s" (buffer-substring (point) (point-max)) (looking-at "{\\$"))
+      ;; (message "Found nothing useful at '%s' looking at {$ %s" (buffer-substring-no-properties (point) (point-max)) (looking-at "{\\$"))
       ;; Check for $, ${ and {$ forward
       (let ((string-start (search-forward-regexp (concat "\\(\n" heredoc_label ";?\n\\|\\$" phps-mode/LABEL "\\|{\\$" phps-mode/LABEL "\\|\\${" phps-mode/LABEL "\\)") nil t)))
         (if string-start
             (let* ((start (match-beginning 0))
                    (end (match-end 0))
-                   (data (buffer-substring start end)))
+                   (data (buffer-substring-no-properties start end)))
               ;; (message "Found something ending at %s" data)
 
               (cond
@@ -1123,7 +1123,7 @@ ANY_CHAR'
 
                ))
           (progn
-            ;; (message "Found no ending of heredoc at %s '%s'" heredoc_label (buffer-substring (point) (point-max)))
+            ;; (message "Found no ending of heredoc at %s '%s'" heredoc_label (buffer-substring-no-properties (point) (point-max)))
             (phps-mode/RETURN_TOKEN 'T_ERROR old-start (point-max))
             (phps-mode/MOVE_FORWARD (point-max))
             ))))
@@ -1144,14 +1144,14 @@ ANY_CHAR'
         (if string-start
             (let* ((start (match-beginning 0))
                    (end (match-end 0))
-                   (data (buffer-substring start end)))
+                   (data (buffer-substring-no-properties start end)))
               ;; (message "Found something ending at %s" data)
               ;; (message "Found nowdoc end at %s-%s" start end)
               (phps-mode/BEGIN phps-mode/ST_END_HEREDOC)
               (phps-mode/RETURN_TOKEN 'T_ENCAPSED_AND_WHITESPACE old-start start)
               )
           (progn
-            ;; (message "Found no ending of nowdoc at %s '%s'" heredoc_label (buffer-substring (point) (point-max)))
+            ;; (message "Found no ending of nowdoc at %s '%s'" heredoc_label (buffer-substring-no-properties (point) (point-max)))
             (phps-mode/RETURN_TOKEN 'T_ERROR old-start (point-max))
             (phps-mode/MOVE_FORWARD (point-max))
             ))))
@@ -1186,7 +1186,7 @@ ANY_CHAR'
 
       (let* ((start (match-beginning 0))
              (end (+ start (length heredoc_label) 1))
-             (data (buffer-substring start end)))
+             (data (buffer-substring-no-properties start end)))
         ;; (message "Found ending heredoc at %s, %s of %s" data (thing-at-point 'line) heredoc_label)
         (pop phps-mode/heredoc_label_stack)
         (phps-mode/BEGIN phps-mode/ST_IN_SCRIPTING)
@@ -1227,7 +1227,7 @@ ANY_CHAR'
                         "\\|[{}\"`]\\)"))
     (let* ((start (match-beginning 0))
            (end (match-end 0))
-           (data (buffer-substring start end)))
+           (data (buffer-substring-no-properties start end)))
       (phps-mode/RETURN_TOKEN data start end)))
 
    ((looking-at (concat "[ \n\r\t'#]"))
