@@ -431,6 +431,24 @@
 
    ))
 
+(defun phps-modex/lex--get-next-unescaped (character)
+  "Find where next un-escaped CHARACTER comes, if none is found return nil."
+  ;; (message "phps-modex/lex--get-next-unescaped(%s)" character)
+  (let ((escaped nil)
+        (pos nil))
+    (while (and (not pos)
+                (< (point) (point-max)))
+      (progn
+        ;; (message "Setting forward one %s vs %s" (point) (point-max))
+        (forward-char)
+        (if (and (not escaped)
+                 (looking-at-p character))
+            (setq pos (+ (point) 1))
+          (if (looking-at-p "\\\\")
+              (setq escaped (not escaped))
+            (setq escaped nil)))))
+    pos))
+
 (define-lex-analyzer phps-mode/lex--ST_IN_SCRIPTING
   "<ST_IN_SCRIPTING>"
   (= phps-mode/STATE phps-mode/ST_IN_SCRIPTING)
@@ -825,25 +843,18 @@
     (let* ((start (match-beginning 0))
            (end (match-end 0))
            (data (buffer-substring-no-properties start end))
-           (found nil))
-      (forward-char)
-      ;; Handle the '' case
-      (if (looking-at-p "'")
+           (found nil)
+           (un-escaped-end (phps-modex/lex--get-next-unescaped "'")))
+      (if un-escaped-end
           (progn
-            ;; (message "Empty single quoted string from %s to %s" start (+ start 2))
-            (phps-mode/RETURN_TOKEN 'T_CONSTANT_ENCAPSED_STRING start (+ start 2))
-            (forward-char))
-        (let ((string-start (search-forward-regexp "[^\\\\]'" nil t)))
-          (if string-start
-              (progn
-                ;; (message "Single quoted string %s" (buffer-substring-no-properties start string-start))
-                (phps-mode/RETURN_TOKEN 'T_CONSTANT_ENCAPSED_STRING start string-start))
-            (progn
-              ;; Unclosed single quotes
-              ;; (message "Single quoted string never ends..")
-              (phps-mode/RETURN_TOKEN 'T_ENCAPSED_AND_WHITESPACE start (point-max))
-              (phps-mode/MOVE_FORWARD (point-max))
-              ))))))
+            ;; (message "Single quoted string %s" (buffer-substring-no-properties start un-escaped-end))
+            (phps-mode/RETURN_TOKEN 'T_CONSTANT_ENCAPSED_STRING start un-escaped-end))
+        (progn
+          ;; Unclosed single quotes
+          ;; (message "Single quoted string never ends..")
+          (phps-mode/RETURN_TOKEN 'T_ENCAPSED_AND_WHITESPACE start (point-max))
+          (phps-mode/MOVE_FORWARD (point-max))
+          ))))
 
    ;; Double quoted string
    ((looking-at "\"")

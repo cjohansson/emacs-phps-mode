@@ -25,6 +25,7 @@ class MyClass {
             $this->var = '';
         }
         $this->var = 'abc';
+        $this->var = '\\';
     }
 
 }
