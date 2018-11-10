@@ -1246,6 +1246,12 @@ ANY_CHAR'
 
    ))
 
+(defun phps-mode/lex--SETUP (start end)
+  "Just prepare other lexers for lexing region START to END."
+  (when (eq start 1)
+    ;; (message "SETUP %s %s" start end)
+    (phps-mode/BEGIN phps-mode/ST_INITIAL)))
+
 
 (define-lex phps-mode/tags-lexer
   "Lexer that handles PHP buffers."
@@ -1267,8 +1273,8 @@ ANY_CHAR'
   "Initialize lexer."
   (when (boundp 'phps-mode/syntax-table)
     (setq semantic-lex-syntax-table phps-mode/syntax-table))
-  (phps-mode/BEGIN phps-mode/ST_INITIAL)
   (setq semantic-lex-analyzer #'phps-mode/tags-lexer)
+  (add-hook 'semantic-lex-reset-functions #'phps-mode/lex--SETUP)
   (setq phps-mode/lexer-tokens (semantic-lex-buffer)))
 
 (provide 'phps-mode/lexer)
