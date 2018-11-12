@@ -138,6 +138,10 @@
    (should (equal phps-mode/lexer-tokens
                   '((T_OPEN_TAG 1 . 7) (T_COMMENT 7 . 24) (";" 24 . 26) (T_CLOSE_TAG 24 . 26)))))
 
+  (phps-mode/with-test-buffer
+   "<?php //echo $contact_position;?><!--</div>-->"
+   (should (equal phps-mode/lexer-tokens
+                  '((T_OPEN_TAG 1 . 7) (T_COMMENT 7 . 32) (";" 32 . 34) (T_CLOSE_TAG 32 . 34))
 
 
   (phps-mode/with-test-buffer
