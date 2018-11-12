@@ -779,13 +779,15 @@
     (let* ((start (match-beginning 0))
            (end (match-end 0))
            (data (buffer-substring-no-properties start end))
-           (line (buffer-substring-no-properties (line-beginning-position) (line-end-position))))
+           (line (buffer-substring-no-properties end (line-end-position))))
       (if (string-match "\\?>" line)
           (progn
-            (phps-mode/RETURN_TOKEN 'T_COMMENT start (match-end 0))
+            ;; (message "Found comment 1 from %s to %s %s in %s" end (+ end (match-beginning 0)) (match-beginning 0) line)
+            (phps-mode/RETURN_TOKEN 'T_COMMENT start (+ end (match-beginning 0)))
             )
         (progn
           ;; TODO Handle expecting values here
+          ;; (message "Found comment 2 from %s to %s" start (line-end-position))
           (phps-mode/RETURN_TOKEN 'T_COMMENT start (line-end-position))
           ))))
 
