@@ -38,20 +38,17 @@
 
 (defun phps-mode/indent-line ()
   "Indent line."
-  (save-excursion
-    (move-beginning-of-line nil)
-    )
   )
 
 (defun phps-mode/indent-region ()
-  "Indent region.")
+  "Indent region."
+  )
 
 (defun phps-mode/functions-init ()
   "PHP specific init-cleanup routines."
 
-  ;; (set (make-local-variable 'indent-line-function) 'phps-mode/indent-line)
-  ;; (set (make-local-variable 'indent-line-function) 'phps-mode/indent-region)
-
+  ;; (set (make-local-variable 'indent-line-function) #'phps-mode/indent-line)
+  ;; (set (make-local-variable 'indent-line-function) #'phps-mode/indent-region)
   )
 
 

@@ -1255,12 +1255,31 @@ ANY_CHAR'
 
    ))
 
+(defun phps-mode/lexer-get-point-data()
+  "Return information about point in tokens."
+  (message "Point: %s in %s" (point) phps-mode/lexer-tokens)
+  (dolist (item phps-mode/lexer-tokens)
+    )
+  )
+
 (defun phps-mode/lex--SETUP (start end)
   "Just prepare other lexers for lexing region START to END."
   (when (eq start 1)
     ;; (message "SETUP %s %s" start end)
     (phps-mode/BEGIN phps-mode/ST_INITIAL)))
 
+;; TODO This function should track between what min and max region a specific buffer has been modified and then re-run lexer for that region when editor is idle, maybe use (buffer-name))
+;; maybe use 'auto-save-hook for this
+(defun phps-mode/after-change-functions (start stop length)
+  "Track buffer change from START to STOP with length LENGTH."
+  (when (string= major-mode "phps-mode")
+    ;; (message "phps-mode/after-change-functions %s %s %s" start stop length)
+  ))
+
+(defun phps-mode/lex--RUN ()
+  "Run lexer."
+  (interactive)
+  (setq phps-mode/lexer-tokens (semantic-lex-buffer)))
 
 (define-lex phps-mode/tags-lexer
   "Lexer that handles PHP buffers."
@@ -1284,7 +1303,8 @@ ANY_CHAR'
     (setq semantic-lex-syntax-table phps-mode/syntax-table))
   (setq semantic-lex-analyzer #'phps-mode/tags-lexer)
   (add-hook 'semantic-lex-reset-functions #'phps-mode/lex--SETUP)
-  (setq phps-mode/lexer-tokens (semantic-lex-buffer)))
+  (add-hook 'after-change-functions #'phps-mode/after-change-functions)
+  (phps-mode/lex--RUN))
 
 (provide 'phps-mode/lexer)
 

@@ -54,8 +54,6 @@
      (kill-buffer test-buffer)
      ))
 
-(defun phps-mode/token-stream-to-string (IGNORE))
-
 (defun phps-mode/test-lexer--script-boundaries ()
   "Run test for lexer."
 
@@ -239,7 +237,15 @@
    (should (equal phps-mode/lexer-tokens
                   '((T_OPEN_TAG 1 . 7) (T_START_HEREDOC 7 . 16) (T_ERROR 16 . 55)))))
 
-)
+  )
+
+(defun phps-mode/test-lexer-get-point-data ()
+  "Return information about point in tokens."
+  (phps-mode/with-test-buffer
+   "<?php\nNAMESPACE MyNameSpace;\nCLASS MyClass {\n\tpublic function __construct() {\n\t\texit;\n\t}\n}\n"
+   (goto-char 30)
+   (phps-mode/lexer-get-point-data))
+  )
 
 (defun phps-mode/test-lexer ()
   "Run test for lexer."
@@ -250,6 +256,7 @@
   (phps-mode/test-lexer--complex-tokens)
   (phps-mode/test-lexer--namespaces)
   (phps-mode/test-lexer--errors)
+  (phps-mode/test-lexer-get-point-data)
   ;; (message "\n-- Ran all tests for lexer. --")
   )
 

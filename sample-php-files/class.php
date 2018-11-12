@@ -28,4 +28,9 @@ class MyClass {
         $this->var = '\\';
     }
 
+    public function heres_more_information() {
+        $var = '23ac';
+        $var2 = '123';
+    }
+
 }
