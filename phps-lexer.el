@@ -1257,10 +1257,38 @@ ANY_CHAR'
 
 (defun phps-mode/lexer-get-point-data()
   "Return information about point in tokens."
-  (message "Point: %s in %s" (point) phps-mode/lexer-tokens)
-  (dolist (item phps-mode/lexer-tokens)
-    )
-  )
+  ;; (message "Point: %s in %s" (point) phps-mode/lexer-tokens)
+  (let ((position (point))
+        (in-scripting nil)
+        (brace-level 0)
+        (parenthesis-level 0)
+        (inline-function-level 0))
+    (catch 'stop-iteration
+      (dolist (item phps-mode/lexer-tokens)
+        (let ((token (car item))
+              (start (car (cdr item)))
+              (end (cdr (cdr item))))
+          ;; (message "Token: %s Start: %s End: %s Item: %s" token start end item)
+
+          (when (> start position)
+            ;; (message "Stopping iteration at: %s %s" start position)
+            (throw 'stop-iteration nil))
+
+          (pcase token
+            ('T_OPEN_TAG (setq in-scripting t))
+            ('T_OPEN_TAG_WITH_ECHO (setq in-scripting t))
+            ('T_CLOSE_TAG (setq in-scripting nil))
+            ("{" (setq brace-level (+ brace-level 1)))
+            ("}" (setq brace-level (- brace-level 1)))
+            ("(" (setq parenthesis-level (+ parenthesis-level 1)))
+            (")" (setq parenthesis-level (- parenthesis-level 1)))
+            (_))
+          
+          )))
+    (let ((data (list in-scripting brace-level parenthesis-level inline-function-level)))
+      ;; (message "data: %s" data)
+      data)
+    ))
 
 (defun phps-mode/lex--SETUP (start end)
   "Just prepare other lexers for lexing region START to END."

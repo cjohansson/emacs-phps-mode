@@ -239,12 +239,19 @@
 
   )
 
-(defun phps-mode/test-lexer-get-point-data ()
+(defun phps-mode/test-lexer--get-point-data ()
   "Return information about point in tokens."
+
   (phps-mode/with-test-buffer
    "<?php\nNAMESPACE MyNameSpace;\nCLASS MyClass {\n\tpublic function __construct() {\n\t\texit;\n\t}\n}\n"
    (goto-char 30)
-   (phps-mode/lexer-get-point-data))
+   (should (equal (list t 1 0 0) (phps-mode/lexer-get-point-data))))
+
+  (phps-mode/with-test-buffer
+   "<html><head><title><?php echo $title; ?></title><body>Bla bla</body></html>"
+   (goto-char 15)
+   (should (equal (list nil 0 0 0) (phps-mode/lexer-get-point-data))))
+
   )
 
 (defun phps-mode/test-lexer ()
@@ -256,7 +263,7 @@
   (phps-mode/test-lexer--complex-tokens)
   (phps-mode/test-lexer--namespaces)
   (phps-mode/test-lexer--errors)
-  (phps-mode/test-lexer-get-point-data)
+  (phps-mode/test-lexer--get-point-data)
   ;; (message "\n-- Ran all tests for lexer. --")
   )
 
