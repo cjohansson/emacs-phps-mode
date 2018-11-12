@@ -252,6 +252,36 @@
    (goto-char 15)
    (should (equal (list nil 0 0 0) (phps-mode/lexer-get-point-data))))
 
+  (phps-mode/with-test-buffer
+   "<html><head><title><?php echo $title; ?></title><body>Bla bla</body></html>"
+   (goto-char 30)
+   (should (equal (list t 0 0 0) (phps-mode/lexer-get-point-data))))
+
+  (phps-mode/with-test-buffer
+   "<html><head><title><?php echo $title; ?></title><body>Bla bla</body></html>"
+   (goto-char 50)
+   (should (equal (list nil 0 0 0) (phps-mode/lexer-get-point-data))))
+
+  (phps-mode/with-test-buffer
+   "<html><head><title><?php if ($myCondition) { if ($mySeconCondition) { echo $title; } } ?></title><body>Bla bla</body></html>"
+   (goto-char 60)
+   (should (equal (list t 1 1 0) (phps-mode/lexer-get-point-data))))
+
+  (phps-mode/with-test-buffer
+   "<html><head><title><?php if ($myCondition) { if ($mySeconCondition) { echo $title; } } ?></title><body>Bla bla</body></html>"
+   (goto-char 70)
+   (should (equal (list t 2 0 0) (phps-mode/lexer-get-point-data))))
+
+  (phps-mode/with-test-buffer
+   "<html><head><title><?php if ($myCondition) { if ($mySeconCondition) { echo $title; } } ?></title><body>Bla bla</body></html>"
+   (goto-char 85)
+   (should (equal (list t 1 0 0) (phps-mode/lexer-get-point-data))))
+
+  (phps-mode/with-test-buffer
+   "<html><head><title><?php if ($myCondition) { if ($mySeconCondition) { echo $title; } } ?></title><body>Bla bla</body></html>"
+   (goto-char 100)
+   (should (equal (list nil 0 0 0) (phps-mode/lexer-get-point-data))))
+
   )
 
 (defun phps-mode/test-lexer ()
