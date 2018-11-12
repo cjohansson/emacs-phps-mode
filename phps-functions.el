@@ -38,7 +38,14 @@
 
 (defun phps-mode/indent-line ()
   "Indent line."
-  )
+  (let ((data (phps-mode/lexer-get-point-data)))
+    (if (nth 0 data)
+        (progn
+          (message "inside scripting %s" data)
+          (indent-line-to (nth 1 data)))
+      (progn
+        (message "Outside scripting %s" data)
+        (indent-relative)))))
 
 (defun phps-mode/indent-region ()
   "Indent region."
@@ -47,7 +54,7 @@
 (defun phps-mode/functions-init ()
   "PHP specific init-cleanup routines."
 
-  ;; (set (make-local-variable 'indent-line-function) #'phps-mode/indent-line)
+  (set (make-local-variable 'indent-line-function) #'phps-mode/indent-line)
   ;; (set (make-local-variable 'indent-line-function) #'phps-mode/indent-region)
   )
 
