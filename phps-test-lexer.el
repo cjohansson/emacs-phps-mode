@@ -141,7 +141,7 @@
   (phps-mode/with-test-buffer
    "<?php //echo $contact_position;?><!--</div>-->"
    (should (equal phps-mode/lexer-tokens
-                  '((T_OPEN_TAG 1 . 7) (T_COMMENT 7 . 32) (";" 32 . 34) (T_CLOSE_TAG 32 . 34))
+                  '((T_OPEN_TAG 1 . 7) (T_COMMENT 7 . 32) (";" 32 . 34) (T_CLOSE_TAG 32 . 34)))))
 
 
   (phps-mode/with-test-buffer
@@ -284,9 +284,10 @@
    (should (equal (list nil 0 0 0) (phps-mode/lexer-get-point-data))))
 
   (phps-mode/with-test-buffer
-   "<html><head><title><?php if ($myCondition) { if ($mySeconCondition) { echo $title; } } ?></title><body>Bla bla</body></html>"
-   (goto-char 60)
-   (should (equal (list t 1 1 0) (phps-mode/lexer-get-point-data))))
+   "<html><head><title><?php if ($myCondition) {      if ($mySeconCondition) { echo $title; } } ?></title><body>Bla bla</body></html>"
+   ;; (message "Tokens: %s" phps-mode/lexer-tokens)
+   (goto-char 48)
+   (should (equal (list t 1 0 0) (phps-mode/lexer-get-point-data))))
 
   (phps-mode/with-test-buffer
    "<html><head><title><?php if ($myCondition) { if ($mySeconCondition) { echo $title; } } ?></title><body>Bla bla</body></html>"
