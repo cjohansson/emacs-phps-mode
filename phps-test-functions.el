@@ -66,6 +66,14 @@
    (let ((buffer-contents (buffer-substring-no-properties (point-min) (point-max))))
      (should (equal buffer-contents  "<html><head><title><?php if ($myCondition) {\nif ($mySeconCondition) {\necho $title;\n\n        } ?></title><body>Bla bla</body></html>"))))
 
+  (phps-mode/with-test-buffer
+   "<html><head><title><?php if ($myCondition) {\nif ($mySeconCondition) {\necho $title;\n\n}\n?>\n</title><body>Bla bla</body></html>"
+
+   (goto-char 110)
+   (phps-mode/indent-line)
+   (let ((buffer-contents (buffer-substring-no-properties (point-min) (point-max))))
+     (should (equal buffer-contents  "<html><head><title><?php if ($myCondition) {\nif ($mySeconCondition) {\necho $title;\n\n}\n?>\n</title><body>Bla bla</body></html>"))))
+
   )
 
 (defun phps-mod/test-functions ()

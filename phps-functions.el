@@ -51,7 +51,8 @@
               (indent-line-to indent-level))
           (progn
             (message "Outside scripting %s" start)
-            (indent-relative)))))))
+            ;; (indent-relative)
+            ))))))
 
 (defun phps-mode/indent-region ()
   "Indent region."
