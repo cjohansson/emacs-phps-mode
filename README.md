@@ -10,12 +10,12 @@ With current progress estimates:
 * Lexer based on official PHP re2c lexer (100%)
 * Syntax coloring based on lexer tokens (100%)
 * Incremental lexer and syntax coloring after changes (0%)
-* PSR based indentation based on lexer tokens (20%)
+* PSR based indentation based on lexer tokens (50%)
 * Wisent LALR parser based on official PHP yacc parser automatically converted (60%)
 * Flymake support (0%)
 * Full integration with Emacs Semantic subsystem (0%)
 
-## Unit testing
+## Unit tests
 
 Not ready yet.
 
@@ -29,4 +29,10 @@ make test-lexer
 
 ``` bash
 make test-parser
+```
+
+### Indentation
+
+``` bash
+make test-functions
 ```

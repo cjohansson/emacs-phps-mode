@@ -37,22 +37,10 @@
 ;;; Code:
 
 
-(autoload 'phps-mode "phps-mode")
+(autoload 'phps-mode/with-test-buffer "phps-test")
 (autoload 'phps-mode/lexer-init "phps-lexer")
-
-(require 'ert)
-
-(defmacro phps-mode/with-test-buffer (source &rest body)
-  "Set up test buffer with SOURCE and BODY."
-  `(let ((test-buffer (generate-new-buffer "test")))
-     (switch-to-buffer test-buffer)
-     (insert ,source)
-     (goto-char 0)
-     ;;,(message "\nTesting buffer:\n'%s'\n" source)
-     (phps-mode)
-     ,@body
-     (kill-buffer test-buffer)
-     ))
+(autoload 'phps-mode/lexer-get-point-data "phps-lexer")
+(autoload 'should "ert")
 
 (defun phps-mode/test-lexer--script-boundaries ()
   "Run test for lexer."
@@ -308,31 +296,6 @@
 
   )
 
-(defun phps-mode/test-indentation ()
-  "Test for indentation."
-  (phps-mode/with-test-buffer
-   "<html><head><title><?php if ($myCondition) {\nif ($mySeconCondition) {\necho $title;\n\n} ?></title><body>Bla bla</body></html>"
-   (goto-char 69)
-   (phps-mode/indent-line)
-   (let ((buffer-contents (buffer-substring-no-properties (point-min) (point-max))))
-     (should (equal buffer-contents  "<html><head><title><?php if ($myCondition) {\n    if ($mySeconCondition) {\necho $title;\n\n} ?></title><body>Bla bla</body></html>"))))
-
-  (phps-mode/with-test-buffer
-   "<html><head><title><?php if ($myCondition) {\nif ($mySeconCondition) {\necho $title;\n\n} ?></title><body>Bla bla</body></html>"
-   (goto-char 80)
-   (phps-mode/indent-line)
-   (let ((buffer-contents (buffer-substring-no-properties (point-min) (point-max))))
-     (should (equal buffer-contents  "<html><head><title><?php if ($myCondition) {\nif ($mySeconCondition) {\n        echo $title;\n\n} ?></title><body>Bla bla</body></html>"))))
-
-  (phps-mode/with-test-buffer
-   "<html><head><title><?php if ($myCondition) {\nif ($mySeconCondition) {\necho $title;\n\n} ?></title><body>Bla bla</body></html>"
-   (goto-char 98)
-   (phps-mode/indent-line)
-   (let ((buffer-contents (buffer-substring-no-properties (point-min) (point-max))))
-     (should (equal buffer-contents  "<html><head><title><?php if ($myCondition) {\nif ($mySeconCondition) {\necho $title;\n\n} ?></title><body>Bla bla</body></html>"))))
-
-  )
-
 (defun phps-mode/test-lexer ()
   "Run test for lexer."
   ;; (message "-- Running all tests for lexer... --\n")
@@ -343,7 +306,6 @@
   (phps-mode/test-lexer--namespaces)
   (phps-mode/test-lexer--errors)
   (phps-mode/test-lexer--get-point-data)
-  (phps-mode/test-indentation)
   ;; (message "\n-- Ran all tests for lexer. --")
   )
 
