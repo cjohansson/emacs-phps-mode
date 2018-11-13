@@ -17,7 +17,7 @@ class MyClass {
     }
 
     public function myMethod2() {
-       echo "Some stuff here 2";
+        echo "Some stuff here 2";
     }
 
     public function myMethod3() {

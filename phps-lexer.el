@@ -1261,6 +1261,7 @@ ANY_CHAR'
   "Return information about point in tokens."
   ;; (message "Point: %s in %s" (point) phps-mode/lexer-tokens)
   (let ((position (point))
+        (line-end (line-end-position))
         (in-scripting nil)
         (brace-level 0)
         (parenthesis-level 0)
@@ -1272,19 +1273,26 @@ ANY_CHAR'
               (end (cdr (cdr item))))
           ;; (message "Token: %s Start: %s End: %s Item: %s" token start end item)
 
-          (when (> start position)
+          (when (> start line-end)
             ;; (message "Stopping iteration at: %s %s" start position)
             (throw 'stop-iteration nil))
 
-          (pcase token
-            ('T_OPEN_TAG (setq in-scripting t))
-            ('T_OPEN_TAG_WITH_ECHO (setq in-scripting t))
-            ('T_CLOSE_TAG (setq in-scripting nil))
-            ("{" (setq brace-level (+ brace-level 1)))
-            ("}" (setq brace-level (- brace-level 1)))
-            ("(" (setq parenthesis-level (+ parenthesis-level 1)))
-            (")" (setq parenthesis-level (- parenthesis-level 1)))
-            (_))
+          ;; When start of token is equal or less to current point
+          (when (<= start position)
+            (pcase token
+              ('T_OPEN_TAG (setq in-scripting t))
+              ('T_OPEN_TAG_WITH_ECHO (setq in-scripting t))
+              ('T_CLOSE_TAG (setq in-scripting nil))
+              ("{" (setq brace-level (+ brace-level 1)))
+              ("(" (setq parenthesis-level (+ parenthesis-level 1)))
+              (")" (setq parenthesis-level (- parenthesis-level 1)))
+              (_)))
+
+          ;; When start of token is equal or less to end of curent line
+          (when (<= start line-end)
+            (pcase token
+              ("}" (setq brace-level (- brace-level 1)))
+              (_)))
           
           )))
     (let ((data (list in-scripting brace-level parenthesis-level inline-function-level)))

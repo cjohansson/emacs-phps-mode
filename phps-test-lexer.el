@@ -306,6 +306,23 @@
 
   )
 
+(defun phps-mode/test-indentation ()
+  "Test for indentation."
+  (phps-mode/with-test-buffer
+   "<html><head><title><?php if ($myCondition) {\nif ($mySeconCondition) {\necho $title;\n\n} ?></title><body>Bla bla</body></html>"
+   (goto-char 69)
+   (phps-mode/indent-line)
+   (let ((buffer-contents (buffer-substring-no-properties (point-min) (point-max))))
+     (should (equal buffer-contents  "<html><head><title><?php if ($myCondition) {\n    if ($mySeconCondition) {\necho $title;\n\n} ?></title><body>Bla bla</body></html>")))
+   (goto-char 85)
+   (phps-mode/indent-line)
+   (let ((buffer-contents (buffer-substring-no-properties (point-min) (point-max))))
+     (should (equal buffer-contents  "<html><head><title><?php if ($myCondition) {\n    if ($mySeconCondition) {\n        echo $title;\n\n} ?></title><body>Bla bla</body></html>")))
+   (goto-char 98)
+   (phps-mode/indent-line)
+   (let ((buffer-contents (buffer-substring-no-properties (point-min) (point-max))))
+     (should (equal buffer-contents  "<html><head><title><?php if ($myCondition) {\n    if ($mySeconCondition) {\n        echo $title;\n\n    } ?></title><body>Bla bla</body></html>")))))
+
 (defun phps-mode/test-lexer ()
   "Run test for lexer."
   ;; (message "-- Running all tests for lexer... --\n")
@@ -316,6 +333,7 @@
   (phps-mode/test-lexer--namespaces)
   (phps-mode/test-lexer--errors)
   (phps-mode/test-lexer--get-point-data)
+  (phps-mode/test-indentation)
   ;; (message "\n-- Ran all tests for lexer. --")
   )
 
