@@ -231,13 +231,14 @@
 
   (phps-mode/with-test-buffer
    "<?php\nnamespace MyNameSpace{\n\tclass MyClass {\n\t\tpublic function __construct() {\n\t\t\texit;\n\t\t}\n\t}\n}\n"
+   
    (should (equal phps-mode/lexer-tokens
                   '((T_OPEN_TAG 1 . 7) (T_NAMESPACE 7 . 16) (T_STRING 17 . 28) ("{" 28 . 29) (T_CLASS 31 . 36) (T_STRING 37 . 44) ("{" 45 . 46) (T_PUBLIC 49 . 55) (T_FUNCTION 56 . 64) (T_STRING 65 . 76) ("(" 76 . 77) (")" 77 . 78) ("{" 79 . 80) (T_EXIT 84 . 88) (";" 88 . 89) ("}" 92 . 93) ("}" 95 . 96) ("}" 97 . 98)))))
 
   (phps-mode/with-test-buffer
    "<?php\nNAMESPACE MyNameSpace;\nCLASS MyClass {\n\tpublic function __construct() {\n\t\texit;\n\t}\n}\n"
    (should (equal phps-mode/lexer-tokens
-                  '((T_OPEN_TAG 1 . 7) (T_NAMESPACE 7 . 16) (T_STRING 17 . 28) ("{" 28 . 29) (T_CLASS 30 . 35) (T_STRING 36 . 43) ("{" 44 . 45) (T_PUBLIC 47 . 53) (T_FUNCTION 54 . 62) (T_STRING 63 . 74) ("(" 74 . 75) (")" 75 . 76) ("{" 77 . 78) (T_EXIT 81 . 85) (";" 85 . 86) ("}" 88 . 89) ("}" 90 . 91) ("}" 90 . 91)))))
+                  '((T_OPEN_TAG 1 . 7) (T_NAMESPACE 7 . 16) (T_STRING 17 . 28) (";" 28 . 29) (T_CLASS 30 . 35) (T_STRING 36 . 43) ("{" 44 . 45) (T_PUBLIC 47 . 53) (T_FUNCTION 54 . 62) (T_STRING 63 . 74) ("(" 74 . 75) (")" 75 . 76) ("{" 77 . 78) (T_EXIT 81 . 85) (";" 85 . 86) ("}" 88 . 89) ("}" 90 . 91)))))
   )
 
 (defun phps-mode/test-lexer--errors ()
@@ -265,44 +266,45 @@
 
   (phps-mode/with-test-buffer
    "<?php\nNAMESPACE MyNameSpace;\nCLASS MyClass {\n\tpublic function __construct() {\n\t\texit;\n\t}\n}\n"
-   (goto-char 30)
-   (should (equal (list t 1 0 0) (phps-mode/lexer-get-point-data))))
+   (goto-char 35)
+   (should (equal (list (list t 0 0 0) (list t 1 0 0)) (phps-mode/lexer-get-point-data))))
 
   (phps-mode/with-test-buffer
    "<html><head><title><?php echo $title; ?></title><body>Bla bla</body></html>"
    (goto-char 15)
-   (should (equal (list nil 0 0 0) (phps-mode/lexer-get-point-data))))
+   (should (equal (list (list nil 0 0 0) (list nil 0 0 0)) (phps-mode/lexer-get-point-data))))
 
   (phps-mode/with-test-buffer
    "<html><head><title><?php echo $title; ?></title><body>Bla bla</body></html>"
    (goto-char 30)
-   (should (equal (list t 0 0 0) (phps-mode/lexer-get-point-data))))
+   (should (equal (list (list nil 0 0 0) (list nil 0 0 0)) (phps-mode/lexer-get-point-data))))
 
   (phps-mode/with-test-buffer
    "<html><head><title><?php echo $title; ?></title><body>Bla bla</body></html>"
    (goto-char 50)
-   (should (equal (list nil 0 0 0) (phps-mode/lexer-get-point-data))))
+   (should (equal (list (list nil 0 0 0) (list nil 0 0 0)) (phps-mode/lexer-get-point-data))))
 
   (phps-mode/with-test-buffer
-   "<html><head><title><?php if ($myCondition) {      if ($mySeconCondition) { echo $title; } } ?></title><body>Bla bla</body></html>"
+   "<html><head><title><?php if ($myCondition) { \n   if ($mySeconCondition) { echo $title; } } ?></title><body>Bla bla</body></html>"
    ;; (message "Tokens: %s" phps-mode/lexer-tokens)
    (goto-char 48)
-   (should (equal (list t 1 0 0) (phps-mode/lexer-get-point-data))))
+   (should (equal (list (list t 1 0 0) (list nil 0 0 0)) (phps-mode/lexer-get-point-data))))
+
+  (phps-mode/with-test-buffer
+   "<html><head><title><?php if ($myCondition) { if ($mySeconCondition) {\n echo $title;\n} } ?></title><body>Bla bla</body></html>"
+   (goto-char 72)
+   (should (equal (list (list t 2 0 0) (list t 2 0 0)) (phps-mode/lexer-get-point-data))))
+
+  (phps-mode/with-test-buffer
+   "<html><head><title><?php if ($myCondition) {\nif ($mySeconCondition) {\necho $title;\n}\n}\n ?></title><body>Bla bla</body></html>"
+   (goto-char 84)
+   (should (equal (list (list t 2 0 0) (list t 1 0 0)) (phps-mode/lexer-get-point-data))))
 
   (phps-mode/with-test-buffer
    "<html><head><title><?php if ($myCondition) { if ($mySeconCondition) { echo $title; } } ?></title><body>Bla bla</body></html>"
-   (goto-char 70)
-   (should (equal (list t 2 0 0) (phps-mode/lexer-get-point-data))))
-
-  (phps-mode/with-test-buffer
-   "<html><head><title><?php if ($myCondition) { if ($mySeconCondition) { echo $title; } } ?></title><body>Bla bla</body></html>"
-   (goto-char 85)
-   (should (equal (list t 1 0 0) (phps-mode/lexer-get-point-data))))
-
-  (phps-mode/with-test-buffer
-   "<html><head><title><?php if ($myCondition) { if ($mySeconCondition) { echo $title; } } ?></title><body>Bla bla</body></html>"
+   
    (goto-char 100)
-   (should (equal (list nil 0 0 0) (phps-mode/lexer-get-point-data))))
+   (should (equal (list (list nil 0 0 0) (list nil 0 0 0)) (phps-mode/lexer-get-point-data))))
 
   )
 
@@ -313,20 +315,28 @@
    (goto-char 69)
    (phps-mode/indent-line)
    (let ((buffer-contents (buffer-substring-no-properties (point-min) (point-max))))
-     (should (equal buffer-contents  "<html><head><title><?php if ($myCondition) {\n    if ($mySeconCondition) {\necho $title;\n\n} ?></title><body>Bla bla</body></html>")))
-   (goto-char 85)
+     (should (equal buffer-contents  "<html><head><title><?php if ($myCondition) {\n    if ($mySeconCondition) {\necho $title;\n\n} ?></title><body>Bla bla</body></html>"))))
+
+  (phps-mode/with-test-buffer
+   "<html><head><title><?php if ($myCondition) {\nif ($mySeconCondition) {\necho $title;\n\n} ?></title><body>Bla bla</body></html>"
+   (goto-char 80)
    (phps-mode/indent-line)
    (let ((buffer-contents (buffer-substring-no-properties (point-min) (point-max))))
-     (should (equal buffer-contents  "<html><head><title><?php if ($myCondition) {\n    if ($mySeconCondition) {\n        echo $title;\n\n} ?></title><body>Bla bla</body></html>")))
+     (should (equal buffer-contents  "<html><head><title><?php if ($myCondition) {\nif ($mySeconCondition) {\n        echo $title;\n\n} ?></title><body>Bla bla</body></html>"))))
+
+  (phps-mode/with-test-buffer
+   "<html><head><title><?php if ($myCondition) {\nif ($mySeconCondition) {\necho $title;\n\n} ?></title><body>Bla bla</body></html>"
    (goto-char 98)
    (phps-mode/indent-line)
    (let ((buffer-contents (buffer-substring-no-properties (point-min) (point-max))))
-     (should (equal buffer-contents  "<html><head><title><?php if ($myCondition) {\n    if ($mySeconCondition) {\n        echo $title;\n\n    } ?></title><body>Bla bla</body></html>")))))
+     (should (equal buffer-contents  "<html><head><title><?php if ($myCondition) {\nif ($mySeconCondition) {\necho $title;\n\n} ?></title><body>Bla bla</body></html>"))))
+
+  )
 
 (defun phps-mode/test-lexer ()
   "Run test for lexer."
   ;; (message "-- Running all tests for lexer... --\n")
-  ;; (setq debug-on-error t)
+  (setq debug-on-error t)
   (phps-mode/test-lexer--script-boundaries)
   (phps-mode/test-lexer--simple-tokens)
   (phps-mode/test-lexer--complex-tokens)

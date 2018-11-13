@@ -38,17 +38,20 @@
 
 (defun phps-mode/indent-line ()
   "Indent line."
-  (save-excursion
-    (beginning-of-line)
-    (let ((data (phps-mode/lexer-get-point-data)))
-      ;; Are we in scripting?
-      (if (nth 0 data)
-          (let ((indent-level (* (+ (nth 1 data) (nth 2 data)) 4)))
-            (message "inside scripting %s, indenting to column %s " data indent-level)
-            (indent-line-to indent-level))
-        (progn
-          (message "Outside scripting %s" data)
-          (indent-relative))))))
+  (let ((data (phps-mode/lexer-get-point-data)))
+    (save-excursion
+      (beginning-of-line)
+      (let ((start (nth 0 data))
+            (end (nth 1 data)))
+
+        ;; Are we in scripting?
+        (if (nth 0 start)
+            (let ((indent-level (* (+ (nth 1 start) (nth 2 start)) 4)))
+              (message "inside scripting, start: %s, end: %s, indenting to column %s " start end indent-level)
+              (indent-line-to indent-level))
+          (progn
+            (message "Outside scripting %s" start)
+            (indent-relative)))))))
 
 (defun phps-mode/indent-region ()
   "Indent region."

@@ -368,12 +368,12 @@
   "Push TOKEN to list with START and END."
   (phps-mode/COLOR_SYNTAX token start end)
 
-  (when (and
-         phps-mode/prepend_trailing_brace
-         (> end (- (point-max) 2)))
-    ;; (message "Adding trailing brace")
-    (setq phps-mode/prepend_trailing_brace nil)
-    (phps-mode/RETURN_TOKEN "}" (- end 1) end))
+  ;; (when (and
+  ;;        phps-mode/prepend_trailing_brace
+  ;;        (> end (- (point-max) 2)))
+  ;;   ;; (message "Adding trailing brace")
+  ;;   (setq phps-mode/prepend_trailing_brace nil)
+  ;;   (phps-mode/RETURN_TOKEN "}" (- end 1) end))
 
   ;; (message "Added token %s %s %s" token start end)
 
@@ -834,7 +834,7 @@
         (when (string= data ";")
           (setq phps-mode/prepend_trailing_brace t)
           ;; (message "Set flag prepend trailing brace")
-          (setq use-brace t)
+          ;; (setq use-brace t)
           )
         (setq phps-mode/declaring_namespace nil))
       (if use-brace
@@ -1260,45 +1260,58 @@ ANY_CHAR'
 (defun phps-mode/lexer-get-point-data()
   "Return information about point in tokens."
   ;; (message "Point: %s in %s" (point) phps-mode/lexer-tokens)
-  (let ((position (point))
-        (line-end (line-end-position))
-        (in-scripting nil)
-        (brace-level 0)
-        (parenthesis-level 0)
-        (inline-function-level 0))
-    (catch 'stop-iteration
-      (dolist (item phps-mode/lexer-tokens)
-        (let ((token (car item))
-              (start (car (cdr item)))
-              (end (cdr (cdr item))))
-          ;; (message "Token: %s Start: %s End: %s Item: %s" token start end item)
+  (save-excursion
+    (beginning-of-line)
+    (let ((position (point))
+          (line-end (line-end-position))
+          (start-in-scripting nil)
+          (start-brace-level 0)
+          (start-parenthesis-level 0)
+          (start-inline-function-level 0)
+          (end-in-scripting nil)
+          (end-brace-level 0)
+          (end-parenthesis-level 0)
+          (end-inline-function-level 0))
+      (catch 'stop-iteration
+        (dolist (item phps-mode/lexer-tokens)
+          (let ((token (car item))
+                (start (car (cdr item)))
+                (end (cdr (cdr item))))
+            ;; (message "Token: %s Start: %s End: %s Item: %s" token start end item)
 
-          (when (> start line-end)
-            ;; (message "Stopping iteration at: %s %s" start position)
-            (throw 'stop-iteration nil))
+            (when (> start line-end)
+              ;; (message "Stopping iteration at: %s %s" start position)
+              (throw 'stop-iteration nil))
 
-          ;; When start of token is equal or less to current point
-          (when (<= start position)
-            (pcase token
-              ('T_OPEN_TAG (setq in-scripting t))
-              ('T_OPEN_TAG_WITH_ECHO (setq in-scripting t))
-              ('T_CLOSE_TAG (setq in-scripting nil))
-              ("{" (setq brace-level (+ brace-level 1)))
-              ("(" (setq parenthesis-level (+ parenthesis-level 1)))
-              (")" (setq parenthesis-level (- parenthesis-level 1)))
-              (_)))
+            ;; When start of token is equal or less to current point
+            (when (< start position)
+              (pcase token
+                ('T_OPEN_TAG (setq start-in-scripting t))
+                ('T_OPEN_TAG_WITH_ECHO (setq start-in-scripting t))
+                ('T_CLOSE_TAG (setq start-in-scripting nil))
+                ("}" (setq start-brace-level (- start-brace-level 1)))
+                ("{" (setq start-brace-level (+ start-brace-level 1)))
+                ("(" (setq start-parenthesis-level (+ start-parenthesis-level 1)))
+                (")" (setq start-parenthesis-level (- start-parenthesis-level 1)))
+                (_)))
 
-          ;; When start of token is equal or less to end of curent line
-          (when (<= start line-end)
-            (pcase token
-              ("}" (setq brace-level (- brace-level 1)))
-              (_)))
-          
-          )))
-    (let ((data (list in-scripting brace-level parenthesis-level inline-function-level)))
-      ;; (message "data: %s" data)
-      data)
-    ))
+            ;; When start of token is equal or less to end of curent line
+            (when (< start line-end)
+              (pcase token
+                ('T_OPEN_TAG (setq end-in-scripting t))
+                ('T_OPEN_TAG_WITH_ECHO (setq end-in-scripting t))
+                ('T_CLOSE_TAG (setq end-in-scripting nil))
+                ("}" (setq end-brace-level (- end-brace-level 1)))
+                ("{" (setq end-brace-level (+ end-brace-level 1)))
+                ("(" (setq end-parenthesis-level (+ end-parenthesis-level 1)))
+                (")" (setq end-parenthesis-level (- end-parenthesis-level 1)))
+                (_)))
+            
+            )))
+      (let ((data (list (list start-in-scripting start-brace-level start-parenthesis-level start-inline-function-level) (list end-in-scripting end-brace-level end-parenthesis-level end-inline-function-level))))
+        ;; (message "data: %s" data)
+        data)
+      )))
 
 (defun phps-mode/lex--SETUP (start end)
   "Just prepare other lexers for lexing region START to END."
