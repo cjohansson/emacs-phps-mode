@@ -42,6 +42,7 @@
 
 (defun phps-mode/test-indentation ()
   "Test for indentation."
+
   (phps-mode/with-test-buffer
    "<html><head><title><?php if ($myCondition) {\nif ($mySeconCondition) {\necho $title;\n\n} ?></title><body>Bla bla</body></html>"
    (goto-char 69)
@@ -50,23 +51,28 @@
      (should (equal buffer-contents  "<html><head><title><?php if ($myCondition) {\n    if ($mySeconCondition) {\necho $title;\n\n} ?></title><body>Bla bla</body></html>"))))
 
   (phps-mode/with-test-buffer
-   "<html><head><title><?php if ($myCondition) {\nif ($mySeconCondition) {\necho $title;\n\n} ?></title><body>Bla bla</body></html>"
-   (goto-char 80)
+   "<html><head><title><?php if ($myCondition) {\nif ($mySeconCondition) {\necho $title;\n} ?></title><body>Bla bla</body></html>"
+   
+   (goto-char 75)
    (phps-mode/indent-line)
    (let ((buffer-contents (buffer-substring-no-properties (point-min) (point-max))))
-     (should (equal buffer-contents  "<html><head><title><?php if ($myCondition) {\nif ($mySeconCondition) {\n        echo $title;\n\n} ?></title><body>Bla bla</body></html>"))))
+     (should (equal buffer-contents  "<html><head><title><?php if ($myCondition) {\nif ($mySeconCondition) {\n        echo $title;\n} ?></title><body>Bla bla</body></html>"))))
 
   (phps-mode/with-test-buffer
    "<html><head><title><?php if ($myCondition) {\nif ($mySeconCondition) {\necho $title;\n\n} ?></title><body>Bla bla</body></html>"
+
    (goto-char 98)
    (phps-mode/indent-line)
    (let ((buffer-contents (buffer-substring-no-properties (point-min) (point-max))))
-     (should (equal buffer-contents  "<html><head><title><?php if  ($myCondition) {\nif ($mySeconCondition) {\necho $title;\n\n} ?></title><body>Bla bla</body></html>"))))
+     (should (equal buffer-contents  "<html><head><title><?php if ($myCondition) {\nif ($mySeconCondition) {\necho $title;\n\n        } ?></title><body>Bla bla</body></html>"))))
 
   )
 
 (defun phps-mod/test-functions ()
   "Run test for functions."
+  (setq-default indent-tabs-mode nil)
+  (setq-default tab-width 4)
+  (setq-default c-basic-indent 4)
   (phps-mode/test-indentation))
 
 (phps-mod/test-functions)
