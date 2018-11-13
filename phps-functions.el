@@ -41,12 +41,18 @@
   (let ((data (phps-mode/lexer-get-point-data)))
     (save-excursion
       (beginning-of-line)
-      (let ((start (nth 0 data))
-            (end (nth 1 data)))
+      (let* ((start (nth 0 data))
+             (end (nth 1 data))
+             (in-scripting (nth 0 start)))
 
         ;; Are we in scripting?
-        (if (nth 0 start)
-            (let ((indent-level (* (+ (nth 1 start) (nth 2 start)) 4)))
+        (if in-scripting
+            (let* ((indent-start (* (+ (nth 1 start) (nth 2 start)) 4))
+                   (indent-end (* (+ (nth 1 end) (nth 2 end)) 4))
+                   (indent-diff 0))
+              (when (> indent-start indent-end)
+                (setq indent-diff (- indent-start indent-end)))
+              (setq indent-level (- indent-start indent-diff))
               (message "inside scripting, start: %s, end: %s, indenting to column %s " start end indent-level)
               (indent-line-to indent-level))
           (progn

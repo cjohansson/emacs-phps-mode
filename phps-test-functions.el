@@ -64,7 +64,7 @@
    (goto-char 98)
    (phps-mode/indent-line)
    (let ((buffer-contents (buffer-substring-no-properties (point-min) (point-max))))
-     (should (equal buffer-contents  "<html><head><title><?php if ($myCondition) {\nif ($mySeconCondition) {\necho $title;\n\n        } ?></title><body>Bla bla</body></html>"))))
+     (should (equal buffer-contents  "<html><head><title><?php if ($myCondition) {\nif ($mySeconCondition) {\necho $title;\n\n    } ?></title><body>Bla bla</body></html>"))))
 
   (phps-mode/with-test-buffer
    "<html><head><title><?php if ($myCondition) {\nif ($mySeconCondition) {\necho $title;\n\n}\n?>\n</title><body>Bla bla</body></html>"
@@ -73,6 +73,20 @@
    (phps-mode/indent-line)
    (let ((buffer-contents (buffer-substring-no-properties (point-min) (point-max))))
      (should (equal buffer-contents  "<html><head><title><?php if ($myCondition) {\nif ($mySeconCondition) {\necho $title;\n\n}\n?>\n</title><body>Bla bla</body></html>"))))
+
+  (phps-mode/with-test-buffer
+   "<?php\n$variable = array(\n'random'\n);\n$variable = true;\n"
+   (goto-char 28)
+   (phps-mode/indent-line)
+   (let ((buffer-contents (buffer-substring-no-properties (point-min) (point-max))))
+     (should (equal buffer-contents  "<?php\n$variable = array(\n    'random'\n);\n$variable = true;\n"))))
+
+(phps-mode/with-test-buffer
+   "<?php\n$variable = array(\n    'random'\n    );\n$variable = true;\n"
+   (goto-char 39)
+   (phps-mode/indent-line)
+   (let ((buffer-contents (buffer-substring-no-properties (point-min) (point-max))))
+     (should (equal buffer-contents  "<?php\n$variable = array(\n    'random'\n);\n$variable = true;\n"))))
 
   )
 
