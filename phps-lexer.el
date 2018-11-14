@@ -47,6 +47,9 @@
 (defvar phps-mode/lexer-tokens nil
   "Last lexer tokens.")
 
+(defvar phps-mode/buffer-changes--start nil
+  "Start of buffer changes, nil if none.")
+
 
 ;; SETTINGS
 
@@ -1268,10 +1271,12 @@ ANY_CHAR'
           (start-brace-level 0)
           (start-parenthesis-level 0)
           (start-inline-function-level 0)
+          (start-token-number 0)
           (end-in-scripting nil)
           (end-brace-level 0)
           (end-parenthesis-level 0)
-          (end-inline-function-level 0))
+          (end-inline-function-level 0)
+          (end-token-number 0))
       (catch 'stop-iteration
         (dolist (item phps-mode/lexer-tokens)
           (let ((token (car item))
@@ -1285,6 +1290,7 @@ ANY_CHAR'
 
             ;; When start of token is equal or less to current point
             (when (< start position)
+              (setq start-token-number (+ start-token-number 1))
               (pcase token
                 ('T_OPEN_TAG (setq start-in-scripting t))
                 ('T_OPEN_TAG_WITH_ECHO (setq start-in-scripting t))
@@ -1297,6 +1303,7 @@ ANY_CHAR'
 
             ;; When start of token is equal or less to end of curent line
             (when (< start line-end)
+              (setq end-token-number (+ end-token-number 1))
               (pcase token
                 ('T_OPEN_TAG (setq end-in-scripting t))
                 ('T_OPEN_TAG_WITH_ECHO (setq end-in-scripting t))
@@ -1308,7 +1315,7 @@ ANY_CHAR'
                 (_)))
             
             )))
-      (let ((data (list (list start-in-scripting start-brace-level start-parenthesis-level start-inline-function-level) (list end-in-scripting end-brace-level end-parenthesis-level end-inline-function-level))))
+      (let ((data (list (list start-in-scripting start-brace-level start-parenthesis-level start-inline-function-level start-token-number) (list end-in-scripting end-brace-level end-parenthesis-level end-inline-function-level end-token-number))))
         ;; (message "data: %s" data)
         data)
       )))
@@ -1317,6 +1324,7 @@ ANY_CHAR'
   "Just prepare other lexers for lexing region START to END."
   (when (eq start 1)
     ;; (message "SETUP %s %s" start end)
+    (setq phps-mode/buffer-changes--start nil)
     (phps-mode/BEGIN phps-mode/ST_INITIAL)))
 
 ;; TODO This function should track between what min and max region a specific buffer has been modified and then re-run lexer for that region when editor is idle, maybe use (buffer-name))
@@ -1324,7 +1332,8 @@ ANY_CHAR'
 (defun phps-mode/after-change-functions (start stop length)
   "Track buffer change from START to STOP with length LENGTH."
   (when (string= major-mode "phps-mode")
-    ;; (message "phps-mode/after-change-functions %s %s %s" start stop length)
+    (setq phps-mode/buffer-changes--start start)
+    (message "phps-mode/after-change-functions %s %s %s" start stop length)
   ))
 
 (defun phps-mode/lex--RUN ()
