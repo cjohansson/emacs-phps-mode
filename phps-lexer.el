@@ -169,17 +169,11 @@
   )
 
 ;; _yy_push_state
-(defun phps-mode/yy_push_state (state)
-  "Add STATE to stack and then begin state."
-  (let ((old-state (car phps-mode/state_stack)))
-    (when (not old-state)
-      (setq old-state phps-mode/STATE))
-    (if (not phps-mode/state_stack)
-        (setq phps-mode/state_stack (list old-state))
-      (push old-state phps-mode/state_stack))
-    ;; (message "Added state %s to stack" old-state)
-    )
-  (phps-mode/BEGIN state))
+(defun phps-mode/yy_push_state (new-state)
+  "Add NEW-STATE to stack and then begin state."
+  (push phps-mode/STATE phps-mode/state_stack)
+  ;; (message "Added state %s to stack" old-state)
+  (phps-mode/BEGIN new-state))
 
 (defun phps-mode/yy_pop_state ()
   "Pop current state from stack."
