@@ -212,6 +212,25 @@
    (should (equal phps-mode/lexer-tokens
                   '((T_OPEN_TAG 1 . 7) ("`" 7 . 8) (T_CONSTANT_ENCAPSED_STRING 8 . 20) (T_VARIABLE 20 . 29) (T_CONSTANT_ENCAPSED_STRING 29 . 33) (T_CURLY_OPEN 33 . 34) (T_VARIABLE 34 . 44) ("}" 44 . 45) (T_CONSTANT_ENCAPSED_STRING 45 . 49) (T_DOLLAR_OPEN_CURLY_BRACES 49 . 51) (T_STRING_VARNAME 51 . 60) ("}" 60 . 61) (T_CONSTANT_ENCAPSED_STRING 61 . 65) (T_VARIABLE 65 . 75) (T_STRING 75 . 80) ("]" 80 . 81) (T_CONSTANT_ENCAPSED_STRING 81 . 90) ("`" 90 . 91) (";" 91 . 92)))))
 
+  (phps-mode/with-test-buffer
+   "<?php $wpdb->posts; ?>"
+   (should (equal phps-mode/lexer-tokens
+                  '((T_OPEN_TAG 1 . 7) (T_VARIABLE 7 . 12) (T_OBJECT_OPERATOR 12 . 14) (T_STRING 14 . 19) (";" 19 . 20) (";" 21 . 23) (T_CLOSE_TAG 21 . 23)))))
+
+  ;; TODO Fix this, produces invalid tokens
+  (phps-mode/with-test-buffer
+   "<?php $var = \"SELECT post_parent FROM $wpdb->posts WHERE ID = '\".$id.\"'\"; ?>"
+   (message "Tokens 1: %s" phps-mode/lexer-tokens)
+   (should (equal phps-mode/lexer-tokens
+                  '((T_OPEN_TAG 1 . 7) (T_VARIABLE 7 . 11) ("=" 12 . 13) ("\"" 14 . 15) (T_ENCAPSED_AND_WHITESPACE 15 . 39) (T_VARIABLE 39 . 47) (T_STRING 47 . 51) (T_CONSTANT_ENCAPSED_STRING 51 . 64) ("\"" 64 . 65) ("." 65 . 66) (T_VARIABLE 66 . 69) ("." 69 . 70) (T_CONSTANT_ENCAPSED_STRING 70 . 73) (";" 73 . 74) (";" 75 . 77) (T_CLOSE_TAG 75 . 77)))))
+
+  ;; TODO Fix this, produces invalid tokens
+  (phps-mode/with-test-buffer
+   "<?php $wpdb->get_var(\"SELECT post_parent FROM $wpdb->posts WHERE ID = '\".$id.\"'\"); ?>"
+   (message "Tokens 2: %s" phps-mode/lexer-tokens)
+   (should (equal phps-mode/lexer-tokens
+                  '((T_OPEN_TAG 1 . 7) (T_VARIABLE 7 . 12) (T_OBJECT_OPERATOR 12 . 14) (T_STRING 14 . 21) ("(" 21 . 22) ("\"" 22 . 23) (T_ENCAPSED_AND_WHITESPACE 23 . 47) (T_VARIABLE 47 . 54) (T_OBJECT_OPERATOR 54 . 56) (T_STRING 56 . 59) (T_CONSTANT_ENCAPSED_STRING 59 . 72) ("\"" 72 . 73) ("." 73 . 74) (T_VARIABLE 74 . 77) ("." 77 . 78) (T_CONSTANT_ENCAPSED_STRING 78 . 81) (")" 81 . 82) (";" 82 . 83) (";" 84 . 86) (T_CLOSE_TAG 84 . 86)))))
+
   )
 
 (defun phps-mode/test-lexer--namespaces ()
@@ -296,12 +315,10 @@
 
   )
 
-;; TODO Test this: $wpdb->get_var("SELECT post_parent FROM $wpdb->posts WHERE ID = '".$id."'");
-
 (defun phps-mode/test-lexer ()
   "Run test for lexer."
   ;; (message "-- Running all tests for lexer... --\n")
-  (setq debug-on-error t)
+  ;; (setq debug-on-error t)
   (phps-mode/test-lexer--script-boundaries)
   (phps-mode/test-lexer--simple-tokens)
   (phps-mode/test-lexer--complex-tokens)

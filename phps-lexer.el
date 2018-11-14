@@ -891,7 +891,7 @@
                         ;; (message "Double quoted string: %s" double-quoted-string)
                         (phps-mode/RETURN_TOKEN 'T_CONSTANT_ENCAPSED_STRING start (+ string-start 2))))
                   (progn
-                    ;; (message "Found variable after '%s'" (buffer-substring-no-properties start (point)))
+                    (message "Found variable after '%s'" (buffer-substring-no-properties start string-start))
                     (phps-mode/BEGIN phps-mode/ST_DOUBLE_QUOTES)
                     (phps-mode/RETURN_TOKEN "\"" start (+ start 1))
                     (phps-mode/RETURN_TOKEN 'T_ENCAPSED_AND_WHITESPACE (+ start 1) string-start))))
@@ -1001,7 +1001,7 @@
 
    ((looking-at "[\"]")
     (phps-mode/BEGIN phps-mode/ST_IN_SCRIPTING)
-    ;; (message "Ended double-quote at %s" (match-beginning 0))
+    (message "Ended double-quote at %s" (match-beginning 0))
     (phps-mode/RETURN_TOKEN "\"" (match-beginning 0) (match-end 0)))
 
    ((looking-at phps-mode/ANY_CHAR)
@@ -1048,7 +1048,8 @@ ANY_CHAR'
 
          ((looking-at (concat "\\$" phps-mode/LABEL "->" "[a-zA-Z_\x80-\xff]"))
           (phps-mode/yy_push_state phps-mode/ST_LOOKING_FOR_PROPERTY)
-          (phps-mode/RETURN_TOKEN 'T_VARIABLE (match-beginning 0) (match-end 0)))
+          (forward-char -3)
+          (phps-mode/RETURN_TOKEN 'T_VARIABLE (match-beginning 0) (- (match-end 0) 3)))
 
          ((looking-at (concat "\\$" phps-mode/LABEL "\\["))
           (phps-mode/yy_push_state phps-mode/ST_VAR_OFFSET)
@@ -1100,7 +1101,8 @@ ANY_CHAR'
 
      ((looking-at (concat "\\$" phps-mode/LABEL "->" "[a-zA-Z_\x80-\xff]"))
       (phps-mode/yy_push_state phps-mode/ST_LOOKING_FOR_PROPERTY)
-      (phps-mode/RETURN_TOKEN 'T_VARIABLE (match-beginning 0) (match-end 0)))
+      (forward-char -3)
+      (phps-mode/RETURN_TOKEN 'T_VARIABLE (match-beginning 0) (- (match-end 0) 3)))
 
      ((looking-at (concat "\\$" phps-mode/LABEL "\\["))
       (phps-mode/yy_push_state phps-mode/ST_VAR_OFFSET)
