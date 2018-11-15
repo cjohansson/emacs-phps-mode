@@ -1268,24 +1268,33 @@ ANY_CHAR'
           (start-brace-level 0)
           (start-parenthesis-level 0)
           (start-inline-function-level 0)
-          (start-token-number -1)
+          (start-token-number nil)
           (end-in-scripting nil)
           (end-brace-level 0)
           (end-parenthesis-level 0)
           (end-inline-function-level 0)
-          (end-token-number -1))
+          (end-token-number nil)
+          (found-line-tokens nil))
       (catch 'stop-iteration
         (dolist (item phps-mode/lexer-tokens)
           (let ((token (car item))
-                (start (car (cdr item))))
+                (start (car (cdr item)))
+                (end (cdr (cdr item))))
             ;; (message "Token: %s Start: %s End: %s Item: %s" token start end item)
 
             (when (> start line-end)
               ;; (message "Stopping iteration at: %s %s" start position)
               (throw 'stop-iteration nil))
 
+            (when (and (not found-line-tokens)
+                       (>= start position)
+                       (<= end line-end))
+              (setq found-line-tokens t))
+
             ;; When start of token is equal or less to current point
-            (when (< start position)
+            (when (<= end position)
+              (when (null start-token-number)
+                (setq start-token-number -1))
               (setq start-token-number (+ start-token-number 1))
               (pcase token
                 ('T_OPEN_TAG (setq start-in-scripting t))
@@ -1298,7 +1307,9 @@ ANY_CHAR'
                 (_)))
 
             ;; When start of token is equal or less to end of curent line
-            (when (< start line-end)
+            (when (<= start line-end)
+              (when (null end-token-number)
+                (setq end-token-number -1))
               (setq end-token-number (+ end-token-number 1))
               (pcase token
                 ('T_OPEN_TAG (setq end-in-scripting t))
@@ -1311,10 +1322,11 @@ ANY_CHAR'
                 (_)))
             
             )))
-      (let ((data (list (list start-in-scripting start-brace-level start-parenthesis-level start-inline-function-level start-token-number) (list end-in-scripting end-brace-level end-parenthesis-level end-inline-function-level end-token-number))))
+      (let ((data (list (list start-in-scripting start-brace-level start-parenthesis-level start-inline-function-level nil) (list end-in-scripting end-brace-level end-parenthesis-level end-inline-function-level nil))))
+        (when found-line-tokens
+          (setq data (list (list start-in-scripting start-brace-level start-parenthesis-level start-inline-function-level start-token-number) (list end-in-scripting end-brace-level end-parenthesis-level end-inline-function-level end-token-number))))
         ;; (message "data: %s" data)
-        data)
-      )))
+        data))))
 
 (defun phps-mode/lex--SETUP (start end)
   "Just prepare other lexers for lexing region START to END."
