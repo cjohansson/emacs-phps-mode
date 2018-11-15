@@ -1,4 +1,4 @@
-;;; phps-mode/phps-functions.el --- Mode functions for PHPs
+;;; phps-mode/phps-functions.el --- Mode functions for PHPs -*- lexical-binding: t -*-
 
 ;; Author: Christian Johansson <github.com/cjohansson>
 ;; Maintainer: Christian Johansson <github.com/cjohansson>
@@ -46,20 +46,16 @@
              (in-scripting (nth 0 start)))
 
         ;; Are we in scripting?
-        (if in-scripting
-            (let* ((indent-start (* (+ (nth 1 start) (nth 2 start)) tab-width))
-                   (indent-end (* (+ (nth 1 end) (nth 2 end)) tab-width))
-                   (indent-diff 0))
-              (when (and (> indent-start indent-end)
-                         (looking-at-p "^[][ \t)(}{};]+\\($\\|?>\\)"))
-                (setq indent-diff (- indent-start indent-end)))
-              (setq indent-level (- indent-start indent-diff))
+        (when in-scripting
+          (let ((indent-start (* (+ (nth 1 start) (nth 2 start)) tab-width))
+                (indent-end (* (+ (nth 1 end) (nth 2 end)) tab-width))
+                (indent-diff 0))
+            (when (and (> indent-start indent-end)
+                       (looking-at-p "^[][ \t)(}{};]+\\($\\|?>\\)"))
+              (setq indent-diff (- indent-start indent-end)))
+            (let ((indent-level (- indent-start indent-diff)))
               (message "inside scripting, start: %s, end: %s, indenting to column %s " start end indent-level)
-              (indent-line-to indent-level))
-          (progn
-            ;; (message "Outside scripting %s" start)
-            ;; (indent-relative)
-            ))))))
+              (indent-line-to indent-level))))))))
 
 (defun phps-mode/indent-region ()
   "Indent region."

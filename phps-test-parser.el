@@ -1,4 +1,4 @@
-;;; phps-test-parser.el --- Tests for Semantic parser
+;;; phps-test-parser.el --- Tests for Semantic parser -*- lexical-binding: t -*-
 
 ;; Author: Christian Johansson <github.com/cjohansson>
 ;; Maintainer: Christian Johansson <github.com/cjohansson>

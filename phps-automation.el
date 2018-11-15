@@ -1,4 +1,4 @@
-;;; phps-automation --- Generate a Wisent Parser file
+;;; phps-automation --- Generate a Wisent Parser file -*- lexical-binding: t -*-
 
 
 ;;; Commentary:
@@ -13,7 +13,7 @@
 
 
 (add-to-list 'load-path (expand-file-name "~/.emacs.d/emacs-wisent-grammar-converter/"))
-(require 'emacs-wisent-grammar-converter)
+(autoload 'emacs-wisent-grammar-converter/generate-grammar-from-filename "emacs-wisent-grammar-converter")
 
 (let ((php-yacc-url "https://raw.githubusercontent.com/php/php-src/master/Zend/zend_language_parser.y")
       (php-yacc-file (expand-file-name "zend_language_parser.y"))

@@ -1,4 +1,4 @@
-;;; phps-mode/phps-semantic.el --- Semantic functions for PHP
+;;; phps-mode/phps-semantic.el --- Semantic functions for PHP -*- lexical-binding: t -*-
 
 ;; Copyright (C) 2017 Christian Johansson
 

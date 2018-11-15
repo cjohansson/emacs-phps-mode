@@ -1,4 +1,4 @@
-;;; phps-test-lexer.el --- Tests for Semantic Lexer
+;;; phps-test-lexer.el --- Tests for Semantic Lexer -*- lexical-binding: t -*-
 
 ;; Author: Christian Johansson <github.com/cjohansson>
 ;; Maintainer: Christian Johansson <github.com/cjohansson>

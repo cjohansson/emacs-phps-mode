@@ -1,4 +1,4 @@
-;;; phps-mode/phps-font-lock.el --- Font Lock for PHP Semantic
+;;; phps-mode/phps-font-lock.el --- Font Lock for PHP Semantic -*- lexical-binding: t -*-
 
 ;; Author: Christian Johansson <github.com/cjohansson>
 ;; Maintainer: Christian Johansson <github.com/cjohansson>

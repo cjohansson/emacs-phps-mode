@@ -1,4 +1,4 @@
-;;; phps-mode/phps-lexer.wy -- Lexer for PHP
+;;; phps-mode/phps-lexer.wy -- Lexer for PHP -*- lexical-binding: t -*-
 
 ;; Copyright (C) 2018 Free Software Foundation, Inc.
 ;;

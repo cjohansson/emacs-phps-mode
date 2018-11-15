@@ -1,4 +1,4 @@
-;;; phps-test.el --- Commons for tests
+;;; phps-test.el --- Commons for tests -*- lexical-binding: t -*-
 
 ;; Author: Christian Johansson <github.com/cjohansson>
 ;; Maintainer: Christian Johansson <github.com/cjohansson>

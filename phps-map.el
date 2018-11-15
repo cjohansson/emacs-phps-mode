@@ -1,4 +1,4 @@
-;; phps-mode/phps-map.el --- Map for major mode
+;; phps-mode/phps-map.el --- Map for major mode -*- lexical-binding: t -*-
 
 ;; Author: Christian Johansson <github.com/cjohansson>
 ;; Maintainer: Christian Johansson <github.com/cjohansson>

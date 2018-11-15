@@ -1,4 +1,4 @@
-;;; phps-mode/phps-tags.el --- PHP LALR parser for Emacs
+;;; phps-mode/phps-tags.el --- PHP LALR parser for Emacs -*- lexical-binding: t -*-
 
 ;; Copyright (C) 2001-2006, 2009-2018 Free Software Foundation, Inc.
 

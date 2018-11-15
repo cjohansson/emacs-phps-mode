@@ -1,4 +1,4 @@
-;;; phps-test-functions.el --- Tests for functions
+;;; phps-test-functions.el --- Tests for functions -*- lexical-binding: t -*-
 
 ;; Author: Christian Johansson <github.com/cjohansson>
 ;; Maintainer: Christian Johansson <github.com/cjohansson>

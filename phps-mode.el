@@ -1,4 +1,4 @@
-;;; phps-mode.el --- Major mode for PHP with Semantic integration
+;;; phps-mode.el --- Major mode for PHP with Semantic integration -*- lexical-binding: t -*-
 
 ;; Author: Christian Johansson <github.com/cjohansson>
 ;; Maintainer: Christian Johansson <github.com/cjohansson>
