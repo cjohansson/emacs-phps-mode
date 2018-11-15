@@ -47,8 +47,8 @@
 
         ;; Are we in scripting?
         (if in-scripting
-            (let* ((indent-start (* (+ (nth 1 start) (nth 2 start)) 4))
-                   (indent-end (* (+ (nth 1 end) (nth 2 end)) 4))
+            (let* ((indent-start (* (+ (nth 1 start) (nth 2 start)) tab-width))
+                   (indent-end (* (+ (nth 1 end) (nth 2 end)) tab-width))
                    (indent-diff 0))
               (when (and (> indent-start indent-end)
                          (looking-at-p "^[][ \t)(}{};]+\\($\\|?>\\)"))
@@ -57,7 +57,7 @@
               (message "inside scripting, start: %s, end: %s, indenting to column %s " start end indent-level)
               (indent-line-to indent-level))
           (progn
-            (message "Outside scripting %s" start)
+            ;; (message "Outside scripting %s" start)
             ;; (indent-relative)
             ))))))
 
@@ -69,7 +69,17 @@
   "PHP specific init-cleanup routines."
 
   (set (make-local-variable 'indent-line-function) #'phps-mode/indent-line)
-  (set (make-local-variable 'tab-width) 8)
+
+  (when phps-mode/use-psr-2
+
+    ;; PSR-2 : Code MUST use an indent of 4 spaces
+    (set (make-local-variable 'tab-width) 4)
+
+    ;; PSR-2 : MUST NOT use tabs for indenting
+    (set (make-local-variable 'indent-tabs-mode) nil)
+
+    )
+
   ;; (set (make-local-variable 'indent-line-function) #'phps-mode/indent-region)
   )
 

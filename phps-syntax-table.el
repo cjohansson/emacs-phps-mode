@@ -43,12 +43,14 @@
   (let ((phps-mode/syntax-table (make-syntax-table)))
 
     ;; This is added so entity names with underscores can be more easily parsed as one word
-    (modify-syntax-entry ?_ "w" phps-mode/syntax-table)
+    
+    ;; Treat underscore as a punctuation
+    (modify-syntax-entry ?_ "." phps-mode/syntax-table)
 
     ;; Improve parsing of <?php and ?> as words
-    (modify-syntax-entry ?? "w" phps-mode/syntax-table)
-    (modify-syntax-entry ?< "w" phps-mode/syntax-table)
-    (modify-syntax-entry ?> "w" phps-mode/syntax-table)
+    ;;(modify-syntax-entry ?? "w" phps-mode/syntax-table)
+    ;;(modify-syntax-entry ?< "w" phps-mode/syntax-table)
+    ;;(modify-syntax-entry ?> "w" phps-mode/syntax-table)
 
     ;; (modify-syntax-entry ?_ "w" phps-mode/syntax-table)
 

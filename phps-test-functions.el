@@ -99,9 +99,6 @@
 
 (defun phps-mod/test-functions ()
   "Run test for functions."
-  (setq-default indent-tabs-mode nil)
-  (setq-default tab-width 4)
-  (setq-default c-basic-indent 4)
   (phps-mode/test-indentation))
 
 (phps-mod/test-functions)
