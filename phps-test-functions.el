@@ -40,7 +40,7 @@
 (autoload 'phps-mode/with-test-buffer "phps-test")
 (autoload 'should "ert")
 
-(defun phps-mode/test-indentation ()
+(defun phps-mode/test-indent-line ()
   "Test for indentation."
 
   (phps-mode/with-test-buffer
@@ -99,9 +99,11 @@
 
   )
 
+;; TODO Add tests for all examples here: https://www.php-fig.org/psr/psr-2/
+
 (defun phps-mod/test-functions ()
   "Run test for functions."
-  (phps-mode/test-indentation))
+  (phps-mode/test-indent-line))
 
 (phps-mod/test-functions)
 

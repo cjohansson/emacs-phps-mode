@@ -36,6 +36,9 @@
 ;;; Code:
 
 
+(defvar phps-mode/buffer-changes--start nil
+  "Start of buffer changes, nil if none.")
+
 (autoload 'phps-mode/lexer-get-point-data "phps-lexer")
 
 (defun phps-mode/indent-line ()
@@ -93,6 +96,15 @@
   "Indent region."
   )
 
+;; TODO This function should track between what min and max region a specific buffer has been modified and then re-run lexer for that region when editor is idle, maybe use (buffer-name))
+;; maybe use 'auto-save-hook for this
+(defun phps-mode/after-change-functions (start stop length)
+  "Track buffer change from START to STOP with length LENGTH."
+  (when (string= major-mode "phps-mode")
+    (setq phps-mode/buffer-changes--start start)
+    (message "phps-mode/after-change-functions %s %s %s" start stop length)
+  ))
+
 (defun phps-mode/functions-init ()
   "PHP specific init-cleanup routines."
 
@@ -108,6 +120,10 @@
     (set (make-local-variable 'indent-tabs-mode) nil)
 
     )
+
+  (set (make-local-variable 'phps-mode/buffer-changes--start) nil)
+
+  (add-hook 'after-change-functions #'phps-mode/after-change-functions)
 
   ;; (set (make-local-variable 'indent-line-function) #'phps-mode/indent-region)
   )
