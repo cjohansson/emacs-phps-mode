@@ -49,15 +49,45 @@
 
         ;; Are we in scripting?
         (when in-scripting
-          (let ((indent-start (* (+ (nth 1 start) (nth 2 start)) tab-width))
-                (indent-end (* (+ (nth 1 end) (nth 2 end)) tab-width))
-                (indent-diff 0))
-            (when (and (> indent-start indent-end)
-                       (looking-at-p "^[][ \t)(}{};]+\\($\\|?>\\)"))
-              (setq indent-diff (- indent-start indent-end)))
-            (let ((indent-level (- indent-start indent-diff)))
-              (message "inside scripting, start: %s, end: %s, indenting to column %s " start end indent-level)
-              (indent-line-to indent-level))))))))
+          (let ((start-bracket-level (nth 1 start))
+                (start-parenthesis-level (nth 2 start))
+                (start-token-number (nth 4 start))
+                (end-bracket-level (nth 1 end))
+                (end-parenthesis-level (nth 2 end))
+                (end-token-number (nth 4 end)))
+            (let* ((indent-start (+ start-bracket-level start-parenthesis-level))
+                   (indent-end (+ end-bracket-level end-parenthesis-level))
+                   (indent-level indent-start))
+              ;; (message "indent-start %s, indent-end %s" indent-start indent-end)
+              (when (and
+                     (boundp 'phps-mode/lexer-tokens)
+                     (> indent-start indent-end))
+                (let ((token-number start-token-number)
+                      (valid-tokens t))
+                  ;; (message "token start %s, token end %s" start-token-number end-token-number)
+                  (while (and valid-tokens
+                              (<= token-number end-token-number))
+                    (let ((token (car (nth token-number phps-mode/lexer-tokens)))
+                          (token-start (car (cdr (nth token-number phps-mode/lexer-tokens)))))
+                      (when (and valid-tokens
+                                 (>= token-start (point))
+                                 (not (or
+                                       (string= token "{")
+                                       (string= token "}")
+                                       (string= token "(")
+                                       (string= token ")")
+                                       (string= token "[")
+                                       (string= token "]")
+                                       (string= token ";")
+                                       (eq token 'T_CLOSE_TAG))))
+                        ;; (message "Token %s - %s in %s was invalid" token token-number phps-mode/lexer-tokens)
+                        (setq valid-tokens nil)))
+                    (setq token-number (+ token-number 1)))
+                  (when valid-tokens
+                    ;; (message "Tokens was valid, decreasing indent %s - %s" (line-beginning-position) (line-end-position))
+                    (setq indent-level (- indent-level (- indent-start indent-end))))))
+              ;; (message "inside scripting, start: %s, end: %s, indenting to column %s " start end indent-level)
+              (indent-line-to (* indent-level tab-width)))))))))
 
 (defun phps-mode/indent-region ()
   "Indent region."

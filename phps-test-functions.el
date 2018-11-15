@@ -51,49 +51,51 @@
      (should (equal buffer-contents  "<html><head><title><?php if ($myCondition) {\n    if ($mySeconCondition) {\necho $title;\n\n} ?></title><body>Bla bla</body></html>"))))
 
   (phps-mode/with-test-buffer
-   "<html><head><title><?php if ($myCondition) {\nif ($mySeconCondition) {\necho $title;\n} ?></title><body>Bla bla</body></html>"
+   "<html><head><title><?php if ($myCondition) {\nif ($mySeconCondition) {\necho $title1;\n} ?></title><body>Bla bla</body></html>"
    
    (goto-char 75)
    (phps-mode/indent-line)
    (let ((buffer-contents (buffer-substring-no-properties (point-min) (point-max))))
-     (should (equal buffer-contents  "<html><head><title><?php if ($myCondition) {\nif ($mySeconCondition) {\n        echo $title;\n} ?></title><body>Bla bla</body></html>"))))
+     (should (equal buffer-contents  "<html><head><title><?php if ($myCondition) {\nif ($mySeconCondition) {\n        echo $title1;\n} ?></title><body>Bla bla</body></html>"))))
 
   (phps-mode/with-test-buffer
-   "<html><head><title><?php if ($myCondition) {\nif ($mySeconCondition) {\necho $title;\n\n} ?></title><body>Bla bla</body></html>"
+   "<html><head><title><?php if ($myCondition) {\nif ($mySeconCondition) {\necho $title2;\n\n} ?></title><body>Bla bla</body></html>"
 
    (goto-char 98)
    (phps-mode/indent-line)
    (let ((buffer-contents (buffer-substring-no-properties (point-min) (point-max))))
-     (should (equal buffer-contents  "<html><head><title><?php if ($myCondition) {\nif ($mySeconCondition) {\necho $title;\n\n    } ?></title><body>Bla bla</body></html>"))))
+     (should (equal buffer-contents  "<html><head><title><?php if ($myCondition) {\nif ($mySeconCondition) {\necho $title2;\n\n    } ?></title><body>Bla bla</body></html>"))))
 
   (phps-mode/with-test-buffer
-   "<html><head><title><?php if ($myCondition) {\nif ($mySeconCondition) {\necho $title;\n\n}\n?>\n</title><body>Bla bla</body></html>"
+   "<html><head><title><?php if ($myCondition) {\nif ($mySeconCondition) {\necho $title3;\n\n}\n?>\n</title><body>Bla bla</body></html>"
 
    (goto-char 110)
    (phps-mode/indent-line)
    (let ((buffer-contents (buffer-substring-no-properties (point-min) (point-max))))
-     (should (equal buffer-contents  "<html><head><title><?php if ($myCondition) {\nif ($mySeconCondition) {\necho $title;\n\n}\n?>\n</title><body>Bla bla</body></html>"))))
+     (should (equal buffer-contents  "<html><head><title><?php if ($myCondition) {\nif ($mySeconCondition) {\necho $title3;\n\n}\n?>\n</title><body>Bla bla</body></html>"))))
 
   (phps-mode/with-test-buffer
-   "<?php\n$variable = array(\n'random'\n);\n$variable = true;\n"
+   "<?php\n$variable = array(\n'random3'\n);\n$variable = true;\n"
    (goto-char 28)
    (phps-mode/indent-line)
    (let ((buffer-contents (buffer-substring-no-properties (point-min) (point-max))))
-     (should (equal buffer-contents  "<?php\n$variable = array(\n    'random'\n);\n$variable = true;\n"))))
+     (should (equal buffer-contents  "<?php\n$variable = array(\n    'random3'\n);\n$variable = true;\n"))))
 
   (phps-mode/with-test-buffer
-   "<?php\n$variable = array(\n    'random'\n    );\n$variable = true;\n"
-   (goto-char 39)
+   "<?php\n$variable = array(\n    'random2'\n    );\n$variable = true;\n"
+   (goto-char 43)
+   ;; (message "Tokens %s point %s" phps-mode/lexer-tokens (point))
    (phps-mode/indent-line)
    (let ((buffer-contents (buffer-substring-no-properties (point-min) (point-max))))
-     (should (equal buffer-contents  "<?php\n$variable = array(\n    'random'\n);\n$variable = true;\n"))))
+     (should (equal buffer-contents  "<?php\n$variable = array(\n    'random2'\n);\n$variable = true;\n"))))
 
   (phps-mode/with-test-buffer
-   "<?php\n$variable = array(\n'random');\n$variable = true;\n"
+   "<?php\n$variable = array(\n'random4');\n$variable = true;\n"
    (goto-char 29)
    (phps-mode/indent-line)
+   ;; (message "Tokens %s point %s" phps-mode/lexer-tokens (point))
    (let ((buffer-contents (buffer-substring-no-properties (point-min) (point-max))))
-     (should (equal buffer-contents  "<?php\n$variable = array(\n    'random');\n$variable = true;\n"))))
+     (should (equal buffer-contents  "<?php\n$variable = array(\n    'random4');\n$variable = true;\n"))))
 
   )
 
