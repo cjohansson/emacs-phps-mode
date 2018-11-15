@@ -36,6 +36,8 @@
 ;;; Code:
 
 
+(autoload 'phps-mode/lexer-get-point-data "phps-lexer")
+
 (defun phps-mode/indent-line ()
   "Indent line."
   (let ((data (phps-mode/lexer-get-point-data)))
@@ -66,7 +68,8 @@
 
   (set (make-local-variable 'indent-line-function) #'phps-mode/indent-line)
 
-  (when phps-mode/use-psr-2
+  (when (and (boundp 'phps-mode/use-psr-2)
+             phps-mode/use-psr-2)
 
     ;; PSR-2 : Code MUST use an indent of 4 spaces
     (set (make-local-variable 'tab-width) 4)
