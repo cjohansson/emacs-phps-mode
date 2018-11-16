@@ -4,16 +4,20 @@
  * @todo was here
  */
 
-class MyClass {
+class MyClass
+{
 
     /**
      * @var string
      */
-    private $var = 'abc';
+    private $var = 'abcdef';
 
     public function myMethod()
     {
         echo "Some stuff here"; // Just a comment
+        if ($this->var) {
+    
+    }
     }
 
     public function myMethod2() {

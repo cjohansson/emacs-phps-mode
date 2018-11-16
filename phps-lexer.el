@@ -1327,15 +1327,24 @@ ANY_CHAR'
 
 (defun phps-mode/lex--SETUP (start end)
   "Just prepare other lexers for lexing region START to END."
-  (when (eq start 1)
+  (when (and (eq start 1)
+             end)
     ;; (message "SETUP %s %s" start end)
-    (setq phps-mode/buffer-changes--start nil)
+    (when (boundp 'phps-mode/buffer-changes--start)
+      (setq phps-mode/buffer-changes--start nil))
     (phps-mode/BEGIN phps-mode/ST_INITIAL)))
 
 (defun phps-mode/lex--RUN ()
   "Run lexer."
   (interactive)
   (setq phps-mode/lexer-tokens (semantic-lex-buffer)))
+
+(defun phps-mode/run-incremental-lex ()
+  "Run incremental lexer based on `phps-mode/buffer-changes--start'."
+  (when (boundp 'phps-mode/buffer-changes--start)
+    (message "Should run incremental lex here %s - %s" phps-mode/buffer-changes--start (point-max))
+    (semantic-lex phps-mode/buffer-changes--start (point-max))
+    (setq phps-mode/buffer-changes--start nil)))
 
 (define-lex phps-mode/tags-lexer
   "Lexer that handles PHP buffers."

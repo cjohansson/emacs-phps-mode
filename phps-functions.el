@@ -41,6 +41,7 @@
 
 (autoload 'phps-mode/lexer-get-point-data "phps-lexer")
 
+;; TODO Should also format white-space inside the line, i.e. after function declarations
 (defun phps-mode/indent-line ()
   "Indent line."
   (let ((data (phps-mode/lexer-get-point-data)))
@@ -92,6 +93,7 @@
               ;; (message "inside scripting, start: %s, end: %s, indenting to column %s " start end indent-level)
               (indent-line-to (* indent-level tab-width)))))))))
 
+;; TODO Implement this
 (defun phps-mode/indent-region ()
   "Indent region."
   )
@@ -101,6 +103,9 @@
 (defun phps-mode/after-change-functions (start stop length)
   "Track buffer change from START to STOP with length LENGTH."
   (when (string= major-mode "phps-mode")
+    (when (and (not phps-mode/buffer-changes--start)
+               (boundp 'phps-mode/idle-interval))
+      (run-with-idle-timer phps-mode/idle-interval nil #'phps-mode/run-incremental-lex))
     (setq phps-mode/buffer-changes--start start)
     (message "phps-mode/after-change-functions %s %s %s" start stop length)
   ))
