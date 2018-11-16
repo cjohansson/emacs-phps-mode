@@ -10,7 +10,7 @@
 
 ;; Package-Requires: ((emacs "24"))
 
-;; Copyright (C) 2017 Christian Johansson
+;; Copyright (C) 2018 Christian Johansson
 
 ;; This file is not part of GNU Emacs.
 
@@ -113,6 +113,7 @@
 (defun phps-mode/functions-init ()
   "PHP specific init-cleanup routines."
 
+  ;; indent-region will call this on each line of region
   (set (make-local-variable 'indent-line-function) #'phps-mode/indent-line)
 
   (when (and (boundp 'phps-mode/use-psr-2)

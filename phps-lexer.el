@@ -1325,6 +1325,7 @@ ANY_CHAR'
         ;; (message "data: %s" data)
         data))))
 
+;; TODO Need to store lexer state and stack at each changing point of buffer to be able to rewind lexer
 (defun phps-mode/lex--SETUP (start end)
   "Just prepare other lexers for lexing region START to END."
   (when (and (eq start 1)
