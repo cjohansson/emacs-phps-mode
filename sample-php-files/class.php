@@ -15,9 +15,6 @@ class MyClass
     public function myMethod()
     {
         echo "Some stuff here"; // Just a comment
-        if ($this->var) {
-    
-    }
     }
 
     public function myMethod2() {

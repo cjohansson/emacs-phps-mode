@@ -1331,8 +1331,10 @@ ANY_CHAR'
   (when (and (eq start 1)
              end)
     ;; (message "SETUP %s %s" start end)
+    (delete-all-overlays)
     (when (boundp 'phps-mode/buffer-changes--start)
       (setq phps-mode/buffer-changes--start nil))
+    
     (phps-mode/BEGIN phps-mode/ST_INITIAL)))
 
 (defun phps-mode/lex--RUN ()
@@ -1343,8 +1345,9 @@ ANY_CHAR'
 (defun phps-mode/run-incremental-lex ()
   "Run incremental lexer based on `phps-mode/buffer-changes--start'."
   (when (boundp 'phps-mode/buffer-changes--start)
-    (message "Should run incremental lex here %s - %s" phps-mode/buffer-changes--start (point-max))
-    (semantic-lex phps-mode/buffer-changes--start (point-max))
+    (semantic-lex-buffer)
+    ;; TODO (message "Should run incremental lex here %s - %s" phps-mode/buffer-changes--start (point-max))
+    ;; TODO (semantic-lex phps-mode/buffer-changes--start (point-max))
     (setq phps-mode/buffer-changes--start nil)))
 
 (define-lex phps-mode/tags-lexer

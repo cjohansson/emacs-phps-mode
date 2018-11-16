@@ -91,7 +91,8 @@
                     ;; (message "Tokens was valid, decreasing indent %s - %s" (line-beginning-position) (line-end-position))
                     (setq indent-level (- indent-level (- indent-start indent-end))))))
               ;; (message "inside scripting, start: %s, end: %s, indenting to column %s " start end indent-level)
-              (indent-line-to (* indent-level tab-width)))))))))
+              (indent-line-to (* indent-level tab-width))
+              (phps-mode/run-incremental-lex))))))))
 
 ;; TODO Implement this
 (defun phps-mode/indent-region ()
