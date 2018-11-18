@@ -47,6 +47,9 @@
 (defvar phps-mode/lexer-tokens nil
   "Last lexer tokens.")
 
+(defvar phps-mode/lexer-states nil
+  "A list of lists containing start, state and state stack.")
+
 
 ;; SETTINGS
 
@@ -174,8 +177,7 @@
 
 (defun phps-mode/yy_pop_state ()
   "Pop current state from stack."
-  (let* ((old-state (pop phps-mode/state_stack))
-         (new-state (car phps-mode/state_stack)))
+  (let ((old-state (pop phps-mode/state_stack)))
     ;; (message "Going back to poppped state %s" old-state)
     ;; (message "Ended state %s, going back to %s" old-state new-state)
     (if old-state
@@ -370,6 +372,9 @@
   ;;   (phps-mode/RETURN_TOKEN "}" (- end 1) end))
 
   ;; (message "Added token %s %s %s" token start end)
+
+  ;; Push token start, end, lexer state and state stack to variable
+  (push (list start end phps-mode/STATE phps-mode/state_stack) phps-mode/lexer-states)
 
   (semantic-lex-push-token
    (semantic-lex-token token start end)))
@@ -1334,6 +1339,8 @@ ANY_CHAR'
     (delete-all-overlays)
     (when (boundp 'phps-mode/buffer-changes--start)
       (setq phps-mode/buffer-changes--start nil))
+
+    (setq phps-mode/lexer-states nil)
     
     (phps-mode/BEGIN phps-mode/ST_INITIAL)))
 
@@ -1344,10 +1351,37 @@ ANY_CHAR'
 
 (defun phps-mode/run-incremental-lex ()
   "Run incremental lexer based on `phps-mode/buffer-changes--start'."
-  (when (boundp 'phps-mode/buffer-changes--start)
-    (semantic-lex-buffer)
-    ;; TODO (message "Should run incremental lex here %s - %s" phps-mode/buffer-changes--start (point-max))
-    ;; TODO (semantic-lex phps-mode/buffer-changes--start (point-max))
+  (when (and (boundp 'phps-mode/buffer-changes--start)
+             phps-mode/buffer-changes--start
+             phps-mode/lexer-states)
+    (let ((state nil)
+          (state-stack nil)
+          (new-states '())
+          (states (nreverse phps-mode/lexer-states))
+          (change-start phps-mode/buffer-changes--start)
+          (previous-token-start nil))
+      ;; (message "Looking for state to rewind to for %s in stack %s" change-start states)
+      (catch 'stop-iteration
+        (dolist (state-object states)
+          (let ((start (nth 0 state-object))
+                (end (nth 1 state-object)))
+            (when (< end change-start)
+              (setq state (nth 2 state-object))
+              (setq state-stack (nth 3 state-object))
+              (setq previous-token-start start)
+              (push state-object new-states))
+            (when (> start change-start)
+              (throw 'stop-iteration nil)))))
+      (if (and state
+               state-stack)
+          (progn
+            (setq phps-mode/STATE state)
+            (setq phps-mode/state_stack state-stack)
+            (setq phps-mode/lexer-states new-states)
+            ;; (message "Rewinding lex to state: %s and stack: %s and states: %s and start: %s" state state-stack new-states previous-token-start)
+            (semantic-lex previous-token-start (point-max)))
+        (display-warning "phps-mode" (format "Found no state to rewind to for %s in stack %s" change-start states))
+        (semantic-lex-buffer)))
     (setq phps-mode/buffer-changes--start nil)))
 
 (define-lex phps-mode/tags-lexer

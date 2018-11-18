@@ -107,9 +107,12 @@
     (when (and (not phps-mode/buffer-changes--start)
                (boundp 'phps-mode/idle-interval))
       (run-with-idle-timer phps-mode/idle-interval nil #'phps-mode/run-incremental-lex))
-    (setq phps-mode/buffer-changes--start start)
-    (message "phps-mode/after-change-functions %s %s %s" start stop length)
-  ))
+    (when (or (not phps-mode/buffer-changes--start)
+              (< start phps-mode/buffer-changes--start))
+      ;; (message "Setting %s to %s" phps-mode/buffer-changes--start start)
+      (setq phps-mode/buffer-changes--start start))
+    ;; (message "phps-mode/after-change-functions %s %s %s" start stop length)
+    ))
 
 (defun phps-mode/functions-init ()
   "PHP specific init-cleanup routines."
