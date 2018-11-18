@@ -90,6 +90,14 @@
      (should (equal buffer-contents  "<?php\n$variable = array(\n    'random2'\n);\n$variable = true;\n"))))
 
   (phps-mode/with-test-buffer
+   "<?php\n/**\n* My first line\n* My second line\n**/\n"
+   (goto-char 20)
+   (phps-mode/indent-line)
+   (message "Tokens %s point %s" phps-mode/lexer-tokens (point))
+   (let ((buffer-contents (buffer-substring-no-properties (point-min) (point-max))))
+     (should (equal buffer-contents  "<?php\n/**\n * My first line\n* My second line\n**/\n"))))
+
+  (phps-mode/with-test-buffer
    "<?php\n$variable = array(\n'random4');\n$variable = true;\n"
    (goto-char 29)
    (phps-mode/indent-line)
