@@ -1308,9 +1308,9 @@ ANY_CHAR'
             (setq phps-mode/state_stack state-stack)
             (setq phps-mode/lexer-states new-states)
             ;; (message "Rewinding lex to state: %s and stack: %s and states: %s and start: %s" state state-stack new-states previous-token-start)
-            (semantic-lex previous-token-start (point-max)))
+            (setq phps-mode/lexer-tokens (semantic-lex previous-token-start (point-max))))
         (display-warning "phps-mode" (format "Found no state to rewind to for %s in stack %s" change-start states))
-        (semantic-lex-buffer)))
+        (phps-mode/lex--RUN)))
     (setq phps-mode/buffer-changes--start nil)))
 
 (define-lex phps-mode/tags-lexer
