@@ -123,6 +123,14 @@
    (let ((buffer-contents (buffer-substring-no-properties (point-min) (point-max))))
      (should (equal buffer-contents  "<?php\n$variable = array(\n    'random4');\n$variable = true;\n"))))
 
+  (phps-mode/with-test-buffer
+   "<?php\nadd_filter(\n\"views_{$screen->id}\",'__return_empty_array'\n);"
+   (goto-char 25)
+   (phps-mode/indent-line)
+   ;; (message "Tokens %s point %s" phps-mode/lexer-tokens (point))
+   (let ((buffer-contents (buffer-substring-no-properties (point-min) (point-max))))
+     (should (equal buffer-contents "<?php\nadd_filter(\n    \"views_{$screen->id}\",'__return_empty_array'\n);"))))
+
   )
 
 (defun phps-mode/test-functions--get-point-data ()
