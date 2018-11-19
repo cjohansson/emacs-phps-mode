@@ -38,6 +38,7 @@
 
 
 (autoload 'phps-mode/with-test-buffer "phps-test")
+(autoload 'phps-mode/indent-line "phps-functions")
 (autoload 'should "ert")
 
 (defun phps-mode/test-indent-line ()
@@ -93,7 +94,7 @@
    "<?php\n/**\n* My first line\n* My second line\n**/\n"
    (goto-char 20)
    (phps-mode/indent-line)
-   (message "Tokens %s point %s" phps-mode/lexer-tokens (point))
+   ;; (message "Tokens %s point %s" phps-mode/lexer-tokens (point))
    (let ((buffer-contents (buffer-substring-no-properties (point-min) (point-max))))
      (should (equal buffer-contents  "<?php\n/**\n * My first line\n* My second line\n**/\n"))))
 

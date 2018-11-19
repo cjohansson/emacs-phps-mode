@@ -327,6 +327,11 @@
    (goto-char 20)
    (should (equal (list (list t 0 0 0 nil t) (list t 0 0 0 nil t)) (phps-mode/lexer-get-point-data))))
 
+  (phps-mode/with-test-buffer
+   "<?php /**\n * My first line\n * My second line\n **/"
+   (goto-char 10)
+   (should (equal (list (list nil 0 0 0 nil t) (list t 0 0 0 1 t)) (phps-mode/lexer-get-point-data))))
+
   )
 
 (defun phps-mode/test-lexer ()
