@@ -108,6 +108,14 @@
      (should (equal buffer-contents  "<?php\n/**\n* My first line\n* My second line\n**/\n"))))
 
   (phps-mode/with-test-buffer
+   "<?php\n/**\n* My first line\n* My second line\n**/\n"
+   (goto-char 46)
+   (phps-mode/indent-line)
+   ;; (message "Tokens %s point %s" phps-mode/lexer-tokens (point))
+   (let ((buffer-contents (buffer-substring-no-properties (point-min) (point-max))))
+     (should (equal buffer-contents  "<?php\n/**\n* My first line\n* My second line\n **/\n"))))
+
+  (phps-mode/with-test-buffer
    "<?php\n$variable = array(\n'random4');\n$variable = true;\n"
    (goto-char 29)
    (phps-mode/indent-line)
@@ -184,7 +192,7 @@
   (phps-mode/with-test-buffer
    "<?php /**\n * My first line\n * My second line\n **/"
    (goto-char 50)
-   (should (equal (list (list t 0 0 0 nil nil) (list t 0 0 0 nil nil)) (phps-mode/get-point-data))))
+   (should (equal (list (list t 0 0 0 nil t) (list t 0 0 0 nil t)) (phps-mode/get-point-data))))
 
   (phps-mode/with-test-buffer
    "<?php\n$variable = array(\n'random4');\n$variable = true;\n"

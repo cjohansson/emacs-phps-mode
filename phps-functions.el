@@ -113,7 +113,10 @@
   (when (string= major-mode "phps-mode")
     (when (and (not phps-mode/buffer-changes--start)
                (boundp 'phps-mode/idle-interval))
-      (run-with-idle-timer phps-mode/idle-interval nil #'phps-mode/run-incremental-lex))
+      (run-with-idle-timer phps-mode/idle-interval nil #'phps-mode/lex--RUN)
+      ;; TODO Maybe use incremental lexer once it's working
+      ;; (run-with-idle-timer phps-mode/idle-interval nil #'phps-mode/run-incremental-lex) 
+      )
     (when (or (not phps-mode/buffer-changes--start)
               (< start phps-mode/buffer-changes--start))
       ;; (message "Setting %s to %s" phps-mode/buffer-changes--start start)
@@ -172,8 +175,7 @@
                   (")" (setq start-parenthesis-level (- start-parenthesis-level 1)))
                   (_)))
 
-              (when (and (> token-end line-end)
-                         (< token-start line-beginning)
+              (when (and (< token-start line-beginning)
                          (eq token 'T_DOC_COMMENT))
                 (setq line-in-doc-comment t))
 
