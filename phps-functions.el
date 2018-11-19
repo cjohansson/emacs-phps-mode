@@ -67,13 +67,14 @@
                    (boundp 'phps-mode/lexer-tokens)
                    (> indent-start indent-end))
               (let ((token-number start-token-number)
-                    (valid-tokens t))
+                    (valid-tokens t)
+                    (tokens phps-mode/lexer-tokens))
                 ;; (message "token start %s, token end %s" start-token-number end-token-number)
                 (while (and valid-tokens
                             (<= token-number end-token-number))
-                  (let ((token (car (nth token-number phps-mode/lexer-tokens)))
-                        (token-start (car (cdr (nth token-number phps-mode/lexer-tokens))))
-                        (token-end (cdr (cdr (nth token-number phps-mode/lexer-tokens)))))
+                  (let ((token (car (nth token-number tokens)))
+                        (token-start (car (cdr (nth token-number tokens))))
+                        (token-end (cdr (cdr (nth token-number tokens)))))
                     (when (and valid-tokens
                                (or (>= token-start (point))
                                    (>= token-end (point)))
@@ -86,7 +87,7 @@
                                      (string= token "]")
                                      (string= token ";")
                                      (eq token 'T_CLOSE_TAG))))
-                      ;; (message "Token %s - %s in %s was invalid" token token-number phps-mode/lexer-tokens)
+                      ;; (message "Token %s - %s in %s was invalid" token token-number tokens)
                       (setq valid-tokens nil)))
                   (setq token-number (+ token-number 1)))
                 (when valid-tokens
@@ -155,6 +156,7 @@
                 ;; (message "Stopping iteration at: %s %s" start position)
                 (throw 'stop-iteration nil))
 
+              ;; Did we find any token on this line?
               (when (and (not found-line-tokens)
                          (>= token-start line-beginning)
                          (<= token-end line-end))
@@ -176,6 +178,7 @@
                   (_)))
 
               (when (and (< token-start line-beginning)
+                         (>= token-end line-end)
                          (eq token 'T_DOC_COMMENT))
                 (setq line-in-doc-comment t))
 

@@ -2,7 +2,7 @@
 /**
  * Some comments here
  * @todo was here
- */
+ **/
 
 class MyClass
 {
