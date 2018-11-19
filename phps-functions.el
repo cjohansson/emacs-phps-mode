@@ -55,11 +55,15 @@
               (start-token-number (nth 4 start))
               (end-bracket-level (nth 1 end))
               (end-parenthesis-level (nth 2 end))
-              (end-token-number (nth 4 end)))
+              (end-token-number (nth 4 end))
+              (in-doc-comment (nth 5 start)))
           (let* ((indent-start (+ start-bracket-level start-parenthesis-level))
                  (indent-end (+ end-bracket-level end-parenthesis-level))
-                 (indent-level indent-start))
+                 (indent-level indent-start)
+                 (indent-adjust 0))
             ;; (message "indent-start %s, indent-end %s" indent-start indent-end)
+
+            ;; When bracket count at start is larger than bracket count at end
             (when (and
                    (boundp 'phps-mode/lexer-tokens)
                    (> indent-start indent-end))
@@ -87,17 +91,22 @@
                 (when valid-tokens
                   ;; (message "Tokens was valid, decreasing indent %s - %s" (line-beginning-position) (line-end-position))
                   (setq indent-level (- indent-level (- indent-start indent-end))))))
-            ;; (message "inside scripting, start: %s, end: %s, indenting to column %s " start end indent-level)
-            (indent-line-to (* indent-level tab-width))
-            (phps-mode/run-incremental-lex)))))))
 
-;; TODO Implement this
+            (when in-doc-comment
+              (setq indent-adjust 1))
+
+            (let ((indent-sum (+ (* indent-level tab-width) indent-adjust)))
+              ;; (message "Indenting to %s" indent-sum)
+              ;; (message "inside scripting, start: %s, end: %s, indenting to column %s " start end indent-level)
+              (indent-line-to indent-sum)
+              (phps-mode/run-incremental-lex))))))))
+
+;; TODO Implement this?
 (defun phps-mode/indent-region ()
   "Indent region."
   )
 
-;; TODO This function should track between what min and max region a specific buffer has been modified and then re-run lexer for that region when editor is idle, maybe use (buffer-name))
-;; maybe use 'auto-save-hook for this
+;; TODO Fix flycheck error here
 (defun phps-mode/after-change-functions (start stop length)
   "Track buffer change from START to STOP with length LENGTH."
   (when (string= major-mode "phps-mode")
@@ -117,7 +126,7 @@
   (when (boundp 'phps-mode/lexer-tokens)
     (save-excursion
       (beginning-of-line)
-      (let ((position (point))
+      (let ((line-beginning (point))
             (line-end (line-end-position))
             (start-in-scripting nil)
             (start-brace-level 0)
@@ -143,12 +152,12 @@
                 (throw 'stop-iteration nil))
 
               (when (and (not found-line-tokens)
-                         (>= token-start position)
+                         (>= token-start line-beginning)
                          (<= token-end line-end))
                 (setq found-line-tokens t))
 
               ;; When end of token is equal or less to current point
-              (when (<= token-end position)
+              (when (<= token-end line-beginning)
                 (when (null start-token-number)
                   (setq start-token-number -1))
                 (setq start-token-number (+ start-token-number 1))
@@ -156,24 +165,26 @@
                   ('T_OPEN_TAG (setq start-in-scripting t))
                   ('T_OPEN_TAG_WITH_ECHO (setq start-in-scripting t))
                   ('T_CLOSE_TAG (setq start-in-scripting nil))
-                  ('T_DOC_COMMENT (setq line-in-doc-comment nil))
                   ("}" (setq start-brace-level (- start-brace-level 1)))
                   ("{" (setq start-brace-level (+ start-brace-level 1)))
                   ("(" (setq start-parenthesis-level (+ start-parenthesis-level 1)))
                   (")" (setq start-parenthesis-level (- start-parenthesis-level 1)))
                   (_)))
 
+              (when (and (> token-end line-end)
+                         (< token-start line-beginning)
+                         (eq token 'T_DOC_COMMENT))
+                (setq line-in-doc-comment t))
+
               ;; When start of token is equal or less to end of curent line
               (when (<= token-start line-end)
                 (when (null end-token-number)
                   (setq end-token-number -1))
                 (setq end-token-number (+ end-token-number 1))
-                (setq line-in-doc-comment nil)
                 (pcase token
                   ('T_OPEN_TAG (setq end-in-scripting t))
                   ('T_OPEN_TAG_WITH_ECHO (setq end-in-scripting t))
                   ('T_CLOSE_TAG (setq end-in-scripting nil))
-                  ('T_DOC_COMMENT (setq line-in-doc-comment t))
                   ("}" (setq end-brace-level (- end-brace-level 1)))
                   ("{" (setq end-brace-level (+ end-brace-level 1)))
                   ("(" (setq end-parenthesis-level (+ end-parenthesis-level 1)))
