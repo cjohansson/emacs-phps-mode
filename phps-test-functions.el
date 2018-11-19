@@ -186,6 +186,10 @@
    (goto-char 50)
    (should (equal (list (list t 0 0 0 nil nil) (list t 0 0 0 nil nil)) (phps-mode/get-point-data))))
 
+  (phps-mode/with-test-buffer
+   "<?php\n$variable = array(\n'random4');\n$variable = true;\n"
+   (goto-char 29)
+   (should (equal (list (list t 0 1 0 4 nil) (list t 0 0 0 7 nil)) (phps-mode/get-point-data))))
   )
 
 ;; TODO Add tests for all examples here: https://www.php-fig.org/psr/psr-2/

@@ -39,8 +39,7 @@
 (defvar phps-mode/buffer-changes--start nil
   "Start of buffer changes, nil if none.")
 
-;; TODO Should also format white-space inside the line, i.e. after function declarations?
-;; TODO Should indent doc blocks with 1 space
+;; TODO Also format white-space inside the line, i.e. after function declarations?
 (defun phps-mode/indent-line ()
   "Indent line."
   (let ((data (phps-mode/get-point-data)))
@@ -73,9 +72,11 @@
                 (while (and valid-tokens
                             (<= token-number end-token-number))
                   (let ((token (car (nth token-number phps-mode/lexer-tokens)))
-                        (token-start (car (cdr (nth token-number phps-mode/lexer-tokens)))))
+                        (token-start (car (cdr (nth token-number phps-mode/lexer-tokens))))
+                        (token-end (cdr (cdr (nth token-number phps-mode/lexer-tokens)))))
                     (when (and valid-tokens
-                               (>= token-start (point))
+                               (or (>= token-start (point))
+                                   (>= token-end (point)))
                                (not (or
                                      (string= token "{")
                                      (string= token "}")
