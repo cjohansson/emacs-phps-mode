@@ -181,6 +181,11 @@
    (goto-char 9)
    (should (equal (list (list nil 0 0 0 nil nil) (list t 0 0 0 1 nil)) (phps-mode/get-point-data))))
 
+  (phps-mode/with-test-buffer
+   "<?php /**\n * My first line\n * My second line\n **/"
+   (goto-char 50)
+   (should (equal (list (list t 0 0 0 nil nil) (list t 0 0 0 nil nil)) (phps-mode/get-point-data))))
+
   )
 
 ;; TODO Add tests for all examples here: https://www.php-fig.org/psr/psr-2/
