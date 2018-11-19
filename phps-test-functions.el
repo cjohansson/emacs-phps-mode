@@ -39,6 +39,7 @@
 
 (autoload 'phps-mode/with-test-buffer "phps-test")
 (autoload 'phps-mode/indent-line "phps-functions")
+(autoload 'phps-mode/get-point-data "phps-functions")
 (autoload 'should "ert")
 
 (defun phps-mode/test-indent-line ()
@@ -108,10 +109,77 @@
 
   )
 
+(defun phps-mode/test-functions--get-point-data ()
+  "Return information about point in tokens."
+
+  (phps-mode/with-test-buffer
+   "<?php\nNAMESPACE MyNameSpace;\nCLASS MyClass {\n\tpublic function __construct() {\n\t\texit;\n\t}\n}\n"
+   (goto-char 35)
+   (should (equal (list (list t 0 0 0 3 nil) (list t 1 0 0 6 nil)) (phps-mode/get-point-data))))
+
+  (phps-mode/with-test-buffer
+   "<html><head><title><?php echo $title; ?></title><body>Bla bla</body></html>"
+   (goto-char 15)
+   (should (equal (list (list nil 0 0 0 nil nil) (list nil 0 0 0 5 nil)) (phps-mode/get-point-data))))
+
+  (phps-mode/with-test-buffer
+   "<html><head><title><?php echo $title; ?>\n</title><body>Bla bla</body></html>"
+   (goto-char 50)
+   (should (equal (list (list nil 0 0 0 nil nil) (list nil 0 0 0 nil nil)) (phps-mode/get-point-data))))
+
+  (phps-mode/with-test-buffer
+   "<html><head><title></title><body>Bla bla</body></html>"
+   (goto-char 15)
+   (should (equal (list (list nil 0 0 0 nil nil) (list nil 0 0 0 nil nil)) (phps-mode/get-point-data))))
+
+  (phps-mode/with-test-buffer
+   "<html><head><title><?php echo $title; ?></title><body>Bla bla</body></html>"
+   (goto-char 30)
+   (should (equal (list (list nil 0 0 0 nil nil) (list nil 0 0 0 5 nil)) (phps-mode/get-point-data))))
+
+  (phps-mode/with-test-buffer
+   "<html><head><title><?php echo $title; ?></title><body>Bla bla</body></html>"
+   (goto-char 50)
+   (should (equal (list (list nil 0 0 0 nil nil) (list nil 0 0 0 5 nil)) (phps-mode/get-point-data))))
+
+  (phps-mode/with-test-buffer
+   "<html><head><title><?php if ($myCondition) { \n   if ($mySeconCondition) { echo $title; } } ?></title><body>Bla bla</body></html>"
+   ;; (message "Tokens: %s" phps-mode/lexer-tokens)
+   (goto-char 48)
+   (should (equal (list (list t 1 0 0 5 nil) (list nil 0 0 0 17 nil)) (phps-mode/get-point-data))))
+
+  (phps-mode/with-test-buffer
+   "<html><head><title><?php if ($myCondition) { if ($mySeconCondition) {\n echo $title;\n} } ?></title><body>Bla bla</body></html>"
+   (goto-char 72)
+   (should (equal (list (list t 2 0 0 10 nil) (list t 2 0 0 13 nil)) (phps-mode/get-point-data))))
+
+  (phps-mode/with-test-buffer
+   "<html><head><title><?php if ($myCondition) {\nif ($mySeconCondition) {\necho $title;\n}\n}\n ?></title><body>Bla bla</body></html>"
+   (goto-char 84)
+   (should (equal (list (list t 2 0 0 13 nil) (list t 1 0 0 14 nil)) (phps-mode/get-point-data))))
+
+  (phps-mode/with-test-buffer
+   "<html><head><title><?php if ($myCondition) { if ($mySeconCondition) { echo $title; } } ?></title><body>Bla bla</body></html>"
+   (goto-char 100)
+   (should (equal (list (list nil 0 0 0 nil nil) (list nil 0 0 0 17 nil)) (phps-mode/get-point-data))))
+
+  (phps-mode/with-test-buffer
+   "<?php /**\n * My first line\n * My second line\n **/"
+   (goto-char 20)
+   (should (equal (list (list t 0 0 0 nil t) (list t 0 0 0 nil t)) (phps-mode/get-point-data))))
+
+  (phps-mode/with-test-buffer
+   "<?php /**\n * My first line\n * My second line\n **/"
+   (goto-char 10)
+   (should (equal (list (list nil 0 0 0 nil t) (list t 0 0 0 1 t)) (phps-mode/get-point-data))))
+
+  )
+
 ;; TODO Add tests for all examples here: https://www.php-fig.org/psr/psr-2/
 
 (defun phps-mod/test-functions ()
   "Run test for functions."
+  (phps-mode/test-functions--get-point-data)
   (phps-mode/test-indent-line))
 
 (phps-mod/test-functions)

@@ -268,72 +268,6 @@
 
   )
 
-(defun phps-mode/test-lexer--get-point-data ()
-  "Return information about point in tokens."
-
-  (phps-mode/with-test-buffer
-   "<?php\nNAMESPACE MyNameSpace;\nCLASS MyClass {\n\tpublic function __construct() {\n\t\texit;\n\t}\n}\n"
-   (goto-char 35)
-   (should (equal (list (list t 0 0 0 3 nil) (list t 1 0 0 6 nil)) (phps-mode/lexer-get-point-data))))
-
-  (phps-mode/with-test-buffer
-   "<html><head><title><?php echo $title; ?></title><body>Bla bla</body></html>"
-   (goto-char 15)
-   (should (equal (list (list nil 0 0 0 nil nil) (list nil 0 0 0 5 nil)) (phps-mode/lexer-get-point-data))))
-
-  (phps-mode/with-test-buffer
-   "<html><head><title><?php echo $title; ?>\n</title><body>Bla bla</body></html>"
-   (goto-char 50)
-   (should (equal (list (list nil 0 0 0 nil nil) (list nil 0 0 0 nil nil)) (phps-mode/lexer-get-point-data))))
-
-  (phps-mode/with-test-buffer
-   "<html><head><title></title><body>Bla bla</body></html>"
-   (goto-char 15)
-   (should (equal (list (list nil 0 0 0 nil nil) (list nil 0 0 0 nil nil)) (phps-mode/lexer-get-point-data))))
-
-  (phps-mode/with-test-buffer
-   "<html><head><title><?php echo $title; ?></title><body>Bla bla</body></html>"
-   (goto-char 30)
-   (should (equal (list (list nil 0 0 0 nil nil) (list nil 0 0 0 5 nil)) (phps-mode/lexer-get-point-data))))
-
-  (phps-mode/with-test-buffer
-   "<html><head><title><?php echo $title; ?></title><body>Bla bla</body></html>"
-   (goto-char 50)
-   (should (equal (list (list nil 0 0 0 nil nil) (list nil 0 0 0 5 nil)) (phps-mode/lexer-get-point-data))))
-
-  (phps-mode/with-test-buffer
-   "<html><head><title><?php if ($myCondition) { \n   if ($mySeconCondition) { echo $title; } } ?></title><body>Bla bla</body></html>"
-   ;; (message "Tokens: %s" phps-mode/lexer-tokens)
-   (goto-char 48)
-   (should (equal (list (list t 1 0 0 5 nil) (list nil 0 0 0 17 nil)) (phps-mode/lexer-get-point-data))))
-
-  (phps-mode/with-test-buffer
-   "<html><head><title><?php if ($myCondition) { if ($mySeconCondition) {\n echo $title;\n} } ?></title><body>Bla bla</body></html>"
-   (goto-char 72)
-   (should (equal (list (list t 2 0 0 10 nil) (list t 2 0 0 13 nil)) (phps-mode/lexer-get-point-data))))
-
-  (phps-mode/with-test-buffer
-   "<html><head><title><?php if ($myCondition) {\nif ($mySeconCondition) {\necho $title;\n}\n}\n ?></title><body>Bla bla</body></html>"
-   (goto-char 84)
-   (should (equal (list (list t 2 0 0 13 nil) (list t 1 0 0 14 nil)) (phps-mode/lexer-get-point-data))))
-
-  (phps-mode/with-test-buffer
-   "<html><head><title><?php if ($myCondition) { if ($mySeconCondition) { echo $title; } } ?></title><body>Bla bla</body></html>"
-   (goto-char 100)
-   (should (equal (list (list nil 0 0 0 nil nil) (list nil 0 0 0 17 nil)) (phps-mode/lexer-get-point-data))))
-
-  (phps-mode/with-test-buffer
-   "<?php /**\n * My first line\n * My second line\n **/"
-   (goto-char 20)
-   (should (equal (list (list t 0 0 0 nil t) (list t 0 0 0 nil t)) (phps-mode/lexer-get-point-data))))
-
-  (phps-mode/with-test-buffer
-   "<?php /**\n * My first line\n * My second line\n **/"
-   (goto-char 10)
-   (should (equal (list (list nil 0 0 0 nil t) (list t 0 0 0 1 t)) (phps-mode/lexer-get-point-data))))
-
-  )
-
 (defun phps-mode/test-lexer ()
   "Run test for lexer."
   ;; (message "-- Running all tests for lexer... --\n")
@@ -343,7 +277,6 @@
   (phps-mode/test-lexer--complex-tokens)
   (phps-mode/test-lexer--namespaces)
   (phps-mode/test-lexer--errors)
-  (phps-mode/test-lexer--get-point-data)
   ;; (message "\n-- Ran all tests for lexer. --")
   )
 

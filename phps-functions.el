@@ -39,13 +39,11 @@
 (defvar phps-mode/buffer-changes--start nil
   "Start of buffer changes, nil if none.")
 
-(autoload 'phps-mode/lexer-get-point-data "phps-lexer")
-
 ;; TODO Should also format white-space inside the line, i.e. after function declarations?
 ;; TODO Should indent doc blocks with 1 space
 (defun phps-mode/indent-line ()
   "Indent line."
-  (let ((data (phps-mode/lexer-get-point-data)))
+  (let ((data (phps-mode/get-point-data)))
     (let* ((start (nth 0 data))
            (end (nth 1 data))
            (in-scripting (nth 0 start)))
@@ -112,6 +110,83 @@
       (setq phps-mode/buffer-changes--start start))
     ;; (message "phps-mode/after-change-functions %s %s %s" start stop length)
     ))
+
+(defun phps-mode/get-point-data ()
+  "Return information about point in tokens."
+  ;; (message "Point: %s in %s" (point) phps-mode/lexer-tokens)
+  (when (boundp 'phps-mode/lexer-tokens)
+    (save-excursion
+      (beginning-of-line)
+      (let ((position (point))
+            (line-end (line-end-position))
+            (start-in-scripting nil)
+            (start-brace-level 0)
+            (start-parenthesis-level 0)
+            (start-inline-function-level 0)
+            (start-token-number nil)
+            (end-in-scripting nil)
+            (end-brace-level 0)
+            (end-parenthesis-level 0)
+            (end-inline-function-level 0)
+            (end-token-number nil)
+            (line-in-doc-comment nil)
+            (found-line-tokens nil))
+        (catch 'stop-iteration
+          (dolist (item phps-mode/lexer-tokens)
+            (let ((token (car item))
+                  (token-start (car (cdr item)))
+                  (token-end (cdr (cdr item))))
+              ;; (message "Token: %s Start: %s End: %s Item: %s" token start end item)
+
+              (when (> token-start line-end)
+                ;; (message "Stopping iteration at: %s %s" start position)
+                (throw 'stop-iteration nil))
+
+              (when (and (not found-line-tokens)
+                         (>= token-start position)
+                         (<= token-end line-end))
+                (setq found-line-tokens t))
+
+              ;; When end of token is equal or less to current point
+              (when (<= token-end position)
+                (when (null start-token-number)
+                  (setq start-token-number -1))
+                (setq start-token-number (+ start-token-number 1))
+                (pcase token
+                  ('T_OPEN_TAG (setq start-in-scripting t))
+                  ('T_OPEN_TAG_WITH_ECHO (setq start-in-scripting t))
+                  ('T_CLOSE_TAG (setq start-in-scripting nil))
+                  ('T_DOC_COMMENT (setq line-in-doc-comment nil))
+                  ("}" (setq start-brace-level (- start-brace-level 1)))
+                  ("{" (setq start-brace-level (+ start-brace-level 1)))
+                  ("(" (setq start-parenthesis-level (+ start-parenthesis-level 1)))
+                  (")" (setq start-parenthesis-level (- start-parenthesis-level 1)))
+                  (_)))
+
+              ;; When start of token is equal or less to end of curent line
+              (when (<= token-start line-end)
+                (when (null end-token-number)
+                  (setq end-token-number -1))
+                (setq end-token-number (+ end-token-number 1))
+                (setq line-in-doc-comment nil)
+                (pcase token
+                  ('T_OPEN_TAG (setq end-in-scripting t))
+                  ('T_OPEN_TAG_WITH_ECHO (setq end-in-scripting t))
+                  ('T_CLOSE_TAG (setq end-in-scripting nil))
+                  ('T_DOC_COMMENT (setq line-in-doc-comment t))
+                  ("}" (setq end-brace-level (- end-brace-level 1)))
+                  ("{" (setq end-brace-level (+ end-brace-level 1)))
+                  ("(" (setq end-parenthesis-level (+ end-parenthesis-level 1)))
+                  (")" (setq end-parenthesis-level (- end-parenthesis-level 1)))
+                  (_)))
+              
+              )))
+        (when (not found-line-tokens)
+          (setq start-token-number nil)
+          (setq end-token-number nil))
+        (let ((data (list (list start-in-scripting start-brace-level start-parenthesis-level start-inline-function-level start-token-number line-in-doc-comment) (list end-in-scripting end-brace-level end-parenthesis-level end-inline-function-level end-token-number line-in-doc-comment))))
+          ;; (message "data: %s" data)
+          data)))))
 
 (defun phps-mode/functions-init ()
   "PHP specific init-cleanup routines."
