@@ -1,6 +1,6 @@
 # PHPs - Experiment with a Semantic Mode for Emacs
 
-An Emacs major mode for PHP scripting language which aims at making a full semantic integration. Currently at experimental stage.
+An Emacs major mode for PHP scripting language which aims at making a full semantic integration. Currently at *usable* stage.
 
 ## Goals
 
@@ -9,11 +9,11 @@ With current progress estimates:
 * Flycheck support (100%)
 * Lexer based on official PHP re2c lexer (100%)
 * Syntax coloring based on lexer tokens (100%)
-* Incremental lexer and syntax coloring after changes (0%)
-* PSR based indentation based on lexer tokens (50%)
+* PSR based indentation based on lexer tokens (90%)
 * Wisent LALR parser based on official PHP yacc parser automatically converted (60%)
+* Incremental lexer and syntax coloring after changes (50%)
+* Full integration with Emacs Semantic subsystem (30%)
 * Flymake support (0%)
-* Full integration with Emacs Semantic subsystem (0%)
 
 ## Unit tests
 
@@ -36,3 +36,6 @@ make test-parser
 ``` bash
 make test-functions
 ```
+
+## Installation
+
