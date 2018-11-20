@@ -1319,6 +1319,10 @@ ANY_CHAR'
                     (throw 'stop-iteration nil)
                     ))))
             (setq old-tokens (nreverse old-tokens))
+
+            ;; Delete all overlays from point of change to end of buffer
+            (dolist (overlay (overlays-in previous-token-start (point-max)))
+                (delete-overlay overlay))
             
             (let* ((new-tokens (semantic-lex previous-token-start (point-max)))
                    (appended-tokens (append old-tokens new-tokens)))
@@ -1327,6 +1331,7 @@ ANY_CHAR'
               (setq phps-mode/STATE state)
               (setq phps-mode/state_stack state-stack)
               (setq phps-mode/lexer-states new-states)
+              
               ;; TODO Should clear overlays after point of change here
               ;; (message "Rewinding lex to state: %s and stack: %s and states: %s and start: %s old tokens: %s" state state-stack new-states previous-token-start old-tokens)
 
