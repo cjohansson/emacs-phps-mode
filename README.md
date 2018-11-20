@@ -14,6 +14,7 @@ With current progress estimates:
 * Incremental lexer and syntax coloring after changes (50%)
 * Full integration with Emacs Semantic subsystem (30%)
 * Flymake support (0%)
+* PSR-2 auto-formatting tool based on lexer tokens (0%)
 
 ## Unit tests
 
