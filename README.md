@@ -11,10 +11,12 @@ With current progress estimates:
 * Syntax coloring based on lexer tokens (100%)
 * PSR based indentation based on lexer tokens (90%)
 * Wisent LALR parser based on official PHP yacc parser automatically converted (60%)
-* Incremental lexer and syntax coloring after changes (50%)
+* Incremental lexer and syntax coloring after buffer changes (50%)
 * Full integration with Emacs Semantic subsystem (30%)
 * Flymake support (0%)
 * PSR-2 auto-formatting tool based on lexer tokens (0%)
+* Add to MELPA (0%)
+* Add to ELPA (0%)
 
 ## Unit tests
 
@@ -38,5 +40,14 @@ make test-parser
 make test-functions
 ```
 
-## Installation
+## Installation example
+
+Download to `~/.emacs.d/phps-mode/` and then add this to your init file:
+
+``` emacs-lisp
+(add-to-list 'load-path "~/.emacs.d/phps-mode/")
+(use-package phps-mode
+    :mode ("\\.php\\'" "\\.phtml\\'")
+)
+```
 
