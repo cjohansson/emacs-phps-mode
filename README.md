@@ -20,9 +20,11 @@ With current progress estimates:
 
 ## Unit tests
 
-Not ready yet.
+Not fully ready yet.
 
 ### Lexer
+
+Emacs24+ path need to be updated in Makefile first.
 
 ``` bash
 make test-lexer
@@ -30,11 +32,15 @@ make test-lexer
 
 ### Parser
 
+Not ready yet.
+
 ``` bash
 make test-parser
 ```
 
-### Indentation
+### Functions
+
+Emacs24+ path need to be updated in Makefile first.
 
 ``` bash
 make test-functions
@@ -45,9 +51,8 @@ make test-functions
 Download to `~/.emacs.d/phps-mode/` and then add this to your init file:
 
 ``` emacs-lisp
-(add-to-list 'load-path "~/.emacs.d/phps-mode/")
+(add-to-list 'load-path (expand-file-name "~/.emacs.d/phps-mode/"))
 (use-package phps-mode
-    :mode ("\\.php\\'" "\\.phtml\\'")
-)
+    :mode ("\\.php\\'" "\\.phtml\\'"))
 ```
 
