@@ -40,6 +40,7 @@
   "Start of buffer changes, nil if none.")
 
 ;; TODO Also format white-space inside the line, i.e. after function declarations?
+;; TODO Support inline function indentation
 (defun phps-mode/indent-line ()
   "Indent line."
   (let ((data (phps-mode/get-point-data)))
@@ -101,7 +102,12 @@
               ;; (message "Indenting to %s" indent-sum)
               ;; (message "inside scripting, start: %s, end: %s, indenting to column %s " start end indent-level)
               (indent-line-to indent-sum)
-              (phps-mode/run-incremental-lex))))))))
+              (let ((line-start (line-beginning-position)))
+                (when (or (not phps-mode/buffer-changes--start)
+                          (< line-start phps-mode/buffer-changes--start))
+                  ;; (message "Setting changes start from %s to %s" phps-mode/buffer-changes--start start)
+                  (setq phps-mode/buffer-changes--start line-start))
+                (phps-mode/run-incremental-lex)))))))))
 
 ;; TODO Implement this?
 (defun phps-mode/indent-region ()
@@ -114,13 +120,13 @@
   (when (string= major-mode "phps-mode")
     (when (and (not phps-mode/buffer-changes--start)
                (boundp 'phps-mode/idle-interval))
-      (run-with-idle-timer phps-mode/idle-interval nil #'phps-mode/lex--RUN)
+      ;; (run-with-idle-timer phps-mode/idle-interval nil #'phps-mode/lex--RUN)
       ;; TODO Maybe use incremental lexer once it's working
-      ;; (run-with-idle-timer phps-mode/idle-interval nil #'phps-mode/run-incremental-lex) 
+      (run-with-idle-timer phps-mode/idle-interval nil #'phps-mode/run-incremental-lex) 
       )
     (when (or (not phps-mode/buffer-changes--start)
               (< start phps-mode/buffer-changes--start))
-      ;; (message "Setting %s to %s" phps-mode/buffer-changes--start start)
+      ;; (message "Setting start of changes from %s to %s" phps-mode/buffer-changes--start start)
       (setq phps-mode/buffer-changes--start start))
     ;; (message "phps-mode/after-change-functions %s %s %s" start stop length)
     ))

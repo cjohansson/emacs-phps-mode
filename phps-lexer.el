@@ -1262,9 +1262,9 @@ ANY_CHAR'
 ;; TODO Need to store lexer state and stack at each changing point of buffer to be able to rewind lexer
 (defun phps-mode/lex--SETUP (start end)
   "Just prepare other lexers for lexing region START to END."
+  (message "phps-mode/lex--SETUP %s %s" start end)
   (when (and (eq start 1)
              end)
-    ;; (message "SETUP %s %s" start end)
     (delete-all-overlays)
     (when (boundp 'phps-mode/buffer-changes--start)
       (setq phps-mode/buffer-changes--start nil))
@@ -1288,8 +1288,12 @@ ANY_CHAR'
           (new-states '())
           (states (nreverse phps-mode/lexer-states))
           (change-start phps-mode/buffer-changes--start)
-          (previous-token-start nil))
+          (previous-token-start nil)
+          (tokens phps-mode/lexer-tokens))
       ;; (message "Looking for state to rewind to for %s in stack %s" change-start states)
+
+      ;; Find state and state stack before point of change
+      ;; also determine were previous token to change starts
       (catch 'stop-iteration
         (dolist (state-object states)
           (let ((start (nth 0 state-object))
@@ -1301,14 +1305,33 @@ ANY_CHAR'
               (push state-object new-states))
             (when (> start change-start)
               (throw 'stop-iteration nil)))))
+
       (if (and state
                state-stack)
-          (progn
-            (setq phps-mode/STATE state)
-            (setq phps-mode/state_stack state-stack)
-            (setq phps-mode/lexer-states new-states)
-            ;; (message "Rewinding lex to state: %s and stack: %s and states: %s and start: %s" state state-stack new-states previous-token-start)
-            (setq phps-mode/lexer-tokens (semantic-lex previous-token-start (point-max))))
+          (let ((old-tokens '()))
+
+            ;; Build new list of tokens before point of change
+            (catch 'stop-iteration
+              (dolist (token tokens)
+                (let ((start (car (cdr token))))
+                  (if (< start previous-token-start)
+                      (push token old-tokens)
+                    (throw 'stop-iteration nil)
+                    ))))
+            (setq old-tokens (nreverse old-tokens))
+            
+            (let* ((new-tokens (semantic-lex previous-token-start (point-max)))
+                   (appended-tokens (append old-tokens new-tokens)))
+              ;; (message "old-tokens: %s, new-tokens: %s" old-tokens new-tokens)
+              (setq phps-mode/lexer-tokens appended-tokens)
+              (setq phps-mode/STATE state)
+              (setq phps-mode/state_stack state-stack)
+              (setq phps-mode/lexer-states new-states)
+              ;; TODO Should clear overlays after point of change here
+              ;; (message "Rewinding lex to state: %s and stack: %s and states: %s and start: %s old tokens: %s" state state-stack new-states previous-token-start old-tokens)
+
+              ;; TODO Here clear all tokens after previous-token-start and add new tokens to stack
+              ))
         (display-warning "phps-mode" (format "Found no state to rewind to for %s in stack %s" change-start states))
         (phps-mode/lex--RUN)))
     (setq phps-mode/buffer-changes--start nil)))
