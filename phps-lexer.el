@@ -1279,7 +1279,7 @@ ANY_CHAR'
   (setq phps-mode/lexer-tokens (semantic-lex-buffer)))
 
 (defun phps-mode/move-lexer-tokens (old-tokens start diff)
-  "Move lexer OLD-TOKENS positions after START with DIFF points."
+  "Move lexer OLD-TOKENS positions after (or equal to) START with DIFF points."
   (let ((new-tokens '()))
     (when old-tokens
 
@@ -1290,7 +1290,7 @@ ANY_CHAR'
           (let ((token-symbol (car token))
                 (token-start (car (cdr token)))
                 (token-end (cdr (cdr token))))
-            (if (> token-start start)
+            (if (>= token-start start)
                 (let ((new-token-start (+ token-start diff))
                       (new-token-end (+ token-end diff)))
                   (push `(,token-symbol ,new-token-start . ,new-token-end) new-tokens))
