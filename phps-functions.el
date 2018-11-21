@@ -40,7 +40,7 @@
   "Start of buffer changes, nil if none.")
 
 ;; TODO Also format white-space inside the line, i.e. after function declarations?
-;; TODO Support inline function indentation
+;; TODO Support inline function indentations
 (defun phps-mode/indent-line ()
   "Indent line."
   (let ((data (phps-mode/get-point-data)))
@@ -121,9 +121,12 @@
             (let ((indent-sum (+ (* indent-level tab-width) indent-adjust))
                   current-indentation (current-indentation))
 
+              (when (null current-indentation)
+                (setq current-indentation 0))
+
               ;; Only continue if current indentation is wrong
               (when (not (equal indent-sum current-indentation))
-                (let ((indent-diff (- current-indentation indent-sum)))
+                (let ((indent-diff (- indent-sum current-indentation)))
                   ;; (message "Indenting to %s current column %s" indent-sum (current-indentation))
                   ;; (message "inside scripting, start: %s, end: %s, indenting to column %s " start end indent-level)
 
@@ -131,16 +134,20 @@
 
                   ;; TODO When indent is changed the trailing tokens just need to adjust their token positions, this will improve speed of indent-region a lot
                   ;; TODO Lexer states need to be moved as well
-
                   (let ((line-start (line-beginning-position)))
-
-                    ;; Set point of change if it's not set or if it's larger than current point
-                    (when (or (not phps-mode/buffer-changes--start)
-                              (< line-start phps-mode/buffer-changes--start))
-                      ;; (message "Setting changes start from %s to %s" phps-mode/buffer-changes--start start)
-                      (setq phps-mode/buffer-changes--start line-start))
+                    (phps-mode/move-lexer-tokens line-start indent-diff)
+                    (phps-mode/move-lexer-states line-start indent-diff)
+                    (message "Moving tokens and states %s, %s to %s" indent-diff current-indentation indent-sum)
                     
-                    (phps-mode/run-incremental-lex)))))))))))
+                    ;; ;; Set point of change if it's not set or if it's larger than current point
+                    ;; (when (or (not phps-mode/buffer-changes--start)
+                    ;;           (< line-start phps-mode/buffer-changes--start))
+                    ;;   ;; (message "Setting changes start from %s to %s" phps-mode/buffer-changes--start start)
+                    ;;   (setq phps-mode/buffer-changes--start line-start))
+                    
+                    ;; (phps-mode/run-incremental-lex)
+
+                    ))))))))))
 
 ;; TODO Implement this?
 (defun phps-mode/indent-region ()

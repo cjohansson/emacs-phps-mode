@@ -1302,7 +1302,7 @@ ANY_CHAR'
 
     new-states))
 
-(defun phps-mode/lexer-move-lexer-tokens (start diff)
+(defun phps-mode/move-lexer-tokens (start diff)
   "Update tokens with moved lexer tokens after or equal to START with modification DIFF."
   (setq phps-mode/lexer-tokens (phps-mode/get-moved-lexer-tokens phps-mode/lexer-tokens start diff)))
 
