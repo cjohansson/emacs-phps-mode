@@ -294,6 +294,58 @@
 
   )
 
+(defun phps-mode/test-get-moved-lexer-states ()
+  "Run test for get moved lexer states."
+
+  (should (equal
+           '((68 76 1 '(1))
+             (10 67 1 '(1))
+             (1 7 1 '(1)))
+           
+           (phps-mode/get-moved-lexer-states
+            '((66 74 1 '(1))
+              (8 65 1 '(1))
+              (1 7 1 '(1)))
+            7
+            2)))
+
+  (should (equal
+           '((67 75 1 '(1))
+             (9 66 1 '(1))
+             (2 8 1 '(1)))
+           
+           (phps-mode/get-moved-lexer-states
+            '((66 74 1 '(1))
+              (8 65 1 '(1))
+              (1 7 1 '(1)))
+            0
+            1)))
+
+  (should (equal
+           '((66 74 1 '(1))
+             (8 65 1 '(1))
+             (1 7 1 '(1)))
+           
+           (phps-mode/get-moved-lexer-states
+            '((66 74 1 '(1))
+              (8 65 1 '(1))
+              (1 7 1 '(1)))
+            100
+            1)))
+
+  (should (equal
+           '((64 72 1 '(1))
+             (6 63 1 '(1))
+             (1 7 1 '(1)))
+           
+           (phps-mode/get-moved-lexer-states
+            '((66 74 1 '(1))
+              (8 65 1 '(1))
+              (3 9 1 '(1)))
+            3
+            -2)))
+  )
+
 (defun phps-mode/test-lexer ()
   "Run test for lexer."
   ;; (message "-- Running all tests for lexer... --\n")
@@ -304,6 +356,7 @@
   (phps-mode/test-lexer--namespaces)
   (phps-mode/test-lexer--errors)
   (phps-mode/test-get-moved-lexer-tokens)
+  (phps-mode/test-get-moved-lexer-states)
   ;; (message "\n-- Ran all tests for lexer. --")
   )
 

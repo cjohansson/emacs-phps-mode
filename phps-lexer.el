@@ -1284,8 +1284,23 @@ ANY_CHAR'
 
 (defun phps-mode/get-moved-lexer-states (states start diff)
   "Return moved lexer STATES after (or equal to) START with modification DIFF."
-  ;; TODO Implement this
-  )
+  (let ((old-states states)
+        (new-states '()))
+    (when old-states
+
+      ;; Iterate through states add states before start start unchanged and the others modified with diff
+      (dolist (state-object (nreverse old-states))
+        (let ((state-start (nth 0 state-object))
+              (state-end (nth 1 state-object))
+              (state-symbol (nth 2 state-object))
+              (state-stack (nth 3 state-object)))
+          (if (>= state-start start)
+            (let ((new-state-start (+ state-start diff))
+                  (new-state-end (+ state-end diff)))
+              (push (list new-state-start new-state-end state-symbol state-stack) new-states))
+            (push state-object new-states)))))
+
+    new-states))
 
 (defun phps-mode/lexer-move-lexer-tokens (start diff)
   "Update tokens with moved lexer tokens after or equal to START with modification DIFF."
@@ -1296,18 +1311,16 @@ ANY_CHAR'
   (let ((new-tokens '()))
     (when old-tokens
 
-      ;; Iterate over all tokens, add those that are to be left unchanged and
-      ;; add modified ones that are to be changed.
-      (catch 'stop-iteration
-        (dolist (token (nreverse old-tokens))
-          (let ((token-symbol (car token))
-                (token-start (car (cdr token)))
-                (token-end (cdr (cdr token))))
-            (if (>= token-start start)
-                (let ((new-token-start (+ token-start diff))
-                      (new-token-end (+ token-end diff)))
-                  (push `(,token-symbol ,new-token-start . ,new-token-end) new-tokens))
-              (push token new-tokens))))))
+      ;; Iterate over all tokens, add those that are to be left unchanged and add modified ones that should be changed.
+      (dolist (token (nreverse old-tokens))
+        (let ((token-symbol (car token))
+              (token-start (car (cdr token)))
+              (token-end (cdr (cdr token))))
+          (if (>= token-start start)
+              (let ((new-token-start (+ token-start diff))
+                    (new-token-end (+ token-end diff)))
+                (push `(,token-symbol ,new-token-start . ,new-token-end) new-tokens))
+            (push token new-tokens)))))
 
     new-tokens))
 
