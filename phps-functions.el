@@ -114,26 +114,32 @@
 
                   (setq indent-level (- indent-level (- indent-start indent-end))))))
 
+            ;; If this line is part of a doc-comment increase indent with one unit
             (when in-doc-comment
               (setq indent-adjust 1))
 
-            (let ((indent-sum (+ (* indent-level tab-width) indent-adjust)))
-              (when (not (equal indent-sum (current-indentation)))
-                ;; (message "Indenting to %s current column %s" indent-sum (current-indentation))
-                ;; (message "inside scripting, start: %s, end: %s, indenting to column %s " start end indent-level)
+            (let ((indent-sum (+ (* indent-level tab-width) indent-adjust))
+                  current-indentation (current-indentation))
 
-                ;; TODO When indent is changed the trailing tokens just need to adjust their token positions, this will improve speed of indent-region a lot
-                (indent-line-to indent-sum)
+              ;; Only continue if current indentation is wrong
+              (when (not (equal indent-sum current-indentation))
+                (let ((indent-diff (- current-indentation indent-sum)))
+                  ;; (message "Indenting to %s current column %s" indent-sum (current-indentation))
+                  ;; (message "inside scripting, start: %s, end: %s, indenting to column %s " start end indent-level)
 
-                (let ((line-start (line-beginning-position)))
+                  (indent-line-to indent-sum)
 
-                  ;; Set point of change if it's not set or if it's larger than current point
-                  (when (or (not phps-mode/buffer-changes--start)
-                            (< line-start phps-mode/buffer-changes--start))
-                    ;; (message "Setting changes start from %s to %s" phps-mode/buffer-changes--start start)
-                    (setq phps-mode/buffer-changes--start line-start))
-                  
-                  (phps-mode/run-incremental-lex))))))))))
+                  ;; TODO When indent is changed the trailing tokens just need to adjust their token positions, this will improve speed of indent-region a lot
+
+                  (let ((line-start (line-beginning-position)))
+
+                    ;; Set point of change if it's not set or if it's larger than current point
+                    (when (or (not phps-mode/buffer-changes--start)
+                              (< line-start phps-mode/buffer-changes--start))
+                      ;; (message "Setting changes start from %s to %s" phps-mode/buffer-changes--start start)
+                      (setq phps-mode/buffer-changes--start line-start))
+                    
+                    (phps-mode/run-incremental-lex)))))))))))
 
 ;; TODO Implement this?
 (defun phps-mode/indent-region ()

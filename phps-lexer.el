@@ -1278,6 +1278,26 @@ ANY_CHAR'
   (interactive)
   (setq phps-mode/lexer-tokens (semantic-lex-buffer)))
 
+(defun phps-mode/move-lexer-tokens (old-tokens start diff)
+  "Move lexer OLD-TOKENS positions after START with DIFF points."
+  (let ((new-tokens '()))
+    (when old-tokens
+
+      ;; Iterate over all tokens, add those that are to be left unchanged and
+      ;; add modified ones that are to be changed.
+      (catch 'stop-iteration
+        (dolist (token (nreverse old-tokens))
+          (let ((token-symbol (car token))
+                (token-start (car (cdr token)))
+                (token-end (cdr (cdr token))))
+            (if (> token-start start)
+                (let ((new-token-start (+ token-start diff))
+                      (new-token-end (+ token-end diff)))
+                  (push `(,token-symbol ,new-token-start ,new-token-end) new-tokens)
+                  (push token new-tokens))))))
+
+      new-tokens)))
+
 (defun phps-mode/run-incremental-lex ()
   "Run incremental lexer based on `phps-mode/buffer-changes--start'."
   (when (and (boundp 'phps-mode/buffer-changes--start)
