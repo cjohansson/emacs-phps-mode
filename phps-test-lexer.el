@@ -269,28 +269,28 @@
 
   )
 
-(defun phps-mode/test-move-lexer-tokens ()
-  "Run test for move lexer tokens."
+(defun phps-mode/test-get-moved-lexer-tokens ()
+  "Run test for get moved lexer tokens."
 
   (should (equal
            '((T_OPEN_TAG 1 . 7) (T_START_HEREDOC 7 . 16) (T_ERROR 21 . 60))
-           (phps-mode/move-lexer-tokens '((T_OPEN_TAG 1 . 7) (T_START_HEREDOC 7 . 16) (T_ERROR 16 . 55)) 8 5)))
+           (phps-mode/get-moved-lexer-tokens '((T_OPEN_TAG 1 . 7) (T_START_HEREDOC 7 . 16) (T_ERROR 16 . 55)) 8 5)))
 
   (should (equal
            '((T_OPEN_TAG 1 . 7) (T_START_HEREDOC 7 . 16) (T_ERROR 11 . 50))
-           (phps-mode/move-lexer-tokens '((T_OPEN_TAG 1 . 7) (T_START_HEREDOC 7 . 16) (T_ERROR 16 . 55)) 8 -5)))
+           (phps-mode/get-moved-lexer-tokens '((T_OPEN_TAG 1 . 7) (T_START_HEREDOC 7 . 16) (T_ERROR 16 . 55)) 8 -5)))
 
   (should (equal
            '((T_OPEN_TAG 1 . 7) (T_START_HEREDOC 8 . 17) (T_ERROR 17 . 56))
-           (phps-mode/move-lexer-tokens '((T_OPEN_TAG 1 . 7) (T_START_HEREDOC 7 . 16) (T_ERROR 16 . 55)) 7 1)))
+           (phps-mode/get-moved-lexer-tokens '((T_OPEN_TAG 1 . 7) (T_START_HEREDOC 7 . 16) (T_ERROR 16 . 55)) 7 1)))
 
   (should (equal
            '((T_OPEN_TAG 1 . 7) (T_START_HEREDOC 7 . 16) (T_ERROR 16 . 55))
-           (phps-mode/move-lexer-tokens '((T_OPEN_TAG 1 . 7) (T_START_HEREDOC 7 . 16) (T_ERROR 16 . 55)) 20 1)))
+           (phps-mode/get-moved-lexer-tokens '((T_OPEN_TAG 1 . 7) (T_START_HEREDOC 7 . 16) (T_ERROR 16 . 55)) 20 1)))
 
   (should (equal
            '((T_OPEN_TAG 2 . 8) (T_START_HEREDOC 8 . 17) (T_ERROR 17 . 56))
-           (phps-mode/move-lexer-tokens '((T_OPEN_TAG 1 . 7) (T_START_HEREDOC 7 . 16) (T_ERROR 16 . 55)) -20 1)))
+           (phps-mode/get-moved-lexer-tokens '((T_OPEN_TAG 1 . 7) (T_START_HEREDOC 7 . 16) (T_ERROR 16 . 55)) -20 1)))
 
   )
 
@@ -303,7 +303,7 @@
   (phps-mode/test-lexer--complex-tokens)
   (phps-mode/test-lexer--namespaces)
   (phps-mode/test-lexer--errors)
-  (phps-mode/test-move-lexer-tokens)
+  (phps-mode/test-get-moved-lexer-tokens)
   ;; (message "\n-- Ran all tests for lexer. --")
   )
 

@@ -1278,8 +1278,21 @@ ANY_CHAR'
   (interactive)
   (setq phps-mode/lexer-tokens (semantic-lex-buffer)))
 
-(defun phps-mode/move-lexer-tokens (old-tokens start diff)
-  "Move lexer OLD-TOKENS positions after (or equal to) START with DIFF points."
+(defun phps-mode/move-lexer-states (start diff)
+  "Move lexer states after (or equal to) START with modification DIFF."
+  (setq phps-mode/lexer-states (phps-mode/get-moved-lexer-states phps-mode/lexer-states start diff)))
+
+(defun phps-mode/get-moved-lexer-states (states start diff)
+  "Return moved lexer STATES after (or equal to) START with modification DIFF."
+  ;; TODO Implement this
+  )
+
+(defun phps-mode/lexer-move-lexer-tokens (start diff)
+  "Update tokens with moved lexer tokens after or equal to START with modification DIFF."
+  (setq phps-mode/lexer-tokens (phps-mode/get-moved-lexer-tokens phps-mode/lexer-tokens start diff)))
+
+(defun phps-mode/get-moved-lexer-tokens (old-tokens start diff)
+  "Return moved lexer OLD-TOKENS positions after (or equal to) START with DIFF points."
   (let ((new-tokens '()))
     (when old-tokens
 
