@@ -40,6 +40,7 @@
 (autoload 'phps-mode/with-test-buffer "phps-test")
 (autoload 'phps-mode/lexer-init "phps-lexer")
 (autoload 'phps-mode/lexer-get-point-data "phps-lexer")
+(autoload 'phps-mode/move-lexer-tokens "phps-lexer")
 (autoload 'should "ert")
 
 (defun phps-mode/test-lexer--script-boundaries ()
@@ -268,6 +269,15 @@
 
   )
 
+(defun phps-mode/test-move-lexer-tokens ()
+  "Run test for move lexer tokens."
+
+  (should (equal
+           '((T_OPEN_TAG 1 . 7) (T_START_HEREDOC 7 . 16) (T_ERROR 21 . 60))
+           (phps-mode/move-lexer-tokens '((T_OPEN_TAG 1 . 7) (T_START_HEREDOC 7 . 16) (T_ERROR 16 . 55)) 8 5)))
+
+  )
+
 (defun phps-mode/test-lexer ()
   "Run test for lexer."
   ;; (message "-- Running all tests for lexer... --\n")
@@ -277,6 +287,7 @@
   (phps-mode/test-lexer--complex-tokens)
   (phps-mode/test-lexer--namespaces)
   (phps-mode/test-lexer--errors)
+  (phps-mode/test-move-lexer-tokens)
   ;; (message "\n-- Ran all tests for lexer. --")
   )
 

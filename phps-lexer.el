@@ -1293,10 +1293,10 @@ ANY_CHAR'
             (if (> token-start start)
                 (let ((new-token-start (+ token-start diff))
                       (new-token-end (+ token-end diff)))
-                  (push `(,token-symbol ,new-token-start ,new-token-end) new-tokens)
-                  (push token new-tokens))))))
+                  (push `(,token-symbol ,new-token-start . ,new-token-end) new-tokens))
+              (push token new-tokens))))))
 
-      new-tokens)))
+    new-tokens))
 
 (defun phps-mode/run-incremental-lex ()
   "Run incremental lexer based on `phps-mode/buffer-changes--start'."
