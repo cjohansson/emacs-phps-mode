@@ -44,6 +44,12 @@ make test-parser
 make test-functions
 ```
 
+### All tests
+
+``` bash
+make tests
+```
+
 ## Installation example
 
 Download to `~/.emacs.d/phps-mode/` and then add this to your init file:

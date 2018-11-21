@@ -19,8 +19,7 @@ compile:
 	$(EMACS_CMD) -f batch-byte-compile $<
 
 .PHONY: tests
-tests:
-	clean test-functions test-lexer test-parser
+tests: clean test-functions test-lexer test-parser
 
 .PHONY: test-functions
 test-functions:
