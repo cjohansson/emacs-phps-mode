@@ -121,12 +121,18 @@
               (when (not (equal indent-sum (current-indentation)))
                 ;; (message "Indenting to %s current column %s" indent-sum (current-indentation))
                 ;; (message "inside scripting, start: %s, end: %s, indenting to column %s " start end indent-level)
+
+                ;; TODO When indent is changed the trailing tokens just need to adjust their token positions, this will improve speed of indent-region a lot
                 (indent-line-to indent-sum)
+
                 (let ((line-start (line-beginning-position)))
+
+                  ;; Set point of change if it's not set or if it's larger than current point
                   (when (or (not phps-mode/buffer-changes--start)
                             (< line-start phps-mode/buffer-changes--start))
                     ;; (message "Setting changes start from %s to %s" phps-mode/buffer-changes--start start)
                     (setq phps-mode/buffer-changes--start line-start))
+                  
                   (phps-mode/run-incremental-lex))))))))))
 
 ;; TODO Implement this?

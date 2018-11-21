@@ -137,6 +137,15 @@
    (let ((buffer-contents (buffer-substring-no-properties (point-min) (point-max))))
      (should (equal buffer-contents "<?php\nif (random_expression(\ntrue\n)) {\nsome_logic_here();\n}"))))
 
+  ;; TODO Test this
+        ;; if (empty(
+        ;;         $this->var
+        ;;         ) && !empty($this->var)
+        ;;     ) {
+        ;;     $this->var = 'abc123';
+        ;; }
+
+
   )
 
 (defun phps-mode/test-functions--get-point-data ()
