@@ -130,6 +130,7 @@
                   (indent-line-to indent-sum)
 
                   ;; TODO When indent is changed the trailing tokens just need to adjust their token positions, this will improve speed of indent-region a lot
+                  ;; TODO Lexer states need to be moved as well
 
                   (let ((line-start (line-beginning-position)))
 
