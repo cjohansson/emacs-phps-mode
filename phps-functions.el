@@ -69,13 +69,23 @@
                    (> indent-start indent-end))
               (let ((token-number start-token-number)
                     (valid-tokens t)
+                    (last-token-is-open-brace nil)
                     (tokens phps-mode/lexer-tokens))
                 ;; (message "token start %s, token end %s" start-token-number end-token-number)
+
+                ;; Interate tokens in line and check if all are valid
                 (while (and valid-tokens
                             (<= token-number end-token-number))
                   (let ((token (car (nth token-number tokens)))
                         (token-start (car (cdr (nth token-number tokens))))
                         (token-end (cdr (cdr (nth token-number tokens)))))
+
+                    ;; Check if last token is open brace
+                    (when (and (= token-number end-token-number)
+                               (string= token "{"))
+                      (setq last-token-is-open-brace t))
+
+                    ;; Check if current token is not one of the valid tokens
                     (when (and valid-tokens
                                (or (>= token-start (point))
                                    (>= token-end (point)))
@@ -90,9 +100,16 @@
                                      (eq token 'T_CLOSE_TAG))))
                       ;; (message "Token %s - %s in %s was invalid" token token-number tokens)
                       (setq valid-tokens nil)))
+
                   (setq token-number (+ token-number 1)))
+
                 (when valid-tokens
                   ;; (message "Tokens was valid, decreasing indent %s - %s" (line-beginning-position) (line-end-position))
+
+                  ;; If last token is a opening brace indent line one lesser column
+                  (when last-token-is-open-brace
+                    (setq indent-end (- indent-end 1)))
+
                   (setq indent-level (- indent-level (- indent-start indent-end))))))
 
             (when in-doc-comment
@@ -122,7 +139,7 @@
                (boundp 'phps-mode/idle-interval))
       ;; (run-with-idle-timer phps-mode/idle-interval nil #'phps-mode/lex--RUN)
       ;; TODO Maybe use incremental lexer once it's working
-      (run-with-idle-timer phps-mode/idle-interval nil #'phps-mode/run-incremental-lex) 
+      (run-with-idle-timer phps-mode/idle-interval nil #'phps-mode/run-incremental-lex)
       )
     (when (or (not phps-mode/buffer-changes--start)
               (< start phps-mode/buffer-changes--start))

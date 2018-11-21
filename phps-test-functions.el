@@ -54,7 +54,6 @@
 
   (phps-mode/with-test-buffer
    "<html><head><title><?php if ($myCondition) {\nif ($mySeconCondition) {\necho $title1;\n} ?></title><body>Bla bla</body></html>"
-   
    (goto-char 75)
    (phps-mode/indent-line)
    (let ((buffer-contents (buffer-substring-no-properties (point-min) (point-max))))
@@ -62,7 +61,6 @@
 
   (phps-mode/with-test-buffer
    "<html><head><title><?php if ($myCondition) {\nif ($mySeconCondition) {\necho $title2;\n\n} ?></title><body>Bla bla</body></html>"
-
    (goto-char 98)
    (phps-mode/indent-line)
    (let ((buffer-contents (buffer-substring-no-properties (point-min) (point-max))))
@@ -130,6 +128,14 @@
    ;; (message "Tokens %s point %s" phps-mode/lexer-tokens (point))
    (let ((buffer-contents (buffer-substring-no-properties (point-min) (point-max))))
      (should (equal buffer-contents "<?php\nadd_filter(\n    \"views_{$screen->id}\",'__return_empty_array'\n);"))))
+
+  (phps-mode/with-test-buffer
+   "<?php\nif (random_expression(\ntrue\n)) {\nsome_logic_here();\n}"
+   (goto-char 36)
+   (phps-mode/indent-line)
+   ;; (message "Tokens %s point %s" phps-mode/lexer-tokens (point))
+   (let ((buffer-contents (buffer-substring-no-properties (point-min) (point-max))))
+     (should (equal buffer-contents "<?php\nif (random_expression(\ntrue\n)) {\nsome_logic_here();\n}"))))
 
   )
 

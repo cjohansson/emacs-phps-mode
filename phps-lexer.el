@@ -1337,7 +1337,7 @@ ANY_CHAR'
 
               ;; TODO Here clear all tokens after previous-token-start and add new tokens to stack
               ))
-        (display-warning "phps-mode" (format "Found no state to rewind to for %s in stack %s" change-start states))
+        ;; (display-warning "phps-mode" (format "Found no state to rewind to for %s in stack %s, buffer point max: %s" change-start states (point-max)))
         (phps-mode/lex--RUN)))
     (setq phps-mode/buffer-changes--start nil)))
 

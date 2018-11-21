@@ -39,10 +39,10 @@
 
 (defun phps-test-parser()
   "Run test for lexer."
-  (message "-- Running all tests for parser... --\n")
+  ;; (message "-- Running all tests for parser... --\n")
   ;; (setq debug-on-error t)
 
-  (message "\n-- Ran all tests for parser. --")
+  ;; (message "\n-- Ran all tests for parser. --")
   )
 
 (phps-test-parser)
