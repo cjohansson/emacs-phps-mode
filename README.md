@@ -20,11 +20,11 @@ With current progress estimates:
 
 ## Unit tests
 
-Not fully ready yet.
+If you have emacs at a customized location prefix the commands with your path, i.e.
+
+`export emacs="~~/Documents/emacs/src/emacs" && make test-lexer`
 
 ### Lexer
-
-Emacs24+ path need to be updated in Makefile first.
 
 ``` bash
 make test-lexer
@@ -39,8 +39,6 @@ make test-parser
 ```
 
 ### Functions
-
-Emacs24+ path need to be updated in Makefile first.
 
 ``` bash
 make test-functions
