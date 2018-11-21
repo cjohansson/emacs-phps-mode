@@ -66,7 +66,9 @@
             ;; When bracket count at start is larger than bracket count at end
             (when (and
                    (boundp 'phps-mode/lexer-tokens)
-                   (> indent-start indent-end))
+                   (> indent-start indent-end)
+                   start-token-number
+                   end-token-number)
               (let ((token-number start-token-number)
                     (valid-tokens t)
                     (last-token-is-open-brace nil)

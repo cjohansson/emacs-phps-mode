@@ -25,6 +25,18 @@ class MyClass
         if (!empty($this->var)) {
             $this->var = '';
         }
+        if (empty(
+                $this->var
+        )) {
+            $this->var = 'abc';
+        }
+        if (empty(
+                $this->var
+                ) && !empty($this->var)
+            ) {
+            $this->var = 'abc123';
+        }
+
         $this->var = 'abc';
         $this->var = '\\';
     }
