@@ -35,6 +35,9 @@
 
 ;;; Code:
 
+(autoload 'phps-mode/run-incremental-lex "phps-lexer")
+(autoload 'phps-mode/move-lexer-tokens "phps-lexer")
+(autoload 'phps-mode/move-lexer-states "phps-lexer")
 
 (defvar phps-mode/buffer-changes--start nil
   "Start of buffer changes, nil if none.")
@@ -119,7 +122,7 @@
               (setq indent-adjust 1))
 
             (let ((indent-sum (+ (* indent-level tab-width) indent-adjust))
-                  current-indentation (current-indentation))
+                  (current-indentation (current-indentation)))
 
               (when (null current-indentation)
                 (setq current-indentation 0))
