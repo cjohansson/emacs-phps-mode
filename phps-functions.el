@@ -46,7 +46,8 @@
 ;; TODO Support inline function indentations
 (defun phps-mode/indent-line ()
   "Indent line."
-  (let ((data (phps-mode/get-point-data)))
+  (let ((data (phps-mode/get-point-data))
+        (line-start (line-beginning-position)))
     (let* ((start (nth 0 data))
            (end (nth 1 data))
            (in-scripting (nth 0 start)))
@@ -64,12 +65,12 @@
                  (indent-end (+ end-bracket-level end-parenthesis-level))
                  (indent-level indent-start)
                  (indent-adjust 0))
-            ;; (message "indent-start %s, indent-end %s" indent-start indent-end)
+            (message "indent-start %s, indent-end %s" indent-start indent-end)
 
             ;; When bracket count at start is larger than bracket count at end
             (when (and
                    (boundp 'phps-mode/lexer-tokens)
-                   (> indent-start indent-end)
+                   (not (equal indent-start indent-end))
                    start-token-number
                    end-token-number)
               (let ((token-number start-token-number)
@@ -92,8 +93,8 @@
 
                     ;; Check if current token is not one of the valid tokens
                     (when (and valid-tokens
-                               (or (>= token-start (point))
-                                   (>= token-end (point)))
+                               (or (>= token-start line-start)
+                                   (>= token-end line-start))
                                (not (or
                                      (string= token "{")
                                      (string= token "}")
@@ -103,13 +104,13 @@
                                      (string= token "]")
                                      (string= token ";")
                                      (eq token 'T_CLOSE_TAG))))
-                      ;; (message "Token %s - %s in %s was invalid" token token-number tokens)
+                      (message "Token %s - %s in %s was invalid, line start %s" token token-number tokens line-start)
                       (setq valid-tokens nil)))
 
                   (setq token-number (+ token-number 1)))
 
                 (when valid-tokens
-                  ;; (message "Tokens was valid, decreasing indent %s - %s" (line-beginning-position) (line-end-position))
+                  (message "Tokens was valid, decreasing indent %s - %s" (line-beginning-position) (line-end-position))
 
                   ;; If last token is a opening brace indent line one lesser column
                   (when last-token-is-open-brace
@@ -135,12 +136,10 @@
 
                   (indent-line-to indent-sum)
 
-                  ;; TODO When indent is changed the trailing tokens just need to adjust their token positions, this will improve speed of indent-region a lot
-                  ;; TODO Lexer states need to be moved as well
-                  (let ((line-start (line-beginning-position)))
+                    ;; When indent is changed the trailing tokens and states just need to adjust their positions, this will improve speed of indent-region a lot
                     (phps-mode/move-lexer-tokens line-start indent-diff)
                     (phps-mode/move-lexer-states line-start indent-diff)
-                    (message "Moving tokens and states %s, %s to %s" indent-diff current-indentation indent-sum)
+                    ;; (message "Moving tokens and states %s, %s to %s" indent-diff current-indentation indent-sum)
                     
                     ;; ;; Set point of change if it's not set or if it's larger than current point
                     ;; (when (or (not phps-mode/buffer-changes--start)
@@ -150,7 +149,7 @@
                     
                     ;; (phps-mode/run-incremental-lex)
 
-                    ))))))))))
+                    )))))))))
 
 ;; TODO Implement this?
 (defun phps-mode/indent-region ()

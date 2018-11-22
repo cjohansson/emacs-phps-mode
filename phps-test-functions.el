@@ -137,13 +137,15 @@
    (let ((buffer-contents (buffer-substring-no-properties (point-min) (point-max))))
      (should (equal buffer-contents "<?php\nif (random_expression(\ntrue\n)) {\nsome_logic_here();\n}"))))
 
+  (phps-mode/with-test-buffer
+   "<?php\nif (empty(\n$this->var\n) && !empty($this->var)\n) {\n$this->var = 'abc123';\n}\n"
+   (goto-char 54)
+   (phps-mode/indent-line)
+   ;; (message "Tokens %s point %s" phps-mode/lexer-tokens (point))
+   (let ((buffer-contents (buffer-substring-no-properties (point-min) (point-max))))
+     (should (equal buffer-contents  "<?php\nif (empty(\n$this->var\n) && !empty($this->var)\n) {\n$this->var = 'abc123';\n}\n"))))
+
   ;; TODO Test this
-        ;; if (empty(
-        ;;         $this->var
-        ;;         ) && !empty($this->var)
-        ;;     ) {
-        ;;     $this->var = 'abc123';
-        ;; }
 
 
   )
