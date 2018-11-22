@@ -65,12 +65,13 @@
                  (indent-end (+ end-bracket-level end-parenthesis-level))
                  (indent-level indent-start)
                  (indent-adjust 0))
-            (message "indent-start %s, indent-end %s" indent-start indent-end)
+            ;; (message "indent-start %s, indent-end %s" indent-start indent-end)
 
             ;; When bracket count at start is larger than bracket count at end
             (when (and
                    (boundp 'phps-mode/lexer-tokens)
-                   (not (equal indent-start indent-end))
+                   (or (not (equal start-bracket-level end-bracket-level))
+                       (not (equal start-parenthesis-level end-parenthesis-level)))
                    start-token-number
                    end-token-number)
               (let ((token-number start-token-number)
@@ -104,13 +105,13 @@
                                      (string= token "]")
                                      (string= token ";")
                                      (eq token 'T_CLOSE_TAG))))
-                      (message "Token %s - %s in %s was invalid, line start %s" token token-number tokens line-start)
+                      ;; (message "Token %s - %s in %s was invalid, line start %s" token token-number tokens line-start)
                       (setq valid-tokens nil)))
 
                   (setq token-number (+ token-number 1)))
 
                 (when valid-tokens
-                  (message "Tokens was valid, decreasing indent %s - %s" (line-beginning-position) (line-end-position))
+                  ;; (message "Tokens was valid, decreasing indent %s - %s" (line-beginning-position) (line-end-position))
 
                   ;; If last token is a opening brace indent line one lesser column
                   (when last-token-is-open-brace

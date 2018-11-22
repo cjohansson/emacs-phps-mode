@@ -145,8 +145,6 @@
    (let ((buffer-contents (buffer-substring-no-properties (point-min) (point-max))))
      (should (equal buffer-contents  "<?php\nif (empty(\n$this->var\n) && !empty($this->var)\n) {\n$this->var = 'abc123';\n}\n"))))
 
-  ;; TODO Test this
-
 
   )
 
@@ -223,7 +221,14 @@
    "<?php\n$variable = array(\n'random4');\n$variable = true;\n"
    (goto-char 29)
    (should (equal (list (list t 0 1 0 4 nil) (list t 0 0 0 7 nil)) (phps-mode/get-point-data))))
+
+  (phps-mode/with-test-buffer
+   "<?php\nif (empty(\n$this->var\n) && !empty($this->var)\n) {\n$this->var = 'abc123';\n}\n"
+   (goto-char 54)
+   (should (equal (list (list t 0 1 0 16 nil) (list t 1 0 0 18 nil)) (phps-mode/get-point-data))))
+
   )
+
 
 ;; TODO Add tests for all examples here: https://www.php-fig.org/psr/psr-2/
 
