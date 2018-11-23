@@ -10,13 +10,14 @@ With current progress estimates:
 * Lexer based on official PHP re2c lexer (100%)
 * Syntax coloring based on lexer tokens (100%)
 * PSR based indentation based on lexer tokens (90%)
+* Incremental lexer and syntax coloring after buffer changes (75%)
 * Wisent LALR parser based on official PHP yacc parser automatically converted (60%)
-* Incremental lexer and syntax coloring after buffer changes (50%)
 * Full integration with Emacs Semantic subsystem (30%)
 * Flymake support (0%)
 * PSR-2 auto-formatting tool based on lexer tokens (0%)
 * Add to MELPA (0%)
 * Add to ELPA (0%)
+* Travis support (0%)
 
 ## Unit tests
 
@@ -42,6 +43,14 @@ make test-parser
 
 ``` bash
 make test-functions
+```
+
+### Integration tests
+
+Not working yet
+
+``` bash
+make test-integration
 ```
 
 ### All tests
