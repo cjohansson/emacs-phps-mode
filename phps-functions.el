@@ -42,8 +42,9 @@
 (defvar phps-mode/buffer-changes--start nil
   "Start of buffer changes, nil if none.")
 
-;; TODO Also format white-space inside the line, i.e. after function declarations?
+;; NOTE Also format white-space inside the line, i.e. after function declarations?
 ;; TODO Support inline function indentations
+;; TODO Support indentation for multi-line scalar assignments
 (defun phps-mode/indent-line ()
   "Indent line."
   (let ((data (phps-mode/get-point-data))
@@ -70,15 +71,16 @@
             ;; When bracket count at start is larger than bracket count at end
             (when (and
                    (boundp 'phps-mode/lexer-tokens)
-                   (or (not (equal start-bracket-level end-bracket-level))
-                       (not (equal start-parenthesis-level end-parenthesis-level)))
                    start-token-number
                    end-token-number)
               (let ((token-number start-token-number)
                     (valid-tokens t)
-                    (last-token-is-open-brace nil)
-                    (tokens phps-mode/lexer-tokens))
+                    (last-token-is-opening-brace nil)
+                    (first-token-is-closing-brace nil)
+                    (tokens phps-mode/lexer-tokens)
+                    (is-first-line-token t))
                 ;; (message "token start %s, token end %s" start-token-number end-token-number)
+                ;; (message "First token %s, last token %s" (car (nth start-token-number tokens)) (car (nth end-token-number tokens)))
 
                 ;; Interate tokens in line and check if all are valid
                 (while (and valid-tokens
@@ -87,37 +89,58 @@
                         (token-start (car (cdr (nth token-number tokens))))
                         (token-end (cdr (cdr (nth token-number tokens)))))
 
-                    ;; Check if last token is open brace
-                    (when (and (= token-number end-token-number)
-                               (string= token "{"))
-                      (setq last-token-is-open-brace t))
-
                     ;; Check if current token is not one of the valid tokens
-                    (when (and valid-tokens
-                               (or (>= token-start line-start)
-                                   (>= token-end line-start))
-                               (not (or
-                                     (string= token "{")
-                                     (string= token "}")
-                                     (string= token "(")
-                                     (string= token ")")
-                                     (string= token "[")
-                                     (string= token "]")
-                                     (string= token ";")
-                                     (eq token 'T_CLOSE_TAG))))
-                      ;; (message "Token %s - %s in %s was invalid, line start %s" token token-number tokens line-start)
-                      (setq valid-tokens nil)))
+                    (when (or (>= token-start line-start)
+                              (>= token-end line-start))
 
-                  (setq token-number (+ token-number 1)))
+                      ;; Is it the last token and is it a opening brace?
+                      (when (and (= token-number end-token-number)
+                                 (string= token "{"))
+                        (setq last-token-is-opening-brace t))
 
-                (when valid-tokens
-                  ;; (message "Tokens was valid, decreasing indent %s - %s" (line-beginning-position) (line-end-position))
+                      ;; Is it the first line token?
+                      (when is-first-line-token
+                        (setq is-first-line-token nil)
 
-                  ;; If last token is a opening brace indent line one lesser column
-                  (when last-token-is-open-brace
-                    (setq indent-end (- indent-end 1)))
+                        ;; Is it a closing brace?
+                        (when (string= token "}")
+                          (setq first-token-is-closing-brace t)))
 
-                  (setq indent-level (- indent-level (- indent-start indent-end))))))
+                      (when (and valid-tokens
+                                 (not (or
+                                       (string= token "{")
+                                       (string= token "}")
+                                       (string= token "(")
+                                       (string= token ")")
+                                       (string= token "[")
+                                       (string= token "]")
+                                       (string= token ";")
+                                       (eq token 'T_CLOSE_TAG))))
+                        ;; (message "Token %s - %s in %s was invalid, line start %s" token token-number tokens line-start)
+                        (setq valid-tokens nil))
+
+                      )
+
+                    (setq token-number (+ token-number 1))))
+
+                (if valid-tokens
+                    (progn
+
+                      ;; If last token is a opening brace indent line one lesser column
+                      (when last-token-is-opening-brace
+                        ;; (message "Last token was opening brace")
+                        (setq indent-level (- indent-level 1)))
+
+                      ;; (message "Tokens was valid, decreasing indent %s - %s" (line-beginning-position) (line-end-position))
+                      (setq indent-level (- indent-level (- indent-start indent-end))))
+
+                  
+                  ;; If first token is a closing brace indent line one lesser column
+                  (when first-token-is-closing-brace
+                    ;; (message "First token was closing brace")
+                    (setq indent-level (- indent-level 1))))
+
+                ))
 
             ;; If this line is part of a doc-comment increase indent with one unit
             (when in-doc-comment
@@ -137,25 +160,20 @@
 
                   (indent-line-to indent-sum)
 
-                    ;; When indent is changed the trailing tokens and states just need to adjust their positions, this will improve speed of indent-region a lot
-                    (phps-mode/move-lexer-tokens line-start indent-diff)
-                    (phps-mode/move-lexer-states line-start indent-diff)
-                    ;; (message "Moving tokens and states %s, %s to %s" indent-diff current-indentation indent-sum)
-                    
-                    ;; ;; Set point of change if it's not set or if it's larger than current point
-                    ;; (when (or (not phps-mode/buffer-changes--start)
-                    ;;           (< line-start phps-mode/buffer-changes--start))
-                    ;;   ;; (message "Setting changes start from %s to %s" phps-mode/buffer-changes--start start)
-                    ;;   (setq phps-mode/buffer-changes--start line-start))
-                    
-                    ;; (phps-mode/run-incremental-lex)
+                  ;; When indent is changed the trailing tokens and states just need to adjust their positions, this will improve speed of indent-region a lot
+                  (phps-mode/move-lexer-tokens line-start indent-diff)
+                  (phps-mode/move-lexer-states line-start indent-diff)
+                  ;; (message "Moving tokens and states %s, %s to %s" indent-diff current-indentation indent-sum)
+                  
+                  ;; ;; Set point of change if it's not set or if it's larger than current point
+                  ;; (when (or (not phps-mode/buffer-changes--start)
+                  ;;           (< line-start phps-mode/buffer-changes--start))
+                  ;;   ;; (message "Setting changes start from %s to %s" phps-mode/buffer-changes--start start)
+                  ;;   (setq phps-mode/buffer-changes--start line-start))
+                  
+                  ;; (phps-mode/run-incremental-lex)
 
-                    )))))))))
-
-;; TODO Implement this?
-(defun phps-mode/indent-region ()
-  "Indent region."
-  )
+                  )))))))))
 
 ;; TODO Fix flycheck error here
 (defun phps-mode/after-change-functions (start stop length)
@@ -279,7 +297,7 @@
 
   (add-hook 'after-change-functions #'phps-mode/after-change-functions)
 
-  ;; (set (make-local-variable 'indent-line-function) #'phps-mode/indent-region)
+  ;; NOTE Implement indent-region?
   )
 
 
