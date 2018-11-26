@@ -162,6 +162,13 @@
      (should (equal buffer-contents "<?php\nif (myFirstCondition()) {\n    $this->var = 'abc123';\n} else if (mySeconCondition()) {\n    $this->var = 'def456';\n}\n"))))
 
   (phps-mode/with-test-buffer
+   "<?php\nmyFunction(\n    array(\n        'random' => 'abc',\n    ),\n    $var2\n);\n"
+   (goto-char 50)
+   (phps-mode/indent-line)
+   (let ((buffer-contents (buffer-substring-no-properties (point-min) (point-max))))
+     (should (equal buffer-contents "<?php\nmyFunction(\n    array(\n        'random' => 'abc',\n        ),\n    $var2\n);\n"))))
+
+  (phps-mode/with-test-buffer
    "<?php\n$var = $var2->getHead()\n->getTail();\n"
    (goto-char 35)
    (phps-mode/indent-line)
