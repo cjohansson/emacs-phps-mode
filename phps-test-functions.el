@@ -161,6 +161,36 @@
    (let ((buffer-contents (buffer-substring-no-properties (point-min) (point-max))))
      (should (equal buffer-contents "<?php\nif (myFirstCondition()) {\n    $this->var = 'abc123';\n} else if (mySeconCondition()) {\n    $this->var = 'def456';\n}\n"))))
 
+  (phps-mode/with-test-buffer
+   "<?php\n$var = $var2->getHead()\n->getTail();\n"
+   (goto-char 35)
+   (phps-mode/indent-line)
+   (let ((buffer-contents (buffer-substring-no-properties (point-min) (point-max))))
+     (should (equal buffer-contents "<?php\n$var = $var2->getHead()\n    ->getTail();\n"))))
+
+  (phps-mode/with-test-buffer
+   "<?php\n$var =\n'random string';\n"
+   (goto-char 20)
+   (phps-mode/indent-line)
+   (let ((buffer-contents (buffer-substring-no-properties (point-min) (point-max))))
+     (should (equal buffer-contents "<?php\n$var =\n    'random string';\n"))))
+
+  (phps-mode/with-test-buffer
+   "<?php\nif (empty($this->var)):\n$this->var = 'abc123';\n    endif;"
+   (goto-char 60)
+   (phps-mode/indent-line)
+   (let ((buffer-contents (buffer-substring-no-properties (point-min) (point-max))))
+     (should (equal buffer-contents "<?php\nif (empty($this->var)):\n$this->var = 'abc123';\nendif;"))))
+
+  (phps-mode/with-test-buffer
+   "<?php\nif (empty($this->var)):\n$this->var = 'abc123';\n    endif;"
+   (goto-char 30)
+   (phps-mode/indent-line)
+   (let ((buffer-contents (buffer-substring-no-properties (point-min) (point-max))))
+     (should (equal buffer-contents "<?php\nif (empty($this->var)):\n    $this->var = 'abc123';\n    endif;"))))
+
+  
+
 
   )
 
