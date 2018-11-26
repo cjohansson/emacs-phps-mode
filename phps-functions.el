@@ -45,6 +45,8 @@
 ;; NOTE Also format white-space inside the line, i.e. after function declarations?
 ;; TODO Support inline function indentations
 ;; TODO Support indentation for multi-line scalar assignments
+;; TODO Add support for automatic parenthesis, bracket, square-bracket, single-quote and double-quote encapsulations
+
 (defun phps-mode/indent-line ()
   "Indent line."
   (let ((data (phps-mode/get-point-data))
