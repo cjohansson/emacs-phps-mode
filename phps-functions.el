@@ -58,15 +58,19 @@
 
       ;; Are we in scripting?
       (when in-scripting
-        (let ((start-bracket-level (nth 1 start))
-              (start-parenthesis-level (nth 2 start))
-              (start-token-number (nth 4 start))
-              (end-bracket-level (nth 1 end))
-              (end-parenthesis-level (nth 2 end))
-              (end-token-number (nth 4 end))
-              (in-doc-comment (nth 5 start)))
-          (let* ((indent-start (+ start-bracket-level start-parenthesis-level))
-                 (indent-end (+ end-bracket-level end-parenthesis-level))
+        (let ((start-curly-bracket-level (nth 1 start))
+              (start-round-bracket-level (nth 2 start))
+              (start-square-bracket-level (nth 3 start))
+              (start-inline-function-level (nth 4 start))
+              (start-token-number (nth 5 start))
+              (end-curly-bracket-level (nth 1 end))
+              (end-round-bracket-level (nth 2 end))
+              (end-square-bracket-level (nth 3 end))
+              (end-inline-function-level (nth 4 end))
+              (end-token-number (nth 5 end))
+              (in-doc-comment (nth 6 start)))
+          (let* ((indent-start (+ start-curly-bracket-level start-round-bracket-level start-square-bracket-level))
+                 (indent-end (+ end-curly-bracket-level end-round-bracket-level end-square-bracket-level))
                  (indent-level indent-start)
                  (indent-adjust 0))
             ;; (message "indent-start %s, indent-end %s" indent-start indent-end)
@@ -78,8 +82,8 @@
                    end-token-number)
               (let ((token-number start-token-number)
                     (valid-tokens t)
-                    (last-token-is-opening-brace nil)
-                    (first-token-is-closing-brace nil)
+                    (last-token-is-opening-curly-bracket nil)
+                    (first-token-is-closing-curly-bracket nil)
                     (tokens phps-mode/lexer-tokens)
                     (is-first-line-token t))
                 ;; (message "token start %s, token end %s" start-token-number end-token-number)
@@ -99,7 +103,7 @@
                       ;; Is it the last token and is it a opening brace?
                       (when (and (= token-number end-token-number)
                                  (string= token "{"))
-                        (setq last-token-is-opening-brace t))
+                        (setq last-token-is-opening-curly-bracket t))
 
                       ;; Is it the first line token?
                       (when is-first-line-token
@@ -107,7 +111,7 @@
 
                         ;; Is it a closing brace?
                         (when (string= token "}")
-                          (setq first-token-is-closing-brace t)))
+                          (setq first-token-is-closing-curly-bracket t)))
 
                       (when (and valid-tokens
                                  (not (or
@@ -118,6 +122,7 @@
                                        (string= token "[")
                                        (string= token "]")
                                        (string= token ";")
+                                       (string= token ",")
                                        (eq token 'T_CLOSE_TAG))))
                         ;; (message "Token %s - %s in %s was invalid, line start %s" token token-number tokens line-start)
                         (setq valid-tokens nil))
@@ -130,7 +135,7 @@
                     (progn
 
                       ;; If last token is a opening brace indent line one lesser column
-                      (when last-token-is-opening-brace
+                      (when last-token-is-opening-curly-bracket
                         ;; (message "Last token was opening brace")
                         (setq indent-level (- indent-level 1)))
 
@@ -139,7 +144,7 @@
 
                   
                   ;; If first token is a closing brace indent line one lesser column
-                  (when first-token-is-closing-brace
+                  (when first-token-is-closing-curly-bracket
                     ;; (message "First token was closing brace")
                     (setq indent-level (- indent-level 1))))
 

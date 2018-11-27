@@ -47,6 +47,7 @@
 (defun phps-mode/test-indent-line ()
   "Test for indentation."
 
+  ;; Curly bracket tests
   (phps-mode/with-test-buffer
    "<html><head><title><?php if ($myCondition) {\nif ($mySeconCondition) {\necho $title;\n\n} ?></title><body>Bla bla</body></html>"
    (goto-char 69)
@@ -70,7 +71,6 @@
 
   (phps-mode/with-test-buffer
    "<html><head><title><?php if ($myCondition) {\nif ($mySeconCondition) {\necho $title3;\n\n}\n?>\n</title><body>Bla bla</body></html>"
-
    (goto-char 110)
    (phps-mode/indent-line)
    (let ((buffer-contents (buffer-substring-no-properties (point-min) (point-max))))
@@ -163,11 +163,19 @@
    (let ((buffer-contents (buffer-substring-no-properties (point-min) (point-max))))
      (should (equal buffer-contents "<?php\nif (myFirstCondition()) {\n    $this->var = 'abc123';\n} else if (mySeconCondition()) {\n    $this->var = 'def456';\n}\n"))))
 
+  ;; Square bracket
+  (phps-mode/with-test-buffer
+   "<?php\n$var = [\n    'random' => [\n        'hello',\n],\n];\n"
+   (goto-char 51)
+   (phps-mode/indent-line)
+   (let ((buffer-contents (buffer-substring-no-properties (point-min) (point-max))))
+     (should (equal buffer-contents "<?php\n$var = [\n    'random' => [\n        'hello',\n    ],\n];\n"))))
+  
   (phps-mode/with-test-buffer
    "<?php\nif (myRandomCondition()):\necho 'Something here';\n    else:\n    echo 'Something else here';\nendif;\n"
    (goto-char 60)
    (phps-mode/indent-line)
-   (message "Tokens %s" phps-mode/lexer-tokens)
+   ;; (message "Tokens %s" phps-mode/lexer-tokens)
    (let ((buffer-contents (buffer-substring-no-properties (point-min) (point-max))))
      (should (equal buffer-contents "<?php\nif (myRandomCondition()):\necho 'Something here';\nelse:\n    echo 'Something else here';\nendif;\n"))))
 
@@ -270,7 +278,6 @@
 
   (phps-mode/with-test-buffer
    "<html><head><title><?php if ($myCondition) { \n   if ($mySeconCondition) { echo $title; } } ?></title><body>Bla bla</body></html>"
-   ;; (message "Tokens: %s" phps-mode/lexer-tokens)
    (goto-char 48)
    (should (equal (list (list t 1 0 0 0 5 nil) (list nil 0 0 0 0 17 nil)) (phps-mode/get-point-data))))
 
