@@ -195,6 +195,8 @@
     ;; (message "phps-mode/after-change-functions %s %s %s" start stop length)
     ))
 
+;; TODO This function needs to keep track of alternative syntax for control structures
+
 (defun phps-mode/get-point-data ()
   "Return information about point in tokens."
   ;; (message "Point: %s in %s" (point) phps-mode/lexer-tokens)
