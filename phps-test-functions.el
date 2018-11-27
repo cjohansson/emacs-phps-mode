@@ -42,6 +42,8 @@
 (autoload 'phps-mode/get-point-data "phps-functions")
 (autoload 'should "ert")
 
+;; TODO Add unit tests for HEREDOC, NOWDOC as well
+
 (defun phps-mode/test-indent-line ()
   "Test for indentation."
 
@@ -165,6 +167,7 @@
    "<?php\nif (myRandomCondition()):\necho 'Something here';\n    else:\n    echo 'Something else here';\nendif;\n"
    (goto-char 60)
    (phps-mode/indent-line)
+   (message "Tokens %s" phps-mode/lexer-tokens)
    (let ((buffer-contents (buffer-substring-no-properties (point-min) (point-max))))
      (should (equal buffer-contents "<?php\nif (myRandomCondition()):\necho 'Something here';\nelse:\n    echo 'Something else here';\nendif;\n"))))
 
@@ -225,6 +228,10 @@
      (should (equal buffer-contents "<?php\nif (empty($this->var)):\n    $this->var = 'abc123';\n    endif;"))))
 
   )
+
+;; TODO Support all control structures
+;; if, else, elseif, else if, while, do-while, for, foreach, break, switch, declare, return, require, include, require_once, include_once, goto
+
 
 (defun phps-mode/test-functions--get-point-data ()
   "Return information about point in tokens."
