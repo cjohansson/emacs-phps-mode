@@ -162,11 +162,18 @@
      (should (equal buffer-contents "<?php\nif (myFirstCondition()) {\n    $this->var = 'abc123';\n} else if (mySeconCondition()) {\n    $this->var = 'def456';\n}\n"))))
 
   (phps-mode/with-test-buffer
-   "<?php\nmyFunction(\n    array(\n        'random' => 'abc',\n    ),\n    $var2\n);\n"
+   "<?php\nif (myRandomCondition()):\necho 'Something here';\n    echo 'Something else here';\nendif;\n"
+   (goto-char 40)
+   (phps-mode/indent-line)
+   (let ((buffer-contents (buffer-substring-no-properties (point-min) (point-max))))
+     (should (equal buffer-contents "<?php\nif (myRandomCondition()):\n    echo 'Something here';\n    echo 'Something else here';\nendif;\n"))))
+
+  (phps-mode/with-test-buffer
+   "<?php\nmyFunction(\n    array(\n        'random' => 'abc',\n        ),\n    $var2\n);\n"
    (goto-char 50)
    (phps-mode/indent-line)
    (let ((buffer-contents (buffer-substring-no-properties (point-min) (point-max))))
-     (should (equal buffer-contents "<?php\nmyFunction(\n    array(\n        'random' => 'abc',\n        ),\n    $var2\n);\n"))))
+     (should (equal buffer-contents "<?php\nmyFunction(\n    array(\n        'random' => 'abc',\n    ),\n    $var2\n);\n"))))
 
   (phps-mode/with-test-buffer
    "<?php\n$var = $var2->getHead()\n->getTail();\n"
@@ -195,9 +202,6 @@
    (phps-mode/indent-line)
    (let ((buffer-contents (buffer-substring-no-properties (point-min) (point-max))))
      (should (equal buffer-contents "<?php\nif (empty($this->var)):\n    $this->var = 'abc123';\n    endif;"))))
-
-  
-
 
   )
 
