@@ -38,8 +38,8 @@
 ;; TODO 1. Get semantic working based on zend_language_parser.y
 ;; TODO 2. Add support for flymake
 ;; DONE 3. Add support for flycheck
-;; TODO 4. Get syntax coloring working based on semantic data (as js2-mode)
-;; TODO 5. Get indent-functions working
+;; DONE 4. Get syntax coloring working based on lexer tokens
+;; DONE 5. Get indent-functions working
 
 ;; NOTE use wisent-parse-toggle-verbose-flag and (semantic-debug) to debug parsing
 
@@ -56,6 +56,8 @@
 (autoload 'phps-mode/syntax-table-init "phps-syntax-table")
 (autoload 'phps-mode/tags-init "phps-tags")
 (autoload 'phps-mode/semantic-init "phps-semantic")
+
+(autoload 'semantic-new-buffer-fcn "semantic")
 
 (defvar phps-mode/use-psr-2 t
   "Whether to use PSR-2 guidelines for white-space or not.")
