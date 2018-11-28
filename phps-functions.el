@@ -96,7 +96,8 @@
                         (token-start (car (cdr (nth token-number tokens))))
                         (token-end (cdr (cdr (nth token-number tokens)))))
 
-                    ;; Check if current token is not one of the valid tokens
+                    ;; Does token start on or after current line
+                    ;; or does it end on or after current line?
                     (when (or (>= token-start line-start)
                               (>= token-end line-start))
 
@@ -231,6 +232,7 @@
                   (token-end (cdr (cdr item))))
               ;; (message "Token: %s Start: %s End: %s Item: %s" token start end item)
 
+              ;; Does token start after the end of line?
               (when (> token-start line-end)
                 ;; (message "Stopping iteration at: %s %s" start position)
                 (throw 'stop-iteration nil))
