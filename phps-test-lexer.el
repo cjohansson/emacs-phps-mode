@@ -107,6 +107,12 @@
                   '((T_OPEN_TAG 1 . 7) (T_VARIABLE 7 . 11) ("=" 12 . 13) (T_CONSTANT_ENCAPSED_STRING 14 . 16) (";" 16 . 17) (T_VARIABLE 18 . 22) ("=" 23 . 24) (T_CONSTANT_ENCAPSED_STRING 25 . 30) (";" 30 . 31)))))
 
   (phps-mode/with-test-buffer
+   "<?php\nswitch (myRandomCondition()) {\ncase 'Something here':\necho 'Something else here';\n}\n"
+   ;; (message "Tokens: %s" phps-mode/lexer-tokens)
+   (should (equal phps-mode/lexer-tokens
+                  '((T_OPEN_TAG 1 . 7) (T_SWITCH 7 . 13) ("(" 14 . 15) (T_STRING 15 . 32) ("(" 32 . 33) (")" 33 . 34) (")" 34 . 35) ("{" 36 . 37) (T_CASE 38 . 42) (T_CONSTANT_ENCAPSED_STRING 43 . 59) (":" 59 . 60) (T_ECHO 61 . 65) (T_CONSTANT_ENCAPSED_STRING 66 . 87) (";" 87 . 88) ("}" 89 . 90)))))
+
+  (phps-mode/with-test-buffer
    "<?php $var = \"\"; $var = \"abc\"; $var = \"abc\\def\\ghj\";"
    ;; (message "Tokens: %s" phps-mode/lexer-tokens)
    (should (equal phps-mode/lexer-tokens
