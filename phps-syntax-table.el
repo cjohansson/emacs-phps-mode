@@ -43,9 +43,55 @@
   (let ((phps-mode/syntax-table (make-syntax-table)))
 
     ;; This is added so entity names with underscores can be more easily parsed as one word
+
+
+    ;; PUNCTUATIONS
     
-    ;; Treat underscore as a punctuation
+    ;; Treat underscore, dollar-sign, question-mark as punctuations
     (modify-syntax-entry ?_ "." phps-mode/syntax-table)
+
+    ;; Treat dollar-sign as a punctuation
+    (modify-syntax-entry ?\$ "." phps-mode/syntax-table)
+
+    ;; Treat question-mark as a punctuation
+    (modify-syntax-entry ?\? "." phps-mode/syntax-table)
+
+    ;; Treat backslash as a punctuation
+    (modify-syntax-entry ?\ "." phps-mode/syntax-table)
+
+
+    ;; PARENTHESIS
+
+    ;; Treat opening round bracket as open-parenthesis
+    (modify-syntax-entry ?\( "(" phps-mode/syntax-table)
+
+    ;; Treat closing round bracket as close-parenthesis
+    (modify-syntax-entry ?\) ")" phps-mode/syntax-table)
+
+    ;; Treat opening square bracket as open-parenthesis
+    (modify-syntax-entry ?\[ "(" phps-mode/syntax-table)
+
+    ;; Treat closing square bracket as close-parenthesis
+    (modify-syntax-entry ?\] ")" phps-mode/syntax-table)
+
+    ;; Treat opening curly bracket as open-parenthesis
+    (modify-syntax-entry ?\{ "(" phps-mode/syntax-table)
+
+    ;; Treat closing curly bracket as close-parenthesis
+    (modify-syntax-entry ?\} ")" phps-mode/syntax-table)
+
+
+    ;; STRING QUOTE
+
+    ;; Treat double quoted string as string quote
+    (modify-syntax-entry ?\" "\"" phps-mode/syntax-table)
+
+    ;; Treat single quoted string as string quote
+    (modify-syntax-entry ?\' "\"" phps-mode/syntax-table)
+
+    ;; Treat back-quoted string as string quote
+    (modify-syntax-entry ?\` "\"" phps-mode/syntax-table)
+
 
     ;; Improve parsing of <?php and ?> as words
     ;;(modify-syntax-entry ?? "w" phps-mode/syntax-table)
@@ -66,7 +112,6 @@
     ;; (modify-syntax-entry ?#    "< b" php-mode-syntax-table)
     ;; (modify-syntax-entry ?\n   "> b" php-mode-syntax-table)
     ;; (modify-syntax-entry ?$    "'" php-mode-syntax-table)
-    ;; (set (make-local-variable 'syntax-propertize-function) #'php-syntax-propertize-function)
 
     phps-mode/syntax-table)
   "Syntax table for phps-mode.")
