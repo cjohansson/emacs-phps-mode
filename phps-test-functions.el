@@ -179,6 +179,22 @@
    (let ((buffer-contents (buffer-substring-no-properties (point-min) (point-max))))
      (should (equal buffer-contents "<?php\nif (myRandomCondition()):\necho 'Something here';\nelse:\n    echo 'Something else here';\nendif;\n"))))
 
+  ;; switch case
+  
+  (phps-mode/with-test-buffer
+   "<?php\nswitch (myRandomCondition()) {\ncase 'Something here':\necho 'Something else here';\n}\n"
+   (goto-char 45)
+   (phps-mode/indent-line)
+   (let ((buffer-contents (buffer-substring-no-properties (point-min) (point-max))))
+     (should (equal buffer-contents "<?php\nswitch (myRandomCondition()) {\n    case 'Something here':\necho 'Something else here';\n}\n"))))
+
+  (phps-mode/with-test-buffer
+   "<?php\nswitch (myRandomCondition()) {\ncase 'Something here':\necho 'Something else here';\n}\n"
+   (goto-char 65)
+   (phps-mode/indent-line)
+   (let ((buffer-contents (buffer-substring-no-properties (point-min) (point-max))))
+     (should (equal buffer-contents "<?php\nswitch (myRandomCondition()) {\ncase 'Something here':\n        echo 'Something else here';\n}\n"))))
+
   (phps-mode/with-test-buffer
    "<?php\nif (myRandomCondition())\necho 'Something here';\necho 'Something else here';\n"
    (goto-char 40)
