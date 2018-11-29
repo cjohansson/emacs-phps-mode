@@ -10,7 +10,7 @@
 
 ;; Package-Requires: ((emacs "24"))
 
-;; Copyright (C) 2017 Christian Johansson
+;; Copyright (C) 2018 Christian Johansson
 
 ;; This file is not part of GNU Emacs.
 
@@ -45,6 +45,31 @@
     ;; This is added so entity names with underscores can be more easily parsed as one word
 
 
+    ;; WHITE-SPACE
+
+
+    ;; Treat non-breaking spaces as white-space
+    (modify-syntax-entry ?\xa0 " " phps-mode/syntax-table)
+
+    ;; Treat spaces as white-space
+    (modify-syntax-entry ?\s  " " phps-mode/syntax-table)
+
+    ;; Treat line-feed as white-space
+    (modify-syntax-entry ?\f " " phps-mode/syntax-table)
+
+    ;; Treat spce as white-space
+    (modify-syntax-entry ?\s " " phps-mode/syntax-table)
+
+    ;; Treat tabs as white-space
+    (modify-syntax-entry ?\t " " phps-mode/syntax-table)
+
+    ;; Treat newline as white-space
+    (modify-syntax-entry ?\n " " phps-mode/syntax-table)
+
+    ;; Treat carriage-return as white-space
+    (modify-syntax-entry ?\r " " phps-mode/syntax-table)
+
+
     ;; PUNCTUATIONS
     
     ;; Treat underscore, dollar-sign, question-mark as punctuations
@@ -57,28 +82,28 @@
     (modify-syntax-entry ?\? "." phps-mode/syntax-table)
 
     ;; Treat backslash as a punctuation
-    (modify-syntax-entry ?\ "." phps-mode/syntax-table)
+    (modify-syntax-entry ?\\ "." phps-mode/syntax-table)
 
 
     ;; PARENTHESIS
 
-    ;; Treat opening round bracket as open-parenthesis
-    (modify-syntax-entry ?\( "(" phps-mode/syntax-table)
+    ;; Treat opening round bracket as open-parenthesis closed by )
+    (modify-syntax-entry ?\( "()" phps-mode/syntax-table)
 
-    ;; Treat closing round bracket as close-parenthesis
-    (modify-syntax-entry ?\) ")" phps-mode/syntax-table)
+    ;; Treat closing round bracket as close-parenthesis opened by (
+    (modify-syntax-entry ?\) ")(" phps-mode/syntax-table)
 
-    ;; Treat opening square bracket as open-parenthesis
-    (modify-syntax-entry ?\[ "(" phps-mode/syntax-table)
+    ;; Treat opening square bracket as open-parenthesis closed by ]
+    (modify-syntax-entry ?\[ "(]" phps-mode/syntax-table)
 
-    ;; Treat closing square bracket as close-parenthesis
-    (modify-syntax-entry ?\] ")" phps-mode/syntax-table)
+    ;; Treat closing square bracket as close-parenthesis opened by [
+    (modify-syntax-entry ?\] ")[" phps-mode/syntax-table)
 
-    ;; Treat opening curly bracket as open-parenthesis
-    (modify-syntax-entry ?\{ "(" phps-mode/syntax-table)
+    ;; Treat opening curly bracket as open-parenthesis closed by }
+    (modify-syntax-entry ?\{ "(}" phps-mode/syntax-table)
 
-    ;; Treat closing curly bracket as close-parenthesis
-    (modify-syntax-entry ?\} ")" phps-mode/syntax-table)
+    ;; Treat closing curly bracket as close-parenthesis opened by {
+    (modify-syntax-entry ?\} "){" phps-mode/syntax-table)
 
 
     ;; STRING QUOTE
@@ -91,27 +116,6 @@
 
     ;; Treat back-quoted string as string quote
     (modify-syntax-entry ?\` "\"" phps-mode/syntax-table)
-
-
-    ;; Improve parsing of <?php and ?> as words
-    ;;(modify-syntax-entry ?? "w" phps-mode/syntax-table)
-    ;;(modify-syntax-entry ?< "w" phps-mode/syntax-table)
-    ;;(modify-syntax-entry ?> "w" phps-mode/syntax-table)
-
-    ;; (modify-syntax-entry ?_ "w" phps-mode/syntax-table)
-
-    ;; Comment styles are same as C++
-    ;; (modify-syntax-entry ?/ ". 124b" phps-mode/syntax-table)
-    ;; (modify-syntax-entry ?* ". 23" phps-mode/syntax-table)
-    ;; (modify-syntax-entry ?\n "> b" phps-mode/syntax-table)
-
-    ;; From Old PHP-mode, analyse these
-    ;; (modify-syntax-entry ?_    "_" php-mode-syntax-table)
-    ;; (modify-syntax-entry ?`    "\"" php-mode-syntax-table)
-    ;; (modify-syntax-entry ?\"   "\"" php-mode-syntax-table)
-    ;; (modify-syntax-entry ?#    "< b" php-mode-syntax-table)
-    ;; (modify-syntax-entry ?\n   "> b" php-mode-syntax-table)
-    ;; (modify-syntax-entry ?$    "'" php-mode-syntax-table)
 
     phps-mode/syntax-table)
   "Syntax table for phps-mode.")
