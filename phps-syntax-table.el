@@ -46,11 +46,7 @@
 
 
     ;; WHITE-SPACE
-
-
-    ;; Treat non-breaking spaces as white-space
-    (modify-syntax-entry ?\xa0 " " phps-mode/syntax-table)
-
+    
     ;; Treat spaces as white-space
     (modify-syntax-entry ?\s  " " phps-mode/syntax-table)
 
