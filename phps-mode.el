@@ -6,7 +6,7 @@
 ;; Modified: .
 ;; Version: 0.1
 ;; Keywords: tools, convenience
-;; URL: -
+;; URL: https://github.com/cjohansson/emacs-phps-mode
 
 ;; Package-Requires: ((emacs "24"))
 
@@ -37,9 +37,6 @@
 ;; TODO 0. Add tests for semantic like semantic-php project
 ;; TODO 1. Get semantic working based on zend_language_parser.y
 ;; TODO 2. Add support for flymake
-;; DONE 3. Add support for flycheck
-;; DONE 4. Get syntax coloring working based on lexer tokens
-;; DONE 5. Get indent-functions working
 
 ;; NOTE use wisent-parse-toggle-verbose-flag and (semantic-debug) to debug parsing
 
@@ -47,50 +44,50 @@
 ;;; Code:
 
 
-(autoload 'phps-mode/flycheck-init "phps-flycheck")
-(autoload 'phps-mode/flymake-init "phps-flymake")
-(autoload 'phps-mode/font-lock-init "phps-font-lock")
-(autoload 'phps-mode/functions-init "phps-functions")
-(autoload 'phps-mode/map-init "phps-map")
-(autoload 'phps-mode/lexer-init "phps-lexer")
-(autoload 'phps-mode/syntax-table-init "phps-syntax-table")
-(autoload 'phps-mode/tags-init "phps-tags")
-(autoload 'phps-mode/semantic-init "phps-semantic")
+(autoload 'phps-mode-flycheck-init "phps-mode-flycheck")
+(autoload 'phps-mode-flymake-init "phps-mode-flymake")
+(autoload 'phps-mode-font-lock-init "phps-mode-font-lock")
+(autoload 'phps-mode-functions-init "phps-mode-functions")
+(autoload 'phps-mode-map-init "phps-mode-map")
+(autoload 'phps-mode-lexer-init "phps-mode-lexer")
+(autoload 'phps-mode-syntax-table-init "phps-mode-syntax-table")
+(autoload 'phps-mode-tags-init "phps-mode-tags")
+(autoload 'phps-mode-semantic-init "phps-mode-semantic")
 
 (autoload 'semantic-new-buffer-fcn "semantic")
 
-(defvar phps-mode/use-psr-2 t
+(defvar phps-mode-use-psr-2 t
   "Whether to use PSR-2 guidelines for white-space or not.")
 
-(defvar phps-mode/idle-interval 0.2
+(defvar phps-mode-idle-interval 0.2
   "Idle seconds before running incremental lexer.")
 
 (define-derived-mode phps-mode prog-mode "PHPs"
   "Major mode for PHP with Semantic integration."
 
   ;; Key-map
-  (phps-mode/map-init)
+  (phps-mode-map-init)
 
   ;; Syntax table
-  (phps-mode/syntax-table-init)
+  (phps-mode-syntax-table-init)
 
   ;; Font lock
-  (phps-mode/font-lock-init)
+  (phps-mode-font-lock-init)
 
   ;; Flymake
-  ;; (phps-mode/flymake-init)
+  ;; (phps-mode-flymake-init)
 
   ;; Flycheck
-  (phps-mode/flycheck-init)
+  (phps-mode-flycheck-init)
 
   ;; Override functions
-  (phps-mode/functions-init)
+  (phps-mode-functions-init)
 
   (setq major-mode 'phps-mode)
   (setq mode-name "PHPs")
 
   ;; Lexer
-  (phps-mode/lexer-init)
+  (phps-mode-lexer-init)
 
   ;; Wisent LALR parser
   ;; (phps-mode/tags-init)

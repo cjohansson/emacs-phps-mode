@@ -1,12 +1,4 @@
-;;; phps-test-lexer.el --- Tests for Semantic Lexer -*- lexical-binding: t -*-
-
-;; Author: Christian Johansson <github.com/cjohansson>
-;; Maintainer: Christian Johansson <github.com/cjohansson>
-;; Created: 3 Mar 2018
-;; Modified: .
-;; Version: 0.1
-;; Keywords: tools, convenience
-;; URL: -
+;;; phps-mode-test-lexer.el --- Tests for lexer -*- lexical-binding: t -*-
 
 ;; Copyright (C) 2018 Christian Johansson
 
@@ -37,13 +29,13 @@
 ;;; Code:
 
 
-(autoload 'phps-mode/with-test-buffer "phps-test")
-(autoload 'phps-mode/lexer-init "phps-lexer")
-(autoload 'phps-mode/lexer-get-point-data "phps-lexer")
-(autoload 'phps-mode/move-lexer-tokens "phps-lexer")
+(autoload 'phps-mode-test-with-buffer "phps-mode-test")
+(autoload 'phps-mode-lexer-init "phps-mode-lexer")
+(autoload 'phps-mode-lexer-get-point-data "phps-mode-lexer")
+(autoload 'phps-mode-lexer-move-lexer-tokens "phps-mode-lexer")
 (autoload 'should "ert")
 
-(defun phps-mode/test-lexer--script-boundaries ()
+(defun phps-mode-test-lexer--script-boundaries ()
   "Run test for lexer."
 
   (phps-mode/with-test-buffer
@@ -73,7 +65,7 @@
 
   )
 
-(defun phps-mode/test-lexer--simple-tokens ()
+(defun phps-mode-test-lexer--simple-tokens ()
   "Run test for simple tokens."
 
   (phps-mode/with-test-buffer
@@ -151,7 +143,7 @@
 
   )
 
-(defun phps-mode/test-lexer--complex-tokens ()
+(defun phps-mode-test-lexer--complex-tokens ()
   "Run test for complex tokens."
 
   (phps-mode/with-test-buffer
@@ -240,7 +232,7 @@
 
   )
 
-(defun phps-mode/test-lexer--namespaces ()
+(defun phps-mode-test-lexer--namespaces ()
   "Run test for namespaces."
 
   (phps-mode/with-test-buffer
@@ -255,7 +247,7 @@
                   '((T_OPEN_TAG 1 . 7) (T_NAMESPACE 7 . 16) (T_STRING 17 . 28) (";" 28 . 29) (T_CLASS 30 . 35) (T_STRING 36 . 43) ("{" 44 . 45) (T_PUBLIC 47 . 53) (T_FUNCTION 54 . 62) (T_STRING 63 . 74) ("(" 74 . 75) (")" 75 . 76) ("{" 77 . 78) (T_EXIT 81 . 85) (";" 85 . 86) ("}" 88 . 89) ("}" 90 . 91)))))
   )
 
-(defun phps-mode/test-lexer--errors ()
+(defun phps-mode-test-lexer--errors ()
   "Run test for errors."
 
   (phps-mode/with-test-buffer
@@ -275,7 +267,7 @@
 
   )
 
-(defun phps-mode/test-get-moved-lexer-tokens ()
+(defun phps-mode-test-lexer-get-moved-lexer-tokens ()
   "Run test for get moved lexer tokens."
 
   (should (equal
@@ -300,7 +292,7 @@
 
   )
 
-(defun phps-mode/test-get-moved-lexer-states ()
+(defun phps-mode-test-lexer-get-moved-lexer-states ()
   "Run test for get moved lexer states."
 
   (should (equal
@@ -352,7 +344,7 @@
             -2)))
   )
 
-(defun phps-mode/test-lexer ()
+(defun phps-mode-test-lexer ()
   "Run test for lexer."
   ;; (message "-- Running all tests for lexer... --\n")
   ;; (setq debug-on-error t)
@@ -368,6 +360,6 @@
 
 (phps-mode/test-lexer)
 
-(provide 'phps-mode/test-lexer)
+(provide 'phps-mode-test-lexer)
 
-;;; phps-test-lexer.el ends here
+;;; phps-mode-test-lexer.el ends here

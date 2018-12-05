@@ -1,14 +1,6 @@
-;; phps-mode/phps-map.el --- Map for major mode -*- lexical-binding: t -*-
+;;; phps-mode-test-parser.el --- Tests for parser -*- lexical-binding: t -*-
 
-;; Author: Christian Johansson <github.com/cjohansson>
-;; Maintainer: Christian Johansson <github.com/cjohansson>
-;; Created: 3 Mar 2018
-;; Modified: .
-;; Version: 0.1
-;; Keywords: tools, convenience
-;; URL: -
-
-;; Copyright (C) 2017 Christian Johansson
+;; Copyright (C) 2018 Christian Johansson
 
 ;; This file is not part of GNU Emacs.
 
@@ -31,21 +23,22 @@
 ;;; Commentary:
 
 
-;; Please see README.md from the same repository for extended documentation.
+;; Run from terminal make test-parser
 
 
 ;;; Code:
 
 
-(defvar phps-mode/map
-  (let ((map (make-keymap)))
-    ;; TODO keys here
-    map)
-  "Key-map for major mode.")
+(defun phps-mode-test-parser()
+  "Run test for lexer."
+  ;; (message "-- Running all tests for parser... --\n")
+  ;; (setq debug-on-error t)
 
-(defun phps-mode/map-init ()
-  "Apply map to mode."
-  (use-local-map phps-mode/map))
+  ;; (message "\n-- Ran all tests for parser. --")
+  )
 
-(provide 'phps-mode/map)
-;;; phps-map.el ends here
+(phps-mode-test-parser)
+
+(provide 'phps-mode-test-parser)
+
+;;; phps-mode-test-parser.el ends here

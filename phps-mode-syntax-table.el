@@ -1,14 +1,4 @@
-;;; phps-mode/phps-syntax-table.el --- Major mode for PHP with Semantic integration -*- lexical-binding: t -*-
-
-;; Author: Christian Johansson <github.com/cjohansson>
-;; Maintainer: Christian Johansson <github.com/cjohansson>
-;; Created: 3 Mar 2018
-;; Modified: .
-;; Version: 0.1
-;; Keywords: tools, convenience
-;; URL: -
-
-;; Package-Requires: ((emacs "24"))
+;;; phps-mode-syntax-table.el --- Syntax table for PHPs -*- lexical-binding: t -*-
 
 ;; Copyright (C) 2018 Christian Johansson
 
@@ -39,91 +29,87 @@
 ;;; Code:
 
 
-(defvar phps-mode/syntax-table
-  (let ((phps-mode/syntax-table (make-syntax-table)))
+(defvar phps-mode-syntax-table
+  (let ((phps-mode-syntax-table (make-syntax-table)))
 
     ;; This is added so entity names with underscores can be more easily parsed as one word
 
 
     ;; WHITE-SPACE
-
-
-    ;; Treat non-breaking spaces as white-space
-    (modify-syntax-entry ?\xa0 " " phps-mode/syntax-table)
-
+    
     ;; Treat spaces as white-space
-    (modify-syntax-entry ?\s  " " phps-mode/syntax-table)
+    (modify-syntax-entry ?\s  " " phps-mode-syntax-table)
 
     ;; Treat line-feed as white-space
-    (modify-syntax-entry ?\f " " phps-mode/syntax-table)
+    (modify-syntax-entry ?\f " " phps-mode-syntax-table)
 
     ;; Treat spce as white-space
-    (modify-syntax-entry ?\s " " phps-mode/syntax-table)
+    (modify-syntax-entry ?\s " " phps-mode-syntax-table)
 
     ;; Treat tabs as white-space
-    (modify-syntax-entry ?\t " " phps-mode/syntax-table)
+    (modify-syntax-entry ?\t " " phps-mode-syntax-table)
 
     ;; Treat newline as white-space
-    (modify-syntax-entry ?\n " " phps-mode/syntax-table)
+    (modify-syntax-entry ?\n " " phps-mode-syntax-table)
 
     ;; Treat carriage-return as white-space
-    (modify-syntax-entry ?\r " " phps-mode/syntax-table)
+    (modify-syntax-entry ?\r " " phps-mode-syntax-table)
 
 
     ;; PUNCTUATIONS
     
     ;; Treat underscore, dollar-sign, question-mark as punctuations
-    (modify-syntax-entry ?_ "." phps-mode/syntax-table)
+    (modify-syntax-entry ?_ "." phps-mode-syntax-table)
 
     ;; Treat dollar-sign as a punctuation
-    (modify-syntax-entry ?\$ "." phps-mode/syntax-table)
+    (modify-syntax-entry ?\$ "." phps-mode-syntax-table)
 
     ;; Treat question-mark as a punctuation
-    (modify-syntax-entry ?\? "." phps-mode/syntax-table)
+    (modify-syntax-entry ?\? "." phps-mode-syntax-table)
 
     ;; Treat backslash as a punctuation
-    (modify-syntax-entry ?\\ "." phps-mode/syntax-table)
+    (modify-syntax-entry ?\\ "." phps-mode-syntax-table)
 
 
     ;; PARENTHESIS
 
     ;; Treat opening round bracket as open-parenthesis closed by )
-    (modify-syntax-entry ?\( "()" phps-mode/syntax-table)
+    (modify-syntax-entry ?\( "()" phps-mode-syntax-table)
 
     ;; Treat closing round bracket as close-parenthesis opened by (
-    (modify-syntax-entry ?\) ")(" phps-mode/syntax-table)
+    (modify-syntax-entry ?\) ")(" phps-mode-syntax-table)
 
     ;; Treat opening square bracket as open-parenthesis closed by ]
-    (modify-syntax-entry ?\[ "(]" phps-mode/syntax-table)
+    (modify-syntax-entry ?\[ "(]" phps-mode-syntax-table)
 
     ;; Treat closing square bracket as close-parenthesis opened by [
-    (modify-syntax-entry ?\] ")[" phps-mode/syntax-table)
+    (modify-syntax-entry ?\] ")[" phps-mode-syntax-table)
 
     ;; Treat opening curly bracket as open-parenthesis closed by }
-    (modify-syntax-entry ?\{ "(}" phps-mode/syntax-table)
+    (modify-syntax-entry ?\{ "(}" phps-mode-syntax-table)
 
     ;; Treat closing curly bracket as close-parenthesis opened by {
-    (modify-syntax-entry ?\} "){" phps-mode/syntax-table)
+    (modify-syntax-entry ?\} "){" phps-mode-syntax-table)
 
 
     ;; STRING QUOTE
 
     ;; Treat double quoted string as string quote
-    (modify-syntax-entry ?\" "\"" phps-mode/syntax-table)
+    (modify-syntax-entry ?\" "\"" phps-mode-syntax-table)
 
     ;; Treat single quoted string as string quote
-    (modify-syntax-entry ?\' "\"" phps-mode/syntax-table)
+    (modify-syntax-entry ?\' "\"" phps-mode-syntax-table)
 
     ;; Treat back-quoted string as string quote
-    (modify-syntax-entry ?\` "\"" phps-mode/syntax-table)
+    (modify-syntax-entry ?\` "\"" phps-mode-syntax-table)
 
-    phps-mode/syntax-table)
+    phps-mode-syntax-table)
   "Syntax table for phps-mode.")
 
-(defun phps-mode/syntax-table-init ()
+(defun phps-mode-syntax-table-init ()
   "Apply syntax table."
-  (set-syntax-table phps-mode/syntax-table))
+  (set-syntax-table phps-mode-syntax-table))
 
-(provide 'phps-mode/syntax-table)
+(provide 'phps-mode-syntax-table)
 
-;;; phps-syntax-table.el ends here
+;;; phps-mode-syntax-table.el ends here

@@ -1,6 +1,6 @@
-;;; phps-mode/phps-semantic.el --- Semantic functions for PHP -*- lexical-binding: t -*-
+;;; phps-mode-font-lock.el --- Font Lock for PHPs -*- lexical-binding: t -*-
 
-;; Copyright (C) 2017 Christian Johansson
+;; Copyright (C) 2018 Christian Johansson
 
 ;; This file is not part of GNU Emacs.
 
@@ -23,16 +23,21 @@
 ;;; Commentary:
 
 
+;; Please see README.md from the same repository for extended documentation.
+
+
 ;;; Code:
 
 
-(require 'semantic)
-(require 'semantic/ctxt)
-(require 'semantic/doc)
-(require 'semantic/format)
+(defun phps-mode-font-lock-init ()
+  "Apply font-lock."
 
+  (setq font-lock-keywords-only nil)
 
+  ;; This makes it possible to have full control over syntax coloring from the lexer
+  (set (make-local-variable 'font-lock-defaults) '(nil t))
 
-(provide 'phps-mode/semantic)
+  )
 
-;;; phps-semantic.el ends here
+(provide 'phps-mode-font-lock)
+;;; phps-mode-font-lock.el ends here

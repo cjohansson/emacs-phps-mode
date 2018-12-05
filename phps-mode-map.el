@@ -1,16 +1,6 @@
-;;; phps-mode/phps-font-lock.el --- Font Lock for PHP Semantic -*- lexical-binding: t -*-
+;; phps-mode-map.el --- Map for PHPs -*- lexical-binding: t -*-
 
-;; Author: Christian Johansson <github.com/cjohansson>
-;; Maintainer: Christian Johansson <github.com/cjohansson>
-;; Created: 3 Mar 2018
-;; Modified: .
-;; Version: 0.1
-;; Keywords: tools, convenience
-;; URL: -
-
-;; Package-Requires: ((emacs "24"))
-
-;; Copyright (C) 2017 Christian Johansson
+;; Copyright (C) 2018 Christian Johansson
 
 ;; This file is not part of GNU Emacs.
 
@@ -39,16 +29,15 @@
 ;;; Code:
 
 
-(defun phps-mode/font-lock-init ()
-  "Apply font-lock."
+(defvar phps-mode-map
+  (let ((map (make-keymap)))
+    ;; TODO keys here
+    map)
+  "Key-map for major mode.")
 
-  (setq font-lock-keywords-only nil)
+(defun phps-mode-map-init ()
+  "Apply map to mode."
+  (use-local-map phps-mode-map))
 
-  ;; This makes it possible to have full control over syntax coloring from the lexer
-  (set (make-local-variable 'font-lock-defaults) '(nil t))
-
-  )
-
-(provide 'phps-mode/font-lock)
-
-;;; phps-font-lock.el ends here
+(provide 'phps-mode-map)
+;;; phps-mode-map.el ends here

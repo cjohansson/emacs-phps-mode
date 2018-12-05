@@ -1,16 +1,6 @@
-;;; phps-mode/phps-flycheck.el --- Flycheck support for PHP with Semantic integration -*- lexical-binding: t -*-
+;;; phps-mode-flycheck.el --- Flycheck support for PHPs -*- lexical-binding: t -*-
 
-;; Author: Christian Johansson <github.com/cjohansson>
-;; Maintainer: Christian Johansson <github.com/cjohansson>
-;; Created: 3 Mar 2018
-;; Modified: .
-;; Version: 0.1
-;; Keywords: tools, convenience
-;; URL: -
-
-;; Package-Requires: ((emacs "24"))
-
-;; Copyright (C) 2017 Christian Johansson
+;; Copyright (C) 2018 Christian Johansson
 
 ;; This file is not part of GNU Emacs.
 
@@ -32,18 +22,20 @@
 
 ;;; Commentary:
 
-;; Please see README.md from the same repository for extended documentation.
 
-;;; Commentary:
+;; Please see README.md from the same repository for extended documentation.
 
 
 ;;; Code:
 
 
-(defun phps-mode/flycheck-init ()
+(defun phps-mode-flycheck-init ()
   "Add flycheck support for PHP Semantic mode."
 
+  ;; Is flycheck available?
   (when (fboundp 'flycheck-define-checker)
+
+    ;; Add PHP checker
     (flycheck-define-checker php
       "A PHP syntax checker using the PHP command line interpreter.
 
@@ -53,10 +45,11 @@ See URL `http://php.net/manual/en/features.commandline.php'."
       :error-patterns
       ((error line-start (or "Parse" "Fatal" "syntax") " error" (any ":" ",") " "
               (message) " in " (file-name) " on line " line line-end))
-      :modes (php-mode php+-mode phps-mode)
+      :modes (phps-mode)
       :next-checkers ((warning . php-phpmd)
                       (warning . php-phpcs)))
 
+    ;; Add PHP Mess Detector checker
     (flycheck-define-checker php-phpmd
       "A PHP style checker using PHP Mess Detector.
 
@@ -65,9 +58,10 @@ See URL `https://phpmd.org/'."
                 (eval (flycheck-option-comma-separated-list
                        flycheck-phpmd-rulesets)))
       :error-parser flycheck-parse-phpmd
-      :modes (php-mode php+-mode phps-mode)
-      :next-checkers (php-phpcs))
+      :modes (phps-mode)
+      :next-checkers ((warning . php-phpcs)))
 
+    ;; Add PHP Code Sniffer checker
     (flycheck-define-checker php-phpcs
       "A PHP style checker using PHP Code Sniffer.
 
@@ -97,10 +91,10 @@ See URL `http://pear.php.net/package/PHP_CodeSniffer/'."
       ;; phpcs seems to choke on empty standard input, hence skip phpcs if the
       ;; buffer is empty, see https://github.com/flycheck/flycheck/issues/907
       :predicate (lambda () (not (flycheck-buffer-empty-p))))
-    )
-  )
+
+    ))
 
 
-(provide 'phps-mode/flycheck)
+(provide 'phps-mode-flycheck)
 
-;;; phps-flycheck.el ends here
+;;; phps-mode-flycheck.el ends here

@@ -1,12 +1,4 @@
-;;; phps-test.el --- Commons for tests -*- lexical-binding: t -*-
-
-;; Author: Christian Johansson <github.com/cjohansson>
-;; Maintainer: Christian Johansson <github.com/cjohansson>
-;; Created: 3 Mar 2018
-;; Modified: .
-;; Version: 0.1
-;; Keywords: tools, convenience
-;; URL: -
+;;; phps-mode-test.el --- Commons for tests -*- lexical-binding: t -*-
 
 ;; Copyright (C) 2018 Christian Johansson
 
@@ -36,7 +28,7 @@
 
 (autoload 'phps-mode "phps-mode")
 
-(defmacro phps-mode/with-test-buffer (source &rest body)
+(defmacro phps-mode-test-with-buffer (source &rest body)
   "Set up test buffer with SOURCE and BODY."
   `(let ((test-buffer (generate-new-buffer "test")))
      (switch-to-buffer test-buffer)
@@ -49,6 +41,6 @@
      ))
 
 
-(provide 'phps-mode/test)
+(provide 'phps-mode-test)
 
-;;; phps-test.el ends here
+;;; phps-mode-test.el ends here

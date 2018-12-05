@@ -1,14 +1,4 @@
-;;; phps-mode/phps-functions.el --- Mode functions for PHPs -*- lexical-binding: t -*-
-
-;; Author: Christian Johansson <github.com/cjohansson>
-;; Maintainer: Christian Johansson <github.com/cjohansson>
-;; Created: 3 Mar 2018
-;; Modified: .
-;; Version: 0.1
-;; Keywords: tools, convenience
-;; URL: -
-
-;; Package-Requires: ((emacs "24"))
+;;; phps-mode-functions.el --- Mode functions for PHPs -*- lexical-binding: t -*-
 
 ;; Copyright (C) 2018 Christian Johansson
 
@@ -29,18 +19,17 @@
 ;; Free Spathoftware Foundation, Inc., 59 Temple Place - Suite 330,
 ;; Boston, MA 02111-1307, USA.
 
-
 ;;; Commentary:
 
 
 ;;; Code:
 
-(autoload 'phps-mode/run-incremental-lex "phps-lexer")
-(autoload 'phps-mode/move-lexer-tokens "phps-lexer")
-(autoload 'phps-mode/move-lexer-states "phps-lexer")
+(autoload 'phps-mode-lexer-run-incremental "phps-mode-lexer")
+(autoload 'phps-mode-lexer-move-tokens "phps-mode-lexer")
+(autoload 'phps-mode-lexer-move-states "phps-mode-lexer")
 
-(defvar phps-mode/buffer-changes--start nil
-  "Start of buffer changes, nil if none.")
+(defvar phps-mode-functions-buffer-changes-start nil
+  "Start point of buffer changes, nil if none.")
 
 ;; NOTE Also format white-space inside the line, i.e. after function declarations?
 
@@ -48,9 +37,9 @@
 ;; TODO Support indentation for multi-line scalar assignments
 ;; TODO Add support for automatic parenthesis, bracket, square-bracket, single-quote and double-quote encapsulations
 
-(defun phps-mode/indent-line ()
+(defun phps-mode-functions-indent-line ()
   "Indent line."
-  (let ((data (phps-mode/get-point-data))
+  (let ((data (phps-mode-functions-get-point-data))
         (line-start (line-beginning-position)))
     (let* ((start (nth 0 data))
            (end (nth 1 data))
@@ -170,8 +159,8 @@
                   (indent-line-to indent-sum)
 
                   ;; When indent is changed the trailing tokens and states just need to adjust their positions, this will improve speed of indent-region a lot
-                  (phps-mode/move-lexer-tokens line-start indent-diff)
-                  (phps-mode/move-lexer-states line-start indent-diff)
+                  (phps-mode-lexer-move-tokens line-start indent-diff)
+                  (phps-mode-lexer-move-states line-start indent-diff)
                   ;; (message "Moving tokens and states %s, %s to %s" indent-diff current-indentation indent-sum)
                   
                   ;; ;; Set point of change if it's not set or if it's larger than current point
@@ -180,30 +169,30 @@
                   ;;   ;; (message "Setting changes start from %s to %s" phps-mode/buffer-changes--start start)
                   ;;   (setq phps-mode/buffer-changes--start line-start))
                   
-                  ;; (phps-mode/run-incremental-lex)
+                  ;; (phps-mode-lexer-run-incremental)
 
                   )))))))))
 
 ;; TODO Fix flycheck error here
-(defun phps-mode/after-change-functions (start stop length)
+(defun phps-mode-functions-after-change (start stop length)
   "Track buffer change from START to STOP with length LENGTH."
   (when (string= major-mode "phps-mode")
-    (when (and (not phps-mode/buffer-changes--start)
-               (boundp 'phps-mode/idle-interval))
-      ;; (run-with-idle-timer phps-mode/idle-interval nil #'phps-mode/lex--RUN)
+    (when (and (not phps-mode-functions-buffer-changes-start)
+               (boundp 'phps-mode-idle-interval))
+      ;; (run-with-idle-timer phps-mode/idle-interval nil #'phps-mode-lexer-run)
       ;; TODO Maybe use incremental lexer once it's working
-      (run-with-idle-timer phps-mode/idle-interval nil #'phps-mode/run-incremental-lex)
+      (run-with-idle-timer phps-mode-idle-interval nil #'phps-mode-lexer-run-incremental)
       )
-    (when (or (not phps-mode/buffer-changes--start)
-              (< start phps-mode/buffer-changes--start))
+    (when (or (not phps-mode-functions-buffer-changes-start)
+              (< start phps-mode-functions-buffer-changes-start))
       ;; (message "Setting start of changes from %s to %s" phps-mode/buffer-changes--start start)
-      (setq phps-mode/buffer-changes--start start))
+      (setq phps-mode-functions-buffer-changes-start start))
     ;; (message "phps-mode/after-change-functions %s %s %s" start stop length)
     ))
 
 ;; TODO This function needs to keep track of alternative syntax for control structures
 
-(defun phps-mode/get-point-data ()
+(defun phps-mode-functions-get-point-data ()
   "Return information about point in tokens."
   ;; (message "Point: %s in %s" (point) phps-mode/lexer-tokens)
   (when (boundp 'phps-mode/lexer-tokens)
@@ -295,14 +284,14 @@
           ;; (message "data: %s" data)
           data)))))
 
-(defun phps-mode/functions-init ()
+(defun phps-mode-functions-init ()
   "PHP specific init-cleanup routines."
 
   ;; indent-region will call this on each line of region
-  (set (make-local-variable 'indent-line-function) #'phps-mode/indent-line)
+  (set (make-local-variable 'indent-line-function) #'phps-mode-functions-indent-line)
 
-  (when (and (boundp 'phps-mode/use-psr-2)
-             phps-mode/use-psr-2)
+  (when (and (boundp 'phps-mode-use-psr-2)
+             phps-mode-use-psr-2)
 
     ;; PSR-2 : Code MUST use an indent of 4 spaces
     (set (make-local-variable 'tab-width) 4)
@@ -312,14 +301,14 @@
 
     )
 
-  (set (make-local-variable 'phps-mode/buffer-changes--start) nil)
+  (set (make-local-variable 'phps-mode-functions-buffer-changes-start) nil)
 
-  (add-hook 'after-change-functions #'phps-mode/after-change-functions)
+  (add-hook 'after-change-functions #'phps-mode-functions-after-change)
 
   ;; NOTE Implement indent-region?
   )
 
 
-(provide 'phps-mode/functions)
+(provide 'phps-mode-functions)
 
-;;; phps-functions.el ends here
+;;; phps-mode-functions.el ends here

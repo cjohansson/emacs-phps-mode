@@ -1,12 +1,4 @@
-;;; phps-test-functions.el --- Tests for functions -*- lexical-binding: t -*-
-
-;; Author: Christian Johansson <github.com/cjohansson>
-;; Maintainer: Christian Johansson <github.com/cjohansson>
-;; Created: 3 Mar 2018
-;; Modified: .
-;; Version: 0.1
-;; Keywords: tools, convenience
-;; URL: -
+;;; phps-mode-test-functions.el --- Tests for functions -*- lexical-binding: t -*-
 
 ;; Copyright (C) 2018 Christian Johansson
 
@@ -37,9 +29,9 @@
 ;;; Code:
 
 
-(autoload 'phps-mode/with-test-buffer "phps-test")
-(autoload 'phps-mode/indent-line "phps-functions")
-(autoload 'phps-mode/get-point-data "phps-functions")
+(autoload 'phps-mode-test-with-buffer "phps-mode-test")
+(autoload 'phps-mode-functions-indent-line "phps-mode-functions")
+(autoload 'phps-mode-functions-get-point-data "phps-mode-functions")
 (autoload 'should "ert")
 
 ;; TODO Add unit tests for HEREDOC, NOWDOC as well
@@ -347,13 +339,13 @@
 
 ;; TODO Add tests for all examples here: https://www.php-fig.org/psr/psr-2/
 
-(defun phps-mod/test-functions ()
+(defun phps-mode-test-functions ()
   "Run test for functions."
   (phps-mode/test-functions--get-point-data)
   (phps-mode/test-indent-line))
 
 (phps-mod/test-functions)
 
-(provide 'phps-mod/test-functions)
+(provide 'phps-mode-test-functions)
 
-;;; phps-test-functions.el ends here
+;;; phps-mode-test-functions.el ends here

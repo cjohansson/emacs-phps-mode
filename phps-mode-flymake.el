@@ -1,16 +1,6 @@
-;;; phps-mode/phps-flymake.el --- Major mode for PHP with Semantic integration -*- lexical-binding: t -*-
+;;; phps-mode-flymake.el --- Flymake support for PHPs -*- lexical-binding: t -*-
 
-;; Author: Christian Johansson <github.com/cjohansson>
-;; Maintainer: Christian Johansson <github.com/cjohansson>
-;; Created: 3 Mar 2018
-;; Modified: .
-;; Version: 0.1
-;; Keywords: tools, convenience
-;; URL: -
-
-;; Package-Requires: ((emacs "24"))
-
-;; Copyright (C) 2017 Christian Johansson
+;; Copyright (C) 2018 Christian Johansson
 
 ;; This file is not part of GNU Emacs.
 
@@ -41,7 +31,7 @@
 
 (require 'flymake)
 
-(defun phps-mode/flymake-init ()
+(defun phps-mode-flymake-init ()
   "PHP specific init-cleanup routines.
 
 This is an alternative function of `flymake-php-init'.
@@ -69,6 +59,6 @@ Look at the `php-executable' variable instead of the constant \"php\" command."
                           (file-name-directory buffer-file-name))))
         (list php-executable (list "-f" local-file "-l")))))
 
-(provide 'phps-mode/flymake)
+(provide 'phps-mode-flymake)
 
-;;; phps-flymake.el ends here
+;;; phps-mode-flymake.el ends here

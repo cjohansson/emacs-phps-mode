@@ -1,12 +1,4 @@
-;;; phps-test-parser.el --- Tests for Semantic parser -*- lexical-binding: t -*-
-
-;; Author: Christian Johansson <github.com/cjohansson>
-;; Maintainer: Christian Johansson <github.com/cjohansson>
-;; Created: 3 Mar 2018
-;; Modified: .
-;; Version: 0.1
-;; Keywords: tools, convenience
-;; URL: -
+;;; phps-mode-semantic.el --- Semantic for PHPs -*- lexical-binding: t -*-
 
 ;; Copyright (C) 2018 Christian Johansson
 
@@ -31,22 +23,16 @@
 ;;; Commentary:
 
 
-;; Run from terminal make test-parser
-
-
 ;;; Code:
 
 
-(defun phps-test-parser()
-  "Run test for lexer."
-  ;; (message "-- Running all tests for parser... --\n")
-  ;; (setq debug-on-error t)
+(require 'semantic)
+(require 'semantic/ctxt)
+(require 'semantic/doc)
+(require 'semantic/format)
 
-  ;; (message "\n-- Ran all tests for parser. --")
-  )
 
-(phps-test-parser)
 
-(provide 'phps-test-parser)
+(provide 'phps-mode-semantic)
 
-;;; phps-test-parser.el ends here
+;;; phps-mode-semantic.el ends here

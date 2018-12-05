@@ -1,11 +1,4 @@
-;;; phps-mode/phps-tags.el --- PHP LALR parser for Emacs -*- lexical-binding: t -*-
-
-;; Copyright (C) 2001-2006, 2009-2018 Free Software Foundation, Inc.
-
-;; Author: David Ponce <david@dponce.com>
-;; Maintainer: David Ponce <david@dponce.com>
-;; Created: 15 Dec 2001
-;; Keywords: syntax
+;;; phps-mode-tags.el --- PHP LALR parser for Emacs -*- lexical-binding: t -*-
 
 ;; This file is not part of GNU Emacs.
 
@@ -36,7 +29,7 @@
 (defvar semantic-imenu-summary-function)
 
 ;;;###autoload
-(defun phps-mode/tags-init ()
+(defun phps-mode-tags-init ()
   "Hook run to setup Semantic in `phps-mode'.
 Use the alternate LALR(1) parser."
 
@@ -88,6 +81,6 @@ Use the alternate LALR(1) parser."
   ;; Setup phpdoc stuff
   (semantic-php-doc-setup))
 
-(provide 'phps-mode/phps-tags)
+(provide 'phps-mode-tags)
 
-;;; phps-tags.el ends here
+;;; phps-mode-tags.el ends here
