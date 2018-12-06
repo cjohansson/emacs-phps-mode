@@ -195,7 +195,7 @@
 (defun phps-mode-functions-get-point-data ()
   "Return information about point in tokens."
   ;; (message "Point: %s in %s" (point) phps-mode/lexer-tokens)
-  (when (boundp 'phps-mode/lexer-tokens)
+  (when (boundp 'phps-mode-lexer-tokens)
     (save-excursion
       (beginning-of-line)
       (let ((line-beginning (point))
@@ -215,7 +215,7 @@
             (line-in-doc-comment nil)
             (found-line-tokens nil))
         (catch 'stop-iteration
-          (dolist (item phps-mode/lexer-tokens)
+          (dolist (item phps-mode-lexer-tokens)
             (let ((token (car item))
                   (token-start (car (cdr item)))
                   (token-end (cdr (cdr item))))
