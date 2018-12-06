@@ -1260,9 +1260,9 @@ ANY_CHAR'
    ))
 
 ;; TODO Need to store lexer state and stack at each changing point of buffer to be able to rewind lexer
-(defun phps-mode-lexer-lex--SETUP (start end)
+(defun phps-mode-lexer-setup (start end)
   "Just prepare other lexers for lexing region START to END."
-  ;; (message "phps-mode-lexer-lex--SETUP %s %s" start end)
+  ;; (message "phps-mode-lexer-setup %s %s" start end)
   (when (and (eq start 1)
              end)
     (delete-all-overlays)
@@ -1273,16 +1273,16 @@ ANY_CHAR'
     
     (phps-mode-lexer-BEGIN phps-mode-lexer-ST_INITIAL)))
 
-(defun phps-mode-lexer-lex--RUN ()
+(defun phps-mode-lexer-run ()
   "Run lexer."
   (interactive)
   (setq phps-mode-lexer-tokens (semantic-lex-buffer)))
 
-(defun phps-mode-lexer-move-lexer-states (start diff)
+(defun phps-mode-lexer-move-states (start diff)
   "Move lexer states after (or equal to) START with modification DIFF."
-  (setq phps-mode-lexer-states (phps-mode-lexer-get-moved-lexer-states phps-mode-lexer-states start diff)))
+  (setq phps-mode-lexer-states (phps-mode-lexer-get-moved-states phps-mode-lexer-states start diff)))
 
-(defun phps-mode-lexer-get-moved-lexer-states (states start diff)
+(defun phps-mode-lexer-get-moved-states (states start diff)
   "Return moved lexer STATES after (or equal to) START with modification DIFF."
   (let ((old-states states)
         (new-states '()))
@@ -1304,7 +1304,7 @@ ANY_CHAR'
 
 (defun phps-mode-lexer-move-tokens (start diff)
   "Update tokens with moved lexer tokens after or equal to START with modification DIFF."
-  (setq phps-mode-lexer-tokens (phps-mode-lexer-get-moved-lexer-tokens phps-mode-lexer-tokens start diff)))
+  (setq phps-mode-lexer-tokens (phps-mode-lexer-get-moved-tokens phps-mode-lexer-tokens start diff)))
 
 (defun phps-mode-lexer-get-moved-tokens (old-tokens start diff)
   "Return moved lexer OLD-TOKENS positions after (or equal to) START with DIFF points."
@@ -1384,7 +1384,7 @@ ANY_CHAR'
               ;; TODO Here clear all tokens after previous-token-start and add new tokens to stack
               ))
         ;; (display-warning "phps-mode" (format "Found no state to rewind to for %s in stack %s, buffer point max: %s" change-start states (point-max)))
-        (phps-mode-lexer-lex--RUN)))
+        (phps-mode-lexer-run)))
     (setq phps-mode-lexer-buffer-changes--start nil)))
 
 (define-lex phps-mode-lexer-tags-lexer
@@ -1403,17 +1403,17 @@ ANY_CHAR'
 
   semantic-lex-default-action)
 
-(defun phps-mode-lexer-lexer-init ()
+(defun phps-mode-lexer-init ()
   "Initialize lexer."
 
-  (when (boundp 'phps-mode-lexer-syntax-table)
-    (setq semantic-lex-syntax-table phps-mode-lexer-syntax-table))
+  (when (boundp 'phps-mode-syntax-table)
+    (setq semantic-lex-syntax-table phps-mode-syntax-table))
 
   (setq semantic-lex-analyzer #'phps-mode-lexer-tags-lexer)
 
-  (add-hook 'semantic-lex-reset-functions #'phps-mode-lexer-lex--SETUP)
+  (add-hook 'semantic-lex-reset-functions #'phps-mode-lexer-setup)
 
-  (phps-mode-lexer-lex--RUN))
+  (phps-mode-lexer-run))
 
 (provide 'phps-mode-lexer)
 
