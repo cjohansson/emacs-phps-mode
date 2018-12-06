@@ -38,8 +38,8 @@
 ;;; Code:
 
 
-%package phps-mode/tags
-%provide phps-mode/phps-wy
+%package phps-mode-tags
+%provide phps-mode-phps-wy
 
 %languagemode phps-mode
 

@@ -1324,7 +1324,7 @@ ANY_CHAR'
 
     new-tokens))
 
-(defun phps-mode-lexer-run-incremental-lex ()
+(defun phps-mode-lexer-run-incremental ()
   "Run incremental lexer based on `phps-mode-lexer-buffer-changes--start'."
   (when (and (boundp 'phps-mode-lexer-buffer-changes--start)
              phps-mode-lexer-buffer-changes--start

@@ -66,14 +66,14 @@
 
             ;; When bracket count at start is larger than bracket count at end
             (when (and
-                   (boundp 'phps-mode/lexer-tokens)
+                   (boundp 'phps-mode-lexer-tokens)
                    start-token-number
                    end-token-number)
               (let ((token-number start-token-number)
                     (valid-tokens t)
                     (last-token-is-opening-curly-bracket nil)
                     (first-token-is-closing-curly-bracket nil)
-                    (tokens phps-mode/lexer-tokens)
+                    (tokens phps-mode-lexer-tokens)
                     (is-first-line-token t))
                 ;; (message "token start %s, token end %s" start-token-number end-token-number)
                 ;; (message "First token %s, last token %s" (car (nth start-token-number tokens)) (car (nth end-token-number tokens)))
@@ -164,10 +164,10 @@
                   ;; (message "Moving tokens and states %s, %s to %s" indent-diff current-indentation indent-sum)
                   
                   ;; ;; Set point of change if it's not set or if it's larger than current point
-                  ;; (when (or (not phps-mode/buffer-changes--start)
-                  ;;           (< line-start phps-mode/buffer-changes--start))
-                  ;;   ;; (message "Setting changes start from %s to %s" phps-mode/buffer-changes--start start)
-                  ;;   (setq phps-mode/buffer-changes--start line-start))
+                  ;; (when (or (not phps-mode-functions-buffer-changes-start)
+                  ;;           (< line-start phps-mode-functions-buffer-changes-start))
+                  ;;   ;; (message "Setting changes start from %s to %s" phps-mode-functions-buffer-changes-start start)
+                  ;;   (setq phps-mode-functions-buffer-changes-start line-start))
                   
                   ;; (phps-mode-lexer-run-incremental)
 
@@ -179,22 +179,22 @@
   (when (string= major-mode "phps-mode")
     (when (and (not phps-mode-functions-buffer-changes-start)
                (boundp 'phps-mode-idle-interval))
-      ;; (run-with-idle-timer phps-mode/idle-interval nil #'phps-mode-lexer-run)
+      ;; (run-with-idle-timer phps-mode-idle-interval nil #'phps-mode-lexer-run)
       ;; TODO Maybe use incremental lexer once it's working
       (run-with-idle-timer phps-mode-idle-interval nil #'phps-mode-lexer-run-incremental)
       )
     (when (or (not phps-mode-functions-buffer-changes-start)
               (< start phps-mode-functions-buffer-changes-start))
-      ;; (message "Setting start of changes from %s to %s" phps-mode/buffer-changes--start start)
+      ;; (message "Setting start of changes from %s to %s" phps-mode-functions-buffer-changes-start start)
       (setq phps-mode-functions-buffer-changes-start start))
-    ;; (message "phps-mode/after-change-functions %s %s %s" start stop length)
+    ;; (message "phps-mode-functions-after-change %s %s %s" start stop length)
     ))
 
 ;; TODO This function needs to keep track of alternative syntax for control structures
 
 (defun phps-mode-functions-get-point-data ()
   "Return information about point in tokens."
-  ;; (message "Point: %s in %s" (point) phps-mode/lexer-tokens)
+  ;; (message "Point: %s in %s" (point) phps-mode-lexer-tokens)
   (when (boundp 'phps-mode-lexer-tokens)
     (save-excursion
       (beginning-of-line)

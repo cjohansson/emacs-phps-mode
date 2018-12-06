@@ -78,7 +78,7 @@
   (phps-mode-test-with-buffer
    "<?php\n$variable = array(\n    'random2'\n    );\n$variable = true;\n"
    (goto-char 43)
-   ;; (message "Tokens %s point %s" phps-mode/lexer-tokens (point))
+   ;; (message "Tokens %s point %s" phps-mode-lexer-tokens (point))
    (phps-mode-functions-indent-line)
    (let ((buffer-contents (buffer-substring-no-properties (point-min) (point-max))))
      (should (equal buffer-contents  "<?php\n$variable = array(\n    'random2'\n);\n$variable = true;\n"))))
@@ -87,7 +87,7 @@
    "<?php\n/**\n* My first line\n* My second line\n**/\n"
    (goto-char 20)
    (phps-mode-functions-indent-line)
-   ;; (message "Tokens %s point %s" phps-mode/lexer-tokens (point))
+   ;; (message "Tokens %s point %s" phps-mode-lexer-tokens (point))
    (let ((buffer-contents (buffer-substring-no-properties (point-min) (point-max))))
      (should (equal buffer-contents  "<?php\n/**\n * My first line\n* My second line\n**/\n"))))
 
@@ -95,7 +95,7 @@
    "<?php\n/**\n* My first line\n* My second line\n**/\n"
    (goto-char 9)
    (phps-mode-functions-indent-line)
-   ;; (message "Tokens %s point %s" phps-mode/lexer-tokens (point))
+   ;; (message "Tokens %s point %s" phps-mode-lexer-tokens (point))
    (let ((buffer-contents (buffer-substring-no-properties (point-min) (point-max))))
      (should (equal buffer-contents  "<?php\n/**\n* My first line\n* My second line\n**/\n"))))
 
@@ -103,7 +103,7 @@
    "<?php\n/**\n* My first line\n* My second line\n**/\n"
    (goto-char 46)
    (phps-mode-functions-indent-line)
-   ;; (message "Tokens %s point %s" phps-mode/lexer-tokens (point))
+   ;; (message "Tokens %s point %s" phps-mode-lexer-tokens (point))
    (let ((buffer-contents (buffer-substring-no-properties (point-min) (point-max))))
      (should (equal buffer-contents  "<?php\n/**\n* My first line\n* My second line\n **/\n"))))
 
@@ -111,7 +111,7 @@
    "<?php\n$variable = array(\n'random4');\n$variable = true;\n"
    (goto-char 29)
    (phps-mode-functions-indent-line)
-   ;; (message "Tokens %s point %s" phps-mode/lexer-tokens (point))
+   ;; (message "Tokens %s point %s" phps-mode-lexer-tokens (point))
    (let ((buffer-contents (buffer-substring-no-properties (point-min) (point-max))))
      (should (equal buffer-contents  "<?php\n$variable = array(\n    'random4');\n$variable = true;\n"))))
 
@@ -119,7 +119,7 @@
    "<?php\nadd_filter(\n\"views_{$screen->id}\",'__return_empty_array'\n);"
    (goto-char 25)
    (phps-mode-functions-indent-line)
-   ;; (message "Tokens %s point %s" phps-mode/lexer-tokens (point))
+   ;; (message "Tokens %s point %s" phps-mode-lexer-tokens (point))
    (let ((buffer-contents (buffer-substring-no-properties (point-min) (point-max))))
      (should (equal buffer-contents "<?php\nadd_filter(\n    \"views_{$screen->id}\",'__return_empty_array'\n);"))))
 
@@ -127,7 +127,7 @@
    "<?php\nif (random_expression(\ntrue\n)) {\nsome_logic_here();\n}"
    (goto-char 36)
    (phps-mode-functions-indent-line)
-   ;; (message "Tokens %s point %s" phps-mode/lexer-tokens (point))
+   ;; (message "Tokens %s point %s" phps-mode-lexer-tokens (point))
    (let ((buffer-contents (buffer-substring-no-properties (point-min) (point-max))))
      (should (equal buffer-contents "<?php\nif (random_expression(\ntrue\n)) {\nsome_logic_here();\n}"))))
 
@@ -135,7 +135,7 @@
    "<?php\nif (empty(\n$this->var\n) && !empty($this->var)\n) {\n$this->var = 'abc123';\n}\n"
    (goto-char 54)
    (phps-mode-functions-indent-line)
-   ;; (message "Tokens %s point %s" phps-mode/lexer-tokens (point))
+   ;; (message "Tokens %s point %s" phps-mode-lexer-tokens (point))
    (let ((buffer-contents (buffer-substring-no-properties (point-min) (point-max))))
      (should (equal buffer-contents  "<?php\nif (empty(\n$this->var\n) && !empty($this->var)\n) {\n$this->var = 'abc123';\n}\n"))))
 
@@ -143,7 +143,7 @@
    "<?php\nif (myFirstCondition()) {\n    $this->var = 'abc123';\n    } else {\n    $this->var = 'def456';\n}\n"
    (goto-char 68)
    (phps-mode-functions-indent-line)
-   ;; (message "Tokens %s point %s" phps-mode/lexer-tokens (point))
+   ;; (message "Tokens %s point %s" phps-mode-lexer-tokens (point))
    (let ((buffer-contents (buffer-substring-no-properties (point-min) (point-max))))
      (should (equal buffer-contents "<?php\nif (myFirstCondition()) {\n    $this->var = 'abc123';\n} else {\n    $this->var = 'def456';\n}\n"))))
 
@@ -151,7 +151,7 @@
    "<?php\nif (myFirstCondition()) {\n    $this->var = 'abc123';\n    } else if (mySeconCondition()) {\n    $this->var = 'def456';\n}\n"
    (goto-char 68)
    (phps-mode-functions-indent-line)
-   ;; (message "Tokens %s point %s" phps-mode/lexer-tokens (point))
+   ;; (message "Tokens %s point %s" phps-mode-lexer-tokens (point))
    (let ((buffer-contents (buffer-substring-no-properties (point-min) (point-max))))
      (should (equal buffer-contents "<?php\nif (myFirstCondition()) {\n    $this->var = 'abc123';\n} else if (mySeconCondition()) {\n    $this->var = 'def456';\n}\n"))))
 
@@ -167,7 +167,7 @@
    "<?php\nif (myRandomCondition()):\necho 'Something here';\n    else:\n    echo 'Something else here';\nendif;\n"
    (goto-char 60)
    (phps-mode-functions-indent-line)
-   ;; (message "Tokens %s" phps-mode/lexer-tokens)
+   ;; (message "Tokens %s" phps-mode-lexer-tokens)
    (let ((buffer-contents (buffer-substring-no-properties (point-min) (point-max))))
      (should (equal buffer-contents "<?php\nif (myRandomCondition()):\necho 'Something here';\nelse:\n    echo 'Something else here';\nendif;\n"))))
 

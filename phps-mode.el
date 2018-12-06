@@ -90,7 +90,7 @@
   (phps-mode-lexer-init)
 
   ;; Wisent LALR parser
-  ;; (phps-mode/tags-init)
+  ;; (phps-mode-tags-init)
 
   (run-hooks 'phps-mode-hook)
   (semantic-new-buffer-fcn))
