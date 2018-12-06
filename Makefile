@@ -23,12 +23,12 @@ tests: clean test-functions test-lexer test-parser
 
 .PHONY: test-functions
 test-functions:
-	$(EMACS_CMD) -l phps-test-functions.el
+	$(EMACS_CMD) -l phps-mode-test-functions.el
 
 .PHONY: test-lexer
 test-lexer:
-	$(EMACS_CMD) -l phps-test-lexer.el
+	$(EMACS_CMD) -l phps-mode-test-lexer.el
 
 .PHONY: test-parser
 test-parser:
-	$(EMACS_CMD) -l phps-test-parser.el
+	$(EMACS_CMD) -l phps-mode-test-parser.el
