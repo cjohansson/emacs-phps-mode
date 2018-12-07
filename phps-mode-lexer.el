@@ -380,7 +380,7 @@
    (semantic-lex-token token start end)))
 
 ;; TODO Figure out what this does
-(defun phps-mode-lexer-SKIP_TOKEN (token start end)
+(defun phps-mode-lexer-SKIP_TOKEN (_token _start _end)
   "Skip TOKEN to list with START and END."
   )
 
@@ -793,7 +793,7 @@
    ((looking-at (concat "/\\*\\*" phps-mode-lexer-WHITESPACE))
     (let* ((start (match-beginning 0))
            (end (match-end 0))
-           (data (buffer-substring-no-properties start end)))
+           (_data (buffer-substring-no-properties start end)))
       (let ((string-start (search-forward "*/" nil t))
             position)
         (if string-start
@@ -1326,14 +1326,14 @@ ANY_CHAR'
 
 (defun phps-mode-lexer-run-incremental ()
   "Run incremental lexer based on `phps-mode-lexer-buffer-changes--start'."
-  (when (and (boundp 'phps-mode-lexer-buffer-changes--start)
-             phps-mode-lexer-buffer-changes--start
+  (when (and (boundp 'phps-mode-functions-buffer-changes-start)
+             phps-mode-functions-buffer-changes-start
              phps-mode-lexer-states)
     (let ((state nil)
           (state-stack nil)
           (new-states '())
           (states (nreverse phps-mode-lexer-states))
-          (change-start phps-mode-lexer-buffer-changes--start)
+          (change-start phps-mode-functions-buffer-changes-start)
           (previous-token-start nil)
           (tokens phps-mode-lexer-tokens))
       ;; (message "Looking for state to rewind to for %s in stack %s" change-start states)
@@ -1368,7 +1368,7 @@ ANY_CHAR'
 
             ;; Delete all overlays from point of change to end of buffer
             (dolist (overlay (overlays-in previous-token-start (point-max)))
-                (delete-overlay overlay))
+              (delete-overlay overlay))
             
             (let* ((new-tokens (semantic-lex previous-token-start (point-max)))
                    (appended-tokens (append old-tokens new-tokens)))
@@ -1385,7 +1385,7 @@ ANY_CHAR'
               ))
         ;; (display-warning "phps-mode" (format "Found no state to rewind to for %s in stack %s, buffer point max: %s" change-start states (point-max)))
         (phps-mode-lexer-run)))
-    (setq phps-mode-lexer-buffer-changes--start nil)))
+    (setq phps-mode-functions-buffer-changes-start nil)))
 
 (define-lex phps-mode-lexer-tags-lexer
   "Lexer that handles PHP buffers."

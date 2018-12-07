@@ -50,12 +50,12 @@
         (let ((start-curly-bracket-level (nth 1 start))
               (start-round-bracket-level (nth 2 start))
               (start-square-bracket-level (nth 3 start))
-              (start-inline-function-level (nth 4 start))
+              (_start-inline-function-level (nth 4 start))
               (start-token-number (nth 5 start))
               (end-curly-bracket-level (nth 1 end))
               (end-round-bracket-level (nth 2 end))
               (end-square-bracket-level (nth 3 end))
-              (end-inline-function-level (nth 4 end))
+              (_end-inline-function-level (nth 4 end))
               (end-token-number (nth 5 end))
               (in-doc-comment (nth 6 start)))
           (let* ((indent-start (+ start-curly-bracket-level start-round-bracket-level start-square-bracket-level))
@@ -174,19 +174,23 @@
                   )))))))))
 
 ;; TODO Fix flycheck error here
-(defun phps-mode-functions-after-change (start stop length)
+(defun phps-mode-functions-after-change (start _stop _length)
   "Track buffer change from START to STOP with length LENGTH."
   (when (string= major-mode "phps-mode")
+
+    ;; If we haven't scheduled incremental lexer before - do it
     (when (and (not phps-mode-functions-buffer-changes-start)
-               (boundp 'phps-mode-idle-interval))
-      ;; (run-with-idle-timer phps-mode-idle-interval nil #'phps-mode-lexer-run)
-      ;; TODO Maybe use incremental lexer once it's working
-      (run-with-idle-timer phps-mode-idle-interval nil #'phps-mode-lexer-run-incremental)
-      )
+               (boundp 'phps-mode-idle-interval)
+               phps-mode-idle-interval)
+      ;; (message "Enqueued incremental lexer")
+      (run-with-idle-timer phps-mode-idle-interval nil #'phps-mode-lexer-run-incremental))
+
+    ;; When point of change is not set or when start of new changes precedes old change - update the point
     (when (or (not phps-mode-functions-buffer-changes-start)
               (< start phps-mode-functions-buffer-changes-start))
       ;; (message "Setting start of changes from %s to %s" phps-mode-functions-buffer-changes-start start)
       (setq phps-mode-functions-buffer-changes-start start))
+
     ;; (message "phps-mode-functions-after-change %s %s %s" start stop length)
     ))
 
