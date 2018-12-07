@@ -744,8 +744,8 @@
         (looking-at phps-mode-lexer-DNUM))
     (let* ((start (match-beginning 0))
            (end (match-end 0))
-           (data (buffer-substring-no-properties start end)))
-      ;; (message "Exponent/double at: %s" data)
+           (_data (buffer-substring-no-properties start end)))
+      ;; (message "Exponent/double at: %s" _data)
       (phps-mode-lexer-RETURN_TOKEN 'T_DNUMBER start end)))
 
    ((looking-at phps-mode-lexer-LNUM)
@@ -777,7 +777,7 @@
    ((looking-at "\\(//\\|#\\)")
     (let* ((start (match-beginning 0))
            (end (match-end 0))
-           (data (buffer-substring-no-properties start end))
+           (_data (buffer-substring-no-properties start end))
            (line (buffer-substring-no-properties end (line-end-position))))
       (if (string-match "\\?>" line)
           (progn
@@ -807,7 +807,7 @@
    ((looking-at "/\\*")
     (let* ((start (match-beginning 0))
            (end (match-end 0))
-           (data (buffer-substring-no-properties start end)))
+           (_data (buffer-substring-no-properties start end)))
       (let ((string-start (search-forward "*/" nil t))
             position)
         (if string-start
@@ -843,8 +843,7 @@
    ((looking-at "'")
     (let* ((start (match-beginning 0))
            (end (match-end 0))
-           (data (buffer-substring-no-properties start end))
-           (found nil)
+           (_data (buffer-substring-no-properties start end))
            (un-escaped-end (phps-modex/lex--get-next-unescaped "'")))
       (if un-escaped-end
           (progn
@@ -854,14 +853,13 @@
           ;; Unclosed single quotes
           ;; (message "Single quoted string never ends..")
           (phps-mode-lexer-RETURN_TOKEN 'T_ENCAPSED_AND_WHITESPACE start (point-max))
-          (phps-mode-lexer-MOVE_FORWARD (point-max))
-          ))))
+          (phps-mode-lexer-MOVE_FORWARD (point-max))))))
 
    ;; Double quoted string
    ((looking-at "\"")
     (let* ((start (match-beginning 0))
            (end (match-end 0))
-           (data (buffer-substring-no-properties start end)))
+           (_data (buffer-substring-no-properties start end)))
       (forward-char)
       ;; Handle the "" case
       (if (looking-at-p "\"")
@@ -883,8 +881,8 @@
                 (goto-char string-start)
                 (if (looking-at "[^\\\\]\"")
                     (progn
-                      (let ((double-quoted-string (buffer-substring-no-properties start (+ string-start 2))))
-                        ;; (message "Double quoted string: %s" double-quoted-string)
+                      (let ((_double-quoted-string (buffer-substring-no-properties start (+ string-start 2))))
+                        ;; (message "Double quoted string: %s" _double-quoted-string)
                         (phps-mode-lexer-RETURN_TOKEN 'T_CONSTANT_ENCAPSED_STRING start (+ string-start 2))))
                   (progn
                     ;; (message "Found variable after '%s'" (buffer-substring-no-properties start string-start))
@@ -936,11 +934,10 @@
    ((looking-at phps-mode-lexer-WHITESPACE)
     (let* ((start (match-beginning 0))
            (end (match-end 0))
-           (data (buffer-substring-no-properties start end)))
+           (_data (buffer-substring-no-properties start end)))
       (if phps-mode-lexer-PARSER_MODE
           (phps-mode-lexer-MOVE_FORWARD end)
-        (phps-mode-lexer-RETURN_TOKEN 'T_WHITESPACE start end))
-      ))
+        (phps-mode-lexer-RETURN_TOKEN 'T_WHITESPACE start end))))
 
    ((looking-at "->")
     (phps-mode-lexer-RETURN_TOKEN 'T_OBJECT_OPERATOR (match-beginning 0) (match-end 0)))
@@ -949,17 +946,15 @@
     (let ((start (match-beginning 0))
            (end (match-end 0)))
       (phps-mode-lexer-yy_pop_state)
-      (phps-mode-lexer-RETURN_TOKEN 'T_STRING start end)
-      ))
+      (phps-mode-lexer-RETURN_TOKEN 'T_STRING start end)))
 
    ((looking-at phps-mode-lexer-ANY_CHAR)
-    (let ((start (match-beginning 0))
+    (let ((_start (match-beginning 0))
           (end (match-end 0)))
       (phps-mode-lexer-yy_pop_state)
       ;; TODO goto restart here?
       ;; (message "Restart here")
-      (phps-mode-lexer-MOVE_FORWARD end)
-      ))
+      (phps-mode-lexer-MOVE_FORWARD end)))
 
    ))
 
@@ -1157,8 +1152,8 @@ ANY_CHAR'
         (if string-start
             (let* ((start (match-beginning 0))
                    (end (match-end 0))
-                   (data (buffer-substring-no-properties start end)))
-              ;; (message "Found something ending at %s" data)
+                   (_data (buffer-substring-no-properties start end)))
+              ;; (message "Found something ending at %s" _data)
               ;; (message "Found nowdoc end at %s-%s" start end)
               (phps-mode-lexer-BEGIN phps-mode-lexer-ST_END_HEREDOC)
               (phps-mode-lexer-RETURN_TOKEN 'T_ENCAPSED_AND_WHITESPACE old-start start)
@@ -1199,8 +1194,8 @@ ANY_CHAR'
 
       (let* ((start (match-beginning 0))
              (end (+ start (length heredoc_label) 1))
-             (data (buffer-substring-no-properties start end)))
-        ;; (message "Found ending heredoc at %s, %s of %s" data (thing-at-point 'line) heredoc_label)
+             (_data (buffer-substring-no-properties start end)))
+        ;; (message "Found ending heredoc at %s, %s of %s" _data (thing-at-point 'line) heredoc_label)
         (pop phps-mode-lexer-heredoc_label_stack)
         (phps-mode-lexer-BEGIN phps-mode-lexer-ST_IN_SCRIPTING)
         (phps-mode-lexer-RETURN_TOKEN 'T_END_HEREDOC start end)
