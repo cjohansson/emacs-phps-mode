@@ -245,10 +245,9 @@
 
   )
 
-;; TODO Support all control structures
-;; if, else, elseif, else if, while, do-while, for, foreach, break, switch, declare, return, require, include, require_once, include_once, goto
 
-;; TODO Support nested square brackets [[[ ]]]
+;; TODO Support inline control structures for: if, while, for, foreach, and switch
+;; TODO Support alternative syntax for control structures for: if, while, for, foreach, and switch
 
 
 (defun phps-mode-test-functions-get-point-data ()
