@@ -50,16 +50,18 @@
         (let ((start-curly-bracket-level (nth 1 start))
               (start-round-bracket-level (nth 2 start))
               (start-square-bracket-level (nth 3 start))
-              (_start-inline-function-level (nth 4 start))
-              (start-token-number (nth 5 start))
+              (start-inline-control-structure-level (nth 4 start))
+              (start-alternative-control-structure-level (nth 5 start))
+              (start-token-number (nth 6 start))
               (end-curly-bracket-level (nth 1 end))
               (end-round-bracket-level (nth 2 end))
               (end-square-bracket-level (nth 3 end))
-              (_end-inline-function-level (nth 4 end))
-              (end-token-number (nth 5 end))
-              (in-doc-comment (nth 6 start)))
-          (let* ((indent-start (+ start-curly-bracket-level start-round-bracket-level start-square-bracket-level))
-                 (indent-end (+ end-curly-bracket-level end-round-bracket-level end-square-bracket-level))
+              (end-inline-control-structure-level (nth 4 end))
+              (end-alternative-control-structure-level (nth 5 end))
+              (end-token-number (nth 6 end))
+              (in-doc-comment (nth 7 start)))
+          (let* ((indent-start (+ start-curly-bracket-level start-round-bracket-level start-square-bracket-level start-inline-control-structure-level start-alternative-control-structure-level))
+                 (indent-end (+ end-curly-bracket-level end-round-bracket-level end-square-bracket-level end-inline-control-structure-level end-alternative-control-structure-level))
                  (indent-level indent-start)
                  (indent-adjust 0))
             ;; (message "indent-start %s, indent-end %s" indent-start indent-end)
@@ -194,7 +196,8 @@
     ;; (message "phps-mode-functions-after-change %s %s %s" start stop length)
     ))
 
-;; TODO This function needs to keep track of alternative syntax for control structures
+;; TODO This function needs to keep track of alternative syntax for the control structures: if, while, for, foreach, and switch
+;; TODO This function needs to keep track of inline syntax for the control structures: if, while, for, foreach, and switch
 
 (defun phps-mode-functions-get-point-data ()
   "Return information about point in tokens."
@@ -208,16 +211,19 @@
             (start-curly-bracket-level 0)
             (start-round-bracket-level 0)
             (start-square-bracket-level 0)
-            (start-inline-function-level 0)
+            (start-inline-control-structure-level 0)
+            (start-alternative-control-structure-level 0)
             (start-token-number nil)
             (end-in-scripting nil)
             (end-curly-bracket-level 0)
             (end-round-bracket-level 0)
             (end-square-bracket-level 0)
-            (end-inline-function-level 0)
+            (end-inline-control-structure-level 0)
+            (end-alternative-control-structure-level 0)
             (end-token-number nil)
             (line-in-doc-comment nil)
-            (found-line-tokens nil))
+            (found-line-tokens nil)
+            (_after-special-control-structure nil))
         (catch 'stop-iteration
           (dolist (item phps-mode-lexer-tokens)
             (let ((token (car item))
@@ -236,7 +242,7 @@
                          (<= token-end line-end))
                 (setq found-line-tokens t))
 
-              ;; When end of token is equal or less to current point
+              ;; When end of token is equal or less to beginning of current line
               (when (<= token-end line-beginning)
                 (when (null start-token-number)
                   (setq start-token-number -1))
@@ -284,7 +290,7 @@
         (when (not found-line-tokens)
           (setq start-token-number nil)
           (setq end-token-number nil))
-        (let ((data (list (list start-in-scripting start-curly-bracket-level start-round-bracket-level start-square-bracket-level start-inline-function-level start-token-number line-in-doc-comment) (list end-in-scripting end-curly-bracket-level end-round-bracket-level end-square-bracket-level end-inline-function-level end-token-number line-in-doc-comment))))
+        (let ((data (list (list start-in-scripting start-curly-bracket-level start-round-bracket-level start-square-bracket-level start-inline-control-structure-level start-alternative-control-structure-level start-token-number line-in-doc-comment) (list end-in-scripting end-curly-bracket-level end-round-bracket-level end-square-bracket-level end-inline-control-structure-level end-alternative-control-structure-level end-token-number line-in-doc-comment))))
           ;; (message "data: %s" data)
           data)))))
 
