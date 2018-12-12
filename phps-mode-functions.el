@@ -223,7 +223,7 @@
             (end-token-number nil)
             (line-in-doc-comment nil)
             (found-line-tokens nil)
-            (_after-special-control-structure nil))
+            (after-special-control-structure nil))
         (catch 'stop-iteration
           (dolist (item phps-mode-lexer-tokens)
             (let ((token (car item))
@@ -236,6 +236,17 @@
                 ;; (message "Stopping iteration at: %s %s" start position)
                 (throw 'stop-iteration nil))
 
+              ;; Does the token support inline and alternative syntax?
+              (when (or
+                     (equal token 'T_IF)
+                     (equal token 'T_WHILE)
+                     (equal token 'T_FOR)
+                     (equal token 'T_FOREACH)
+                     (equal token 'T_SWITCH)
+                     (equal token 'T_ELSE)
+                     (equal token 'T_ELSEIF))
+                (setq after-special-control-structure start-round-bracket-level))
+
               ;; Did we find any token on this line?
               (when (and (not found-line-tokens)
                          (>= token-start line-beginning)
@@ -247,6 +258,7 @@
                 (when (null start-token-number)
                   (setq start-token-number -1))
                 (setq start-token-number (+ start-token-number 1))
+
                 (pcase token
                   ('T_OPEN_TAG (setq start-in-scripting t))
                   ('T_OPEN_TAG_WITH_ECHO (setq start-in-scripting t))
@@ -259,7 +271,15 @@
                   ("]" (setq start-square-bracket-level (- start-square-bracket-level 1)))
                   ("(" (setq start-round-bracket-level (+ start-round-bracket-level 1)))
                   (")" (setq start-round-bracket-level (- start-round-bracket-level 1)))
-                  (_)))
+                  (_))
+
+                ;; Did we encounter end of alternative control structure?
+                (when (or (equal token 'T_ENDIF)
+                          (equal token 'T_ENDWHILE)
+                          (equal token 'T_ENDFOR)
+                          (equal token 'T_ENDFOREACH)
+                          (equal token 'T_ENDSWITCH))
+                  (setq start-alternative-control-structure-level (- start-alternative-control-structure-level 1))))
 
               ;; Are we at the final line and inside a doc-comment that ends after it?
               (when (and (< token-start line-beginning)
@@ -284,8 +304,16 @@
                   ("]" (setq end-square-bracket-level (- end-square-bracket-level 1)))
                   ("(" (setq end-round-bracket-level (+ end-round-bracket-level 1)))
                   (")" (setq end-round-bracket-level (- end-round-bracket-level 1)))
-                  (_)))
-              
+                  (_))
+
+                ;; Did we encounter end of alternative control structure?
+                (when (or (equal token 'T_ENDIF)
+                          (equal token 'T_ENDWHILE)
+                          (equal token 'T_ENDFOR)
+                          (equal token 'T_ENDFOREACH)
+                          (equal token 'T_ENDSWITCH))
+                  (setq end-alternative-control-structure-level (- end-alternative-control-structure-level 1))))
+
               )))
         (when (not found-line-tokens)
           (setq start-token-number nil)
