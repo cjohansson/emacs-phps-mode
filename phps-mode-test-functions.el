@@ -333,6 +333,50 @@
    (goto-char 46)
    (should (equal (list (list t 0 0 2 0 0 6 nil) (list t 0 0 2 0 0 8 nil)) (phps-mode-functions-get-point-data))))
 
+  ;; INLINE SYNTAX
+
+  (phps-mode-test-with-buffer
+   "<?php\nif ($myCondition)\n    echo 'was here';\necho 'was here 2';\n"
+   (goto-char 41)
+   (should (equal (list (list t 0 0 0 1 0 4 nil) (list t 0 0 0 0 0 8 nil)) (phps-mode-functions-get-point-data))))
+
+  (phps-mode-test-with-buffer
+   "<?php\nif ($myCondition)\n    echo 'was here';\necho 'was here 2';\n"
+   (goto-char 60)
+   (should (equal (list (list t 0 0 0 0 0 4 nil) (list t 0 0 0 0 0 8 nil)) (phps-mode-functions-get-point-data))))
+
+  (phps-mode-test-with-buffer
+   "<?php\nif ($myCondition) echo 'was here'; echo 'was here 2';\n"
+   (goto-char 32)
+   (should (equal (list (list t 0 0 0 1 0 4 nil) (list t 0 0 0 0 0 8 nil)) (phps-mode-functions-get-point-data))))
+
+  (phps-mode-test-with-buffer
+   "<?php\nif ($myCondition) echo 'was here'; echo 'was here 2';\n"
+   (goto-char 55)
+   (should (equal (list (list t 0 0 0 0 0 4 nil) (list t 0 0 0 0 0 8 nil)) (phps-mode-functions-get-point-data))))
+
+  ;; TODO ALTERNATIVE SYNTAX
+
+  (phps-mode-test-with-buffer
+   "<?php\nif ($myCondition):\n    echo 'was here';\nendif;\necho 'was here 2';\n"
+   (goto-char 41)
+   (should (equal (list (list t 0 0 0 0 1 4 nil) (list t 0 0 0 0 0 8 nil)) (phps-mode-functions-get-point-data))))
+
+  (phps-mode-test-with-buffer
+   "<?php\nif ($myCondition):\n    echo 'was here';\nendif;\necho 'was here 2';\n"
+   (goto-char 52)
+   (should (equal (list (list t 0 0 0 0 0 4 nil) (list t 0 0 0 0 0 8 nil)) (phps-mode-functions-get-point-data))))
+
+  (phps-mode-test-with-buffer
+   "<?php\nif ($myCondition):    echo 'was here';\nendif;\necho 'was here 2';\n"
+   (goto-char 32)
+   (should (equal (list (list t 0 0 0 1 0 4 nil) (list t 0 0 0 0 0 8 nil)) (phps-mode-functions-get-point-data))))
+
+  (phps-mode-test-with-buffer
+   "<?php\nif ($myCondition): echo 'was here'; endif; echo 'was here 2';\n"
+   (goto-char 35)
+   (should (equal (list (list t 0 0 0 0 1 4 nil) (list t 0 0 0 0 0 8 nil)) (phps-mode-functions-get-point-data))))
+  
   )
 
 ;; TODO Add tests for all examples here: https://www.php-fig.org/psr/psr-2/
