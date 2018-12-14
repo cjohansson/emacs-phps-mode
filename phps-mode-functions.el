@@ -198,6 +198,7 @@
 
 ;; TODO This function needs to keep track of alternative syntax for the control structures: if, while, for, foreach, and switch
 ;; TODO This function needs to keep track of inline syntax for the control structures: if, while, for, foreach, and switch
+;; TODO Support switch case as well
 
 (defun phps-mode-functions-get-point-data ()
   "Return information about point in tokens."
@@ -236,18 +237,7 @@
                 ;; (message "Stopping iteration at: %s %s" start position)
                 (throw 'stop-iteration nil))
 
-              ;; Does the token support inline and alternative syntax?
-              (when (or
-                     (equal token 'T_IF)
-                     (equal token 'T_WHILE)
-                     (equal token 'T_FOR)
-                     (equal token 'T_FOREACH)
-                     (equal token 'T_SWITCH)
-                     (equal token 'T_ELSE)
-                     (equal token 'T_ELSEIF))
-                (setq after-special-control-structure start-round-bracket-level))
-
-              ;; Did we find any token on this line?
+              ;; Did we find any token on current line?
               (when (and (not found-line-tokens)
                          (>= token-start line-beginning)
                          (<= token-end line-end))
@@ -255,6 +245,8 @@
 
               ;; When end of token is equal or less to beginning of current line
               (when (<= token-end line-beginning)
+
+                ;; Change start token number
                 (when (null start-token-number)
                   (setq start-token-number -1))
                 (setq start-token-number (+ start-token-number 1))
@@ -313,6 +305,33 @@
                           (equal token 'T_ENDFOREACH)
                           (equal token 'T_ENDSWITCH))
                   (setq end-alternative-control-structure-level (- end-alternative-control-structure-level 1))))
+
+                ;; Are we after a special control structure
+                ;; and does round bracket level match initial round bracket level
+                ;; and is token not a round bracket
+                (when (and after-special-control-structure
+                           (= after-special-control-structure start-round-bracket-level)
+                           (not (string= token ")"))
+                           (not (string= token "(")))
+                  (if (not (string= token "{"))
+                      (progn
+                        (message "After special control structure %s in buffer %s" token (buffer-substring-no-properties (point-min) (point-max))))
+                    ;; (message "Not after special control structure %s in buffer %s" token (buffer-substring-no-properties (point-min) (point-max)))
+                    )
+                  (setq after-special-control-structure nil))
+
+              ;; Does the token support inline and alternative syntax?
+              (when (or
+                     (equal token 'T_IF)
+                     (equal token 'T_WHILE)
+                     (equal token 'T_FOR)
+                     (equal token 'T_FOREACH)
+                     (equal token 'T_SWITCH)
+                     (equal token 'T_ELSE)
+                     (equal token 'T_ELSEIF))
+                ;; (message "Found special control structure %s %s" token start-round-bracket-level)
+                (setq after-special-control-structure start-round-bracket-level))
+
 
               )))
         (when (not found-line-tokens)
