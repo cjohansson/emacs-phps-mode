@@ -224,7 +224,8 @@
             (end-token-number nil)
             (line-in-doc-comment nil)
             (found-line-tokens nil)
-            (after-special-control-structure nil))
+            (after-special-control-structure nil)
+            (round-brace-level 0))
         (catch 'stop-iteration
           (dolist (item phps-mode-lexer-tokens)
             (let ((token (car item))
@@ -306,19 +307,25 @@
                           (equal token 'T_ENDSWITCH))
                   (setq end-alternative-control-structure-level (- end-alternative-control-structure-level 1))))
 
+              ;; Keep track of general round brace level
+              (when (string= token "(")
+                (setq round-brace-level (+ round-brace-level 1)))
+              (when (string= token ")")
+                (setq round-brace-level (- round-brace-level 1)))
+
                 ;; Are we after a special control structure
                 ;; and does round bracket level match initial round bracket level
                 ;; and is token not a round bracket
-                (when (and after-special-control-structure
-                           (= after-special-control-structure start-round-bracket-level)
-                           (not (string= token ")"))
-                           (not (string= token "(")))
-                  (if (not (string= token "{"))
-                      (progn
-                        (message "After special control structure %s in buffer %s" token (buffer-substring-no-properties (point-min) (point-max))))
-                    ;; (message "Not after special control structure %s in buffer %s" token (buffer-substring-no-properties (point-min) (point-max)))
-                    )
-                  (setq after-special-control-structure nil))
+              (when (and after-special-control-structure
+                         (= after-special-control-structure round-brace-level)
+                         (not (string= token ")"))
+                         (not (string= token "(")))
+                (if (not (string= token "{"))
+                    (progn
+                      (message "After special control structure %s in buffer: %s tokens: %s token-start: %s" token (buffer-substring-no-properties (point-min) (point-max)) phps-mode-lexer-tokens token-start))
+                  ;; (message "Not after special control structure %s in buffer %s" token (buffer-substring-no-properties (point-min) (point-max)))
+                  )
+                (setq after-special-control-structure nil))
 
               ;; Does the token support inline and alternative syntax?
               (when (or
@@ -330,7 +337,7 @@
                      (equal token 'T_ELSE)
                      (equal token 'T_ELSEIF))
                 ;; (message "Found special control structure %s %s" token start-round-bracket-level)
-                (setq after-special-control-structure start-round-bracket-level))
+                (setq after-special-control-structure round-brace-level))
 
 
               )))
