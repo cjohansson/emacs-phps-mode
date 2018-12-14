@@ -338,7 +338,7 @@
   (phps-mode-test-with-buffer
    "<?php\nif ($myCondition)\n    echo 'was here';\necho 'was here 2';\n"
    (goto-char 41)
-   (should (equal (list (list t 0 0 0 1 0 4 nil) (list t 0 0 0 0 0 8 nil)) (phps-mode-functions-get-point-data))))
+   (should (equal (list (list t 0 0 0 1 0 4 nil) (list t 0 0 0 0 0 7 nil)) (phps-mode-functions-get-point-data))))
 
   (phps-mode-test-with-buffer
    "<?php\nif ($myCondition)\n    echo 'was here';\necho 'was here 2';\n"

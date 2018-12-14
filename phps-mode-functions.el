@@ -320,11 +320,16 @@
                          (= after-special-control-structure round-brace-level)
                          (not (string= token ")"))
                          (not (string= token "(")))
-                (if (not (string= token "{"))
+                (when (not (string= token "{"))
+                  (message "After special control structure %s in buffer: %s tokens: %s token-start: %s" token (buffer-substring-no-properties (point-min) (point-max)) phps-mode-lexer-tokens token-start)
+                  (if (string= token ":")
+                      (progn
+                        (setq start-alternative-control-structure-level (+ start-alternative-control-structure-level 1))
+                        (message "Was colon"))
                     (progn
-                      (message "After special control structure %s in buffer: %s tokens: %s token-start: %s" token (buffer-substring-no-properties (point-min) (point-max)) phps-mode-lexer-tokens token-start))
-                  ;; (message "Not after special control structure %s in buffer %s" token (buffer-substring-no-properties (point-min) (point-max)))
-                  )
+                      (setq start-inline-control-structure-level (+ start-inline-control-structure-level 1))
+                      (message "Was not colon"))))
+
                 (setq after-special-control-structure nil))
 
               ;; Does the token support inline and alternative syntax?
