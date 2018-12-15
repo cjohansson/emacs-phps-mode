@@ -226,7 +226,8 @@
             (found-line-tokens nil)
             (after-special-control-structure nil)
             (round-brace-level 0)
-            (expecting-semi-colon nil)
+            (start-expecting-semi-colon nil)
+            (end-expecting-semi-colon nil)
             (first-token-on-line nil))
         (catch 'stop-iteration
           (dolist (item phps-mode-lexer-tokens)
@@ -277,10 +278,10 @@
                   (setq start-alternative-control-structure-level (- start-alternative-control-structure-level 1)))
 
                 ;; Reduce inline control structure level when we encounter a semi-colon after it's opening
-                (when (and expecting-semi-colon
+                (when (and start-expecting-semi-colon
                            (string= token ";"))
                   (setq start-inline-control-structure-level (- start-inline-control-structure-level 1))
-                  (setq expecting-semi-colon nil))
+                  (setq start-expecting-semi-colon nil))
 
                 )
 
@@ -321,10 +322,10 @@
                   (setq end-alternative-control-structure-level (- end-alternative-control-structure-level 1)))
 
                 ;; Reduce inline control structure level when we encounter a semi-colon after it's opening
-                (when (and expecting-semi-colon
+                (when (and end-expecting-semi-colon
                            (string= token ";"))
                   (setq end-inline-control-structure-level (- end-inline-control-structure-level 1))
-                  (setq expecting-semi-colon nil))
+                  (setq end-expecting-semi-colon nil))
 
                 )
 
@@ -367,12 +368,13 @@
 
                     (when (or (<= token-end line-beginning)
                               (= first-token-on-line end-token-number))
-                      (setq start-inline-control-structure-level (+ start-inline-control-structure-level 1)))
+                      (setq start-inline-control-structure-level (+ start-inline-control-structure-level 1))
+                      (setq start-expecting-semi-colon t))
 
                     (when (<= token-start line-end)
-                      (setq end-inline-control-structure-level (+ end-inline-control-structure-level 1)))
+                      (setq end-inline-control-structure-level (+ end-inline-control-structure-level 1))
+                      (setq end-expecting-semi-colon t))
 
-                    (setq expecting-semi-colon t)
                     (message "Was not colon")))
 
                 (setq after-special-control-structure nil))
