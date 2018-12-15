@@ -360,22 +360,22 @@
   (phps-mode-test-with-buffer
    "<?php\nif ($myCondition):\n    echo 'was here';\nendif;\necho 'was here 2';\n"
    (goto-char 41)
-   (should (equal (list (list t 0 0 0 0 1 4 nil) (list t 0 0 0 0 0 8 nil)) (phps-mode-functions-get-point-data))))
+   (should (equal (list (list t 0 0 0 0 1 5 nil) (list t 0 0 0 0 1 8 nil)) (phps-mode-functions-get-point-data))))
 
   (phps-mode-test-with-buffer
-   "<?php\nif ($myCondition):\n    echo 'was here';\nendif;\necho 'was here 2';\n"
+   "<?php\nif ($myCondition):\n    echo 'was here';\nendif;\necho 'was here 3';\n"
    (goto-char 52)
-   (should (equal (list (list t 0 0 0 0 0 4 nil) (list t 0 0 0 0 0 8 nil)) (phps-mode-functions-get-point-data))))
+   (should (equal (list (list t 0 0 0 0 0 8 nil) (list t 0 0 0 0 0 10 nil)) (phps-mode-functions-get-point-data))))
 
   (phps-mode-test-with-buffer
-   "<?php\nif ($myCondition):    echo 'was here';\nendif;\necho 'was here 2';\n"
+   "<?php\nif ($myCondition):    echo 'was here';\nendif;\necho 'was here 4';\n"
    (goto-char 32)
-   (should (equal (list (list t 0 0 0 1 0 4 nil) (list t 0 0 0 0 0 8 nil)) (phps-mode-functions-get-point-data))))
+   (should (equal (list (list t 0 0 0 0 0 0 nil) (list t 0 0 0 0 1 8 nil)) (phps-mode-functions-get-point-data))))
 
   (phps-mode-test-with-buffer
-   "<?php\nif ($myCondition): echo 'was here'; endif; echo 'was here 2';\n"
+   "<?php\nif ($myCondition): echo 'was here'; endif; echo 'was here 5';\n"
    (goto-char 35)
-   (should (equal (list (list t 0 0 0 0 1 4 nil) (list t 0 0 0 0 0 8 nil)) (phps-mode-functions-get-point-data))))
+   (should (equal (list (list t 0 0 0 0 0 0 nil) (list t 0 0 0 0 0 13 nil)) (phps-mode-functions-get-point-data))))
   
   )
 

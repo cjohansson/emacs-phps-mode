@@ -313,12 +313,25 @@
                   (")" (setq end-round-bracket-level (- end-round-bracket-level 1)))
                   (_))
 
+                ;; Do we encounter first token on line?
+                (when (and (not first-token-on-line)
+                           (>= token-start line-beginning)
+                           (<= token-start line-end))
+                  (setq first-token-on-line end-token-number))
+
+
                 ;; Did we encounter end of alternative control structure?
                 (when (or (equal token 'T_ENDIF)
                           (equal token 'T_ENDWHILE)
                           (equal token 'T_ENDFOR)
                           (equal token 'T_ENDFOREACH)
                           (equal token 'T_ENDSWITCH))
+
+                  ;; If this was the first token on line decrement start
+                  (when (and first-token-on-line
+                             (= first-token-on-line end-token-number))
+                    (setq start-alternative-control-structure-level (- start-alternative-control-structure-level 1)))
+                  
                   (setq end-alternative-control-structure-level (- end-alternative-control-structure-level 1)))
 
                 ;; Reduce inline control structure level when we encounter a semi-colon after it's opening
@@ -328,12 +341,6 @@
                   (setq end-expecting-semi-colon nil))
 
                 )
-
-              ;; Do we encounter first token on line?
-              (when (and (not first-token-on-line)
-                         (>= token-start line-beginning)
-                         (<= token-start line-end))
-                (setq first-token-on-line end-token-number))
 
               ;; Keep track of general round brace level
               (when (string= token "(")
@@ -351,10 +358,10 @@
 
                 ;; Is token not a curly bracket - because that is a ordinary control structure syntax
                 (when (not (string= token "{"))
-                  (message "After special control structure %s in buffer: %s tokens: %s token-start: %s" token (buffer-substring-no-properties (point-min) (point-max)) phps-mode-lexer-tokens token-start)
+                  ;; (message "After special control structure %s in buffer: %s tokens: %s token-start: %s" token (buffer-substring-no-properties (point-min) (point-max)) phps-mode-lexer-tokens token-start)
                   (if (string= token ":")
                       (progn
-                        (message "Was colon")
+                        ;; (message "Was colon")
 
                         ;; Is token at or before line beginning?
                         (when (<= token-end line-beginning)
@@ -375,7 +382,8 @@
                       (setq end-inline-control-structure-level (+ end-inline-control-structure-level 1))
                       (setq end-expecting-semi-colon t))
 
-                    (message "Was not colon")))
+                    ;; (message "Was not colon")
+                    ))
 
                 (setq after-special-control-structure nil))
 
