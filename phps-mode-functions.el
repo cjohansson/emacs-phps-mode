@@ -225,7 +225,9 @@
             (line-in-doc-comment nil)
             (found-line-tokens nil)
             (after-special-control-structure nil)
-            (round-brace-level 0))
+            (round-brace-level 0)
+            (expecting-semi-colon nil)
+            (first-token-on-line nil))
         (catch 'stop-iteration
           (dolist (item phps-mode-lexer-tokens)
             (let ((token (car item))
@@ -247,10 +249,10 @@
               ;; When end of token is equal or less to beginning of current line
               (when (<= token-end line-beginning)
 
-                ;; Change start token number
-                (when (null start-token-number)
-                  (setq start-token-number -1))
-                (setq start-token-number (+ start-token-number 1))
+                ;; Increment start token number
+                (if (null start-token-number)
+                    (setq start-token-number 0)
+                  (setq start-token-number (+ start-token-number 1)))
 
                 (pcase token
                   ('T_OPEN_TAG (setq start-in-scripting t))
@@ -272,7 +274,15 @@
                           (equal token 'T_ENDFOR)
                           (equal token 'T_ENDFOREACH)
                           (equal token 'T_ENDSWITCH))
-                  (setq start-alternative-control-structure-level (- start-alternative-control-structure-level 1))))
+                  (setq start-alternative-control-structure-level (- start-alternative-control-structure-level 1)))
+
+                ;; Reduce inline control structure level when we encounter a semi-colon after it's opening
+                (when (and expecting-semi-colon
+                           (string= token ";"))
+                  (setq start-inline-control-structure-level (- start-inline-control-structure-level 1))
+                  (setq expecting-semi-colon nil))
+
+                )
 
               ;; Are we at the final line and inside a doc-comment that ends after it?
               (when (and (< token-start line-beginning)
@@ -282,9 +292,12 @@
 
               ;; When start of token is equal or less to end of curent line
               (when (<= token-start line-end)
-                (when (null end-token-number)
-                  (setq end-token-number -1))
-                (setq end-token-number (+ end-token-number 1))
+
+                ;; Increment end token number
+                (if (null end-token-number)
+                    (setq end-token-number 0)
+                  (setq end-token-number (+ end-token-number 1)))
+
                 (pcase token
                   ('T_OPEN_TAG (setq end-in-scripting t))
                   ('T_OPEN_TAG_WITH_ECHO (setq end-in-scripting t))
@@ -305,7 +318,21 @@
                           (equal token 'T_ENDFOR)
                           (equal token 'T_ENDFOREACH)
                           (equal token 'T_ENDSWITCH))
-                  (setq end-alternative-control-structure-level (- end-alternative-control-structure-level 1))))
+                  (setq end-alternative-control-structure-level (- end-alternative-control-structure-level 1)))
+
+                ;; Reduce inline control structure level when we encounter a semi-colon after it's opening
+                (when (and expecting-semi-colon
+                           (string= token ";"))
+                  (setq end-inline-control-structure-level (- end-inline-control-structure-level 1))
+                  (setq expecting-semi-colon nil))
+
+                )
+
+              ;; Do we encounter first token on line?
+              (when (and (not first-token-on-line)
+                         (>= token-start line-beginning)
+                         (<= token-start line-end))
+                (setq first-token-on-line end-token-number))
 
               ;; Keep track of general round brace level
               (when (string= token "(")
@@ -313,22 +340,40 @@
               (when (string= token ")")
                 (setq round-brace-level (- round-brace-level 1)))
 
-                ;; Are we after a special control structure
-                ;; and does round bracket level match initial round bracket level
-                ;; and is token not a round bracket
+              ;; Are we after a special control structure
+              ;; and does the round bracket level match initial round bracket level
+              ;; and is token not a round bracket
               (when (and after-special-control-structure
                          (= after-special-control-structure round-brace-level)
                          (not (string= token ")"))
                          (not (string= token "(")))
+
+                ;; Is token not a curly bracket - because that is a ordinary control structure syntax
                 (when (not (string= token "{"))
                   (message "After special control structure %s in buffer: %s tokens: %s token-start: %s" token (buffer-substring-no-properties (point-min) (point-max)) phps-mode-lexer-tokens token-start)
                   (if (string= token ":")
                       (progn
-                        (setq start-alternative-control-structure-level (+ start-alternative-control-structure-level 1))
-                        (message "Was colon"))
-                    (progn
-                      (setq start-inline-control-structure-level (+ start-inline-control-structure-level 1))
-                      (message "Was not colon"))))
+                        (message "Was colon")
+
+                        ;; Is token at or before line beginning?
+                        (when (<= token-end line-beginning)
+                          (setq start-alternative-control-structure-level (+ start-alternative-control-structure-level 1)))
+
+                        ;; Is token at or before line end?
+                        (when (<= token-start line-end)
+                          (setq end-alternative-control-structure-level (+ end-alternative-control-structure-level 1)))
+
+                        )
+
+                    (when (or (<= token-end line-beginning)
+                              (= first-token-on-line end-token-number))
+                      (setq start-inline-control-structure-level (+ start-inline-control-structure-level 1)))
+
+                    (when (<= token-start line-end)
+                      (setq end-inline-control-structure-level (+ end-inline-control-structure-level 1)))
+
+                    (setq expecting-semi-colon t)
+                    (message "Was not colon")))
 
                 (setq after-special-control-structure nil))
 
