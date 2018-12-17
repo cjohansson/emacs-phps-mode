@@ -326,11 +326,6 @@
                           (equal token 'T_ENDFOR)
                           (equal token 'T_ENDFOREACH)
                           (equal token 'T_ENDSWITCH))
-
-                  ;; If this was the first token on line decrement start
-                  (when (and first-token-on-line
-                             (= first-token-on-line end-token-number))
-                    (setq start-alternative-control-structure-level (- start-alternative-control-structure-level 1)))
                   
                   (setq end-alternative-control-structure-level (- end-alternative-control-structure-level 1)))
 
@@ -364,7 +359,8 @@
                         ;; (message "Was colon")
 
                         ;; Is token at or before line beginning?
-                        (when (<= token-end line-beginning)
+                        (when (or (<= token-end line-beginning)
+                                  (= first-token-on-line end-token-number))
                           (setq start-alternative-control-structure-level (+ start-alternative-control-structure-level 1)))
 
                         ;; Is token at or before line end?
@@ -378,6 +374,7 @@
                       (setq start-inline-control-structure-level (+ start-inline-control-structure-level 1))
                       (setq start-expecting-semi-colon t))
 
+
                     (when (<= token-start line-end)
                       (setq end-inline-control-structure-level (+ end-inline-control-structure-level 1))
                       (setq end-expecting-semi-colon t))
@@ -387,7 +384,7 @@
 
                 (setq after-special-control-structure nil))
 
-              ;; Does the token support inline and alternative syntax?
+              ;; Does current token support inline and alternative syntax?
               (when (or
                      (equal token 'T_IF)
                      (equal token 'T_WHILE)
@@ -395,12 +392,13 @@
                      (equal token 'T_FOREACH)
                      (equal token 'T_SWITCH)
                      (equal token 'T_ELSE)
-                     (equal token 'T_ELSEIF))
+                     (equal token 'T_ELSEIF)
+                     (equal token 'T_CASE))
                 ;; (message "Found special control structure %s %s" token start-round-bracket-level)
-                (setq after-special-control-structure round-brace-level))
+                (setq after-special-control-structure round-brace-level)
 
 
-              )))
+                ))))
         (when (not found-line-tokens)
           (setq start-token-number nil)
           (setq end-token-number nil))
