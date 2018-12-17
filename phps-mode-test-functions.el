@@ -209,11 +209,11 @@
      (should (equal buffer-contents "<?php\nif (myRandomCondition()):\n    echo 'Something here';\n    echo 'Something else here';\nendif;\n"))))
 
   (phps-mode-test-with-buffer
-   "<?php\nmyFunction(\n    array(\n        'random' => 'abc',\n        ),\n    $var2\n);\n"
-   (goto-char 50)
+   "<?php\nmyFunction(\n    array(\n        'random' => 'abc',\n        ),\n    $var5\n);\n"
+   (goto-char 65)
    (phps-mode-functions-indent-line)
    (let ((buffer-contents (buffer-substring-no-properties (point-min) (point-max))))
-     (should (equal buffer-contents "<?php\nmyFunction(\n    array(\n        'random' => 'abc',\n    ),\n    $var2\n);\n"))))
+     (should (equal buffer-contents "<?php\nmyFunction(\n    array(\n        'random' => 'abc',\n    ),\n    $var5\n);\n"))))
 
   (phps-mode-test-with-buffer
    "<?php\n$var = $var2->getHead()\n->getTail();\n"
