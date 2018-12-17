@@ -33,9 +33,10 @@
 
 ;; NOTE Also format white-space inside the line, i.e. after function declarations?
 
+;; TODO Add support for automatic parenthesis, bracket, square-bracket, single-quote and double-quote encapsulations
+
 ;; TODO Support inline function indentations
 ;; TODO Support indentation for multi-line scalar assignments
-;; TODO Add support for automatic parenthesis, bracket, square-bracket, single-quote and double-quote encapsulations
 
 (defun phps-mode-functions-indent-line ()
   "Indent line."
@@ -77,6 +78,7 @@
                     (first-token-is-closing-curly-bracket nil)
                     (tokens phps-mode-lexer-tokens)
                     (is-first-line-token t))
+
                 ;; (message "token start %s, token end %s" start-token-number end-token-number)
                 ;; (message "First token %s, last token %s" (car (nth start-token-number tokens)) (car (nth end-token-number tokens)))
 
@@ -102,7 +104,9 @@
                         (setq is-first-line-token nil)
 
                         ;; Is it a closing brace?
-                        (when (string= token "}")
+                        (when (or (string= token "}")
+                                  (eq token 'T_ELSE)
+                                  (eq token 'T_ELSEIF))
                           (setq first-token-is-closing-curly-bracket t)))
 
                       (when (and valid-tokens

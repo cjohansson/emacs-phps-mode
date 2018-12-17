@@ -164,12 +164,12 @@
      (should (equal buffer-contents "<?php\n$var = [\n    'random' => [\n        'hello',\n    ],\n];\n"))))
   
   (phps-mode-test-with-buffer
-   "<?php\nif (myRandomCondition()):\necho 'Something here';\n    else:\n    echo 'Something else here';\nendif;\n"
-   (goto-char 60)
+   "<?php\nif (myRandomCondition()):\necho 'Something here';\n    else:\n    echo 'Something else here 8';\nendif;\n"
+   (goto-char 62)
    (phps-mode-functions-indent-line)
    ;; (message "Tokens %s" phps-mode-lexer-tokens)
    (let ((buffer-contents (buffer-substring-no-properties (point-min) (point-max))))
-     (should (equal buffer-contents "<?php\nif (myRandomCondition()):\necho 'Something here';\nelse:\n    echo 'Something else here';\nendif;\n"))))
+     (should (equal buffer-contents "<?php\nif (myRandomCondition()):\necho 'Something here';\nelse:\n    echo 'Something else here 8';\nendif;\n"))))
 
   ;; switch case
   
