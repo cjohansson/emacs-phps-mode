@@ -442,7 +442,7 @@
         (forward-char)
         (if (and (not escaped)
                  (looking-at-p character))
-            (setq pos (+ (point) 1))
+            (setq pos (1+ (point)))
           (if (looking-at-p "\\\\")
               (setq escaped (not escaped))
             (setq escaped nil)))))
@@ -887,8 +887,8 @@
                   (progn
                     ;; (message "Found variable after '%s'" (buffer-substring-no-properties start string-start))
                     (phps-mode-lexer-BEGIN phps-mode-lexer-ST_DOUBLE_QUOTES)
-                    (phps-mode-lexer-RETURN_TOKEN "\"" start (+ start 1))
-                    (phps-mode-lexer-RETURN_TOKEN 'T_ENCAPSED_AND_WHITESPACE (+ start 1) string-start))))
+                    (phps-mode-lexer-RETURN_TOKEN "\"" start (1+ start))
+                    (phps-mode-lexer-RETURN_TOKEN 'T_ENCAPSED_AND_WHITESPACE (1+ start) string-start))))
             (progn
               ;; (message "Found no ending quote, skipping to end")
               (phps-mode-lexer-RETURN_TOKEN 'T_ERROR start (point-max))

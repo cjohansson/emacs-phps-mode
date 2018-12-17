@@ -125,7 +125,7 @@
 
                       )
 
-                    (setq token-number (+ token-number 1))))
+                    (setq token-number (1+ token-number))))
 
                 (if valid-tokens
                     (progn
@@ -157,7 +157,7 @@
                 (setq current-indentation 0))
 
               ;; Only continue if current indentation is wrong
-              (when (not (equal indent-sum current-indentation))
+              (unless (equal indent-sum current-indentation)
                 (let ((indent-diff (- indent-sum current-indentation)))
                   ;; (message "Indenting to %s current column %s" indent-sum (current-indentation))
                   ;; (message "inside scripting, start: %s, end: %s, indenting to column %s " start end indent-level)
@@ -257,20 +257,20 @@
                 ;; Increment start token number
                 (if (null start-token-number)
                     (setq start-token-number 0)
-                  (setq start-token-number (+ start-token-number 1)))
+                  (setq start-token-number (1+ start-token-number)))
 
                 (pcase token
                   ('T_OPEN_TAG (setq start-in-scripting t))
                   ('T_OPEN_TAG_WITH_ECHO (setq start-in-scripting t))
                   ('T_CLOSE_TAG (setq start-in-scripting nil))
-                  ('T_CURLY_OPEN (setq start-curly-bracket-level (+ start-curly-bracket-level 1)))
-                  ('T_DOLLAR_OPEN_CURLY_BRACES (setq start-curly-bracket-level (+ start-curly-bracket-level 1)))
-                  ("{" (setq start-curly-bracket-level (+ start-curly-bracket-level 1)))
-                  ("}" (setq start-curly-bracket-level (- start-curly-bracket-level 1)))
-                  ("[" (setq start-square-bracket-level (+ start-square-bracket-level 1)))
-                  ("]" (setq start-square-bracket-level (- start-square-bracket-level 1)))
-                  ("(" (setq start-round-bracket-level (+ start-round-bracket-level 1)))
-                  (")" (setq start-round-bracket-level (- start-round-bracket-level 1)))
+                  ('T_CURLY_OPEN (setq start-curly-bracket-level (1+ start-curly-bracket-level)))
+                  ('T_DOLLAR_OPEN_CURLY_BRACES (setq start-curly-bracket-level (1+ start-curly-bracket-level)))
+                  ("{" (setq start-curly-bracket-level (1+ start-curly-bracket-level)))
+                  ("}" (setq start-curly-bracket-level (1- start-curly-bracket-level)))
+                  ("[" (setq start-square-bracket-level (1+ start-square-bracket-level)))
+                  ("]" (setq start-square-bracket-level (1- start-square-bracket-level)))
+                  ("(" (setq start-round-bracket-level (1+ start-round-bracket-level)))
+                  (")" (setq start-round-bracket-level (1- start-round-bracket-level)))
                   (_))
 
                 ;; Did we encounter end of alternative control structure?
@@ -301,20 +301,20 @@
                 ;; Increment end token number
                 (if (null end-token-number)
                     (setq end-token-number 0)
-                  (setq end-token-number (+ end-token-number 1)))
+                  (setq end-token-number (1+ end-token-number)))
 
                 (pcase token
                   ('T_OPEN_TAG (setq end-in-scripting t))
                   ('T_OPEN_TAG_WITH_ECHO (setq end-in-scripting t))
                   ('T_CLOSE_TAG (setq end-in-scripting nil))
-                  ('T_CURLY_OPEN (setq end-curly-bracket-level (+ end-curly-bracket-level 1)))
-                  ('T_DOLLAR_OPEN_CURLY_BRACES (setq end-curly-bracket-level (+ end-curly-bracket-level 1)))
-                  ("{" (setq end-curly-bracket-level (+ end-curly-bracket-level 1)))
-                  ("}" (setq end-curly-bracket-level (- end-curly-bracket-level 1)))
-                  ("[" (setq end-square-bracket-level (+ end-square-bracket-level 1)))
-                  ("]" (setq end-square-bracket-level (- end-square-bracket-level 1)))
-                  ("(" (setq end-round-bracket-level (+ end-round-bracket-level 1)))
-                  (")" (setq end-round-bracket-level (- end-round-bracket-level 1)))
+                  ('T_CURLY_OPEN (setq end-curly-bracket-level (1+ end-curly-bracket-level)))
+                  ('T_DOLLAR_OPEN_CURLY_BRACES (setq end-curly-bracket-level (1+ end-curly-bracket-level)))
+                  ("{" (setq end-curly-bracket-level (1+ end-curly-bracket-level)))
+                  ("}" (setq end-curly-bracket-level (1- end-curly-bracket-level)))
+                  ("[" (setq end-square-bracket-level (1+ end-square-bracket-level)))
+                  ("]" (setq end-square-bracket-level (1- end-square-bracket-level)))
+                  ("(" (setq end-round-bracket-level (1+ end-round-bracket-level)))
+                  (")" (setq end-round-bracket-level (1- end-round-bracket-level)))
                   (_))
 
                 ;; Do we encounter first token on line?
@@ -343,9 +343,9 @@
 
               ;; Keep track of general round brace level
               (when (string= token "(")
-                (setq round-brace-level (+ round-brace-level 1)))
+                (setq round-brace-level (1+ round-brace-level)))
               (when (string= token ")")
-                (setq round-brace-level (- round-brace-level 1)))
+                (setq round-brace-level (1- round-brace-level)))
 
               ;; Are we after a special control structure
               ;; and does the round bracket level match initial round bracket level
@@ -356,7 +356,7 @@
                          (not (string= token "(")))
 
                 ;; Is token not a curly bracket - because that is a ordinary control structure syntax
-                (when (not (string= token "{"))
+                (unless (string= token "{")
                   ;; (message "After special control structure %s in buffer: %s tokens: %s token-start: %s" token (buffer-substring-no-properties (point-min) (point-max)) phps-mode-lexer-tokens token-start)
                   (if (string= token ":")
                       (progn
@@ -365,22 +365,22 @@
                         ;; Is token at or before line beginning?
                         (when (or (<= token-end line-beginning)
                                   (= first-token-on-line end-token-number))
-                          (setq start-alternative-control-structure-level (+ start-alternative-control-structure-level 1)))
+                          (setq start-alternative-control-structure-level (1+ start-alternative-control-structure-level)))
 
                         ;; Is token at or before line end?
                         (when (<= token-start line-end)
-                          (setq end-alternative-control-structure-level (+ end-alternative-control-structure-level 1)))
+                          (setq end-alternative-control-structure-level (1+ end-alternative-control-structure-level)))
 
                         )
 
                     (when (or (<= token-end line-beginning)
                               (= first-token-on-line end-token-number))
-                      (setq start-inline-control-structure-level (+ start-inline-control-structure-level 1))
+                      (setq start-inline-control-structure-level (1+ start-inline-control-structure-level))
                       (setq start-expecting-semi-colon t))
 
 
                     (when (<= token-start line-end)
-                      (setq end-inline-control-structure-level (+ end-inline-control-structure-level 1))
+                      (setq end-inline-control-structure-level (1+ end-inline-control-structure-level))
                       (setq end-expecting-semi-colon t))
 
                     ;; (message "Was not colon")
@@ -403,7 +403,7 @@
 
 
                 ))))
-        (when (not found-line-tokens)
+        (unless found-line-tokens
           (setq start-token-number nil)
           (setq end-token-number nil))
         (let ((data (list (list start-in-scripting start-curly-bracket-level start-round-bracket-level start-square-bracket-level start-inline-control-structure-level start-alternative-control-structure-level start-token-number line-in-doc-comment) (list end-in-scripting end-curly-bracket-level end-round-bracket-level end-square-bracket-level end-inline-control-structure-level end-alternative-control-structure-level end-token-number line-in-doc-comment))))
