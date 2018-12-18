@@ -323,14 +323,14 @@
                            (<= token-start line-end))
                   (setq first-token-on-line end-token-number))
 
-
                 ;; Did we encounter end of alternative control structure?
                 (when (or (equal token 'T_ENDIF)
                           (equal token 'T_ENDWHILE)
                           (equal token 'T_ENDFOR)
                           (equal token 'T_ENDFOREACH)
                           (equal token 'T_ENDSWITCH))
-                  (when (= first-token-on-line end-token-number)
+                  (when (and first-token-on-line
+                             (= first-token-on-line end-token-number))
                     (setq start-alternative-control-structure-level (1- start-alternative-control-structure-level)))
                   (setq end-alternative-control-structure-level (1- end-alternative-control-structure-level)))
 
@@ -365,7 +365,8 @@
 
                         ;; Is token at or before line beginning?
                         (when (or (<= token-end line-beginning)
-                                  (= first-token-on-line end-token-number))
+                                  (and first-token-on-line
+                                       (= first-token-on-line end-token-number)))
                           (setq start-alternative-control-structure-level (1+ start-alternative-control-structure-level)))
 
                         ;; Is token at or before line end?
@@ -375,7 +376,8 @@
                         )
 
                     (when (or (<= token-end line-beginning)
-                              (= first-token-on-line end-token-number))
+                              (and first-token-on-line
+                                   (= first-token-on-line end-token-number)))
                       (setq start-inline-control-structure-level (1+ start-inline-control-structure-level))
                       (setq start-expecting-semi-colon t))
 
