@@ -1,17 +1,14 @@
 <?php
 
 if (true)
-    echo 'was here';
-echo 'was here 2';
+    echo 'was true 1';
+echo 'was here';
 
 if (true)
-    echo 'was here';
+    echo 'was true 3';
 else
-    echo 'was here 2';
+    echo 'was false';
 
-switch (true) {
-    case true:
-        echo 'something here';
-    default:
-        echo 'the default here';
-}
+$i = 0;
+while ($i++ < 10)
+    echo ' ' . $i . ' ';
