@@ -330,8 +330,9 @@
                           (equal token 'T_ENDFOR)
                           (equal token 'T_ENDFOREACH)
                           (equal token 'T_ENDSWITCH))
-                  
-                  (setq end-alternative-control-structure-level (- end-alternative-control-structure-level 1)))
+                  (when (= first-token-on-line end-token-number)
+                    (setq start-alternative-control-structure-level (1- start-alternative-control-structure-level)))
+                  (setq end-alternative-control-structure-level (1- end-alternative-control-structure-level)))
 
                 ;; Reduce inline control structure level when we encounter a semi-colon after it's opening
                 (when (and end-expecting-semi-colon
@@ -392,12 +393,13 @@
               (when (or
                      (equal token 'T_IF)
                      (equal token 'T_WHILE)
+                     (equal token 'T_CASE)
+                     (equal token 'T_DEFAULT)
                      (equal token 'T_FOR)
                      (equal token 'T_FOREACH)
                      (equal token 'T_SWITCH)
                      (equal token 'T_ELSE)
-                     (equal token 'T_ELSEIF)
-                     (equal token 'T_CASE))
+                     (equal token 'T_ELSEIF))
                 ;; (message "Found special control structure %s %s" token start-round-bracket-level)
                 (setq after-special-control-structure round-brace-level)
 
