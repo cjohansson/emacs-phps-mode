@@ -34,7 +34,7 @@
 (autoload 'phps-mode-functions-get-point-data "phps-mode-functions")
 (autoload 'should "ert")
 
-;; TODO Add unit tests for HEREDOC, NOWDOC as well
+;; TODO Add unit tests for HEREDOC and NOWDOC regions as well
 
 (defun phps-mode-test-functions-indent-line ()
   "Test for indentation."
@@ -245,11 +245,6 @@
 
   )
 
-
-;; TODO Support inline control structures for: if, while, for, foreach, and switch
-;; TODO Support alternative syntax for control structures for: if, while, for, foreach, and switch
-
-
 (defun phps-mode-test-functions-get-point-data ()
   "Return information about point in tokens."
 
@@ -333,7 +328,7 @@
    (goto-char 46)
    (should (equal (list (list t 0 0 2 0 0 6 nil) (list t 0 0 2 0 0 8 nil)) (phps-mode-functions-get-point-data))))
 
-  ;; INLINE SYNTAX
+  ;; INLINE SYNTAX FOR CONTROL STRUCTURES
 
   (phps-mode-test-with-buffer
    "<?php\nif ($myCondition)\n    echo 'was here';\necho 'was here 2';\n"
@@ -365,7 +360,12 @@
    (goto-char 57)
    (should (equal (list (list t 0 0 0 1 0 8 nil) (list t 0 0 0 0 0 11 nil)) (phps-mode-functions-get-point-data))))
 
-  ;; ALTERNATIVE SYNTAX
+  (phps-mode-test-with-buffer
+   "<?php\nif ($myCondition)\n    echo 'was here';\nelse\n    echo 'was here 2';\n"
+   (goto-char 55)
+   (should (equal (list (list t 0 0 0 1 0 8 nil) (list t 0 0 0 0 0 11 nil)) (phps-mode-functions-get-point-data))))
+
+  ;; ALTERNATIVE SYNTAX FOR CONTROL STRUCTURES
 
   (phps-mode-test-with-buffer
    "<?php\nif ($myCondition):\n    echo 'was here';\nendif;\necho 'was here 2';\n"
@@ -393,9 +393,16 @@
    (should (equal (list (list t 0 0 0 0 1 5 nil) (list t 0 0 0 0 1 8 nil)) (phps-mode-functions-get-point-data))))
 
   (phps-mode-test-with-buffer
-   "<?php\nif ($myCondition)\n    echo 'was here';\nelse\n    echo 'was here 2';\n"
-   (goto-char 55)
-   (should (equal (list (list t 0 0 0 1 0 8 nil) (list t 0 0 0 0 0 11 nil)) (phps-mode-functions-get-point-data))))
+   "<?php\nif ($myCondition):\n    echo 'was here';\nelse:\n    echo 'was here 2';\nendif;\n"
+   (goto-char 64)
+   (should (equal (list (list t 0 0 0 0 1 10 nil) (list t 0 0 0 0 1 13 nil)) (phps-mode-functions-get-point-data))))
+
+  (phps-mode-test-with-buffer
+   "<?php\nif ($myCondition):\n    echo 'was here';\nelse:\n    echo 'was here 2';\nendif;\n"
+   (goto-char 79)
+   (should (equal (list (list t 0 0 0 0 0 10 nil) (list t 0 0 0 0 0 15 nil)) (phps-mode-functions-get-point-data))))
+
+  ;; TODO SWITCH, CASE, DEFAULT AS WELL
   
   )
 
