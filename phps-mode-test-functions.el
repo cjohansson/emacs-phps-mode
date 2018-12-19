@@ -31,7 +31,7 @@
 
 (autoload 'phps-mode-test-with-buffer "phps-mode-test")
 (autoload 'phps-mode-functions-indent-line "phps-mode-functions")
-(autoload 'phps-mode-functions-get-point-data "phps-mode-functions")
+(autoload 'phps-mode-functions-get-current-line-data "phps-mode-functions")
 (autoload 'should "ert")
 
 ;; TODO Add unit tests for HEREDOC and NOWDOC regions as well
@@ -245,162 +245,162 @@
 
   )
 
-(defun phps-mode-test-functions-get-point-data ()
+(defun phps-mode-test-functions-get-current-line-data ()
   "Return information about point in tokens."
 
   (phps-mode-test-with-buffer
    "<?php\nNAMESPACE MyNameSpace;\nCLASS MyClass {\n\tpublic function __construct() {\n\t\texit;\n\t}\n}\n"
    (goto-char 35)
-   (should (equal (list (list t 0 0 0 0 0 3 nil) (list t 1 0 0 0 0 6 nil)) (phps-mode-functions-get-point-data))))
+   (should (equal (list (list t 0 0 0 0 0 3 nil) (list t 1 0 0 0 0 6 nil)) (phps-mode-functions-get-current-line-data))))
 
   (phps-mode-test-with-buffer
    "<html><head><title><?php echo $title; ?></title><body>Bla bla</body></html>"
    (goto-char 15)
-   (should (equal (list (list nil 0 0 0 0 0 nil nil) (list nil 0 0 0 0 0 5 nil)) (phps-mode-functions-get-point-data))))
+   (should (equal (list (list nil 0 0 0 0 0 nil nil) (list nil 0 0 0 0 0 5 nil)) (phps-mode-functions-get-current-line-data))))
 
   (phps-mode-test-with-buffer
    "<html><head><title><?php echo $title; ?>\n</title><body>Bla bla</body></html>"
    (goto-char 50)
-   (should (equal (list (list nil 0 0 0 0 0 nil nil) (list nil 0 0 0 0 0 nil nil)) (phps-mode-functions-get-point-data))))
+   (should (equal (list (list nil 0 0 0 0 0 nil nil) (list nil 0 0 0 0 0 nil nil)) (phps-mode-functions-get-current-line-data))))
 
   (phps-mode-test-with-buffer
    "<html><head><title></title><body>Bla bla</body></html>"
    (goto-char 15)
-   (should (equal (list (list nil 0 0 0 0 0 nil nil) (list nil 0 0 0 0 0 nil nil)) (phps-mode-functions-get-point-data))))
+   (should (equal (list (list nil 0 0 0 0 0 nil nil) (list nil 0 0 0 0 0 nil nil)) (phps-mode-functions-get-current-line-data))))
 
   (phps-mode-test-with-buffer
    "<html><head><title><?php echo $title; ?></title><body>Bla bla</body></html>"
    (goto-char 30)
-   (should (equal (list (list nil 0 0 0 0 0 nil nil) (list nil 0 0 0 0 0 5 nil)) (phps-mode-functions-get-point-data))))
+   (should (equal (list (list nil 0 0 0 0 0 nil nil) (list nil 0 0 0 0 0 5 nil)) (phps-mode-functions-get-current-line-data))))
 
   (phps-mode-test-with-buffer
    "<html><head><title><?php echo $title; ?></title><body>Bla bla</body></html>"
    (goto-char 50)
-   (should (equal (list (list nil 0 0 0 0 0 nil nil) (list nil 0 0 0 0 0 5 nil)) (phps-mode-functions-get-point-data))))
+   (should (equal (list (list nil 0 0 0 0 0 nil nil) (list nil 0 0 0 0 0 5 nil)) (phps-mode-functions-get-current-line-data))))
 
   (phps-mode-test-with-buffer
    "<html><head><title><?php if ($myCondition) { \n   if ($mySeconCondition) { echo $title; } } ?></title><body>Bla bla</body></html>"
    (goto-char 48)
-   (should (equal (list (list t 1 0 0 0 0 5 nil) (list nil 0 0 0 0 0 17 nil)) (phps-mode-functions-get-point-data))))
+   (should (equal (list (list t 1 0 0 0 0 5 nil) (list nil 0 0 0 0 0 17 nil)) (phps-mode-functions-get-current-line-data))))
 
   (phps-mode-test-with-buffer
    "<html><head><title><?php if ($myCondition) { if ($mySeconCondition) {\n echo $title;\n} } ?></title><body>Bla bla</body></html>"
    (goto-char 72)
-   (should (equal (list (list t 2 0 0 0 0 10 nil) (list t 2 0 0 0 0 13 nil)) (phps-mode-functions-get-point-data))))
+   (should (equal (list (list t 2 0 0 0 0 10 nil) (list t 2 0 0 0 0 13 nil)) (phps-mode-functions-get-current-line-data))))
 
   (phps-mode-test-with-buffer
    "<html><head><title><?php if ($myCondition) {\nif ($mySeconCondition) {\necho $title;\n}\n}\n ?></title><body>Bla bla</body></html>"
    (goto-char 84)
-   (should (equal (list (list t 2 0 0 0 0 13 nil) (list t 1 0 0 0 0 14 nil)) (phps-mode-functions-get-point-data))))
+   (should (equal (list (list t 2 0 0 0 0 13 nil) (list t 1 0 0 0 0 14 nil)) (phps-mode-functions-get-current-line-data))))
 
   (phps-mode-test-with-buffer
    "<html><head><title><?php if ($myCondition) { if ($mySeconCondition) { echo $title; } } ?></title><body>Bla bla</body></html>"
    (goto-char 100)
-   (should (equal (list (list nil 0 0 0 0 0 nil nil) (list nil 0 0 0 0 0 17 nil)) (phps-mode-functions-get-point-data))))
+   (should (equal (list (list nil 0 0 0 0 0 nil nil) (list nil 0 0 0 0 0 17 nil)) (phps-mode-functions-get-current-line-data))))
 
   (phps-mode-test-with-buffer
    "<?php /**\n * My first line\n * My second line\n **/"
    (goto-char 20)
-   (should (equal (list (list t 0 0 0 0 0 nil t) (list t 0 0 0 0 0 nil t)) (phps-mode-functions-get-point-data))))
+   (should (equal (list (list t 0 0 0 0 0 nil t) (list t 0 0 0 0 0 nil t)) (phps-mode-functions-get-current-line-data))))
 
   (phps-mode-test-with-buffer
    "<?php /**\n * My first line\n * My second line\n **/"
    (goto-char 9)
-   (should (equal (list (list nil 0 0 0 0 0 nil nil) (list t 0 0 0 0 0 1 nil)) (phps-mode-functions-get-point-data))))
+   (should (equal (list (list nil 0 0 0 0 0 nil nil) (list t 0 0 0 0 0 1 nil)) (phps-mode-functions-get-current-line-data))))
 
   (phps-mode-test-with-buffer
    "<?php /**\n * My first line\n * My second line\n **/"
    (goto-char 50)
-   (should (equal (list (list t 0 0 0 0 0 nil t) (list t 0 0 0 0 0 nil t)) (phps-mode-functions-get-point-data))))
+   (should (equal (list (list t 0 0 0 0 0 nil t) (list t 0 0 0 0 0 nil t)) (phps-mode-functions-get-current-line-data))))
 
   (phps-mode-test-with-buffer
    "<?php\n$variable = array(\n'random4');\n$variable = true;\n"
    (goto-char 29)
-   (should (equal (list (list t 0 1 0 0 0 4 nil) (list t 0 0 0 0 0 7 nil)) (phps-mode-functions-get-point-data))))
+   (should (equal (list (list t 0 1 0 0 0 4 nil) (list t 0 0 0 0 0 7 nil)) (phps-mode-functions-get-current-line-data))))
 
   (phps-mode-test-with-buffer
    "<?php\nif (empty(\n$this->var\n) && !empty($this->var)\n) {\n$this->var = 'abc123';\n}\n"
    (goto-char 54)
-   (should (equal (list (list t 0 1 0 0 0 16 nil) (list t 1 0 0 0 0 18 nil)) (phps-mode-functions-get-point-data))))
+   (should (equal (list (list t 0 1 0 0 0 16 nil) (list t 1 0 0 0 0 18 nil)) (phps-mode-functions-get-current-line-data))))
 
   (phps-mode-test-with-buffer
    "<?php\n$var = [\n    'random' => [\n        'hello',\n    ],\n];\n"
    (goto-char 46)
-   (should (equal (list (list t 0 0 2 0 0 6 nil) (list t 0 0 2 0 0 8 nil)) (phps-mode-functions-get-point-data))))
+   (should (equal (list (list t 0 0 2 0 0 6 nil) (list t 0 0 2 0 0 8 nil)) (phps-mode-functions-get-current-line-data))))
 
   ;; INLINE SYNTAX FOR CONTROL STRUCTURES
 
   (phps-mode-test-with-buffer
    "<?php\nif ($myCondition)\n    echo 'was here';\necho 'was here 2';\n"
    (goto-char 41)
-   (should (equal (list (list t 0 0 0 1 0 4 nil) (list t 0 0 0 0 0 7 nil)) (phps-mode-functions-get-point-data))))
+   (should (equal (list (list t 0 0 0 1 0 4 nil) (list t 0 0 0 0 0 7 nil)) (phps-mode-functions-get-current-line-data))))
 
   (phps-mode-test-with-buffer
    "<?php\nif ($myCondition)\n    echo 'was here';\necho 'was here 2';\n"
    (goto-char 60)
-   (should (equal (list (list t 0 0 0 0 0 7 nil) (list t 0 0 0 0 0 10 nil)) (phps-mode-functions-get-point-data))))
+   (should (equal (list (list t 0 0 0 0 0 7 nil) (list t 0 0 0 0 0 10 nil)) (phps-mode-functions-get-current-line-data))))
 
   (phps-mode-test-with-buffer
    "<?php\nif ($myCondition) echo 'was here'; echo 'was here 2';\n"
    (goto-char 32)
-   (should (equal (list (list t 0 0 0 0 0 0 nil) (list t 0 0 0 0 0 10 nil)) (phps-mode-functions-get-point-data))))
+   (should (equal (list (list t 0 0 0 0 0 0 nil) (list t 0 0 0 0 0 10 nil)) (phps-mode-functions-get-current-line-data))))
 
   (phps-mode-test-with-buffer
    "<?php\nif ($myCondition) echo 'was here'; echo 'was here 2';\n"
    (goto-char 55)
-   (should (equal (list (list t 0 0 0 0 0 0 nil) (list t 0 0 0 0 0 10 nil)) (phps-mode-functions-get-point-data))))
+   (should (equal (list (list t 0 0 0 0 0 0 nil) (list t 0 0 0 0 0 10 nil)) (phps-mode-functions-get-current-line-data))))
 
   (phps-mode-test-with-buffer
    "<?php\nif ($myCondition)\n    echo 'was here';\nelse\n    echo 'was here 2';\n"
    (goto-char 47)
-   (should (equal (list (list t 0 0 0 0 0 7 nil) (list t 0 0 0 0 0 8 nil)) (phps-mode-functions-get-point-data))))
+   (should (equal (list (list t 0 0 0 0 0 7 nil) (list t 0 0 0 0 0 8 nil)) (phps-mode-functions-get-current-line-data))))
 
   (phps-mode-test-with-buffer
    "<?php\nif ($myCondition)\n    echo 'was here';\nelse\n    echo 'was here 2';\n"
    (goto-char 57)
-   (should (equal (list (list t 0 0 0 1 0 8 nil) (list t 0 0 0 0 0 11 nil)) (phps-mode-functions-get-point-data))))
+   (should (equal (list (list t 0 0 0 1 0 8 nil) (list t 0 0 0 0 0 11 nil)) (phps-mode-functions-get-current-line-data))))
 
   (phps-mode-test-with-buffer
    "<?php\nif ($myCondition)\n    echo 'was here';\nelse\n    echo 'was here 2';\n"
    (goto-char 55)
-   (should (equal (list (list t 0 0 0 1 0 8 nil) (list t 0 0 0 0 0 11 nil)) (phps-mode-functions-get-point-data))))
+   (should (equal (list (list t 0 0 0 1 0 8 nil) (list t 0 0 0 0 0 11 nil)) (phps-mode-functions-get-current-line-data))))
 
   ;; ALTERNATIVE SYNTAX FOR CONTROL STRUCTURES
 
   (phps-mode-test-with-buffer
    "<?php\nif ($myCondition):\n    echo 'was here';\nendif;\necho 'was here 2';\n"
    (goto-char 41)
-   (should (equal (list (list t 0 0 0 0 1 5 nil) (list t 0 0 0 0 1 8 nil)) (phps-mode-functions-get-point-data))))
+   (should (equal (list (list t 0 0 0 0 1 5 nil) (list t 0 0 0 0 1 8 nil)) (phps-mode-functions-get-current-line-data))))
 
   (phps-mode-test-with-buffer
    "<?php\nif ($myCondition):\n    echo 'was here';\nendif;\necho 'was here 3';\n"
    (goto-char 52)
-   (should (equal (list (list t 0 0 0 0 0 8 nil) (list t 0 0 0 0 0 10 nil)) (phps-mode-functions-get-point-data))))
+   (should (equal (list (list t 0 0 0 0 0 8 nil) (list t 0 0 0 0 0 10 nil)) (phps-mode-functions-get-current-line-data))))
 
   (phps-mode-test-with-buffer
    "<?php\nif ($myCondition):    echo 'was here';\nendif;\necho 'was here 4';\n"
    (goto-char 32)
-   (should (equal (list (list t 0 0 0 0 0 0 nil) (list t 0 0 0 0 1 8 nil)) (phps-mode-functions-get-point-data))))
+   (should (equal (list (list t 0 0 0 0 0 0 nil) (list t 0 0 0 0 1 8 nil)) (phps-mode-functions-get-current-line-data))))
 
   (phps-mode-test-with-buffer
    "<?php\nif ($myCondition): echo 'was here'; endif; echo 'was here 5';\n"
    (goto-char 35)
-   (should (equal (list (list t 0 0 0 0 0 0 nil) (list t 0 0 0 0 0 13 nil)) (phps-mode-functions-get-point-data))))
+   (should (equal (list (list t 0 0 0 0 0 0 nil) (list t 0 0 0 0 0 13 nil)) (phps-mode-functions-get-current-line-data))))
 
   (phps-mode-test-with-buffer
    "<?php\nif ($myCondition):\n    echo 'was here';\nelse:\n    echo 'was here 2';\nendif;\n"
    (goto-char 44)
-   (should (equal (list (list t 0 0 0 0 1 5 nil) (list t 0 0 0 0 1 8 nil)) (phps-mode-functions-get-point-data))))
+   (should (equal (list (list t 0 0 0 0 1 5 nil) (list t 0 0 0 0 1 8 nil)) (phps-mode-functions-get-current-line-data))))
 
   (phps-mode-test-with-buffer
    "<?php\nif ($myCondition):\n    echo 'was here';\nelse:\n    echo 'was here 2';\nendif;\n"
    (goto-char 64)
-   (should (equal (list (list t 0 0 0 0 1 10 nil) (list t 0 0 0 0 1 13 nil)) (phps-mode-functions-get-point-data))))
+   (should (equal (list (list t 0 0 0 0 1 10 nil) (list t 0 0 0 0 1 13 nil)) (phps-mode-functions-get-current-line-data))))
 
   (phps-mode-test-with-buffer
    "<?php\nif ($myCondition):\n    echo 'was here';\nelse:\n    echo 'was here 2';\nendif;\n"
    (goto-char 79)
-   (should (equal (list (list t 0 0 0 0 0 10 nil) (list t 0 0 0 0 0 15 nil)) (phps-mode-functions-get-point-data))))
+   (should (equal (list (list t 0 0 0 0 0 10 nil) (list t 0 0 0 0 0 15 nil)) (phps-mode-functions-get-current-line-data))))
 
   ;; TODO SWITCH, CASE, DEFAULT AS WELL
   
@@ -411,7 +411,7 @@
 (defun phps-mode-test-functions ()
   "Run test for functions."
   ;; (toggle-debug-on-error t)
-  (phps-mode-test-functions-get-point-data)
+  (phps-mode-test-functions-get-current-line-data)
   (phps-mode-test-functions-indent-line))
 
 (phps-mode-test-functions)

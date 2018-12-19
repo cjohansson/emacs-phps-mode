@@ -40,7 +40,7 @@
 
 (defun phps-mode-functions-indent-line ()
   "Indent line."
-  (let ((data (phps-mode-functions-get-point-data))
+  (let ((data (phps-mode-functions-get-current-line-data))
         (line-start (line-beginning-position)))
     (let* ((start (nth 0 data))
            (end (nth 1 data))
@@ -205,8 +205,8 @@
 ;; TODO Support switch case as well
 ;; TODO Keep track of assignments as well
 
-(defun phps-mode-functions-get-point-data ()
-  "Return information about point in tokens."
+(defun phps-mode-functions-get-current-line-data ()
+  "Return information about current line in tokens."
   ;; (message "Point: %s in %s" (point) phps-mode-lexer-tokens)
   (when (boundp 'phps-mode-lexer-tokens)
     (save-excursion
