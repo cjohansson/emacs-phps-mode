@@ -203,6 +203,7 @@
 ;; TODO This function needs to keep track of alternative syntax for the control structures: if, while, for, foreach, and switch
 ;; TODO This function needs to keep track of inline syntax for the control structures: if, while, for, foreach, and switch
 ;; TODO Support switch case as well
+;; TODO Keep track of assignments as well
 
 (defun phps-mode-functions-get-point-data ()
   "Return information about point in tokens."
@@ -240,12 +241,18 @@
                   (token-end (cdr (cdr item))))
               ;; (message "Token: %s Start: %s End: %s Item: %s" token start end item)
 
-              ;; Does token start after the end of line?
+              ;; Does token start after the end of line? - break
               (when (> token-start line-end)
                 ;; (message "Stopping iteration at: %s %s" start position)
                 (throw 'stop-iteration nil))
 
-              ;; Did we find any token on current line?
+              ;; Keep track of general round brace level
+              (when (string= token "(")
+                (setq round-brace-level (1+ round-brace-level)))
+              (when (string= token ")")
+                (setq round-brace-level (1- round-brace-level)))
+
+              ;; Did we find any token on current line? - flag t
               (when (and (not found-line-tokens)
                          (>= token-start line-beginning)
                          (<= token-end line-end))
@@ -273,21 +280,19 @@
                   (")" (setq start-round-bracket-level (1- start-round-bracket-level)))
                   (_))
 
-                ;; Did we encounter end of alternative control structure?
+                ;; Did we encounter end of an alternative control structure?
                 (when (or (equal token 'T_ENDIF)
                           (equal token 'T_ENDWHILE)
                           (equal token 'T_ENDFOR)
                           (equal token 'T_ENDFOREACH)
                           (equal token 'T_ENDSWITCH))
-                  (setq start-alternative-control-structure-level (- start-alternative-control-structure-level 1)))
+                  (setq start-alternative-control-structure-level (1- start-alternative-control-structure-level)))
 
                 ;; Reduce inline control structure level when we encounter a semi-colon after it's opening
                 (when (and start-expecting-semi-colon
                            (string= token ";"))
-                  (setq start-inline-control-structure-level (- start-inline-control-structure-level 1))
-                  (setq start-expecting-semi-colon nil))
-
-                )
+                  (setq start-inline-control-structure-level (1- start-inline-control-structure-level))
+                  (setq start-expecting-semi-colon nil)))
 
               ;; Are we at the final line and inside a doc-comment that ends after it?
               (when (and (< token-start line-beginning)
@@ -295,7 +300,7 @@
                          (eq token 'T_DOC_COMMENT))
                 (setq line-in-doc-comment t))
 
-              ;; When start of token is equal or less to end of curent line
+              ;; When start of token is equal or less to end of current line
               (when (<= token-start line-end)
 
                 ;; Increment end token number
@@ -317,7 +322,7 @@
                   (")" (setq end-round-bracket-level (1- end-round-bracket-level)))
                   (_))
 
-                ;; Do we encounter first token on line?
+                ;; Do we encounter first token on current line?
                 (when (and (not first-token-on-line)
                            (>= token-start line-beginning)
                            (<= token-start line-end))
@@ -338,15 +343,7 @@
                 (when (and end-expecting-semi-colon
                            (string= token ";"))
                   (setq end-inline-control-structure-level (- end-inline-control-structure-level 1))
-                  (setq end-expecting-semi-colon nil))
-
-                )
-
-              ;; Keep track of general round brace level
-              (when (string= token "(")
-                (setq round-brace-level (1+ round-brace-level)))
-              (when (string= token ")")
-                (setq round-brace-level (1- round-brace-level)))
+                  (setq end-expecting-semi-colon nil)))
 
               ;; Are we after a special control structure
               ;; and does the round bracket level match initial round bracket level
@@ -402,16 +399,12 @@
                      (equal token 'T_SWITCH)
                      (equal token 'T_ELSE)
                      (equal token 'T_ELSEIF))
-                ;; (message "Found special control structure %s %s" token start-round-bracket-level)
-                (setq after-special-control-structure round-brace-level)
+                (setq after-special-control-structure round-brace-level)))))
 
-
-                ))))
         (unless found-line-tokens
           (setq start-token-number nil)
           (setq end-token-number nil))
         (let ((data (list (list start-in-scripting start-curly-bracket-level start-round-bracket-level start-square-bracket-level start-inline-control-structure-level start-alternative-control-structure-level start-token-number line-in-doc-comment) (list end-in-scripting end-curly-bracket-level end-round-bracket-level end-square-bracket-level end-inline-control-structure-level end-alternative-control-structure-level end-token-number line-in-doc-comment))))
-          ;; (message "data: %s" data)
           data)))))
 
 (defun phps-mode-functions-init ()
