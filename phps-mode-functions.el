@@ -206,7 +206,21 @@
 ;; TODO Keep track of assignments as well
 
 (defun phps-mode-functions-get-current-line-data ()
-  "Return information about current line in tokens."
+  "Return information about current line in tokens.
+
+1. Iterate from beginning of buffer up till start of current line.
+2a.  If current line has no tokens, return nil
+2b.  If current line has tokens, return information about:
+* Sum of different kinds of open brackets: curly, round and square.
+* The sum of open alternative control structures
+* The sum of open inline control structures
+* The sum of open assignments
+* The current lines tokens
+* Whether current line is inside scripting or not
+* Whether current line is inside a doc comment block or not
+* Whether current line is inside a HEREDOC block or not
+* Whether current line is inside a NOWDOC block or not."
+
   ;; (message "Point: %s in %s" (point) phps-mode-lexer-tokens)
   (when (boundp 'phps-mode-lexer-tokens)
     (save-excursion
