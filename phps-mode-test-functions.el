@@ -34,6 +34,11 @@
 (autoload 'phps-mode-functions-get-current-line-data "phps-mode-functions")
 (autoload 'should "ert")
 
+(defun phps-mode-test-functions-get-current-line-indent ()
+  "Test `phps-mode-functions-get-current-line-indent' function."
+
+  )
+
 ;; TODO Add unit tests for HEREDOC and NOWDOC regions as well
 
 (defun phps-mode-test-functions-indent-line ()
@@ -245,6 +250,7 @@
 
   )
 
+;; TODO Remove this functions
 (defun phps-mode-test-functions-get-current-line-data ()
   "Return information about point in tokens."
 
@@ -410,7 +416,7 @@
 
 (defun phps-mode-test-functions ()
   "Run test for functions."
-  ;; (toggle-debug-on-error t)
+  (phps-mode-test-functions-get-current-line-indent)
   (phps-mode-test-functions-get-current-line-data)
   (phps-mode-test-functions-indent-line))
 

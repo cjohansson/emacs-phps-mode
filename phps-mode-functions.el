@@ -38,6 +38,105 @@
 ;; TODO Support inline function indentations
 ;; TODO Support indentation for multi-line scalar assignments
 
+(defun phps-mode-functions-get-current-line-indent ()
+  "Get the column number for current line."
+  (if (boundp 'phps-mode-lexer-tokens)
+      (save-excursion
+        (beginning-of-line)
+        (let ((line-beginning (line-beginning-position))
+              (line-end (line-end-position))
+              (in-scripting nil)
+              (in-nowdoc nil)
+              (in-heredoc nil)
+              (in-doc-block nil)
+              (curly-bracket-level 0)
+              (round-bracket-level 0)
+              (square-bracket-level 0)
+              (indent-level 0)
+              (indent-start 0)
+              (indent-end 0)
+              (last-line-number 0))
+
+          ;; Iterate through all buffer tokens from beginning to end
+          (catch 'stop-iteration
+            (dolist (item phps-mode-lexer-tokens)
+              (let* ((token (car item))
+                     (token-start (car (cdr item)))
+                     (token-end (cdr (cdr item)))
+                     (token-line-number (line-number-at-pos token-start t)))
+
+                ;; Break when token starts after current line end
+                (when (> token-start line-end)
+                  (throw 'stop-iteration nil))
+
+                ;; Are we on a new line?
+                (when (> token-line-number last-line-number)
+
+                  ;; Calculate indentation leven at end of line
+                  (setq indent-end (+ round-bracket-level square-bracket-level curly-bracket-level))
+
+                  ;; Is line ending indentation higher than line beginning indentation?
+                  (when (> indent-end indent-start)
+
+                    ;; Increase indentation by one
+                    (setq indent-level (1+ indent-level)))
+
+                  ;; Is line ending indentation lesser than line beginning indentation?
+                  (when (< indent-end indent-start)
+
+                    ;; Decrease indentation by one
+                    (setq indent-level (1- indent-level))
+
+                  ;; Calculate indentation level at start of line
+                  (setq indent-start (+ round-bracket-level square-bracket-level curly-bracket-level)))
+
+                ;; Keep track of round bracket level
+                (when (string= token "(")
+                  (setq round-bracket-level (1+ round-bracket-level)))
+                (when (string= token ")")
+                  (setq round-bracket-level (1- round-bracket-level)))
+
+                ;; Keep track of square bracket level
+                (when (string= token "[")
+                  (setq square-bracket-level (1+ square-bracket-level)))
+                (when (string= token ")")
+                  (setq square-bracket-level (1- square-bracket-level)))
+
+                ;; Keep track of curly bracket level
+                (when (or (equal token 'T_CURLY_OPEN)
+                          (equal token 'T_DOLLAR_OPEN_CURLY_BRACES)
+                          (string= token "{"))
+                  (setq curly-bracket-level (1+ curly-bracket-level)))
+                (when (string= token "}")
+                  (setq curly-bracket-level (1- curly-bracket-level)))
+
+                ;; TODO Keep track of alternative control structures
+                ;; TODO Keep track of inline control structures
+
+                ;; Keep track of in scripting
+                (when (or (equal token 'T_OPEN_TAG)
+                          (equal token 'T_OPEN_TAG_WITH_ECHO))
+                  (setq in-scripting t))
+                (when (equal token 'T_CLOSE_TAG)
+                  (setq in-scripting nil))
+
+                ;; TODO Keep track of inside doc-block
+                ;; TODO Keep track of inside HEREDOC
+                ;; TODO Keep track of inside NOWDOC
+
+                ;; Are we on a new line?
+                (when (> token-line-number last-line-number)
+
+                  ;; Update last line number
+                  (setq last-line-number token-line-number))
+
+                )))
+
+          (if in-scripting
+              indent-level
+            nil)))
+    nil))
+
 (defun phps-mode-functions-indent-line ()
   "Indent line."
   (let ((data (phps-mode-functions-get-current-line-data))
