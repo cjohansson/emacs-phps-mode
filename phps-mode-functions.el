@@ -39,7 +39,7 @@
 ;; TODO Support indentation for multi-line scalar assignments
 
 (defun phps-mode-functions-get-current-line-indent ()
-  "Get the column number for current line."
+  "Get the column number and space number for current line."
   (if (boundp 'phps-mode-lexer-tokens)
       (save-excursion
         (beginning-of-line)
@@ -56,6 +56,7 @@
               (alternative-control-structure-level 0)
               (inline-control-structure-level 0)
               (indent-level 0)
+              (adjust-level 0)
               (indent-start 0)
               (indent-end 0)
               (last-line-number 0))
@@ -77,10 +78,6 @@
 
                   ;; Calculate indentation leven at end of line
                   (setq indent-end (+ round-bracket-level square-bracket-level curly-bracket-level alternative-control-structure-level inline-control-structure-level))
-
-                  ;; TODO Increase indent with 1 inside doc-comment, heredoc or nowdoc
-                  (when (or in-doc-comment in-heredoc)
-                    (setq indent-end (1+ indent-end)))
 
                   ;; Is line ending indentation higher than line beginning indentation?
                   (when (> indent-end indent-start)
@@ -130,7 +127,7 @@
                 (when (or (equal token 'T_IF)
                           (equal token 'T_WHILE)
                           (equal token 'T_CASE)
-                          (equal token 'T_DEFAULT)
+                             (equal token 'T_DEFAULT)
                           (equal token 'T_FOR)
                           (equal token 'T_FOREACH)
                           (equal token 'T_SWITCH)
@@ -166,8 +163,12 @@
 
                 )))
 
+          ;; Increase indent with one space inside doc-comment, HEREDOC or NOWDOC
+          (when (or in-doc-comment in-heredoc)
+            (setq adjust-level 1))
+
           (if in-scripting
-              indent-level
+              (list indent-level adjust-level)
             nil)))
     nil))
 

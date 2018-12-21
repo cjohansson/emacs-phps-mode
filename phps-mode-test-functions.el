@@ -40,22 +40,22 @@
   (phps-mode-test-with-buffer
    "<html><head><title><?php if ($myCondition) {\nif ($mySeconCondition) {\necho $title;\n\n} ?></title><body>Bla bla</body></html>"
    (goto-char 69)
-   (should (equal 1 (phps-mode-functions-get-current-line-indent))))
+   (should (equal '(1 0) (phps-mode-functions-get-current-line-indent))))
 
   (phps-mode-test-with-buffer
    "<html><head><title><?php if ($myCondition) {\nif ($mySeconCondition) {\necho $title;\n\n} ?></title><body>Bla bla</body></html>"
    (goto-char 40)
-   (should (equal 0 (phps-mode-functions-get-current-line-indent))))
+   (should (equal '(0 0) (phps-mode-functions-get-current-line-indent))))
 
   (phps-mode-test-with-buffer
    "<html><head><title><?php if ($myCondition) {\nif ($mySeconCondition) {\necho $title;\n\n} ?></title><body>Bla bla</body></html>"
    (goto-char 75)
-   (should (equal 2 (phps-mode-functions-get-current-line-indent))))
+   (should (equal '(2 0) (phps-mode-functions-get-current-line-indent))))
 
-  ;; (phps-mode-test-with-buffer
-  ;;  "<?php\n/**\n* Bla\n*/"
-  ;;  (goto-char 13)
-  ;;  (should (equal 2 (phps-mode-functions-get-current-line-indent))))
+  (phps-mode-test-with-buffer
+   "<?php\n/**\n* Bla\n*/"
+   (goto-char 13)
+   (should (equal '(0 1) (phps-mode-functions-get-current-line-indent))))
 
 
   )
