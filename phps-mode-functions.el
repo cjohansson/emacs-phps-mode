@@ -135,25 +135,30 @@
                           (equal token 'T_ELSEIF))
                   (setq after-special-control-structure round-bracket-level))
 
-                ;; Keep track of in scripting
-                (when (or (equal token 'T_OPEN_TAG)
-                          (equal token 'T_OPEN_TAG_WITH_ECHO))
-                  (setq in-scripting t))
-                (when (equal token 'T_CLOSE_TAG)
-                  (setq in-scripting nil))
+                ;; Does token end before current line begins?
+                (when (< token-start line-beginning)
 
-                ;; Keep track of whether we are inside a doc-comment
-                (when (equal token 'T_DOC_COMMENT)
-                  (setq in-doc-comment token-end))
-                (when (and in-doc-comment
-                           (> token-start in-doc-comment))
-                  (setq in-doc-comment nil))
+                  ;; Keep track of in scripting
+                  (when (or (equal token 'T_OPEN_TAG)
+                            (equal token 'T_OPEN_TAG_WITH_ECHO))
+                    (setq in-scripting t))
+                  (when (equal token 'T_CLOSE_TAG)
+                    (setq in-scripting nil))
 
-                ;; Keep track of whether we are inside a HEREDOC or NOWDOC
-                (when (equal token 'T_START_HEREDOC)
-                  (setq in-heredoc t))
-                (when (equal token 'T_END_HEREDOC)
-                  (setq in-heredoc nil))
+                  ;; Keep track of whether we are inside a doc-comment
+                  (when (equal token 'T_DOC_COMMENT)
+                    (setq in-doc-comment token-end))
+                  (when (and in-doc-comment
+                             (> token-start in-doc-comment))
+                    (setq in-doc-comment nil))
+
+                  ;; Keep track of whether we are inside a HEREDOC or NOWDOC
+                  (when (equal token 'T_START_HEREDOC)
+                    (setq in-heredoc t))
+                  (when (equal token 'T_END_HEREDOC)
+                    (setq in-heredoc nil))
+
+                  )
 
                 ;; Are we on a new line?
                 (when (> token-line-number last-line-number)

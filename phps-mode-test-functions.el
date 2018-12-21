@@ -37,26 +37,44 @@
 (defun phps-mode-test-functions-get-current-line-indent ()
   "Test `phps-mode-functions-get-current-line-indent' function."
 
+  ;; Mixed HTML/PHP
+
   (phps-mode-test-with-buffer
-   "<html><head><title><?php if ($myCondition) {\nif ($mySeconCondition) {\necho $title;\n\n} ?></title><body>Bla bla</body></html>"
+   "<html><head><title><?php\nif ($myCondition) {\nif ($mySeconCondition) {\necho $title;\n\n} ?></title><body>Bla bla</body></html>"
+   (goto-char 15)
+   (should (equal nil (phps-mode-functions-get-current-line-indent))))
+
+  (phps-mode-test-with-buffer
+   "<html><head><title><?php\nif ($myCondition) {\nif ($mySeconCondition) {\necho $title;\n\n} ?></title><body>Bla bla</body></html>"
    (goto-char 69)
    (should (equal '(1 0) (phps-mode-functions-get-current-line-indent))))
 
   (phps-mode-test-with-buffer
-   "<html><head><title><?php if ($myCondition) {\nif ($mySeconCondition) {\necho $title;\n\n} ?></title><body>Bla bla</body></html>"
+   "<html><head><title><?php\nif ($myCondition) {\nif ($mySeconCondition) {\necho $title;\n\n} ?></title><body>Bla bla</body></html>"
    (goto-char 40)
    (should (equal '(0 0) (phps-mode-functions-get-current-line-indent))))
 
   (phps-mode-test-with-buffer
-   "<html><head><title><?php if ($myCondition) {\nif ($mySeconCondition) {\necho $title;\n\n} ?></title><body>Bla bla</body></html>"
+   "<html><head><title><?php\nif ($myCondition) {\nif ($mySeconCondition) {\necho $title;\n\n} ?></title><body>Bla bla</body></html>"
    (goto-char 75)
    (should (equal '(2 0) (phps-mode-functions-get-current-line-indent))))
+
+  ;; DOC-COMMENT
 
   (phps-mode-test-with-buffer
    "<?php\n/**\n* Bla\n*/"
    (goto-char 13)
    (should (equal '(0 1) (phps-mode-functions-get-current-line-indent))))
 
+  (phps-mode-test-with-buffer
+   "<?php\n/**\n* Bla\n*/"
+   (goto-char 8)
+   (should (equal '(0 0) (phps-mode-functions-get-current-line-indent))))
+
+  (phps-mode-test-with-buffer
+   "<?php\n/**\n* Bla\n*/"
+   (goto-char 17)
+   (should (equal '(0 1) (phps-mode-functions-get-current-line-indent))))
 
   )
 
