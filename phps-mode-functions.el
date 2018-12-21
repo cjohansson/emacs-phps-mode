@@ -114,7 +114,8 @@
                 (when (string= token "}")
                   (setq curly-bracket-level (1- curly-bracket-level)))
 
-                ;; TODO Keep track of inline control structures
+                ;; TODO Keep track of case and default special tokens
+
                 ;; Keep track of alternative control structure level
                 (when (or (equal token 'T_ENDIF)
                           (equal token 'T_ENDWHILE)
@@ -123,11 +124,31 @@
                           (equal token 'T_ENDSWITCH))
                   (setq alternative-control-structure-level (1- alternative-control-structure-level)))
 
+                (when (and after-special-control-structure
+                           (= after-special-control-structure round-bracket-level)
+                           (not (string= token ")"))
+                           (not (string= token "(")))
+
+                  ;; Is token not a curly bracket - because that is a ordinary control structure syntax
+                  (unless (string= token "{")
+
+                    ;; Is it the start of an alternative control structure?
+                    (if (string= token ":")
+                        (setq alternative-control-structure-level (1+ alternative-control-structure-level))
+                      (setq inline-control-structure-level (1+ inline-control-structure-level))
+                      (setq in-inline-control-structure t)))
+
+                  (setq after-special-control-structure nil))
+
+                ;; Did we reach a semicolon inside a inline block? Close the inline block
+                (when (and in-inline-control-structure
+                           (string= token ";"))
+                  (setq inline-control-structure-level (1- inline-control-structure-level))
+                  (setq in-inline-control-structure nil))
+
                 ;; Did we encounter a token that supports alternative and inline control structures?
                 (when (or (equal token 'T_IF)
                           (equal token 'T_WHILE)
-                          (equal token 'T_CASE)
-                             (equal token 'T_DEFAULT)
                           (equal token 'T_FOR)
                           (equal token 'T_FOREACH)
                           (equal token 'T_SWITCH)

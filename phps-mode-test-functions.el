@@ -76,6 +76,60 @@
    (goto-char 17)
    (should (equal '(0 1) (phps-mode-functions-get-current-line-indent))))
 
+  ;; Alternative control structures
+
+  (phps-mode-test-with-buffer
+   "<?php\nif (true):\n    echo 'Something';\nelse:\n    echo 'Something else';\nendif;\n"
+   (goto-char 11)
+   (should (equal '(0 0) (phps-mode-functions-get-current-line-indent))))
+
+  (phps-mode-test-with-buffer
+   "<?php\nif (true):\n    echo 'Something';\nelse:\n    echo 'Something else';\nendif;\n"
+   (goto-char 22)
+   (should (equal '(1 0) (phps-mode-functions-get-current-line-indent))))
+
+  (phps-mode-test-with-buffer
+   "<?php\nif (true):\n    echo 'Something';\nelse:\n    echo 'Something else';\nendif;\n"
+   (goto-char 42)
+   (should (equal '(0 0) (phps-mode-functions-get-current-line-indent))))
+
+  (phps-mode-test-with-buffer
+   "<?php\nif (true):\n    echo 'Something';\nelse:\n    echo 'Something else';\nendif;\n"
+   (goto-char 55)
+   (should (equal '(1 0) (phps-mode-functions-get-current-line-indent))))
+
+  (phps-mode-test-with-buffer
+   "<?php\nif (true):\n    echo 'Something';\nelse:\n    echo 'Something else';\nendif;\n"
+   (goto-char 75)
+   (should (equal '(0 0) (phps-mode-functions-get-current-line-indent))))
+
+  ;; Inline control structures
+
+  (phps-mode-test-with-buffer
+   "<?php\nif (true)\n    echo 'Something';\nelse:\n    echo 'Something else';\n"
+   (goto-char 23)
+   (should (equal '(1 0) (phps-mode-functions-get-current-line-indent))))
+
+  (phps-mode-test-with-buffer
+   "<?php\nif (true)\n    echo 'Something';\nelse\n    echo 'Something else';\n"
+   (goto-char 42)
+   (should (equal '(0 0) (phps-mode-functions-get-current-line-indent))))
+
+  (phps-mode-test-with-buffer
+   "<?php\nif (true)\n    echo 'Something';\nelse\n    echo 'Something else';\n"
+   (goto-char 55)
+   (should (equal '(1 0) (phps-mode-functions-get-current-line-indent))))
+
+  (phps-mode-test-with-buffer
+   "<?php\nif (true):\n    echo 'Something';\nelse:\n    echo 'Something else';\n"
+   (goto-char 72)
+   (should (equal '(0 0) (phps-mode-functions-get-current-line-indent))))
+
+  ;; TODO CASE, DEFAULT
+
+  ;; TODO NOWDOC, HEREDOC
+
+
   )
 
 ;; TODO Add unit tests for HEREDOC and NOWDOC regions as well
