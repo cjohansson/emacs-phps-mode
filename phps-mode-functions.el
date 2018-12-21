@@ -46,12 +46,15 @@
         (let ((line-beginning (line-beginning-position))
               (line-end (line-end-position))
               (in-scripting nil)
-              (in-nowdoc nil)
               (in-heredoc nil)
-              (in-doc-block nil)
+              (in-doc-comment nil)
+              (in-inline-control-structure nil)
+              (after-special-control-structure nil)
               (curly-bracket-level 0)
               (round-bracket-level 0)
               (square-bracket-level 0)
+              (alternative-control-structure-level 0)
+              (inline-control-structure-level 0)
               (indent-level 0)
               (indent-start 0)
               (indent-end 0)
@@ -73,7 +76,11 @@
                 (when (> token-line-number last-line-number)
 
                   ;; Calculate indentation leven at end of line
-                  (setq indent-end (+ round-bracket-level square-bracket-level curly-bracket-level))
+                  (setq indent-end (+ round-bracket-level square-bracket-level curly-bracket-level alternative-control-structure-level inline-control-structure-level))
+
+                  ;; TODO Increase indent with 1 inside doc-comment, heredoc or nowdoc
+                  (when (or in-doc-comment in-heredoc)
+                    (setq indent-end (1+ indent-end)))
 
                   ;; Is line ending indentation higher than line beginning indentation?
                   (when (> indent-end indent-start)
@@ -85,10 +92,10 @@
                   (when (< indent-end indent-start)
 
                     ;; Decrease indentation by one
-                    (setq indent-level (1- indent-level))
+                    (setq indent-level (1- indent-level)))
 
                   ;; Calculate indentation level at start of line
-                  (setq indent-start (+ round-bracket-level square-bracket-level curly-bracket-level)))
+                  (setq indent-start (+ round-bracket-level square-bracket-level curly-bracket-level alternative-control-structure-level inline-control-structure-level)))
 
                 ;; Keep track of round bracket level
                 (when (string= token "(")
@@ -99,7 +106,7 @@
                 ;; Keep track of square bracket level
                 (when (string= token "[")
                   (setq square-bracket-level (1+ square-bracket-level)))
-                (when (string= token ")")
+                (when (string= token "]")
                   (setq square-bracket-level (1- square-bracket-level)))
 
                 ;; Keep track of curly bracket level
@@ -110,8 +117,26 @@
                 (when (string= token "}")
                   (setq curly-bracket-level (1- curly-bracket-level)))
 
-                ;; TODO Keep track of alternative control structures
                 ;; TODO Keep track of inline control structures
+                ;; Keep track of alternative control structure level
+                (when (or (equal token 'T_ENDIF)
+                          (equal token 'T_ENDWHILE)
+                          (equal token 'T_ENDFOR)
+                          (equal token 'T_ENDFOREACH)
+                          (equal token 'T_ENDSWITCH))
+                  (setq alternative-control-structure-level (1- alternative-control-structure-level)))
+
+                ;; Did we encounter a token that supports alternative and inline control structures?
+                (when (or (equal token 'T_IF)
+                          (equal token 'T_WHILE)
+                          (equal token 'T_CASE)
+                          (equal token 'T_DEFAULT)
+                          (equal token 'T_FOR)
+                          (equal token 'T_FOREACH)
+                          (equal token 'T_SWITCH)
+                          (equal token 'T_ELSE)
+                          (equal token 'T_ELSEIF))
+                  (setq after-special-control-structure round-bracket-level))
 
                 ;; Keep track of in scripting
                 (when (or (equal token 'T_OPEN_TAG)
@@ -120,9 +145,18 @@
                 (when (equal token 'T_CLOSE_TAG)
                   (setq in-scripting nil))
 
-                ;; TODO Keep track of inside doc-block
-                ;; TODO Keep track of inside HEREDOC
-                ;; TODO Keep track of inside NOWDOC
+                ;; Keep track of whether we are inside a doc-comment
+                (when (equal token 'T_DOC_COMMENT)
+                  (setq in-doc-comment token-end))
+                (when (and in-doc-comment
+                           (> token-start in-doc-comment))
+                  (setq in-doc-comment nil))
+
+                ;; Keep track of whether we are inside a HEREDOC or NOWDOC
+                (when (equal token 'T_START_HEREDOC)
+                  (setq in-heredoc t))
+                (when (equal token 'T_END_HEREDOC)
+                  (setq in-heredoc nil))
 
                 ;; Are we on a new line?
                 (when (> token-line-number last-line-number)
