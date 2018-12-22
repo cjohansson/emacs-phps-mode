@@ -31,99 +31,100 @@
 
 (autoload 'phps-mode-test-with-buffer "phps-mode-test")
 (autoload 'phps-mode-functions-indent-line "phps-mode-functions")
+(autoload 'phps-mode-functions-get-lines-indent "phps-mode-functions")
 (autoload 'phps-mode-functions-get-current-line-data "phps-mode-functions")
 (autoload 'should "ert")
 
-(defun phps-mode-test-functions-get-current-line-indent ()
-  "Test `phps-mode-functions-get-current-line-indent' function."
+(defun phps-mode-test-functions-get-lines-indent ()
+  "Test `phps-mode-functions-get-lines-indent' function."
 
   ;; Mixed HTML/PHP
 
   (phps-mode-test-with-buffer
    "<html><head><title><?php\nif ($myCondition) {\nif ($mySeconCondition) {\necho $title;\n\n} ?></title><body>Bla bla</body></html>"
    (goto-char 15)
-   (should (equal nil (phps-mode-functions-get-current-line-indent))))
+   (should (equal nil (phps-mode-functions-get-lines-indent))))
 
   (phps-mode-test-with-buffer
    "<html><head><title><?php\nif ($myCondition) {\nif ($mySeconCondition) {\necho $title;\n\n} ?></title><body>Bla bla</body></html>"
-   (goto-char 69)
-   (should (equal '(1 0) (phps-mode-functions-get-current-line-indent))))
+   (goto-char 60)
+   (should (equal '(1 0) (phps-mode-functions-get-lines-indent))))
 
   (phps-mode-test-with-buffer
    "<html><head><title><?php\nif ($myCondition) {\nif ($mySeconCondition) {\necho $title;\n\n} ?></title><body>Bla bla</body></html>"
    (goto-char 40)
-   (should (equal '(0 0) (phps-mode-functions-get-current-line-indent))))
+   (should (equal '(0 0) (phps-mode-functions-get-lines-indent))))
 
   (phps-mode-test-with-buffer
    "<html><head><title><?php\nif ($myCondition) {\nif ($mySeconCondition) {\necho $title;\n\n} ?></title><body>Bla bla</body></html>"
    (goto-char 75)
-   (should (equal '(2 0) (phps-mode-functions-get-current-line-indent))))
+   (should (equal '(2 0) (phps-mode-functions-get-lines-indent))))
 
   ;; DOC-COMMENT
 
   (phps-mode-test-with-buffer
    "<?php\n/**\n* Bla\n*/"
    (goto-char 13)
-   (should (equal '(0 1) (phps-mode-functions-get-current-line-indent))))
+   (should (equal '(0 1) (phps-mode-functions-get-lines-indent))))
 
   (phps-mode-test-with-buffer
    "<?php\n/**\n* Bla\n*/"
    (goto-char 8)
-   (should (equal '(0 0) (phps-mode-functions-get-current-line-indent))))
+   (should (equal '(0 0) (phps-mode-functions-get-lines-indent))))
 
   (phps-mode-test-with-buffer
    "<?php\n/**\n* Bla\n*/"
    (goto-char 17)
-   (should (equal '(0 1) (phps-mode-functions-get-current-line-indent))))
+   (should (equal '(0 1) (phps-mode-functions-get-lines-indent))))
 
   ;; Alternative control structures
 
   (phps-mode-test-with-buffer
    "<?php\nif (true):\n    echo 'Something';\nelse:\n    echo 'Something else';\nendif;\n"
    (goto-char 11)
-   (should (equal '(0 0) (phps-mode-functions-get-current-line-indent))))
+   (should (equal '(0 0) (phps-mode-functions-get-lines-indent))))
 
   (phps-mode-test-with-buffer
    "<?php\nif (true):\n    echo 'Something';\nelse:\n    echo 'Something else';\nendif;\n"
-   (goto-char 22)
-   (should (equal '(1 0) (phps-mode-functions-get-current-line-indent))))
+   (goto-char 25)
+   (should (equal '(1 0) (phps-mode-functions-get-lines-indent))))
 
   (phps-mode-test-with-buffer
    "<?php\nif (true):\n    echo 'Something';\nelse:\n    echo 'Something else';\nendif;\n"
    (goto-char 42)
-   (should (equal '(0 0) (phps-mode-functions-get-current-line-indent))))
+   (should (equal '(0 0) (phps-mode-functions-get-lines-indent))))
 
   (phps-mode-test-with-buffer
    "<?php\nif (true):\n    echo 'Something';\nelse:\n    echo 'Something else';\nendif;\n"
    (goto-char 55)
-   (should (equal '(1 0) (phps-mode-functions-get-current-line-indent))))
+   (should (equal '(1 0) (phps-mode-functions-get-lines-indent))))
 
   (phps-mode-test-with-buffer
    "<?php\nif (true):\n    echo 'Something';\nelse:\n    echo 'Something else';\nendif;\n"
    (goto-char 75)
-   (should (equal '(0 0) (phps-mode-functions-get-current-line-indent))))
+   (should (equal '(0 0) (phps-mode-functions-get-lines-indent))))
 
   ;; Inline control structures
 
   (phps-mode-test-with-buffer
    "<?php\nif (true)\n    echo 'Something';\nelse:\n    echo 'Something else';\n"
    (goto-char 23)
-   (should (equal '(1 0) (phps-mode-functions-get-current-line-indent))))
+   (should (equal '(1 0) (phps-mode-functions-get-lines-indent))))
 
   (phps-mode-test-with-buffer
    "<?php\nif (true)\n    echo 'Something';\nelse\n    echo 'Something else';\n"
    (goto-char 42)
-   (should (equal '(0 0) (phps-mode-functions-get-current-line-indent))))
+   (should (equal '(0 0) (phps-mode-functions-get-lines-indent))))
 
   (phps-mode-test-with-buffer
    "<?php\nif (true)\n    echo 'Something';\nelse\n    echo 'Something else';\n"
    (goto-char 55)
-   (should (equal '(1 0) (phps-mode-functions-get-current-line-indent))))
+   (should (equal '(1 0) (phps-mode-functions-get-lines-indent))))
 
   (phps-mode-test-with-buffer
    "<?php\nif (true):\n    echo 'Something';\nelse:\n    echo 'Something else';\n"
    (goto-char 72)
-   (should (equal '(0 0) (phps-mode-functions-get-current-line-indent))))
+   (should (equal '(0 0) (phps-mode-functions-get-lines-indent))))
 
   ;; TODO CASE, DEFAULT
 
@@ -509,7 +510,7 @@
 
 (defun phps-mode-test-functions ()
   "Run test for functions."
-  (phps-mode-test-functions-get-current-line-indent)
+  (phps-mode-test-functions-get-lines-indent)
   (phps-mode-test-functions-get-current-line-data)
   (phps-mode-test-functions-indent-line))
 

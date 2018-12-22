@@ -35,11 +35,12 @@
 
 ;; TODO Add support for automatic parenthesis, bracket, square-bracket, single-quote and double-quote encapsulations
 
-;; TODO Support inline function indentations
-;; TODO Support indentation for multi-line scalar assignments
+;; TODO Support inline function indentation
 
-(defun phps-mode-functions-get-current-line-indent ()
-  "Get the column number and space number for current line."
+;; TODO Support indentation for multi-line assignments
+
+(defun phps-mode-functions-get-lines-indent ()
+  "Get the column number and space number for every line in current buffer."
   (if (boundp 'phps-mode-lexer-tokens)
       (save-excursion
         (beginning-of-line)
@@ -50,6 +51,7 @@
               (in-doc-comment nil)
               (in-inline-control-structure nil)
               (after-special-control-structure nil)
+              (after-extra-special-control-structure nil)
               (curly-bracket-level 0)
               (round-bracket-level 0)
               (square-bracket-level 0)
@@ -59,143 +61,176 @@
               (adjust-level 0)
               (indent-start 0)
               (indent-end 0)
-              (last-line-number 0))
+              (last-line-number 0)
+              (first-token-on-line nil)
+              (first-token-on-line-is-closing-token nil)
+              (line-indents (make-hash-table :test 'equal)))
 
           ;; Iterate through all buffer tokens from beginning to end
-          (catch 'stop-iteration
-            (dolist (item phps-mode-lexer-tokens)
-              (let* ((token (car item))
-                     (token-start (car (cdr item)))
-                     (token-end (cdr (cdr item)))
-                     (token-line-number (line-number-at-pos token-start t)))
+          (dolist (item phps-mode-lexer-tokens)
+            (let* ((token (car item))
+                   (token-start (car (cdr item)))
+                   (token-end (cdr (cdr item)))
+                   (token-line-number (line-number-at-pos token-start t)))
 
-                ;; Break when token starts after current line end
-                (when (> token-start line-end)
-                  (throw 'stop-iteration nil))
+              ;; Are we on a new line?
+              (if (> token-line-number last-line-number)
+                  (progn
 
-                ;; Are we on a new line?
-                (when (> token-line-number last-line-number)
+                    ;; TODO Here populate potential lines in-between last line and current line with nil
 
-                  ;; Calculate indentation leven at end of line
-                  (setq indent-end (+ round-bracket-level square-bracket-level curly-bracket-level alternative-control-structure-level inline-control-structure-level))
+                    ;; Calculate indentation leven at end of line
+                    (setq indent-end (+ round-bracket-level square-bracket-level curly-bracket-level alternative-control-structure-level inline-control-structure-level))
 
-                  ;; Is line ending indentation higher than line beginning indentation?
-                  (when (> indent-end indent-start)
+                    ;; Is line ending indentation higher than line beginning indentation?
+                    (when (> indent-end indent-start)
 
-                    ;; Increase indentation by one
-                    (setq indent-level (1+ indent-level)))
+                      ;; Increase indentation by one
+                      (setq indent-level (1+ indent-level)))
 
-                  ;; Is line ending indentation lesser than line beginning indentation?
-                  (when (< indent-end indent-start)
+                    ;; Is line ending indentation lesser than line beginning indentation?
+                    (when (< indent-end indent-start)
 
-                    ;; Decrease indentation by one
-                    (setq indent-level (1- indent-level)))
+                      ;; Decrease indentation by one
+                      (setq indent-level (1- indent-level)))
 
-                  ;; Calculate indentation level at start of line
-                  (setq indent-start (+ round-bracket-level square-bracket-level curly-bracket-level alternative-control-structure-level inline-control-structure-level)))
+                    ;; Increase indent with one space inside doc-comment, HEREDOC or NOWDOC
+                    (if (or in-doc-comment in-heredoc)
+                        (setq adjust-level 1)
+                      (setq adjust-level 0))
 
-                ;; Keep track of round bracket level
-                (when (string= token "(")
-                  (setq round-bracket-level (1+ round-bracket-level)))
-                (when (string= token ")")
-                  (setq round-bracket-level (1- round-bracket-level)))
+                    (message "%s, %s = %s %s %s %s %s" token indent-level round-bracket-level square-bracket-level curly-bracket-level alternative-control-structure-level inline-control-structure-level)
 
-                ;; Keep track of square bracket level
-                (when (string= token "[")
-                  (setq square-bracket-level (1+ square-bracket-level)))
-                (when (string= token "]")
-                  (setq square-bracket-level (1- square-bracket-level)))
+                    ;; Put indent-level to hash-table
+                    (puthash last-line-number `(,indent-level ,adjust-level) line-indents)
 
-                ;; Keep track of curly bracket level
-                (when (or (equal token 'T_CURLY_OPEN)
-                          (equal token 'T_DOLLAR_OPEN_CURLY_BRACES)
-                          (string= token "{"))
-                  (setq curly-bracket-level (1+ curly-bracket-level)))
-                (when (string= token "}")
-                  (setq curly-bracket-level (1- curly-bracket-level)))
+                    ;; Calculate indentation level at start of line
+                    (setq indent-start (+ round-bracket-level square-bracket-level curly-bracket-level alternative-control-structure-level inline-control-structure-level))
 
-                ;; TODO Keep track of case and default special tokens
+                    ;; Set initial values for tracking first token
+                    (setq first-token-on-line t)
+                    (setq first-token-on-line-is-closing-token nil))
+                (setq first-token-on-line nil))
 
-                ;; Keep track of alternative control structure level
-                (when (or (equal token 'T_ENDIF)
-                          (equal token 'T_ENDWHILE)
-                          (equal token 'T_ENDFOR)
-                          (equal token 'T_ENDFOREACH)
-                          (equal token 'T_ENDSWITCH))
-                  (setq alternative-control-structure-level (1- alternative-control-structure-level)))
+              ;; Keep track of round bracket level
+              (when (string= token "(")
+                (setq round-bracket-level (1+ round-bracket-level)))
+              (when (string= token ")")
+                (setq round-bracket-level (1- round-bracket-level))
+                (when first-token-on-line
+                  (setq first-token-on-line-is-closing-token t)))
 
-                (when (and after-special-control-structure
-                           (= after-special-control-structure round-bracket-level)
-                           (not (string= token ")"))
-                           (not (string= token "(")))
+              ;; Keep track of square bracket level
+              (when (string= token "[")
+                (setq square-bracket-level (1+ square-bracket-level)))
+              (when (string= token "]")
+                (setq square-bracket-level (1- square-bracket-level))
+                (when first-token-on-line
+                  (setq first-token-on-line-is-closing-token t)))
 
-                  ;; Is token not a curly bracket - because that is a ordinary control structure syntax
-                  (unless (string= token "{")
+              ;; Keep track of curly bracket level
+              (when (or (equal token 'T_CURLY_OPEN)
+                        (equal token 'T_DOLLAR_OPEN_CURLY_BRACES)
+                        (string= token "{"))
+                (setq curly-bracket-level (1+ curly-bracket-level)))
+              (when (string= token "}")
+                (setq curly-bracket-level (1- curly-bracket-level))
+                (when first-token-on-line
+                  (setq first-token-on-line-is-closing-token t)))
 
-                    ;; Is it the start of an alternative control structure?
-                    (if (string= token ":")
-                        (setq alternative-control-structure-level (1+ alternative-control-structure-level))
-                      (setq inline-control-structure-level (1+ inline-control-structure-level))
-                      (setq in-inline-control-structure t)))
+              ;; Keep track of alternative control structure level
+              (when (or (equal token 'T_ENDIF)
+                        (equal token 'T_ENDWHILE)
+                        (equal token 'T_ENDFOR)
+                        (equal token 'T_ENDFOREACH)
+                        (equal token 'T_ENDSWITCH)
+                        (equal token 'T_CASE)
+                        (equal token 'T_DEFAULT)
+                        (equal token 'T_ELSE))
+                (setq alternative-control-structure-level (1- alternative-control-structure-level))
+                (when first-token-on-line
+                  (message "Token %s was start of line level %s" token alternative-control-structure-level)
+                  (setq first-token-on-line-is-closing-token t)))
 
-                  (setq after-special-control-structure nil))
+              ;; TODO Support for else as alternative and inline control structure
 
-                ;; Did we reach a semicolon inside a inline block? Close the inline block
-                (when (and in-inline-control-structure
-                           (string= token ";"))
-                  (setq inline-control-structure-level (1- inline-control-structure-level))
-                  (setq in-inline-control-structure nil))
+              (when (and after-special-control-structure
+                         (= after-special-control-structure round-bracket-level)
+                         (not (string= token ")"))
+                         (not (string= token "(")))
 
-                ;; Did we encounter a token that supports alternative and inline control structures?
-                (when (or (equal token 'T_IF)
-                          (equal token 'T_WHILE)
-                          (equal token 'T_FOR)
-                          (equal token 'T_FOREACH)
-                          (equal token 'T_SWITCH)
-                          (equal token 'T_ELSE)
-                          (equal token 'T_ELSEIF))
-                  (setq after-special-control-structure round-bracket-level))
+                ;; Is token not a curly bracket - because that is a ordinary control structure syntax
+                (unless (string= token "{")
 
-                ;; Does token end before current line begins?
-                (when (< token-start line-beginning)
+                  ;; Is it the start of an alternative control structure?
+                  (if (string= token ":")
+                      (setq alternative-control-structure-level (1+ alternative-control-structure-level))
+                    (setq inline-control-structure-level (1+ inline-control-structure-level))
+                    (setq in-inline-control-structure t)))
 
-                  ;; Keep track of in scripting
-                  (when (or (equal token 'T_OPEN_TAG)
-                            (equal token 'T_OPEN_TAG_WITH_ECHO))
-                    (setq in-scripting t))
-                  (when (equal token 'T_CLOSE_TAG)
-                    (setq in-scripting nil))
+                (setq after-special-control-structure nil))
 
-                  ;; Keep track of whether we are inside a doc-comment
-                  (when (equal token 'T_DOC_COMMENT)
-                    (setq in-doc-comment token-end))
-                  (when (and in-doc-comment
-                             (> token-start in-doc-comment))
-                    (setq in-doc-comment nil))
+              ;; Support extra special control structures (CASE and DEFAULT)
+              (when (and after-extra-special-control-structure
+                         (string= token ":"))
+                (setq alternative-control-structure-level (1+ alternative-control-structure-level))
+                (setq after-extra-special-control-structure nil))
 
-                  ;; Keep track of whether we are inside a HEREDOC or NOWDOC
-                  (when (equal token 'T_START_HEREDOC)
-                    (setq in-heredoc t))
-                  (when (equal token 'T_END_HEREDOC)
-                    (setq in-heredoc nil))
+              ;; Did we reach a semicolon inside a inline block? Close the inline block
+              (when (and in-inline-control-structure
+                         (string= token ";"))
+                (setq inline-control-structure-level (1- inline-control-structure-level))
+                (setq in-inline-control-structure nil))
 
-                  )
+              ;; Did we encounter a token that supports alternative and inline control structures?
+              (when (or (equal token 'T_IF)
+                        (equal token 'T_WHILE)
+                        (equal token 'T_FOR)
+                        (equal token 'T_FOREACH)
+                        (equal token 'T_SWITCH)
+                        (equal token 'T_ELSE)
+                        (equal token 'T_ELSEIF))
+                (setq after-special-control-structure round-bracket-level))
 
-                ;; Are we on a new line?
-                (when (> token-line-number last-line-number)
+              ;; Did we encounter a token that supports extra special alternative control structures?
+              (when (or (equal token 'T_CASE)
+                        (equal token 'T_DEFAULT))
+                (setq after-extra-special-control-structure t))
 
-                  ;; Update last line number
-                  (setq last-line-number token-line-number))
+              ;; Does token end before current line begins?
+              (when (< token-start line-beginning)
 
-                )))
+                ;; Keep track of in scripting
+                (when (or (equal token 'T_OPEN_TAG)
+                          (equal token 'T_OPEN_TAG_WITH_ECHO))
+                  (setq in-scripting t))
+                (when (equal token 'T_CLOSE_TAG)
+                  (setq in-scripting nil))
 
-          ;; Increase indent with one space inside doc-comment, HEREDOC or NOWDOC
-          (when (or in-doc-comment in-heredoc)
-            (setq adjust-level 1))
+                ;; Keep track of whether we are inside a doc-comment
+                (when (equal token 'T_DOC_COMMENT)
+                  (setq in-doc-comment token-end))
+                (when (and in-doc-comment
+                           (> token-start in-doc-comment))
+                  (setq in-doc-comment nil))
 
-          (if in-scripting
-              (list indent-level adjust-level)
-            nil)))
+                ;; Keep track of whether we are inside a HEREDOC or NOWDOC
+                (when (equal token 'T_START_HEREDOC)
+                  (setq in-heredoc t))
+                (when (equal token 'T_END_HEREDOC)
+                  (setq in-heredoc nil))
+
+                )
+
+              ;; Are we on a new line?
+              (when (> token-line-number last-line-number)
+
+                ;; Update last line number
+                (setq last-line-number token-line-number))
+
+              ))
+
+          line-indents))
     nil))
 
 (defun phps-mode-functions-indent-line ()
