@@ -40,7 +40,7 @@
 ;; TODO Support indentation for multi-line assignments
 
 (defun phps-mode-functions-get-lines-indent ()
-  "Get the column number and space number for every line in current buffer."
+  "Get the column and tuning indentation-numbers for each line in buffer that contains tokens."
   (if (boundp 'phps-mode-lexer-tokens)
       (save-excursion
         (beginning-of-line)
@@ -57,14 +57,14 @@
               (square-bracket-level 0)
               (alternative-control-structure-level 0)
               (inline-control-structure-level 0)
-              (indent-level 0)
-              (adjust-level 0)
-              (indent-start 0)
-              (indent-end 0)
+              (column-level 0)
+              (tuning-level 0)
+              (nesting-start 0)
+              (nesting-end 0)
               (last-line-number 0)
               (first-token-on-line nil)
-              (first-token-on-line-is-closing-token nil)
-              (line-indents (make-hash-table :test 'equal)))
+              (line-indents (make-hash-table :test 'equal))
+              (change-of-scope nil))
 
           ;; Iterate through all buffer tokens from beginning to end
           (dolist (item phps-mode-lexer-tokens)
@@ -77,80 +77,80 @@
               (if (> token-line-number last-line-number)
                   (progn
 
-                    ;; TODO Here populate potential lines in-between last line and current line with nil
-
-                    ;; Calculate indentation leven at end of line
-                    (setq indent-end (+ round-bracket-level square-bracket-level curly-bracket-level alternative-control-structure-level inline-control-structure-level))
+                    ;; Calculate indentation level at end of line
+                    (setq nesting-end (+ round-bracket-level square-bracket-level curly-bracket-level alternative-control-structure-level inline-control-structure-level))
 
                     ;; Is line ending indentation higher than line beginning indentation?
-                    (when (> indent-end indent-start)
+                    (when (> nesting-end nesting-start)
 
                       ;; Increase indentation by one
-                      (setq indent-level (1+ indent-level)))
+                      (setq column-level (1+ column-level)))
 
                     ;; Is line ending indentation lesser than line beginning indentation?
-                    (when (< indent-end indent-start)
+                    (when (< nesting-end nesting-start)
 
                       ;; Decrease indentation by one
-                      (setq indent-level (1- indent-level)))
+                      (setq column-level (1- column-level)))
+
+                    ;; Is line ending indentation equal to line beginning indentation and did we have a change of scope?
+                    (when (and (= nesting-end nesting-start)
+                               change-of-scope)
+                      (setq column-level (1- column-level)))
+                      
 
                     ;; Increase indent with one space inside doc-comment, HEREDOC or NOWDOC
                     (if (or in-doc-comment in-heredoc)
-                        (setq adjust-level 1)
-                      (setq adjust-level 0))
+                        (setq tuning-level 1)
+                      (setq tuning-level 0))
 
-                    (message "%s, %s = %s %s %s %s %s" token indent-level round-bracket-level square-bracket-level curly-bracket-level alternative-control-structure-level inline-control-structure-level)
+                    (message "%s, %s = %s %s %s %s %s %s" token column-level tuning-level round-bracket-level square-bracket-level curly-bracket-level alternative-control-structure-level inline-control-structure-level)
 
                     ;; Put indent-level to hash-table
-                    (puthash last-line-number `(,indent-level ,adjust-level) line-indents)
+                    (when (> last-line-number 0)
+                      (puthash last-line-number `(,column-level ,tuning-level) line-indents))
 
                     ;; Calculate indentation level at start of line
-                    (setq indent-start (+ round-bracket-level square-bracket-level curly-bracket-level alternative-control-structure-level inline-control-structure-level))
+                    (setq nesting-start (+ round-bracket-level square-bracket-level curly-bracket-level alternative-control-structure-level inline-control-structure-level))
 
                     ;; Set initial values for tracking first token
                     (setq first-token-on-line t)
-                    (setq first-token-on-line-is-closing-token nil))
+                    (setq change-of-scope nil))
                 (setq first-token-on-line nil))
 
               ;; Keep track of round bracket level
               (when (string= token "(")
+                (setq change-of-scope t)
                 (setq round-bracket-level (1+ round-bracket-level)))
               (when (string= token ")")
-                (setq round-bracket-level (1- round-bracket-level))
-                (when first-token-on-line
-                  (setq first-token-on-line-is-closing-token t)))
+                (setq change-of-scope t)
+                (setq round-bracket-level (1- round-bracket-level)))
 
               ;; Keep track of square bracket level
               (when (string= token "[")
+                (setq change-of-scope t)
                 (setq square-bracket-level (1+ square-bracket-level)))
               (when (string= token "]")
-                (setq square-bracket-level (1- square-bracket-level))
-                (when first-token-on-line
-                  (setq first-token-on-line-is-closing-token t)))
+                (setq change-of-scope t)
+                (setq square-bracket-level (1- square-bracket-level)))
 
               ;; Keep track of curly bracket level
               (when (or (equal token 'T_CURLY_OPEN)
                         (equal token 'T_DOLLAR_OPEN_CURLY_BRACES)
                         (string= token "{"))
+                (setq change-of-scope t)
                 (setq curly-bracket-level (1+ curly-bracket-level)))
               (when (string= token "}")
-                (setq curly-bracket-level (1- curly-bracket-level))
-                (when first-token-on-line
-                  (setq first-token-on-line-is-closing-token t)))
+                (setq change-of-scope t)
+                (setq curly-bracket-level (1- curly-bracket-level)))
 
-              ;; Keep track of alternative control structure level
+              ;; Keep track of ending alternative control structure level
               (when (or (equal token 'T_ENDIF)
                         (equal token 'T_ENDWHILE)
                         (equal token 'T_ENDFOR)
                         (equal token 'T_ENDFOREACH)
-                        (equal token 'T_ENDSWITCH)
-                        (equal token 'T_CASE)
-                        (equal token 'T_DEFAULT)
-                        (equal token 'T_ELSE))
-                (setq alternative-control-structure-level (1- alternative-control-structure-level))
-                (when first-token-on-line
-                  (message "Token %s was start of line level %s" token alternative-control-structure-level)
-                  (setq first-token-on-line-is-closing-token t)))
+                        (equal token 'T_ENDSWITCH))
+                (setq change-of-scope t)
+                (setq alternative-control-structure-level (1- alternative-control-structure-level)))
 
               ;; TODO Support for else as alternative and inline control structure
 
@@ -164,7 +164,10 @@
 
                   ;; Is it the start of an alternative control structure?
                   (if (string= token ":")
-                      (setq alternative-control-structure-level (1+ alternative-control-structure-level))
+                      (progn
+                        (setq change-of-scope t)
+                        (setq alternative-control-structure-level (1+ alternative-control-structure-level)))
+                    (setq change-of-scope t)
                     (setq inline-control-structure-level (1+ inline-control-structure-level))
                     (setq in-inline-control-structure t)))
 
@@ -173,12 +176,14 @@
               ;; Support extra special control structures (CASE and DEFAULT)
               (when (and after-extra-special-control-structure
                          (string= token ":"))
+                (setq change-of-scope t)
                 (setq alternative-control-structure-level (1+ alternative-control-structure-level))
                 (setq after-extra-special-control-structure nil))
 
               ;; Did we reach a semicolon inside a inline block? Close the inline block
               (when (and in-inline-control-structure
                          (string= token ";"))
+                (setq change-of-scope t)
                 (setq inline-control-structure-level (1- inline-control-structure-level))
                 (setq in-inline-control-structure nil))
 
