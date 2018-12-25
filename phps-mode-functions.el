@@ -40,7 +40,7 @@
 ;; TODO Support indentation for multi-line assignments
 
 (defun phps-mode-functions-get-lines-indent ()
-  "Get the column and tuning indentation-numbers for each line in buffer that contains tokens."
+  "Get the column and tuning indentation-numbers for each line in buffer that contain tokens."
   (if (boundp 'phps-mode-lexer-tokens)
       (save-excursion
         (beginning-of-line)
@@ -64,7 +64,9 @@
               (last-line-number 0)
               (first-token-on-line nil)
               (line-indents (make-hash-table :test 'equal))
-              (change-of-scope nil))
+              (change-of-scope nil)
+              (token-number 1)
+              (last-token-number (length phps-mode-lexer-tokens)))
 
           ;; Iterate through all buffer tokens from beginning to end
           (dolist (item phps-mode-lexer-tokens)
@@ -74,17 +76,12 @@
                    (token-line-number (line-number-at-pos token-start t)))
 
               ;; Are we on a new line?
-              (if (> token-line-number last-line-number)
+              (if (or (> token-line-number last-line-number)
+                      (= token-number last-token-number))
                   (progn
 
                     ;; Calculate indentation level at end of line
                     (setq nesting-end (+ round-bracket-level square-bracket-level curly-bracket-level alternative-control-structure-level inline-control-structure-level))
-
-                    ;; Is line ending indentation higher than line beginning indentation?
-                    (when (> nesting-end nesting-start)
-
-                      ;; Increase indentation by one
-                      (setq column-level (1+ column-level)))
 
                     ;; Is line ending indentation lesser than line beginning indentation?
                     (when (< nesting-end nesting-start)
@@ -96,8 +93,7 @@
                     (when (and (= nesting-end nesting-start)
                                change-of-scope)
                       (setq column-level (1- column-level)))
-                      
-
+                    
                     ;; Increase indent with one space inside doc-comment, HEREDOC or NOWDOC
                     (if (or in-doc-comment in-heredoc)
                         (setq tuning-level 1)
@@ -108,6 +104,12 @@
                     ;; Put indent-level to hash-table
                     (when (> last-line-number 0)
                       (puthash last-line-number `(,column-level ,tuning-level) line-indents))
+
+                    ;; Is line ending indentation higher than line beginning indentation?
+                    (when (> nesting-end nesting-start)
+
+                      ;; Increase indentation by one
+                      (setq column-level (1+ column-level)))
 
                     ;; Calculate indentation level at start of line
                     (setq nesting-start (+ round-bracket-level square-bracket-level curly-bracket-level alternative-control-structure-level inline-control-structure-level))
@@ -233,7 +235,9 @@
                 ;; Update last line number
                 (setq last-line-number token-line-number))
 
-              ))
+              )
+
+            (setq token-number (1+ token-number)))
 
           line-indents))
     nil))
