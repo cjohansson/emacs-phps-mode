@@ -33,6 +33,7 @@
 (autoload 'phps-mode-functions-indent-line "phps-mode-functions")
 (autoload 'phps-mode-functions-get-lines-indent "phps-mode-functions")
 (autoload 'phps-mode-functions-get-current-line-data "phps-mode-functions")
+(autoload 'hash-table-values "subr-x")
 (autoload 'should "ert")
 
 (defun phps-mode-test-functions-get-lines-indent ()
@@ -43,7 +44,7 @@
   (phps-mode-test-with-buffer
    "<html><head><title><?php\nif ($myCondition) {\nif ($mySeconCondition) {\necho $title;\n}\n} ?></title><body>Bla bla</body></html>"
    (goto-char 15)
-   (should (equal #s(hash-table size 65 test equal data (1 (0 0) 2 (0 0) 3 (1 0) 4 (2 0) 5 (1 0) 6 (0 0))) (phps-mode-functions-get-lines-indent))))
+   (should (equal '((0 0) (0 0) (1 0) (2 0) (1 0) (0 0)) (hash-table-values (phps-mode-functions-get-lines-indent)))))
 
   (phps-mode-test-with-buffer
    "<html><head><title><?php\nif ($myCondition) {\nif ($mySeconCondition) {\necho $title;\n\n} ?></title><body>Bla bla</body></html>"
