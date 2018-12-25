@@ -36,6 +36,15 @@
 (autoload 'hash-table-values "subr-x")
 (autoload 'should "ert")
 
+(defun phps-mode-test-functions--hash-to-list (hash-table)
+  "Return a list that represent the HASH-TABLE.  Each element is a list: (list key value)."
+  (let (result)
+    (maphash
+     (lambda (k v)
+       (push (list k v) result))
+     hash-table)
+    (nreverse result)))
+
 (defun phps-mode-test-functions-get-lines-indent ()
   "Test `phps-mode-functions-get-lines-indent' function."
 
@@ -44,7 +53,7 @@
   (phps-mode-test-with-buffer
    "<html><head><title><?php\nif ($myCondition) {\nif ($mySeconCondition) {\necho $title;\n}\n} ?></title><body>Bla bla</body></html>"
    (goto-char 15)
-   (should (equal '((0 0) (0 0) (1 0) (2 0) (1 0) (0 0)) (hash-table-values (phps-mode-functions-get-lines-indent)))))
+   (should (equal '((1 (0 0)) (2 (0 0)) (3 (1 0)) (4 (2 0)) (5 (1 0)) (6 (0 0))) (phps-mode-test-functions--hash-to-list (phps-mode-functions-get-lines-indent)))))
 
   (phps-mode-test-with-buffer
    "<html><head><title><?php\nif ($myCondition) {\nif ($mySeconCondition) {\necho $title;\n\n} ?></title><body>Bla bla</body></html>"
