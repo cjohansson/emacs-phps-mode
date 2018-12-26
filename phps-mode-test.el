@@ -28,8 +28,8 @@
 
 (autoload 'phps-mode "phps-mode")
 
-(defmacro phps-mode-test-with-buffer (source &rest body)
-  "Set up test buffer with SOURCE and BODY."
+(defmacro phps-mode-test-with-buffer (source &optional title &rest body)
+  "Set up test buffer with SOURCE, TITLE and BODY."
   `(let ((test-buffer (generate-new-buffer "test")))
      (switch-to-buffer test-buffer)
      (insert ,source)
@@ -38,8 +38,8 @@
      (phps-mode)
      ,@body
      (kill-buffer test-buffer)
-     ))
-
+     (when ,title
+       (message "\nPassed tests for '%s'\n" ,title))))
 
 (provide 'phps-mode-test)
 
