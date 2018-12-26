@@ -52,93 +52,31 @@
 
   (phps-mode-test-with-buffer
    "<html><head><title><?php\nif ($myCondition) {\nif ($mySeconCondition) {\necho $title;\n}\n} ?></title><body>Bla bla</body></html>"
-   (goto-char 15)
    (should (equal '((1 (0 0)) (2 (0 0)) (3 (1 0)) (4 (2 0)) (5 (1 0)) (6 (0 0))) (phps-mode-test-functions--hash-to-list (phps-mode-functions-get-lines-indent)))))
 
-  (phps-mode-test-with-buffer
-   "<html><head><title><?php\nif ($myCondition) {\nif ($mySeconCondition) {\necho $title;\n\n} ?></title><body>Bla bla</body></html>"
-   (goto-char 60)
-   (should (equal '(1 0) (phps-mode-functions-get-lines-indent))))
+  ;; Inline control structures
 
   (phps-mode-test-with-buffer
-   "<html><head><title><?php\nif ($myCondition) {\nif ($mySeconCondition) {\necho $title;\n\n} ?></title><body>Bla bla</body></html>"
-   (goto-char 40)
-   (should (equal '(0 0) (phps-mode-functions-get-lines-indent))))
+   "<?php\nif (true)\n    echo 'Something';\nelse\n    echo 'Something else';\necho true;\n"
+   (should (equal '((1 (0 0)) (2 (0 0)) (3 (1 0)) (4 (0 0)) (5 (1 0)) (6 (0 1))) (phps-mode-test-functions--hash-to-list (phps-mode-functions-get-lines-indent)))))
+
+  ;; Alternative control structures
 
   (phps-mode-test-with-buffer
-   "<html><head><title><?php\nif ($myCondition) {\nif ($mySeconCondition) {\necho $title;\n\n} ?></title><body>Bla bla</body></html>"
-   (goto-char 75)
-   (should (equal '(2 0) (phps-mode-functions-get-lines-indent))))
+   "<?php\nif (true):\n    echo 'Something';\nelse:\n    echo 'Something else';\nendif;\necho true;\n"
+   (should (equal '((1 (0 0)) (2 (0 0)) (3 (1 0)) (4 (0 0)) (5 (1 0)) (6 (0 0))) (phps-mode-test-functions--hash-to-list (phps-mode-functions-get-lines-indent)))))
 
   ;; DOC-COMMENT
 
   (phps-mode-test-with-buffer
    "<?php\n/**\n* Bla\n*/"
-   (goto-char 13)
-   (should (equal '(0 1) (phps-mode-functions-get-lines-indent))))
-
-  (phps-mode-test-with-buffer
-   "<?php\n/**\n* Bla\n*/"
-   (goto-char 8)
-   (should (equal '(0 0) (phps-mode-functions-get-lines-indent))))
-
-  (phps-mode-test-with-buffer
-   "<?php\n/**\n* Bla\n*/"
-   (goto-char 17)
-   (should (equal '(0 1) (phps-mode-functions-get-lines-indent))))
-
-  ;; Alternative control structures
-
-  (phps-mode-test-with-buffer
-   "<?php\nif (true):\n    echo 'Something';\nelse:\n    echo 'Something else';\nendif;\n"
-   (goto-char 11)
-   (should (equal '(0 0) (phps-mode-functions-get-lines-indent))))
-
-  (phps-mode-test-with-buffer
-   "<?php\nif (true):\n    echo 'Something';\nelse:\n    echo 'Something else';\nendif;\n"
-   (goto-char 25)
-   (should (equal '(1 0) (phps-mode-functions-get-lines-indent))))
-
-  (phps-mode-test-with-buffer
-   "<?php\nif (true):\n    echo 'Something';\nelse:\n    echo 'Something else';\nendif;\n"
-   (goto-char 42)
-   (should (equal '(0 0) (phps-mode-functions-get-lines-indent))))
-
-  (phps-mode-test-with-buffer
-   "<?php\nif (true):\n    echo 'Something';\nelse:\n    echo 'Something else';\nendif;\n"
-   (goto-char 55)
-   (should (equal '(1 0) (phps-mode-functions-get-lines-indent))))
-
-  (phps-mode-test-with-buffer
-   "<?php\nif (true):\n    echo 'Something';\nelse:\n    echo 'Something else';\nendif;\n"
-   (goto-char 75)
-   (should (equal '(0 0) (phps-mode-functions-get-lines-indent))))
-
-  ;; Inline control structures
-
-  (phps-mode-test-with-buffer
-   "<?php\nif (true)\n    echo 'Something';\nelse:\n    echo 'Something else';\n"
-   (goto-char 23)
-   (should (equal '(1 0) (phps-mode-functions-get-lines-indent))))
-
-  (phps-mode-test-with-buffer
-   "<?php\nif (true)\n    echo 'Something';\nelse\n    echo 'Something else';\n"
-   (goto-char 42)
-   (should (equal '(0 0) (phps-mode-functions-get-lines-indent))))
-
-  (phps-mode-test-with-buffer
-   "<?php\nif (true)\n    echo 'Something';\nelse\n    echo 'Something else';\n"
-   (goto-char 55)
-   (should (equal '(1 0) (phps-mode-functions-get-lines-indent))))
-
-  (phps-mode-test-with-buffer
-   "<?php\nif (true):\n    echo 'Something';\nelse:\n    echo 'Something else';\n"
-   (goto-char 72)
-   (should (equal '(0 0) (phps-mode-functions-get-lines-indent))))
+   (should (equal '((1 (0 0)) (2 (0 0)) (3 (0 1))) (phps-mode-test-functions--hash-to-list (phps-mode-functions-get-lines-indent)))))
 
   ;; TODO CASE, DEFAULT
 
   ;; TODO NOWDOC, HEREDOC
+
+  ;; TODO Multi-line assignments
 
 
   )

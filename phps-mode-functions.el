@@ -64,7 +64,8 @@
               (last-line-number 0)
               (first-token-on-line nil)
               (line-indents (make-hash-table :test 'equal))
-              (change-of-scope nil)
+              (first-token-is-nesting-decrease nil)
+              (first-token-is-nesting-increase nil)
               (token-number 1)
               (last-token-number (length phps-mode-lexer-tokens)))
 
@@ -90,16 +91,18 @@
                       (setq column-level (1- column-level)))
 
                     ;; Is line ending indentation equal to line beginning indentation and did we have a change of scope?
-                    (when (and (= nesting-end nesting-start)
-                               change-of-scope)
-                      (setq column-level (1- column-level)))
+                    (when (= nesting-end nesting-start)
+                      (when first-token-is-nesting-decrease
+                        (setq column-level (1- column-level)))
+                      (when first-token-is-nesting-increase
+                        (setq column-level (1+ column-level))))
                     
-                    ;; Increase indent with one space inside doc-comment, HEREDOC or NOWDOC
-                    (if (or in-doc-comment in-heredoc)
+                    ;; Increase indent with one space inside doc-comment
+                    (if in-doc-comment
                         (setq tuning-level 1)
                       (setq tuning-level 0))
 
-                    (message "%s, %s = %s %s %s %s %s %s" token column-level tuning-level round-bracket-level square-bracket-level curly-bracket-level alternative-control-structure-level inline-control-structure-level)
+                    (message "%s, %s, %s, %s = %s %s %s %s %s %s" token column-level nesting-start nesting-end tuning-level round-bracket-level square-bracket-level curly-bracket-level alternative-control-structure-level inline-control-structure-level)
 
                     ;; Put indent-level to hash-table
                     (when (> last-line-number 0)
@@ -116,34 +119,41 @@
 
                     ;; Set initial values for tracking first token
                     (setq first-token-on-line t)
-                    (setq change-of-scope nil))
+                    (setq first-token-is-nesting-increase nil)
+                    (setq first-token-is-nesting-decrease nil))
                 (setq first-token-on-line nil))
 
               ;; Keep track of round bracket level
               (when (string= token "(")
-                (setq change-of-scope t)
-                (setq round-bracket-level (1+ round-bracket-level)))
+                (setq round-bracket-level (1+ round-bracket-level))
+                (when first-token-on-line
+                  (setq first-token-is-nesting-increase t)))
               (when (string= token ")")
-                (setq change-of-scope t)
-                (setq round-bracket-level (1- round-bracket-level)))
+                (setq round-bracket-level (1- round-bracket-level))
+                (when first-token-on-line
+                  (setq first-token-is-nesting-decrease t)))
 
               ;; Keep track of square bracket level
               (when (string= token "[")
-                (setq change-of-scope t)
-                (setq square-bracket-level (1+ square-bracket-level)))
+                (setq square-bracket-level (1+ square-bracket-level))
+                (when first-token-on-line
+                  (setq first-token-is-nesting-increase t)))
               (when (string= token "]")
-                (setq change-of-scope t)
-                (setq square-bracket-level (1- square-bracket-level)))
+                (setq square-bracket-level (1- square-bracket-level))
+                (when first-token-on-line
+                  (setq first-token-is-nesting-decrease t)))
 
               ;; Keep track of curly bracket level
               (when (or (equal token 'T_CURLY_OPEN)
                         (equal token 'T_DOLLAR_OPEN_CURLY_BRACES)
                         (string= token "{"))
-                (setq change-of-scope t)
-                (setq curly-bracket-level (1+ curly-bracket-level)))
+                (setq curly-bracket-level (1+ curly-bracket-level))
+                (when first-token-on-line
+                  (setq first-token-is-nesting-increase t)))
               (when (string= token "}")
-                (setq change-of-scope t)
-                (setq curly-bracket-level (1- curly-bracket-level)))
+                (setq curly-bracket-level (1- curly-bracket-level))
+                (when first-token-on-line
+                  (setq first-token-is-nesting-decrease t)))
 
               ;; Keep track of ending alternative control structure level
               (when (or (equal token 'T_ENDIF)
@@ -151,8 +161,9 @@
                         (equal token 'T_ENDFOR)
                         (equal token 'T_ENDFOREACH)
                         (equal token 'T_ENDSWITCH))
-                (setq change-of-scope t)
-                (setq alternative-control-structure-level (1- alternative-control-structure-level)))
+                (setq alternative-control-structure-level (1- alternative-control-structure-level))
+                (when first-token-on-line
+                  (setq first-token-is-nesting-decrease t)))
 
               ;; TODO Support for else as alternative and inline control structure
 
@@ -167,10 +178,12 @@
                   ;; Is it the start of an alternative control structure?
                   (if (string= token ":")
                       (progn
-                        (setq change-of-scope t)
-                        (setq alternative-control-structure-level (1+ alternative-control-structure-level)))
-                    (setq change-of-scope t)
+                        (setq alternative-control-structure-level (1+ alternative-control-structure-level))
+                        (when first-token-on-line
+                          (setq first-token-is-nesting-increase t)))
                     (setq inline-control-structure-level (1+ inline-control-structure-level))
+                    (when first-token-on-line
+                      (setq first-token-is-nesting-increase t))
                     (setq in-inline-control-structure t)))
 
                 (setq after-special-control-structure nil))
@@ -178,14 +191,14 @@
               ;; Support extra special control structures (CASE and DEFAULT)
               (when (and after-extra-special-control-structure
                          (string= token ":"))
-                (setq change-of-scope t)
                 (setq alternative-control-structure-level (1+ alternative-control-structure-level))
+                (when first-token-on-line
+                  (setq first-token-is-nesting-increase t))
                 (setq after-extra-special-control-structure nil))
 
               ;; Did we reach a semicolon inside a inline block? Close the inline block
               (when (and in-inline-control-structure
                          (string= token ";"))
-                (setq change-of-scope t)
                 (setq inline-control-structure-level (1- inline-control-structure-level))
                 (setq in-inline-control-structure nil))
 
