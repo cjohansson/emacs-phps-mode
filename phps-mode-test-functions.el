@@ -49,25 +49,26 @@
   "Test `phps-mode-functions-get-lines-indent' function."
 
   (phps-mode-test-with-buffer
-   "<html><head><title><?php\nif ($myCondition) {\nif ($mySeconCondition) {\necho $title;\n}\n} ?></title><body>Bla bla</body></html>"
+   "<html><head><title><?php\nif ($myCondition) {\n    if ($mySeconCondition) {\n        echo $title;\n    } else {\n        echo $title2;\n        echo $title3;\n    }\n} ?></title><body>Bla bla</body></html>"
    "Mixed HTML/PHP"
-   (should (equal '((1 (0 0)) (2 (0 0)) (3 (1 0)) (4 (2 0)) (5 (1 0)) (6 (0 0))) (phps-mode-test-functions--hash-to-list (phps-mode-functions-get-lines-indent)))))
+   (should (equal '((1 (0 0)) (2 (0 0)) (3 (1 0)) (4 (2 0)) (5 (1 0)) (6 (2 0)) (7 (2 0)) (8 (1 0)) (9 (0 0))) (phps-mode-test-functions--hash-to-list (phps-mode-functions-get-lines-indent)))))
 
   (phps-mode-test-with-buffer
-   "<?php\nif (true):\n    echo 'Something';\nelse:\n    echo 'Something else';\nendif;\necho true;\n"
+   "<?php\nif (true):\n    echo 'Something';\nelse:\n    echo 'Something else';\n    'Something else again';\nendif;\necho true;\n"
    "Alternative control structures"
-   ;; (message "Tokens: %s" phps-mode-lexer-tokens)
-   (should (equal '((1 (0 0)) (2 (0 0)) (3 (1 0)) (4 (0 0)) (5 (1 0)) (6 (0 0)) (7 (0 0))) (phps-mode-test-functions--hash-to-list (phps-mode-functions-get-lines-indent)))))
+   (should (equal '((1 (0 0)) (2 (0 0)) (3 (1 0)) (4 (0 0)) (5 (1 0)) (6 (1 0)) (7 (0 0)) (8 (0 0))) (phps-mode-test-functions--hash-to-list (phps-mode-functions-get-lines-indent)))))
 
   (phps-mode-test-with-buffer
    "<?php\nif (true)\n    echo 'Something';\nelse\n    echo 'Something else';\necho true;\n"
    "Inline control structures"
-   (should (equal '((1 (0 0)) (2 (0 0)) (3 (1 0)) (4 (0 0)) (5 (1 0)) (6 (0 1))) (phps-mode-test-functions--hash-to-list (phps-mode-functions-get-lines-indent)))))
+   (should (equal '((1 (0 0)) (2 (0 0)) (3 (1 0)) (4 (0 0)) (5 (1 0)) (6 (0 0))) (phps-mode-test-functions--hash-to-list (phps-mode-functions-get-lines-indent)))))
 
   (phps-mode-test-with-buffer
    "<?php\n/**\n* Bla\n*/"
    "DOC-COMMENT"
    (should (equal '((1 (0 0)) (2 (0 0)) (3 (0 1))) (phps-mode-test-functions--hash-to-list (phps-mode-functions-get-lines-indent)))))
+
+  ;; TODO round and square bracket expressions
 
   ;; TODO CASE, DEFAULT
 

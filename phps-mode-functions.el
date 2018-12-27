@@ -200,7 +200,7 @@
                             (equal after-special-control-structure-token 'T_ELSEIF))
                         (progn
                           (when after-special-control-structure-first-on-line
-                            (setq first-token-is-nesting-decrease t)))
+                            (setq first-token-is-nesting-increase t)))
                       (message "Was inline-control structure %s %s" after-special-control-structure-token token)
                       (setq inline-control-structure-level (1+ inline-control-structure-level))
                       (when after-special-control-structure-first-on-line
