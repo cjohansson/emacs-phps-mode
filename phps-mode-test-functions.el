@@ -68,7 +68,10 @@
    "DOC-COMMENT"
    (should (equal '((1 (0 0)) (2 (0 0)) (3 (0 1)) (4 (0 1))) (phps-mode-test-functions--hash-to-list (phps-mode-functions-get-lines-indent)))))
 
-  ;; TODO round and square bracket expressions
+  (phps-mode-test-with-buffer
+   "<?php\nmyFunction(\n    array(\n        23,\n        [\n            25\n        ]\n    )\n);"
+   "Round and square bracket expressions"
+   (should (equal '((1 (0 0)) (2 (0 0)) (3 (1 0)) (4 (2 0)) (5 (2 0)) (6 (3 0)) (7 (2 0)) (8 (1 0)) (9 (0 0))) (phps-mode-test-functions--hash-to-list (phps-mode-functions-get-lines-indent)))))
 
   ;; TODO CASE, DEFAULT
 
