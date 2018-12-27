@@ -87,7 +87,8 @@
                     (setq nesting-end (+ round-bracket-level square-bracket-level curly-bracket-level alternative-control-structure-level inline-control-structure-level))
 
                     ;; Is line ending indentation lesser than line beginning indentation?
-                    (when (< nesting-end nesting-start)
+                    (when (and (< nesting-end nesting-start)
+                               (> column-level 0))
 
                       ;; Decrease indentation by one
                       (setq column-level (1- column-level)))
