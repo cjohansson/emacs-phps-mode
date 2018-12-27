@@ -75,10 +75,11 @@
             (let* ((token (car item))
                    (token-start (car (cdr item)))
                    (token-end (cdr (cdr item)))
-                   (token-line-number (line-number-at-pos token-start t)))
+                   (token-start-line-number (line-number-at-pos token-start t))
+                   (token-end-line-number (line-number-at-pos token-end t)))
 
-              ;; Are we on a new line?
-              (if (or (> token-line-number last-line-number)
+              ;; Are we on a new line or are we are last token?
+              (if (or (> token-start-line-number last-line-number)
                       (= token-number last-token-number))
                   (progn
 
@@ -98,16 +99,21 @@
                       (when first-token-is-nesting-increase
                         (setq column-level (1+ column-level))))
                     
-                    ;; Increase indent with one space inside doc-comment
-                    (if in-doc-comment
-                        (setq tuning-level 1)
-                      (setq tuning-level 0))
-
                     (message "new line at %s, %s %s.%s (%s - %s) = %s %s %s %s %s [%s %s]" token last-token column-level tuning-level nesting-start nesting-end round-bracket-level square-bracket-level curly-bracket-level alternative-control-structure-level inline-control-structure-level first-token-is-nesting-decrease first-token-is-nesting-increase)
 
                     ;; Put indent-level to hash-table
                     (when (> last-line-number 0)
                       (puthash last-line-number `(,column-level ,tuning-level) line-indents))
+
+                    (when (> token-end-line-number token-start-line-number)
+                      (message "Token %s starts at %s and ends at %s" token token-start-line-number token-end-line-number)
+                      (when (equal token 'T_DOC_COMMENT)
+                        (setq tuning-level 1))
+                      (let ((token-line-number-diff (1- (- token-end-line-number token-start-line-number))))
+                        (while (>= token-line-number-diff 0)
+                          (puthash (- token-end-line-number token-line-number-diff) `(,column-level ,tuning-level) line-indents)
+                          (setq token-line-number-diff (1- token-line-number-diff))))
+                      (setq tuning-level 0))
 
                     ;; Is line ending indentation equal to line beginning indentation and did we have a change of scope?
                     (when (= nesting-end nesting-start)
@@ -247,13 +253,6 @@
               (when (equal token 'T_CLOSE_TAG)
                 (setq in-scripting nil))
 
-              ;; Keep track of whether we are inside a doc-comment
-              (when (equal token 'T_DOC_COMMENT)
-                (setq in-doc-comment token-end))
-              (when (and in-doc-comment
-                         (> token-start in-doc-comment))
-                (setq in-doc-comment nil))
-
               ;; Keep track of whether we are inside a HEREDOC or NOWDOC
               (when (equal token 'T_START_HEREDOC)
                 (setq in-heredoc t))
@@ -261,10 +260,10 @@
                 (setq in-heredoc nil))
 
               ;; Are we on a new line?
-              (when (> token-line-number last-line-number)
+              (when (> token-start-line-number last-line-number)
 
                 ;; Update last line number
-                (setq last-line-number token-line-number))
+                (setq last-line-number token-start-line-number))
 
               (setq token-number (1+ token-number))))
 
