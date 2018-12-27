@@ -43,14 +43,14 @@
   "Get the column and tuning indentation-numbers for each line in buffer that contain tokens."
   (if (boundp 'phps-mode-lexer-tokens)
       (save-excursion
-        (beginning-of-line)
-        (let ((line-beginning (line-beginning-position))
-              (line-end (line-end-position))
-              (in-scripting nil)
+        (beginning-of-buffer)
+        (let ((in-scripting nil)
               (in-heredoc nil)
               (in-doc-comment nil)
               (in-inline-control-structure nil)
               (after-special-control-structure nil)
+              (after-special-control-structure-token nil)
+              (after-special-control-structure-first-on-line nil)
               (after-extra-special-control-structure nil)
               (curly-bracket-level 0)
               (round-bracket-level 0)
@@ -67,7 +67,8 @@
               (first-token-is-nesting-decrease nil)
               (first-token-is-nesting-increase nil)
               (token-number 1)
-              (last-token-number (length phps-mode-lexer-tokens)))
+              (last-token-number (length phps-mode-lexer-tokens))
+              (last-token nil))
 
           ;; Iterate through all buffer tokens from beginning to end
           (dolist (item phps-mode-lexer-tokens)
@@ -102,11 +103,18 @@
                         (setq tuning-level 1)
                       (setq tuning-level 0))
 
-                    (message "%s, %s, %s, %s = %s %s %s %s %s %s" token column-level nesting-start nesting-end tuning-level round-bracket-level square-bracket-level curly-bracket-level alternative-control-structure-level inline-control-structure-level)
+                    (message "new line at %s, %s %s.%s (%s - %s) = %s %s %s %s %s [%s %s]" token last-token column-level tuning-level nesting-start nesting-end round-bracket-level square-bracket-level curly-bracket-level alternative-control-structure-level inline-control-structure-level first-token-is-nesting-decrease first-token-is-nesting-increase)
 
                     ;; Put indent-level to hash-table
                     (when (> last-line-number 0)
                       (puthash last-line-number `(,column-level ,tuning-level) line-indents))
+
+                    ;; Is line ending indentation equal to line beginning indentation and did we have a change of scope?
+                    (when (= nesting-end nesting-start)
+                      (when first-token-is-nesting-decrease
+                        (setq column-level (1+ column-level)))
+                      (when first-token-is-nesting-increase
+                        (setq column-level (1- column-level))))
 
                     ;; Is line ending indentation higher than line beginning indentation?
                     (when (> nesting-end nesting-start)
@@ -120,7 +128,8 @@
                     ;; Set initial values for tracking first token
                     (setq first-token-on-line t)
                     (setq first-token-is-nesting-increase nil)
-                    (setq first-token-is-nesting-decrease nil))
+                    (setq first-token-is-nesting-decrease nil)
+                    (setq last-token token))
                 (setq first-token-on-line nil))
 
               ;; Keep track of round bracket level
@@ -162,6 +171,7 @@
                         (equal token 'T_ENDFOREACH)
                         (equal token 'T_ENDSWITCH))
                 (setq alternative-control-structure-level (1- alternative-control-structure-level))
+                (message "Found ending alternative token %s %s" token alternative-control-structure-level)
                 (when first-token-on-line
                   (setq first-token-is-nesting-decrease t)))
 
@@ -178,13 +188,24 @@
                   ;; Is it the start of an alternative control structure?
                   (if (string= token ":")
                       (progn
-                        (setq alternative-control-structure-level (1+ alternative-control-structure-level))
-                        (when first-token-on-line
-                          (setq first-token-is-nesting-increase t)))
-                    (setq inline-control-structure-level (1+ inline-control-structure-level))
-                    (when first-token-on-line
-                      (setq first-token-is-nesting-increase t))
-                    (setq in-inline-control-structure t)))
+                        (if (or (equal after-special-control-structure-token 'T_ELSE)
+                                (equal after-special-control-structure-token 'T_ELSEIF))
+                            (progn
+                              (when after-special-control-structure-first-on-line
+                                (setq first-token-is-nesting-decrease t)))
+                          (setq alternative-control-structure-level (1+ alternative-control-structure-level))
+                          (when after-special-control-structure-first-on-line
+                            (setq first-token-is-nesting-increase t))))
+                    (if (or (equal after-special-control-structure-token 'T_ELSE)
+                            (equal after-special-control-structure-token 'T_ELSEIF))
+                        (progn
+                          (when after-special-control-structure-first-on-line
+                            (setq first-token-is-nesting-decrease t)))
+                      (message "Was inline-control structure %s %s" after-special-control-structure-token token)
+                      (setq inline-control-structure-level (1+ inline-control-structure-level))
+                      (when after-special-control-structure-first-on-line
+                        (setq first-token-is-nesting-increase t))
+                      (setq in-inline-control-structure t))))
 
                 (setq after-special-control-structure nil))
 
@@ -210,37 +231,34 @@
                         (equal token 'T_SWITCH)
                         (equal token 'T_ELSE)
                         (equal token 'T_ELSEIF))
-                (setq after-special-control-structure round-bracket-level))
+                (setq after-special-control-structure-first-on-line first-token-on-line)
+                (setq after-special-control-structure round-bracket-level)
+                (setq after-special-control-structure-token token))
 
               ;; Did we encounter a token that supports extra special alternative control structures?
               (when (or (equal token 'T_CASE)
                         (equal token 'T_DEFAULT))
                 (setq after-extra-special-control-structure t))
 
-              ;; Does token end before current line begins?
-              (when (< token-start line-beginning)
+              ;; Keep track of in scripting
+              (when (or (equal token 'T_OPEN_TAG)
+                        (equal token 'T_OPEN_TAG_WITH_ECHO))
+                (setq in-scripting t))
+              (when (equal token 'T_CLOSE_TAG)
+                (setq in-scripting nil))
 
-                ;; Keep track of in scripting
-                (when (or (equal token 'T_OPEN_TAG)
-                          (equal token 'T_OPEN_TAG_WITH_ECHO))
-                  (setq in-scripting t))
-                (when (equal token 'T_CLOSE_TAG)
-                  (setq in-scripting nil))
+              ;; Keep track of whether we are inside a doc-comment
+              (when (equal token 'T_DOC_COMMENT)
+                (setq in-doc-comment token-end))
+              (when (and in-doc-comment
+                         (> token-start in-doc-comment))
+                (setq in-doc-comment nil))
 
-                ;; Keep track of whether we are inside a doc-comment
-                (when (equal token 'T_DOC_COMMENT)
-                  (setq in-doc-comment token-end))
-                (when (and in-doc-comment
-                           (> token-start in-doc-comment))
-                  (setq in-doc-comment nil))
-
-                ;; Keep track of whether we are inside a HEREDOC or NOWDOC
-                (when (equal token 'T_START_HEREDOC)
-                  (setq in-heredoc t))
-                (when (equal token 'T_END_HEREDOC)
-                  (setq in-heredoc nil))
-
-                )
+              ;; Keep track of whether we are inside a HEREDOC or NOWDOC
+              (when (equal token 'T_START_HEREDOC)
+                (setq in-heredoc t))
+              (when (equal token 'T_END_HEREDOC)
+                (setq in-heredoc nil))
 
               ;; Are we on a new line?
               (when (> token-line-number last-line-number)
@@ -248,9 +266,7 @@
                 ;; Update last line number
                 (setq last-line-number token-line-number))
 
-              )
-
-            (setq token-number (1+ token-number)))
+              (setq token-number (1+ token-number))))
 
           line-indents))
     nil))

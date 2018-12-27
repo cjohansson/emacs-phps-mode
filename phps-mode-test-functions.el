@@ -56,6 +56,7 @@
   (phps-mode-test-with-buffer
    "<?php\nif (true):\n    echo 'Something';\nelse:\n    echo 'Something else';\nendif;\necho true;\n"
    "Alternative control structures"
+   ;; (message "Tokens: %s" phps-mode-lexer-tokens)
    (should (equal '((1 (0 0)) (2 (0 0)) (3 (1 0)) (4 (0 0)) (5 (1 0)) (6 (0 0)) (7 (0 0))) (phps-mode-test-functions--hash-to-list (phps-mode-functions-get-lines-indent)))))
 
   (phps-mode-test-with-buffer
