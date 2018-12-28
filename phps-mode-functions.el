@@ -109,7 +109,8 @@
 
                     ;; Is line ending indentation equal to line beginning indentation and did we have a change of scope?
                     (when (= nesting-end nesting-start)
-                      (when first-token-is-nesting-decrease
+                      (when (and first-token-is-nesting-decrease
+                                 (> column-level 0))
                         (setq column-level (1- column-level)))
                       (when first-token-is-nesting-increase
                         (setq column-level (1+ column-level))))
@@ -331,7 +332,8 @@
 
             ;; Is line ending indentation equal to line beginning indentation and did we have a change of scope?
             (when (= nesting-end nesting-start)
-              (when first-token-is-nesting-decrease
+              (when (and first-token-is-nesting-decrease
+                         (> column-level 0))
                 (setq column-level (1- column-level)))
               (when first-token-is-nesting-increase
                 (setq column-level (1+ column-level))))

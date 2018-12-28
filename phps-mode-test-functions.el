@@ -179,7 +179,7 @@
    (phps-mode-functions-indent-line)
    ;; (message "Tokens %s point %s" phps-mode-lexer-tokens (point))
    (let ((buffer-contents (buffer-substring-no-properties (point-min) (point-max))))
-     (should (equal buffer-contents  "<?php\n$variable = array(\n    'random4');\n$variable = true;\n"))))
+     (should (equal buffer-contents  "<?php\n$variable = array(\n'random4');\n$variable = true;\n"))))
 
   (phps-mode-test-with-buffer
    "<?php\nadd_filter(\n\"views_{$screen->id}\",'__return_empty_array'\n);"
@@ -192,7 +192,7 @@
 
   (phps-mode-test-with-buffer
    "<?php\nif (random_expression(\ntrue\n)) {\nsome_logic_here();\n}"
-   nil
+   "Round bracket test 3"
    (goto-char 36)
    (phps-mode-functions-indent-line)
    ;; (message "Tokens %s point %s" phps-mode-lexer-tokens (point))
@@ -201,7 +201,7 @@
 
   (phps-mode-test-with-buffer
    "<?php\nif (empty(\n$this->var\n) && !empty($this->var)\n) {\n$this->var = 'abc123';\n}\n"
-   nil
+   "Nested if-expression"
    (goto-char 54)
    (phps-mode-functions-indent-line)
    ;; (message "Tokens %s point %s" phps-mode-lexer-tokens (point))
@@ -210,7 +210,7 @@
 
   (phps-mode-test-with-buffer
    "<?php\nif (myFirstCondition()) {\n    $this->var = 'abc123';\n    } else {\n    $this->var = 'def456';\n}\n"
-   nil
+   "Regular else expression"
    (goto-char 68)
    (phps-mode-functions-indent-line)
    ;; (message "Tokens %s point %s" phps-mode-lexer-tokens (point))
@@ -219,7 +219,7 @@
 
   (phps-mode-test-with-buffer
    "<?php\nif (myFirstCondition()) {\n    $this->var = 'abc123';\n    } else if (mySeconCondition()) {\n    $this->var = 'def456';\n}\n"
-   nil
+   "Regular else if test"
    (goto-char 68)
    (phps-mode-functions-indent-line)
    ;; (message "Tokens %s point %s" phps-mode-lexer-tokens (point))
@@ -229,7 +229,7 @@
   ;; Square bracket
   (phps-mode-test-with-buffer
    "<?php\n$var = [\n    'random' => [\n        'hello',\n],\n];\n"
-   nil
+   "Square bracket test 1"
    (goto-char 51)
    (phps-mode-functions-indent-line)
    (let ((buffer-contents (buffer-substring-no-properties (point-min) (point-max))))
@@ -237,7 +237,7 @@
   
   (phps-mode-test-with-buffer
    "<?php\nif (myRandomCondition()):\necho 'Something here';\n    else:\n    echo 'Something else here 8';\nendif;\n"
-   nil
+   "Alternative else test"
    (goto-char 62)
    (phps-mode-functions-indent-line)
    ;; (message "Tokens %s" phps-mode-lexer-tokens)
@@ -248,23 +248,23 @@
   
   (phps-mode-test-with-buffer
    "<?php\nswitch (myRandomCondition()) {\ncase 'Something here':\necho 'Something else here';\n}\n"
-   nil
+   "Switch case indentation test"
    (goto-char 45)
    (phps-mode-functions-indent-line)
    (let ((buffer-contents (buffer-substring-no-properties (point-min) (point-max))))
      (should (equal buffer-contents "<?php\nswitch (myRandomCondition()) {\n    case 'Something here':\necho 'Something else here';\n}\n"))))
 
   (phps-mode-test-with-buffer
-   "<?php\nswitch (myRandomCondition()) {\ncase 'Something here':\necho 'Something else here';\n}\n"
-   nil
-   (goto-char 65)
+   "<?php\nswitch (myRandomCondition()): \ncase 'Something here':\necho 'Something else here';\nendswitch;\n"
+   "Alternative switch case indentation test 2"
+   (goto-char 70)
    (phps-mode-functions-indent-line)
    (let ((buffer-contents (buffer-substring-no-properties (point-min) (point-max))))
-     (should (equal buffer-contents "<?php\nswitch (myRandomCondition()) {\ncase 'Something here':\n        echo 'Something else here';\n}\n"))))
+     (should (equal buffer-contents "<?php\nswitch (myRandomCondition()): \ncase 'Something here':\n        echo 'Something else here';\nendswitch;\n"))))
 
   (phps-mode-test-with-buffer
    "<?php\nif (myRandomCondition())\necho 'Something here';\necho 'Something else here';\n"
-   nil
+   "Inline control structure indentation"
    (goto-char 40)
    (phps-mode-functions-indent-line)
    (let ((buffer-contents (buffer-substring-no-properties (point-min) (point-max))))
@@ -272,7 +272,7 @@
 
   (phps-mode-test-with-buffer
    "<?php\nif (myRandomCondition())\n    echo 'Something here';\n    echo 'Something else here';\n"
-   nil
+   "Inline control structure indentation 2"
    (goto-char 60)
    (phps-mode-functions-indent-line)
    (let ((buffer-contents (buffer-substring-no-properties (point-min) (point-max))))
@@ -280,7 +280,7 @@
 
   (phps-mode-test-with-buffer
    "<?php\nif (myRandomCondition()):\necho 'Something here';\n    echo 'Something else here';\nendif;\n"
-   nil
+   "Alternative control structure indentation 1"
    (goto-char 40)
    (phps-mode-functions-indent-line)
    (let ((buffer-contents (buffer-substring-no-properties (point-min) (point-max))))
@@ -288,7 +288,7 @@
 
   (phps-mode-test-with-buffer
    "<?php\nmyFunction(\n    array(\n        'random' => 'abc',\n        ),\n    $var5\n);\n"
-   nil
+   "Function arguments with associate array indentation"
    (goto-char 65)
    (phps-mode-functions-indent-line)
    (let ((buffer-contents (buffer-substring-no-properties (point-min) (point-max))))
@@ -296,7 +296,7 @@
 
   (phps-mode-test-with-buffer
    "<?php\n$var = $var2->getHead()\n->getTail();\n"
-   nil
+   "Multi-line assignment indentation test 1"
    (goto-char 35)
    (phps-mode-functions-indent-line)
    (let ((buffer-contents (buffer-substring-no-properties (point-min) (point-max))))
@@ -304,7 +304,7 @@
 
   (phps-mode-test-with-buffer
    "<?php\n$var =\n'random string';\n"
-   nil
+   "Single-line assignment indentation test"
    (goto-char 20)
    (phps-mode-functions-indent-line)
    (let ((buffer-contents (buffer-substring-no-properties (point-min) (point-max))))
@@ -312,7 +312,7 @@
 
   (phps-mode-test-with-buffer
    "<?php\nif (empty($this->var)):\n$this->var = 'abc123';\n    endif;"
-   nil
+   "Alternative control structure if expression"
    (goto-char 60)
    (phps-mode-functions-indent-line)
    (let ((buffer-contents (buffer-substring-no-properties (point-min) (point-max))))
@@ -320,7 +320,7 @@
 
   (phps-mode-test-with-buffer
    "<?php\nif (empty($this->var)):\n$this->var = 'abc123';\n    endif;"
-   nil
+   "Alternative control structure test"
    (goto-char 30)
    (phps-mode-functions-indent-line)
    (let ((buffer-contents (buffer-substring-no-properties (point-min) (point-max))))
