@@ -541,6 +541,8 @@
    ((looking-at "\\?>\n?")
     (let ((start (match-beginning 0))
           (end (match-end 0)))
+      (when (= (- end start) 3)
+        (setq end (1- end)))
       (phps-mode-lexer-BEGIN phps-mode-lexer-ST_INITIAL)
       (when phps-mode-lexer-PARSER_MODE
         (phps-mode-lexer-RETURN_TOKEN ";" start end))

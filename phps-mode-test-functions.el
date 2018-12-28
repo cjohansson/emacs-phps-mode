@@ -122,10 +122,11 @@
   (phps-mode-test-with-buffer
    "<html><head><title><?php if ($myCondition) {\nif ($mySeconCondition) {\necho $title3;\n\n}\n?>\n</title><body>Bla bla</body></html>"
    "Curly bracket test 4"
+   ;; (message "Tokens: %s" phps-mode-lexer-tokens)
    (goto-char 110)
    (phps-mode-functions-indent-line)
    (let ((buffer-contents (buffer-substring-no-properties (point-min) (point-max))))
-     (should (equal buffer-contents  "<html><head><title><?php if ($myCondition) {\nif ($mySeconCondition) {\necho $title3;\n\n}\n?>\n</title><body>Bla bla</body></html>"))))
+     (should (equal buffer-contents "<html><head><title><?php if ($myCondition) {\nif ($mySeconCondition) {\necho $title3;\n\n}\n?>\n</title><body>Bla bla</body></html>"))))
 
   (phps-mode-test-with-buffer
    "<?php\n$variable = array(\n'random3'\n);\n$variable = true;\n"
