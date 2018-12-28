@@ -103,7 +103,7 @@
                       ;; Decrement column
                       (if allow-custom-column-decrement
                           (progn
-                            (setq column-level (- nesting-end nesting-start))
+                            (setq column-level (- column-level (- nesting-start nesting-end)))
                             (setq allow-custom-column-increment nil))
                         (setq column-level (1- column-level))))
 
@@ -143,7 +143,7 @@
                       ;; Increase indentation
                       (if allow-custom-column-increment
                           (progn
-                            (setq column-level (- nesting-end nesting-start))
+                            (setq column-level (+ column-level (- nesting-end nesting-start)))
                             (setq allow-custom-column-increment nil))
                         (setq column-level (1+ column-level))))
 
@@ -191,6 +191,8 @@
                 (when (and switch-curly-stack
                            (= curly-bracket-level (car switch-curly-stack)))
                   (setq curly-bracket-level (1- curly-bracket-level))
+                  ;; (message "Found ending switch curly bracket")
+                  (setq allow-custom-column-decrement t)
                   (pop switch-curly-stack))
 
                 (when first-token-on-line
@@ -206,6 +208,7 @@
                 ;; (message "Found ending alternative token %s %s" token alternative-control-structure-level)
 
                 (when (equal token 'T_ENDSWITCH)
+                  (setq allow-custom-column-decrement t)
                   (setq alternative-control-structure-level (1- alternative-control-structure-level)))
 
                 (when first-token-on-line
@@ -220,10 +223,10 @@
                 (if (string= token "{")
 
                     (when (equal after-special-control-structure-token 'T_SWITCH)
-                      (setq curly-bracket-level (1+ curly-bracket-level))
-                      (setq allow-custom-column-increment t)
                       ;; (message "Opening switch, increase curly brackets to %s" curly-bracket-level)
-                      (push curly-bracket-level switch-curly-stack))
+                      (push curly-bracket-level switch-curly-stack)
+                      (setq allow-custom-column-increment t)
+                      (setq curly-bracket-level (1+ curly-bracket-level)))
 
                   ;; Is it the start of an alternative control structure?
                   (if (string= token ":")
@@ -322,7 +325,7 @@
               ;; Decrement column
               (if allow-custom-column-decrement
                   (progn
-                    (setq column-level (- nesting-end nesting-start))
+                    (setq column-level (- column-level (- nesting-start nesting-end)))
                     (setq allow-custom-column-increment nil))
                 (setq column-level (1- column-level))))
 
