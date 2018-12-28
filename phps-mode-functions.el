@@ -38,8 +38,6 @@
 
 ;; TODO Add support for automatic parenthesis, bracket, square-bracket, single-quote and double-quote encapsulations
 
-;; TODO Support inline function indentation
-
 ;; TODO Support indentation for multi-line assignments
 
 (defun phps-mode-functions-get-lines-indent ()
@@ -73,7 +71,10 @@
               (first-token-is-nesting-increase nil)
               (token-number 1)
               (last-token-number (length phps-mode-lexer-tokens))
-              (last-token nil))
+              (last-token nil)
+              (last-token-was-first-on-new-line nil)
+              (allow-custom-column-increment nil)
+              (allow-custom-column-decrement nil))
 
           ;; Iterate through all buffer tokens from beginning to end
           (dolist (item phps-mode-lexer-tokens)
@@ -88,6 +89,10 @@
                       (= token-number last-token-number))
                   (progn
 
+                    ;; Flag when last token was on a new line
+                    (when (= token-number last-token-number)
+                      (setq last-token-was-first-on-new-line t))
+
                     ;; Calculate indentation level at end of line
                     (setq nesting-end (+ round-bracket-level square-bracket-level curly-bracket-level alternative-control-structure-level inline-control-structure-level))
 
@@ -95,8 +100,12 @@
                     (when (and (< nesting-end nesting-start)
                                (> column-level 0))
 
-                      ;; Decrease indentation by one
-                      (setq column-level (1- column-level)))
+                      ;; Decrement column
+                      (if allow-custom-column-decrement
+                          (progn
+                            (setq column-level (- nesting-end nesting-start))
+                            (setq allow-custom-column-increment nil))
+                        (setq column-level (1- column-level))))
 
                     ;; Is line ending indentation equal to line beginning indentation and did we have a change of scope?
                     (when (= nesting-end nesting-start)
@@ -105,14 +114,14 @@
                       (when first-token-is-nesting-increase
                         (setq column-level (1+ column-level))))
                     
-                    (message "new line at %s, %s %s.%s (%s - %s) = %s %s %s %s %s [%s %s]" token last-token column-level tuning-level nesting-start nesting-end round-bracket-level square-bracket-level curly-bracket-level alternative-control-structure-level inline-control-structure-level first-token-is-nesting-decrease first-token-is-nesting-increase)
+                    ;; (message "new line at %s, %s %s.%s (%s - %s) = %s %s %s %s %s [%s %s]" token last-token column-level tuning-level nesting-start nesting-end round-bracket-level square-bracket-level curly-bracket-level alternative-control-structure-level inline-control-structure-level first-token-is-nesting-decrease first-token-is-nesting-increase)
 
                     ;; Put indent-level to hash-table
                     (when (> last-line-number 0)
                       (puthash last-line-number `(,column-level ,tuning-level) line-indents))
 
                     (when (> token-end-line-number token-start-line-number)
-                      (message "Token %s starts at %s and ends at %s" token token-start-line-number token-end-line-number)
+                      ;; (message "Token %s starts at %s and ends at %s" token token-start-line-number token-end-line-number)
                       (when (equal token 'T_DOC_COMMENT)
                         (setq tuning-level 1))
                       (let ((token-line-number-diff (1- (- token-end-line-number token-start-line-number))))
@@ -131,8 +140,12 @@
                     ;; Is line ending indentation higher than line beginning indentation?
                     (when (> nesting-end nesting-start)
 
-                      ;; Increase indentation by one
-                      (setq column-level (1+ column-level)))
+                      ;; Increase indentation
+                      (if allow-custom-column-increment
+                          (progn
+                            (setq column-level (- nesting-end nesting-start))
+                            (setq allow-custom-column-increment nil))
+                        (setq column-level (1+ column-level))))
 
                     ;; Calculate indentation level at start of line
                     (setq nesting-start (+ round-bracket-level square-bracket-level curly-bracket-level alternative-control-structure-level inline-control-structure-level))
@@ -198,8 +211,6 @@
                 (when first-token-on-line
                   (setq first-token-is-nesting-decrease t)))
 
-              ;; TODO Support for else as alternative and inline control structure
-
               (when (and after-special-control-structure
                          (= after-special-control-structure round-bracket-level)
                          (not (string= token ")"))
@@ -210,7 +221,8 @@
 
                     (when (equal after-special-control-structure-token 'T_SWITCH)
                       (setq curly-bracket-level (1+ curly-bracket-level))
-                      (message "Opening switch, increase curly brackets to %s" curly-bracket-level)
+                      (setq allow-custom-column-increment t)
+                      ;; (message "Opening switch, increase curly brackets to %s" curly-bracket-level)
                       (push curly-bracket-level switch-curly-stack))
 
                   ;; Is it the start of an alternative control structure?
@@ -224,7 +236,8 @@
                                 (setq first-token-is-nesting-decrease t)))
 
                           (when (equal after-special-control-structure-token 'T_SWITCH)
-                            (setq alternative-control-structure-level (1+ alternative-control-structure-level)))
+                            (setq alternative-control-structure-level (1+ alternative-control-structure-level))
+                            (setq allow-custom-column-increment t))
 
                           (setq alternative-control-structure-level (1+ alternative-control-structure-level))
                           (when after-special-control-structure-first-on-line
@@ -234,13 +247,15 @@
                         (progn
                           (when after-special-control-structure-first-on-line
                             (setq first-token-is-nesting-increase t)))
-                      (message "Was inline-control structure %s %s" after-special-control-structure-token token)
+                      ;; (message "Was inline-control structure %s %s" after-special-control-structure-token token)
                       (setq inline-control-structure-level (1+ inline-control-structure-level))
                       (when after-special-control-structure-first-on-line
                         (setq first-token-is-nesting-increase t))
                       (setq in-inline-control-structure t))))
 
-                (setq after-special-control-structure nil))
+                (setq after-special-control-structure nil)
+                (setq after-special-control-structure-token nil)
+                (setq after-special-control-structure-first-on-line nil))
 
               ;; Support extra special control structures (CASE)
               (when (and after-extra-special-control-structure
@@ -293,6 +308,35 @@
                 (setq last-line-number token-start-line-number))
 
               (setq token-number (1+ token-number))))
+
+          ;; Process line if last token was first on new line
+          (when last-token-was-first-on-new-line
+
+            ;; Calculate indentation level at end of line
+            (setq nesting-end (+ round-bracket-level square-bracket-level curly-bracket-level alternative-control-structure-level inline-control-structure-level))
+
+            ;; Is line ending indentation lesser than line beginning indentation?
+            (when (and (< nesting-end nesting-start)
+                       (> column-level 0))
+
+              ;; Decrement column
+              (if allow-custom-column-decrement
+                  (progn
+                    (setq column-level (- nesting-end nesting-start))
+                    (setq allow-custom-column-increment nil))
+                (setq column-level (1- column-level))))
+
+            ;; Is line ending indentation equal to line beginning indentation and did we have a change of scope?
+            (when (= nesting-end nesting-start)
+              (when first-token-is-nesting-decrease
+                (setq column-level (1- column-level)))
+              (when first-token-is-nesting-increase
+                (setq column-level (1+ column-level))))
+            
+            ;; (message "last token at %s %s.%s (%s - %s) = %s %s %s %s %s [%s %s]" last-token column-level tuning-level nesting-start nesting-end round-bracket-level square-bracket-level curly-bracket-level alternative-control-structure-level inline-control-structure-level first-token-is-nesting-decrease first-token-is-nesting-increase)
+
+            ;; Put indent-level to hash-table
+            (puthash last-line-number `(,column-level ,tuning-level) line-indents))
 
           line-indents))
     nil))
