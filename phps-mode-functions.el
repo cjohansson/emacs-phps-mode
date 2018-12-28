@@ -46,7 +46,7 @@
   "Get the column and tuning indentation-numbers for each line in buffer that contain tokens."
   (if (boundp 'phps-mode-lexer-tokens)
       (save-excursion
-        (beginning-of-buffer)
+        (goto-char (point-min))
         (let ((in-scripting nil)
               (in-heredoc nil)
               (in-doc-comment nil)
@@ -55,6 +55,8 @@
               (after-special-control-structure-token nil)
               (after-special-control-structure-first-on-line nil)
               (after-extra-special-control-structure nil)
+              (after-extra-special-control-structure-first-on-line nil)
+              (switch-curly-stack nil)
               (curly-bracket-level 0)
               (round-bracket-level 0)
               (square-bracket-level 0)
@@ -171,6 +173,13 @@
                   (setq first-token-is-nesting-increase t)))
               (when (string= token "}")
                 (setq curly-bracket-level (1- curly-bracket-level))
+
+                ;; Decrease switch curly stack if any
+                (when (and switch-curly-stack
+                           (= curly-bracket-level (car switch-curly-stack)))
+                  (setq curly-bracket-level (1- curly-bracket-level))
+                  (pop switch-curly-stack))
+
                 (when first-token-on-line
                   (setq first-token-is-nesting-decrease t)))
 
@@ -181,7 +190,11 @@
                         (equal token 'T_ENDFOREACH)
                         (equal token 'T_ENDSWITCH))
                 (setq alternative-control-structure-level (1- alternative-control-structure-level))
-                (message "Found ending alternative token %s %s" token alternative-control-structure-level)
+                ;; (message "Found ending alternative token %s %s" token alternative-control-structure-level)
+
+                (when (equal token 'T_ENDSWITCH)
+                  (setq alternative-control-structure-level (1- alternative-control-structure-level)))
+
                 (when first-token-on-line
                   (setq first-token-is-nesting-decrease t)))
 
@@ -193,16 +206,26 @@
                          (not (string= token "(")))
 
                 ;; Is token not a curly bracket - because that is a ordinary control structure syntax
-                (unless (string= token "{")
+                (if (string= token "{")
+
+                    (when (equal after-special-control-structure-token 'T_SWITCH)
+                      (setq curly-bracket-level (1+ curly-bracket-level))
+                      (message "Opening switch, increase curly brackets to %s" curly-bracket-level)
+                      (push curly-bracket-level switch-curly-stack))
 
                   ;; Is it the start of an alternative control structure?
                   (if (string= token ":")
                       (progn
                         (if (or (equal after-special-control-structure-token 'T_ELSE)
-                                (equal after-special-control-structure-token 'T_ELSEIF))
+                                (equal after-special-control-structure-token 'T_ELSEIF)
+                                (equal after-special-control-structure-token 'T_DEFAULT))
                             (progn
                               (when after-special-control-structure-first-on-line
                                 (setq first-token-is-nesting-decrease t)))
+
+                          (when (equal after-special-control-structure-token 'T_SWITCH)
+                            (setq alternative-control-structure-level (1+ alternative-control-structure-level)))
+
                           (setq alternative-control-structure-level (1+ alternative-control-structure-level))
                           (when after-special-control-structure-first-on-line
                             (setq first-token-is-nesting-increase t))))
@@ -219,12 +242,11 @@
 
                 (setq after-special-control-structure nil))
 
-              ;; Support extra special control structures (CASE and DEFAULT)
+              ;; Support extra special control structures (CASE)
               (when (and after-extra-special-control-structure
                          (string= token ":"))
-                (setq alternative-control-structure-level (1+ alternative-control-structure-level))
-                (when first-token-on-line
-                  (setq first-token-is-nesting-increase t))
+                (when after-extra-special-control-structure-first-on-line
+                  (setq first-token-is-nesting-decrease t))
                 (setq after-extra-special-control-structure nil))
 
               ;; Did we reach a semicolon inside a inline block? Close the inline block
@@ -240,15 +262,16 @@
                         (equal token 'T_FOREACH)
                         (equal token 'T_SWITCH)
                         (equal token 'T_ELSE)
-                        (equal token 'T_ELSEIF))
+                        (equal token 'T_ELSEIF)
+                        (equal token 'T_DEFAULT))
                 (setq after-special-control-structure-first-on-line first-token-on-line)
                 (setq after-special-control-structure round-bracket-level)
                 (setq after-special-control-structure-token token))
 
               ;; Did we encounter a token that supports extra special alternative control structures?
-              (when (or (equal token 'T_CASE)
-                        (equal token 'T_DEFAULT))
-                (setq after-extra-special-control-structure t))
+              (when (equal token 'T_CASE)
+                (setq after-extra-special-control-structure t)
+                (setq after-extra-special-control-structure-first-on-line first-token-on-line))
 
               ;; Keep track of in scripting
               (when (or (equal token 'T_OPEN_TAG)

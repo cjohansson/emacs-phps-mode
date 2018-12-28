@@ -73,7 +73,10 @@
    "Round and square bracket expressions"
    (should (equal '((1 (0 0)) (2 (0 0)) (3 (1 0)) (4 (1 0)) (5 (2 0)) (6 (1 0)) (7 (0 0)) (8 (0 0))) (phps-mode-test-functions--hash-to-list (phps-mode-functions-get-lines-indent)))))
 
-  ;; TODO CASE, DEFAULT
+  (phps-mode-test-with-buffer
+   "<?php\nswitch ($condition) {\n    case true:\n        echo 'here';\n        echo 'here 2';\n    case false:\n        echo 'here 4';\n    default:\n        echo 'here 3';\n}\n"
+   "Switch, case, default"
+   (should (equal '((1 (0 0)) (2 (0 0)) (3 (1 0)) (4 (2 0)) (5 (2 0)) (6 (1 0)) (7 (2 0)) (8 (1 0)) (9 (2 0)) (10 (0 0))) (phps-mode-test-functions--hash-to-list (phps-mode-functions-get-lines-indent)))))
 
   ;; TODO NOWDOC, HEREDOC
 
@@ -89,7 +92,7 @@
   ;; Curly bracket tests
   (phps-mode-test-with-buffer
    "<html><head><title><?php if ($myCondition) {\nif ($mySeconCondition) {\necho $title;\n\n} ?></title><body>Bla bla</body></html>"
-   nil
+   "Curly bracket test"
    (goto-char 69)
    (phps-mode-functions-indent-line)
    (let ((buffer-contents (buffer-substring-no-properties (point-min) (point-max))))
@@ -97,6 +100,7 @@
 
   (phps-mode-test-with-buffer
    "<html><head><title><?php if ($myCondition) {\nif ($mySeconCondition) {\necho $title1;\n} ?></title><body>Bla bla</body></html>"
+   "Curly bracket test 2"
    (goto-char 75)
    (phps-mode-functions-indent-line)
    (let ((buffer-contents (buffer-substring-no-properties (point-min) (point-max))))
@@ -104,7 +108,7 @@
 
   (phps-mode-test-with-buffer
    "<html><head><title><?php if ($myCondition) {\nif ($mySeconCondition) {\necho $title2;\n\n} ?></title><body>Bla bla</body></html>"
-   nil
+   "Curly bracket test 3"
    (goto-char 98)
    (phps-mode-functions-indent-line)
    (let ((buffer-contents (buffer-substring-no-properties (point-min) (point-max))))
@@ -112,6 +116,7 @@
 
   (phps-mode-test-with-buffer
    "<html><head><title><?php if ($myCondition) {\nif ($mySeconCondition) {\necho $title3;\n\n}\n?>\n</title><body>Bla bla</body></html>"
+   "Curly bracket test 4"
    (goto-char 110)
    (phps-mode-functions-indent-line)
    (let ((buffer-contents (buffer-substring-no-properties (point-min) (point-max))))
@@ -119,7 +124,7 @@
 
   (phps-mode-test-with-buffer
    "<?php\n$variable = array(\n'random3'\n);\n$variable = true;\n"
-   nil
+   "Assignment test 1"
    (goto-char 28)
    (phps-mode-functions-indent-line)
    (let ((buffer-contents (buffer-substring-no-properties (point-min) (point-max))))
@@ -127,6 +132,7 @@
 
   (phps-mode-test-with-buffer
    "<?php\n$variable = array(\n    'random2'\n    );\n$variable = true;\n"
+   "Assignment test 2"
    (goto-char 43)
    ;; (message "Tokens %s point %s" phps-mode-lexer-tokens (point))
    (phps-mode-functions-indent-line)
@@ -135,7 +141,7 @@
 
   (phps-mode-test-with-buffer
    "<?php\n/**\n* My first line\n* My second line\n**/\n"
-   nil
+   "Doc-comment test 1"
    (goto-char 20)
    (phps-mode-functions-indent-line)
    ;; (message "Tokens %s point %s" phps-mode-lexer-tokens (point))
@@ -144,6 +150,7 @@
 
   (phps-mode-test-with-buffer
    "<?php\n/**\n* My first line\n* My second line\n**/\n"
+   "Doc-comment test 2"
    (goto-char 9)
    (phps-mode-functions-indent-line)
    ;; (message "Tokens %s point %s" phps-mode-lexer-tokens (point))
@@ -152,7 +159,7 @@
 
   (phps-mode-test-with-buffer
    "<?php\n/**\n* My first line\n* My second line\n**/\n"
-   nil
+   "Doc-comment test 3"
    (goto-char 46)
    (phps-mode-functions-indent-line)
    ;; (message "Tokens %s point %s" phps-mode-lexer-tokens (point))
@@ -161,6 +168,7 @@
 
   (phps-mode-test-with-buffer
    "<?php\n$variable = array(\n'random4');\n$variable = true;\n"
+   "Round bracket test 1"
    (goto-char 29)
    (phps-mode-functions-indent-line)
    ;; (message "Tokens %s point %s" phps-mode-lexer-tokens (point))
@@ -169,7 +177,7 @@
 
   (phps-mode-test-with-buffer
    "<?php\nadd_filter(\n\"views_{$screen->id}\",'__return_empty_array'\n);"
-   nil
+   "Round bracket test 2"
    (goto-char 25)
    (phps-mode-functions-indent-line)
    ;; (message "Tokens %s point %s" phps-mode-lexer-tokens (point))
@@ -178,6 +186,7 @@
 
   (phps-mode-test-with-buffer
    "<?php\nif (random_expression(\ntrue\n)) {\nsome_logic_here();\n}"
+   nil
    (goto-char 36)
    (phps-mode-functions-indent-line)
    ;; (message "Tokens %s point %s" phps-mode-lexer-tokens (point))
@@ -195,6 +204,7 @@
 
   (phps-mode-test-with-buffer
    "<?php\nif (myFirstCondition()) {\n    $this->var = 'abc123';\n    } else {\n    $this->var = 'def456';\n}\n"
+   nil
    (goto-char 68)
    (phps-mode-functions-indent-line)
    ;; (message "Tokens %s point %s" phps-mode-lexer-tokens (point))
@@ -213,6 +223,7 @@
   ;; Square bracket
   (phps-mode-test-with-buffer
    "<?php\n$var = [\n    'random' => [\n        'hello',\n],\n];\n"
+   nil
    (goto-char 51)
    (phps-mode-functions-indent-line)
    (let ((buffer-contents (buffer-substring-no-properties (point-min) (point-max))))
@@ -231,6 +242,7 @@
   
   (phps-mode-test-with-buffer
    "<?php\nswitch (myRandomCondition()) {\ncase 'Something here':\necho 'Something else here';\n}\n"
+   nil
    (goto-char 45)
    (phps-mode-functions-indent-line)
    (let ((buffer-contents (buffer-substring-no-properties (point-min) (point-max))))
@@ -246,6 +258,7 @@
 
   (phps-mode-test-with-buffer
    "<?php\nif (myRandomCondition())\necho 'Something here';\necho 'Something else here';\n"
+   nil
    (goto-char 40)
    (phps-mode-functions-indent-line)
    (let ((buffer-contents (buffer-substring-no-properties (point-min) (point-max))))
@@ -261,6 +274,7 @@
 
   (phps-mode-test-with-buffer
    "<?php\nif (myRandomCondition()):\necho 'Something here';\n    echo 'Something else here';\nendif;\n"
+   nil
    (goto-char 40)
    (phps-mode-functions-indent-line)
    (let ((buffer-contents (buffer-substring-no-properties (point-min) (point-max))))
@@ -276,6 +290,7 @@
 
   (phps-mode-test-with-buffer
    "<?php\n$var = $var2->getHead()\n->getTail();\n"
+   nil
    (goto-char 35)
    (phps-mode-functions-indent-line)
    (let ((buffer-contents (buffer-substring-no-properties (point-min) (point-max))))
@@ -291,6 +306,7 @@
 
   (phps-mode-test-with-buffer
    "<?php\nif (empty($this->var)):\n$this->var = 'abc123';\n    endif;"
+   nil
    (goto-char 60)
    (phps-mode-functions-indent-line)
    (let ((buffer-contents (buffer-substring-no-properties (point-min) (point-max))))

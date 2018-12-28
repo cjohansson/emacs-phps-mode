@@ -1265,7 +1265,9 @@ ANY_CHAR'
       (setq phps-mode-lexer-buffer-changes--start nil))
 
     (setq phps-mode-lexer-states nil)
-    
+    (when (and (boundp 'phps-mode-functions-lines-indent)
+               phps-mode-functions-lines-indent)
+      (setq phps-mode-functions-lines-indent nil))
     (phps-mode-lexer-BEGIN phps-mode-lexer-ST_INITIAL)))
 
 (defun phps-mode-lexer-run ()
