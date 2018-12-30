@@ -179,7 +179,7 @@
    "Round bracket test 1"
    (goto-char 30)
    (phps-mode-functions-indent-line)
-   (message "Tokens %s point %s" phps-mode-lexer-tokens (point))
+   ;; (message "Tokens %s point %s" phps-mode-lexer-tokens (point))
    (let ((buffer-contents (buffer-substring-no-properties (point-min) (point-max))))
      (should (equal buffer-contents  "<?php\n$variable = array(\n    'random4');\n$variable = true;\n"))))
 
@@ -297,7 +297,7 @@
   (phps-mode-test-with-buffer
    "<?php\n$var = $var2->getHead()\n->getTail();\n"
    "Multi-line assignment indentation test 1"
-   (message "Tokens: %s" phps-mode-lexer-tokens)
+   ;; (message "Tokens: %s" phps-mode-lexer-tokens)
    (goto-char 35)
    (phps-mode-functions-indent-line)
    (let ((buffer-contents (buffer-substring-no-properties (point-min) (point-max))))
@@ -322,7 +322,7 @@
   (phps-mode-test-with-buffer
    "<?php\nif (empty($this->var)):\n$this->var = 'abc123';\n    endif;"
    "Alternative control structure test"
-   (goto-char 30)
+   (goto-char 35)
    (phps-mode-functions-indent-line)
    (let ((buffer-contents (buffer-substring-no-properties (point-min) (point-max))))
      (should (equal buffer-contents "<?php\nif (empty($this->var)):\n    $this->var = 'abc123';\n    endif;"))))
