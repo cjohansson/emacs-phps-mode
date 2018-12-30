@@ -299,7 +299,8 @@
                 (setq after-special-control-structure-token token))
 
               ;; Keep track of assignments
-              (when in-assignment
+              (when (and in-assignment
+                         (not in-heredoc))
                 (if (string= token ";")
                     (progn
                       (setq in-assignment nil)

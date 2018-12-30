@@ -90,12 +90,6 @@
    (should (equal '((1 (0 0)) (2 (0 0)) (3 (1 0)) (4 (1 0)) (5 (1 0)) (6 (1 0)) (7 (1 0)) (8 (1 0))) (phps-mode-test-functions--hash-to-list (phps-mode-functions-get-lines-indent)))))
 
   (phps-mode-test-with-buffer
-   "<?php\nclass MyClass extends MyAbstract implements\n    myInterface,\n    myInterface2\n{\n}\n"
-   "Class multi-line implements"
-   (message "Tokens: %s" phps-mode-lexer-tokens)
-   (should (equal '((1 (0 0)) (2 (0 0)) (3 (1 0)) (4 (1 0)) (5 (0 0)) (6 (0 0))) (phps-mode-test-functions--hash-to-list (phps-mode-functions-get-lines-indent)))))
-
-  (phps-mode-test-with-buffer
    "<?php\n$str = <<<'EOD'\nExample of string\nspanning multiple lines\nusing nowdoc syntax.\nEOD;\n"
    "Multi-line NOWDOC string"
    (message "Tokens: %s" phps-mode-lexer-tokens)
@@ -107,9 +101,13 @@
    (message "Tokens: %s" phps-mode-lexer-tokens)
    (should (equal '((1 (0 0)) (2 (0 0)) (3 (0 0)) (4 (0 0)) (5 (0 0)) (6 (0 0))) (phps-mode-test-functions--hash-to-list (phps-mode-functions-get-lines-indent)))))
 
-  ;; TODO NOWDOC
+  (phps-mode-test-with-buffer
+   "<?php\nclass MyClass extends MyAbstract implements\n    myInterface,\n    myInterface2\n{\n}\n"
+   "Class multi-line implements"
+   (message "Tokens: %s" phps-mode-lexer-tokens)
+   (should (equal '((1 (0 0)) (2 (0 0)) (3 (1 0)) (4 (1 0)) (5 (0 0)) (6 (0 0))) (phps-mode-test-functions--hash-to-list (phps-mode-functions-get-lines-indent)))))
 
-(phps-mode-test-with-buffer
+  (phps-mode-test-with-buffer
    "<?php\n$var = \"A line\nmore text here\nlast line here\";"
    "Multi-line double-quoted string"
    (message "Tokens: %s" phps-mode-lexer-tokens)
