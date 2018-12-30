@@ -74,7 +74,9 @@
               (last-token nil)
               (last-token-was-first-on-new-line nil)
               (allow-custom-column-increment nil)
-              (allow-custom-column-decrement nil))
+              (allow-custom-column-decrement nil)
+              (in-assignment nil)
+              (in-assignment-on-new-line nil))
 
           ;; Iterate through all buffer tokens from beginning to end
           (dolist (item phps-mode-lexer-tokens)
@@ -96,9 +98,14 @@
                     ;; Calculate indentation level at end of line
                     (setq nesting-end (+ round-bracket-level square-bracket-level curly-bracket-level alternative-control-structure-level inline-control-structure-level))
 
+                    ;; Inside assignment increment by one
+                    (when in-assignment
+                      (setq nesting-end (1+ nesting-end)))
+
                     ;; Is line ending indentation lesser than line beginning indentation?
                     (when (and (< nesting-end nesting-start)
-                               (> column-level 0))
+                               (> column-level 0)
+                               (not in-assignment-on-new-line))
 
                       ;; Decrement column
                       (if allow-custom-column-decrement
@@ -115,7 +122,7 @@
                       (when first-token-is-nesting-increase
                         (setq column-level (1+ column-level))))
                     
-                    ;; (message "new line at %s, %s %s.%s (%s - %s) = %s %s %s %s %s [%s %s]" token last-token column-level tuning-level nesting-start nesting-end round-bracket-level square-bracket-level curly-bracket-level alternative-control-structure-level inline-control-structure-level first-token-is-nesting-decrease first-token-is-nesting-increase)
+                    (message "new line at %s, %s %s.%s (%s - %s) = %s %s %s %s %s [%s %s] %s" token last-token column-level tuning-level nesting-start nesting-end round-bracket-level square-bracket-level curly-bracket-level alternative-control-structure-level inline-control-structure-level first-token-is-nesting-decrease first-token-is-nesting-increase in-assignment)
 
                     ;; Put indent-level to hash-table
                     (when (> last-line-number 0)
@@ -151,11 +158,14 @@
                     ;; Calculate indentation level at start of line
                     (setq nesting-start (+ round-bracket-level square-bracket-level curly-bracket-level alternative-control-structure-level inline-control-structure-level))
 
+                    ;; Inside assignment increment by one
+                    (when in-assignment
+                      (setq nesting-start (1+ nesting-start)))
+
                     ;; Set initial values for tracking first token
                     (setq first-token-on-line t)
                     (setq first-token-is-nesting-increase nil)
-                    (setq first-token-is-nesting-decrease nil)
-                    (setq last-token token))
+                    (setq first-token-is-nesting-decrease nil))
                 (setq first-token-on-line nil))
 
               ;; Keep track of round bracket level
@@ -287,6 +297,27 @@
                 (setq after-special-control-structure round-bracket-level)
                 (setq after-special-control-structure-token token))
 
+              ;; Keep track of assignments
+              (when in-assignment
+                (if (string= token ";")
+                    (progn
+                      (setq in-assignment nil)
+                      (message "Assignment ended at semi-colon"))
+                  (when first-token-on-line
+                    (if (or (equal token 'T_VARIABLE)
+                            (equal token 'T_CONSTANT_ENCAPSED_STRING)
+                            (equal token 'T_OBJECT_OPERATOR))
+                        (progn
+                          (message "In assignment on new-line at %s" token)
+                          (setq in-assignment-on-new-line t))
+                      (message "Not in assignment on new-line at %s" token)
+                      (setq in-assignment-on-new-line nil)))))
+              (when (and (not after-special-control-structure)
+                         (string= token "="))
+                (message "Started assignment")
+                (setq in-assignment t)
+                (setq in-assignment-on-new-line nil))
+
               ;; Did we encounter a token that supports extra special alternative control structures?
               (when (equal token 'T_CASE)
                 (setq after-extra-special-control-structure t)
@@ -311,13 +342,18 @@
                 ;; Update last line number
                 (setq last-line-number token-start-line-number))
 
-              (setq token-number (1+ token-number))))
+              (setq token-number (1+ token-number))
+              (setq last-token token)))
 
           ;; Process line if last token was first on new line
           (when last-token-was-first-on-new-line
 
             ;; Calculate indentation level at end of line
             (setq nesting-end (+ round-bracket-level square-bracket-level curly-bracket-level alternative-control-structure-level inline-control-structure-level))
+
+            ;; Inside assignment increment by one
+            (when in-assignment
+              (setq nesting-end (1+ nesting-end)))
 
             ;; Is line ending indentation lesser than line beginning indentation?
             (when (and (< nesting-end nesting-start)
@@ -338,7 +374,7 @@
               (when first-token-is-nesting-increase
                 (setq column-level (1+ column-level))))
             
-            ;; (message "last token at %s %s.%s (%s - %s) = %s %s %s %s %s [%s %s]" last-token column-level tuning-level nesting-start nesting-end round-bracket-level square-bracket-level curly-bracket-level alternative-control-structure-level inline-control-structure-level first-token-is-nesting-decrease first-token-is-nesting-increase)
+            (message "last token at %s %s.%s (%s - %s) = %s %s %s %s %s [%s %s]" last-token column-level tuning-level nesting-start nesting-end round-bracket-level square-bracket-level curly-bracket-level alternative-control-structure-level inline-control-structure-level first-token-is-nesting-decrease first-token-is-nesting-increase)
 
             ;; Put indent-level to hash-table
             (puthash last-line-number `(,column-level ,tuning-level) line-indents))

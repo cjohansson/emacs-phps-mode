@@ -172,14 +172,16 @@
    (let ((buffer-contents (buffer-substring-no-properties (point-min) (point-max))))
      (should (equal buffer-contents  "<?php\n/**\n* My first line\n* My second line\n **/\n"))))
 
+  ;; TODO Fix this and also indentation for class implements
+
   (phps-mode-test-with-buffer
    "<?php\n$variable = array(\n'random4');\n$variable = true;\n"
    "Round bracket test 1"
-   (goto-char 29)
+   (goto-char 30)
    (phps-mode-functions-indent-line)
-   ;; (message "Tokens %s point %s" phps-mode-lexer-tokens (point))
+   (message "Tokens %s point %s" phps-mode-lexer-tokens (point))
    (let ((buffer-contents (buffer-substring-no-properties (point-min) (point-max))))
-     (should (equal buffer-contents  "<?php\n$variable = array(\n'random4');\n$variable = true;\n"))))
+     (should (equal buffer-contents  "<?php\n$variable = array(\n    'random4');\n$variable = true;\n"))))
 
   (phps-mode-test-with-buffer
    "<?php\nadd_filter(\n\"views_{$screen->id}\",'__return_empty_array'\n);"
@@ -244,8 +246,6 @@
    (let ((buffer-contents (buffer-substring-no-properties (point-min) (point-max))))
      (should (equal buffer-contents "<?php\nif (myRandomCondition()):\necho 'Something here';\nelse:\n    echo 'Something else here 8';\nendif;\n"))))
 
-  ;; switch case
-  
   (phps-mode-test-with-buffer
    "<?php\nswitch (myRandomCondition()) {\ncase 'Something here':\necho 'Something else here';\n}\n"
    "Switch case indentation test"
@@ -297,6 +297,7 @@
   (phps-mode-test-with-buffer
    "<?php\n$var = $var2->getHead()\n->getTail();\n"
    "Multi-line assignment indentation test 1"
+   (message "Tokens: %s" phps-mode-lexer-tokens)
    (goto-char 35)
    (phps-mode-functions-indent-line)
    (let ((buffer-contents (buffer-substring-no-properties (point-min) (point-max))))
