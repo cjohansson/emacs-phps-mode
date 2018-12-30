@@ -129,9 +129,10 @@
                       (puthash last-line-number `(,column-level ,tuning-level) line-indents))
 
                     (when (> token-end-line-number token-start-line-number)
-                      ;; (message "Token %s starts at %s and ends at %s" token token-start-line-number token-end-line-number)
+                      (message "Token %s starts at %s and ends at %s" token token-start-line-number token-end-line-number)
                       (when (equal token 'T_DOC_COMMENT)
                         (setq tuning-level 1))
+
                       (let ((token-line-number-diff (1- (- token-end-line-number token-start-line-number))))
                         (while (>= token-line-number-diff 0)
                           (puthash (- token-end-line-number token-line-number-diff) `(,column-level ,tuning-level) line-indents)
