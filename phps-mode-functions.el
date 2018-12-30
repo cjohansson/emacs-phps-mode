@@ -307,7 +307,10 @@
                   (when first-token-on-line
                     (if (or (equal token 'T_VARIABLE)
                             (equal token 'T_CONSTANT_ENCAPSED_STRING)
-                            (equal token 'T_OBJECT_OPERATOR))
+                            (equal token 'T_ENCAPSED_AND_WHITESPACE)
+                            (equal token 'T_OBJECT_OPERATOR)
+                            (equal token 'T_LNUMBER)
+                            (equal token 'T_DNUMBER))
                         (progn
                           ;; (message "In assignment on new-line at %s" token)
                           (setq in-assignment-on-new-line t))
