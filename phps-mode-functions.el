@@ -99,7 +99,8 @@
                     (setq nesting-end (+ round-bracket-level square-bracket-level curly-bracket-level alternative-control-structure-level inline-control-structure-level))
 
                     ;; Inside assignment increment by one
-                    (when in-assignment
+                    (when (and in-assignment
+                               (not in-heredoc))
                       (setq nesting-end (1+ nesting-end)))
 
                     ;; Is line ending indentation lesser than line beginning indentation?
@@ -129,7 +130,7 @@
                       (puthash last-line-number `(,column-level ,tuning-level) line-indents))
 
                     (when (> token-end-line-number token-start-line-number)
-                      (message "Token %s starts at %s and ends at %s" token token-start-line-number token-end-line-number)
+                      ;; (message "Token %s starts at %s and ends at %s" token token-start-line-number token-end-line-number)
                       (when (equal token 'T_DOC_COMMENT)
                         (setq tuning-level 1))
 
@@ -299,8 +300,7 @@
                 (setq after-special-control-structure-token token))
 
               ;; Keep track of assignments
-              (when (and in-assignment
-                         (not in-heredoc))
+              (when in-assignment
                 (if (string= token ";")
                     (progn
                       (setq in-assignment nil)
@@ -319,6 +319,7 @@
                       ;; (message "Not in assignment on new-line at %s" token)
                       (setq in-assignment-on-new-line nil)))))
               (when (and (not after-special-control-structure)
+                         (not in-assignment)
                          (string= token "="))
                 ;; (message "Started assignment")
                 (setq in-assignment t)
