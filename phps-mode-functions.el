@@ -336,7 +336,10 @@
               (if in-class-declaration
                   (if (string= token "{")
                       (progn
-                        (setq in-class-declaration nil))
+                        (setq in-class-declaration nil)
+                        (when first-token-on-line
+                          (setq first-token-is-nesting-increase nil)
+                          (setq first-token-is-nesting-decrease t)))
                     (when first-token-on-line
                       (setq in-class-declaration-level 1)))
                 (when (equal token 'T_CLASS)

@@ -104,20 +104,25 @@
   (phps-mode-test-with-buffer
    "<?php\nclass MyClass extends MyAbstract implements\n    myInterface,\n    myInterface2\n{\n}\n"
    "Class multi-line implements"
-   (message "Tokens: %s" phps-mode-lexer-tokens)
+   ;; (message "Tokens: %s" phps-mode-lexer-tokens)
    (should (equal '((1 (0 0)) (2 (0 0)) (3 (1 0)) (4 (1 0)) (5 (0 0)) (6 (0 0))) (phps-mode-test-functions--hash-to-list (phps-mode-functions-get-lines-indent)))))
 
   (phps-mode-test-with-buffer
    "<?php\n$var = \"A line\nmore text here\nlast line here\";"
    "Multi-line double-quoted string"
-   (message "Tokens: %s" phps-mode-lexer-tokens)
+   ;; (message "Tokens: %s" phps-mode-lexer-tokens)
    (should (equal '((1 (0 0)) (2 (0 0)) (3 (0 0)) (4 (0 0))) (phps-mode-test-functions--hash-to-list (phps-mode-functions-get-lines-indent)))))
 
   (phps-mode-test-with-buffer
    "<?php\n$var = 'A line\nmore text here\nlast line here';"
    "Multi-line single-quoted string"
-   (message "Tokens: %s" phps-mode-lexer-tokens)
+   ;; (message "Tokens: %s" phps-mode-lexer-tokens)
    (should (equal '((1 (0 0)) (2 (0 0)) (3 (0 0)) (4 (0 0))) (phps-mode-test-functions--hash-to-list (phps-mode-functions-get-lines-indent)))))
+
+  ;; TODO Test concatenated string outside assignments
+  ;; TODO Test HEREDOC outside assignment
+  ;; TODO Test multi-line single-quoted string outside assignment
+  ;; TODO Test multi-line double-quoted string outside assignment
 
   )
 
