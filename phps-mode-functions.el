@@ -121,7 +121,7 @@
                       (when first-token-is-nesting-increase
                         (setq column-level (1+ column-level))))
                     
-                    (message "new line at %s, %s %s.%s (%s - %s) = %s %s %s %s %s [%s %s] %s %s %s" token last-token column-level tuning-level nesting-start nesting-end round-bracket-level square-bracket-level curly-bracket-level alternative-control-structure-level inline-control-structure-level first-token-is-nesting-decrease first-token-is-nesting-increase in-assignment-level in-assignment-level in-class-declaration-level)
+                    (message "new line %s or last token at %s, %s %s.%s (%s - %s) = %s %s %s %s %s [%s %s] %s %s %s" token-start-line-number token last-token column-level tuning-level nesting-start nesting-end round-bracket-level square-bracket-level curly-bracket-level alternative-control-structure-level inline-control-structure-level first-token-is-nesting-decrease first-token-is-nesting-increase in-assignment-level in-assignment-level in-class-declaration-level)
 
                     ;; Put indent-level to hash-table
                     (when (> last-line-number 0)
@@ -159,10 +159,12 @@
                     (setq nesting-start (+ round-bracket-level square-bracket-level curly-bracket-level alternative-control-structure-level inline-control-structure-level in-assignment-level in-class-declaration-level))
 
                     ;; Set initial values for tracking first token
-                    (setq first-token-on-line t)
-                    (setq first-token-is-nesting-increase nil)
-                    (setq first-token-is-nesting-decrease nil)
-                    (setq in-assignment-level 0))
+                    (when (> token-start-line-number last-line-number)
+                      (setq first-token-on-line t)
+                      (setq first-token-is-nesting-increase nil)
+                      (setq first-token-is-nesting-decrease nil)
+                      (setq in-assignment-level 0)
+                      (setq in-class-declaration-level 0)))
                 (setq first-token-on-line nil))
 
               ;; Keep track of round bracket level
@@ -295,22 +297,22 @@
                 (setq after-special-control-structure-token token))
 
               ;; Keep track of assignments
-              (when in-assignment
-                (if (string= token ";")
-                    (progn
-                      (setq in-assignment nil)
-                      ;; (message "Assignment ended at semi-colon")
-                      )
-                  (when first-token-on-line
-                    (setq in-assignment-level 1)
-                    (message "In assignment on new-line at %s" token)
-                    )))
-              (when (and (not after-special-control-structure)
-                         (not in-assignment)
-                         (string= token "="))
-                ;; (message "Started assignment")
-                (setq in-assignment t)
-                (setq in-assignment-level 1))
+              (if in-assignment
+                  (if (string= token ";")
+                      (progn
+                        (setq in-assignment nil)
+                        ;; (message "Assignment ended at semi-colon")
+                        )
+                    (when (and first-token-on-line
+                               (not in-heredoc))
+                      (setq in-assignment-level 1)
+                      (message "In assignment on new-line at %s" token)
+                      ))
+                (when (and (not after-special-control-structure)
+                           (string= token "="))
+                  ;; (message "Started assignment")
+                  (setq in-assignment t)
+                  (setq in-assignment-level 1)))
 
               ;; Did we encounter a token that supports extra special alternative control structures?
               (when (equal token 'T_CASE)
@@ -331,17 +333,15 @@
                 (setq in-heredoc nil))
 
               ;; Keep track of when we are inside a class definition
-              (when (and in-class-declaration
-                         first-token-on-line)
-                (if (not (string= token "{"))
-                    (setq in-class-declaration-level 1)
-                  (setq in-class-declaration-level 0)))
-              (when (equal token 'T_CLASS)
-                (setq in-class-declaration t)
-                (setq in-class-declaration-level 0))
-              (when (and in-class-declaration
-                         (string= token "{"))
-                (setq in-class-declaration nil))
+              (if in-class-declaration
+                  (if (string= token "{")
+                      (progn
+                        (setq in-class-declaration nil))
+                    (when first-token-on-line
+                      (setq in-class-declaration-level 1)))
+                (when (equal token 'T_CLASS)
+                  (setq in-class-declaration t)
+                  (setq in-class-declaration-level 1)))
 
               ;; Are we on a new line?
               (when (> token-start-line-number last-line-number)
