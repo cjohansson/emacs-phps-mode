@@ -94,7 +94,10 @@
                   (progn
 
                     ;; Flag when last token was on a new line
-                    (when (= token-number last-token-number)
+                    (when (and
+                           (= token-number last-token-number)
+                           (> token-start-line-number last-line-number))
+                      ;; (message "Token %s was first on line and last last token" token)
                       (setq last-token-was-first-on-new-line t))
 
                     ;; Calculate indentation level at end of line

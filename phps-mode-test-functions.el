@@ -97,7 +97,7 @@
 
   (phps-mode-test-with-buffer
    "<?php\n$str = <<<EOD\nExample of string\nspanning multiple lines\nusing heredoc syntax.\nEOD;\n"
-   "Multi-line HEREDOC string"
+   "Multi-line HEREDOC string in assignment"
    ;; (message "Tokens: %s" phps-mode-lexer-tokens)
    (should (equal '((1 (0 0)) (2 (0 0)) (3 (0 0)) (4 (0 0)) (5 (0 0)) (6 (0 0))) (phps-mode-test-functions--hash-to-list (phps-mode-functions-get-lines-indent)))))
 
@@ -119,14 +119,39 @@
    ;; (message "Tokens: %s" phps-mode-lexer-tokens)
    (should (equal '((1 (0 0)) (2 (0 0)) (3 (0 0)) (4 (0 0))) (phps-mode-test-functions--hash-to-list (phps-mode-functions-get-lines-indent)))))
 
-  ;; TODO Test concatenated string outside assignments
-  ;; TODO Test HEREDOC outside assignment
-  ;; TODO Test multi-line single-quoted string outside assignment
-  ;; TODO Test multi-line double-quoted string outside assignment
+  (phps-mode-test-with-buffer
+   "<html><head><title><?php if ($myCondition) {\nif ($mySeconCondition) {\necho $title2;\n\n} ?></title><body>Bla bla</body></html>"
+   "Mixed HTML/PHP 2"
+   (message "Tokens: %s" phps-mode-lexer-tokens)
+   (should (equal '((1 (0 0)) (2 (1 0)) (3 (2 0)) (5 (1 0))) (phps-mode-test-functions--hash-to-list (phps-mode-functions-get-lines-indent)))))
+
+  ;; NOTE Maybe concatenated strings spanning multiple lines outside assignments should have indentation?
+  
+  (phps-mode-test-with-buffer
+   "<?php\necho \"A line\" .\n    \"more text here\" .\n    \"last line here\";"
+   "Concatenated double-quoted-string spanning multiple-lines"
+   ;; (message "Tokens: %s" phps-mode-lexer-tokens)
+   (should (equal '((1 (0 0)) (2 (0 0)) (3 (0 0)) (4 (0 0))) (phps-mode-test-functions--hash-to-list (phps-mode-functions-get-lines-indent)))))
+
+  (phps-mode-test-with-buffer
+   "<?php\necho 'A line' .\n    'more text here' .\n    'last line here';"
+   "Concatenated single-quoted-string spanning multiple-lines"
+   ;; (message "Tokens: %s" phps-mode-lexer-tokens)
+   (should (equal '((1 (0 0)) (2 (0 0)) (3 (0 0)) (4 (0 0))) (phps-mode-test-functions--hash-to-list (phps-mode-functions-get-lines-indent)))))
+
+  (phps-mode-test-with-buffer
+   "<?php\n$var = 'A line' .\n    'more text here' .\n    'last line here';"
+   "Concatenated single-quoted-string multiple-lines in assignment"
+   ;; (message "Tokens: %s" phps-mode-lexer-tokens)
+   (should (equal '((1 (0 0)) (2 (0 0)) (3 (1 0)) (4 (1 0))) (phps-mode-test-functions--hash-to-list (phps-mode-functions-get-lines-indent)))))
+
+  (phps-mode-test-with-buffer
+   "<?php\necho <<<EOD\nExample of string\nspanning multiple lines\nusing heredoc syntax.\nEOD;\n"
+   "Multi-line HEREDOC string outside assignment"
+   ;; (message "Tokens: %s" phps-mode-lexer-tokens)
+   (should (equal '((1 (0 0)) (2 (0 0)) (3 (0 0)) (4 (0 0)) (5 (0 0)) (6 (0 0))) (phps-mode-test-functions--hash-to-list (phps-mode-functions-get-lines-indent)))))
 
   )
-
-;; TODO Add unit tests for HEREDOC and NOWDOC regions as well
 
 (defun phps-mode-test-functions-indent-line ()
   "Test for indentation."
