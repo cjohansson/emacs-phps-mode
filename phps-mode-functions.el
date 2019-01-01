@@ -77,6 +77,7 @@
               (allow-custom-column-decrement nil)
               (in-assignment nil)
               (in-assignment-level 0)
+              (in-assignment-started-this-line nil)
               (in-class-declaration nil)
               (in-class-declaration-level 0))
 
@@ -124,14 +125,14 @@
                       (when first-token-is-nesting-increase
                         (setq column-level (1+ column-level))))
                     
-                    (message "new line %s or last token at %s, %s %s.%s (%s - %s) = %s %s %s %s %s [%s %s] %s %s %s" token-start-line-number token last-token column-level tuning-level nesting-start nesting-end round-bracket-level square-bracket-level curly-bracket-level alternative-control-structure-level inline-control-structure-level first-token-is-nesting-decrease first-token-is-nesting-increase in-assignment-level in-assignment-level in-class-declaration-level)
+                    ;; (message "new line %s or last token at %s, %s %s.%s (%s - %s) = %s %s %s %s %s [%s %s] %s %s %s" token-start-line-number token last-token column-level tuning-level nesting-start nesting-end round-bracket-level square-bracket-level curly-bracket-level alternative-control-structure-level inline-control-structure-level first-token-is-nesting-decrease first-token-is-nesting-increase in-assignment in-assignment-level in-class-declaration-level)
 
                     ;; Put indent-level to hash-table
                     (when (> last-line-number 0)
                       (puthash last-line-number `(,column-level ,tuning-level) line-indents))
 
                     (when (> token-end-line-number token-start-line-number)
-                      (message "Token %s starts at %s and ends at %s" token token-start-line-number token-end-line-number)
+                      ;; (message "Token %s starts at %s and ends at %s" token token-start-line-number token-end-line-number)
                       (when (equal token 'T_DOC_COMMENT)
                         (setq tuning-level 1))
 
@@ -167,7 +168,8 @@
                       (setq first-token-is-nesting-increase nil)
                       (setq first-token-is-nesting-decrease nil)
                       (setq in-assignment-level 0)
-                      (setq in-class-declaration-level 0)))
+                      (setq in-class-declaration-level 0)
+                      (setq in-assignment-started-this-line nil)))
                 (setq first-token-on-line nil)
                 (when (> token-end-line-number token-start-line-number)
                   ;; (message "Token not first on line %s starts at %s and ends at %s" token token-start-line-number token-end-line-number)
@@ -314,17 +316,20 @@
                   (if (string= token ";")
                       (progn
                         (setq in-assignment nil)
+                        (when in-assignment-started-this-line
+                          (setq in-assignment-level 0))
                         ;; (message "Assignment ended at semi-colon")
                         )
                     (when (and first-token-on-line
                                (not in-heredoc))
                       (setq in-assignment-level 1)
-                      (message "In assignment on new-line at %s" token)
+                      ;; (message "In assignment on new-line at %s" token)
                       ))
                 (when (and (not after-special-control-structure)
                            (string= token "="))
                   ;; (message "Started assignment")
                   (setq in-assignment t)
+                  (setq in-assignment-started-this-line t)
                   (setq in-assignment-level 1)))
 
               ;; Did we encounter a token that supports extra special alternative control structures?
@@ -393,7 +398,7 @@
               (when first-token-is-nesting-increase
                 (setq column-level (1+ column-level))))
             
-            (message "last token at %s %s.%s (%s - %s) = %s %s %s %s %s [%s %s] %s %s" last-token column-level tuning-level nesting-start nesting-end round-bracket-level square-bracket-level curly-bracket-level alternative-control-structure-level inline-control-structure-level first-token-is-nesting-decrease first-token-is-nesting-increase in-assignment-level in-class-declaration-level)
+            ;; (message "last token at %s %s.%s (%s - %s) = %s %s %s %s %s [%s %s] %s %s" last-token column-level tuning-level nesting-start nesting-end round-bracket-level square-bracket-level curly-bracket-level alternative-control-structure-level inline-control-structure-level first-token-is-nesting-decrease first-token-is-nesting-increase in-assignment-level in-class-declaration-level)
 
             ;; Put indent-level to hash-table
             (puthash last-line-number `(,column-level ,tuning-level) line-indents))

@@ -59,6 +59,12 @@
    (should (equal '((1 (0 0)) (2 (0 0)) (3 (1 0)) (4 (2 0)) (5 (1 0)) (6 (2 0)) (7 (1 0)) (8 (2 0)) (9 (2 0)) (10 (1 0)) (11 (0 0))) (phps-mode-test-functions--hash-to-list (phps-mode-functions-get-lines-indent)))))
 
   (phps-mode-test-with-buffer
+   "<?php\nif (myFirstCondition()) {\n    $this->var = 'abc123';\n    } else {\n    $this->var = 'def456';\n}\n"
+   "Regular else expression indent calculation"
+   ;; (message "Tokens %s point %s" phps-mode-lexer-tokens (point))
+   (should (equal '((1 (0 0)) (2 (0 0)) (3 (1 0)) (4 (0 0)) (5 (1 0)) (6 (0 0))) (phps-mode-test-functions--hash-to-list (phps-mode-functions-get-lines-indent)))))
+
+  (phps-mode-test-with-buffer
    "<?php\nif (true):\n    echo 'Something';\nelseif (true):\n    echo 'Something';\nelse:\n    echo 'Something else';\n    echo 'Something else again';\nendif;\necho true;\n"
    "Alternative control structures"
    (should (equal '((1 (0 0)) (2 (0 0)) (3 (1 0)) (4 (0 0)) (5 (1 0)) (6 (0 0)) (7 (1 0)) (8 (1 0)) (9 (0 0)) (10 (0 0))) (phps-mode-test-functions--hash-to-list (phps-mode-functions-get-lines-indent)))))
@@ -88,6 +94,12 @@
    "Multi-line assignments"
    ;; (message "Tokens: %s" phps-mode-lexer-tokens)
    (should (equal '((1 (0 0)) (2 (0 0)) (3 (1 0)) (4 (1 0)) (5 (1 0)) (6 (1 0)) (7 (1 0)) (8 (1 0))) (phps-mode-test-functions--hash-to-list (phps-mode-functions-get-lines-indent)))))
+
+  (phps-mode-test-with-buffer
+   "<?php\n$variable = array(\n    'random4');\n$variable = true;\n"
+   "Array assignment on only two lines"
+   ;; (message "Tokens: %s" phps-mode-lexer-tokens)
+   (should (equal '((1 (0 0)) (2 (0 0)) (3 (0 0)) (4 (0 0)) ) (phps-mode-test-functions--hash-to-list (phps-mode-functions-get-lines-indent)))))
 
   (phps-mode-test-with-buffer
    "<?php\n$str = <<<'EOD'\nExample of string\nspanning multiple lines\nusing nowdoc syntax.\nEOD;\n"
@@ -122,7 +134,7 @@
   (phps-mode-test-with-buffer
    "<html><head><title><?php if ($myCondition) {\nif ($mySeconCondition) {\necho $title2;\n\n} ?></title><body>Bla bla</body></html>"
    "Mixed HTML/PHP 2"
-   (message "Tokens: %s" phps-mode-lexer-tokens)
+   ;; (message "Tokens: %s" phps-mode-lexer-tokens)
    (should (equal '((1 (0 0)) (2 (1 0)) (3 (2 0)) (5 (1 0))) (phps-mode-test-functions--hash-to-list (phps-mode-functions-get-lines-indent)))))
 
   ;; NOTE Maybe concatenated strings spanning multiple lines outside assignments should have indentation?
@@ -234,16 +246,14 @@
    (let ((buffer-contents (buffer-substring-no-properties (point-min) (point-max))))
      (should (equal buffer-contents  "<?php\n/**\n* My first line\n* My second line\n **/\n"))))
 
-  ;; TODO Fix this and also indentation for class implements
-
   (phps-mode-test-with-buffer
-   "<?php\n$variable = array(\n'random4');\n$variable = true;\n"
+   "<?php\n$variable = array(\n    'random4');\n$variable = true;\n"
    "Round bracket test 1"
    (goto-char 30)
    (phps-mode-functions-indent-line)
    ;; (message "Tokens %s point %s" phps-mode-lexer-tokens (point))
    (let ((buffer-contents (buffer-substring-no-properties (point-min) (point-max))))
-     (should (equal buffer-contents  "<?php\n$variable = array(\n    'random4');\n$variable = true;\n"))))
+     (should (equal buffer-contents  "<?php\n$variable = array(\n'random4');\n$variable = true;\n"))))
 
   (phps-mode-test-with-buffer
    "<?php\nadd_filter(\n\"views_{$screen->id}\",'__return_empty_array'\n);"
