@@ -163,6 +163,29 @@
    ;; (message "Tokens: %s" phps-mode-lexer-tokens)
    (should (equal '((1 (0 0)) (2 (0 0)) (3 (0 0)) (4 (0 0)) (5 (0 0)) (6 (0 0))) (phps-mode-test-functions--hash-to-list (phps-mode-functions-get-lines-indent)))))
 
+  ;; TODO
+  ;;     // Can we load configuration?
+  ;;     if ($configuration::load(
+  ;;         self::getParameter(self::PARAMETER_CONFIGURATION_INTERNAL_FILENAME),
+  ;;         self::getParameter(self::PARAMETER_CONFIGURATION_EXTERNAL_FILENAME),
+  ;;         self::getParameter(self::PARAMETER_STRUCTURE_INTERNAL_FILENAME),
+  ;;     self::getParameter(self::PARAMETER_STRUCTURE_EXTERNAL_FILENAME))
+  ;; ) {
+
+  ;; TODO
+  ;; /**
+  ;;    * @var string
+  ;;    */
+
+  ;; TODO
+  ;; public function __construct($parameters = null)
+  ;;   {
+
+  ;; TODO
+  ;;                     /** @define _SYSTEM_START_TIME_     Startup time for system */
+  ;;                   define('_SYSTEM_START_TIME_', microtime(true));
+
+
   )
 
 (defun phps-mode-test-functions-indent-line ()
