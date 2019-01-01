@@ -317,7 +317,8 @@
 
               ;; Keep track of assignments
               (if in-assignment
-                  (if (string= token ";")
+                  (if (or (string= token ";")
+                          (< round-bracket-level in-assignment))
                       (progn
                         (setq in-assignment nil)
                         (when in-assignment-started-this-line
@@ -332,7 +333,7 @@
                 (when (and (not after-special-control-structure)
                            (string= token "="))
                   ;; (message "Started assignment")
-                  (setq in-assignment t)
+                  (setq in-assignment round-bracket-level)
                   (setq in-assignment-started-this-line t)
                   (setq in-assignment-level 1)))
 
