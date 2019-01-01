@@ -163,28 +163,28 @@
    ;; (message "Tokens: %s" phps-mode-lexer-tokens)
    (should (equal '((1 (0 0)) (2 (0 0)) (3 (0 0)) (4 (0 0)) (5 (0 0)) (6 (0 0))) (phps-mode-test-functions--hash-to-list (phps-mode-functions-get-lines-indent)))))
 
-  ;; TODO
-  ;;     // Can we load configuration?
-  ;;     if ($configuration::load(
-  ;;         self::getParameter(self::PARAMETER_CONFIGURATION_INTERNAL_FILENAME),
-  ;;         self::getParameter(self::PARAMETER_CONFIGURATION_EXTERNAL_FILENAME),
-  ;;         self::getParameter(self::PARAMETER_STRUCTURE_INTERNAL_FILENAME),
-  ;;     self::getParameter(self::PARAMETER_STRUCTURE_EXTERNAL_FILENAME))
-  ;; ) {
+  (phps-mode-test-with-buffer
+   "<?php\n/**\n * @var string\n */\necho 'was here';\n"
+   "Statement after doc-comment"
+   ;; (message "Tokens: %s" phps-mode-lexer-tokens)
+   (should (equal '((1 (0 0)) (2 (0 0)) (3 (0 1)) (4 (0 1)) (5 (0 0))) (phps-mode-test-functions--hash-to-list (phps-mode-functions-get-lines-indent)))))
 
-  ;; TODO
-  ;; /**
-  ;;    * @var string
-  ;;    */
+  (phps-mode-test-with-buffer
+   "<?php\n/** @define _SYSTEM_START_TIME_     Startup time for system */\ndefine('_SYSTEM_START_TIME_', microtime(true));\necho 'statement';\n"
+   "Statement after a define() with a doc-comment"
+   (should (equal '((1 (0 0)) (2 (0 0)) (3 (0 0)) (4 (0 0))) (phps-mode-test-functions--hash-to-list (phps-mode-functions-get-lines-indent)))))
 
-  ;; TODO
-  ;; public function __construct($parameters = null)
-  ;;   {
+  (phps-mode-test-with-buffer
+   "<?php\nfunction myFunction($parameters = null)\n{\n    echo 'statement';\n}\n"
+   "Statement after one-lined function declaration"
+   ;; (message "Tokens: %s" phps-mode-lexer-tokens)
+   (should (equal '((1 (0 0)) (2 (0 0)) (3 (0 0)) (4 (1 0)) (5 (0 0))) (phps-mode-test-functions--hash-to-list (phps-mode-functions-get-lines-indent)))))
 
-  ;; TODO
-  ;;                     /** @define _SYSTEM_START_TIME_     Startup time for system */
-  ;;                   define('_SYSTEM_START_TIME_', microtime(true));
-
+  (phps-mode-test-with-buffer
+   "<?php\n// Can we load configuration?\nif ($configuration::load(\n    self::getParameter(self::PARAMETER_CONFIGURATION_INTERNAL_FILENAME),\n    self::getParameter(self::PARAMETER_CONFIGURATION_EXTERNAL_FILENAME),\n    self::getParameter(self::PARAMETER_STRUCTURE_INTERNAL_FILENAME),\n    self::getParameter(self::PARAMETER_STRUCTURE_EXTERNAL_FILENAME))\n) {\n    echo 'was here';\n}\n"
+   "If expression spanning multiple lines"
+   ;; (message "Tokens: %s" phps-mode-lexer-tokens)
+   (should (equal '((1 (0 0)) (2 (0 0)) (3 (0 0)) (4 (1 0)) (5 (1 0)) (6 (1 0)) (7 (1 0)) (8 (0 0)) (9 (1 0)) (10 (0 0))) (phps-mode-test-functions--hash-to-list (phps-mode-functions-get-lines-indent)))))
 
   )
 
