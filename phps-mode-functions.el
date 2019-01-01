@@ -79,7 +79,9 @@
               (in-assignment-level 0)
               (in-assignment-started-this-line nil)
               (in-class-declaration nil)
-              (in-class-declaration-level 0))
+              (in-class-declaration-level 0)
+              (last-token-start-line-number 0)
+              (last-token-end-line-number 0))
 
           ;; Iterate through all buffer tokens from beginning to end
           (dolist (item phps-mode-lexer-tokens)
@@ -131,14 +133,16 @@
                     (when (> last-line-number 0)
                       (puthash last-line-number `(,column-level ,tuning-level) line-indents))
 
-                    (when (> token-end-line-number token-start-line-number)
-                      ;; (message "Token %s starts at %s and ends at %s" token token-start-line-number token-end-line-number)
-                      (when (equal token 'T_DOC_COMMENT)
+                    ;; Does last token span several lines?
+                    (when (> last-token-end-line-number last-token-start-line-number)
+                      ;; (message "Token %s starts at %s and ends at %s indent %s %s" last-token last-token-start-line-number last-token-end-line-number column-level tuning-level)
+                      (when (equal last-token 'T_DOC_COMMENT)
                         (setq tuning-level 1))
 
-                      (let ((token-line-number-diff (1- (- token-end-line-number token-start-line-number))))
+                      (let ((token-line-number-diff (1- (- last-token-end-line-number last-token-start-line-number))))
                         (while (>= token-line-number-diff 0)
-                          (puthash (- token-end-line-number token-line-number-diff) `(,column-level ,tuning-level) line-indents)
+                          (puthash (- last-token-end-line-number token-line-number-diff) `(,column-level ,tuning-level) line-indents)
+                          ;; (message "Saved line %s indent %s %s" (- last-token-end-line-number token-line-number-diff) column-level tuning-level)
                           (setq token-line-number-diff (1- token-line-number-diff))))
                       (setq tuning-level 0))
 
@@ -171,14 +175,14 @@
                       (setq in-class-declaration-level 0)
                       (setq in-assignment-started-this-line nil)))
                 (setq first-token-on-line nil)
-                (when (> token-end-line-number token-start-line-number)
+                (when (> last-token-end-line-number last-token-start-line-number)
                   ;; (message "Token not first on line %s starts at %s and ends at %s" token token-start-line-number token-end-line-number)
-                  (when (equal token 'T_DOC_COMMENT)
+                  (when (equal last-token 'T_DOC_COMMENT)
                     (setq tuning-level 1))
 
-                  (let ((token-line-number-diff (1- (- token-end-line-number token-start-line-number))))
+                  (let ((token-line-number-diff (1- (- last-token-end-line-number last-token-start-line-number))))
                     (while (>= token-line-number-diff 0)
-                      (puthash (- token-end-line-number token-line-number-diff) `(,column-level ,tuning-level) line-indents)
+                      (puthash (- last-token-end-line-number token-line-number-diff) `(,column-level ,tuning-level) line-indents)
                       (setq token-line-number-diff (1- token-line-number-diff))))
                   (setq tuning-level 0)))
 
@@ -371,7 +375,9 @@
                 (setq last-line-number token-start-line-number))
 
               (setq token-number (1+ token-number))
-              (setq last-token token)))
+              (setq last-token token)
+              (setq last-token-start-line-number token-start-line-number)
+              (setq last-token-end-line-number token-end-line-number)))
 
           ;; Process line if last token was first on new line
           (when last-token-was-first-on-new-line
@@ -401,7 +407,21 @@
             ;; (message "last token at %s %s.%s (%s - %s) = %s %s %s %s %s [%s %s] %s %s" last-token column-level tuning-level nesting-start nesting-end round-bracket-level square-bracket-level curly-bracket-level alternative-control-structure-level inline-control-structure-level first-token-is-nesting-decrease first-token-is-nesting-increase in-assignment-level in-class-declaration-level)
 
             ;; Put indent-level to hash-table
-            (puthash last-line-number `(,column-level ,tuning-level) line-indents))
+            (puthash last-line-number `(,column-level ,tuning-level) line-indents)
+
+            ;; Does last token span several lines?
+            (when (> last-token-end-line-number last-token-start-line-number)
+              ;; (message "Token %s starts at %s and ends at %s indent %s %s" last-token last-token-start-line-number last-token-end-line-number column-level tuning-level)
+              (when (equal last-token 'T_DOC_COMMENT)
+                (setq tuning-level 1))
+
+              (let ((token-line-number-diff (1- (- last-token-end-line-number last-token-start-line-number))))
+                (while (>= token-line-number-diff 0)
+                  (puthash (- last-token-end-line-number token-line-number-diff) `(,column-level ,tuning-level) line-indents)
+                  ;; (message "Saved line %s indent %s %s" (- last-token-end-line-number token-line-number-diff) column-level tuning-level)
+                  (setq token-line-number-diff (1- token-line-number-diff))))
+              (setq tuning-level 0))
+            )
 
           line-indents))
     nil))
