@@ -38,23 +38,12 @@
 
 ;; TODO Add support for automatic parenthesis, bracket, square-bracket, single-quote and double-quote encapsulations
 
-;; TODO Support indentation for multi-line assignments
-
 (defun phps-mode-functions-get-lines-indent ()
-  "Get the column and tuning indentation-numbers for each line in buffer that contain tokens.
-
-Refactor to this structure:
-1. Iterate through each token
-2. Do token logic
-3. If token is last on it's line or the last token of all, process line logic
-
-"
+  "Get the column and tuning indentation-numbers for each line in buffer that contain tokens."
   (if (boundp 'phps-mode-lexer-tokens)
       (save-excursion
         (goto-char (point-min))
-        (let ((in-scripting nil)
-              (in-heredoc nil)
-              (in-doc-comment nil)
+        (let ((in-heredoc nil)
               (in-inline-control-structure nil)
               (after-special-control-structure nil)
               (after-special-control-structure-token nil)
@@ -77,7 +66,6 @@ Refactor to this structure:
               (first-token-is-nesting-decrease nil)
               (first-token-is-nesting-increase nil)
               (token-number 1)
-              (last-token-number (length phps-mode-lexer-tokens))
               (allow-custom-column-increment nil)
               (allow-custom-column-decrement nil)
               (in-assignment nil)
@@ -86,8 +74,6 @@ Refactor to this structure:
               (in-class-declaration nil)
               (in-class-declaration-level 0)
               (token nil)
-              (token-start 0)
-              (token-end 0)
               (token-start-line-number 0)
               (token-end-line-number)
               (tokens (nreverse phps-mode-lexer-tokens)))
@@ -269,13 +255,6 @@ Refactor to this structure:
                   (setq after-extra-special-control-structure t)
                   (setq after-extra-special-control-structure-first-on-line first-token-on-line))
 
-                ;; Keep track of in scripting
-                (when (or (equal token 'T_OPEN_TAG)
-                          (equal token 'T_OPEN_TAG_WITH_ECHO))
-                  (setq in-scripting t))
-                (when (equal token 'T_CLOSE_TAG)
-                  (setq in-scripting nil))
-
                 ;; Keep track of whether we are inside a HEREDOC or NOWDOC
                 (when (equal token 'T_START_HEREDOC)
                   (setq in-heredoc t))
@@ -395,8 +374,6 @@ Refactor to this structure:
 
               ;; Update current token
               (setq token next-token)
-              (setq token-start next-token-start)
-              (setq token-end next-token-end)
               (setq token-start-line-number next-token-start-line-number)
               (setq token-end-line-number next-token-end-line-number)
               (setq token-number (1+ token-number))))
@@ -458,11 +435,6 @@ Refactor to this structure:
     ;; (message "phps-mode-functions-after-change %s %s %s" start stop length)
     ))
 
-;; TODO This function needs to keep track of alternative syntax for the control structures: if, while, for, foreach, and switch
-;; TODO This function needs to keep track of inline syntax for the control structures: if, while, for, foreach, and switch
-;; TODO Support switch case as well
-;; TODO Keep track of assignments as well
-
 (defun phps-mode-functions-init ()
   "PHP specific init-cleanup routines."
 
@@ -483,10 +455,7 @@ Refactor to this structure:
   (set (make-local-variable 'phps-mode-functions-buffer-changes-start) nil)
   (set (make-local-variable 'phps-mode-functions-lines-indent) nil)
 
-  (add-hook 'after-change-functions #'phps-mode-functions-after-change)
-
-  ;; NOTE Implement indent-region?
-  )
+  (add-hook 'after-change-functions #'phps-mode-functions-after-change))
 
 
 (provide 'phps-mode-functions)
