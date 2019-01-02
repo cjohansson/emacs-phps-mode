@@ -337,7 +337,7 @@ Refactor to this structure:
                         (when first-token-is-nesting-increase
                           (setq column-level (1+ column-level))))
 
-                      (message "Process line ending with %s, nesting: %s-%s, line-number: %s-%s, indent: %s.%s" token nesting-start nesting-end token-start-line-number token-end-line-number column-level tuning-level)
+                      (message "Process line ending.	nesting: %s-%s,	line-number: %s-%s,	indent: %s.%s,	token: %s" nesting-start nesting-end token-start-line-number token-end-line-number column-level tuning-level token)
                       
                       ;; (message "new line %s or last token at %s, %s %s.%s (%s - %s) = %s %s %s %s %s [%s %s] %s %s %s" token-start-line-number token next-token column-level tuning-level nesting-start nesting-end round-bracket-level square-bracket-level curly-bracket-level alternative-control-structure-level inline-control-structure-level first-token-is-nesting-decrease first-token-is-nesting-increase in-assignment in-assignment-level in-class-declaration-level)
 
