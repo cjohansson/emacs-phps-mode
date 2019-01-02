@@ -107,15 +107,18 @@
                     (setq nesting-end (+ round-bracket-level square-bracket-level curly-bracket-level alternative-control-structure-level inline-control-structure-level in-assignment-level in-class-declaration-level))
 
                     ;; Is line ending indentation lesser than line beginning indentation?
-                    (when (and (< nesting-end nesting-start)
-                               (> column-level 0))
+                    (when (< nesting-end nesting-start)
 
                       ;; Decrement column
                       (if allow-custom-column-decrement
                           (progn
                             (setq column-level (- column-level (- nesting-start nesting-end)))
                             (setq allow-custom-column-increment nil))
-                        (setq column-level (1- column-level))))
+                        (setq column-level (1- column-level)))
+
+                        ;; Prevent negative column-values
+                        (when (< column-level 0)
+                          (setq column-level 0)))
 
                     ;; Is line ending indentation equal to line beginning indentation and did we have a change of scope?
                     (when (and (= nesting-end nesting-start)
@@ -127,7 +130,7 @@
                       (when first-token-is-nesting-increase
                         (setq column-level (1+ column-level))))
                     
-                    ;; (message "new line %s or last token at %s, %s %s.%s (%s - %s) = %s %s %s %s %s [%s %s] %s %s %s" token-start-line-number token last-token column-level tuning-level nesting-start nesting-end round-bracket-level square-bracket-level curly-bracket-level alternative-control-structure-level inline-control-structure-level first-token-is-nesting-decrease first-token-is-nesting-increase in-assignment in-assignment-level in-class-declaration-level)
+                    (message "new line %s or last token at %s, %s %s.%s (%s - %s) = %s %s %s %s %s [%s %s] %s %s %s" token-start-line-number token last-token column-level tuning-level nesting-start nesting-end round-bracket-level square-bracket-level curly-bracket-level alternative-control-structure-level inline-control-structure-level first-token-is-nesting-decrease first-token-is-nesting-increase in-assignment in-assignment-level in-class-declaration-level)
 
                     ;; Put indent-level to hash-table
                     (when (> last-line-number 0)
@@ -387,15 +390,26 @@
             (setq nesting-end (+ round-bracket-level square-bracket-level curly-bracket-level alternative-control-structure-level inline-control-structure-level in-assignment-level in-class-declaration-level))
 
             ;; Is line ending indentation lesser than line beginning indentation?
-            (when (and (< nesting-end nesting-start)
-                       (> column-level 0))
+            (when (< nesting-end nesting-start)
 
               ;; Decrement column
               (if allow-custom-column-decrement
                   (progn
                     (setq column-level (- column-level (- nesting-start nesting-end)))
                     (setq allow-custom-column-increment nil))
-                (setq column-level (1- column-level))))
+                (setq column-level (1- column-level)))
+
+              ;; Positive nesting should set positive column
+              (when (and (<= column-level 0)
+                         (> nesting-end 0))
+                (message "Setting column-level to 1")
+                (setq column-level 1))
+
+              ;; Prevent negative column-values
+              (when (< column-level 0)
+                (setq column-level 0))
+
+              )
 
             ;; Is line ending indentation equal to line beginning indentation and did we have a change of scope?
             (when (= nesting-end nesting-start)
@@ -405,7 +419,7 @@
               (when first-token-is-nesting-increase
                 (setq column-level (1+ column-level))))
             
-            ;; (message "last token at %s %s.%s (%s - %s) = %s %s %s %s %s [%s %s] %s %s" last-token column-level tuning-level nesting-start nesting-end round-bracket-level square-bracket-level curly-bracket-level alternative-control-structure-level inline-control-structure-level first-token-is-nesting-decrease first-token-is-nesting-increase in-assignment-level in-class-declaration-level)
+            (message "last token at %s %s.%s (%s - %s) = %s %s %s %s %s [%s %s] %s %s" last-token column-level tuning-level nesting-start nesting-end round-bracket-level square-bracket-level curly-bracket-level alternative-control-structure-level inline-control-structure-level first-token-is-nesting-decrease first-token-is-nesting-increase in-assignment-level in-class-declaration-level)
 
             ;; Put indent-level to hash-table
             (puthash last-line-number `(,column-level ,tuning-level) line-indents)
