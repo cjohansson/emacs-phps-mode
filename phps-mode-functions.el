@@ -89,15 +89,26 @@ Refactor to this structure:
               (token-start 0)
               (token-end 0)
               (token-start-line-number 0)
-              (token-end-line-number))
+              (token-end-line-number)
+              (tokens (nreverse phps-mode-lexer-tokens)))
+
+          (push `(END_PARSE ,(point-max) . ,(point-max)) tokens)
 
           ;; Iterate through all buffer tokens from beginning to end
-          (dolist (item phps-mode-lexer-tokens)
-            (let* ((next-token (car item))
+          (dolist (item (nreverse tokens))
+            ;; (message "Items: %s %s" item phps-mode-lexer-tokens)
+            (let ((next-token (car item))
                    (next-token-start (car (cdr item)))
                    (next-token-end (cdr (cdr item)))
-                   (next-token-start-line-number (line-number-at-pos next-token-start t))
-                   (next-token-end-line-number (line-number-at-pos next-token-end t)))
+                   (next-token-start-line-number nil)
+                   (next-token-end-line-number nil))
+
+              (if (equal next-token 'END_PARSE)
+                  (progn
+                    (setq next-token-start-line-number (1+ token-start-line-number))
+                    (setq next-token-end-line-number (1+ token-end-line-number)))
+                (setq next-token-start-line-number (line-number-at-pos next-token-start t))
+                (setq next-token-end-line-number (line-number-at-pos next-token-end t)))
 
               ;; Token logic
               (when token
@@ -290,8 +301,7 @@ Refactor to this structure:
               (when token
 
                 ;; Line logic
-                (if (or (> next-token-start-line-number token-start-line-number)
-                        (= token-number last-token-number))
+                (if (> next-token-start-line-number token-start-line-number)
                     (progn
 
                       ;; Flag when last token was on a new line
