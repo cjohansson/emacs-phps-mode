@@ -1267,9 +1267,6 @@ ANY_CHAR'
       (setq phps-mode-lexer-buffer-changes--start nil))
 
     (setq phps-mode-lexer-states nil)
-    (when (and (boundp 'phps-mode-functions-lines-indent)
-               phps-mode-functions-lines-indent)
-      (setq phps-mode-functions-lines-indent nil))
     (phps-mode-lexer-BEGIN phps-mode-lexer-ST_INITIAL)))
 
 (defun phps-mode-lexer-run ()
@@ -1324,7 +1321,7 @@ ANY_CHAR'
     new-tokens))
 
 (defun phps-mode-lexer-run-incremental ()
-  "Run incremental lexer based on `phps-mode-lexer-buffer-changes--start'."
+  "Run incremental lexer based on `phps-mode-lexer-buffer-changes-start'."
   (when (and (boundp 'phps-mode-functions-buffer-changes-start)
              phps-mode-functions-buffer-changes-start
              phps-mode-lexer-states)

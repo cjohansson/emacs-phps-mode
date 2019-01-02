@@ -444,6 +444,9 @@ Refactor to this structure:
                (boundp 'phps-mode-idle-interval)
                phps-mode-idle-interval)
       ;; (message "Enqueued incremental lexer")
+
+      ;; Reset line indents
+      (setq phps-mode-functions-lines-indent nil)
       (run-with-idle-timer phps-mode-idle-interval nil #'phps-mode-lexer-run-incremental))
 
     ;; When point of change is not set or when start of new changes precedes old change - update the point
