@@ -185,16 +185,23 @@
    (should (equal '((1 (0 0)) (2 (0 0)) (3 (0 0)) (4 (1 0)) (5 (0 0))) (phps-mode-test-functions--hash-to-list (phps-mode-functions-get-lines-indent)))))
 
   (phps-mode-test-with-buffer
+   "<?php\nif (\n    true\n    && true\n) {\n    echo 'was here';\n}\n"
+   "If expression spanning multiple lines 1"
+   ;; (message "Tokens: %s" phps-mode-lexer-tokens)
+   (should (equal '((1 (0 0)) (2 (0 0)) (3 (1 0)) (4 (1 0)) (5 (0 0)) (6 (1 0)) (7 (0 0))) (phps-mode-test-functions--hash-to-list (phps-mode-functions-get-lines-indent)))))
+
+  (phps-mode-test-with-buffer
    "<?php\n// Can we load configuration?\nif ($configuration::load(\n    self::getParameter(self::PARAMETER_CONFIGURATION_INTERNAL_FILENAME),\n    self::getParameter(self::PARAMETER_CONFIGURATION_EXTERNAL_FILENAME),\n    self::getParameter(self::PARAMETER_STRUCTURE_INTERNAL_FILENAME),\n    self::getParameter(self::PARAMETER_STRUCTURE_EXTERNAL_FILENAME)\n)) {\n    echo 'was here';\n}\n"
-   "If expression spanning multiple lines"
+   "If expression spanning multiple lines 2"
    ;; (message "Tokens: %s" phps-mode-lexer-tokens)
    (should (equal '((1 (0 0)) (2 (0 0)) (3 (0 0)) (4 (1 0)) (5 (1 0)) (6 (1 0)) (7 (1 0)) (8 (0 0)) (9 (1 0)) (10 (0 0))) (phps-mode-test-functions--hash-to-list (phps-mode-functions-get-lines-indent)))))
 
-  (phps-mode-test-with-buffer
-   "<?php\n// Can we load configuration?\nif ($configuration::load(\n    self::getParameter(self::PARAMETER_CONFIGURATION_INTERNAL_FILENAME),\n    self::getParameter(self::PARAMETER_CONFIGURATION_EXTERNAL_FILENAME),\n    self::getParameter(self::PARAMETER_STRUCTURE_INTERNAL_FILENAME),\n    self::getParameter(self::PARAMETER_STRUCTURE_EXTERNAL_FILENAME))\n) {\n    echo 'was here';\n}\n"
-   "If expression spanning multiple lines"
+    (phps-mode-test-with-buffer
+   "<?php\nif (true) {\n    if ($configuration::load(\n        self::getParameter(self::PARAMETER_CONFIGURATION_INTERNAL_FILENAME),\n        self::getParameter(self::PARAMETER_CONFIGURATION_EXTERNAL_FILENAME),\n        self::getParameter(self::PARAMETER_STRUCTURE_INTERNAL_FILENAME),\n        self::getParameter(self::PARAMETER_STRUCTURE_EXTERNAL_FILENAME)\n    )) {\n        echo 'was here';\n    }\n}\n"
+   "If expression spanning multiple lines 2"
    ;; (message "Tokens: %s" phps-mode-lexer-tokens)
-   (should (equal '((1 (0 0)) (2 (0 0)) (3 (0 0)) (4 (1 0)) (5 (1 0)) (6 (1 0)) (7 (0 0)) (8 (0 0)) (9 (1 0)) (10 (0 0))) (phps-mode-test-functions--hash-to-list (phps-mode-functions-get-lines-indent)))))
+   (should (equal '((1 (0 0)) (2 (0 0)) (3 (1 0)) (4 (2 0)) (5 (2 0)) (6 (2 0)) (7 (2 0)) (8 (1 0)) (9 (2 0)) (10 (1 0)) (11 (0 0))) (phps-mode-test-functions--hash-to-list (phps-mode-functions-get-lines-indent)))))
+
 
   )
 

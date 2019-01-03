@@ -351,6 +351,7 @@
                       ;; Put indent-level to hash-table
                       (when (> token-start-line-number 0)
                         (puthash token-start-line-number `(,column-level-start ,tuning-level) line-indents))
+
                       ;; Does token span over several lines?
                       (when (> token-end-line-number token-start-line-number)
                         ;; (message "Token %s starts at %s and ends at %s indent %s %s" next-token token-start-line-number token-end-line-number column-level tuning-level)
@@ -377,6 +378,11 @@
                               (setq column-level (+ column-level (- nesting-end nesting-start)))
                               (setq allow-custom-column-increment nil))
                           (setq column-level (1+ column-level))))
+
+                      ;; When nesting decreases but ends with a nesting increase, increase indent by one
+                      (when (and (< nesting-end nesting-start)
+                                     last-token-is-nesting-increase)
+                        (setq column-level (1+ column-level)))
 
                       ;; Calculate indentation level at start of line
                       (setq nesting-start (+ round-bracket-level square-bracket-level curly-bracket-level alternative-control-structure-level inline-control-structure-level in-assignment-level in-class-declaration-level))
