@@ -38,12 +38,15 @@
 
 ;; TODO Add support for automatic parenthesis, bracket, square-bracket, single-quote and double-quote encapsulations
 
+;; Set indent for white-space lines as well
 (defun phps-mode-functions-get-lines-indent ()
   "Get the column and tuning indentation-numbers for each line in buffer that contain tokens."
   (if (boundp 'phps-mode-lexer-tokens)
       (save-excursion
         (goto-char (point-min))
-        (let ((in-heredoc nil)
+        (message "\nCalculation indentation for all lines in buffer:\n\n%s" (buffer-substring-no-properties (point-min) (point-max)))
+        (let ((in-scripting nil)
+              (in-heredoc nil)
               (in-inline-control-structure nil)
               (after-special-control-structure nil)
               (after-special-control-structure-token nil)
@@ -57,6 +60,7 @@
               (alternative-control-structure-level 0)
               (inline-control-structure-level 0)
               (column-level 0)
+              (column-level-start 0)
               (tuning-level 0)
               (nesting-start 0)
               (nesting-end 0)
@@ -65,6 +69,8 @@
               (line-indents (make-hash-table :test 'equal))
               (first-token-is-nesting-decrease nil)
               (first-token-is-nesting-increase nil)
+              (last-token-is-nesting-increase nil)
+              (last-token-is-nesting-decrease nil)
               (token-number 1)
               (allow-custom-column-increment nil)
               (allow-custom-column-decrement nil)
@@ -76,7 +82,8 @@
               (token nil)
               (token-start-line-number 0)
               (token-end-line-number)
-              (tokens (nreverse phps-mode-lexer-tokens)))
+              (tokens (nreverse phps-mode-lexer-tokens))
+              (nesting-stack '()))
 
           (push `(END_PARSE ,(point-max) . ,(point-max)) tokens)
 
@@ -128,6 +135,13 @@
                     (setq first-token-is-nesting-increase t)))
                 (when (string= token "}")
                   (setq curly-bracket-level (1- curly-bracket-level))
+
+                  ;; Keep track of in scripting
+                  (when (or (equal token 'T_OPEN_TAG)
+                            (equal token 'T_OPEN_TAG_WITH_ECHO))
+                    (setq in-scripting t))
+                  (when (equal token 'T_CLOSE_TAG)
+                    (setq in-scripting nil))
 
                   ;; Decrease switch curly stack if any
                   (when (and switch-curly-stack
@@ -276,15 +290,27 @@
                     (setq in-class-declaration t)
                     (setq in-class-declaration-level 1))))
 
-              ;; Are we on a new line or is it the last token of the buffer?
               (when token
 
-                ;; Line logic
+                ;; Are we on a new line or is it the last token of the buffer?
                 (if (> next-token-start-line-number token-start-line-number)
+
+                    ;; Line logic
                     (progn
 
                       ;; Calculate indentation level at end of line
                       (setq nesting-end (+ round-bracket-level square-bracket-level curly-bracket-level alternative-control-structure-level inline-control-structure-level in-assignment-level in-class-declaration-level))
+
+                      ;; Set flags for last token
+                      (setq last-token-is-nesting-increase (or (string= token "{")
+                                                               (string= token "(")
+                                                               (string= token "[")))
+                      (setq last-token-is-nesting-decrease (or (string= token "}")
+                                                               (string= token ")")
+                                                               (string= token "]")))
+
+                      ;; TODO Should keep stack of nesting-levels and only change columns when nesting exceeds previous
+                      ;; TODO Should only change column-level once below
 
                       ;; Is line ending indentation lesser than line beginning indentation?
                       (when (< nesting-end nesting-start)
@@ -300,27 +326,30 @@
                         (when (< column-level 0)
                           (setq column-level 0)))
 
-                      ;; Is line ending indentation equal to line beginning indentation and did we have a change of scope?
-                      (when (and (= nesting-end nesting-start)
-                                 (not (and first-token-is-nesting-increase
-                                           first-token-is-nesting-decrease)))
+                      (setq column-level-start column-level)
+                      (when (= nesting-end nesting-start)
                         (when (and first-token-is-nesting-decrease
-                                   (> column-level 0))
-                          (setq column-level (1- column-level)))
-                        (when first-token-is-nesting-increase
-                          (setq column-level (1+ column-level))))
+                                   (not first-token-is-nesting-increase)
+                                   (> column-level-start 0))
+                          (setq column-level-start (1- column-level-start)))
+                        (when (and first-token-is-nesting-increase
+                                   (not first-token-is-nesting-decrease))
+                          (setq column-level-start (1+ column-level-start))))
+                                 
 
-                      ;; (message "Process line ending.	nesting: %s-%s,	line-number: %s-%s,	indent: %s.%s,	token: %s" nesting-start nesting-end token-start-line-number token-end-line-number column-level tuning-level token)
+                      (message "Process line ending.	nesting: %s-%s,	line-number: %s-%s,	indent: %s.%s,	token: %s" nesting-start nesting-end token-start-line-number token-end-line-number column-level-start tuning-level token)
+                      
                       
                       ;; (message "new line %s or last token at %s, %s %s.%s (%s - %s) = %s %s %s %s %s [%s %s] %s %s %s" token-start-line-number token next-token column-level tuning-level nesting-start nesting-end round-bracket-level square-bracket-level curly-bracket-level alternative-control-structure-level inline-control-structure-level first-token-is-nesting-decrease first-token-is-nesting-increase in-assignment in-assignment-level in-class-declaration-level)
 
                       ;; Put indent-level to hash-table
                       (when (> token-start-line-number 0)
-                        (puthash token-start-line-number `(,column-level ,tuning-level) line-indents))
-
-                      ;; Does last token span several lines?
+                        (puthash token-start-line-number `(,column-level-start ,tuning-level) line-indents))
+                      ;; Does token span over several lines?
                       (when (> token-end-line-number token-start-line-number)
                         ;; (message "Token %s starts at %s and ends at %s indent %s %s" next-token token-start-line-number token-end-line-number column-level tuning-level)
+
+                        ;; Indent doc-comment lines with 1 tuning
                         (when (equal token 'T_DOC_COMMENT)
                           (setq tuning-level 1))
 
@@ -329,14 +358,9 @@
                             (puthash (- token-end-line-number token-line-number-diff) `(,column-level ,tuning-level) line-indents)
                             ;; (message "Saved line %s indent %s %s" (- token-end-line-number token-line-number-diff) column-level tuning-level)
                             (setq token-line-number-diff (1- token-line-number-diff))))
-                        (setq tuning-level 0))
 
-                      ;; Is line ending indentation equal to line beginning indentation and did we have a change of scope?
-                      (when (= nesting-end nesting-start)
-                        (when first-token-is-nesting-decrease
-                          (setq column-level (1+ column-level)))
-                        (when first-token-is-nesting-increase
-                          (setq column-level (1- column-level))))
+                        ;; Rest tuning-level used for comments
+                        (setq tuning-level 0))
 
                       ;; Is line ending indentation higher than line beginning indentation?
                       (when (> nesting-end nesting-start)
