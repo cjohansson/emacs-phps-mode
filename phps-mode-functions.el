@@ -389,7 +389,7 @@
                           (setq column-level (1+ column-level)))
 
                         (when phps-mode-functions-verbose
-                          (message "Pushing %s to nesting-stack since is greater than %s" nesting-end nesting-start))
+                          (message "Pushing %s to nesting-stack since is lesser than %s" nesting-start nesting-end))
                         (push nesting-start nesting-stack))
 
                       ;; When nesting decreases but ends with a nesting increase, increase indent by one
@@ -397,7 +397,7 @@
                                  line-contained-nesting-increase)
                         (setq column-level (1+ column-level))
                         (when phps-mode-functions-verbose
-                          (message "Pushing %s to nesting-stack since is greater than %s" nesting-end nesting-start))
+                          (message "Pushing %s to nesting-stack since is lesser than %s" nesting-start nesting-end))
                         (push nesting-start nesting-stack))
 
                       ;; Calculate indentation level at start of line
