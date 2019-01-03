@@ -34,6 +34,10 @@
 (defvar phps-mode-functions-lines-indent nil
   "The indentation of each line in buffer, nil if none.")
 
+(defvar phps-mode-functions-verbose nil
+  "Verbose messaging, default nil.")
+
+
 ;; NOTE Also format white-space inside the line, i.e. after function declarations?
 
 ;; TODO Add support for automatic parenthesis, bracket, square-bracket, single-quote and double-quote encapsulations
@@ -44,7 +48,8 @@
   (if (boundp 'phps-mode-lexer-tokens)
       (save-excursion
         (goto-char (point-min))
-        (message "\nCalculation indentation for all lines in buffer:\n\n%s" (buffer-substring-no-properties (point-min) (point-max)))
+        (when phps-mode-functions-verbose
+          (message "\nCalculation indentation for all lines in buffer:\n\n%s" (buffer-substring-no-properties (point-min) (point-max))))
         (let ((in-scripting nil)
               (in-heredoc nil)
               (in-inline-control-structure nil)
@@ -337,7 +342,8 @@
                           (setq column-level-start (1+ column-level-start))))
                                  
 
-                      (message "Process line ending.	nesting: %s-%s,	line-number: %s-%s,	indent: %s.%s,	token: %s" nesting-start nesting-end token-start-line-number token-end-line-number column-level-start tuning-level token)
+                      (when phps-mode-functions-verbose
+                        (message "Process line ending.	nesting: %s-%s,	line-number: %s-%s,	indent: %s.%s,	token: %s" nesting-start nesting-end token-start-line-number token-end-line-number column-level-start tuning-level token))
                       
                       
                       ;; (message "new line %s or last token at %s, %s %s.%s (%s - %s) = %s %s %s %s %s [%s %s] %s %s %s" token-start-line-number token next-token column-level tuning-level nesting-start nesting-end round-bracket-level square-bracket-level curly-bracket-level alternative-control-structure-level inline-control-structure-level first-token-is-nesting-decrease first-token-is-nesting-increase in-assignment in-assignment-level in-class-declaration-level)

@@ -30,10 +30,9 @@
 
 
 (autoload 'phps-mode-test-with-buffer "phps-mode-test")
+(autoload 'phps-mode-functions-verbose "phps-mode-functions")
 (autoload 'phps-mode-functions-indent-line "phps-mode-functions")
 (autoload 'phps-mode-functions-get-lines-indent "phps-mode-functions")
-(autoload 'phps-mode-functions-get-current-line-data "phps-mode-functions")
-(autoload 'hash-table-values "subr-x")
 (autoload 'should "ert")
 
 (defun phps-mode-test-functions--hash-to-list (hash-table)
@@ -439,6 +438,7 @@
 
 (defun phps-mode-test-functions ()
   "Run test for functions."
+  (setq phps-mode-functions-verbose t)
   (phps-mode-test-functions-get-lines-indent)
   (phps-mode-test-functions-indent-line))
 
