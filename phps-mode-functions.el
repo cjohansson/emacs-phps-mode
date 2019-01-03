@@ -318,7 +318,13 @@
                       (setq nesting-end (+ round-bracket-level square-bracket-level curly-bracket-level alternative-control-structure-level inline-control-structure-level in-assignment-level in-class-declaration-level))
 
                       ;; Is line ending indentation lesser than line beginning indentation?
-                      (when (< nesting-end nesting-start)
+                      (when (and nesting-stack
+                                 (<= nesting-end (car nesting-stack)))
+
+                        (when phps-mode-functions-verbose
+                          (message "Popping %s from nesting-stack since %s is lesser" (car nesting-stack) nesting-end))
+
+                        (pop nesting-stack)
 
                         ;; Decrement column
                         (if allow-custom-column-decrement
@@ -331,16 +337,20 @@
                         (when (< column-level 0)
                           (setq column-level 0)))
 
+                      ;; Start indentation might differ from ending indentation in cases like } else {
                       (setq column-level-start column-level)
                       (when (= nesting-end nesting-start)
+
+                        ;; Handle cases like: } else {
                         (when (and first-token-is-nesting-decrease
                                    (not first-token-is-nesting-increase)
                                    (> column-level-start 0))
                           (setq column-level-start (1- column-level-start)))
+
+                        ;; Handle cases like if (blaha)\n    echo 'blaha';
                         (when (and first-token-is-nesting-increase
                                    (not first-token-is-nesting-decrease))
                           (setq column-level-start (1+ column-level-start))))
-                                 
 
                       (when phps-mode-functions-verbose
                         (message "Process line ending.	nesting: %s-%s,	line-number: %s-%s,	indent: %s.%s,	token: %s" nesting-start nesting-end token-start-line-number token-end-line-number column-level-start tuning-level token))
@@ -376,12 +386,19 @@
                             (progn
                               (setq column-level (+ column-level (- nesting-end nesting-start)))
                               (setq allow-custom-column-increment nil))
-                          (setq column-level (1+ column-level))))
+                          (setq column-level (1+ column-level)))
+
+                        (when phps-mode-functions-verbose
+                          (message "Pushing %s to nesting-stack since is greater than %s" nesting-end nesting-start))
+                        (push nesting-start nesting-stack))
 
                       ;; When nesting decreases but ends with a nesting increase, increase indent by one
                       (when (and (< nesting-end nesting-start)
                                  line-contained-nesting-increase)
-                        (setq column-level (1+ column-level)))
+                        (setq column-level (1+ column-level))
+                        (when phps-mode-functions-verbose
+                          (message "Pushing %s to nesting-stack since is greater than %s" nesting-end nesting-start))
+                        (push nesting-start nesting-stack))
 
                       ;; Calculate indentation level at start of line
                       (setq nesting-start (+ round-bracket-level square-bracket-level curly-bracket-level alternative-control-structure-level inline-control-structure-level in-assignment-level in-class-declaration-level))
