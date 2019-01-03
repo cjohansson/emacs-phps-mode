@@ -1256,15 +1256,23 @@ ANY_CHAR'
 
    ))
 
-;; TODO Need to store lexer state and stack at each changing point of buffer to be able to rewind lexer
 (defun phps-mode-lexer-setup (start end)
   "Just prepare other lexers for lexing region START to END."
   ;; (message "phps-mode-lexer-setup %s %s" start end)
   (when (and (eq start 1)
              end)
     (delete-all-overlays)
-    (when (boundp 'phps-mode-lexer-buffer-changes--start)
+
+    ;; Rest buffer changes flag
+    (when (and (boundp 'phps-mode-lexer-buffer-changes--start)
+               phps-mode-lexer-buffer-changes--start)
       (setq phps-mode-lexer-buffer-changes--start nil))
+
+    ;; Reset line indents
+    (when (and (boundp 'phps-mode-functions-lines-indent)
+               phps-mode-functions-lines-indent)
+      (setq phps-mode-functions-lines-indent nil))
+
 
     (setq phps-mode-lexer-states nil)
     (phps-mode-lexer-BEGIN phps-mode-lexer-ST_INITIAL)))

@@ -345,7 +345,6 @@
                       (when phps-mode-functions-verbose
                         (message "Process line ending.	nesting: %s-%s,	line-number: %s-%s,	indent: %s.%s,	token: %s" nesting-start nesting-end token-start-line-number token-end-line-number column-level-start tuning-level token))
                       
-                      
                       ;; (message "new line %s or last token at %s, %s %s.%s (%s - %s) = %s %s %s %s %s [%s %s] %s %s %s" token-start-line-number token next-token column-level tuning-level nesting-start nesting-end round-bracket-level square-bracket-level curly-bracket-level alternative-control-structure-level inline-control-structure-level first-token-is-nesting-decrease first-token-is-nesting-increase in-assignment in-assignment-level in-class-declaration-level)
 
                       ;; Put indent-level to hash-table
@@ -458,8 +457,6 @@
                phps-mode-idle-interval)
       ;; (message "Enqueued incremental lexer")
 
-      ;; Reset line indents
-      (setq phps-mode-functions-lines-indent nil)
       (run-with-idle-timer phps-mode-idle-interval nil #'phps-mode-lexer-run-incremental))
 
     ;; When point of change is not set or when start of new changes precedes old change - update the point
