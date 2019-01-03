@@ -74,8 +74,8 @@
               (line-indents (make-hash-table :test 'equal))
               (first-token-is-nesting-decrease nil)
               (first-token-is-nesting-increase nil)
-              (last-token-is-nesting-increase nil)
-              (last-token-is-nesting-decrease nil)
+              (line-contained-nesting-decrease nil)
+              (line-contained-nesting-increase nil)
               (token-number 1)
               (allow-custom-column-increment nil)
               (allow-custom-column-decrement nil)
@@ -114,6 +114,7 @@
                 ;; Keep track of round bracket level
                 (when (string= token "(")
                   (setq round-bracket-level (1+ round-bracket-level))
+                  (setq line-contained-nesting-increase t)
                   (when first-token-on-line
                     (setq first-token-is-nesting-increase t)))
                 (when (string= token ")")
@@ -124,10 +125,12 @@
                 ;; Keep track of square bracket level
                 (when (string= token "[")
                   (setq square-bracket-level (1+ square-bracket-level))
+                  (setq line-contained-nesting-increase t)
                   (when first-token-on-line
                     (setq first-token-is-nesting-increase t)))
                 (when (string= token "]")
                   (setq square-bracket-level (1- square-bracket-level))
+                  (setq line-contained-nesting-decrease t)
                   (when first-token-on-line
                     (setq first-token-is-nesting-decrease t)))
 
@@ -136,9 +139,11 @@
                           (equal token 'T_DOLLAR_OPEN_CURLY_BRACES)
                           (string= token "{"))
                   (setq curly-bracket-level (1+ curly-bracket-level))
+                  (setq line-contained-nesting-increase t)
                   (when first-token-on-line
                     (setq first-token-is-nesting-increase t)))
                 (when (string= token "}")
+                  (setq line-contained-nesting-decrease t)
                   (setq curly-bracket-level (1- curly-bracket-level))
 
                   ;; Keep track of in scripting
@@ -196,6 +201,7 @@
                                   (equal after-special-control-structure-token 'T_ELSEIF)
                                   (equal after-special-control-structure-token 'T_DEFAULT))
                               (progn
+                                (setq line-contained-nesting-increase t)
                                 (when after-special-control-structure-first-on-line
                                   (setq first-token-is-nesting-decrease t)))
 
@@ -204,15 +210,18 @@
                               (setq allow-custom-column-increment t))
 
                             (setq alternative-control-structure-level (1+ alternative-control-structure-level))
+                            (setq line-contained-nesting-increase t)
                             (when after-special-control-structure-first-on-line
                               (setq first-token-is-nesting-increase t))))
                       (if (or (equal after-special-control-structure-token 'T_ELSE)
                               (equal after-special-control-structure-token 'T_ELSEIF))
                           (progn
+                            (setq line-contained-nesting-increase t)
                             (when after-special-control-structure-first-on-line
                               (setq first-token-is-nesting-increase t)))
                         ;; (message "Was inline-control structure %s %s" after-special-control-structure-token token)
                         (setq inline-control-structure-level (1+ inline-control-structure-level))
+                        (setq line-contained-nesting-increase t)
                         (when after-special-control-structure-first-on-line
                           (setq first-token-is-nesting-increase t))
                         (setq in-inline-control-structure t))))
@@ -224,6 +233,7 @@
                 ;; Support extra special control structures (CASE)
                 (when (and after-extra-special-control-structure
                            (string= token ":"))
+                  (setq line-contained-nesting-increase t)
                   (when after-extra-special-control-structure-first-on-line
                     (setq first-token-is-nesting-decrease t))
                   (setq after-extra-special-control-structure nil))
@@ -231,6 +241,7 @@
                 ;; Did we reach a semicolon inside a inline block? Close the inline block
                 (when (and in-inline-control-structure
                            (string= token ";"))
+                  (setq line-contained-nesting-decrease t)
                   (setq inline-control-structure-level (1- inline-control-structure-level))
                   (setq in-inline-control-structure nil))
 
@@ -306,17 +317,6 @@
                       ;; Calculate indentation level at end of line
                       (setq nesting-end (+ round-bracket-level square-bracket-level curly-bracket-level alternative-control-structure-level inline-control-structure-level in-assignment-level in-class-declaration-level))
 
-                      ;; Set flags for last token
-                      (setq last-token-is-nesting-increase (or (string= token "{")
-                                                               (string= token "(")
-                                                               (string= token "[")))
-                      (setq last-token-is-nesting-decrease (or (string= token "}")
-                                                               (string= token ")")
-                                                               (string= token "]")))
-
-                      ;; TODO Should keep stack of nesting-levels and only change columns when nesting exceeds previous
-                      ;; TODO Should only change column-level once below
-
                       ;; Is line ending indentation lesser than line beginning indentation?
                       (when (< nesting-end nesting-start)
 
@@ -380,7 +380,7 @@
 
                       ;; When nesting decreases but ends with a nesting increase, increase indent by one
                       (when (and (< nesting-end nesting-start)
-                                     last-token-is-nesting-increase)
+                                 line-contained-nesting-increase)
                         (setq column-level (1+ column-level)))
 
                       ;; Calculate indentation level at start of line
@@ -393,6 +393,8 @@
                         (setq first-token-is-nesting-decrease nil)
                         (setq in-assignment-level 0)
                         (setq in-class-declaration-level 0)
+                        (setq line-contained-nesting-increase nil)
+                        (setq line-contained-nesting-decrease nil)
                         (setq in-assignment-started-this-line nil)))
                   (setq first-token-on-line nil)
 
