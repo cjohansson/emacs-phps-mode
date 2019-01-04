@@ -46,11 +46,6 @@
 
 (defun phps-mode-test-functions-get-lines-indent ()
   "Test `phps-mode-functions-get-lines-indent' function."
-
-  (phps-mode-test-with-buffer
-   "<?php\nnamespace myNamespace\n{\n    class myClass\n    {\n        public function myFunction()\n        {\n            echo 'my statement';\n        }\n    }\n}\n"
-   "Regular PHP with namespaces, classes and functions"
-   (should (equal '((1 (0 0)) (2 (0 0)) (3 (0 0)) (4 (1 0)) (5 (1 0)) (6 (2 0)) (7 (2 0)) (8 (3 0)) (9 (2 0)) (10 (1 0)) (11 (0 0))) (phps-mode-test-functions--hash-to-list (phps-mode-functions-get-lines-indent)))))
   
   (phps-mode-test-with-buffer
    "<html><head><title><?php\nif ($myCondition) {\n    if ($mySecondCondition) {\n        echo $title;\n    } else if ($mySecondCondition) {\n        echo $title4;\n    } else {\n        echo $title2;\n        echo $title3;\n    }\n} ?></title><body>Bla bla</body></html>"
@@ -113,12 +108,6 @@
    (should (equal '((1 (0 0)) (2 (0 0)) (3 (0 0)) (4 (0 0)) (5 (0 0)) (6 (0 0))) (phps-mode-test-functions--hash-to-list (phps-mode-functions-get-lines-indent)))))
 
   (phps-mode-test-with-buffer
-   "<?php\nclass MyClass extends MyAbstract implements\n    myInterface,\n    myInterface2\n{\n}\n"
-   "Class multi-line implements"
-   ;; (message "Tokens: %s" phps-mode-lexer-tokens)
-   (should (equal '((1 (0 0)) (2 (0 0)) (3 (1 0)) (4 (1 0)) (5 (0 0)) (6 (0 0))) (phps-mode-test-functions--hash-to-list (phps-mode-functions-get-lines-indent)))))
-
-  (phps-mode-test-with-buffer
    "<?php\n$var = \"A line\nmore text here\nlast line here\";"
    "Multi-line double-quoted string"
    ;; (message "Tokens: %s" phps-mode-lexer-tokens)
@@ -169,11 +158,6 @@
    (should (equal '((1 (0 0)) (2 (0 0)) (3 (0 1)) (4 (0 1)) (5 (0 0))) (phps-mode-test-functions--hash-to-list (phps-mode-functions-get-lines-indent)))))
 
   (phps-mode-test-with-buffer
-   "<?php\n/**\n *\n */\nnamespace Aomebo\n{\n    /**\n     *\n     */\n    class Base\n    {\n    }\n}\n"
-   "Namespace and class with doc-comments"
-   (should (equal '((1 (0 0)) (2 (0 0)) (3 (0 1)) (4 (0 1)) (5 (0 0)) (6 (0 0)) (7 (1 0)) (8 (1 1)) (9 (1 1)) (10 (1 0)) (11 (1 0)) (12 (1 0)) (13 (0 0))) (phps-mode-test-functions--hash-to-list (phps-mode-functions-get-lines-indent)))))
-
-  (phps-mode-test-with-buffer
    "<?php\n/** @define _SYSTEM_START_TIME_     Startup time for system */\ndefine('_SYSTEM_START_TIME_', microtime(true));\necho 'statement';\n"
    "Statement after a define() with a doc-comment"
    (should (equal '((1 (0 0)) (2 (0 0)) (3 (0 0)) (4 (0 0))) (phps-mode-test-functions--hash-to-list (phps-mode-functions-get-lines-indent)))))
@@ -183,6 +167,32 @@
    "Statement after one-lined function declaration with optional argument"
    ;; (message "Tokens: %s" phps-mode-lexer-tokens)
    (should (equal '((1 (0 0)) (2 (0 0)) (3 (0 0)) (4 (1 0)) (5 (0 0))) (phps-mode-test-functions--hash-to-list (phps-mode-functions-get-lines-indent)))))
+
+  )
+
+(defun phps-mode-test-function-get-lines-indent-classes ()
+  "Test for class indent."
+
+  (phps-mode-test-with-buffer
+   "<?php\nnamespace myNamespace\n{\n    class myClass\n    {\n        public function myFunction()\n        {\n            echo 'my statement';\n        }\n    }\n}\n"
+   "Regular PHP with namespaces, classes and functions"
+   (should (equal '((1 (0 0)) (2 (0 0)) (3 (0 0)) (4 (1 0)) (5 (1 0)) (6 (2 0)) (7 (2 0)) (8 (3 0)) (9 (2 0)) (10 (1 0)) (11 (0 0))) (phps-mode-test-functions--hash-to-list (phps-mode-functions-get-lines-indent)))))
+
+  (phps-mode-test-with-buffer
+   "<?php\nclass MyClass extends MyAbstract implements\n    myInterface,\n    myInterface2\n{\n}\n"
+   "Class multi-line implements"
+   ;; (message "Tokens: %s" phps-mode-lexer-tokens)
+   (should (equal '((1 (0 0)) (2 (0 0)) (3 (1 0)) (4 (1 0)) (5 (0 0)) (6 (0 0))) (phps-mode-test-functions--hash-to-list (phps-mode-functions-get-lines-indent)))))
+
+  (phps-mode-test-with-buffer
+   "<?php\n/**\n *\n */\nnamespace Aomebo\n{\n    /**\n     *\n     */\n    class Base\n    {\n    }\n}\n"
+   "Namespace and class with doc-comments"
+   (should (equal '((1 (0 0)) (2 (0 0)) (3 (0 1)) (4 (0 1)) (5 (0 0)) (6 (0 0)) (7 (1 0)) (8 (1 1)) (9 (1 1)) (10 (1 0)) (11 (1 0)) (12 (1 0)) (13 (0 0))) (phps-mode-test-functions--hash-to-list (phps-mode-functions-get-lines-indent)))))
+
+)
+
+(defun phps-mode-test-functions-get-lines-lindent-if ()
+  "Test for multi-line if expressions."
 
   (phps-mode-test-with-buffer
    "<?php\nif (\n    true\n    && true\n) {\n    echo 'was here';\n}\n"
@@ -197,7 +207,7 @@
    (should (equal '((1 (0 0)) (2 (0 0)) (3 (0 0)) (4 (1 0)) (5 (1 0)) (6 (1 0)) (7 (1 0)) (8 (0 0)) (9 (1 0)) (10 (0 0))) (phps-mode-test-functions--hash-to-list (phps-mode-functions-get-lines-indent)))))
 
     (phps-mode-test-with-buffer
-   "<?php\nif (true) {\n    if ($configuration::load(\n        self::getParameter(self::PARAMETER_CONFIGURATION_INTERNAL_FILENAME),\n        self::getParameter(self::PARAMETER_CONFIGURATION_EXTERNAL_FILENAME),\n        self::getParameter(self::PARAMETER_STRUCTURE_INTERNAL_FILENAME),\n        self::getParameter(self::PARAMETER_STRUCTURE_EXTERNAL_FILENAME)\n    )) {\n        echo 'was here';\n    }\n}\n"
+   "<?php\nif (true) {\n    if ($configuration::load(\n        self::getParameter(self::PARAMETER_CONFIGURATION_INTERNAL_FILENAME),\n        self::getParameter(self::PARAMETER_CONFIGURATION_EXTERNAL_FILENAME),\n        self::getParameter(self::PARAMETER_STRUCTURE_INTERNAL_FILENAME),\n        self::getParameter(self::PARAMETER_STRUCTURE_EXTERNAL_FILENAME))\n    ) {\n        echo 'was here';\n    }\n}\n"
    "If expression spanning multiple lines 3"
    ;; (message "Tokens: %s" phps-mode-lexer-tokens)
    (should (equal '((1 (0 0)) (2 (0 0)) (3 (1 0)) (4 (2 0)) (5 (2 0)) (6 (2 0)) (7 (2 0)) (8 (1 0)) (9 (2 0)) (10 (1 0)) (11 (0 0))) (phps-mode-test-functions--hash-to-list (phps-mode-functions-get-lines-indent)))))
@@ -212,14 +222,13 @@
    "<?php\nif (myFunction(\ntrue)\n) {\n    echo 'was here';\n}\n"
    "If expression spanning multiple lines 5"
    ;; (message "Tokens: %s" phps-mode-lexer-tokens)
-   (should (equal '((1 (0 0)) (2 (0 0)) (3 (0 0)) (4 (0 0)) (5 (1 0)) (6 (0 0))) (phps-mode-test-functions--hash-to-list (phps-mode-functions-get-lines-indent)))))
+   (should (equal '((1 (0 0)) (2 (0 0)) (3 (1 0)) (4 (0 0)) (5 (1 0)) (6 (0 0))) (phps-mode-test-functions--hash-to-list (phps-mode-functions-get-lines-indent)))))
 
   (phps-mode-test-with-buffer
    "<?php\nif (true) {\n    if (myFunction(\n        true)\n    ) {\n        echo 'was here';\n    }\n}\n"
    "Nested if expression spanning multiple lines 6"
    ;; (message "Tokens: %s" phps-mode-lexer-tokens)
    (should (equal '((1 (0 0)) (2 (0 0)) (3 (1 0)) (4 (2 0)) (5 (1 0)) (6 (2 0)) (7 (1 0)) (8 (0 0))) (phps-mode-test-functions--hash-to-list (phps-mode-functions-get-lines-indent)))))
-
 
   )
 
@@ -463,7 +472,10 @@
 
 (defun phps-mode-test-functions ()
   "Run test for functions."
+  ;; (setq debug-on-error t)
   (setq phps-mode-functions-verbose t)
+  (phps-mode-test-functions-get-lines-lindent-if)
+  (phps-mode-test-function-get-lines-indent-classes)
   (phps-mode-test-functions-get-lines-indent)
   (phps-mode-test-functions-indent-line))
 
