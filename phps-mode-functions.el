@@ -136,6 +136,31 @@
                   (when first-token-on-line
                     (setq first-token-is-nesting-decrease t)))
 
+                ;; Keep track of when we are inside a class definition
+                (if in-class-declaration
+                    (if (string= token "{")
+                        (progn
+                          (setq in-class-declaration nil)
+                          (setq in-class-declaration-level 0)
+                          
+                          (setq column-level (1- column-level))
+                          (setq nesting-start (1- nesting-start))
+                          (pop nesting-stack)
+
+                          (when first-token-on-line
+                            (setq after-class-declaration t)
+                            (setq first-token-is-nesting-increase nil)
+                            (setq first-token-is-nesting-decrease t))
+
+                          (setq nesting-end (+ round-bracket-level square-bracket-level curly-bracket-level alternative-control-structure-level inline-control-structure-level in-assignment-level in-class-declaration-level))
+
+                          )
+                      (when first-token-on-line
+                        (setq in-class-declaration-level 1)))
+                  (when (equal token 'T_CLASS)
+                    (setq in-class-declaration t)
+                    (setq in-class-declaration-level 1)))
+
                 ;; Keep track of curly bracket level
                 (when (or (equal token 'T_CURLY_OPEN)
                           (equal token 'T_DOLLAR_OPEN_CURLY_BRACES)
@@ -293,25 +318,7 @@
                 (when (equal token 'T_END_HEREDOC)
                   (setq in-heredoc nil))
 
-                ;; Keep track of when we are inside a class definition
-                (if in-class-declaration
-                    (if (string= token "{")
-                        (progn
-                          (setq in-class-declaration nil)
-                          (setq in-class-declaration-level 0)
-                          (when first-token-on-line
-                            (setq after-class-declaration t)
-                            (setq first-token-is-nesting-increase nil)
-                            (setq first-token-is-nesting-decrease t))
-
-                          (setq nesting-end (+ round-bracket-level square-bracket-level curly-bracket-level alternative-control-structure-level inline-control-structure-level in-assignment-level in-class-declaration-level))
-
-                          )
-                      (when first-token-on-line
-                        (setq in-class-declaration-level 1)))
-                  (when (equal token 'T_CLASS)
-                    (setq in-class-declaration t)
-                    (setq in-class-declaration-level 1))))
+                )
 
               (when token
 
