@@ -90,7 +90,8 @@
               (tokens (nreverse phps-mode-lexer-tokens))
               (nesting-stack nil)
               (changed-nesting-stack-in-line nil)
-              (after-class-declaration nil))
+              (after-class-declaration nil)
+              (class-declaration-started-this-line nil))
 
           (push `(END_PARSE ,(point-max) . ,(point-max)) tokens)
 
@@ -143,10 +144,9 @@
                           (setq in-class-declaration nil)
                           (setq in-class-declaration-level 0)
 
-                          ;; TODO Should only do this if class-declaration was not started on this line
-                          (setq column-level (1- column-level))
-                          (setq nesting-start (1- nesting-start))
-                          (pop nesting-stack)
+                          (when (not class-declaration-started-this-line)
+                            (setq column-level (1- column-level))
+                            (pop nesting-stack))
 
                           (when first-token-on-line
 
@@ -161,7 +161,8 @@
                         (setq in-class-declaration-level 1)))
                   (when (equal token 'T_CLASS)
                     (setq in-class-declaration t)
-                    (setq in-class-declaration-level 1)))
+                    (setq in-class-declaration-level 1)
+                    (setq class-declaration-started-this-line t)))
 
                 ;; Keep track of curly bracket level
                 (when (or (equal token 'T_CURLY_OPEN)
@@ -455,7 +456,8 @@
                         (setq line-contained-nesting-increase nil)
                         (setq line-contained-nesting-decrease nil)
                         (setq in-assignment-started-this-line nil)
-                        (setq changed-nesting-stack-in-line nil)))
+                        (setq changed-nesting-stack-in-line nil)
+                        (setq class-declaration-started-this-line nil)))
 
                   ;; Current token is not first
                   (setq first-token-on-line nil)
