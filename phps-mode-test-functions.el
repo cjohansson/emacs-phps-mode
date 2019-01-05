@@ -48,11 +48,6 @@
   "Test `phps-mode-functions-get-lines-indent' function."
   
   (phps-mode-test-with-buffer
-   "<?php\nif (true):\n    echo 'Something';\nelseif (true):\n    echo 'Something';\nelse:\n    echo 'Something else';\n    echo 'Something else again';\nendif;\necho true;\n"
-   "Alternative control structures"
-   (should (equal '((1 (0 0)) (2 (0 0)) (3 (1 0)) (4 (0 0)) (5 (1 0)) (6 (0 0)) (7 (1 0)) (8 (1 0)) (9 (0 0)) (10 (0 0))) (phps-mode-test-functions--hash-to-list (phps-mode-functions-get-lines-indent)))))
-
-  (phps-mode-test-with-buffer
    "<?php\nif (true)\n    echo 'Something';\nelse\n    echo 'Something else';\necho true;\n"
    "Inline control structures"
    (should (equal '((1 (0 0)) (2 (0 0)) (3 (1 0)) (4 (0 0)) (5 (1 0)) (6 (0 0))) (phps-mode-test-functions--hash-to-list (phps-mode-functions-get-lines-indent)))))
@@ -150,6 +145,26 @@
    "Statement after one-lined function declaration with optional argument"
    ;; (message "Tokens: %s" phps-mode-lexer-tokens)
    (should (equal '((1 (0 0)) (2 (0 0)) (3 (0 0)) (4 (1 0)) (5 (0 0))) (phps-mode-test-functions--hash-to-list (phps-mode-functions-get-lines-indent)))))
+
+  )
+
+(defun phps-mode-test-functions-get-lines-indent-alternative-if ()
+  "Test for alternative if indentations."
+
+  (phps-mode-test-with-buffer
+   "<?php\nif (true):\n    echo 'Something';\nelseif (true):\n    echo 'Something';\nelse:\n    echo 'Something else';\n    echo 'Something else again';\nendif;\necho true;\n"
+   "Alternative control structures"
+   (should (equal '((1 (0 0)) (2 (0 0)) (3 (1 0)) (4 (0 0)) (5 (1 0)) (6 (0 0)) (7 (1 0)) (8 (1 0)) (9 (0 0)) (10 (0 0))) (phps-mode-test-functions--hash-to-list (phps-mode-functions-get-lines-indent)))))
+
+  (phps-mode-test-with-buffer
+   "<?php\nif (true):\n    echo 'Something';\nelseif (true\n    && true):\n    echo 'Something';\nelse:\n    echo 'Something else';\n    echo 'Something else again';\nendif;\necho true;\n"
+   "Alternative control structures with multi-line elseif 1"
+   (should (equal '((1 (0 0)) (2 (0 0)) (3 (1 0)) (4 (0 0)) (5 (1 0)) (6 (1 0)) (7 (0 0)) (8 (1 0)) (9 (1 0)) (10 (0 0)) (11 (0 0))) (phps-mode-test-functions--hash-to-list (phps-mode-functions-get-lines-indent)))))
+
+  (phps-mode-test-with-buffer
+   "<?php\nif (true):\n    echo 'Something';\nelseif (true\n    && true\n):\n    echo 'Something';\nelse:\n    echo 'Something else';\n    echo 'Something else again';\nendif;\necho true;\n"
+   "Alternative control structures with multi-line elseif 1"
+   (should (equal '((1 (0 0)) (2 (0 0)) (3 (1 0)) (4 (0 0)) (5 (1 0)) (6 (0 0)) (7 (1 0)) (8 (0 0)) (9 (1 0)) (10 (1 0)) (11 (0 0)) (12 (0 0))) (phps-mode-test-functions--hash-to-list (phps-mode-functions-get-lines-indent)))))
 
   )
 
@@ -489,6 +504,7 @@
   (phps-mode-test-functions-get-lines-lindent-if)
   (phps-mode-test-function-get-lines-indent-classes)
   (phps-mode-test-functions-get-lines-indent)
+  (phps-mode-test-functions-get-lines-indent-alternative-if)
   (phps-mode-test-functions-indent-line))
 
 (phps-mode-test-functions)

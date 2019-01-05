@@ -91,7 +91,8 @@
               (nesting-stack nil)
               (changed-nesting-stack-in-line nil)
               (after-class-declaration nil)
-              (class-declaration-started-this-line nil))
+              (class-declaration-started-this-line nil)
+              (special-control-structure-started-this-line nil))
 
           (push `(END_PARSE ,(point-max) . ,(point-max)) tokens)
 
@@ -149,12 +150,9 @@
                             (pop nesting-stack))
 
                           (when first-token-on-line
-
                             (setq after-class-declaration t)
                             (setq first-token-is-nesting-increase nil)
                             (setq first-token-is-nesting-decrease t))
-
-                          (setq nesting-end (+ round-bracket-level square-bracket-level curly-bracket-level alternative-control-structure-level inline-control-structure-level in-assignment-level in-class-declaration-level))
 
                           )
                       (when first-token-on-line
@@ -226,7 +224,9 @@
 
                     ;; Is it the start of an alternative control structure?
                     (if (string= token ":")
+
                         (progn
+                          ;; Alternative syntax for control structures here
                           (if (or (equal after-special-control-structure-token 'T_ELSE)
                                   (equal after-special-control-structure-token 'T_ELSEIF)
                                   (equal after-special-control-structure-token 'T_DEFAULT))
@@ -243,18 +243,26 @@
                             (setq line-contained-nesting-increase t)
                             (when after-special-control-structure-first-on-line
                               (setq first-token-is-nesting-increase t))))
+
+                      ;; Inline syntax for control structures here
                       (if (or (equal after-special-control-structure-token 'T_ELSE)
                               (equal after-special-control-structure-token 'T_ELSEIF))
                           (progn
                             (setq line-contained-nesting-increase t)
                             (when after-special-control-structure-first-on-line
+
+
                               (setq first-token-is-nesting-increase t)))
                         ;; (message "Was inline-control structure %s %s" after-special-control-structure-token token)
                         (setq inline-control-structure-level (1+ inline-control-structure-level))
                         (setq line-contained-nesting-increase t)
                         (when after-special-control-structure-first-on-line
                           (setq first-token-is-nesting-increase t))
-                        (setq in-inline-control-structure t))))
+                        (setq in-inline-control-structure t))
+
+                      (when (not special-control-structure-started-this-line)
+                        (setq column-level (1+ column-level)))
+                      ))
 
                   (setq after-special-control-structure nil)
                   (setq after-special-control-structure-token nil)
@@ -270,7 +278,9 @@
 
                 ;; Did we reach a semicolon inside a inline block? Close the inline block
                 (when (and in-inline-control-structure
-                           (string= token ";"))
+                           (string= token ";")
+                           (not special-control-structure-started-this-line))
+                  (setq column-level (1- column-level))
                   (setq line-contained-nesting-decrease t)
                   (setq inline-control-structure-level (1- inline-control-structure-level))
                   (setq in-inline-control-structure nil))
@@ -286,7 +296,18 @@
                           (equal token 'T_DEFAULT))
                   (setq after-special-control-structure-first-on-line first-token-on-line)
                   (setq after-special-control-structure round-bracket-level)
-                  (setq after-special-control-structure-token token))
+                  (setq after-special-control-structure-token token)
+                  (setq special-control-structure-started-this-line t)
+
+                  (when (and (or (equal token 'T_ELSE)
+                                 (equal token 'T_ELSEIF)
+                                 (equal token 'T_DEFAULT))
+                             nesting-stack
+                             (string= (car (cdr (cdr (car nesting-stack)))) ":"))
+                    (setq column-level (1- column-level))
+                    (pop nesting-stack))
+
+                  )
 
                 ;; Keep track of assignments
                 (if in-assignment
@@ -410,7 +431,6 @@
 
 
                       ;; Has nesting decreased?
-                      ;; If nesting-end > 0 AND (!nesting-stack OR nesting-end > nesting-stack-end), push stack, increase indent
                       (when (and (> nesting-end 0)
                                  (or (not nesting-stack)
                                      (> nesting-end (car (cdr (car nesting-stack))))))
@@ -428,7 +448,7 @@
                           (when phps-mode-functions-verbose
                             ;; (message "\nPushing (%s %s) to nesting-stack since %s is greater than %s or stack is empty" nesting-start nesting-end nesting-end (car (cdr (car nesting-stack))))
                             )
-                          (push `(,nesting-stack-end ,nesting-end) nesting-stack)
+                          (push `(,nesting-stack-end ,nesting-end ,token) nesting-stack)
                           (when phps-mode-functions-verbose
                             ;; (message "New stack %s, start: %s end: %s\n" nesting-stack (car (car nesting-stack)) (car (cdr (car nesting-stack))))
                             )))
@@ -457,7 +477,8 @@
                         (setq line-contained-nesting-decrease nil)
                         (setq in-assignment-started-this-line nil)
                         (setq changed-nesting-stack-in-line nil)
-                        (setq class-declaration-started-this-line nil)))
+                        (setq class-declaration-started-this-line nil)
+                        (setq special-control-structure-started-this-line nil)))
 
                   ;; Current token is not first
                   (setq first-token-on-line nil)
