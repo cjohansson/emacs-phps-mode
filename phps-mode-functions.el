@@ -142,12 +142,14 @@
                         (progn
                           (setq in-class-declaration nil)
                           (setq in-class-declaration-level 0)
-                          
+
+                          ;; TODO Should only do this if class-declaration was not started on this line
                           (setq column-level (1- column-level))
                           (setq nesting-start (1- nesting-start))
                           (pop nesting-stack)
 
                           (when first-token-on-line
+
                             (setq after-class-declaration t)
                             (setq first-token-is-nesting-increase nil)
                             (setq first-token-is-nesting-decrease t))
