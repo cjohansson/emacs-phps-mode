@@ -341,7 +341,7 @@
                            (<= nesting-end (car (car nesting-stack))))
 
                   (when phps-mode-functions-verbose
-                    ;; (message "\nPopping %s from nesting-stack since %s is lesser or equal to %s, next value is: %s\n" (car nesting-stack) nesting-end (car (car nesting-stack)) (nth 1 nesting-stack))
+                    (message "\nPopping %s from nesting-stack since %s is lesser or equal to %s, next value is: %s\n" (car nesting-stack) nesting-end (car (car nesting-stack)) (nth 1 nesting-stack))
                     )
                   (pop nesting-stack)
 
@@ -421,7 +421,7 @@
                             (setq column-level (1+ column-level)))
 
                           (when phps-mode-functions-verbose
-                            (message "\nPushing (%s %s %s) to nesting-stack since %s is greater than %s or stack is empty" nesting-start nesting-end token nesting-end (car (cdr (car nesting-stack))))
+                            (message "\nPushing (%s %s %s) to nesting-stack since %s is greater than %s or stack is empty\n" nesting-start nesting-end token nesting-end (car (cdr (car nesting-stack))))
                             )
                           (push `(,nesting-stack-end ,nesting-end ,token) nesting-stack)
                           (when phps-mode-functions-verbose
