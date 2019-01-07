@@ -302,10 +302,7 @@
                             (< round-bracket-level in-assignment))
                         (progn
                           (setq in-assignment nil)
-                          (when in-assignment-started-this-line
                             (setq in-assignment-level 0))
-                          ;; (message "Assignment ended at semi-colon")
-                          )
                       (when (and first-token-on-line
                                  (not in-heredoc))
                         (setq in-assignment-level 1)

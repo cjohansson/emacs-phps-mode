@@ -50,7 +50,9 @@ endforeach;
 
 ## Examples
 
-```php
+PHP examples using algorithms defined above, explained each line.
+
+```php				// #save indent: 0
 if (function(		// #save indent: 0, #increase push (0 2) indent: 1
     false)			// #save indent: 1
 ) {				// #decrease pop (0 2) indent: 0, #save indent: 0, #increase push (0 1) indent: 1
@@ -60,7 +62,7 @@ if (function(		// #save indent: 0, #increase push (0 2) indent: 1
 
 ## Inline control structure for if-else
 
-```php
+```php				// #save indent: 0
 if (true)			// #save indent: 0
     echo true;		// #temp-pre-indent: 1, #save indent: 1
 else				// #save indent: 0
@@ -69,15 +71,24 @@ else				// #save indent: 0
 
 ## Alternative control structure for if-else 2
 
+```php					// #save indent: 0
+if (true &&			// #save indent: 0, #increase push (0 1) indent: 1
+    true				// #save indent: 1
+):						// #decrease pop (0 1) indent: 0, #save indent: 0, #increase push (0 1) indent: 1
+    echo true;			// #save indent_ 1
+elseif (true			// #decrease pop (0 1) indent: 0, #save indent: 0, #increase push (0 1) indent: 1
+    || false):			// #decrease pop (0 1) indent: 0, #save indent: 0, #increase push (0 1) indent: 1
+    echo 'another';	// #save indent: 1
+else:					// #decrease pop (0 1) indent: 0, #save indent: 0, #increase push (0 1) indent: 1
+    echo false;		// #save indent: 1
+endif;					// #decrease pop (0 1) indent: 0, #save indent: 0
+```
+
+## Multi-line assignments 1
+
 ```php
-if (true &&			#save indent: 0, #increase push (0 1) indent: 1
-    true				#save indent: 1
-):						#decrease pop (0 1) indent: 0, #save indent: 0, #increase push (0 1) indent: 1
-    echo true;			#save indent 1
-elseif (true			#decrease pop (0 1) indent: 0, #save indent: 0, #increase push (0 1) indent: 1
-    || false):			#decrease pop (0 1) indent: 0, #save indent: 0, #increase push (0 1) indent: 1
-    echo 'another';
-else:
-    echo false;
-endif;
+<?php				// #save indent: 0
+$var = 'abc'		// #save indent: 0, #increase push (0 1) indent: 1
+    . 'def'		// #save indent: 1
+    . 'ghj';		// #decrease pop (0 1) indent: 0, #save indent: 0 <!-- ERROR -->
 ```
