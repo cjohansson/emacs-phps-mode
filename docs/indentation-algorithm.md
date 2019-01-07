@@ -88,7 +88,16 @@ endif;					// #decrease pop (0 1) indent: 0, #save indent: 0
 
 ```php
 <?php				// #save indent: 0
+$var = array(		// #save indent: 0, #increase push (0 2) indent: 1
+    'def'			// #save indent: 1
+);					// #decrease pop (0 2) indent: 0, #save indent: 0
+```
+
+## Multi-line assignments 2
+
+```php
+<?php				// #save indent: 0
 $var = 'abc'		// #save indent: 0, #increase push (0 1) indent: 1
     . 'def'		// #save indent: 1
-    . 'ghj';		// #decrease pop (0 1) indent: 0, #save indent: 0 <!-- ERROR -->
+    . 'ghj';		// #decrease pop (0 1) indent: 0, #save indent: 0 /* ERROR */
 ```
