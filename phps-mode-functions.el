@@ -63,7 +63,6 @@
               (round-bracket-level 0)
               (square-bracket-level 0)
               (alternative-control-structure-level 0)
-              (inline-control-structure-level 0)
               (column-level 0)
               (column-level-start 0)
               (tuning-level 0)
@@ -92,7 +91,8 @@
               (changed-nesting-stack-in-line nil)
               (after-class-declaration nil)
               (class-declaration-started-this-line nil)
-              (special-control-structure-started-this-line nil))
+              (special-control-structure-started-this-line nil)
+              (temp-pre-indent nil))
 
           (push `(END_PARSE ,(point-max) . ,(point-max)) tokens)
 
@@ -105,6 +105,7 @@
                    (next-token-start-line-number nil)
                    (next-token-end-line-number nil))
 
+              ;; Handle the pseudo-token for last-line
               (if (equal next-token 'END_PARSE)
                   (progn
                     (setq next-token-start-line-number (1+ token-start-line-number))
@@ -213,60 +214,48 @@
                            (not (string= token ")"))
                            (not (string= token "(")))
 
-                  ;; Is token not a curly bracket - because that is a ordinary control structure syntax
-                  (if (string= token "{")
+                  ;; Handle the else if case
+                  (if (equal 'T_IF token)
+                      (setq after-special-control-structure-token token)
 
-                      (when (equal after-special-control-structure-token 'T_SWITCH)
-                        ;; (message "Opening switch, increase curly brackets to %s" curly-bracket-level)
-                        (push curly-bracket-level switch-curly-stack)
-                        (setq allow-custom-column-increment t)
-                        (setq curly-bracket-level (1+ curly-bracket-level)))
+                    ;; Is token not a curly bracket - because that is a ordinary control structure syntax
+                    (if (string= token "{")
 
-                    ;; Is it the start of an alternative control structure?
-                    (if (string= token ":")
+                        (when (equal after-special-control-structure-token 'T_SWITCH)
+                          ;; (message "Opening switch, increase curly brackets to %s" curly-bracket-level)
+                          (push curly-bracket-level switch-curly-stack)
+                          (setq allow-custom-column-increment t)
+                          (setq curly-bracket-level (1+ curly-bracket-level)))
 
-                        (progn
-                          ;; Alternative syntax for control structures here
-                          (if (or (equal after-special-control-structure-token 'T_ELSE)
-                                  (equal after-special-control-structure-token 'T_ELSEIF)
-                                  (equal after-special-control-structure-token 'T_DEFAULT))
-                              (progn
-                                (setq line-contained-nesting-increase t)
-                                (when after-special-control-structure-first-on-line
-                                  (setq first-token-is-nesting-decrease t)))
+                      ;; Is it the start of an alternative control structure?
+                      (if (string= token ":")
 
-                            (when (equal after-special-control-structure-token 'T_SWITCH)
-                              (setq alternative-control-structure-level (1+ alternative-control-structure-level))
-                              (setq allow-custom-column-increment t))
-
-                            (setq alternative-control-structure-level (1+ alternative-control-structure-level))
-                            (setq line-contained-nesting-increase t)
-                            (when after-special-control-structure-first-on-line
-                              (setq first-token-is-nesting-increase t))))
-
-                      ;; Inline syntax for control structures here
-                      (if (or (equal after-special-control-structure-token 'T_ELSE)
-                              (equal after-special-control-structure-token 'T_ELSEIF))
                           (progn
-                            (setq line-contained-nesting-increase t)
-                            (when after-special-control-structure-first-on-line
+                            ;; Alternative syntax for control structures here
+                            (if (or (equal after-special-control-structure-token 'T_ELSE)
+                                    (equal after-special-control-structure-token 'T_ELSEIF)
+                                    (equal after-special-control-structure-token 'T_DEFAULT))
+                                (progn
+                                  (setq line-contained-nesting-increase t)
+                                  (when after-special-control-structure-first-on-line
+                                    (setq first-token-is-nesting-decrease t)))
 
+                              (when (equal after-special-control-structure-token 'T_SWITCH)
+                                (setq alternative-control-structure-level (1+ alternative-control-structure-level))
+                                (setq allow-custom-column-increment t))
 
-                              (setq first-token-is-nesting-increase t)))
-                        ;; (message "Was inline-control structure %s %s" after-special-control-structure-token token)
-                        (setq inline-control-structure-level (1+ inline-control-structure-level))
-                        (setq line-contained-nesting-increase t)
-                        (when after-special-control-structure-first-on-line
-                          (setq first-token-is-nesting-increase t))
-                        (setq in-inline-control-structure t))
+                              (setq alternative-control-structure-level (1+ alternative-control-structure-level))
+                              (setq line-contained-nesting-increase t)
+                              (when after-special-control-structure-first-on-line
+                                (setq first-token-is-nesting-increase t))))
 
-                      (when (not special-control-structure-started-this-line)
-                        (setq column-level (1+ column-level)))
-                      ))
+                        ;; (message "Started inline control-structure after %s at %s" after-special-control-structure-token token)
+                        (setq in-inline-control-structure t)
+                        (setq temp-pre-indent (1+ column-level))))
 
-                  (setq after-special-control-structure nil)
-                  (setq after-special-control-structure-token nil)
-                  (setq after-special-control-structure-first-on-line nil))
+                    (setq after-special-control-structure nil)
+                    (setq after-special-control-structure-token nil)
+                    (setq after-special-control-structure-first-on-line nil)))
 
                 ;; Support extra special control structures (CASE)
                 (when (and after-extra-special-control-structure
@@ -281,7 +270,6 @@
                            (string= token ";")
                            (not special-control-structure-started-this-line))
                   (setq line-contained-nesting-decrease t)
-                  (setq inline-control-structure-level (1- inline-control-structure-level))
                   (setq in-inline-control-structure nil))
 
                 ;; Did we encounter a token that supports alternative and inline control structures?
@@ -346,7 +334,7 @@
               (when token
                 
                 ;; Calculate nesting
-                (setq nesting-end (+ round-bracket-level square-bracket-level curly-bracket-level alternative-control-structure-level inline-control-structure-level in-assignment-level in-class-declaration-level))
+                (setq nesting-end (+ round-bracket-level square-bracket-level curly-bracket-level alternative-control-structure-level in-assignment-level in-class-declaration-level))
 
                 ;; Has nesting increased?
                 (when (and nesting-stack
@@ -377,37 +365,26 @@
                       ;; ;; Start indentation might differ from ending indentation in cases like } else {
                       (setq column-level-start column-level)
 
-                      ;; (when (= nesting-end nesting-start)
 
-                      ;;   (when (and after-class-declaration
-                      ;;              (> column-level-start 0))
-                      ;;     (setq column-level-start (1- column-level-start)))
+                      ;; Support temporarily pre-indent
+                      (when temp-pre-indent
+                        (setq column-level-start temp-pre-indent)
+                        (setq temp-pre-indent nil))
 
-                      ;;   ;; ;; Handle cases like: } else {
-                      ;;   ;; (when (and first-token-is-nesting-decrease
-                      ;;   ;;            (not first-token-is-nesting-increase)
-                      ;;   ;;            (> column-level-start 0))
-                      ;;   ;;   (setq column-level-start (1- column-level-start)))
 
-                      ;;   ;; ;; Handle cases like if (blaha)\n    echo 'blaha';
-                      ;;   ;; (when (and first-token-is-nesting-increase
-                      ;;   ;;            (not first-token-is-nesting-decrease))
-                      ;;   ;;   (setq column-level-start (1+ column-level-start)))
 
-                      ;;   )
-
+                      ;; Save line indent
+                      
                       (when phps-mode-functions-verbose
                         (message "Process line ending.	nesting: %s-%s,	line-number: %s-%s,	indent: %s.%s,	token: %s" nesting-start nesting-end token-start-line-number token-end-line-number column-level-start tuning-level token))
-                      
-                      ;; (message "new line %s or last token at %s, %s %s.%s (%s - %s) = %s %s %s %s %s [%s %s] %s %s %s" token-start-line-number token next-token column-level tuning-level nesting-start nesting-end round-bracket-level square-bracket-level curly-bracket-level alternative-control-structure-level inline-control-structure-level first-token-is-nesting-decrease first-token-is-nesting-increase in-assignment in-assignment-level in-class-declaration-level)
 
                       (when (> token-start-line-number 0)
 
                         ;; Save line indentation
                         (puthash token-start-line-number `(,column-level-start ,tuning-level) line-indents))
 
-                      ;; TODO Handle case were current line number is more than 1 above last line number and then fill lines in-between with indentation
 
+                      ;; TODO Fill token-less but in-scripting lines in-between with indentation
 
 
                       ;; Does token span over several lines?
@@ -428,7 +405,7 @@
                         (setq tuning-level 0))
 
 
-                      ;; Has nesting decreased?
+                      ;; Decrease indentation
                       (when (and (> nesting-end 0)
                                  (or (not nesting-stack)
                                      (> nesting-end (car (cdr (car nesting-stack))))))
@@ -461,7 +438,7 @@
                       ;;   (message "New stack %s, start: %s end: %s" nesting-stack (car (car nesting-stack)) (car (cdr (car nesting-stack)))))
 
                       ;; Calculate indentation level at start of line
-                      (setq nesting-start (+ round-bracket-level square-bracket-level curly-bracket-level alternative-control-structure-level inline-control-structure-level in-assignment-level in-class-declaration-level))
+                      (setq nesting-start (+ round-bracket-level square-bracket-level curly-bracket-level alternative-control-structure-level in-assignment-level in-class-declaration-level))
 
                       ;; Set initial values for tracking first token
                       (when (> token-start-line-number last-line-number)

@@ -26,8 +26,14 @@ foreach token in buffer:
     endif;
 
     if we reached end of a line:
+    
+        indent-start = indent;
+    
+        if temp-pre-indent: // #temp-pre-indent
+            indent-start = temp-pre-indent;
+        endif;
 
-        save line indent; // #save
+        save line indent-start; // #save
 
         if nesting-end > 0 AND (!nesting-stack OR nesting-end > nesting-stack-end): // #increase
             if !nesting-stack:
@@ -56,9 +62,9 @@ if (function(		// #save indent: 0, #increase push (0 2) indent: 1
 
 ```php
 if (true)			// #save indent: 0
-    echo true;		// #pre-temp-increase indent: 1, #save indent: 1, #pre-temp-decrease indent: 0
+    echo true;		// #temp-pre-indent: 1, #save indent: 1
 else				// #save indent: 0
-    echo false;	// #pre-temp-increase indent: 1, #save indent: 1, #pre-temp-decrease indent: 0
+    echo false;	// #temp-pre-indent: 1, #save indent: 1
 ```
 
 ## Alternative control structure for if-else 2
