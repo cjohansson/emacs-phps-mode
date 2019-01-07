@@ -280,7 +280,6 @@
                 (when (and in-inline-control-structure
                            (string= token ";")
                            (not special-control-structure-started-this-line))
-                  (setq column-level (1- column-level))
                   (setq line-contained-nesting-decrease t)
                   (setq inline-control-structure-level (1- inline-control-structure-level))
                   (setq in-inline-control-structure nil))
@@ -345,36 +344,35 @@
                 )
 
               (when token
+                
+                ;; Calculate nesting
+                (setq nesting-end (+ round-bracket-level square-bracket-level curly-bracket-level alternative-control-structure-level inline-control-structure-level in-assignment-level in-class-declaration-level))
+
+                ;; Has nesting increased?
+                (when (and nesting-stack
+                           (<= nesting-end (car (car nesting-stack))))
+
+                  (when phps-mode-functions-verbose
+                    ;; (message "\nPopping %s from nesting-stack since %s is lesser or equal to %s, next value is: %s\n" (car nesting-stack) nesting-end (car (car nesting-stack)) (nth 1 nesting-stack))
+                    )
+                  (pop nesting-stack)
+
+                  ;; Decrement column
+                  (if allow-custom-column-decrement
+                      (progn
+                        (setq column-level (- column-level (- nesting-start nesting-end)))
+                        (setq allow-custom-column-increment nil))
+                    (setq column-level (1- column-level)))
+
+                  ;; Prevent negative column-values
+                  (when (< column-level 0)
+                    (setq column-level 0)))
 
                 ;; Are we on a new line or is it the last token of the buffer?
                 (if (> next-token-start-line-number token-start-line-number)
 
                     ;; Line logic
                     (progn
-
-                      ;; Calculate nesting
-                      (setq nesting-end (+ round-bracket-level square-bracket-level curly-bracket-level alternative-control-structure-level inline-control-structure-level in-assignment-level in-class-declaration-level))
-
-                      ;; Has nesting increased?
-                      (when (and nesting-stack
-                                 (<= nesting-end (car (car nesting-stack))))
-
-                        (when phps-mode-functions-verbose
-                          ;; (message "\nPopping %s from nesting-stack since %s is lesser or equal to %s, next value is: %s\n" (car nesting-stack) nesting-end (car (car nesting-stack)) (nth 1 nesting-stack))
-                          )
-                        (pop nesting-stack)
-
-                        ;; Decrement column
-                        (if allow-custom-column-decrement
-                            (progn
-                              (setq column-level (- column-level (- nesting-start nesting-end)))
-                              (setq allow-custom-column-increment nil))
-                          (setq column-level (1- column-level)))
-
-                        ;; Prevent negative column-values
-                        (when (< column-level 0)
-                          (setq column-level 0)))
-
 
                       ;; ;; Start indentation might differ from ending indentation in cases like } else {
                       (setq column-level-start column-level)
@@ -446,7 +444,7 @@
                             (setq column-level (1+ column-level)))
 
                           (when phps-mode-functions-verbose
-                            ;; (message "\nPushing (%s %s) to nesting-stack since %s is greater than %s or stack is empty" nesting-start nesting-end nesting-end (car (cdr (car nesting-stack))))
+                            (message "\nPushing (%s %s %s) to nesting-stack since %s is greater than %s or stack is empty" nesting-start nesting-end token nesting-end (car (cdr (car nesting-stack))))
                             )
                           (push `(,nesting-stack-end ,nesting-end ,token) nesting-stack)
                           (when phps-mode-functions-verbose
@@ -482,19 +480,6 @@
 
                   ;; Current token is not first
                   (setq first-token-on-line nil)
-
-                  ;; Calculate nesting
-                  (setq nesting-end (+ round-bracket-level square-bracket-level curly-bracket-level alternative-control-structure-level inline-control-structure-level in-assignment-level in-class-declaration-level))
-
-                  ;; Is current nesting-level equal or below stack-value? (#0)
-                  (when (and nesting-stack
-                             (<= nesting-end (car (car nesting-stack))))
-                    (setq column-level (1- column-level))
-                    (when phps-mode-functions-verbose
-                      ;; (message "\nPopping %s from nesting-stack since %s is lesser somewhere on line, next is: %s, new column is: %s, new stack-value is: %s\n" (car nesting-stack) nesting-end (nth 1 nesting-stack) column-level (nth 1 nesting-stack))
-                      )
-                    (pop nesting-stack)
-                    (setq changed-nesting-stack-in-line t))
 
                   (when (> token-end-line-number token-start-line-number)
                     ;; (message "Token not first on line %s starts at %s and ends at %s" token token-start-line-number token-end-line-number)

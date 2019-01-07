@@ -20,20 +20,16 @@ foreach token in buffer:
 
     calculate nesting-end;
 
-    if nesting-stack AND nesting-end <= nesting-stack-end:
+    if nesting-stack AND nesting-end <= nesting-stack-start: // #decrease
         pop stack;
-        indentation--;
+        indent--;
     endif;
 
     if we reached end of a line:
-        if nesting-stack AND nesting-end <= nesting-stack-start:
-            pop stack;
-            indent--;
-        endif;
 
-        save line indent;
+        save line indent; // #save
 
-        if nesting-end > 0 AND (!nesting-stack OR nesting-end > nesting-stack-end):
+        if nesting-end > 0 AND (!nesting-stack OR nesting-end > nesting-stack-end): // #increase
             if !nesting-stack:
                 nesting-stack-end = 0;
             endif;
@@ -49,9 +45,33 @@ endforeach;
 ## Examples
 
 ```php
-If (function( <- (1)
-    false)
-) { <- (3, 1)
+if (function(		// #save indent: 0, #increase push (0 2) indent: 1
+    false)			// #save indent: 1
+) {				// #decrease pop (0 2) indent: 0, #save indent: 0, #increase push (0 1) indent: 1
+    echo true;		// #save indent: 1
+}					// #decrease pop (0 1) indent: 0, #save indent: 0
+```
+
+## Inline control structure for if-else
+
+```php
+if (true)
     echo true;
-} <- (3)
+else
+    echo false;
+```
+
+## Alternative control structure for if-else 2
+
+```php
+if (true &&
+    true
+):
+    echo true;
+elseif (true
+    || false):
+    echo 'another';
+else:
+    echo false;
+endif;
 ```
