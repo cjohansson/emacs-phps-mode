@@ -55,10 +55,10 @@ if (function(		// #save indent: 0, #increase push (0 2) indent: 1
 ## Inline control structure for if-else
 
 ```php
-if (true)
-    echo true;
-else
-    echo false;
+if (true)			// #save indent: 0
+    echo true;		// #pre-temp-increase indent: 1, #save indent: 1, #pre-temp-decrease indent: 0
+else				// #save indent: 0
+    echo false;	// #pre-temp-increase indent: 1, #save indent: 1, #pre-temp-decrease indent: 0
 ```
 
 ## Alternative control structure for if-else 2
