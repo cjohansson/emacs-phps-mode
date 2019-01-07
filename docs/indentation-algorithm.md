@@ -70,12 +70,12 @@ else				// #save indent: 0
 ## Alternative control structure for if-else 2
 
 ```php
-if (true &&
-    true
-):
-    echo true;
-elseif (true
-    || false):
+if (true &&			#save indent: 0, #increase push (0 1) indent: 1
+    true				#save indent: 1
+):						#decrease pop (0 1) indent: 0, #save indent: 0, #increase push (0 1) indent: 1
+    echo true;			#save indent 1
+elseif (true			#decrease pop (0 1) indent: 0, #save indent: 0, #increase push (0 1) indent: 1
+    || false):			#decrease pop (0 1) indent: 0, #save indent: 0, #increase push (0 1) indent: 1
     echo 'another';
 else:
     echo false;

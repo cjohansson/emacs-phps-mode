@@ -238,7 +238,7 @@
                                 (progn
                                   (setq line-contained-nesting-increase t)
                                   (when after-special-control-structure-first-on-line
-                                    (setq first-token-is-nesting-decrease t)))
+                                    (setq alternative-control-structure-level (1+ alternative-control-structure-level))))
 
                               (when (equal after-special-control-structure-token 'T_SWITCH)
                                 (setq alternative-control-structure-level (1+ alternative-control-structure-level))
@@ -291,8 +291,8 @@
                                  (equal token 'T_DEFAULT))
                              nesting-stack
                              (string= (car (cdr (cdr (car nesting-stack)))) ":"))
-                    (setq column-level (1- column-level))
-                    (pop nesting-stack))
+
+                    (setq alternative-control-structure-level (1- alternative-control-structure-level)))
 
                   )
 

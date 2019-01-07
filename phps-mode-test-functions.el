@@ -58,11 +58,6 @@
    (should (equal '((1 (0 0)) (2 (0 0)) (3 (1 0)) (4 (1 0)) (5 (2 0)) (6 (1 0)) (7 (1 0)) (8 (0 0))) (phps-mode-test-functions--hash-to-list (phps-mode-functions-get-lines-indent)))))
 
   (phps-mode-test-with-buffer
-   "<?php\nswitch ($condition) {\n    case true:\n        echo 'here';\n        echo 'here 2';\n    case false:\n        echo 'here 4';\n    default:\n        echo 'here 3';\n}\n"
-   "Switch, case, default"
-   (should (equal '((1 (0 0)) (2 (0 0)) (3 (1 0)) (4 (2 0)) (5 (2 0)) (6 (1 0)) (7 (2 0)) (8 (1 0)) (9 (2 0)) (10 (0 0))) (phps-mode-test-functions--hash-to-list (phps-mode-functions-get-lines-indent)))))
-
-  (phps-mode-test-with-buffer
    "<?php\n$var =\n    500 .\n    \"200\" .\n    100.0 .\n    '200' .\n    $this->getTail()\n    ->getBottom();"
    "Multi-line assignments"
    ;; (message "Tokens: %s" phps-mode-lexer-tokens)
@@ -70,9 +65,15 @@
 
   (phps-mode-test-with-buffer
    "<?php\n$variable = array(\n    'random4');\n$variable = true;\n"
-   "Array assignment on only two lines"
+   "Array assignment on two lines"
    ;; (message "Tokens: %s" phps-mode-lexer-tokens)
    (should (equal '((1 (0 0)) (2 (0 0)) (3 (1 0)) (4 (0 0)) ) (phps-mode-test-functions--hash-to-list (phps-mode-functions-get-lines-indent)))))
+
+  (phps-mode-test-with-buffer
+   "<?php\n$variable = array(\n    'random4'\n);\n$variable = true;\n"
+   "Array assignment on three lines"
+   ;; (message "Tokens: %s" phps-mode-lexer-tokens)
+   (should (equal '((1 (0 0)) (2 (0 0)) (3 (1 0)) (4 (0 0)) (5 (0 0))) (phps-mode-test-functions--hash-to-list (phps-mode-functions-get-lines-indent)))))
 
   (phps-mode-test-with-buffer
    "<?php\n$str = <<<'EOD'\nExample of string\nspanning multiple lines\nusing nowdoc syntax.\nEOD;\n"
@@ -179,7 +180,7 @@
   (phps-mode-test-with-buffer
    "<?php\nif (true):\n    echo 'Something';\nelseif (true\n    && true):\n    echo 'Something';\nelse:\n    echo 'Something else';\n    echo 'Something else again';\nendif;\necho true;\n"
    "Alternative control structures with multi-line elseif 2"
-   (should (equal '((1 (0 0)) (2 (0 0)) (3 (1 0)) (4 (0 0)) (5 (1 0)) (6 (1 0)) (7 (0 0)) (8 (1 0)) (9 (1 0)) (10 (0 0)) (11 (0 0))) (phps-mode-test-functions--hash-to-list (phps-mode-functions-get-lines-indent)))))
+   (should (equal '((1 (0 0)) (2 (0 0)) (3 (1 0)) (4 (0 0)) (5 (0 0)) (6 (1 0)) (7 (0 0)) (8 (1 0)) (9 (1 0)) (10 (0 0)) (11 (0 0))) (phps-mode-test-functions--hash-to-list (phps-mode-functions-get-lines-indent)))))
 
   )
 
@@ -273,6 +274,16 @@
    (should (equal '((1 (0 0)) (2 (0 0)) (3 (1 0)) (4 (0 0)) (5 (1 0)) (6 (0 0))) (phps-mode-test-functions--hash-to-list (phps-mode-functions-get-lines-indent)))))
 
   )
+
+(defun phps-mode-test-functions-get-lines-indent-switch-case ()
+  "Test for switch-case indentation."
+
+    (phps-mode-test-with-buffer
+   "<?php\nswitch ($condition) {\n    case true:\n        echo 'here';\n        echo 'here 2';\n    case false:\n        echo 'here 4';\n    default:\n        echo 'here 3';\n}\n"
+   "Switch, case, default"
+   (should (equal '((1 (0 0)) (2 (0 0)) (3 (1 0)) (4 (2 0)) (5 (2 0)) (6 (1 0)) (7 (2 0)) (8 (1 0)) (9 (2 0)) (10 (0 0))) (phps-mode-test-functions--hash-to-list (phps-mode-functions-get-lines-indent)))))
+
+)
 
 (defun phps-mode-test-functions-indent-line ()
   "Test for indentation."
@@ -521,6 +532,7 @@
   (phps-mode-test-functions-get-lines-indent-inline-if)
   (phps-mode-test-functions-get-lines-indent-alternative-if)
   (phps-mode-test-functions-get-lines-indent)
+  (phps-mode-test-functions-get-lines-indent-switch-case)
   (phps-mode-test-functions-indent-line))
 
 (phps-mode-test-functions)
