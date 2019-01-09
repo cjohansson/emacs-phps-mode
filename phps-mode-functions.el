@@ -92,7 +92,8 @@
               (after-class-declaration nil)
               (class-declaration-started-this-line nil)
               (special-control-structure-started-this-line nil)
-              (temp-pre-indent nil))
+              (temp-pre-indent nil)
+              (temp-post-indent nil))
 
           (push `(END_PARSE ,(point-max) . ,(point-max)) tokens)
 
@@ -294,6 +295,10 @@
                              (string= (car (cdr (cdr (car nesting-stack)))) ":"))
 
                     (setq alternative-control-structure-level (1- alternative-control-structure-level))
+
+                    (when first-token-on-line
+                      (setq first-token-is-nesting-decrease t))
+
                     (when phps-mode-functions-verbose
                       (message "\nDecreasing alternative control structure nesting at %s to %s\n" token alternative-control-structure-level))
                     )
@@ -346,16 +351,35 @@
                     )
                   (pop nesting-stack)
 
-                  ;; Decrement column
-                  (if allow-custom-column-decrement
-                      (progn
-                        (setq column-level (- column-level (- nesting-start nesting-end)))
-                        (setq allow-custom-column-increment nil))
-                    (setq column-level (1- column-level)))
+                  (if first-token-is-nesting-decrease
 
-                  ;; Prevent negative column-values
-                  (when (< column-level 0)
-                    (setq column-level 0)))
+                      (progn
+                        ;; Decrement column
+                        (if allow-custom-column-decrement
+                            (progn
+                              (setq column-level (- column-level (- nesting-start nesting-end)))
+                              (setq allow-custom-column-increment nil))
+                          (setq column-level (1- column-level)))
+
+                        ;; Prevent negative column-values
+                        (when (< column-level 0)
+                          (setq column-level 0)))
+
+                    (when (not temp-post-indent)
+                      (setq temp-post-indent column-level))
+
+                    ;; Decrement column
+                    (if allow-custom-column-decrement
+                        (progn
+                          (setq temp-post-indent (- temp-post-indent (- nesting-start nesting-end)))
+                          (setq allow-custom-column-increment nil))
+                      (setq temp-post-indent (1- temp-post-indent)))
+
+                    ;; Prevent negative column-values
+                    (when (< temp-post-indent 0)
+                      (setq temp-post-indent 0))
+
+                    ))
 
                 ;; Are we on a new line or is it the last token of the buffer?
                 (if (> next-token-start-line-number token-start-line-number)
@@ -405,6 +429,10 @@
                         ;; Rest tuning-level used for comments
                         (setq tuning-level 0))
 
+                      ;; Support trailing indent decrements
+                      (when temp-post-indent
+                        (setq column-level temp-post-indent)
+                        (setq temp-post-indent nil))
 
                       ;; Decrease indentation
                       (when (and (> nesting-end 0)

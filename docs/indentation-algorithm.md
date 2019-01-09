@@ -17,24 +17,38 @@ Here follows pseudo-code for a algorithm that calculates indentation for each li
 
 ```php
 foreach token in buffer:
-
+    
     calculate nesting-end;
-
+    
     if nesting-stack AND nesting-end <= nesting-stack-start: // #decrease
         pop stack;
-        indent--;
+        
+        if first-token-on-line-is-nesting-decrease:
+            indent--;
+        else:
+            if !temp-post-indent:
+                temp-post-indent = indent;
+            endif;
+            
+            temp-post-indent--;
+        endif;
+        
     endif;
-
+    
     if we reached end of a line:
-    
+        
         indent-start = indent;
-    
+        
         if temp-pre-indent: // #temp-pre-indent
             indent-start = temp-pre-indent;
         endif;
-
+        
         save line indent-start; // #save
-
+        
+        if temp-post-indent: #temp-post-indent
+            indent = temp-post-indent;
+        endif;
+        
         if nesting-end > 0 AND (!nesting-stack OR nesting-end > nesting-stack-end): // #increase
             if !nesting-stack:
                 nesting-stack-end = 0;
@@ -44,7 +58,7 @@ foreach token in buffer:
             indent++;
         endif;
     endif;
-
+    
 endforeach;
 ```
 
@@ -66,7 +80,7 @@ if (function(		// #save indent: 0, #increase push (0 2) indent: 1
 
 ```php				// #save indent: 0
 if (function(		// #save indent: 0, #increase push (0 2) indent: 1
-    false)) {		// #decrease pop (0 2) post-indent: 0, #save indent: 1, #increase push (0 1) indent: 1 TODO fix ERROR
+    false)) {		// #decrease pop (0 2) temp-post-indent: 0, #save indent: 1, #temp-post-indent indent: 0, #increase push (0 1) indent: 1
     echo true;		// #save indent: 1
 }					// #decrease pop (0 1) indent: 0, #save indent: 0
 ```
