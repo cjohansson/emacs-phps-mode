@@ -52,10 +52,21 @@ endforeach;
 
 PHP examples using algorithms defined above, explained each line.
 
+## Basic multi-line if-expression 1
+
 ```php				// #save indent: 0
 if (function(		// #save indent: 0, #increase push (0 2) indent: 1
     false)			// #save indent: 1
 ) {				// #decrease pop (0 2) indent: 0, #save indent: 0, #increase push (0 1) indent: 1
+    echo true;		// #save indent: 1
+}					// #decrease pop (0 1) indent: 0, #save indent: 0
+```
+
+## Basic multi-line if-expression 2
+
+```php				// #save indent: 0
+if (function(		// #save indent: 0, #increase push (0 2) indent: 1
+    false)) {		// #decrease pop (0 2) post-indent: 0, #save indent: 1, #increase push (0 1) indent: 1 TODO fix ERROR
     echo true;		// #save indent: 1
 }					// #decrease pop (0 1) indent: 0, #save indent: 0
 ```
