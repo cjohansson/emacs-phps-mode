@@ -238,17 +238,30 @@
                                 (progn
                                   (setq line-contained-nesting-increase t)
                                   (when after-special-control-structure-first-on-line
+<<<<<<< HEAD
                                     (setq alternative-control-structure-level (1+ alternative-control-structure-level))))
+=======
+                                    (setq first-token-is-nesting-decrease t)))
+>>>>>>> 2d4646f2f1e8faf4a79f6b36f30140c233592430
 
                               (when (equal after-special-control-structure-token 'T_SWITCH)
                                 (setq alternative-control-structure-level (1+ alternative-control-structure-level))
                                 (setq allow-custom-column-increment t))
+<<<<<<< HEAD
 
                               (setq alternative-control-structure-level (1+ alternative-control-structure-level))
                               (setq line-contained-nesting-increase t)
                               (when after-special-control-structure-first-on-line
                                 (setq first-token-is-nesting-increase t))))
 
+=======
+
+                              (setq alternative-control-structure-level (1+ alternative-control-structure-level))
+                              (setq line-contained-nesting-increase t)
+                              (when after-special-control-structure-first-on-line
+                                (setq first-token-is-nesting-increase t))))
+
+>>>>>>> 2d4646f2f1e8faf4a79f6b36f30140c233592430
                         ;; (message "Started inline control-structure after %s at %s" after-special-control-structure-token token)
                         (setq in-inline-control-structure t)
                         (setq temp-pre-indent (1+ column-level))))
