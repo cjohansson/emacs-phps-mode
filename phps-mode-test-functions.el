@@ -112,7 +112,6 @@
 
   )
 
-<<<<<<< HEAD
 (defun phps-mode-test-functions-get-lines-indent-multi-line-assignments ()
   "Test for multi-line assignments."
 
@@ -146,11 +145,8 @@
    ;; (message "Tokens: %s" phps-mode-lexer-tokens)
    (should (equal '((1 (0 0)) (2 (0 0)) (3 (1 0)) (4 (1 0)) (5 (1 0)) (6 (1 0)) (7 (1 0)) (8 (1 0))) (phps-mode-test-functions--hash-to-list (phps-mode-functions-get-lines-indent)))))
 
-
   )
 
-=======
->>>>>>> 2d4646f2f1e8faf4a79f6b36f30140c233592430
 (defun phps-mode-test-functions-get-lines-indent-inline-if ()
   "Test for inline if indentations."
 

@@ -203,12 +203,15 @@
                   ;; (message "Found ending alternative token %s %s" token alternative-control-structure-level)
 
                   (when (equal token 'T_ENDSWITCH)
+
+                    ;; Decrement end switch with two points
                     (setq allow-custom-column-decrement t)
                     (setq alternative-control-structure-level (1- alternative-control-structure-level)))
 
                   (when first-token-on-line
                     (setq first-token-is-nesting-decrease t)))
 
+                ;; When we encounter a token except () after a control-structure
                 (when (and after-special-control-structure
                            (= after-special-control-structure round-bracket-level)
                            (not (string= token ")"))
@@ -231,44 +234,29 @@
                       (if (string= token ":")
 
                           (progn
-                            ;; Alternative syntax for control structures here
-                            (if (or (equal after-special-control-structure-token 'T_ELSE)
-                                    (equal after-special-control-structure-token 'T_ELSEIF)
-                                    (equal after-special-control-structure-token 'T_DEFAULT))
-                                (progn
-                                  (setq line-contained-nesting-increase t)
-                                  (when after-special-control-structure-first-on-line
-<<<<<<< HEAD
-                                    (setq alternative-control-structure-level (1+ alternative-control-structure-level))))
-=======
-                                    (setq first-token-is-nesting-decrease t)))
->>>>>>> 2d4646f2f1e8faf4a79f6b36f30140c233592430
 
-                              (when (equal after-special-control-structure-token 'T_SWITCH)
-                                (setq alternative-control-structure-level (1+ alternative-control-structure-level))
-                                (setq allow-custom-column-increment t))
-<<<<<<< HEAD
-
+                            (when (equal after-special-control-structure-token 'T_SWITCH)
                               (setq alternative-control-structure-level (1+ alternative-control-structure-level))
-                              (setq line-contained-nesting-increase t)
-                              (when after-special-control-structure-first-on-line
-                                (setq first-token-is-nesting-increase t))))
+                              (setq allow-custom-column-increment t))
 
-=======
+                            (setq alternative-control-structure-level (1+ alternative-control-structure-level))
 
-                              (setq alternative-control-structure-level (1+ alternative-control-structure-level))
-                              (setq line-contained-nesting-increase t)
-                              (when after-special-control-structure-first-on-line
-                                (setq first-token-is-nesting-increase t))))
+                            (when phps-mode-functions-verbose
+                              (message "\nIncreasing alternative-control-structure after %s %s to %s\n" after-special-control-structure-token token alternative-control-structure-level))
 
->>>>>>> 2d4646f2f1e8faf4a79f6b36f30140c233592430
-                        ;; (message "Started inline control-structure after %s at %s" after-special-control-structure-token token)
-                        (setq in-inline-control-structure t)
-                        (setq temp-pre-indent (1+ column-level))))
+                            (setq line-contained-nesting-increase t)
+                            (when after-special-control-structure-first-on-line
+                              (setq first-token-is-nesting-increase t)))
 
-                    (setq after-special-control-structure nil)
-                    (setq after-special-control-structure-token nil)
-                    (setq after-special-control-structure-first-on-line nil)))
+                        (when phps-mode-functions-verbose
+                          (message "\nStarted inline control-structure after %s at %s\n" after-special-control-structure-token token))
+
+                      (setq in-inline-control-structure t)
+                      (setq temp-pre-indent (1+ column-level))))
+
+                  (setq after-special-control-structure nil)
+                  (setq after-special-control-structure-token nil)
+                  (setq after-special-control-structure-first-on-line nil)))
 
                 ;; Support extra special control structures (CASE)
                 (when (and after-extra-special-control-structure
@@ -305,7 +293,10 @@
                              nesting-stack
                              (string= (car (cdr (cdr (car nesting-stack)))) ":"))
 
-                    (setq alternative-control-structure-level (1- alternative-control-structure-level)))
+                    (setq alternative-control-structure-level (1- alternative-control-structure-level))
+                    (when phps-mode-functions-verbose
+                      (message "\nDecreasing alternative control structure nesting at %s to %s\n" token alternative-control-structure-level))
+                    )
 
                   )
 
