@@ -47,6 +47,12 @@ foreach token in buffer:
         
         indent-start = indent;
         
+        if new-token-line-start is more than one line after last-token-line-start AND token is not T_CLOSE_TAG:
+            foreach line between last-token-line-start and new-token-line-start:
+                save line indent-start
+            endforeach;
+        endforeach;
+        
         if temp-pre-indent: // #temp-pre-indent
             indent-start = temp-pre-indent;
         endif;
@@ -70,8 +76,29 @@ foreach token in buffer:
             indent++;
         endif;
         
+        indent-end = indent;
+        if token-end-line-number > token-start-line-number:
+            if (in-heredoc AND !in-heredoc-started-this-line) OR in-heredoc-ended-this-line:
+                indent-end = 0;
+            endif;
+            
+            if token = T_DOC_COMMENT:
+                tuning-level = 1;
+            endif;
+            
+            foreach line between token-start-line-number to token-end-line-number:
+                save line indent-end tuning-level;
+            endforeach;
+        endif;
+        
         in-heredoc-started-this-line = false;
         in-heredoc-ended-this-line = false;
+        first-token-on-line = true;
+        
+    else:
+        if token != T_OPEN_TAG AND token != T_OPEN_TAG_WITH_ECHO:
+            first-token-on-line = false;
+        endif;
     endif;
     
 endforeach;
