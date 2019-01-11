@@ -229,19 +229,12 @@
 
                         (when (equal after-special-control-structure-token 'T_SWITCH)
                           ;; (message "Opening switch, increase curly brackets to %s" curly-bracket-level)
-                          (push curly-bracket-level switch-curly-stack)
-                          (setq allow-custom-column-increment t)
-                          (setq curly-bracket-level (1+ curly-bracket-level)))
+                          (push curly-bracket-level switch-curly-stack))
 
                       ;; Is it the start of an alternative control structure?
                       (if (string= token ":")
 
                           (progn
-
-                            (when (equal after-special-control-structure-token 'T_SWITCH)
-                              (setq alternative-control-structure-level (1+ alternative-control-structure-level))
-                              (setq allow-custom-column-increment t))
-
                             (setq alternative-control-structure-level (1+ alternative-control-structure-level))
 
                             (when phps-mode-functions-verbose
@@ -261,9 +254,15 @@
                   (setq after-special-control-structure-token nil)
                   (setq after-special-control-structure-first-on-line nil)))
 
-                ;; Support extra special control structures (CASE)
+                ;; Support extra special control structures (CASE:)
                 (when (and after-extra-special-control-structure
                            (string= token ":"))
+
+                  (when phps-mode-functions-verbose
+                    (message "Started CASE"))
+
+                  (setq alternative-control-structure-level (1+ alternative-control-structure-level))
+                  
                   (setq line-contained-nesting-increase t)
                   (when after-extra-special-control-structure-first-on-line
                     (setq first-token-is-nesting-decrease t))
@@ -394,16 +393,6 @@
                       (setq column-level-start column-level)
 
 
-                      ;; Indent token-less lines here in between last tokens if distance is more than 1 line
-                      (when (and (> next-token-start-line-number (1+ token-start-line-number))
-                                 (not (equal token 'T_CLOSE_TAG)))
-                        (let ((token-line-number-diff (1- (- token-start-line-number next-token-start-line-number))))
-                          (while (>= token-line-number-diff 0)
-                            (puthash (- token-start-line-number token-line-number-diff) `(,column-level-start ,tuning-level) line-indents)
-                            ;; (message "Saved line %s indent %s %s" (- token-end-line-number token-line-number-diff) column-level tuning-level)
-                            (setq token-line-number-diff (1- token-line-number-diff)))))
-
-
                       ;; Support temporarily pre-indent
                       (when temp-pre-indent
                         (setq column-level-start temp-pre-indent)
@@ -480,6 +469,20 @@
 
                           ;; Rest tuning-level used for comments
                           (setq tuning-level 0)))
+
+
+;; Indent token-less lines here in between last tokens if distance is more than 1 line
+                      (when (and (> next-token-start-line-number (1+ token-end-line-number))
+                                 (not (equal token 'T_CLOSE_TAG)))
+
+                        (when phps-mode-functions-verbose
+                          (message "\nDetected token-less lines between %s and %s, should have indent: %s\n" token-end-line-number next-token-start-line-number column-level))
+
+                        (let ((token-line-number-diff (1- (- next-token-start-line-number token-end-line-number))))
+                          (while (>= token-line-number-diff 0)
+                            (puthash (- next-token-start-line-number token-line-number-diff) `(,column-level ,tuning-level) line-indents)
+                            ;; (message "Saved line %s indent %s %s" (- token-end-line-number token-line-number-diff) column-level tuning-level)
+                            (setq token-line-number-diff (1- token-line-number-diff)))))
 
 
                       ;; ;; When nesting decreases but ends with a nesting increase, increase indent by one
