@@ -542,8 +542,8 @@
   (phps-mode-test-functions-get-lines-indent-inline-if)
   (phps-mode-test-functions-get-lines-indent-alternative-if)
   (phps-mode-test-functions-get-lines-indent-multi-line-assignments)
-  (phps-mode-test-functions-get-lines-indent-switch-case)
   (phps-mode-test-functions-get-lines-indent)
+  (phps-mode-test-functions-get-lines-indent-switch-case)
   (phps-mode-test-functions-indent-line))
 
 (phps-mode-test-functions)

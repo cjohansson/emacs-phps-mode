@@ -417,7 +417,14 @@
                         (puthash token-start-line-number `(,column-level-start ,tuning-level) line-indents))
 
 
-                      ;; TODO Fill token-less but in-scripting lines in-between with indentation
+                      ;; Indent token-less lines here in between last tokens if distance is more than 1 line
+                      (when (and (> next-token-start-line-number (1+ token-start-line-number))
+                                 (not (equal token 'T_CLOSE_TAG)))
+                        (let ((token-line-number-diff (1- (- token-start-line-number next-token-start-line-number))))
+                          (while (>= token-line-number-diff 0)
+                            (puthash (- token-start-line-number token-line-number-diff) `(,column-level-start ,tuning-level) line-indents)
+                            ;; (message "Saved line %s indent %s %s" (- token-end-line-number token-line-number-diff) column-level tuning-level)
+                            (setq token-line-number-diff (1- token-line-number-diff)))))
 
 
                       ;; Does token span over several lines?
