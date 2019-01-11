@@ -86,6 +86,7 @@
               (in-class-declaration nil)
               (in-class-declaration-level 0)
               (token nil)
+              (in-function-declaration nil)
               (token-start-line-number 0)
               (token-end-line-number)
               (tokens (nreverse phps-mode-lexer-tokens))
@@ -165,6 +166,13 @@
                     (setq in-class-declaration t)
                     (setq in-class-declaration-level 1)
                     (setq class-declaration-started-this-line t)))
+
+                ;; Keep track of function declarations
+                (if (and in-function-declaration
+                         (string= token "{"))
+                    (setq in-function-declaration nil)
+                  (when (equal token 'T_FUNCTION)
+                    (setq in-function-declaration t)))
 
                 ;; Keep track of curly bracket level
                 (when (or (equal token 'T_CURLY_OPEN)
@@ -318,6 +326,7 @@
                         ;; (message "In assignment on new-line at %s" token)
                         ))
                   (when (and (not after-special-control-structure)
+                             (not in-function-declaration)
                              (string= token "="))
                     ;; (message "Started assignment")
                     (setq in-assignment round-bracket-level)
