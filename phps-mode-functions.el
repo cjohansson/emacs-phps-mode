@@ -394,6 +394,16 @@
                       (setq column-level-start column-level)
 
 
+                      ;; Indent token-less lines here in between last tokens if distance is more than 1 line
+                      (when (and (> next-token-start-line-number (1+ token-start-line-number))
+                                 (not (equal token 'T_CLOSE_TAG)))
+                        (let ((token-line-number-diff (1- (- token-start-line-number next-token-start-line-number))))
+                          (while (>= token-line-number-diff 0)
+                            (puthash (- token-start-line-number token-line-number-diff) `(,column-level-start ,tuning-level) line-indents)
+                            ;; (message "Saved line %s indent %s %s" (- token-end-line-number token-line-number-diff) column-level tuning-level)
+                            (setq token-line-number-diff (1- token-line-number-diff)))))
+
+
                       ;; Support temporarily pre-indent
                       (when temp-pre-indent
                         (setq column-level-start temp-pre-indent)
@@ -406,48 +416,21 @@
                                 in-heredoc-ended-this-line)
                         (setq column-level-start 0))
 
+
                       ;; Save line indent
                       
                       (when phps-mode-functions-verbose
                         (message "Process line ending.	nesting: %s-%s,	line-number: %s-%s,	indent: %s.%s,	token: %s" nesting-start nesting-end token-start-line-number token-end-line-number column-level-start tuning-level token))
 
                       (when (> token-start-line-number 0)
-
-                        ;; Save line indentation
                         (puthash token-start-line-number `(,column-level-start ,tuning-level) line-indents))
 
-
-                      ;; Indent token-less lines here in between last tokens if distance is more than 1 line
-                      (when (and (> next-token-start-line-number (1+ token-start-line-number))
-                                 (not (equal token 'T_CLOSE_TAG)))
-                        (let ((token-line-number-diff (1- (- token-start-line-number next-token-start-line-number))))
-                          (while (>= token-line-number-diff 0)
-                            (puthash (- token-start-line-number token-line-number-diff) `(,column-level-start ,tuning-level) line-indents)
-                            ;; (message "Saved line %s indent %s %s" (- token-end-line-number token-line-number-diff) column-level tuning-level)
-                            (setq token-line-number-diff (1- token-line-number-diff)))))
-
-
-                      ;; Does token span over several lines?
-                      (when (> token-end-line-number token-start-line-number)
-                        ;; (message "Token %s starts at %s and ends at %s indent %s %s" next-token token-start-line-number token-end-line-number column-level tuning-level)
-
-                        ;; Indent doc-comment lines with 1 tuning
-                        (when (equal token 'T_DOC_COMMENT)
-                          (setq tuning-level 1))
-
-                        (let ((token-line-number-diff (1- (- token-end-line-number token-start-line-number))))
-                          (while (>= token-line-number-diff 0)
-                            (puthash (- token-end-line-number token-line-number-diff) `(,column-level-start ,tuning-level) line-indents)
-                            ;; (message "Saved line %s indent %s %s" (- token-end-line-number token-line-number-diff) column-level tuning-level)
-                            (setq token-line-number-diff (1- token-line-number-diff))))
-
-                        ;; Rest tuning-level used for comments
-                        (setq tuning-level 0))
 
                       ;; Support trailing indent decrements
                       (when temp-post-indent
                         (setq column-level temp-post-indent)
                         (setq temp-post-indent nil))
+
 
                       ;; Increase indentation
                       (when (and (> nesting-end 0)
@@ -471,6 +454,33 @@
                           (when phps-mode-functions-verbose
                             ;; (message "New stack %s, start: %s end: %s\n" nesting-stack (car (car nesting-stack)) (car (cdr (car nesting-stack))))
                             )))
+
+
+                      ;; Does token span over several lines?
+                      (when (> token-end-line-number token-start-line-number)
+                        (let ((column-level-end column-level))
+
+                          ;; HEREDOC lines should have zero indent
+                          (when (or (and in-heredoc
+                                         (not in-heredoc-started-this-line))
+                                    in-heredoc-ended-this-line)
+                            (setq column-level-end 0))
+
+                          ;; (message "Token %s starts at %s and ends at %s indent %s %s" next-token token-start-line-number token-end-line-number column-level-end tuning-level)
+
+                          ;; Indent doc-comment lines with 1 tuning
+                          (when (equal token 'T_DOC_COMMENT)
+                            (setq tuning-level 1))
+
+                          (let ((token-line-number-diff (1- (- token-end-line-number token-start-line-number))))
+                            (while (>= token-line-number-diff 0)
+                              (puthash (- token-end-line-number token-line-number-diff) `(,column-level-end ,tuning-level) line-indents)
+                              ;; (message "Saved line %s indent %s %s" (- token-end-line-number token-line-number-diff) column-level tuning-level)
+                              (setq token-line-number-diff (1- token-line-number-diff))))
+
+                          ;; Rest tuning-level used for comments
+                          (setq tuning-level 0)))
+
 
                       ;; ;; When nesting decreases but ends with a nesting increase, increase indent by one
                       ;; (when (and (< nesting-end nesting-start)
