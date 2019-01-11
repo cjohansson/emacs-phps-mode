@@ -510,8 +510,10 @@
                         (setq in-heredoc-started-this-line nil)
                         (setq special-control-structure-started-this-line nil)))
 
-                  ;; Current token is not first
-                  (setq first-token-on-line nil)
+                  ;; Current token is not first if it's not <?php or <?=
+                  (when (not (or (equal token 'T_OPEN_TAG)
+                                 (equal token 'T_OPEN_TAG_WITH_ECHO)))
+                    (setq first-token-on-line nil))
 
                   (when (> token-end-line-number token-start-line-number)
                     ;; (message "Token not first on line %s starts at %s and ends at %s" token token-start-line-number token-end-line-number)
