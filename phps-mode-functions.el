@@ -60,6 +60,8 @@
               (after-special-control-structure-first-on-line nil)
               (after-extra-special-control-structure nil)
               (after-extra-special-control-structure-first-on-line nil)
+              (switch-curly-stack nil)
+              (switch-alternative-stack nil)
               (switch-case-alternative-stack nil)
               (curly-bracket-level 0)
               (round-bracket-level 0)
@@ -178,16 +180,25 @@
                   (setq line-contained-nesting-decrease t)
                   (setq curly-bracket-level (1- curly-bracket-level))
 
-                  ;; Keep track of in scripting
-                  (when (or (equal token 'T_OPEN_TAG)
-                            (equal token 'T_OPEN_TAG_WITH_ECHO))
-                    (setq in-scripting t))
-                  (when (equal token 'T_CLOSE_TAG)
-                    (setq in-scripting nil))
+                  (when (and switch-curly-stack
+                             (= (1+ curly-bracket-level) (car switch-curly-stack)))
 
+                    (when phps-mode-functions-verbose
+                      (message "Ended switch curly stack at %s" curly-bracket-level))
 
+                    (setq allow-custom-column-decrement t)
+                    (setq alternative-control-structure-level (1- alternative-control-structure-level))
+                    (pop switch-curly-stack))
+                  
                   (when first-token-on-line
                     (setq first-token-is-nesting-decrease t)))
+
+                ;; Keep track of in scripting
+                (when (or (equal token 'T_OPEN_TAG)
+                          (equal token 'T_OPEN_TAG_WITH_ECHO))
+                  (setq in-scripting t))
+                (when (equal token 'T_CLOSE_TAG)
+                  (setq in-scripting nil))
 
                 ;; Keep track of ending alternative control structure level
                 (when (or (equal token 'T_ENDIF)
@@ -200,7 +211,14 @@
 
                   (when (and (equal token 'T_ENDSWITCH)
                              switch-case-alternative-stack)
-                    (pop switch-case-alternative-stack))
+
+                    (when phps-mode-functions-verbose
+                      (message "Ended alternative switch stack at %s" alternative-control-structure-level))
+                    
+                    (pop switch-alternative-stack)
+                    (pop switch-case-alternative-stack)
+                    (setq allow-custom-column-decrement t)
+                    (setq alternative-control-structure-level (1- alternative-control-structure-level)))
 
                   (when first-token-on-line
                     (setq first-token-is-nesting-decrease t)))
@@ -216,12 +234,28 @@
                       (setq after-special-control-structure-token token)
 
                     ;; Is token not a curly bracket - because that is a ordinary control structure syntax
-                    (unless (string= token "{")
+                    (if (string= token "{")
+
+                        ;; Save curly bracket level when switch starts
+                        (when (equal after-special-control-structure-token 'T_SWITCH)
+
+                          (when phps-mode-functions-verbose
+                            (message "Started switch curly stack at %s" curly-bracket-level))
+
+                          (push curly-bracket-level switch-curly-stack))
 
                       ;; Is it the start of an alternative control structure?
                       (if (string= token ":")
 
                           (progn
+
+                            ;; Save alternative nesting level for switch
+                            (when (equal after-special-control-structure-token 'T_SWITCH)
+
+                              (when phps-mode-functions-verbose
+                                (message "Started switch alternative stack at %s" alternative-control-structure-level))
+
+                              (push alternative-control-structure-level switch-alternative-stack))
 
                             (setq alternative-control-structure-level (1+ alternative-control-structure-level))
 
@@ -312,11 +346,12 @@
                   (setq after-extra-special-control-structure t)
                   (setq after-extra-special-control-structure-first-on-line first-token-on-line)
 
-                  (when phps-mode-functions-verbose
-                    (message "Found CASE %s vs %s" (1- alternative-control-structure-level) (car switch-case-alternative-stack)))
-
                   (when (and switch-case-alternative-stack
                              (= (1- alternative-control-structure-level) (car switch-case-alternative-stack)))
+
+                    (when phps-mode-functions-verbose
+                      (message "Found CASE %s vs %s" (1- alternative-control-structure-level) (car switch-case-alternative-stack)))
+
                     (setq alternative-control-structure-level (1- alternative-control-structure-level))
                     (when first-token-on-line
                       (setq first-token-is-nesting-decrease t))
