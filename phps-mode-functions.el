@@ -52,6 +52,8 @@
           (message "\nCalculation indentation for all lines in buffer:\n\n%s" (buffer-substring-no-properties (point-min) (point-max))))
         (let ((in-scripting nil)
               (in-heredoc nil)
+              (in-heredoc-started-this-line nil)
+              (in-heredoc-ended-this-line nil)
               (in-inline-control-structure nil)
               (after-special-control-structure nil)
               (after-special-control-structure-token nil)
@@ -312,8 +314,7 @@
                         (progn
                           (setq in-assignment nil)
                             (setq in-assignment-level 0))
-                      (when (and first-token-on-line
-                                 (not in-heredoc))
+                      (when first-token-on-line
                         (setq in-assignment-level 1)
                         ;; (message "In assignment on new-line at %s" token)
                         ))
@@ -329,18 +330,20 @@
                   (setq after-extra-special-control-structure t)
                   (setq after-extra-special-control-structure-first-on-line first-token-on-line))
 
-                ;; Keep track of whether we are inside a HEREDOC or NOWDOC
-                (when (equal token 'T_START_HEREDOC)
-                  (setq in-heredoc t))
-                (when (equal token 'T_END_HEREDOC)
-                  (setq in-heredoc nil))
-
                 )
 
               (when token
                 
                 ;; Calculate nesting
                 (setq nesting-end (+ round-bracket-level square-bracket-level curly-bracket-level alternative-control-structure-level in-assignment-level in-class-declaration-level))
+
+                ;; Keep track of whether we are inside a HEREDOC or NOWDOC
+                (when (equal token 'T_START_HEREDOC)
+                  (setq in-heredoc t)
+                  (setq in-heredoc-started-this-line t))
+                (when (equal token 'T_END_HEREDOC)
+                  (setq in-heredoc nil)
+                  (setq in-heredoc-ended-this-line t))
 
                 ;; Has nesting increased?
                 (when (and nesting-stack
@@ -397,6 +400,11 @@
                         (setq temp-pre-indent nil))
 
 
+                      ;; HEREDOC lines should have zero indent
+                      (when (or (and in-heredoc
+                                     (not in-heredoc-started-this-line))
+                                in-heredoc-ended-this-line)
+                        (setq column-level-start 0))
 
                       ;; Save line indent
                       
@@ -422,7 +430,7 @@
 
                         (let ((token-line-number-diff (1- (- token-end-line-number token-start-line-number))))
                           (while (>= token-line-number-diff 0)
-                            (puthash (- token-end-line-number token-line-number-diff) `(,column-level ,tuning-level) line-indents)
+                            (puthash (- token-end-line-number token-line-number-diff) `(,column-level-start ,tuning-level) line-indents)
                             ;; (message "Saved line %s indent %s %s" (- token-end-line-number token-line-number-diff) column-level tuning-level)
                             (setq token-line-number-diff (1- token-line-number-diff))))
 
@@ -434,7 +442,7 @@
                         (setq column-level temp-post-indent)
                         (setq temp-post-indent nil))
 
-                      ;; Decrease indentation
+                      ;; Increase indentation
                       (when (and (> nesting-end 0)
                                  (or (not nesting-stack)
                                      (> nesting-end (car (cdr (car nesting-stack))))))
@@ -482,6 +490,7 @@
                         (setq in-assignment-started-this-line nil)
                         (setq changed-nesting-stack-in-line nil)
                         (setq class-declaration-started-this-line nil)
+                        (setq in-heredoc-started-this-line nil)
                         (setq special-control-structure-started-this-line nil)))
 
                   ;; Current token is not first

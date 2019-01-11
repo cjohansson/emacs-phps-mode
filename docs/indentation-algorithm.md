@@ -18,6 +18,14 @@ Here follows pseudo-code for a algorithm that calculates indentation for each li
 ```php
 foreach token in buffer:
     
+    if token = T_START_HEREDOC:
+        in-heredoc = true;
+        in-heredoc-started-this-line = true;
+    elseif token == T_END_HEREDOC:
+        in-heredoc = false;
+        in-heredoc-ended-this-line = true;
+    endif;
+    
     calculate nesting-end;
     
     if nesting-stack AND nesting-end <= nesting-stack-start: // #decrease
@@ -43,6 +51,10 @@ foreach token in buffer:
             indent-start = temp-pre-indent;
         endif;
         
+        if (in-heredoc AND !in-heredoc-started-this-line) OR in-heredoc-ended-this-line:
+            indent-start = 0;
+        endif;
+        
         save line indent-start; // #save
         
         if temp-post-indent: #temp-post-indent
@@ -57,6 +69,9 @@ foreach token in buffer:
             push (nesting-stack-end nesting-end) to stack;
             indent++;
         endif;
+        
+        in-heredoc-started-this-line = false;
+        in-heredoc-ended-this-line = false;
     endif;
     
 endforeach;
