@@ -123,12 +123,6 @@
    ;; (message "Tokens: %s" phps-mode-lexer-tokens)
    (should (equal '((1 (0 0)) (2 (1 0)) (3 (0 0))) (phps-mode-test-functions--hash-to-list (phps-mode-functions-get-lines-indent)))))
 
-  (phps-mode-test-with-buffer
-   "<?php\nif (true) {\n\n\n    echo 'here';\n\n}"
-   "Regular if-expression white token-less lines"
-   ;; (message "Tokens: %s" phps-mode-lexer-tokens)
-   (should (equal '((1 (0 0)) (2 (0 0)) (3 (1 0)) (4 (1 0)) (5 (1 0)) (6 (1 0)) (7 (0 0))) (phps-mode-test-functions--hash-to-list (phps-mode-functions-get-lines-indent)))))
-
   )
 
 (defun phps-mode-test-functions-get-lines-indent-multi-line-assignments ()
@@ -231,12 +225,6 @@
    ;; (message "Tokens: %s" phps-mode-lexer-tokens)
    (should (equal '((1 (0 0)) (2 (0 0)) (3 (1 0)) (4 (1 0)) (5 (0 0)) (6 (0 0))) (phps-mode-test-functions--hash-to-list (phps-mode-functions-get-lines-indent)))))
 
-  (phps-mode-test-with-buffer
-   "<?php\nclass MyClass\n{\n    public function __construct(\n        $arg1 = false,\n        $arg2 = []\n    ) {\n        echo 'here';\n    }\n}"
-   "Class multi-line optional function arguments"
-   ;; (message "Tokens: %s" phps-mode-lexer-tokens)
-   (should (equal '((1 (0 0)) (2 (0 0)) (3 (0 0)) (4 (1 0)) (5 (2 0)) (6 (2 0)) (7 (1 0)) (8 (2 0)) (9 (1 0)) (10 (0 0))) (phps-mode-test-functions--hash-to-list (phps-mode-functions-get-lines-indent)))))
-
 
   (phps-mode-test-with-buffer
    "<?php\n/**\n *\n */\nnamespace Aomebo\n{\n    /**\n     *\n     */\n    class Base\n    {\n    }\n}\n"
@@ -288,7 +276,7 @@
    "<html><head><title><?php if ($myCondition) {\n    if ($mySeconCondition) {\n        echo $title2;\n\n    } ?></title><body>Bla bla</body></html>"
    "Mixed HTML/PHP with if expression"
    ;; (message "Tokens: %s" phps-mode-lexer-tokens)
-   (should (equal '((1 (0 0)) (2 (1 0)) (3 (2 0)) (4 (2 0)) (5 (1 0))) (phps-mode-test-functions--hash-to-list (phps-mode-functions-get-lines-indent)))))
+   (should (equal '((1 (0 0)) (2 (1 0)) (3 (2 0)) (5 (1 0))) (phps-mode-test-functions--hash-to-list (phps-mode-functions-get-lines-indent)))))
 
   (phps-mode-test-with-buffer
    "<html><head><title><?php\nif ($myCondition) {\n    if ($mySecondCondition) {\n        echo $title;\n    } else if ($mySecondCondition) {\n        echo $title4;\n    } else {\n        echo $title2;\n        echo $title3;\n    }\n} ?></title><body>Bla bla</body></html>"

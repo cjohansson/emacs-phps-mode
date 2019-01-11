@@ -60,7 +60,7 @@
               (after-special-control-structure-first-on-line nil)
               (after-extra-special-control-structure nil)
               (after-extra-special-control-structure-first-on-line nil)
-              (switch-curly-stack nil)
+              (switch-case-alternative-stack nil)
               (curly-bracket-level 0)
               (round-bracket-level 0)
               (square-bracket-level 0)
@@ -86,7 +86,6 @@
               (in-class-declaration nil)
               (in-class-declaration-level 0)
               (token nil)
-              (in-function-declaration nil)
               (token-start-line-number 0)
               (token-end-line-number)
               (tokens (nreverse phps-mode-lexer-tokens))
@@ -167,13 +166,6 @@
                     (setq in-class-declaration-level 1)
                     (setq class-declaration-started-this-line t)))
 
-                ;; Keep track of function declarations
-                (if (and in-function-declaration
-                         (string= token "{"))
-                    (setq in-function-declaration nil)
-                  (when (equal token 'T_FUNCTION)
-                    (setq in-function-declaration t)))
-
                 ;; Keep track of curly bracket level
                 (when (or (equal token 'T_CURLY_OPEN)
                           (equal token 'T_DOLLAR_OPEN_CURLY_BRACES)
@@ -193,13 +185,6 @@
                   (when (equal token 'T_CLOSE_TAG)
                     (setq in-scripting nil))
 
-                  ;; Decrease switch curly stack if any
-                  (when (and switch-curly-stack
-                             (= curly-bracket-level (car switch-curly-stack)))
-                    (setq curly-bracket-level (1- curly-bracket-level))
-                    ;; (message "Found ending switch curly bracket")
-                    (setq allow-custom-column-decrement t)
-                    (pop switch-curly-stack))
 
                   (when first-token-on-line
                     (setq first-token-is-nesting-decrease t)))
@@ -213,11 +198,9 @@
                   (setq alternative-control-structure-level (1- alternative-control-structure-level))
                   ;; (message "Found ending alternative token %s %s" token alternative-control-structure-level)
 
-                  (when (equal token 'T_ENDSWITCH)
-
-                    ;; Decrement end switch with two points
-                    (setq allow-custom-column-decrement t)
-                    (setq alternative-control-structure-level (1- alternative-control-structure-level)))
+                  (when (and (equal token 'T_ENDSWITCH)
+                             switch-case-alternative-stack)
+                    (pop switch-case-alternative-stack))
 
                   (when first-token-on-line
                     (setq first-token-is-nesting-decrease t)))
@@ -233,16 +216,13 @@
                       (setq after-special-control-structure-token token)
 
                     ;; Is token not a curly bracket - because that is a ordinary control structure syntax
-                    (if (string= token "{")
-
-                        (when (equal after-special-control-structure-token 'T_SWITCH)
-                          ;; (message "Opening switch, increase curly brackets to %s" curly-bracket-level)
-                          (push curly-bracket-level switch-curly-stack))
+                    (unless (string= token "{")
 
                       ;; Is it the start of an alternative control structure?
                       (if (string= token ":")
 
                           (progn
+
                             (setq alternative-control-structure-level (1+ alternative-control-structure-level))
 
                             (when phps-mode-functions-verbose
@@ -255,23 +235,18 @@
                         (when phps-mode-functions-verbose
                           (message "\nStarted inline control-structure after %s at %s\n" after-special-control-structure-token token))
 
-                      (setq in-inline-control-structure t)
-                      (setq temp-pre-indent (1+ column-level))))
+                        (setq in-inline-control-structure t)
+                        (setq temp-pre-indent (1+ column-level))))
 
-                  (setq after-special-control-structure nil)
-                  (setq after-special-control-structure-token nil)
-                  (setq after-special-control-structure-first-on-line nil)))
+                    (setq after-special-control-structure nil)
+                    (setq after-special-control-structure-token nil)
+                    (setq after-special-control-structure-first-on-line nil)))
 
-                ;; Support extra special control structures (CASE:)
+                ;; Support extra special control structures (CASE)
                 (when (and after-extra-special-control-structure
                            (string= token ":"))
-
-                  (when phps-mode-functions-verbose
-                    (message "Started CASE"))
-
-                  (setq alternative-control-structure-level (1+ alternative-control-structure-level))
-                  
                   (setq line-contained-nesting-increase t)
+                  (setq alternative-control-structure-level (1+ alternative-control-structure-level))
                   (when after-extra-special-control-structure-first-on-line
                     (setq first-token-is-nesting-decrease t))
                   (setq after-extra-special-control-structure nil))
@@ -320,13 +295,12 @@
                             (< round-bracket-level in-assignment))
                         (progn
                           (setq in-assignment nil)
-                            (setq in-assignment-level 0))
+                          (setq in-assignment-level 0))
                       (when first-token-on-line
                         (setq in-assignment-level 1)
                         ;; (message "In assignment on new-line at %s" token)
                         ))
                   (when (and (not after-special-control-structure)
-                             (not in-function-declaration)
                              (string= token "="))
                     ;; (message "Started assignment")
                     (setq in-assignment round-bracket-level)
@@ -336,9 +310,19 @@
                 ;; Did we encounter a token that supports extra special alternative control structures?
                 (when (equal token 'T_CASE)
                   (setq after-extra-special-control-structure t)
-                  (setq after-extra-special-control-structure-first-on-line first-token-on-line))
+                  (setq after-extra-special-control-structure-first-on-line first-token-on-line)
 
-                )
+                  (when phps-mode-functions-verbose
+                    (message "Found CASE %s vs %s" (1- alternative-control-structure-level) (car switch-case-alternative-stack)))
+
+                  (when (and switch-case-alternative-stack
+                             (= (1- alternative-control-structure-level) (car switch-case-alternative-stack)))
+                    (setq alternative-control-structure-level (1- alternative-control-structure-level))
+                    (when first-token-on-line
+                      (setq first-token-is-nesting-decrease t))
+                    (pop switch-case-alternative-stack))
+
+                  (push alternative-control-structure-level switch-case-alternative-stack)))
 
               (when token
                 
@@ -400,6 +384,16 @@
 
                       ;; ;; Start indentation might differ from ending indentation in cases like } else {
                       (setq column-level-start column-level)
+
+
+                      ;; Indent token-less lines here in between last tokens if distance is more than 1 line
+                      (when (and (> next-token-start-line-number (1+ token-start-line-number))
+                                 (not (equal token 'T_CLOSE_TAG)))
+                        (let ((token-line-number-diff (1- (- token-start-line-number next-token-start-line-number))))
+                          (while (>= token-line-number-diff 0)
+                            (puthash (- token-start-line-number token-line-number-diff) `(,column-level-start ,tuning-level) line-indents)
+                            ;; (message "Saved line %s indent %s %s" (- token-end-line-number token-line-number-diff) column-level tuning-level)
+                            (setq token-line-number-diff (1- token-line-number-diff)))))
 
 
                       ;; Support temporarily pre-indent
@@ -478,20 +472,6 @@
 
                           ;; Rest tuning-level used for comments
                           (setq tuning-level 0)))
-
-
-;; Indent token-less lines here in between last tokens if distance is more than 1 line
-                      (when (and (> next-token-start-line-number (1+ token-end-line-number))
-                                 (not (equal token 'T_CLOSE_TAG)))
-
-                        (when phps-mode-functions-verbose
-                          (message "\nDetected token-less lines between %s and %s, should have indent: %s\n" token-end-line-number next-token-start-line-number column-level))
-
-                        (let ((token-line-number-diff (1- (- next-token-start-line-number token-end-line-number))))
-                          (while (>= token-line-number-diff 0)
-                            (puthash (- next-token-start-line-number token-line-number-diff) `(,column-level ,tuning-level) line-indents)
-                            ;; (message "Saved line %s indent %s %s" (- token-end-line-number token-line-number-diff) column-level tuning-level)
-                            (setq token-line-number-diff (1- token-line-number-diff)))))
 
 
                       ;; ;; When nesting decreases but ends with a nesting increase, increase indent by one
