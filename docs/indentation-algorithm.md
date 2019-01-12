@@ -45,6 +45,12 @@ foreach token in buffer:
     
     if we reached end of a line:
         
+        if this-token or last token is a dot:
+            concatentation-level = 1;
+        else:
+            concatentation-level = 0;
+        endif;
+        
         indent-start = indent;
         
         if new-token-line-start is more than one line after last-token-line-start AND token is not T_CLOSE_TAG:

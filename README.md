@@ -7,17 +7,19 @@ An Emacs major mode for PHP scripting language which aims at making a full seman
 *With current progress estimates:*
 
 * Flycheck support (100%)
-* Lexer based on official PHP re2c lexer (100%)
 * Syntax coloring based on lexer tokens (100%)
-* PSR based indentation based on lexer tokens (90%)
+* PSR based indentation based on lexer tokens (100%)
+* Lexer based on official PHP re2c lexer (90%)
 * Incremental lexer and syntax coloring after buffer changes (75%)
-* Wisent LALR parser based on official PHP yacc parser automatically converted (60%)
+* Wisent LALR parser based on official PHP yacc parser automatically converted (50%)
 * Full integration with Emacs Semantic subsystem (30%)
+* Imenu support (0%)
 * Flymake support (0%)
 * PSR-2 auto-formatting tool based on lexer tokens (0%)
 * Travis support (0%)
 * Add to MELPA (0%)
 * Add to ELPA (0%)
+* Use master branch for stable releases and develop for unstable (0%)
 
 ## Unit tests
 
@@ -26,6 +28,8 @@ If you have emacs at a customized location prefix the commands with your path, i
 `export emacs="~~/Documents/emacs/src/emacs" && make test-lexer`
 
 ### Lexer
+
+Token generation
 
 ``` bash
 make test-lexer
@@ -41,13 +45,15 @@ make test-parser
 
 ### Functions
 
+Indentations, imenu, semantic subsystem
+
 ``` bash
 make test-functions
 ```
 
 ### Integration tests
 
-Not working yet
+Not ready yet
 
 ``` bash
 make test-integration
