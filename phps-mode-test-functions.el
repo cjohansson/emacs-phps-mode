@@ -85,13 +85,13 @@
   (phps-mode-test-with-buffer
    "<?php\necho \"A line\" .\n    \"more text here\" .\n    \"last line here\";"
    "Concatenated double-quoted-string spanning multiple-lines"
-   (message "Tokens: %s" phps-mode-lexer-tokens)
+   ;; (message "Tokens: %s" phps-mode-lexer-tokens)
    (should (equal '((1 (0 0)) (2 (0 0)) (3 (1 0)) (4 (1 0))) (phps-mode-test-functions--hash-to-list (phps-mode-functions-get-lines-indent)))))
 
   (phps-mode-test-with-buffer
    "<?php\necho \"A line\"\n    . \"more text here\"\n    . \"last line here\";"
    "Concatenated double-quoted-string spanning multiple-lines 2"
-   (message "Tokens: %s" phps-mode-lexer-tokens)
+   ;; (message "Tokens: %s" phps-mode-lexer-tokens)
    (should (equal '((1 (0 0)) (2 (0 0)) (3 (1 0)) (4 (1 0))) (phps-mode-test-functions--hash-to-list (phps-mode-functions-get-lines-indent)))))
 
   (phps-mode-test-with-buffer
@@ -559,7 +559,7 @@
 (defun phps-mode-test-functions ()
   "Run test for functions."
   ;; (setq debug-on-error t)
-  (setq phps-mode-functions-verbose t)
+  ;; (setq phps-mode-functions-verbose t)
   (phps-mode-test-functions-get-lines-lindent-if)
   (phps-mode-test-function-get-lines-indent-classes)
   (phps-mode-test-functions-get-lines-indent-inline-if)
