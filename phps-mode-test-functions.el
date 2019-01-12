@@ -388,13 +388,13 @@
      (should (equal buffer-contents  "<?php\n/**\n* My first line\n* My second line\n **/\n"))))
 
   (phps-mode-test-with-buffer
-   "<?php\n$variable = array(\n    'random4');\n$variable = true;\n"
+   "<?php\n$variable = array(\n  'random4');\n$variable = true;\n"
    "Round bracket test 1"
    (goto-char 30)
    (phps-mode-functions-indent-line)
    ;; (message "Tokens %s point %s" phps-mode-lexer-tokens (point))
    (let ((buffer-contents (buffer-substring-no-properties (point-min) (point-max))))
-     (should (equal buffer-contents  "<?php\n$variable = array(\n'random4');\n$variable = true;\n"))))
+     (should (equal buffer-contents  "<?php\n$variable = array(\n    'random4');\n$variable = true;\n"))))
 
   (phps-mode-test-with-buffer
    "<?php\nadd_filter(\n\"views_{$screen->id}\",'__return_empty_array'\n);"
@@ -533,12 +533,12 @@
      (should (equal buffer-contents "<?php\nif (empty($this->var)):\n$this->var = 'abc123';\nendif;"))))
 
   (phps-mode-test-with-buffer
-   "<?php\nif (empty($this->var)):\n$this->var = 'abc123';\n    endif;"
+   "<?php\nif (empty($this->var)):\n$this->var = 'abc123';\nendif;"
    "Alternative control structure test"
    (goto-char 35)
    (phps-mode-functions-indent-line)
    (let ((buffer-contents (buffer-substring-no-properties (point-min) (point-max))))
-     (should (equal buffer-contents "<?php\nif (empty($this->var)):\n    $this->var = 'abc123';\n    endif;"))))
+     (should (equal buffer-contents "<?php\nif (empty($this->var)):\n    $this->var = 'abc123';\nendif;"))))
 
   )
 
