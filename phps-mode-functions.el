@@ -420,17 +420,6 @@
                       ;; ;; Start indentation might differ from ending indentation in cases like } else {
                       (setq column-level-start column-level)
 
-
-                      ;; Indent token-less lines here in between last tokens if distance is more than 1 line
-                      (when (and (> next-token-start-line-number (1+ token-start-line-number))
-                                 (not (equal token 'T_CLOSE_TAG)))
-                        (let ((token-line-number-diff (1- (- token-start-line-number next-token-start-line-number))))
-                          (while (>= token-line-number-diff 0)
-                            (puthash (- token-start-line-number token-line-number-diff) `(,column-level-start ,tuning-level) line-indents)
-                            ;; (message "Saved line %s indent %s %s" (- token-end-line-number token-line-number-diff) column-level tuning-level)
-                            (setq token-line-number-diff (1- token-line-number-diff)))))
-
-
                       ;; Support temporarily pre-indent
                       (when temp-pre-indent
                         (setq column-level-start temp-pre-indent)
@@ -445,7 +434,6 @@
 
 
                       ;; Save line indent
-                      
                       (when phps-mode-functions-verbose
                         (message "Process line ending.	nesting: %s-%s,	line-number: %s-%s,	indent: %s.%s,	token: %s" nesting-start nesting-end token-start-line-number token-end-line-number column-level-start tuning-level token))
 
@@ -467,7 +455,6 @@
                           (when nesting-stack
                             (setq nesting-stack-end (car (cdr (car nesting-stack)))))
 
-                          ;; Increase indentation
                           (if allow-custom-column-increment
                               (progn
                                 (setq column-level (+ column-level (- nesting-end nesting-start)))
@@ -507,6 +494,20 @@
 
                           ;; Rest tuning-level used for comments
                           (setq tuning-level 0)))
+
+
+                      ;; Indent token-less lines here in between last tokens if distance is more than 1 line
+                      (when (and (> next-token-start-line-number (1+ token-end-line-number))
+                                 (not (equal token 'T_CLOSE_TAG)))
+
+                        (when phps-mode-functions-verbose
+                          (message "\nDetected token-less lines between %s and %s, should have indent: %s\n" token-end-line-number next-token-start-line-number column-level))
+
+                        (let ((token-line-number-diff (1- (- next-token-start-line-number token-end-line-number))))
+                          (while (>= token-line-number-diff 0)
+                            (puthash (- next-token-start-line-number token-line-number-diff) `(,column-level ,tuning-level) line-indents)
+                            ;; (message "Saved line %s indent %s %s" (- token-end-line-number token-line-number-diff) column-level tuning-level)
+                            (setq token-line-number-diff (1- token-line-number-diff)))))
 
 
                       ;; ;; When nesting decreases but ends with a nesting increase, increase indent by one
