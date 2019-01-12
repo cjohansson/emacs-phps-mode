@@ -287,14 +287,9 @@
                   (setq after-extra-special-control-structure nil))
 
                 ;; Keep track of concatenations
-                (when (and first-token-on-line
-                           (string= token "."))
-                  (when phps-mode-functions-verbose
-                    (message "\nFound starting dot, indenting current line with one.\n"))
-                  (setq temp-pre-indent t)
-                  (setq temp-pre-indent (1+ column-level)))
                 (when (> next-token-start-line-number token-end-line-number)
-                  (if (string= token ".")
+                  (if (or (string= token ".")
+                          (string= next-token "."))
                       (progn
                         (when phps-mode-functions-verbose
                           (message "\nFound ending dot, indenting next line with one.\n"))
