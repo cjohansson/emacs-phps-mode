@@ -67,6 +67,7 @@
               (round-bracket-level 0)
               (square-bracket-level 0)
               (alternative-control-structure-level 0)
+              (concatenation-level 0)
               (column-level 0)
               (column-level-start 0)
               (tuning-level 0)
@@ -285,6 +286,21 @@
                     (setq first-token-is-nesting-decrease t))
                   (setq after-extra-special-control-structure nil))
 
+                ;; Keep track of concatenations
+                (when (and first-token-on-line
+                           (string= token "."))
+                  (when phps-mode-functions-verbose
+                    (message "\nFound starting dot, indenting current line with one.\n"))
+                  (setq temp-pre-indent t)
+                  (setq temp-pre-indent (1+ column-level)))
+                (when (> next-token-start-line-number token-end-line-number)
+                  (if (string= token ".")
+                      (progn
+                        (when phps-mode-functions-verbose
+                          (message "\nFound ending dot, indenting next line with one.\n"))
+                        (setq concatenation-level 1))
+                    (setq concatenation-level 0)))
+
                 ;; Did we reach a semicolon inside a inline block? Close the inline block
                 (when (and in-inline-control-structure
                            (string= token ";")
@@ -319,9 +335,7 @@
 
                     (when phps-mode-functions-verbose
                       (message "\nDecreasing alternative control structure nesting at %s to %s\n" token alternative-control-structure-level))
-                    )
-
-                  )
+                    ))
 
                 ;; Keep track of assignments
                 (if in-assignment
@@ -362,7 +376,7 @@
               (when token
                 
                 ;; Calculate nesting
-                (setq nesting-end (+ round-bracket-level square-bracket-level curly-bracket-level alternative-control-structure-level in-assignment-level in-class-declaration-level))
+                (setq nesting-end (+ round-bracket-level square-bracket-level curly-bracket-level alternative-control-structure-level in-assignment-level in-class-declaration-level concatenation-level))
 
                 ;; Keep track of whether we are inside a HEREDOC or NOWDOC
                 (when (equal token 'T_START_HEREDOC)
@@ -416,6 +430,7 @@
 
                     ;; Line logic
                     (progn
+
 
                       ;; ;; Start indentation might differ from ending indentation in cases like } else {
                       (setq column-level-start column-level)
@@ -510,17 +525,8 @@
                             (setq token-line-number-diff (1- token-line-number-diff)))))
 
 
-                      ;; ;; When nesting decreases but ends with a nesting increase, increase indent by one
-                      ;; (when (and (< nesting-end nesting-start)
-                      ;;            line-contained-nesting-increase)
-                      ;;   (setq column-level (1+ column-level))
-                      ;;   (when phps-mode-functions-verbose
-                      ;;     (message "Pushing %s to nesting-stack since is lesser than %s" nesting-start nesting-end))
-                      ;;   (push `(,nesting-start nesting-end) nesting-stack)
-                      ;;   (message "New stack %s, start: %s end: %s" nesting-stack (car (car nesting-stack)) (car (cdr (car nesting-stack)))))
-
                       ;; Calculate indentation level at start of line
-                      (setq nesting-start (+ round-bracket-level square-bracket-level curly-bracket-level alternative-control-structure-level in-assignment-level in-class-declaration-level))
+                      (setq nesting-start (+ round-bracket-level square-bracket-level curly-bracket-level alternative-control-structure-level in-assignment-level in-class-declaration-level concatenation-level))
 
                       ;; Set initial values for tracking first token
                       (when (> token-start-line-number last-line-number)
