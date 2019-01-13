@@ -159,6 +159,11 @@
    ;; (message "Tokens: %s" phps-mode-lexer-tokens)
    (should (equal '((1 (0 0)) (2 (1 0)) (3 (0 0))) (phps-mode-test-functions--hash-to-list (phps-mode-functions-get-lines-indent)))))
 
+  (phps-mode-test-with-buffer
+   "<?php\ndo {\n    echo 'true';\n} while ($number > 0\n    && $letter > 0\n);"
+   "Do while loop with multi-line condition"
+   (should (equal '((1 (0 0)) (2 (0 0)) (3 (1 0)) (4 (0 0)) (5 (1 0)) (6 (0 0))) (phps-mode-test-functions--hash-to-list (phps-mode-functions-get-lines-indent)))))
+
   )
 
 (defun phps-mode-test-functions-get-lines-indent-multi-line-assignments ()

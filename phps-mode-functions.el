@@ -267,11 +267,13 @@
                             (when after-special-control-structure-first-on-line
                               (setq first-token-is-nesting-increase t)))
 
-                        (when phps-mode-functions-verbose
-                          (message "\nStarted inline control-structure after %s at %s\n" after-special-control-structure-token token))
+                        ;; Don't start inline control structures after a while ($condition); expression
+                        (when (not (string= token ";"))
+                          (when phps-mode-functions-verbose
+                            (message "\nStarted inline control-structure after %s at %s\n" after-special-control-structure-token token))
 
-                        (setq in-inline-control-structure t)
-                        (setq temp-pre-indent (1+ column-level))))
+                          (setq in-inline-control-structure t)
+                          (setq temp-pre-indent (1+ column-level)))))
 
                     (setq after-special-control-structure nil)
                     (setq after-special-control-structure-token nil)
