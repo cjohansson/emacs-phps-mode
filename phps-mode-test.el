@@ -34,7 +34,7 @@
      (switch-to-buffer test-buffer)
      (insert ,source)
      (goto-char 0)
-     ;;,(message "\nTesting buffer:\n'%s'\n" source)
+     (message "\nTesting buffer:\n'%s'\n" ,source)
      (phps-mode)
      ,@body
      (kill-buffer test-buffer)

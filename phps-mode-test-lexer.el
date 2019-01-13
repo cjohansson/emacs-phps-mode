@@ -60,13 +60,13 @@
    "<html><head>blabla</head<body>\n\n \t<?php\nexit;\n?>\n\n</body></html>"
    nil
    (should (equal phps-mode-lexer-tokens
-                  '((T_OPEN_TAG 35 . 41) (T_EXIT 41 . 45) (";" 45 . 46) (";" 47 . 50) (T_CLOSE_TAG 47 . 50)))))
+                  '((T_OPEN_TAG 35 . 41) (T_EXIT 41 . 45) (";" 45 . 46) (";" 47 . 49) (T_CLOSE_TAG 47 . 49)))))
 
   (phps-mode-test-with-buffer
    "\n\n \t<html><title>echo \"Blaha\";</title><?php\n\n\nexit?>\n\n<html><random /></html><?php exit ?>"
    nil
    (should (equal phps-mode-lexer-tokens
-                  '((T_OPEN_TAG 39 . 45) (T_EXIT 47 . 51) (";" 51 . 54) (T_CLOSE_TAG 51 . 54) (T_OPEN_TAG 78 . 84) (T_EXIT 84 . 88) (";" 89 . 91) (T_CLOSE_TAG 89 . 91)))))
+                  '((T_OPEN_TAG 39 . 45) (T_EXIT 47 . 51) (";" 51 . 53) (T_CLOSE_TAG 51 . 53) (T_OPEN_TAG 78 . 84) (T_EXIT 84 . 88) (";" 89 . 91) (T_CLOSE_TAG 89 . 91)))))
 
   )
 
