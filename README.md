@@ -2,7 +2,7 @@
 
 An Emacs major mode for PHP scripting language which aims at making a full semantic integration. Currently at *usable* stage.
 
-This mode does not require PHP installed on computer because it has a elisp based lexer and parser. It supports all PHP versions.
+This mode does not require PHP installed on computer because it has a elisp based lexer and parser. It supports all PHP versions and Emacs >= 24.
 
 ## Goals
 
@@ -28,7 +28,7 @@ This mode does not require PHP installed on computer because it has a elisp base
 
 If you have emacs at a customized location prefix the commands with your path, i.e.
 
-`export emacs="~~/Documents/emacs/src/emacs" && make test-lexer`
+`export emacs="~/Documents/emacs/src/emacs" && make test-lexer`
 
 ### Lexer
 
