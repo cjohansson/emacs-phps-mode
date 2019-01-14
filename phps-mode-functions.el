@@ -618,11 +618,23 @@
     ;; (message "phps-mode-functions-after-change %s %s %s" start stop length)
     ))
 
+;; TODO Implement this
+(defun phps-mode-functions-imenu-create-index-function ()
+  "Create index for imenu."
+  (let ((index '()))
+
+    ;; TODO Iterate namespaces, classes and functions and add to index
+
+    index))
+
 (defun phps-mode-functions-init ()
   "PHP specific init-cleanup routines."
 
-  ;; indent-region will call this on each line of region
+  ;; NOTE Indent-region will call this on each line of region
   (set (make-local-variable 'indent-line-function) #'phps-mode-functions-indent-line)
+
+  ;; Support Imenu
+  (set (make-local-variable 'imenu-create-index-function) #'phps-mode-functions-imenu-create-index-function)
 
   (when (and (boundp 'phps-mode-use-psr-2)
              phps-mode-use-psr-2)

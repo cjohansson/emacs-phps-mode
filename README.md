@@ -30,7 +30,7 @@ If you have emacs at a customized location prefix the commands with your path, i
 
 ### Lexer
 
-Token generation
+Semantic token generation.
 
 ``` bash
 make test-lexer
@@ -38,7 +38,7 @@ make test-lexer
 
 ### Parser
 
-Not ready yet.
+Semantic grammar. Not ready yet.
 
 ``` bash
 make test-parser
@@ -46,7 +46,7 @@ make test-parser
 
 ### Functions
 
-Indentations, imenu, semantic subsystem
+Indentations, imenu.
 
 ``` bash
 make test-functions
