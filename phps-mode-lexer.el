@@ -721,9 +721,10 @@
 
    ((looking-at "}")
     (when phps-mode-lexer-state_stack
-      ;; (message "State stack %s" phps-mode-lexer-state_stack)
-      ;; (message "popping state from } %s" (length phps-mode-lexer-state_stack))
-      (phps-mode-lexer-yy_pop_state))
+      (message "State stack %s" phps-mode-lexer-state_stack)
+      (message "popping state from } %s at %s-%s" (length phps-mode-lexer-state_stack) (match-beginning 0) (match-end 0))
+      (phps-mode-lexer-yy_pop_state)
+      (message "New state: %s" phps-mode-lexer-STATE))
     (phps-mode-lexer-RETURN_TOKEN "}" (match-beginning 0) (match-end 0)))
 
    ((looking-at phps-mode-lexer-BNUM)
@@ -996,11 +997,12 @@
 
    ((looking-at "{\\$")
     (phps-mode-lexer-yy_push_state phps-mode-lexer-ST_IN_SCRIPTING)
+    (message "Starting ST_IN_SCRIPTING from double-quoted string at %s-%s" (match-beginning 0) (- (match-end 0) 1))
     (phps-mode-lexer-RETURN_TOKEN 'T_CURLY_OPEN (match-beginning 0) (- (match-end 0) 1)))
 
    ((looking-at "[\"]")
     (phps-mode-lexer-BEGIN phps-mode-lexer-ST_IN_SCRIPTING)
-    ;; (message "Ended double-quote at %s" (match-beginning 0))
+    (message "Ended double-quote at %s" (match-beginning 0))
     (phps-mode-lexer-RETURN_TOKEN "\"" (match-beginning 0) (match-end 0)))
 
    ((looking-at phps-mode-lexer-ANY_CHAR)
@@ -1010,16 +1012,23 @@
             (let* ((end (- (match-end 0) 1))
                    (double-quoted-string (buffer-substring-no-properties start end)))
               ;; Do we find variable inside quote?
-              (if (or (string-match (concat "\\$" phps-mode-lexer-LABEL) double-quoted-string)
-                      (string-match (concat "\\${" phps-mode-lexer-LABEL) double-quoted-string)
-                      (string-match (concat "{\\$" phps-mode-lexer-LABEL) double-quoted-string))
+              (if (or (string-match (concat "\\${" phps-mode-lexer-LABEL) double-quoted-string)
+                      (string-match (concat "{\\$" phps-mode-lexer-LABEL) double-quoted-string)
+                      (string-match (concat "\\$" phps-mode-lexer-LABEL) double-quoted-string))
                   (progn
                     (let ((variable-start (+ start (match-beginning 0))))
+
+                      (when (or (string-match (concat "\\${" phps-mode-lexer-LABEL) double-quoted-string)
+                                (string-match (concat "{\\$" phps-mode-lexer-LABEL) double-quoted-string))
+                        (setq variable-start (1- variable-start))
+                        (message "Decreased index with one"))
+
+                      (message "Found starting expression inside double-quoted string at: %s %s" start variable-start)
                       (phps-mode-lexer-RETURN_TOKEN 'T_CONSTANT_ENCAPSED_STRING start variable-start)
                       ))
                 (progn
                   (phps-mode-lexer-RETURN_TOKEN 'T_CONSTANT_ENCAPSED_STRING start end)
-                  ;; (message "Found end of quote at %s-%s, moving ahead after '%s'" start end (buffer-substring-no-properties start end))
+                  (message "Found end of quote at %s-%s, moving ahead after '%s'" start end (buffer-substring-no-properties start end))
                   )))
           (progn
             ;; "Found no end of double-quoted region
@@ -1180,7 +1189,8 @@ ANY_CHAR'
 
    ((looking-at (concat phps-mode-lexer-LABEL "[\\[}]"))
     (let ((start (match-beginning 0))
-           (end (- (match-end 0) 1)))
+          (end (- (match-end 0) 1)))
+      (message "Stopped here")
       (phps-mode-lexer-yy_pop_state)
       (phps-mode-lexer-yy_push_state phps-mode-lexer-ST_IN_SCRIPTING)
       (phps-mode-lexer-RETURN_TOKEN 'T_STRING_VARNAME start end)))

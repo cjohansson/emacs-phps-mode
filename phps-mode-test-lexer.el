@@ -268,6 +268,13 @@
    (should (equal phps-mode-lexer-tokens
                   '((T_OPEN_TAG 1 . 7) (T_VARIABLE 7 . 12) (T_OBJECT_OPERATOR 12 . 14) (T_STRING 14 . 21) ("(" 21 . 22) ("\"" 22 . 23) (T_ENCAPSED_AND_WHITESPACE 23 . 47) (T_VARIABLE 47 . 52) (T_OBJECT_OPERATOR 52 . 54) (T_STRING 54 . 59) (T_CONSTANT_ENCAPSED_STRING 59 . 72) ("\"" 72 . 73) ("." 73 . 74) (T_VARIABLE 74 . 77) ("." 77 . 78) (T_CONSTANT_ENCAPSED_STRING 78 . 81) (")" 81 . 82) (";" 82 . 83) (";" 84 . 86) (T_CLOSE_TAG 84 . 86)))))
 
+  (phps-mode-test-with-buffer
+   "<?php $this->add($option['style']['selectors'], array('background' => \"{$value['color']} url('{$value['image']}')\"));"
+   "Complex tokens with tokens inside double-quoted string"
+   ;; (message "Tokens 2: %s" phps-mode-lexer-tokens)
+   (should (equal phps-mode-lexer-tokens
+                  '((T_OPEN_TAG 1 . 7) (T_VARIABLE 7 . 12) (T_OBJECT_OPERATOR 12 . 14) (T_STRING 14 . 21) ("(" 21 . 22) ("\"" 22 . 23) (T_ENCAPSED_AND_WHITESPACE 23 . 47) (T_VARIABLE 47 . 52) (T_OBJECT_OPERATOR 52 . 54) (T_STRING 54 . 59) (T_CONSTANT_ENCAPSED_STRING 59 . 72) ("\"" 72 . 73) ("." 73 . 74) (T_VARIABLE 74 . 77) ("." 77 . 78) (T_CONSTANT_ENCAPSED_STRING 78 . 81) (")" 81 . 82) (";" 82 . 83) (";" 84 . 86) (T_CLOSE_TAG 84 . 86)))))
+
   ;; TODO Test object properties inside heredoc, nowdocs strings
 
   )
