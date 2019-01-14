@@ -914,7 +914,7 @@
         (phps-mode-lexer-RETURN_TOKEN data start end))))
 
    ((looking-at phps-mode-lexer-LABEL)
-    (message "Adding T_STRING from %s to %s" (match-beginning 0) (match-end 0))
+    ;; (message "Adding T_STRING from %s to %s" (match-beginning 0) (match-end 0))
     (phps-mode-lexer-RETURN_TOKEN 'T_STRING (match-beginning 0) (match-end 0)))
 
    ((looking-at phps-mode-lexer-TOKENS)
