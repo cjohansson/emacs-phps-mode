@@ -662,7 +662,8 @@
               (cond
 
                ((string= token-symbol "{")
-                (setq open-namespace-level nesting-level))
+                (setq open-namespace-level nesting-level)
+                (setq in-namespace-declaration nil))
 
                ((string= token-symbol ";")
                 (setq in-namespace-declaration nil))
@@ -685,7 +686,7 @@
                       (index-pos token-start))
                   (setq in-class-name index-name)
                   (when in-namespace-name
-                    (setq index-name (concat in-namespace-name " | " index-name)))
+                    (setq index-name (concat in-namespace-name " \\ " index-name)))
                   (push `(,index-name . ,index-pos) index)))))
 
              (in-function-declaration
@@ -702,9 +703,9 @@
                 (let ((index-name (format "function %s" (buffer-substring-no-properties token-start token-end)))
                       (index-pos token-start))
                   (when in-class-name
-                    (setq index-name (concat in-class-name " | " index-name)))
+                    (setq index-name (concat in-class-name " -> " index-name)))
                   (when in-namespace-name
-                    (setq index-name (concat in-namespace-name " | " index-name)))
+                    (setq index-name (concat in-namespace-name " \\ " index-name)))
                   (push `(,index-name . ,index-pos) index)))))
 
              (t
