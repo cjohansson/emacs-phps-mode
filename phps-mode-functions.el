@@ -626,47 +626,85 @@
     (when (boundp 'phps-mode-lexer-tokens)
       (let ((tokens phps-mode-lexer-tokens)
             (in-namespace-declaration nil)
+            (in-namespace-name nil)
+            (open-namespace-level nil)
             (in-class-declaration nil)
-            (in-function-declaration nil))
+            (open-class-level nil)
+            (in-class-name nil)
+            (in-function-declaration nil)
+            (open-function-level nil)
+            (nesting-level 0))
         (dolist (token tokens)
           (let ((token-symbol (car token))
                 (token-start (car (cdr token)))
                 (token-end (cdr (cdr token))))
+
+            (cond
+             ((string= token-symbol "{")
+              (setq nesting-level (1+ nesting-level)))
+             ((string= token-symbol "}")
+
+              (when (and open-namespace-level
+                         (= open-namespace-level nesting-level)
+                         in-namespace-name)
+                (setq in-namespace-name nil))
+
+              (when (and open-class-level
+                         (= open-class-level nesting-level)
+                         in-class-name)
+                (setq in-class-name nil))
+
+              (setq nesting-level (1- nesting-level))))
+            
             (cond
 
              (in-namespace-declaration
               (cond
 
-               ((or (string= token-symbol "{")
-                    (string= token-symbol ";"))
+               ((string= token-symbol "{")
+                (setq open-namespace-level nesting-level))
+
+               ((string= token-symbol ";")
                 (setq in-namespace-declaration nil))
 
                ((equal token-symbol 'T_STRING)
                 (let ((index-name (format "namespace %s" (buffer-substring-no-properties token-start token-end)))
                       (index-pos token-start))
+                  (setq in-namespace-name index-name)
                   (push `(,index-name . ,index-pos) index)))))
 
              (in-class-declaration
               (cond
 
                ((string= token-symbol "{")
+                (setq open-class-level nesting-level)
                 (setq in-class-declaration nil))
 
                ((equal token-symbol 'T_STRING)
                 (let ((index-name (format "class %s" (buffer-substring-no-properties token-start token-end)))
                       (index-pos token-start))
+                  (setq in-class-name index-name)
+                  (when in-namespace-name
+                    (setq index-name (concat in-namespace-name " | " index-name)))
                   (push `(,index-name . ,index-pos) index)))))
 
              (in-function-declaration
               (cond
 
-               ((or (string= token-symbol "{")
-                    (string= token-symbol ";"))
+               ((string= token-symbol "{")
+                (setq open-function-level nesting-level)
+                (setq in-function-declaration nil))
+
+               ((string= token-symbol ";")
                 (setq in-function-declaration nil))
 
                ((equal token-symbol 'T_STRING)
                 (let ((index-name (format "function %s" (buffer-substring-no-properties token-start token-end)))
                       (index-pos token-start))
+                  (when in-class-name
+                    (setq index-name (concat in-class-name " | " index-name)))
+                  (when in-namespace-name
+                    (setq index-name (concat in-namespace-name " | " index-name)))
                   (push `(,index-name . ,index-pos) index)))))
 
              (t

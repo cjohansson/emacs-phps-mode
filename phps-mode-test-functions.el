@@ -590,6 +590,17 @@
    "<?php\nfunction myFunctionA() {}\nfunction myFunctionB() {}\n"
    "Imenu function-oriented file"
    (should (equal (phps-mode-functions-imenu-create-index-function) '(("function myFunctionA" . 16) ("function myFunctionB" . 42)))))
+
+  (phps-mode-test-with-buffer
+   "<?php\nclass myClass {\n    public function myFunctionA() {}\n    protected function myFunctionB() {}\n}\n"
+   "Imenu object-oriented file"
+   (should (equal (phps-mode-functions-imenu-create-index-function) '(("class myClass" . 13) ("class myClass | function myFunctionA" . 43) ("class myClass | function myFunctionB" . 83)))))
+
+  (phps-mode-test-with-buffer
+   "<?php\nnamespace myNamespace {\n    class myClass {\n        public function myFunctionA() {}\n        protected function myFunctionB() {}\n    }\n}\n"
+   "Imenu object-oriented file"
+   (should (equal (phps-mode-functions-imenu-create-index-function) '(("class myClass" . 13) ("class myClass | function myFunctionA" . 43) ("class myClass | function myFunctionB" . 83)))))
+
   
   )
 
