@@ -584,12 +584,13 @@
   )
 
 (defun phps-mode-test-functions-imenu ()
-  "Test for imenu"
+  "Test for imenu."
+
   (phps-mode-test-with-buffer
    "<?php\nfunction myFunctionA() {}\nfunction myFunctionB() {}\n"
    "Imenu function-oriented file"
-   (should (equal (phps-mode-functions-imenu-create-index-function) '(("myFunctionA" . 16) ("myFunction B" . 42))))
-   )
+   (should (equal (phps-mode-functions-imenu-create-index-function) '(("function myFunctionA" . 16) ("function myFunctionB" . 42)))))
+  
   )
 
 ;; TODO Add tests for all examples here: https://www.php-fig.org/psr/psr-2/

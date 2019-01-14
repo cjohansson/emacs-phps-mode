@@ -623,9 +623,65 @@
   "Create index for imenu."
   (let ((index '()))
 
-    ;; TODO Iterate namespaces, classes and functions and add to index
+    (when (boundp 'phps-mode-lexer-tokens)
+      (let ((tokens phps-mode-lexer-tokens)
+            (in-namespace-declaration nil)
+            (in-class-declaration nil)
+            (in-function-declaration nil))
+        (dolist (token tokens)
+          (let ((token-symbol (car token))
+                (token-start (car (cdr token)))
+                (token-end (cdr (cdr token))))
+            (cond
 
-    index))
+             (in-namespace-declaration
+              (cond
+
+               ((or (string= token-symbol "{")
+                    (string= token-symbol ";"))
+                (setq in-namespace-declaration nil))
+
+               ((equal token-symbol 'T_STRING)
+                (let ((index-name (format "namespace %s" (buffer-substring-no-properties token-start token-end)))
+                      (index-pos token-start))
+                  (push `(,index-name . ,index-pos) index)))))
+
+             (in-class-declaration
+              (cond
+
+               ((string= token-symbol "{")
+                (setq in-class-declaration nil))
+
+               ((equal token-symbol 'T_STRING)
+                (let ((index-name (format "class %s" (buffer-substring-no-properties token-start token-end)))
+                      (index-pos token-start))
+                  (push `(,index-name . ,index-pos) index)))))
+
+             (in-function-declaration
+              (cond
+
+               ((or (string= token-symbol "{")
+                    (string= token-symbol ";"))
+                (setq in-function-declaration nil))
+
+               ((equal token-symbol 'T_STRING)
+                (let ((index-name (format "function %s" (buffer-substring-no-properties token-start token-end)))
+                      (index-pos token-start))
+                  (push `(,index-name . ,index-pos) index)))))
+
+             (t
+              (cond
+
+               ((equal token-symbol 'T_NAMESPACE)
+                (setq in-namespace-declaration t))
+
+               ((equal token-symbol 'T_CLASS)
+                (setq in-class-declaration t))
+
+               ((equal token-symbol 'T_FUNCTION)
+                (setq in-function-declaration t)))))))))
+
+    (nreverse index)))
 
 (defun phps-mode-functions-init ()
   "PHP specific init-cleanup routines."
