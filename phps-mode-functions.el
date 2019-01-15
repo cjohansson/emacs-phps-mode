@@ -631,6 +631,7 @@
             (open-class-level nil)
             (in-class-name nil)
             (in-function-declaration nil)
+            (in-function-name nil)
             (open-function-level nil)
             (nesting-level 0))
         (dolist (token tokens)
@@ -695,14 +696,17 @@
 
                ((string= token-symbol "{")
                 (setq open-function-level nesting-level)
+                (setq in-function-name nil)
                 (setq in-function-declaration nil))
 
                ((string= token-symbol ";")
                 (setq in-function-declaration nil))
 
-               ((equal token-symbol 'T_STRING)
+               ((and (equal token-symbol 'T_STRING)
+                     (not in-function-name))
                 (let ((index-name (format "%s()" (buffer-substring-no-properties token-start token-end)))
                       (index-pos token-start))
+                  (setq in-function-name index-name)
                   (when in-class-name
                     (setq index-name (concat in-class-name "->" index-name)))
                   (when in-namespace-name
@@ -721,6 +725,7 @@
                 (setq in-class-declaration t))
 
                ((equal token-symbol 'T_FUNCTION)
+                (setq in-function-name nil)
                 (setq in-function-declaration t)))))))))
 
     (nreverse index)))

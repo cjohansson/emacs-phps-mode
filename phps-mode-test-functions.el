@@ -616,6 +616,11 @@
    "Imenu object-oriented file with bracket-less namespace, class that extends and implements and functions"
    (should (equal (phps-mode-functions-imenu-create-index-function) '(("\\myNamespace" . 17) ("\\myNamespace\\myClass" . 36) ("\\myNamespace\\myClass->myFunctionA()" . 108) ("\\myNamespace\\myClass->myFunctionB()" . 148)))))
 
+  (phps-mode-test-with-buffer
+   "<?php\nnamespace myNamespace;\nclass myClass extends myAbstract implements myInterface {\n    public function myFunctionA($myArg = null) {}\n    protected function myFunctionB($myArg = 'abc') {}\n}\n"
+   "Imenu object-oriented file with bracket-less namespace, class that extends and implements and functions with optional arguments"
+   (should (equal (phps-mode-functions-imenu-create-index-function) '(("\\myNamespace" . 17) ("\\myNamespace\\myClass" . 36) ("\\myNamespace\\myClass->myFunctionA()" . 108) ("\\myNamespace\\myClass->myFunctionB()" . 161)))))
+
   )
 
 ;; TODO Add tests for all examples here: https://www.php-fig.org/psr/psr-2/
