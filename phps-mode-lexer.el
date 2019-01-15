@@ -148,10 +148,10 @@
   "Characters not starting a label.")
 
 (defvar phps-mode-lexer-WHITESPACE "[ \n\r\t]+"
-  "Whitespace.")
+  "White-space.")
 
 (defvar phps-mode-lexer-TABS_AND_SPACES "[ \t]*"
-  "Tabs and whitespaces.")
+  "Tabs and white-spaces.")
 
 (defvar phps-mode-lexer-TOKENS "[][;\\:,\.()|^&+-/*=%!~\\$<>?@]"
   "Tokens.")
@@ -176,14 +176,13 @@
 (defun phps-mode-lexer-yy_push_state (new-state)
   "Add NEW-STATE to stack and then begin state."
   (push phps-mode-lexer-STATE phps-mode-lexer-state_stack)
-  ;; (message "Added state %s to stack" old-state)
+  ;; (message "Added state %s to stack begun state %s" phps-mode-lexer-STATE new-state)
   (phps-mode-lexer-BEGIN new-state))
 
 (defun phps-mode-lexer-yy_pop_state ()
   "Pop current state from stack."
   (let ((old-state (pop phps-mode-lexer-state_stack)))
     ;; (message "Going back to poppped state %s" old-state)
-    ;; (message "Ended state %s, going back to %s" old-state new-state)
     (if old-state
         (phps-mode-lexer-BEGIN old-state)
       (display-warning "phps-mode" "PHPs Lexer Error - Going back to nil?"))
@@ -721,10 +720,11 @@
 
    ((looking-at "}")
     (when phps-mode-lexer-state_stack
-      (message "State stack %s" phps-mode-lexer-state_stack)
-      (message "popping state from } %s at %s-%s" (length phps-mode-lexer-state_stack) (match-beginning 0) (match-end 0))
+      ;; (message "State stack %s" phps-mode-lexer-state_stack)
+      ;; (message "popping state from } %s at %s-%s" (length phps-mode-lexer-state_stack) (match-beginning 0) (match-end 0))
       (phps-mode-lexer-yy_pop_state)
-      (message "New state: %s" phps-mode-lexer-STATE))
+      ;; (message "New state: %s" phps-mode-lexer-STATE)
+      )
     (phps-mode-lexer-RETURN_TOKEN "}" (match-beginning 0) (match-end 0)))
 
    ((looking-at phps-mode-lexer-BNUM)
@@ -997,12 +997,12 @@
 
    ((looking-at "{\\$")
     (phps-mode-lexer-yy_push_state phps-mode-lexer-ST_IN_SCRIPTING)
-    (message "Starting ST_IN_SCRIPTING from double-quoted string at %s-%s" (match-beginning 0) (- (match-end 0) 1))
+    ;; (message "Starting ST_IN_SCRIPTING from double-quoted string at %s-%s" (match-beginning 0) (- (match-end 0) 1))
     (phps-mode-lexer-RETURN_TOKEN 'T_CURLY_OPEN (match-beginning 0) (- (match-end 0) 1)))
 
    ((looking-at "[\"]")
     (phps-mode-lexer-BEGIN phps-mode-lexer-ST_IN_SCRIPTING)
-    (message "Ended double-quote at %s" (match-beginning 0))
+    ;; (message "Ended double-quote at %s" (match-beginning 0))
     (phps-mode-lexer-RETURN_TOKEN "\"" (match-beginning 0) (match-end 0)))
 
    ((looking-at phps-mode-lexer-ANY_CHAR)
@@ -1018,17 +1018,12 @@
                   (progn
                     (let ((variable-start (+ start (match-beginning 0))))
 
-                      (when (or (string-match (concat "\\${" phps-mode-lexer-LABEL) double-quoted-string)
-                                (string-match (concat "{\\$" phps-mode-lexer-LABEL) double-quoted-string))
-                        (setq variable-start (1- variable-start))
-                        (message "Decreased index with one"))
-
-                      (message "Found starting expression inside double-quoted string at: %s %s" start variable-start)
+                      ;; (message "Found starting expression inside double-quoted string at: %s %s" start variable-start)
                       (phps-mode-lexer-RETURN_TOKEN 'T_CONSTANT_ENCAPSED_STRING start variable-start)
                       ))
                 (progn
                   (phps-mode-lexer-RETURN_TOKEN 'T_CONSTANT_ENCAPSED_STRING start end)
-                  (message "Found end of quote at %s-%s, moving ahead after '%s'" start end (buffer-substring-no-properties start end))
+                  ;; (message "Found end of quote at %s-%s, moving ahead after '%s'" start end (buffer-substring-no-properties start end))
                   )))
           (progn
             ;; "Found no end of double-quoted region
