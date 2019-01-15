@@ -57,7 +57,7 @@
    "Round and square bracket expressions"
    (should (equal '((1 (0 0)) (2 (0 0)) (3 (1 0)) (4 (1 0)) (5 (2 0)) (6 (1 0)) (7 (1 0)) (8 (0 0))) (phps-mode-test-functions--hash-to-list (phps-mode-functions-get-lines-indent)))))
 
-    (phps-mode-test-with-buffer
+  (phps-mode-test-with-buffer
    "<?php\nvar_dump(array(<<<EOD\nfoobar!\nEOD\n));\n?>"
    "HEREDOC in arguments example"
    ;; (message "Tokens: %s" phps-mode-lexer-tokens)
@@ -272,7 +272,7 @@
    "Namespace and class with doc-comments"
    (should (equal '((1 (0 0)) (2 (0 0)) (3 (0 1)) (4 (0 1)) (5 (0 0)) (6 (0 0)) (7 (1 0)) (8 (1 1)) (9 (1 1)) (10 (1 0)) (11 (1 0)) (12 (1 0)) (13 (0 0))) (phps-mode-test-functions--hash-to-list (phps-mode-functions-get-lines-indent)))))
 
-)
+  )
 
 (defun phps-mode-test-functions-get-lines-lindent-if ()
   "Test for multi-line if expressions."
@@ -289,7 +289,7 @@
    ;; (message "Tokens: %s" phps-mode-lexer-tokens)
    (should (equal '((1 (0 0)) (2 (0 0)) (3 (0 0)) (4 (1 0)) (5 (1 0)) (6 (1 0)) (7 (1 0)) (8 (0 0)) (9 (1 0)) (10 (0 0))) (phps-mode-test-functions--hash-to-list (phps-mode-functions-get-lines-indent)))))
 
-    (phps-mode-test-with-buffer
+  (phps-mode-test-with-buffer
    "<?php\nif (true) {\n    if ($configuration::load(\n        self::getParameter(self::PARAMETER_CONFIGURATION_INTERNAL_FILENAME),\n        self::getParameter(self::PARAMETER_CONFIGURATION_EXTERNAL_FILENAME),\n        self::getParameter(self::PARAMETER_STRUCTURE_INTERNAL_FILENAME),\n        self::getParameter(self::PARAMETER_STRUCTURE_EXTERNAL_FILENAME))\n    ) {\n        echo 'was here';\n    }\n}\n"
    "If expression spanning multiple lines 3"
    ;; (message "Tokens: %s" phps-mode-lexer-tokens)
@@ -605,7 +605,17 @@
    "<?php\nnamespace myNamespace;\nclass myClass {\n    public function myFunctionA() {}\n    protected function myFunctionB() {}\n}\n"
    "Imenu object-oriented file with bracket-less namespace, class and function"
    (should (equal (phps-mode-functions-imenu-create-index-function) '(("\\myNamespace" . 17) ("\\myNamespace\\myClass" . 36) ("\\myNamespace\\myClass->myFunctionA()" . 66) ("\\myNamespace\\myClass->myFunctionB()" . 106)))))
-  
+
+  (phps-mode-test-with-buffer
+   "<?php\nnamespace myNamespace {\n    class myClass extends myAbstract {\n        public function myFunctionA() {}\n        protected function myFunctionB() {}\n    }\n}\n"
+   "Imenu object-oriented file with namespace, class that extends and functions"
+   (should (equal (phps-mode-functions-imenu-create-index-function) '(("\\myNamespace" . 17) ("\\myNamespace\\myClass" . 41) ("\\myNamespace\\myClass->myFunctionA()" . 94) ("\\myNamespace\\myClass->myFunctionB()" . 138)))))
+
+  (phps-mode-test-with-buffer
+   "<?php\nnamespace myNamespace;\nclass myClass extends myAbstract implements myInterface {\n    public function myFunctionA() {}\n    protected function myFunctionB() {}\n}\n"
+   "Imenu object-oriented file with bracket-less namespace, class that extends and implements and functions"
+   (should (equal (phps-mode-functions-imenu-create-index-function) '(("\\myNamespace" . 17) ("\\myNamespace\\myClass" . 36) ("\\myNamespace\\myClass->myFunctionA()" . 108) ("\\myNamespace\\myClass->myFunctionB()" . 148)))))
+
   )
 
 ;; TODO Add tests for all examples here: https://www.php-fig.org/psr/psr-2/

@@ -667,7 +667,8 @@
                ((string= token-symbol ";")
                 (setq in-namespace-declaration nil))
 
-               ((equal token-symbol 'T_STRING)
+               ((and (equal token-symbol 'T_STRING)
+                     (not in-namespace-name))
                 (let ((index-name (format "\\%s" (buffer-substring-no-properties token-start token-end)))
                       (index-pos token-start))
                   (setq in-namespace-name index-name)
@@ -680,7 +681,8 @@
                 (setq open-class-level nesting-level)
                 (setq in-class-declaration nil))
 
-               ((equal token-symbol 'T_STRING)
+               ((and (equal token-symbol 'T_STRING)
+                     (not in-class-name))
                 (let ((index-name (format "%s" (buffer-substring-no-properties token-start token-end)))
                       (index-pos token-start))
                   (setq in-class-name index-name)
@@ -711,9 +713,11 @@
               (cond
 
                ((equal token-symbol 'T_NAMESPACE)
+                (setq in-namespace-name nil)
                 (setq in-namespace-declaration t))
 
                ((equal token-symbol 'T_CLASS)
+                (setq in-class-name nil)
                 (setq in-class-declaration t))
 
                ((equal token-symbol 'T_FUNCTION)
