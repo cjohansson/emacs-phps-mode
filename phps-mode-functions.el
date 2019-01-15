@@ -618,7 +618,6 @@
     ;; (message "phps-mode-functions-after-change %s %s %s" start stop length)
     ))
 
-;; TODO Implement this
 (defun phps-mode-functions-imenu-create-index-function ()
   "Create index for imenu."
   (let ((index '()))
@@ -669,7 +668,7 @@
                 (setq in-namespace-declaration nil))
 
                ((equal token-symbol 'T_STRING)
-                (let ((index-name (format "namespace %s" (buffer-substring-no-properties token-start token-end)))
+                (let ((index-name (format "\\%s" (buffer-substring-no-properties token-start token-end)))
                       (index-pos token-start))
                   (setq in-namespace-name index-name)
                   (push `(,index-name . ,index-pos) index)))))
@@ -682,11 +681,11 @@
                 (setq in-class-declaration nil))
 
                ((equal token-symbol 'T_STRING)
-                (let ((index-name (format "class %s" (buffer-substring-no-properties token-start token-end)))
+                (let ((index-name (format "%s" (buffer-substring-no-properties token-start token-end)))
                       (index-pos token-start))
                   (setq in-class-name index-name)
                   (when in-namespace-name
-                    (setq index-name (concat in-namespace-name " \\ " index-name)))
+                    (setq index-name (concat in-namespace-name "\\" index-name)))
                   (push `(,index-name . ,index-pos) index)))))
 
              (in-function-declaration
@@ -700,12 +699,12 @@
                 (setq in-function-declaration nil))
 
                ((equal token-symbol 'T_STRING)
-                (let ((index-name (format "function %s" (buffer-substring-no-properties token-start token-end)))
+                (let ((index-name (format "%s()" (buffer-substring-no-properties token-start token-end)))
                       (index-pos token-start))
                   (when in-class-name
-                    (setq index-name (concat in-class-name " -> " index-name)))
+                    (setq index-name (concat in-class-name "->" index-name)))
                   (when in-namespace-name
-                    (setq index-name (concat in-namespace-name " \\ " index-name)))
+                    (setq index-name (concat in-namespace-name "\\" index-name)))
                   (push `(,index-name . ,index-pos) index)))))
 
              (t
