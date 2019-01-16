@@ -34,6 +34,9 @@
 (defvar phps-mode-functions-lines-indent nil
   "The indentation of each line in buffer, nil if none.")
 
+(defvar phps-mode-functions-imenu nil
+  "The Imenu alist for current buffer, nil if none.")
+
 (defvar phps-mode-functions-verbose nil
   "Verbose messaging, default nil.")
 
@@ -568,8 +571,7 @@
 (defun phps-mode-functions-indent-line ()
   "Indent line."
   ;; Set lines indent if not set
-  (unless (and (boundp 'phps-mode-functions-lines-indent)
-               phps-mode-functions-lines-indent)
+  (unless phps-mode-functions-lines-indent
     (setq phps-mode-functions-lines-indent (phps-mode-functions-get-lines-indent)))
 
   (when phps-mode-functions-lines-indent
@@ -618,7 +620,7 @@
     ;; (message "phps-mode-functions-after-change %s %s %s" start stop length)
     ))
 
-(defun phps-mode-functions-imenu-create-index-function ()
+(defun phps-mode-functions--imenu-create-index-function ()
   "Create index for imenu."
   (let ((index '()))
 
@@ -632,7 +634,6 @@
             (in-class-name nil)
             (in-function-declaration nil)
             (in-function-name nil)
-            (open-function-level nil)
             (nesting-level 0))
         (dolist (token tokens)
           (let ((token-symbol (car token))
@@ -695,7 +696,6 @@
               (cond
 
                ((string= token-symbol "{")
-                (setq open-function-level nesting-level)
                 (setq in-function-name nil)
                 (setq in-function-declaration nil))
 
@@ -713,22 +713,27 @@
                     (setq index-name (concat in-namespace-name "\\" index-name)))
                   (push `(,index-name . ,index-pos) index)))))
 
-             (t
-              (cond
+             (t (cond
 
-               ((equal token-symbol 'T_NAMESPACE)
-                (setq in-namespace-name nil)
-                (setq in-namespace-declaration t))
+                 ((equal token-symbol 'T_NAMESPACE)
+                  (setq in-namespace-name nil)
+                  (setq in-namespace-declaration t))
 
-               ((equal token-symbol 'T_CLASS)
-                (setq in-class-name nil)
-                (setq in-class-declaration t))
+                 ((equal token-symbol 'T_CLASS)
+                  (setq in-class-name nil)
+                  (setq in-class-declaration t))
 
-               ((equal token-symbol 'T_FUNCTION)
-                (setq in-function-name nil)
-                (setq in-function-declaration t)))))))))
+                 ((equal token-symbol 'T_FUNCTION)
+                  (setq in-function-name nil)
+                  (setq in-function-declaration t)))))))))
 
     (nreverse index)))
+
+(defun phps-mode-functions-get-imenu ()
+  "Get Imenu for current buffer."
+  (unless phps-mode-functions-imenu
+    (setq phps-mode-functions-imenu (phps-mode-functions--imenu-create-index-function)))
+  phps-mode-functions-imenu)
 
 (defun phps-mode-functions-init ()
   "PHP specific init-cleanup routines."
@@ -737,7 +742,7 @@
   (set (make-local-variable 'indent-line-function) #'phps-mode-functions-indent-line)
 
   ;; Support Imenu
-  (set (make-local-variable 'imenu-create-index-function) #'phps-mode-functions-imenu-create-index-function)
+  (set (make-local-variable 'imenu-create-index-function) #'phps-mode-functions-get-imenu)
 
   (when (and (boundp 'phps-mode-use-psr-2)
              phps-mode-use-psr-2)
@@ -752,6 +757,7 @@
 
   (set (make-local-variable 'phps-mode-functions-buffer-changes-start) nil)
   (set (make-local-variable 'phps-mode-functions-lines-indent) nil)
+  (set (make-local-variable 'phps-mode-functions-imenu) nil)
 
   (add-hook 'after-change-functions #'phps-mode-functions-after-change))
 

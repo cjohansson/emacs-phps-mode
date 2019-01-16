@@ -1283,6 +1283,10 @@ ANY_CHAR'
                phps-mode-functions-lines-indent)
       (setq phps-mode-functions-lines-indent nil))
 
+    ;; Reset imenu index
+    (when (and (boundp 'phps-mode-functions-imenu)
+               phps-mode-functions-imenu)
+      (setq phps-mode-functions-imenu nil))
 
     (setq phps-mode-lexer-states nil)
     (phps-mode-lexer-BEGIN phps-mode-lexer-ST_INITIAL)))

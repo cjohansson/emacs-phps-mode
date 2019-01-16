@@ -589,37 +589,37 @@
   (phps-mode-test-with-buffer
    "<?php\nfunction myFunctionA() {}\nfunction myFunctionB() {}\n"
    "Imenu function-oriented file"
-   (should (equal (phps-mode-functions-imenu-create-index-function) '(("myFunctionA()" . 16) ("myFunctionB()" . 42)))))
+   (should (equal (phps-mode-functions-get-imenu) '(("myFunctionA()" . 16) ("myFunctionB()" . 42)))))
 
   (phps-mode-test-with-buffer
    "<?php\nclass myClass {\n    public function myFunctionA() {}\n    protected function myFunctionB() {}\n}\n"
    "Imenu object-oriented file"
-   (should (equal (phps-mode-functions-imenu-create-index-function) '(("myClass" . 13) ("myClass->myFunctionA()" . 43) ("myClass->myFunctionB()" . 83)))))
+   (should (equal (phps-mode-functions-get-imenu) '(("myClass" . 13) ("myClass->myFunctionA()" . 43) ("myClass->myFunctionB()" . 83)))))
 
   (phps-mode-test-with-buffer
    "<?php\nnamespace myNamespace {\n    class myClass {\n        public function myFunctionA() {}\n        protected function myFunctionB() {}\n    }\n}\n"
    "Imenu object-oriented file with namespace, class and function"
-   (should (equal (phps-mode-functions-imenu-create-index-function) '(("\\myNamespace" . 17) ("\\myNamespace\\myClass" . 41) ("\\myNamespace\\myClass->myFunctionA()" . 75) ("\\myNamespace\\myClass->myFunctionB()" . 119)))))
+   (should (equal (phps-mode-functions-get-imenu) '(("\\myNamespace" . 17) ("\\myNamespace\\myClass" . 41) ("\\myNamespace\\myClass->myFunctionA()" . 75) ("\\myNamespace\\myClass->myFunctionB()" . 119)))))
 
   (phps-mode-test-with-buffer
    "<?php\nnamespace myNamespace;\nclass myClass {\n    public function myFunctionA() {}\n    protected function myFunctionB() {}\n}\n"
    "Imenu object-oriented file with bracket-less namespace, class and function"
-   (should (equal (phps-mode-functions-imenu-create-index-function) '(("\\myNamespace" . 17) ("\\myNamespace\\myClass" . 36) ("\\myNamespace\\myClass->myFunctionA()" . 66) ("\\myNamespace\\myClass->myFunctionB()" . 106)))))
+   (should (equal (phps-mode-functions-get-imenu) '(("\\myNamespace" . 17) ("\\myNamespace\\myClass" . 36) ("\\myNamespace\\myClass->myFunctionA()" . 66) ("\\myNamespace\\myClass->myFunctionB()" . 106)))))
 
   (phps-mode-test-with-buffer
    "<?php\nnamespace myNamespace {\n    class myClass extends myAbstract {\n        public function myFunctionA() {}\n        protected function myFunctionB() {}\n    }\n}\n"
    "Imenu object-oriented file with namespace, class that extends and functions"
-   (should (equal (phps-mode-functions-imenu-create-index-function) '(("\\myNamespace" . 17) ("\\myNamespace\\myClass" . 41) ("\\myNamespace\\myClass->myFunctionA()" . 94) ("\\myNamespace\\myClass->myFunctionB()" . 138)))))
+   (should (equal (phps-mode-functions-get-imenu) '(("\\myNamespace" . 17) ("\\myNamespace\\myClass" . 41) ("\\myNamespace\\myClass->myFunctionA()" . 94) ("\\myNamespace\\myClass->myFunctionB()" . 138)))))
 
   (phps-mode-test-with-buffer
    "<?php\nnamespace myNamespace;\nclass myClass extends myAbstract implements myInterface {\n    public function myFunctionA() {}\n    protected function myFunctionB() {}\n}\n"
    "Imenu object-oriented file with bracket-less namespace, class that extends and implements and functions"
-   (should (equal (phps-mode-functions-imenu-create-index-function) '(("\\myNamespace" . 17) ("\\myNamespace\\myClass" . 36) ("\\myNamespace\\myClass->myFunctionA()" . 108) ("\\myNamespace\\myClass->myFunctionB()" . 148)))))
+   (should (equal (phps-mode-functions-get-imenu) '(("\\myNamespace" . 17) ("\\myNamespace\\myClass" . 36) ("\\myNamespace\\myClass->myFunctionA()" . 108) ("\\myNamespace\\myClass->myFunctionB()" . 148)))))
 
   (phps-mode-test-with-buffer
    "<?php\nnamespace myNamespace;\nclass myClass extends myAbstract implements myInterface {\n    public function myFunctionA($myArg = null) {}\n    protected function myFunctionB($myArg = 'abc') {}\n}\n"
    "Imenu object-oriented file with bracket-less namespace, class that extends and implements and functions with optional arguments"
-   (should (equal (phps-mode-functions-imenu-create-index-function) '(("\\myNamespace" . 17) ("\\myNamespace\\myClass" . 36) ("\\myNamespace\\myClass->myFunctionA()" . 108) ("\\myNamespace\\myClass->myFunctionB()" . 161)))))
+   (should (equal (phps-mode-functions-get-imenu) '(("\\myNamespace" . 17) ("\\myNamespace\\myClass" . 36) ("\\myNamespace\\myClass->myFunctionA()" . 108) ("\\myNamespace\\myClass->myFunctionB()" . 161)))))
 
   )
 
