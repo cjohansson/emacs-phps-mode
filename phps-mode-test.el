@@ -34,7 +34,9 @@
      (switch-to-buffer test-buffer)
      (insert ,source)
      (goto-char 0)
-     (message "\nTesting buffer:\n'%s'\n" ,source)
+     (when (and (boundp 'phps-mode-functions-verbose)
+                phps-mode-functions-verbose)
+       (message "\nTesting buffer:\n'%s'\n" ,source))
      (phps-mode)
      ,@body
      (kill-buffer test-buffer)

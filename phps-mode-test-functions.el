@@ -241,7 +241,7 @@
 
   )
 
-(defun phps-mode-test-function-get-lines-indent-classes ()
+(defun phps-mode-test-functions-get-lines-indent-classes ()
   "Test for class indent."
 
   (phps-mode-test-with-buffer
@@ -628,9 +628,9 @@
 (defun phps-mode-test-functions ()
   "Run test for functions."
   ;; (setq debug-on-error t)
-  (setq phps-mode-functions-verbose t)
+  ;; (setq phps-mode-functions-verbose t)
   (phps-mode-test-functions-get-lines-lindent-if)
-  (phps-mode-test-function-get-lines-indent-classes)
+  (phps-mode-test-functions-get-lines-indent-classes)
   (phps-mode-test-functions-get-lines-indent-inline-if)
   (phps-mode-test-functions-get-lines-indent-alternative-if)
   (phps-mode-test-functions-get-lines-indent-multi-line-assignments)
