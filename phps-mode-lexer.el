@@ -1380,8 +1380,7 @@ ANY_CHAR'
                 (let ((start (car (cdr token))))
                   (if (< start previous-token-start)
                       (push token old-tokens)
-                    (throw 'stop-iteration nil)
-                    ))))
+                    (throw 'stop-iteration nil)))))
             (setq old-tokens (nreverse old-tokens))
 
             ;; Delete all overlays from point of change to end of buffer
