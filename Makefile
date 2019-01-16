@@ -11,7 +11,7 @@ ELC := $(EL:.el=.elc)
 clean:
 	rm -f $(ELC)
 
-.PHONE: compile
+.PHONY: compile
 compile:
 	$(ELC)
 
@@ -19,11 +19,15 @@ compile:
 	$(EMACS_CMD) -f batch-byte-compile $<
 
 .PHONY: tests
-tests: clean test-functions test-lexer test-parser
+tests: clean test-functions test-lexer test-parser test-integration
 
 .PHONY: test-functions
 test-functions:
 	$(EMACS_CMD) -l phps-mode-test-functions.el
+
+.PHONY: test-integration
+test-integration:
+	$(EMACS_CMD) -l phps-mode-test-integration.el
 
 .PHONY: test-lexer
 test-lexer:

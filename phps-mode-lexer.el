@@ -1185,7 +1185,7 @@ ANY_CHAR'
    ((looking-at (concat phps-mode-lexer-LABEL "[\\[}]"))
     (let ((start (match-beginning 0))
           (end (- (match-end 0) 1)))
-      (message "Stopped here")
+      ;; (message "Stopped here")
       (phps-mode-lexer-yy_pop_state)
       (phps-mode-lexer-yy_push_state phps-mode-lexer-ST_IN_SCRIPTING)
       (phps-mode-lexer-RETURN_TOKEN 'T_STRING_VARNAME start end)))
