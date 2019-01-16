@@ -53,14 +53,12 @@
         (goto-char (point-min))
         (when phps-mode-functions-verbose
           (message "\nCalculation indentation for all lines in buffer:\n\n%s" (buffer-substring-no-properties (point-min) (point-max))))
-        (let ((in-scripting nil)
-              (in-heredoc nil)
+        (let ((in-heredoc nil)
               (in-heredoc-started-this-line nil)
               (in-heredoc-ended-this-line nil)
               (in-inline-control-structure nil)
               (after-special-control-structure nil)
               (after-special-control-structure-token nil)
-              (after-special-control-structure-first-on-line nil)
               (after-extra-special-control-structure nil)
               (after-extra-special-control-structure-first-on-line nil)
               (switch-curly-stack nil)
@@ -80,15 +78,11 @@
               (first-token-on-line nil)
               (line-indents (make-hash-table :test 'equal))
               (first-token-is-nesting-decrease nil)
-              (first-token-is-nesting-increase nil)
-              (line-contained-nesting-decrease nil)
-              (line-contained-nesting-increase nil)
               (token-number 1)
               (allow-custom-column-increment nil)
               (allow-custom-column-decrement nil)
               (in-assignment nil)
               (in-assignment-level 0)
-              (in-assignment-started-this-line nil)
               (in-class-declaration nil)
               (in-class-declaration-level 0)
               (token nil)
@@ -96,8 +90,6 @@
               (token-end-line-number)
               (tokens (nreverse phps-mode-lexer-tokens))
               (nesting-stack nil)
-              (changed-nesting-stack-in-line nil)
-              (after-class-declaration nil)
               (class-declaration-started-this-line nil)
               (special-control-structure-started-this-line nil)
               (temp-pre-indent nil)
@@ -127,10 +119,7 @@
 
                 ;; Keep track of round bracket level
                 (when (string= token "(")
-                  (setq round-bracket-level (1+ round-bracket-level))
-                  (setq line-contained-nesting-increase t)
-                  (when first-token-on-line
-                    (setq first-token-is-nesting-increase t)))
+                  (setq round-bracket-level (1+ round-bracket-level)))
                 (when (string= token ")")
                   (setq round-bracket-level (1- round-bracket-level))
                   (when first-token-on-line
@@ -138,13 +127,9 @@
 
                 ;; Keep track of square bracket level
                 (when (string= token "[")
-                  (setq square-bracket-level (1+ square-bracket-level))
-                  (setq line-contained-nesting-increase t)
-                  (when first-token-on-line
-                    (setq first-token-is-nesting-increase t)))
+                  (setq square-bracket-level (1+ square-bracket-level)))
                 (when (string= token "]")
                   (setq square-bracket-level (1- square-bracket-level))
-                  (setq line-contained-nesting-decrease t)
                   (when first-token-on-line
                     (setq first-token-is-nesting-decrease t)))
 
@@ -160,8 +145,6 @@
                             (pop nesting-stack))
 
                           (when first-token-on-line
-                            (setq after-class-declaration t)
-                            (setq first-token-is-nesting-increase nil)
                             (setq first-token-is-nesting-decrease t))
 
                           )
@@ -176,12 +159,8 @@
                 (when (or (equal token 'T_CURLY_OPEN)
                           (equal token 'T_DOLLAR_OPEN_CURLY_BRACES)
                           (string= token "{"))
-                  (setq curly-bracket-level (1+ curly-bracket-level))
-                  (setq line-contained-nesting-increase t)
-                  (when first-token-on-line
-                    (setq first-token-is-nesting-increase t)))
+                  (setq curly-bracket-level (1+ curly-bracket-level)))
                 (when (string= token "}")
-                  (setq line-contained-nesting-decrease t)
                   (setq curly-bracket-level (1- curly-bracket-level))
 
                   (when (and switch-curly-stack
@@ -196,13 +175,6 @@
                   
                   (when first-token-on-line
                     (setq first-token-is-nesting-decrease t)))
-
-                ;; Keep track of in scripting
-                (when (or (equal token 'T_OPEN_TAG)
-                          (equal token 'T_OPEN_TAG_WITH_ECHO))
-                  (setq in-scripting t))
-                (when (equal token 'T_CLOSE_TAG)
-                  (setq in-scripting nil))
 
                 ;; Keep track of ending alternative control structure level
                 (when (or (equal token 'T_ENDIF)
@@ -265,10 +237,7 @@
 
                             (when phps-mode-functions-verbose
                               (message "\nIncreasing alternative-control-structure after %s %s to %s\n" after-special-control-structure-token token alternative-control-structure-level))
-
-                            (setq line-contained-nesting-increase t)
-                            (when after-special-control-structure-first-on-line
-                              (setq first-token-is-nesting-increase t)))
+)
 
                         ;; Don't start inline control structures after a while ($condition); expression
                         (when (not (string= token ";"))
@@ -279,13 +248,11 @@
                           (setq temp-pre-indent (1+ column-level)))))
 
                     (setq after-special-control-structure nil)
-                    (setq after-special-control-structure-token nil)
-                    (setq after-special-control-structure-first-on-line nil)))
+                    (setq after-special-control-structure-token nil)))
 
                 ;; Support extra special control structures (CASE)
                 (when (and after-extra-special-control-structure
                            (string= token ":"))
-                  (setq line-contained-nesting-increase t)
                   (setq alternative-control-structure-level (1+ alternative-control-structure-level))
                   (when after-extra-special-control-structure-first-on-line
                     (setq first-token-is-nesting-decrease t))
@@ -305,7 +272,6 @@
                 (when (and in-inline-control-structure
                            (string= token ";")
                            (not special-control-structure-started-this-line))
-                  (setq line-contained-nesting-decrease t)
                   (setq in-inline-control-structure nil))
 
                 ;; Did we encounter a token that supports alternative and inline control structures?
@@ -317,7 +283,6 @@
                           (equal token 'T_ELSE)
                           (equal token 'T_ELSEIF)
                           (equal token 'T_DEFAULT))
-                  (setq after-special-control-structure-first-on-line first-token-on-line)
                   (setq after-special-control-structure round-bracket-level)
                   (setq after-special-control-structure-token token)
                   (setq special-control-structure-started-this-line t)
@@ -352,7 +317,6 @@
                              (string= token "="))
                     ;; (message "Started assignment")
                     (setq in-assignment round-bracket-level)
-                    (setq in-assignment-started-this-line t)
                     (setq in-assignment-level 1)))
 
                 ;; Did we encounter a token that supports extra special alternative control structures?
@@ -531,15 +495,9 @@
                       ;; Set initial values for tracking first token
                       (when (> token-start-line-number last-line-number)
                         (setq first-token-on-line t)
-                        (setq first-token-is-nesting-increase nil)
                         (setq first-token-is-nesting-decrease nil)
                         (setq in-assignment-level 0)
-                        (setq after-class-declaration nil)
                         (setq in-class-declaration-level 0)
-                        (setq line-contained-nesting-increase nil)
-                        (setq line-contained-nesting-decrease nil)
-                        (setq in-assignment-started-this-line nil)
-                        (setq changed-nesting-stack-in-line nil)
                         (setq class-declaration-started-this-line nil)
                         (setq in-heredoc-started-this-line nil)
                         (setq special-control-structure-started-this-line nil)))
