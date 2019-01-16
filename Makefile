@@ -13,10 +13,7 @@ clean:
 
 .PHONY: compile
 compile:
-	$(ELC)
-
-%.elc: %.el
-	$(EMACS_CMD) -f batch-byte-compile $<
+	$(EMACS_CMD) -f batch-byte-compile $(EL)
 
 .PHONY: tests
 tests: test-functions test-lexer test-parser test-integration

@@ -32,7 +32,8 @@
 (autoload 'phps-mode-test-with-buffer "phps-mode-test")
 (autoload 'phps-mode-lexer-init "phps-mode-lexer")
 (autoload 'phps-mode-lexer-get-point-data "phps-mode-lexer")
-(autoload 'phps-mode-lexer-move-lexer-tokens "phps-mode-lexer")
+(autoload 'phps-mode-lexer-get-moved-tokens "phps-mode-lexer")
+(autoload 'phps-mode-lexer-get-moved-states "phps-mode-lexer")
 (autoload 'should "ert")
 
 (defun phps-mode-test-lexer-script-boundaries ()
