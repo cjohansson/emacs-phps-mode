@@ -30,17 +30,47 @@
 
 
 (autoload 'phps-mode-test-with-buffer "phps-mode-test")
-(autoload 'phps-mode-functions-verbose "phps-mode-functions")
 (autoload 'phps-mode-functions-indent-line "phps-mode-functions")
 (autoload 'phps-mode-functions-get-lines-indent "phps-mode-functions")
+(autoload 'phps-mode-functions-get-imenu "phps-mode-functions")
+(autoload 'phps-mode-test-hash-to-list "phps-mode-test")
 (autoload 'should "ert")
+
+(defun phps-mode-test-integration-incremental ()
+  "Test for object-oriented PHP file."
+
+    (phps-mode-test-with-buffer
+   "<?php\nnamespace myNamespace\n{\n    class myClass\n    {\n        public function myFunction()\n        {\n            echo 'my statement';\n        }\n    }\n}\n"
+   "Regular PHP with namespaces, classes and functions"
+
+   ;; Tokens
+   (when (and (boundp 'phps-mode-lexer-tokens)
+              phps-mode-lexer-tokens)
+     ;; (message "Tokens %s" phps-mode-lexer-tokens)
+     (should (equal phps-mode-lexer-tokens '((T_OPEN_TAG 1 . 7) (T_NAMESPACE 7 . 16) (T_STRING 17 . 28) ("{" 29 . 30) (T_CLASS 35 . 40) (T_STRING 41 . 48) ("{" 53 . 54) (T_PUBLIC 63 . 69) (T_FUNCTION 70 . 78) (T_STRING 79 . 89) ("(" 89 . 90) (")" 90 . 91) ("{" 100 . 101) (T_ECHO 114 . 118) (T_CONSTANT_ENCAPSED_STRING 119 . 133) (";" 133 . 134) ("}" 143 . 144) ("}" 149 . 150) ("}" 151 . 152)))))
+
+   ;; Indentation
+   (should (equal '((1 (0 0)) (2 (0 0)) (3 (0 0)) (4 (1 0)) (5 (1 0)) (6 (2 0)) (7 (2 0)) (8 (3 0)) (9 (2 0)) (10 (1 0)) (11 (0 0))) (phps-mode-test-hash-to-list (phps-mode-functions-get-lines-indent))))
+
+   ;; Imenu
+   (should (equal (phps-mode-functions-get-imenu) '(("\\myNamespace" . 17) ("\\myNamespace\\myClass" . 41) ("\\myNamespace\\myClass->myFunction()" . 79))))
+
+   ;; TODO Make changes
+
+   ;; TODO New test for tokens
+   ;; TODO New test for indentation
+   ;; TODO new test for Imenu
+   )
+
+)
 
 (defun phps-mode-test-integration ()
   "Run test for integration."
   ;; (setq debug-on-error t)
   ;; (setq phps-mode-functions-verbose t)
 
-  (message "Integration tests here")
+  (phps-mode-test-integration-incremental)
+
 )
 
 (phps-mode-test-integration)
