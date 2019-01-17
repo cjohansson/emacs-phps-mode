@@ -1269,6 +1269,20 @@ ANY_CHAR'
 (defun phps-mode-lexer-setup (start end)
   "Just prepare other lexers for lexing region START to END."
   ;; (message "phps-mode-lexer-setup %s %s" start end)
+
+  ;; Reset line indents
+  (when (and (boundp 'phps-mode-functions-lines-indent)
+             phps-mode-functions-lines-indent)
+    (setq phps-mode-functions-lines-indent nil))
+
+  ;; Reset imenu index
+  (when (and (boundp 'phps-mode-functions-imenu)
+             phps-mode-functions-imenu)
+    (setq phps-mode-functions-imenu nil))
+
+  ;; TODO Delete all overlays after point of change if it's incremental
+
+  ;; Does lexer start from the beginning of buffer?
   (when (and (eq start 1)
              end)
     (delete-all-overlays)
@@ -1277,16 +1291,6 @@ ANY_CHAR'
     (when (and (boundp 'phps-mode-lexer-buffer-changes--start)
                phps-mode-lexer-buffer-changes--start)
       (setq phps-mode-lexer-buffer-changes--start nil))
-
-    ;; Reset line indents
-    (when (and (boundp 'phps-mode-functions-lines-indent)
-               phps-mode-functions-lines-indent)
-      (setq phps-mode-functions-lines-indent nil))
-
-    ;; Reset imenu index
-    (when (and (boundp 'phps-mode-functions-imenu)
-               phps-mode-functions-imenu)
-      (setq phps-mode-functions-imenu nil))
 
     (setq phps-mode-lexer-states nil)
     (phps-mode-lexer-BEGIN phps-mode-lexer-ST_INITIAL)))
