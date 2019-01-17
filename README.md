@@ -15,7 +15,9 @@ This mode does not require PHP installed on computer because it has a elisp base
 * Lexer based on official PHP re2c lexer (100%)
 * Imenu support (100%)
 * Incremental lexer and syntax coloring after buffer changes (75%)
+* Incremental indentation and imenu calculation after buffer changes (50%)
 * Wisent LALR parser based on official PHP yacc parser automatically converted grammar (50%)
+* Approach flycheck about including support for this module by default (0%)
 * Full integration with Emacs Semantic subsystem (30%)
 * Flymake support (0%)
 * PSR-2 auto-formatting tool based on lexer tokens (0%)
@@ -54,18 +56,33 @@ Indentations, incremental processes, Imenu-support.
 make test-functions
 ```
 
-### Integration tests
+## Integration tests
 
-This should test all other parts in collaboration. Not ready yet
+This should test all other parts in collaboration.
 
 ``` bash
 make test-integration
 ```
 
-### All tests
+## All tests
 
 ``` bash
 make tests
+```
+
+## Compilation
+
+
+### Compile
+
+``` bash
+make compile
+```
+
+### Clean
+
+``` bash
+make clean
 ```
 
 ## Installation example
