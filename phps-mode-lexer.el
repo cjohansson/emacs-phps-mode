@@ -1270,6 +1270,11 @@ ANY_CHAR'
   "Just prepare other lexers for lexing region START to END."
   ;; (message "phps-mode-lexer-setup %s %s" start end)
 
+  ;; Flag that buffer has not been processed
+  (when (and (boundp 'phps-mode-functions-processed-buffer)
+             phps-mode-functions-processed-buffer)
+    (setq phps-mode-functions-processed-buffer nil))
+
   ;; Reset line indents
   (when (and (boundp 'phps-mode-functions-lines-indent)
              phps-mode-functions-lines-indent)

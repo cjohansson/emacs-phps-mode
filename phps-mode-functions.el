@@ -37,6 +37,9 @@
 (defvar phps-mode-functions-imenu nil
   "The Imenu alist for current buffer, nil if none.")
 
+(defvar phps-mode-functions-processed-buffer nil
+  "Flag whether current buffer is processed or not.")
+
 (defvar phps-mode-functions-verbose nil
   "Verbose messaging, default nil.")
 
@@ -44,6 +47,15 @@
 ;; NOTE Also format white-space inside the line, i.e. after function declarations?
 
 ;; TODO Add support for automatic parenthesis, bracket, square-bracket, single-quote and double-quote encapsulations
+
+(defun phps-mode-functions-process-current-buffer ()
+  "Process current buffer, generate indentations and Imenu."
+  (unless phps-mode-functions-processed-buffer
+    (unless phps-mode-functions-lines-indent
+      (setq phps-mode-functions-lines-indent (phps-mode-functions-get-lines-indent)))
+    (unless phps-mode-functions-imenu
+      (setq phps-mode-functions-imenu (phps-mode-functions--imenu-create-index-function)))
+    (setq phps-mode-functions-processed-buffer t)))
 
 ;; Set indent for white-space lines as well
 (defun phps-mode-functions-get-lines-indent ()
@@ -528,10 +540,7 @@
 
 (defun phps-mode-functions-indent-line ()
   "Indent line."
-  ;; Set lines indent if not set
-  (unless phps-mode-functions-lines-indent
-    (setq phps-mode-functions-lines-indent (phps-mode-functions-get-lines-indent)))
-
+  (phps-mode-functions-process-current-buffer)
   (when phps-mode-functions-lines-indent
     (let ((indent (gethash (line-number-at-pos (point)) phps-mode-functions-lines-indent)))
       (when indent
@@ -689,8 +698,7 @@
 
 (defun phps-mode-functions-get-imenu ()
   "Get Imenu for current buffer."
-  (unless phps-mode-functions-imenu
-    (setq phps-mode-functions-imenu (phps-mode-functions--imenu-create-index-function)))
+  (phps-mode-functions-process-current-buffer)
   phps-mode-functions-imenu)
 
 (defun phps-mode-functions-init ()
@@ -716,6 +724,7 @@
   (set (make-local-variable 'phps-mode-functions-buffer-changes-start) nil)
   (set (make-local-variable 'phps-mode-functions-lines-indent) nil)
   (set (make-local-variable 'phps-mode-functions-imenu) nil)
+  (set (make-local-variable 'phps-mode-functions-processed-buffer) nil)
 
   (add-hook 'after-change-functions #'phps-mode-functions-after-change))
 
