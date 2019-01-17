@@ -1275,16 +1275,6 @@ ANY_CHAR'
              phps-mode-functions-processed-buffer)
     (setq phps-mode-functions-processed-buffer nil))
 
-  ;; Reset line indents
-  (when (and (boundp 'phps-mode-functions-lines-indent)
-             phps-mode-functions-lines-indent)
-    (setq phps-mode-functions-lines-indent nil))
-
-  ;; Reset imenu index
-  (when (and (boundp 'phps-mode-functions-imenu)
-             phps-mode-functions-imenu)
-    (setq phps-mode-functions-imenu nil))
-
   ;; TODO Delete all overlays after point of change if it's incremental
 
   ;; Does lexer start from the beginning of buffer?

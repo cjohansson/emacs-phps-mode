@@ -51,10 +51,10 @@
 (defun phps-mode-functions-process-current-buffer ()
   "Process current buffer, generate indentations and Imenu."
   (unless phps-mode-functions-processed-buffer
-    (unless phps-mode-functions-lines-indent
-      (setq phps-mode-functions-lines-indent (phps-mode-functions-get-lines-indent)))
-    (unless phps-mode-functions-imenu
-      (setq phps-mode-functions-imenu (phps-mode-functions--imenu-create-index-function)))
+
+    ;; TODO Merge these two functions into one
+    (setq phps-mode-functions-lines-indent (phps-mode-functions-get-lines-indent))
+    (setq phps-mode-functions-imenu (phps-mode-functions-get-imenu))
     (setq phps-mode-functions-processed-buffer t)))
 
 ;; Set indent for white-space lines as well
@@ -587,7 +587,7 @@
     ;; (message "phps-mode-functions-after-change %s %s %s" start stop length)
     ))
 
-(defun phps-mode-functions--imenu-create-index-function ()
+(defun phps-mode-functions-get-imenu ()
   "Create index for imenu."
   (let ((index '()))
 
@@ -696,7 +696,7 @@
 
     (nreverse index)))
 
-(defun phps-mode-functions-get-imenu ()
+(defun phps-mode-functions-imenu-create-index ()
   "Get Imenu for current buffer."
   (phps-mode-functions-process-current-buffer)
   phps-mode-functions-imenu)
@@ -704,28 +704,30 @@
 (defun phps-mode-functions-init ()
   "PHP specific init-cleanup routines."
 
+  ;; Custom indentation
   ;; NOTE Indent-region will call this on each line of region
   (set (make-local-variable 'indent-line-function) #'phps-mode-functions-indent-line)
 
-  ;; Support Imenu
-  (set (make-local-variable 'imenu-create-index-function) #'phps-mode-functions-get-imenu)
+  ;; Custom Imenu
+  (set (make-local-variable 'imenu-create-index-function) #'phps-mode-functions-imenu-create-index)
 
+  ;; Should we follow PSR-2?
   (when (and (boundp 'phps-mode-use-psr-2)
              phps-mode-use-psr-2)
 
-    ;; PSR-2 : Code MUST use an indent of 4 spaces
+    ;; Code MUST use an indent of 4 spaces
     (set (make-local-variable 'tab-width) 4)
 
-    ;; PSR-2 : MUST NOT use tabs for indenting
-    (set (make-local-variable 'indent-tabs-mode) nil)
+    ;; MUST NOT use tabs for indenting
+    (set (make-local-variable 'indent-tabs-mode) nil))
 
-    )
-
+  ;; Reset flags
   (set (make-local-variable 'phps-mode-functions-buffer-changes-start) nil)
   (set (make-local-variable 'phps-mode-functions-lines-indent) nil)
   (set (make-local-variable 'phps-mode-functions-imenu) nil)
   (set (make-local-variable 'phps-mode-functions-processed-buffer) nil)
 
+  ;; Support for change detection
   (add-hook 'after-change-functions #'phps-mode-functions-after-change))
 
 
