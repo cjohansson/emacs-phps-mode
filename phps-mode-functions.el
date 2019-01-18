@@ -51,15 +51,21 @@
 (defun phps-mode-functions-process-current-buffer ()
   "Process current buffer, generate indentations and Imenu."
   (unless phps-mode-functions-processed-buffer
-
-    ;; TODO Merge these two functions into one
-    (setq phps-mode-functions-lines-indent (phps-mode-functions-get-lines-indent))
-    (setq phps-mode-functions-imenu (phps-mode-functions-get-imenu))
+    (phps-mode-functions--process-current-buffer)
     (setq phps-mode-functions-processed-buffer t)))
 
-;; Set indent for white-space lines as well
 (defun phps-mode-functions-get-lines-indent ()
-  "Get the column and tuning indentation-numbers for each line in buffer that contain tokens."
+  "Return lines indent, process buffer if not done already."
+  (phps-mode-functions-process-current-buffer)
+  phps-mode-functions-lines-indent)
+
+(defun phps-mode-functions-get-imenu ()
+  "Return Imenu, process buffer if not done already."
+  (phps-mode-functions-process-current-buffer)
+  phps-mode-functions-imenu)
+
+(defun phps-mode-functions--process-current-buffer ()
+  "Process current buffer and generation indentation and Imenu in one iteration.  Complexity: O(n)."
   (if (boundp 'phps-mode-lexer-tokens)
       (save-excursion
         (goto-char (point-min))
@@ -98,6 +104,8 @@
               (in-class-declaration nil)
               (in-class-declaration-level 0)
               (token nil)
+              (token-start nil)
+              (token-end nil)
               (token-start-line-number 0)
               (token-end-line-number)
               (tokens (nreverse phps-mode-lexer-tokens))
@@ -105,7 +113,17 @@
               (class-declaration-started-this-line nil)
               (special-control-structure-started-this-line nil)
               (temp-pre-indent nil)
-              (temp-post-indent nil))
+              (temp-post-indent nil)
+              (imenu-index '())
+              (imenu-in-namespace-declaration nil)
+              (imenu-in-namespace-name nil)
+              (imenu-open-namespace-level nil)
+              (imenu-in-class-declaration nil)
+              (imenu-open-class-level nil)
+              (imenu-in-class-name nil)
+              (imenu-in-function-declaration nil)
+              (imenu-in-function-name nil)
+              (imenu-nesting-level 0))
 
           (push `(END_PARSE ,(point-max) . ,(point-max)) tokens)
 
@@ -113,10 +131,10 @@
           (dolist (item (nreverse tokens))
             ;; (message "Items: %s %s" item phps-mode-lexer-tokens)
             (let ((next-token (car item))
-                   (next-token-start (car (cdr item)))
-                   (next-token-end (cdr (cdr item)))
-                   (next-token-start-line-number nil)
-                   (next-token-end-line-number nil))
+                  (next-token-start (car (cdr item)))
+                  (next-token-end (cdr (cdr item)))
+                  (next-token-start-line-number nil)
+                  (next-token-end-line-number nil))
 
               ;; Handle the pseudo-token for last-line
               (if (equal next-token 'END_PARSE)
@@ -128,6 +146,97 @@
 
               ;; Token logic
               (when token
+
+                ;; IMENU LOGIC
+
+                (cond
+                 ((string= token "{")
+                  (setq imenu-nesting-level (1+ imenu-nesting-level)))
+                 ((string= token "}")
+
+                  (when (and imenu-open-namespace-level
+                             (= imenu-open-namespace-level imenu-nesting-level)
+                             imenu-in-namespace-name)
+                    (setq imenu-in-namespace-name nil))
+
+                  (when (and imenu-open-class-level
+                             (= imenu-open-class-level imenu-nesting-level)
+                             imenu-in-class-name)
+                    (setq imenu-in-class-name nil))
+
+                  (setq imenu-nesting-level (1- imenu-nesting-level))))
+                
+                (cond
+
+                 (imenu-in-namespace-declaration
+                  (cond
+
+                   ((string= token "{")
+                    (setq imenu-open-namespace-level imenu-nesting-level)
+                    (setq imenu-in-namespace-declaration nil))
+
+                   ((string= token ";")
+                    (setq imenu-in-namespace-declaration nil))
+
+                   ((and (equal token 'T_STRING)
+                         (not imenu-in-namespace-name))
+                    (let ((imenu-index-name (format "\\%s" (buffer-substring-no-properties token-start token-end)))
+                          (imenu-index-pos token-start))
+                      (setq imenu-in-namespace-name imenu-index-name)
+                      (push `(,imenu-index-name . ,imenu-index-pos) imenu-index)))))
+
+                 (imenu-in-class-declaration
+                  (cond
+
+                   ((string= token "{")
+                    (setq imenu-open-class-level imenu-nesting-level)
+                    (setq imenu-in-class-declaration nil))
+
+                   ((and (equal token 'T_STRING)
+                         (not imenu-in-class-name))
+                    (let ((imenu-index-name (format "%s" (buffer-substring-no-properties token-start token-end)))
+                          (imenu-index-pos token-start))
+                      (setq imenu-in-class-name imenu-index-name)
+                      (when imenu-in-namespace-name
+                        (setq imenu-index-name (concat imenu-in-namespace-name "\\" imenu-index-name)))
+                      (push `(,imenu-index-name . ,imenu-index-pos) imenu-index)))))
+
+                 (imenu-in-function-declaration
+                  (cond
+
+                   ((string= token "{")
+                    (setq imenu-in-function-name nil)
+                    (setq imenu-in-function-declaration nil))
+
+                   ((string= token ";")
+                    (setq imenu-in-function-declaration nil))
+
+                   ((and (equal token 'T_STRING)
+                         (not imenu-in-function-name))
+                    (let ((imenu-index-name (format "%s()" (buffer-substring-no-properties token-start token-end)))
+                          (imenu-index-pos token-start))
+                      (setq imenu-in-function-name imenu-index-name)
+                      (when imenu-in-class-name
+                        (setq imenu-index-name (concat imenu-in-class-name "->" imenu-index-name)))
+                      (when imenu-in-namespace-name
+                        (setq imenu-index-name (concat imenu-in-namespace-name "\\" imenu-index-name)))
+                      (push `(,imenu-index-name . ,imenu-index-pos) imenu-index)))))
+
+                 (t (cond
+
+                     ((equal token 'T_NAMESPACE)
+                      (setq imenu-in-namespace-name nil)
+                      (setq imenu-in-namespace-declaration t))
+
+                     ((equal token 'T_CLASS)
+                      (setq imenu-in-class-name nil)
+                      (setq imenu-in-class-declaration t))
+
+                     ((equal token 'T_FUNCTION)
+                      (setq imenu-in-function-name nil)
+                      (setq imenu-in-function-declaration t)))))
+
+                ;; INDENTATION LOGIC
 
                 ;; Keep track of round bracket level
                 (when (string= token "(")
@@ -249,7 +358,7 @@
 
                             (when phps-mode-functions-verbose
                               (message "\nIncreasing alternative-control-structure after %s %s to %s\n" after-special-control-structure-token token alternative-control-structure-level))
-)
+                            )
 
                         ;; Don't start inline control structures after a while ($condition); expression
                         (when (not (string= token ";"))
@@ -532,11 +641,15 @@
 
               ;; Update current token
               (setq token next-token)
+              (setq token-start next-token-start)
+              (setq token-end next-token-end)
               (setq token-start-line-number next-token-start-line-number)
               (setq token-end-line-number next-token-end-line-number)
               (setq token-number (1+ token-number))))
-          line-indents))
-    nil))
+          (setq phps-mode-functions-imenu (nreverse imenu-index))
+          (setq phps-mode-functions-lines-indent line-indents)))
+    (setq phps-mode-functions-imenu nil)
+    (setq phps-mode-functions-lines-indent nil)))
 
 (defun phps-mode-functions-indent-line ()
   "Indent line."
@@ -586,115 +699,6 @@
 
     ;; (message "phps-mode-functions-after-change %s %s %s" start stop length)
     ))
-
-(defun phps-mode-functions-get-imenu ()
-  "Create index for imenu."
-  (let ((index '()))
-
-    (when (boundp 'phps-mode-lexer-tokens)
-      (let ((tokens phps-mode-lexer-tokens)
-            (in-namespace-declaration nil)
-            (in-namespace-name nil)
-            (open-namespace-level nil)
-            (in-class-declaration nil)
-            (open-class-level nil)
-            (in-class-name nil)
-            (in-function-declaration nil)
-            (in-function-name nil)
-            (nesting-level 0))
-        (dolist (token tokens)
-          (let ((token-symbol (car token))
-                (token-start (car (cdr token)))
-                (token-end (cdr (cdr token))))
-
-            (cond
-             ((string= token-symbol "{")
-              (setq nesting-level (1+ nesting-level)))
-             ((string= token-symbol "}")
-
-              (when (and open-namespace-level
-                         (= open-namespace-level nesting-level)
-                         in-namespace-name)
-                (setq in-namespace-name nil))
-
-              (when (and open-class-level
-                         (= open-class-level nesting-level)
-                         in-class-name)
-                (setq in-class-name nil))
-
-              (setq nesting-level (1- nesting-level))))
-            
-            (cond
-
-             (in-namespace-declaration
-              (cond
-
-               ((string= token-symbol "{")
-                (setq open-namespace-level nesting-level)
-                (setq in-namespace-declaration nil))
-
-               ((string= token-symbol ";")
-                (setq in-namespace-declaration nil))
-
-               ((and (equal token-symbol 'T_STRING)
-                     (not in-namespace-name))
-                (let ((index-name (format "\\%s" (buffer-substring-no-properties token-start token-end)))
-                      (index-pos token-start))
-                  (setq in-namespace-name index-name)
-                  (push `(,index-name . ,index-pos) index)))))
-
-             (in-class-declaration
-              (cond
-
-               ((string= token-symbol "{")
-                (setq open-class-level nesting-level)
-                (setq in-class-declaration nil))
-
-               ((and (equal token-symbol 'T_STRING)
-                     (not in-class-name))
-                (let ((index-name (format "%s" (buffer-substring-no-properties token-start token-end)))
-                      (index-pos token-start))
-                  (setq in-class-name index-name)
-                  (when in-namespace-name
-                    (setq index-name (concat in-namespace-name "\\" index-name)))
-                  (push `(,index-name . ,index-pos) index)))))
-
-             (in-function-declaration
-              (cond
-
-               ((string= token-symbol "{")
-                (setq in-function-name nil)
-                (setq in-function-declaration nil))
-
-               ((string= token-symbol ";")
-                (setq in-function-declaration nil))
-
-               ((and (equal token-symbol 'T_STRING)
-                     (not in-function-name))
-                (let ((index-name (format "%s()" (buffer-substring-no-properties token-start token-end)))
-                      (index-pos token-start))
-                  (setq in-function-name index-name)
-                  (when in-class-name
-                    (setq index-name (concat in-class-name "->" index-name)))
-                  (when in-namespace-name
-                    (setq index-name (concat in-namespace-name "\\" index-name)))
-                  (push `(,index-name . ,index-pos) index)))))
-
-             (t (cond
-
-                 ((equal token-symbol 'T_NAMESPACE)
-                  (setq in-namespace-name nil)
-                  (setq in-namespace-declaration t))
-
-                 ((equal token-symbol 'T_CLASS)
-                  (setq in-class-name nil)
-                  (setq in-class-declaration t))
-
-                 ((equal token-symbol 'T_FUNCTION)
-                  (setq in-function-name nil)
-                  (setq in-function-declaration t)))))))))
-
-    (nreverse index)))
 
 (defun phps-mode-functions-imenu-create-index ()
   "Get Imenu for current buffer."
