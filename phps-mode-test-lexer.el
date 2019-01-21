@@ -34,6 +34,7 @@
 (autoload 'phps-mode-lexer-get-point-data "phps-mode-lexer")
 (autoload 'phps-mode-lexer-get-moved-tokens "phps-mode-lexer")
 (autoload 'phps-mode-lexer-get-moved-states "phps-mode-lexer")
+(autoload 'phps-mode-lexer-get-tokens "phps-mode-lexer")
 (autoload 'should "ert")
 
 (defun phps-mode-test-lexer-script-boundaries ()
@@ -41,33 +42,33 @@
 
   (phps-mode-test-with-buffer
    "<?php\t$var=1; exit $var;\t?>"
-   nil
-   (should (equal phps-mode-lexer-tokens
+   "Simple PHP with two expression"
+   (should (equal (phps-mode-lexer-get-tokens)
                   '((T_OPEN_TAG 1 . 7) (T_VARIABLE 7 . 11) ("=" 11 . 12) (T_LNUMBER 12 . 13) (";" 13 . 14) (T_EXIT 15 . 19) (T_VARIABLE 20 . 24) (";" 24 . 25) (";" 26 . 28) (T_CLOSE_TAG 26 . 28)))))
 
   (phps-mode-test-with-buffer
    "<?php\nexit;\n?>"
-   nil
-   (should (equal phps-mode-lexer-tokens
+   "Minimal PHP expression"
+   (should (equal (phps-mode-lexer-get-tokens)
                   '((T_OPEN_TAG 1 . 7) (T_EXIT 7 . 11) (";" 11 . 12) (";" 13 . 15) (T_CLOSE_TAG 13 . 15)))))
 
   (phps-mode-test-with-buffer
    "<?php exit; ?>"
-   nil
-   (should (equal phps-mode-lexer-tokens
+   "Small PHP file"
+   (should (equal (phps-mode-lexer-get-tokens)
                   '((T_OPEN_TAG 1 . 7) (T_EXIT 7 . 11) (";" 11 . 12) (";" 13 . 15) (T_CLOSE_TAG 13 . 15)))))
 
   (phps-mode-test-with-buffer
    "<html><head>blabla</head<body>\n\n \t<?php\nexit;\n?>\n\n</body></html>"
-   nil
-   (should (equal phps-mode-lexer-tokens
-                  '((T_OPEN_TAG 35 . 41) (T_EXIT 41 . 45) (";" 45 . 46) (";" 47 . 49) (T_CLOSE_TAG 47 . 49)))))
+   "Mixed inline HTML and PHP"
+   (should (equal (phps-mode-lexer-get-tokens)
+                  '((T_INLINE_HTML 1 . 35) (T_OPEN_TAG 35 . 41) (T_EXIT 41 . 45) (";" 45 . 46) (";" 47 . 49) (T_CLOSE_TAG 47 . 49) (T_INLINE_HTML 49 . 65)))))
 
   (phps-mode-test-with-buffer
    "\n\n \t<html><title>echo \"Blaha\";</title><?php\n\n\nexit?>\n\n<html><random /></html><?php exit ?>"
-   nil
-   (should (equal phps-mode-lexer-tokens
-                  '((T_OPEN_TAG 39 . 45) (T_EXIT 47 . 51) (";" 51 . 53) (T_CLOSE_TAG 51 . 53) (T_OPEN_TAG 78 . 84) (T_EXIT 84 . 88) (";" 89 . 91) (T_CLOSE_TAG 89 . 91)))))
+   "Another mixed inline HTML and PHP"
+   (should (equal (phps-mode-lexer-get-tokens)
+                  '((T_INLINE_HTML 1 . 39) (T_OPEN_TAG 39 . 45) (T_EXIT 47 . 51) (";" 51 . 53) (T_CLOSE_TAG 51 . 53) (T_INLINE_HTML 53 . 78) (T_OPEN_TAG 78 . 84) (T_EXIT 84 . 88) (";" 89 . 91) (T_CLOSE_TAG 89 . 91)))))
 
   )
 
@@ -76,95 +77,94 @@
 
   (phps-mode-test-with-buffer
    "<?php echo $var = array('');"
-   nil
-     (should (equal phps-mode-lexer-tokens
-                    '((T_OPEN_TAG 1 . 7) (T_ECHO 7 . 11) (T_VARIABLE 12 . 16) ("=" 17 . 18) (T_ARRAY 19 . 24) ("(" 24 . 25) (T_CONSTANT_ENCAPSED_STRING 25 . 27) (")" 27 . 28) (";" 28 . 29)))))
-
-  (phps-mode-test-with-buffer
-   "<?php if (empty($parameters[self::PARAMETER_CONFIGURATION_INTERNAL_FILENAME])) { $parameters[self::PARAMETER_CONFIGURATION_INTERNAL_FILENAME] = ''; }"
-   nil
-   (should (equal phps-mode-lexer-tokens
-                  '((T_OPEN_TAG 1 . 7) (T_IF 7 . 9) ("(" 10 . 11) (T_EMPTY 11 . 16) ("(" 16 . 17) (T_VARIABLE 17 . 28) ("[" 28 . 29) (T_STRING 29 . 33) (T_PAAMAYIM_NEKUDOTAYIM 33 . 35) (T_STRING 35 . 76) ("]" 76 . 77) (")" 77 . 78) (")" 78 . 79) ("{" 80 . 81) (T_VARIABLE 82 . 93) ("[" 93 . 94) (T_STRING 94 . 98) (T_PAAMAYIM_NEKUDOTAYIM 98 . 100) (T_STRING 100 . 141) ("]" 141 . 142) ("=" 143 . 144) (T_CONSTANT_ENCAPSED_STRING 145 . 147) (";" 147 . 148) ("}" 149 . 150)))))
-
-  (phps-mode-test-with-buffer
-   "<?php echo $var = array(\"\");"
-   nil
+   "Simple PHP via array declaration"
    (should (equal phps-mode-lexer-tokens
                   '((T_OPEN_TAG 1 . 7) (T_ECHO 7 . 11) (T_VARIABLE 12 . 16) ("=" 17 . 18) (T_ARRAY 19 . 24) ("(" 24 . 25) (T_CONSTANT_ENCAPSED_STRING 25 . 27) (")" 27 . 28) (";" 28 . 29)))))
 
   (phps-mode-test-with-buffer
+   "<?php if (empty($parameters[self::PARAMETER_CONFIGURATION_INTERNAL_FILENAME])) { $parameters[self::PARAMETER_CONFIGURATION_INTERNAL_FILENAME] = ''; }"
+   "Complex PHP with conditional"
+   (should (equal (phps-mode-lexer-get-tokens)
+                  '((T_OPEN_TAG 1 . 7) (T_IF 7 . 9) ("(" 10 . 11) (T_EMPTY 11 . 16) ("(" 16 . 17) (T_VARIABLE 17 . 28) ("[" 28 . 29) (T_STRING 29 . 33) (T_PAAMAYIM_NEKUDOTAYIM 33 . 35) (T_STRING 35 . 76) ("]" 76 . 77) (")" 77 . 78) (")" 78 . 79) ("{" 80 . 81) (T_VARIABLE 82 . 93) ("[" 93 . 94) (T_STRING 94 . 98) (T_PAAMAYIM_NEKUDOTAYIM 98 . 100) (T_STRING 100 . 141) ("]" 141 . 142) ("=" 143 . 144) (T_CONSTANT_ENCAPSED_STRING 145 . 147) (";" 147 . 148) ("}" 149 . 150)))))
+
+  (phps-mode-test-with-buffer
+   "<?php echo $var = array(\"\");"
+   "Simple PHP with empty array assignment"
+   (should (equal (phps-mode-lexer-get-tokens)
+                  '((T_OPEN_TAG 1 . 7) (T_ECHO 7 . 11) (T_VARIABLE 12 . 16) ("=" 17 . 18) (T_ARRAY 19 . 24) ("(" 24 . 25) (T_CONSTANT_ENCAPSED_STRING 25 . 27) (")" 27 . 28) (";" 28 . 29)))))
+
+  (phps-mode-test-with-buffer
    "<?php echo $var = array('abc' => '123');"
-   nil
-   (should (equal phps-mode-lexer-tokens
+   "Simple PHP with associative array assignment"
+   (should (equal (phps-mode-lexer-get-tokens)
                   '((T_OPEN_TAG 1 . 7) (T_ECHO 7 . 11) (T_VARIABLE 12 . 16) ("=" 17 . 18) (T_ARRAY 19 . 24) ("(" 24 . 25) (T_CONSTANT_ENCAPSED_STRING 25 . 30) (T_DOUBLE_ARROW 31 . 33) (T_CONSTANT_ENCAPSED_STRING 34 . 39) (")" 39 . 40) (";" 40 . 41)))))
 
   (phps-mode-test-with-buffer
    "<?php $var = []; "
-   nil
-   (should (equal phps-mode-lexer-tokens
+   "PHP with short-handed array declaration assignment"
+   (should (equal (phps-mode-lexer-get-tokens)
                   '((T_OPEN_TAG 1 . 7) (T_VARIABLE 7 . 11) ("=" 12 . 13) ("[" 14 . 15) ("]" 15 . 16) (";" 16 . 17)))))
 
   (phps-mode-test-with-buffer
    "<?php $var = ''; $var = 'abc'; "
-   nil
-   (should (equal phps-mode-lexer-tokens
+   "PHP with string assignments"
+   (should (equal (phps-mode-lexer-get-tokens)
                   '((T_OPEN_TAG 1 . 7) (T_VARIABLE 7 . 11) ("=" 12 . 13) (T_CONSTANT_ENCAPSED_STRING 14 . 16) (";" 16 . 17) (T_VARIABLE 18 . 22) ("=" 23 . 24) (T_CONSTANT_ENCAPSED_STRING 25 . 30) (";" 30 . 31)))))
 
   (phps-mode-test-with-buffer
    "<?php\nswitch (myRandomCondition()) {\ncase 'Something here':\necho 'Something else here';\n}\n"
-   nil
+   "Switch case PHP"
    ;; (message "Tokens: %s" phps-mode-lexer-tokens)
-   (should (equal phps-mode-lexer-tokens
+   (should (equal (phps-mode-lexer-get-tokens)
                   '((T_OPEN_TAG 1 . 7) (T_SWITCH 7 . 13) ("(" 14 . 15) (T_STRING 15 . 32) ("(" 32 . 33) (")" 33 . 34) (")" 34 . 35) ("{" 36 . 37) (T_CASE 38 . 42) (T_CONSTANT_ENCAPSED_STRING 43 . 59) (":" 59 . 60) (T_ECHO 61 . 65) (T_CONSTANT_ENCAPSED_STRING 66 . 87) (";" 87 . 88) ("}" 89 . 90)))))
 
   (phps-mode-test-with-buffer
    "<?php $var = \"\"; $var = \"abc\"; $var = \"abc\\def\\ghj\";"
-   nil
+   "PHP with three string assignments"
    ;; (message "Tokens: %s" phps-mode-lexer-tokens)
-   (should (equal phps-mode-lexer-tokens
+   (should (equal (phps-mode-lexer-get-tokens)
                   '((T_OPEN_TAG 1 . 7) (T_VARIABLE 7 . 11) ("=" 12 . 13) (T_CONSTANT_ENCAPSED_STRING 14 . 16) (";" 16 . 17) (T_VARIABLE 18 . 22) ("=" 23 . 24) (T_CONSTANT_ENCAPSED_STRING 25 . 30) (";" 30 . 31) (T_VARIABLE 32 . 36) ("=" 37 . 38) (T_CONSTANT_ENCAPSED_STRING 39 . 52) (";" 52 . 53)))))
 
   (phps-mode-test-with-buffer
    "<?php echo isset($backtrace[1]['file']) ? 'yes' : 'no'; "
-   nil
-   (should (equal phps-mode-lexer-tokens
+   "PHP with short-handed conditional echo"
+   (should (equal (phps-mode-lexer-get-tokens)
                   '((T_OPEN_TAG 1 . 7) (T_ECHO 7 . 11) (T_ISSET 12 . 17) ("(" 17 . 18) (T_VARIABLE 18 . 28) ("[" 28 . 29) (T_LNUMBER 29 . 30) ("]" 30 . 31) ("[" 31 . 32) (T_CONSTANT_ENCAPSED_STRING 32 . 38) ("]" 38 . 39) (")" 39 . 40) ("?" 41 . 42) (T_CONSTANT_ENCAPSED_STRING 43 . 48) (":" 49 . 50) (T_CONSTANT_ENCAPSED_STRING 51 . 55) (";" 55 . 56)))))
 
   (phps-mode-test-with-buffer
    "<?php myFunction(); "
-   nil
-   (should (equal phps-mode-lexer-tokens
+   "A single function call"
+   (should (equal (phps-mode-lexer-get-tokens)
                   '((T_OPEN_TAG 1 . 7) (T_STRING 7 . 17) ("(" 17 . 18) (")" 18 . 19) (";" 19 . 20)))))
 
   (phps-mode-test-with-buffer
    "<?php // echo 'random';?><!--</div>-->"
-   nil
-   (should (equal phps-mode-lexer-tokens
-                  '((T_OPEN_TAG 1 . 7) (T_COMMENT 7 . 24) (";" 24 . 26) (T_CLOSE_TAG 24 . 26)))))
+   "Commented out PHP expression and inline-html"
+   (should (equal (phps-mode-lexer-get-tokens)
+                  '((T_OPEN_TAG 1 . 7) (T_COMMENT 7 . 24) (";" 24 . 26) (T_CLOSE_TAG 24 . 26) (T_INLINE_HTML 26 . 39)))))
 
   (phps-mode-test-with-buffer
    "<?php //echo $contact_position;?><!--</div>-->"
-   nil
-   (should (equal phps-mode-lexer-tokens
-                  '((T_OPEN_TAG 1 . 7) (T_COMMENT 7 . 32) (";" 32 . 34) (T_CLOSE_TAG 32 . 34)))))
-
+   "Commented out PHP expression and inline-html 2"
+   (should (equal (phps-mode-lexer-get-tokens)
+                  '((T_OPEN_TAG 1 . 7) (T_COMMENT 7 . 32) (";" 32 . 34) (T_CLOSE_TAG 32 . 34) (T_INLINE_HTML 34 . 47)))))
 
   (phps-mode-test-with-buffer
    "<?php echo isset($backtrace[1]['file']) ? 'yes' : 'no';\n//a random comment\n// another random comment\n/**\n * More comments\n* More\n **/\necho $backtrace; ?>"
-   nil
-   (should (equal phps-mode-lexer-tokens
+   "Conditional echo, comment and doc-comment block"
+   (should (equal (phps-mode-lexer-get-tokens)
                   '((T_OPEN_TAG 1 . 7) (T_ECHO 7 . 11) (T_ISSET 12 . 17) ("(" 17 . 18) (T_VARIABLE 18 . 28) ("[" 28 . 29) (T_LNUMBER 29 . 30) ("]" 30 . 31) ("[" 31 . 32) (T_CONSTANT_ENCAPSED_STRING 32 . 38) ("]" 38 . 39) (")" 39 . 40) ("?" 41 . 42) (T_CONSTANT_ENCAPSED_STRING 43 . 48) (":" 49 . 50) (T_CONSTANT_ENCAPSED_STRING 51 . 55) (";" 55 . 56) (T_COMMENT 57 . 75) (T_COMMENT 76 . 101) (T_DOC_COMMENT 102 . 134) (T_ECHO 135 . 139) (T_VARIABLE 140 . 150) (";" 150 . 151) (";" 152 . 154) (T_CLOSE_TAG 152 . 154)))))
 
   (phps-mode-test-with-buffer
    "<?php $var EXIT die function return yield from yield try catch finally throw if elseif endif else while endwhile do for endfor foreach endforeach declare enddeclare instanceof as switch endswitch case default break continue goto echo print class interface trait extends implements :: \\ ... ?? new clone var (int) (integer) (real) (double) (float) (string) (binary) (array) (object) (boolean) (bool) (unset) eval include include_once require require_once namespace use insteadof global isset empty __halt_compiler static abstract final private protected public unset => list array callable ++ -- === !== == != <> <= >= <=> += -= *= *\\*= *\\* /= .= %= <<= >>= &= |= ^= || && OR AND XOR << >> { } 0xAF 0b10 200 2147483650 2.5 2.5e10 __CLASS__ __TRAIT__ __FUNCTION__ __METHOD__ __LINE__ __FILE__ __DIR__ __NAMESPACE__\n// My comment \n# My comment 2\n/*blaha blaha2*/ /** blaha\n blaha2 **/ 'test' 'my first \\'comment\\' really' \"sentence\" \"words \\\\comment\\\" really\" 'this single quoted string never ends"
-   nil
-   (should (equal phps-mode-lexer-tokens
+   "All PHP tokens after each other"
+   (should (equal (phps-mode-lexer-get-tokens)
                   '((T_OPEN_TAG 1 . 7) (T_VARIABLE 7 . 11) (T_EXIT 12 . 16) (T_DIE 17 . 20) (T_FUNCTION 21 . 29) (T_RETURN 30 . 36) (T_YIELD_FROM 37 . 48) (T_YIELD 48 . 53) (T_TRY 54 . 57) (T_CATCH 58 . 63) (T_FINALLY 64 . 71) (T_THROW 72 . 77) (T_IF 78 . 80) (T_ELSEIF 81 . 87) (T_ENDIF 88 . 93) (T_ELSE 94 . 98) (T_WHILE 99 . 104) (T_ENDWHILE 105 . 113) (T_DO 114 . 116) (T_FOR 117 . 120) (T_ENDFOR 121 . 127) (T_FOREACH 128 . 135) (T_ENDFOREACH 136 . 146) (T_DECLARE 147 . 154) (T_ENDDECLARE 155 . 165) (T_INSTANCEOF 166 . 176) (T_AS 177 . 179) (T_SWITCH 180 . 186) (T_ENDSWITCH 187 . 196) (T_CASE 197 . 201) (T_DEFAULT 202 . 209) (T_BREAK 210 . 215) (T_CONTINUE 216 . 224) (T_GOTO 225 . 229) (T_ECHO 230 . 234) (T_PRINT 235 . 240) (T_CLASS 241 . 246) (T_INTERFACE 247 . 256) (T_TRAIT 257 . 262) (T_EXTENDS 263 . 270) (T_IMPLEMENTS 271 . 281) (T_PAAMAYIM_NEKUDOTAYIM 282 . 284) (T_NS_SEPARATOR 285 . 286) (T_ELLIPSIS 287 . 290) (T_COALESCE 291 . 293) (T_NEW 294 . 297) (T_CLONE 298 . 303) (T_VAR 304 . 307) (T_INT_CAST 308 . 313) (T_INT_CAST 314 . 323) (T_DOUBLE_CAST 324 . 330) (T_DOUBLE_CAST 331 . 339) (T_DOUBLE_CAST 340 . 347) (T_STRING_CAST 348 . 356) (T_STRING_CAST 357 . 365) (T_ARRAY_CAST 366 . 373) (T_OBJECT_CAST 374 . 382) (T_BOOL_CAST 383 . 392) (T_BOOL_CAST 393 . 399) (T_UNSET_CAST 400 . 407) (T_EVAL 408 . 412) (T_INCLUDE 413 . 420) (T_INCLUDE_ONCE 421 . 433) (T_REQUIRE 434 . 441) (T_REQUIRE_ONCE 442 . 454) (T_NAMESPACE 455 . 464) (T_USE 465 . 468) (T_INSTEADOF 469 . 478) (T_GLOBAL 479 . 485) (T_ISSET 486 . 491) (T_EMPTY 492 . 497) (T_HALT_COMPILER 498 . 513) (T_STATIC 514 . 520) (T_ABSTRACT 521 . 529) (T_FINAL 530 . 535) (T_PRIVATE 536 . 543) (T_PROTECTED 544 . 553) (T_PUBLIC 554 . 560) (T_UNSET 561 . 566) (T_DOUBLE_ARROW 567 . 569) (T_LIST 570 . 574) (T_ARRAY 575 . 580) (T_CALLABLE 581 . 589) (T_INC 590 . 592) (T_DEC 593 . 595) (T_IS_IDENTICAL 596 . 599) (T_IS_NOT_IDENTICAL 600 . 603) (T_IS_EQUAL 604 . 606) (T_IS_NOT_EQUAL 607 . 609) (T_IS_NOT_EQUAL 610 . 612) (T_IS_SMALLER_OR_EQUAL 613 . 615) (T_IS_GREATER_OR_EQUAL 616 . 618) (T_SPACESHIP 619 . 622) (T_PLUS_EQUAL 623 . 625) (T_MINUS_EQUAL 626 . 628) (T_MUL_EQUAL 629 . 631) (T_POW_EQUAL 632 . 636) (T_POW 637 . 640) (T_DIV_EQUAL 641 . 643) (T_CONCAT_EQUAL 644 . 646) (T_MOD_EQUAL 647 . 649) (T_SL_EQUAL 650 . 653) (T_SR_EQUAL 654 . 657) (T_AND_EQUAL 658 . 660) (T_OR_EQUAL 661 . 663) (T_XOR_EQUAL 664 . 666) (T_BOOLEAN_OR 667 . 669) (T_BOOLEAN_AND 670 . 672) (T_LOGICAL_OR 673 . 675) (T_LOGICAL_AND 676 . 679) (T_LOGICAL_XOR 680 . 683) (T_SL 684 . 686) (T_SR 687 . 689) ("{" 690 . 691) ("}" 692 . 693) (T_LNUMBER 694 . 698) (T_LNUMBER 699 . 703) (T_LNUMBER 704 . 707) (T_DNUMBER 708 . 718) (T_DNUMBER 719 . 722) (T_DNUMBER 723 . 729) (T_CLASS_C 730 . 739) (T_TRAIT_C 740 . 749) (T_FUNC_C 750 . 762) (T_METHOD_C 763 . 773) (T_LINE 774 . 782) (T_FILE 783 . 791) (T_DIR 792 . 799) (T_NS_C 800 . 813) (T_COMMENT 814 . 828) (T_COMMENT 829 . 843) (T_COMMENT 844 . 860) (T_DOC_COMMENT 861 . 882) (T_CONSTANT_ENCAPSED_STRING 883 . 889) (T_CONSTANT_ENCAPSED_STRING 890 . 919) (T_CONSTANT_ENCAPSED_STRING 920 . 930) (T_CONSTANT_ENCAPSED_STRING 931 . 957) (T_ENCAPSED_AND_WHITESPACE 958 . 995)))))
 
   (phps-mode-test-with-buffer
    "<?php forgerarray($arg1, $arg2)"
-   nil
-   (should (equal phps-mode-lexer-tokens
+   "A function call containing keywords in its name"
+   (should (equal (phps-mode-lexer-get-tokens)
                   '((T_OPEN_TAG 1 . 7) (T_STRING 7 . 18) ("(" 18 . 19) (T_VARIABLE 19 . 24) ("," 24 . 25) (T_VARIABLE 26 . 31) (")" 31 . 32)))))
 
   )
@@ -174,113 +174,112 @@
 
   (phps-mode-test-with-buffer
    "<?php $var->property;"
-   nil
-   (should (equal phps-mode-lexer-tokens
+   "Object property"
+   (should (equal (phps-mode-lexer-get-tokens)
                   '((T_OPEN_TAG 1 . 7) (T_VARIABLE 7 . 11) (T_OBJECT_OPERATOR 11 . 13) (T_STRING 13 . 21) (";" 21 . 22)))))
 
-  ;; Double quoted strings with variables
   (phps-mode-test-with-buffer
    "<?php echo \"My $variable is here\"; echo \"you know\";"
-   nil
-   (should (equal phps-mode-lexer-tokens
+   "Double quoted strings with variables"
+   (should (equal (phps-mode-lexer-get-tokens)
                   '((T_OPEN_TAG 1 . 7) (T_ECHO 7 . 11) ("\"" 12 . 13) (T_ENCAPSED_AND_WHITESPACE 13 . 16) (T_VARIABLE 16 . 25) (T_CONSTANT_ENCAPSED_STRING 25 . 33) ("\"" 33 . 34) (";" 34 . 35) (T_ECHO 36 . 40) (T_CONSTANT_ENCAPSED_STRING 41 . 51) (";" 51 . 52)))))
 
   (phps-mode-test-with-buffer
    "<?php echo \"My ${variable} is here 1\";"
-   nil
-   (should (equal phps-mode-lexer-tokens
+   "Double quoted string with variable"
+   (should (equal (phps-mode-lexer-get-tokens)
                   '((T_OPEN_TAG 1 . 7) (T_ECHO 7 . 11) ("\"" 12 . 13) (T_ENCAPSED_AND_WHITESPACE 13 . 16) (T_DOLLAR_OPEN_CURLY_BRACES 16 . 18) (T_STRING_VARNAME 18 . 26) ("}" 26 . 27) (T_CONSTANT_ENCAPSED_STRING 27 . 37) ("\"" 37 . 38) (";" 38 . 39)))))
 
   (phps-mode-test-with-buffer
    "<?php echo \"Mine {$first_variable} is here and my $second is there.\";"
-   nil
-   (should (equal phps-mode-lexer-tokens
+   "Another double quoted string with variable"
+   (should (equal (phps-mode-lexer-get-tokens)
                   '((T_OPEN_TAG 1 . 7) (T_ECHO 7 . 11) ("\"" 12 . 13) (T_ENCAPSED_AND_WHITESPACE 13 . 18) (T_CURLY_OPEN 18 . 19) (T_VARIABLE 19 . 34) ("}" 34 . 35) (T_CONSTANT_ENCAPSED_STRING 35 . 51) (T_VARIABLE 51 . 58) (T_CONSTANT_ENCAPSED_STRING 58 . 68) ("\"" 68 . 69) (";" 69 . 70)))))
 
   (phps-mode-test-with-buffer
    "<?php echo \" Hello $variable[0], how are you?\";"
    nil
-   (should (equal phps-mode-lexer-tokens
+   (should (equal (phps-mode-lexer-get-tokens)
                   '((T_OPEN_TAG 1 . 7) (T_ECHO 7 . 11) ("\"" 12 . 13) (T_ENCAPSED_AND_WHITESPACE 13 . 20) (T_VARIABLE 20 . 30) (T_NUM_STRING 30 . 31) ("]" 31 . 32) (T_CONSTANT_ENCAPSED_STRING 32 . 46) ("\"" 46 . 47) (";" 47 . 48)))))
 
-  ;; Heredoc
+  ;; HEREDOC
   (phps-mode-test-with-buffer
    "<?php echo <<<\"MYLABEL\"\nline 1\n line 2\nMYLABEL\n;"
    nil
-   (should (equal phps-mode-lexer-tokens
+   (should (equal (phps-mode-lexer-get-tokens)
                   '((T_OPEN_TAG 1 . 7) (T_ECHO 7 . 11) (T_START_HEREDOC 12 . 25) (T_ENCAPSED_AND_WHITESPACE 25 . 39) (T_END_HEREDOC 39 . 47) (";" 48 . 49)))))
 
   (phps-mode-test-with-buffer
    "<?php echo <<<MYLABEL\nline 1\n line 2\nMYLABEL\n;"
    nil
-   (should (equal phps-mode-lexer-tokens
+   (should (equal (phps-mode-lexer-get-tokens)
                   '((T_OPEN_TAG 1 . 7) (T_ECHO 7 . 11) (T_START_HEREDOC 12 . 23) (T_ENCAPSED_AND_WHITESPACE 23 . 37) (T_END_HEREDOC 37 . 45) (";" 46 . 47)))))
 
   (phps-mode-test-with-buffer
    "<?php echo <<<\"MYLABEL\"\nMYLABEL\n"
    nil
-   (should (equal phps-mode-lexer-tokens
+   (should (equal (phps-mode-lexer-get-tokens)
                   '((T_OPEN_TAG 1 . 7) (T_ECHO 7 . 11) (T_START_HEREDOC 12 . 25) (T_END_HEREDOC 25 . 33)))))
 
   ;; Test heredoc with variables $, {$, ${ here
   (phps-mode-test-with-buffer
    "<?php echo <<<\"MYLABEL\"\nline 1 $variable1\n line 2\n${variable2} line 3\n line {$variable3} here\nline 5 $variable[3] here\nMYLABEL;\n"
    nil
-   (should (equal phps-mode-lexer-tokens
+   (should (equal (phps-mode-lexer-get-tokens)
                   '((T_OPEN_TAG 1 . 7) (T_ECHO 7 . 11) (T_START_HEREDOC 12 . 25) (T_ENCAPSED_AND_WHITESPACE 25 . 32) (T_VARIABLE 32 . 42) (T_ENCAPSED_AND_WHITESPACE 42 . 51) (T_DOLLAR_OPEN_CURLY_BRACES 51 . 53) (T_STRING_VARNAME 53 . 62) ("}" 62 . 63) (T_ENCAPSED_AND_WHITESPACE 63 . 77) (T_CURLY_OPEN 77 . 78) (T_VARIABLE 78 . 88) ("}" 88 . 89) (T_ENCAPSED_AND_WHITESPACE 89 . 102) (T_VARIABLE 102 . 112) (T_NUM_STRING 112 . 113) ("]" 113 . 114) (T_ENCAPSED_AND_WHITESPACE 114 . 119) (T_END_HEREDOC 119 . 127) (";" 127 . 128)))))
 
   ;; Nowdoc
   (phps-mode-test-with-buffer
    "<?php echo <<<'MYLABEL'\nline 1\n line 2\nMYLABEL;\n"
    nil
-   (should (equal phps-mode-lexer-tokens
+   (should (equal (phps-mode-lexer-get-tokens)
                   '((T_OPEN_TAG 1 . 7) (T_ECHO 7 . 11) (T_START_HEREDOC 12 . 25) (T_ENCAPSED_AND_WHITESPACE 25 . 39) (T_END_HEREDOC 39 . 47) (";" 47 . 48)))))
 
   ;; Backquotes
   (phps-mode-test-with-buffer
    "<?php `echo \"HELLO\"`;"
    nil
-   (should (equal phps-mode-lexer-tokens
+   (should (equal (phps-mode-lexer-get-tokens)
                   '((T_OPEN_TAG 1 . 7) ("`" 7 . 8) (T_CONSTANT_ENCAPSED_STRING 8 . 20) ("`" 20 . 21) (";" 21 . 22)))))
 
   (phps-mode-test-with-buffer
    "<?php `echo \"HELLO $variable or {$variable2} or ${variable3} or $variable[index][0] here\"`;"
    nil
-   (should (equal phps-mode-lexer-tokens
+   (should (equal (phps-mode-lexer-get-tokens)
                   '((T_OPEN_TAG 1 . 7) ("`" 7 . 8) (T_CONSTANT_ENCAPSED_STRING 8 . 20) (T_VARIABLE 20 . 29) (T_CONSTANT_ENCAPSED_STRING 29 . 33) (T_CURLY_OPEN 33 . 34) (T_VARIABLE 34 . 44) ("}" 44 . 45) (T_CONSTANT_ENCAPSED_STRING 45 . 49) (T_DOLLAR_OPEN_CURLY_BRACES 49 . 51) (T_STRING_VARNAME 51 . 60) ("}" 60 . 61) (T_CONSTANT_ENCAPSED_STRING 61 . 65) (T_VARIABLE 65 . 75) (T_STRING 75 . 80) ("]" 80 . 81) (T_CONSTANT_ENCAPSED_STRING 81 . 90) ("`" 90 . 91) (";" 91 . 92)))))
 
   (phps-mode-test-with-buffer
    "<?php $wpdb->posts; ?>"
    nil
-   (should (equal phps-mode-lexer-tokens
+   (should (equal (phps-mode-lexer-get-tokens)
                   '((T_OPEN_TAG 1 . 7) (T_VARIABLE 7 . 12) (T_OBJECT_OPERATOR 12 . 14) (T_STRING 14 . 19) (";" 19 . 20) (";" 21 . 23) (T_CLOSE_TAG 21 . 23)))))
 
   (phps-mode-test-with-buffer
    "<?php $var = \"SELECT post_parent FROM $wpdb->posts WHERE ID = '\".$id.\"'\"; ?>"
    nil
-   ;; (message "Tokens 1: %s" phps-mode-lexer-tokens)
-   (should (equal phps-mode-lexer-tokens
+   ;; (message "Tokens 1: %s" (phps-mode-lexer-get-tokens))
+   (should (equal (phps-mode-lexer-get-tokens)
                   '((T_OPEN_TAG 1 . 7) (T_VARIABLE 7 . 11) ("=" 12 . 13) ("\"" 14 . 15) (T_ENCAPSED_AND_WHITESPACE 15 . 39) (T_VARIABLE 39 . 44) (T_OBJECT_OPERATOR 44 . 46) (T_STRING 46 . 51) (T_CONSTANT_ENCAPSED_STRING 51 . 64) ("\"" 64 . 65) ("." 65 . 66) (T_VARIABLE 66 . 69) ("." 69 . 70) (T_CONSTANT_ENCAPSED_STRING 70 . 73) (";" 73 . 74) (";" 75 . 77) (T_CLOSE_TAG 75 . 77)))))
 
   (phps-mode-test-with-buffer
    "<?php $wpdb->get_var(\"SELECT post_parent FROM $wpdb->posts WHERE ID = '\".$id.\"'\"); ?>"
    nil
-   ;; (message "Tokens 2: %s" phps-mode-lexer-tokens)
-   (should (equal phps-mode-lexer-tokens
+   ;; (message "Tokens 2: %s" (phps-mode-lexer-get-tokens))
+   (should (equal (phps-mode-lexer-get-tokens)
                   '((T_OPEN_TAG 1 . 7) (T_VARIABLE 7 . 12) (T_OBJECT_OPERATOR 12 . 14) (T_STRING 14 . 21) ("(" 21 . 22) ("\"" 22 . 23) (T_ENCAPSED_AND_WHITESPACE 23 . 47) (T_VARIABLE 47 . 52) (T_OBJECT_OPERATOR 52 . 54) (T_STRING 54 . 59) (T_CONSTANT_ENCAPSED_STRING 59 . 72) ("\"" 72 . 73) ("." 73 . 74) (T_VARIABLE 74 . 77) ("." 77 . 78) (T_CONSTANT_ENCAPSED_STRING 78 . 81) (")" 81 . 82) (";" 82 . 83) (";" 84 . 86) (T_CLOSE_TAG 84 . 86)))))
 
   (phps-mode-test-with-buffer
    "<?php $this->add($option['style']['selectors'], array('background' => \"{$value['color']} url('{$value['image']}')\"));"
    "Complex tokens with tokens inside double-quoted string"
-   ;; (message "Tokens 2: %s" phps-mode-lexer-tokens)
-   (should (equal phps-mode-lexer-tokens
+   ;; (message "Tokens 2: %s" (phps-mode-lexer-get-tokens))
+   (should (equal (phps-mode-lexer-get-tokens)
                   '((T_OPEN_TAG 1 . 7) (T_VARIABLE 7 . 12) (T_OBJECT_OPERATOR 12 . 14) (T_STRING 14 . 17) ("(" 17 . 18) (T_VARIABLE 18 . 25) ("[" 25 . 26) (T_CONSTANT_ENCAPSED_STRING 26 . 33) ("]" 33 . 34) ("[" 34 . 35) (T_CONSTANT_ENCAPSED_STRING 35 . 46) ("]" 46 . 47) ("," 47 . 48) (T_ARRAY 49 . 54) ("(" 54 . 55) (T_CONSTANT_ENCAPSED_STRING 55 . 67) (T_DOUBLE_ARROW 68 . 70) ("\"" 71 . 72) (T_ENCAPSED_AND_WHITESPACE 72 . 72) (T_CURLY_OPEN 72 . 73) (T_VARIABLE 73 . 79) ("[" 79 . 80) (T_CONSTANT_ENCAPSED_STRING 80 . 87) ("]" 87 . 88) ("}" 88 . 89) (T_CONSTANT_ENCAPSED_STRING 89 . 95) (T_CURLY_OPEN 95 . 96) (T_VARIABLE 96 . 102) ("[" 102 . 103) (T_CONSTANT_ENCAPSED_STRING 103 . 110) ("]" 110 . 111) ("}" 111 . 112) (T_CONSTANT_ENCAPSED_STRING 112 . 114) ("\"" 114 . 115) (")" 115 . 116) (")" 116 . 117) (";" 117 . 118)))))
 
   (phps-mode-test-with-buffer
    "<?php\n$var = <<<EOD\nrandom {$value['color']->property} again {$value->head()}; random\nEOD;\n"
    "Complex tokens with tokens inside HEREDOC string"
-   ;; (message "Tokens 2: %s" phps-mode-lexer-tokens)
-   (should (equal phps-mode-lexer-tokens
+   ;; (message "Tokens 2: %s" (phps-mode-lexer-get-tokens))
+   (should (equal (phps-mode-lexer-get-tokens)
                   '((T_OPEN_TAG 1 . 7) (T_VARIABLE 7 . 11) ("=" 12 . 13) (T_START_HEREDOC 14 . 21) (T_ENCAPSED_AND_WHITESPACE 21 . 28) (T_CURLY_OPEN 28 . 29) (T_VARIABLE 29 . 35) ("[" 35 . 36) (T_CONSTANT_ENCAPSED_STRING 36 . 43) ("]" 43 . 44) (T_OBJECT_OPERATOR 44 . 46) (T_STRING 46 . 54) ("}" 54 . 55) (T_ENCAPSED_AND_WHITESPACE 55 . 62) (T_CURLY_OPEN 62 . 63) (T_VARIABLE 63 . 69) (T_OBJECT_OPERATOR 69 . 71) (T_STRING 71 . 75) ("(" 75 . 76) (")" 76 . 77) ("}" 77 . 78) (T_ENCAPSED_AND_WHITESPACE 78 . 86) (T_END_HEREDOC 86 . 90) (";" 90 . 91)))))
 
   )
@@ -291,13 +290,13 @@
   (phps-mode-test-with-buffer
    "<?php\nnamespace MyNameSpace{\n\tclass MyClass {\n\t\tpublic function __construct() {\n\t\t\texit;\n\t\t}\n\t}\n}\n"
    nil
-   (should (equal phps-mode-lexer-tokens
+   (should (equal (phps-mode-lexer-get-tokens)
                   '((T_OPEN_TAG 1 . 7) (T_NAMESPACE 7 . 16) (T_STRING 17 . 28) ("{" 28 . 29) (T_CLASS 31 . 36) (T_STRING 37 . 44) ("{" 45 . 46) (T_PUBLIC 49 . 55) (T_FUNCTION 56 . 64) (T_STRING 65 . 76) ("(" 76 . 77) (")" 77 . 78) ("{" 79 . 80) (T_EXIT 84 . 88) (";" 88 . 89) ("}" 92 . 93) ("}" 95 . 96) ("}" 97 . 98)))))
 
   (phps-mode-test-with-buffer
    "<?php\nNAMESPACE MyNameSpace;\nCLASS MyClass {\n\tpublic function __construct() {\n\t\texit;\n\t}\n}\n"
    nil
-   (should (equal phps-mode-lexer-tokens
+   (should (equal (phps-mode-lexer-get-tokens)
                   '((T_OPEN_TAG 1 . 7) (T_NAMESPACE 7 . 16) (T_STRING 17 . 28) (";" 28 . 29) (T_CLASS 30 . 35) (T_STRING 36 . 43) ("{" 44 . 45) (T_PUBLIC 47 . 53) (T_FUNCTION 54 . 62) (T_STRING 63 . 74) ("(" 74 . 75) (")" 75 . 76) ("{" 77 . 78) (T_EXIT 81 . 85) (";" 85 . 86) ("}" 88 . 89) ("}" 90 . 91)))))
   )
 
@@ -307,19 +306,19 @@
   (phps-mode-test-with-buffer
    "<?php\necho \"My neverending double quotation\n"
    nil
-   (should (equal phps-mode-lexer-tokens
+   (should (equal (phps-mode-lexer-get-tokens)
                   '((T_OPEN_TAG 1 . 7) (T_ECHO 7 . 11) (T_ERROR 12 . 45)))))
 
   (phps-mode-test-with-buffer
    "<?php\n`My neverending backquotes\n"
    nil
-   (should (equal phps-mode-lexer-tokens
+   (should (equal (phps-mode-lexer-get-tokens)
                   '((T_OPEN_TAG 1 . 7) ("`" 7 . 8) (T_ERROR 8 . 34)))))
 
   (phps-mode-test-with-buffer
    "<?php\n<<<LABEL\nMy neverending heredoc\ngoes on forever\n"
    nil
-   (should (equal phps-mode-lexer-tokens
+   (should (equal (phps-mode-lexer-get-tokens)
                   '((T_OPEN_TAG 1 . 7) (T_START_HEREDOC 7 . 16) (T_ERROR 16 . 55)))))
 
   )

@@ -214,6 +214,9 @@
      )
     (overlay-put (make-overlay start end) 'font-lock-face 'font-lock-variable-name-face))
 
+   ((string= token 'T_INLINE_HTML)
+    (overlay-put (make-overlay start end) 'font-lock-face 'font-lock-string-face))
+
    ((string= token 'T_COMMENT)
     (overlay-put (make-overlay start end) 'font-lock-face 'font-lock-comment-face))
 
@@ -426,16 +429,21 @@
 
    ;; NOTE: mimics inline_char_handler
    ((looking-at phps-mode-lexer-ANY_CHAR)
-    (let ((string-start (search-forward "<?" nil t)))
-      (if string-start
-          (phps-mode-lexer-MOVE_FORWARD (- string-start 2))
-        (phps-mode-lexer-MOVE_FORWARD (point-max)))))
+    (let ((start (match-beginning 0)))
+      (let ((string-start (search-forward "<?" nil t)))
+        (if string-start
+            (phps-mode-lexer-RETURN_TOKEN 'T_INLINE_HTML start (- string-start 2))
+          (phps-mode-lexer-RETURN_TOKEN 'T_INLINE_HTML start (point-max))))))
 
    ))
 
-(defun phps-modex/lex--get-next-unescaped (character)
+(defun phps-mode-lexer-get-tokens ()
+  "Get tokens."
+  phps-mode-lexer-tokens)
+
+(defun phps-mode-lexer--get-next-unescaped (character)
   "Find where next un-escaped CHARACTER comes, if none is found return nil."
-  ;; (message "phps-modex/lex--get-next-unescaped(%s)" character)
+  ;; (message "phps-mode-lexer--get-next-unescaped(%s)" character)
   (let ((escaped nil)
         (pos nil))
     (while (and (not pos)
@@ -851,7 +859,7 @@
     (let* ((start (match-beginning 0))
            (end (match-end 0))
            (_data (buffer-substring-no-properties start end))
-           (un-escaped-end (phps-modex/lex--get-next-unescaped "'")))
+           (un-escaped-end (phps-mode-lexer--get-next-unescaped "'")))
       (if un-escaped-end
           (progn
             ;; (message "Single quoted string %s" (buffer-substring-no-properties start un-escaped-end))
