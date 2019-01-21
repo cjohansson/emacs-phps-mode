@@ -199,23 +199,16 @@
   (cond
 
    ((or
-     (string= token 'T_OBJECT_OPERATOR)
-     (string= token 'T_PAAMAYIM_NEKUDOTAYIM)
-     (string= token 'T_NS_SEPARATOR)
      (string= token 'T_VARIABLE)
-     (string= token 'T_STRING_VARNAME)
-     (string= token 'T_NUM_STRING)
-     (string= token 'T_DOLLAR_OPEN_CURLY_BRACES)
-     (string= token 'T_CURLY_OPEN)
-     (string= token 'T_STRING)
-     (string= token "]")
-     (string= token "{")
-     (string= token "}")
-     )
+     (string= token 'T_STRING_VARNAME))
     (overlay-put (make-overlay start end) 'font-lock-face 'font-lock-variable-name-face))
 
-   ((string= token 'T_INLINE_HTML)
+   ((or (string= token 'T_STRING)
+        (string= token 'T_NUM_STRING))
     (overlay-put (make-overlay start end) 'font-lock-face 'font-lock-string-face))
+
+   ((string= token 'T_INLINE_HTML)
+    (overlay-put (make-overlay start end) 'font-lock-face 'font-lock-reference-face))
 
    ((string= token 'T_COMMENT)
     (overlay-put (make-overlay start end) 'font-lock-face 'font-lock-comment-face))
@@ -232,6 +225,14 @@
     (overlay-put (make-overlay start end) 'font-lock-face 'font-lock-string-face))
 
    ((or
+     (string= token "]")
+     (string= token "{")
+     (string= token "}")
+     (string= token 'T_DOLLAR_OPEN_CURLY_BRACES)
+     (string= token 'T_CURLY_OPEN)
+     (string= token 'T_OBJECT_OPERATOR)
+     (string= token 'T_PAAMAYIM_NEKUDOTAYIM)
+     (string= token 'T_NS_SEPARATOR)
      (string= token 'T_EXIT)
      (string= token 'T_DIE)
      (string= token 'T_FUNCTION)
