@@ -36,6 +36,9 @@
 ;;; Code:
 
 
+(autoload 'phps-mode-function-get-buffer-changes-start "phps-mode-functions")
+(autoload 'phps-mode-functions-reset-buffer-changes-start "phps-mode-functions")
+
 (require 'semantic)
 (require 'semantic/lex)
 
@@ -1284,17 +1287,10 @@ ANY_CHAR'
              phps-mode-functions-processed-buffer)
     (setq phps-mode-functions-processed-buffer nil))
 
-  ;; TODO Delete all overlays after point of change if it's incremental
-
   ;; Does lexer start from the beginning of buffer?
   (when (and (eq start 1)
              end)
     (delete-all-overlays)
-
-    ;; Rest buffer changes flag
-    (when (and (boundp 'phps-mode-lexer-buffer-changes--start)
-               phps-mode-lexer-buffer-changes--start)
-      (setq phps-mode-lexer-buffer-changes--start nil))
 
     (setq phps-mode-lexer-states nil)
     (phps-mode-lexer-BEGIN phps-mode-lexer-ST_INITIAL)))
@@ -1351,16 +1347,16 @@ ANY_CHAR'
     new-tokens))
 
 (defun phps-mode-lexer-run-incremental ()
-  "Run incremental lexer based on `phps-mode-lexer-buffer-changes-start'."
-  (when (and (boundp 'phps-mode-functions-buffer-changes-start)
-             phps-mode-functions-buffer-changes-start
+  "Run incremental lexer based on `(phps-mode-functions-get-buffer-changes-start)'."
+  (when (and (phps-mode-functions-get-buffer-changes-start)
              phps-mode-lexer-states)
     (let ((state nil)
           (state-stack nil)
           (new-states '())
           (states (nreverse phps-mode-lexer-states))
-          (change-start phps-mode-functions-buffer-changes-start)
+          (change-start (phps-mode-functions-get-buffer-changes-start))
           (previous-token-start nil)
+          (previous-token-end nil)
           (tokens phps-mode-lexer-tokens))
       ;; (message "Looking for state to rewind to for %s in stack %s" change-start states)
 
@@ -1374,6 +1370,7 @@ ANY_CHAR'
               (setq state (nth 2 state-object))
               (setq state-stack (nth 3 state-object))
               (setq previous-token-start start)
+              (setq previous-token-end end)
               (push state-object new-states))
             (when (> start change-start)
               (throw 'stop-iteration nil)))))
@@ -1386,13 +1383,13 @@ ANY_CHAR'
             (catch 'stop-iteration
               (dolist (token tokens)
                 (let ((start (car (cdr token))))
-                  (if (< start previous-token-start)
+                  (if (< start previous-token-end)
                       (push token old-tokens)
                     (throw 'stop-iteration nil)))))
             (setq old-tokens (nreverse old-tokens))
 
             ;; Delete all overlays from point of change to end of buffer
-            (dolist (overlay (overlays-in previous-token-start (point-max)))
+            (dolist (overlay (overlays-in previous-token-end (point-max)))
               (delete-overlay overlay))
             
             (let* ((new-tokens (semantic-lex previous-token-start (point-max)))
@@ -1410,7 +1407,7 @@ ANY_CHAR'
               ))
         ;; (display-warning "phps-mode" (format "Found no state to rewind to for %s in stack %s, buffer point max: %s" change-start states (point-max)))
         (phps-mode-lexer-run)))
-    (setq phps-mode-functions-buffer-changes-start nil)))
+    (phps-mode-functions-reset-buffer-changes-start)))
 
 (define-lex phps-mode-lexer-tags-lexer
   "Lexer that handles PHP buffers."
@@ -1430,14 +1427,10 @@ ANY_CHAR'
 
 (defun phps-mode-lexer-init ()
   "Initialize lexer."
-
   (when (boundp 'phps-mode-syntax-table)
     (setq semantic-lex-syntax-table phps-mode-syntax-table))
-
   (setq semantic-lex-analyzer #'phps-mode-lexer-tags-lexer)
-
   (add-hook 'semantic-lex-reset-functions #'phps-mode-lexer-setup)
-
   (phps-mode-lexer-run))
 
 (provide 'phps-mode-lexer)

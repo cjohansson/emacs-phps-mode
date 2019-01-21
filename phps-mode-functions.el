@@ -48,6 +48,14 @@
 
 ;; TODO Add support for automatic parenthesis, bracket, square-bracket, single-quote and double-quote encapsulations
 
+(defun phps-mode-functions-get-buffer-changes-start ()
+  "Get buffer change start."
+  phps-mode-functions-buffer-changes-start)
+
+(defun phps-mode-functions-reset-buffer-changes-start ()
+  "Reset buffer change start."
+  (setq phps-mode-functions-buffer-changes-start nil))
+
 (defun phps-mode-functions-process-current-buffer ()
   "Process current buffer, generate indentations and Imenu."
   (unless phps-mode-functions-processed-buffer

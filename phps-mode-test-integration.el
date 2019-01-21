@@ -33,7 +33,9 @@
 (autoload 'phps-mode-functions-indent-line "phps-mode-functions")
 (autoload 'phps-mode-functions-get-lines-indent "phps-mode-functions")
 (autoload 'phps-mode-functions-get-imenu "phps-mode-functions")
+(autoload 'phps-mode-functions-get-buffer-changes-start "phps-mode-functions")
 (autoload 'phps-mode-test-hash-to-list "phps-mode-test")
+(autoload 'phps-mode-lexer-get-tokens "phps-mode-lexer")
 (autoload 'should "ert")
 
 (defun phps-mode-test-integration-incremental ()
@@ -44,10 +46,8 @@
    "Integration-test for regular PHP with namespaces, classes and functions"
 
    ;; Tokens
-   (when (and (boundp 'phps-mode-lexer-tokens)
-              phps-mode-lexer-tokens)
-     ;; (message "Tokens %s" phps-mode-lexer-tokens)
-     (should (equal phps-mode-lexer-tokens '((T_OPEN_TAG 1 . 7) (T_NAMESPACE 7 . 16) (T_STRING 17 . 28) ("{" 29 . 30) (T_CLASS 35 . 40) (T_STRING 41 . 48) ("{" 53 . 54) (T_PUBLIC 63 . 69) (T_FUNCTION 70 . 78) (T_STRING 79 . 89) ("(" 89 . 90) (")" 90 . 91) ("{" 100 . 101) (T_ECHO 114 . 118) (T_CONSTANT_ENCAPSED_STRING 119 . 133) (";" 133 . 134) ("}" 143 . 144) ("}" 149 . 150) ("}" 151 . 152)))))
+   ;; (message "Tokens %s" phps-mode-lexer-tokens)
+   (should (equal (phps-mode-lexer-get-tokens) '((T_OPEN_TAG 1 . 7) (T_NAMESPACE 7 . 16) (T_STRING 17 . 28) ("{" 29 . 30) (T_CLASS 35 . 40) (T_STRING 41 . 48) ("{" 53 . 54) (T_PUBLIC 63 . 69) (T_FUNCTION 70 . 78) (T_STRING 79 . 89) ("(" 89 . 90) (")" 90 . 91) ("{" 100 . 101) (T_ECHO 114 . 118) (T_CONSTANT_ENCAPSED_STRING 119 . 133) (";" 133 . 134) ("}" 143 . 144) ("}" 149 . 150) ("}" 151 . 152))))
 
    ;; Indentation
    (should (equal '((1 (0 0)) (2 (0 0)) (3 (0 0)) (4 (1 0)) (5 (1 0)) (6 (2 0)) (7 (2 0)) (8 (3 0)) (9 (2 0)) (10 (1 0)) (11 (0 0))) (phps-mode-test-hash-to-list (phps-mode-functions-get-lines-indent))))
@@ -60,17 +60,14 @@
    (insert "\n\n        public function myFunctionB()\n        {\n            echo 'my second statement';\n        }\n")
 
    ;; Verify stored point of change
-   (when (boundp 'phps-mode-functions-buffer-changes-start)
-     (should (equal phps-mode-functions-buffer-changes-start 144)))
+   (should (equal (phps-mode-functions-get-buffer-changes-start) 144))
 
    ;; Run incremental lexer
    (phps-mode-lexer-run-incremental)
 
    ;; Tokens
-   (when (and (boundp 'phps-mode-lexer-tokens)
-              phps-mode-lexer-tokens)
-     ;; (message "Tokens %s" phps-mode-lexer-tokens)
-     (should (equal phps-mode-lexer-tokens '((T_OPEN_TAG 1 . 7) (T_NAMESPACE 7 . 16) (T_STRING 17 . 28) ("{" 29 . 30) (T_CLASS 35 . 40) (T_STRING 41 . 48) ("{" 53 . 54) (T_PUBLIC 63 . 69) (T_FUNCTION 70 . 78) (T_STRING 79 . 89) ("(" 89 . 90) (")" 90 . 91) ("{" 100 . 101) (T_ECHO 114 . 118) (T_CONSTANT_ENCAPSED_STRING 119 . 133) (";" 133 . 134) ("}" 143 . 144) (T_PUBLIC 154 . 160) (T_FUNCTION 161 . 169) (T_STRING 170 . 181) ("(" 181 . 182) (")" 182 . 183) ("{" 192 . 193) (T_ECHO 206 . 210) (T_CONSTANT_ENCAPSED_STRING 211 . 232) (";" 232 . 233) ("}" 242 . 243) ("}" 249 . 250) ("}" 251 . 252)))))
+   ;; (message "Tokens %s" (phps-mode-lexer-get-tokens))
+   (should (equal (phps-mode-lexer-get-tokens) '((T_OPEN_TAG 1 . 7) (T_NAMESPACE 7 . 16) (T_STRING 17 . 28) ("{" 29 . 30) (T_CLASS 35 . 40) (T_STRING 41 . 48) ("{" 53 . 54) (T_PUBLIC 63 . 69) (T_FUNCTION 70 . 78) (T_STRING 79 . 89) ("(" 89 . 90) (")" 90 . 91) ("{" 100 . 101) (T_ECHO 114 . 118) (T_CONSTANT_ENCAPSED_STRING 119 . 133) (";" 133 . 134) (";" 133 . 134) ("}" 143 . 144) (T_PUBLIC 154 . 160) (T_FUNCTION 161 . 169) (T_STRING 170 . 181) ("(" 181 . 182) (")" 182 . 183) ("{" 192 . 193) (T_ECHO 206 . 210) (T_CONSTANT_ENCAPSED_STRING 211 . 232) (";" 232 . 233) ("}" 242 . 243) ("}" 249 . 250) ("}" 251 . 252))))
 
    ;; Indentation
    ;; (message "indent: %s" (phps-mode-test-hash-to-list (phps-mode-functions-get-lines-indent)))
