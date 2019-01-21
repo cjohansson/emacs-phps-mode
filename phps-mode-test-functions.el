@@ -36,7 +36,6 @@
 (autoload 'phps-mode-test-hash-to-list "phps-mode-test")
 (autoload 'should "ert")
 
-
 (defun phps-mode-test-functions-get-lines-indent ()
   "Test `phps-mode-functions-get-lines-indent' function."
   
@@ -371,7 +370,7 @@
   (phps-mode-test-with-buffer
    "<html><head><title><?php if ($myCondition) {\nif ($mySeconCondition) {\necho $title3;\n\n}\n?>\n</title><body>Bla bla</body></html>"
    "Curly bracket test 4"
-   ;; (message "Tokens: %s" phps-mode-lexer-tokens)
+   (message "Tokens: %s" (phps-mode-lexer-get-tokens))
    (goto-char 110)
    (phps-mode-functions-indent-line)
    (let ((buffer-contents (buffer-substring-no-properties (point-min) (point-max))))

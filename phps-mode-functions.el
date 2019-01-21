@@ -75,6 +75,7 @@
               (in-heredoc-started-this-line nil)
               (in-heredoc-ended-this-line nil)
               (in-inline-control-structure nil)
+              (first-token-is-inline-html nil)
               (after-special-control-structure nil)
               (after-special-control-structure-token nil)
               (after-extra-special-control-structure nil)
@@ -253,6 +254,11 @@
                   (setq square-bracket-level (1- square-bracket-level))
                   (when first-token-on-line
                     (setq first-token-is-nesting-decrease t)))
+
+                ;; Detect in inline-html
+                (when (and (equal token 'T_INLINE_HTML)
+                           first-token-on-line)
+                  (setq first-token-is-inline-html t))
 
                 ;; Keep track of when we are inside a class definition
                 (if in-class-declaration
@@ -532,6 +538,10 @@
                                 in-heredoc-ended-this-line)
                         (setq column-level-start 0))
 
+                      ;; Inline HTML should have zero indent
+                      (when first-token-is-inline-html
+                        (setq column-level-start 0))
+
 
                       ;; Save line indent
                       (when phps-mode-functions-verbose
@@ -580,6 +590,10 @@
                                     in-heredoc-ended-this-line)
                             (setq column-level-end 0))
 
+                          ;; Inline HTML should have no indent
+                          (when (equal token 'T_INLINE_HTML)
+                            (setq column-level-end 0))
+
                           ;; (message "Token %s starts at %s and ends at %s indent %s %s" next-token token-start-line-number token-end-line-number column-level-end tuning-level)
 
                           ;; Indent doc-comment lines with 1 tuning
@@ -617,6 +631,7 @@
                       (when (> token-start-line-number last-line-number)
                         (setq first-token-on-line t)
                         (setq first-token-is-nesting-decrease nil)
+                        (setq first-token-is-inline-html nil)
                         (setq in-assignment-level 0)
                         (setq in-class-declaration-level 0)
                         (setq class-declaration-started-this-line nil)
