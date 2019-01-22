@@ -228,6 +228,10 @@
     (overlay-put (make-overlay start end) 'font-lock-face 'font-lock-string-face))
 
    ((or
+     (string= token ",")
+     (string= token "(")
+     (string= token ")")
+     (string= token "[")
      (string= token "]")
      (string= token "{")
      (string= token "}")
