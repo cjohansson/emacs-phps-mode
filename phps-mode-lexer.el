@@ -348,6 +348,7 @@
      (string= token 'T_AND_EQUAL)
      (string= token 'T_OR_EQUAL)
      (string= token 'T_XOR_EQUAL)
+     (string= token 'T_COALESCE_EQUAL)
      (string= token 'T_BOOLEAN_OR)
      (string= token 'T_BOOLEAN_AND)
      (string= token 'T_BOOLEAN_XOR)
@@ -424,91 +425,357 @@
         (ST_VAR_OFFSET (= phps-mode-lexer-STATE phps-mode-lexer-ST_VAR_OFFSET)))
     (cond
 
-     ;; ST_IN_SCRIPTING
      ((and ST_IN_SCRIPTING (looking-at (concat "exit" phps-mode-lexer-NOT-LABEL)))
       (phps-mode-lexer-RETURN_TOKEN 'T_EXIT (match-beginning 0) (1- (match-end 0))))
+
      ((and ST_IN_SCRIPTING (looking-at (concat "die" phps-mode-lexer-NOT-LABEL)))
       (phps-mode-lexer-RETURN_TOKEN 'T_DIE (match-beginning 0) (1- (match-end 0))))
+
      ((and ST_IN_SCRIPTING (looking-at (concat "function" phps-mode-lexer-NOT-LABEL)))
       (phps-mode-lexer-RETURN_TOKEN 'T_FUNCTION (match-beginning 0) (1- (match-end 0))))
+
      ((and ST_IN_SCRIPTING (looking-at (concat "const" phps-mode-lexer-NOT-LABEL)))
       (phps-mode-lexer-RETURN_TOKEN 'T_CONST (match-beginning 0) (1- (match-end 0))))
+
      ((and ST_IN_SCRIPTING (looking-at (concat "return" phps-mode-lexer-NOT-LABEL)))
       (phps-mode-lexer-RETURN_TOKEN 'T_RETURN (match-beginning 0) (1- (match-end 0))))
+
      ((and ST_IN_SCRIPTING (looking-at (concat "yield" phps-mode-lexer-WHITESPACE "from" "[^a-zA-Z0-9_\x80-\xff]")))
       (phps-mode-lexer-RETURN_TOKEN 'T_YIELD_FROM (match-beginning 0) (match-end 0)))
+
      ((and ST_IN_SCRIPTING (looking-at (concat "yield" phps-mode-lexer-NOT-LABEL)))
       (phps-mode-lexer-RETURN_TOKEN 'T_YIELD (match-beginning 0) (1- (match-end 0))))
+
      ((and ST_IN_SCRIPTING (looking-at (concat "try" phps-mode-lexer-NOT-LABEL)))
       (phps-mode-lexer-RETURN_TOKEN 'T_TRY (match-beginning 0) (1- (match-end 0))))
+
      ((and ST_IN_SCRIPTING (looking-at (concat "catch" phps-mode-lexer-NOT-LABEL)))
       (phps-mode-lexer-RETURN_TOKEN 'T_CATCH (match-beginning 0) (1- (match-end 0))))
+
      ((and ST_IN_SCRIPTING (looking-at (concat "finally" phps-mode-lexer-NOT-LABEL)))
       (phps-mode-lexer-RETURN_TOKEN 'T_FINALLY (match-beginning 0) (1- (match-end 0))))
+
      ((and ST_IN_SCRIPTING (looking-at (concat "throw" phps-mode-lexer-NOT-LABEL)))
       (phps-mode-lexer-RETURN_TOKEN 'T_THROW (match-beginning 0) (1- (match-end 0))))
+
      ((and ST_IN_SCRIPTING (looking-at (concat "if" phps-mode-lexer-NOT-LABEL)))
       (phps-mode-lexer-RETURN_TOKEN 'T_IF (match-beginning 0) (1- (match-end 0))))
+
      ((and ST_IN_SCRIPTING (looking-at (concat "elseif" phps-mode-lexer-NOT-LABEL)))
       (phps-mode-lexer-RETURN_TOKEN 'T_ELSEIF (match-beginning 0) (1- (match-end 0))))
+
      ((and ST_IN_SCRIPTING (looking-at (concat "endif" phps-mode-lexer-NOT-LABEL)))
       (phps-mode-lexer-RETURN_TOKEN 'T_ENDIF (match-beginning 0) (1- (match-end 0))))
+
      ((and ST_IN_SCRIPTING (looking-at (concat "else" phps-mode-lexer-NOT-LABEL)))
       (phps-mode-lexer-RETURN_TOKEN 'T_ELSE (match-beginning 0) (1- (match-end 0))))
+
      ((and ST_IN_SCRIPTING (looking-at (concat "while" phps-mode-lexer-NOT-LABEL)))
       (phps-mode-lexer-RETURN_TOKEN 'T_WHILE (match-beginning 0) (1- (match-end 0))))
+
      ((and ST_IN_SCRIPTING (looking-at (concat "endwhile" phps-mode-lexer-NOT-LABEL)))
       (phps-mode-lexer-RETURN_TOKEN 'T_ENDWHILE (match-beginning 0) (1- (match-end 0))))
+
      ((and ST_IN_SCRIPTING (looking-at (concat "do" phps-mode-lexer-NOT-LABEL)))
       (phps-mode-lexer-RETURN_TOKEN 'T_DO (match-beginning 0) (1- (match-end 0))))
-     ((and ST_IN_SCRIPTING (looking-at (concat "foreach" phps-mode-lexer-NOT-LABEL)))
-      (phps-mode-lexer-RETURN_TOKEN 'T_FOREACH (match-beginning 0) (1- (match-end 0))))
-     ((and ST_IN_SCRIPTING (looking-at (concat "endforeach" phps-mode-lexer-NOT-LABEL)))
-      (phps-mode-lexer-RETURN_TOKEN 'T_ENDFOREACH (match-beginning 0) (1- (match-end 0))))
+
      ((and ST_IN_SCRIPTING (looking-at (concat "for" phps-mode-lexer-NOT-LABEL)))
       (phps-mode-lexer-RETURN_TOKEN 'T_FOR (match-beginning 0) (1- (match-end 0))))
+
      ((and ST_IN_SCRIPTING (looking-at (concat "endfor" phps-mode-lexer-NOT-LABEL)))
       (phps-mode-lexer-RETURN_TOKEN 'T_ENDFOR (match-beginning 0) (1- (match-end 0))))
+
+     ((and ST_IN_SCRIPTING (looking-at (concat "foreach" phps-mode-lexer-NOT-LABEL)))
+      (phps-mode-lexer-RETURN_TOKEN 'T_FOREACH (match-beginning 0) (1- (match-end 0))))
+
+     ((and ST_IN_SCRIPTING (looking-at (concat "endforeach" phps-mode-lexer-NOT-LABEL)))
+      (phps-mode-lexer-RETURN_TOKEN 'T_ENDFOREACH (match-beginning 0) (1- (match-end 0))))
+
      ((and ST_IN_SCRIPTING (looking-at (concat "declare" phps-mode-lexer-NOT-LABEL)))
       (phps-mode-lexer-RETURN_TOKEN 'T_DECLARE (match-beginning 0) (1- (match-end 0))))
+
      ((and ST_IN_SCRIPTING (looking-at (concat "enddeclare" phps-mode-lexer-NOT-LABEL)))
       (phps-mode-lexer-RETURN_TOKEN 'T_ENDDECLARE (match-beginning 0) (1- (match-end 0))))
+
      ((and ST_IN_SCRIPTING (looking-at (concat "instanceof" phps-mode-lexer-NOT-LABEL)))
       (phps-mode-lexer-RETURN_TOKEN 'T_INSTANCEOF (match-beginning 0) (1- (match-end 0))))
+
      ((and ST_IN_SCRIPTING (looking-at (concat "as" phps-mode-lexer-NOT-LABEL)))
       (phps-mode-lexer-RETURN_TOKEN 'T_AS (match-beginning 0) (1- (match-end 0))))
+
      ((and ST_IN_SCRIPTING (looking-at (concat "switch" phps-mode-lexer-NOT-LABEL)))
       (phps-mode-lexer-RETURN_TOKEN 'T_SWITCH (match-beginning 0) (1- (match-end 0))))
+
      ((and ST_IN_SCRIPTING (looking-at (concat "endswitch" phps-mode-lexer-NOT-LABEL)))
       (phps-mode-lexer-RETURN_TOKEN 'T_ENDSWITCH (match-beginning 0) (1- (match-end 0))))
+
      ((and ST_IN_SCRIPTING (looking-at (concat "case" phps-mode-lexer-NOT-LABEL)))
       (phps-mode-lexer-RETURN_TOKEN 'T_CASE (match-beginning 0) (1- (match-end 0))))
+
      ((and ST_IN_SCRIPTING (looking-at (concat "default" phps-mode-lexer-NOT-LABEL)))
       (phps-mode-lexer-RETURN_TOKEN 'T_DEFAULT (match-beginning 0) (1- (match-end 0))))
+
      ((and ST_IN_SCRIPTING (looking-at (concat "break" phps-mode-lexer-NOT-LABEL)))
       (phps-mode-lexer-RETURN_TOKEN 'T_BREAK (match-beginning 0) (1- (match-end 0))))
+
      ((and ST_IN_SCRIPTING (looking-at (concat "continue" phps-mode-lexer-NOT-LABEL)))
       (phps-mode-lexer-RETURN_TOKEN 'T_CONTINUE (match-beginning 0) (1- (match-end 0))))
+
      ((and ST_IN_SCRIPTING (looking-at (concat "goto" phps-mode-lexer-NOT-LABEL)))
       (phps-mode-lexer-RETURN_TOKEN 'T_GOTO (match-beginning 0) (1- (match-end 0))))
+
      ((and ST_IN_SCRIPTING (looking-at (concat "echo" phps-mode-lexer-NOT-LABEL)))
       (phps-mode-lexer-RETURN_TOKEN 'T_ECHO (match-beginning 0) (1- (match-end 0))))
+
      ((and ST_IN_SCRIPTING (looking-at (concat "print" phps-mode-lexer-NOT-LABEL)))
       (phps-mode-lexer-RETURN_TOKEN 'T_PRINT (match-beginning 0) (1- (match-end 0))))
+
      ((and ST_IN_SCRIPTING (looking-at (concat "class" phps-mode-lexer-NOT-LABEL)))
       (phps-mode-lexer-RETURN_TOKEN 'T_CLASS (match-beginning 0) (1- (match-end 0))))
+
      ((and ST_IN_SCRIPTING (looking-at (concat "interface" phps-mode-lexer-NOT-LABEL)))
       (phps-mode-lexer-RETURN_TOKEN 'T_INTERFACE (match-beginning 0) (1- (match-end 0))))
+
      ((and ST_IN_SCRIPTING (looking-at (concat "trait" phps-mode-lexer-NOT-LABEL)))
       (phps-mode-lexer-RETURN_TOKEN 'T_TRAIT (match-beginning 0) (1- (match-end 0))))
+
      ((and ST_IN_SCRIPTING (looking-at (concat "extends" phps-mode-lexer-NOT-LABEL)))
       (phps-mode-lexer-RETURN_TOKEN 'T_EXTENDS (match-beginning 0) (1- (match-end 0))))
+
      ((and ST_IN_SCRIPTING (looking-at (concat "implements" phps-mode-lexer-NOT-LABEL)))
       (phps-mode-lexer-RETURN_TOKEN 'T_IMPLEMENTS (match-beginning 0) (1- (match-end 0))))
 
      ((and ST_IN_SCRIPTING (looking-at "->"))
       (phps-mode-lexer-yy_push_state phps-mode-lexer-ST_LOOKING_FOR_PROPERTY)
       (phps-mode-lexer-RETURN_TOKEN 'T_OBJECT_OPERATOR (match-beginning 0) (match-end 0)))
+
+     ((and (or ST_IN_SCRIPTING ST_LOOKING_FOR_PROPERTY)
+           (looking-at phps-mode-lexer-WHITESPACE))
+      (let* ((start (match-beginning 0))
+             (end (match-end 0))
+             (data (buffer-substring-no-properties start end)))
+        (if phps-mode-lexer-PARSER_MODE
+            (phps-mode-lexer-MOVE_FORWARD end)
+          (phps-mode-lexer-RETURN_TOKEN data start end))))
+
+     ((and ST_LOOKING_FOR_PROPERTY (looking-at "->"))
+      (phps-mode-lexer-RETURN_TOKEN 'T_OBJECT_OPERATOR (match-beginning 0) (match-end 0)))
+
+     ((and ST_LOOKING_FOR_PROPERTY (looking-at phps-mode-lexer-LABEL))
+      (let ((start (match-beginning 0))
+            (end (match-end 0)))
+        (phps-mode-lexer-yy_pop_state)
+        (phps-mode-lexer-RETURN_TOKEN 'T_STRING start end)))
+
+     ((and ST_LOOKING_FOR_PROPERTY (looking-at phps-mode-lexer-ANY_CHAR))
+      (let ((_start (match-beginning 0))
+            (end (match-end 0)))
+        (phps-mode-lexer-yy_pop_state)
+        ;; TODO goto restart here?
+        ;; (message "Restart here")
+        (phps-mode-lexer-MOVE_FORWARD end)))
+
+     ((and ST_IN_SCRIPTING (looking-at "::"))
+      (phps-mode-lexer-RETURN_TOKEN 'T_PAAMAYIM_NEKUDOTAYIM (match-beginning 0) (match-end 0)))
+
+     ((and ST_IN_SCRIPTING (looking-at "\\\\"))
+      (phps-mode-lexer-RETURN_TOKEN 'T_NS_SEPARATOR (match-beginning 0) (match-end 0)))
+
+     ((and ST_IN_SCRIPTING (looking-at "\\.\\.\\."))
+      (phps-mode-lexer-RETURN_TOKEN 'T_ELLIPSIS (match-beginning 0) (match-end 0)))
+
+     ((and ST_IN_SCRIPTING (looking-at (concat "\\?\\?" "[^\\=]")))
+      (phps-mode-lexer-RETURN_TOKEN 'T_COALESCE (match-beginning 0) (1- (match-end 0))))
+
+     ((and ST_IN_SCRIPTING (looking-at (concat "new" phps-mode-lexer-NOT-LABEL)))
+      (phps-mode-lexer-RETURN_TOKEN 'T_NEW (match-beginning 0) (1- (match-end 0))))
+
+     ((and ST_IN_SCRIPTING (looking-at (concat "clone" phps-mode-lexer-NOT-LABEL)))
+      (phps-mode-lexer-RETURN_TOKEN 'T_CLONE (match-beginning 0) (1- (match-end 0))))
+
+     ((and ST_IN_SCRIPTING (looking-at (concat "var" phps-mode-lexer-NOT-LABEL)))
+      (phps-mode-lexer-RETURN_TOKEN 'T_VAR (match-beginning 0) (1- (match-end 0))))
+
+     ((and ST_IN_SCRIPTING (looking-at (concat "(" phps-mode-lexer-TABS_AND_SPACES "\\(int\\|integer\\)" phps-mode-lexer-TABS_AND_SPACES ")")))
+      (phps-mode-lexer-RETURN_TOKEN 'T_INT_CAST (match-beginning 0) (match-end 0)))
+
+     ((and ST_IN_SCRIPTING (looking-at (concat "(" phps-mode-lexer-TABS_AND_SPACES "\\(real\\|double\\|float\\)" phps-mode-lexer-TABS_AND_SPACES ")")))
+      (phps-mode-lexer-RETURN_TOKEN 'T_DOUBLE_CAST (match-beginning 0) (match-end 0)))
+
+     ((and ST_IN_SCRIPTING (looking-at (concat "(" phps-mode-lexer-TABS_AND_SPACES "\\(string\\|binary\\)" phps-mode-lexer-TABS_AND_SPACES ")")))
+      (phps-mode-lexer-RETURN_TOKEN 'T_STRING_CAST (match-beginning 0) (match-end 0)))
+
+     ((and ST_IN_SCRIPTING (looking-at (concat "(" phps-mode-lexer-TABS_AND_SPACES "array" phps-mode-lexer-TABS_AND_SPACES ")")))
+      (phps-mode-lexer-RETURN_TOKEN 'T_ARRAY_CAST (match-beginning 0) (match-end 0)))
+
+     ((and ST_IN_SCRIPTING (looking-at (concat "(" phps-mode-lexer-TABS_AND_SPACES "object" phps-mode-lexer-TABS_AND_SPACES ")")))
+      (phps-mode-lexer-RETURN_TOKEN 'T_OBJECT_CAST (match-beginning 0) (match-end 0)))
+
+     ((and ST_IN_SCRIPTING (looking-at (concat "(" phps-mode-lexer-TABS_AND_SPACES "\\(bool\\|boolean\\)" phps-mode-lexer-TABS_AND_SPACES ")")))
+      (phps-mode-lexer-RETURN_TOKEN 'T_BOOL_CAST (match-beginning 0) (match-end 0)))
+
+     ((and ST_IN_SCRIPTING (looking-at (concat "(" phps-mode-lexer-TABS_AND_SPACES "unset" phps-mode-lexer-TABS_AND_SPACES ")")))
+      (phps-mode-lexer-RETURN_TOKEN 'T_UNSET_CAST (match-beginning 0) (match-end 0)))
+
+     ((and ST_IN_SCRIPTING (looking-at (concat "eval" phps-mode-lexer-NOT-LABEL)))
+      (phps-mode-lexer-RETURN_TOKEN 'T_EVAL (match-beginning 0) (1- (match-end 0))))
+
+     ((and ST_IN_SCRIPTING (looking-at (concat "include" phps-mode-lexer-NOT-LABEL)))
+      (phps-mode-lexer-RETURN_TOKEN 'T_INCLUDE (match-beginning 0) (1- (match-end 0))))
+
+     ((and ST_IN_SCRIPTING (looking-at (concat "include_once" phps-mode-lexer-NOT-LABEL)))
+      (phps-mode-lexer-RETURN_TOKEN 'T_INCLUDE_ONCE (match-beginning 0) (1- (match-end 0))))
+
+     ((and ST_IN_SCRIPTING (looking-at (concat "require" phps-mode-lexer-NOT-LABEL)))
+      (phps-mode-lexer-RETURN_TOKEN 'T_REQUIRE (match-beginning 0) (1- (match-end 0))))
+
+     ((and ST_IN_SCRIPTING (looking-at (concat "require_once" phps-mode-lexer-NOT-LABEL)))
+      (phps-mode-lexer-RETURN_TOKEN 'T_REQUIRE_ONCE (match-beginning 0) (1- (match-end 0))))
+
+     ((and ST_IN_SCRIPTING (looking-at (concat "namespace" phps-mode-lexer-NOT-LABEL)))
+      (setq phps-mode-lexer-declaring_namespace t)
+      (phps-mode-lexer-RETURN_TOKEN 'T_NAMESPACE (match-beginning 0) (1- (match-end 0))))
+
+     ((and ST_IN_SCRIPTING (looking-at (concat "use" phps-mode-lexer-NOT-LABEL)))
+      (phps-mode-lexer-RETURN_TOKEN 'T_USE (match-beginning 0) (1- (match-end 0))))
+
+     ((and ST_IN_SCRIPTING (looking-at (concat "insteadof" phps-mode-lexer-NOT-LABEL)))
+      (phps-mode-lexer-RETURN_TOKEN 'T_INSTEADOF (match-beginning 0) (1- (match-end 0))))
+
+     ((and ST_IN_SCRIPTING (looking-at (concat "global" phps-mode-lexer-NOT-LABEL)))
+      (phps-mode-lexer-RETURN_TOKEN 'T_GLOBAL (match-beginning 0) (1- (match-end 0))))
+
+     ((and ST_IN_SCRIPTING (looking-at (concat "isset" phps-mode-lexer-NOT-LABEL)))
+      (phps-mode-lexer-RETURN_TOKEN 'T_ISSET (match-beginning 0) (1- (match-end 0))))
+
+     ((and ST_IN_SCRIPTING (looking-at (concat "empty" phps-mode-lexer-NOT-LABEL)))
+      (phps-mode-lexer-RETURN_TOKEN 'T_EMPTY (match-beginning 0) (1- (match-end 0))))
+
+     ((and ST_IN_SCRIPTING (looking-at (concat "__halt_compiler" phps-mode-lexer-NOT-LABEL)))
+      (phps-mode-lexer-RETURN_TOKEN 'T_HALT_COMPILER (match-beginning 0) (1- (match-end 0))))
+
+     ((and ST_IN_SCRIPTING (looking-at (concat "static" phps-mode-lexer-NOT-LABEL)))
+      (phps-mode-lexer-RETURN_TOKEN 'T_STATIC (match-beginning 0) (1- (match-end 0))))
+
+     ((and ST_IN_SCRIPTING (looking-at (concat "abstract" phps-mode-lexer-NOT-LABEL)))
+      (phps-mode-lexer-RETURN_TOKEN 'T_ABSTRACT (match-beginning 0) (1- (match-end 0))))
+
+     ((and ST_IN_SCRIPTING (looking-at (concat "final" phps-mode-lexer-NOT-LABEL)))
+      (phps-mode-lexer-RETURN_TOKEN 'T_FINAL (match-beginning 0) (1- (match-end 0))))
+
+     ((and ST_IN_SCRIPTING (looking-at (concat "private" phps-mode-lexer-NOT-LABEL)))
+      (phps-mode-lexer-RETURN_TOKEN 'T_PRIVATE (match-beginning 0) (1- (match-end 0))))
+
+     ((and ST_IN_SCRIPTING (looking-at (concat "protected" phps-mode-lexer-NOT-LABEL)))
+      (phps-mode-lexer-RETURN_TOKEN 'T_PROTECTED (match-beginning 0) (1- (match-end 0))))
+
+     ((and ST_IN_SCRIPTING (looking-at (concat "public" phps-mode-lexer-NOT-LABEL)))
+      (phps-mode-lexer-RETURN_TOKEN 'T_PUBLIC (match-beginning 0) (1- (match-end 0))))
+
+     ((and ST_IN_SCRIPTING (looking-at (concat "unset" phps-mode-lexer-NOT-LABEL)))
+      (phps-mode-lexer-RETURN_TOKEN 'T_UNSET (match-beginning 0) (1- (match-end 0))))
+
+     ((and ST_IN_SCRIPTING (looking-at "=>"))
+      (phps-mode-lexer-RETURN_TOKEN 'T_DOUBLE_ARROW (match-beginning 0) (match-end 0)))
+
+     ((and ST_IN_SCRIPTING (looking-at (concat "list" phps-mode-lexer-NOT-LABEL)))
+      (phps-mode-lexer-RETURN_TOKEN 'T_LIST (match-beginning 0) (1- (match-end 0))))
+
+     ((and ST_IN_SCRIPTING (looking-at (concat "array" phps-mode-lexer-NOT-LABEL)))
+      (phps-mode-lexer-RETURN_TOKEN 'T_ARRAY (match-beginning 0) (1- (match-end 0))))
+
+     ((and ST_IN_SCRIPTING (looking-at (concat "callable" phps-mode-lexer-NOT-LABEL)))
+      (phps-mode-lexer-RETURN_TOKEN 'T_CALLABLE (match-beginning 0) (1- (match-end 0))))
+
+     ((and ST_IN_SCRIPTING (looking-at "\\+\\+"))
+      (phps-mode-lexer-RETURN_TOKEN 'T_INC (match-beginning 0) (match-end 0)))
+
+     ((and ST_IN_SCRIPTING (looking-at "--"))
+      (phps-mode-lexer-RETURN_TOKEN 'T_DEC (match-beginning 0) (match-end 0)))
+
+     ((and ST_IN_SCRIPTING (looking-at "==="))
+      (phps-mode-lexer-RETURN_TOKEN 'T_IS_IDENTICAL (match-beginning 0) (match-end 0)))
+
+     ((and ST_IN_SCRIPTING (looking-at "!=="))
+      (phps-mode-lexer-RETURN_TOKEN 'T_IS_NOT_IDENTICAL (match-beginning 0) (match-end 0)))
+
+     ((and ST_IN_SCRIPTING (looking-at "=="))
+      (phps-mode-lexer-RETURN_TOKEN 'T_IS_EQUAL (match-beginning 0) (match-end 0)))
+
+     ((and ST_IN_SCRIPTING (looking-at "\\(!=\\|<>\\)"))
+      (phps-mode-lexer-RETURN_TOKEN 'T_IS_NOT_EQUAL (match-beginning 0) (match-end 0)))
+
+     ((and ST_IN_SCRIPTING (looking-at "<=>"))
+      (phps-mode-lexer-RETURN_TOKEN 'T_SPACESHIP (match-beginning 0) (match-end 0)))
+
+     ((and ST_IN_SCRIPTING (looking-at "<="))
+      (phps-mode-lexer-RETURN_TOKEN 'T_IS_SMALLER_OR_EQUAL (match-beginning 0) (match-end 0)))
+
+     ((and ST_IN_SCRIPTING (looking-at ">="))
+      (phps-mode-lexer-RETURN_TOKEN 'T_IS_GREATER_OR_EQUAL (match-beginning 0) (match-end 0)))
+
+     ((and ST_IN_SCRIPTING (looking-at "\\+="))
+      (phps-mode-lexer-RETURN_TOKEN 'T_PLUS_EQUAL (match-beginning 0) (match-end 0)))
+
+     ((and ST_IN_SCRIPTING (looking-at "-="))
+      (phps-mode-lexer-RETURN_TOKEN 'T_MINUS_EQUAL (match-beginning 0) (match-end 0)))
+
+     ((and ST_IN_SCRIPTING (looking-at "\\*="))
+      (phps-mode-lexer-RETURN_TOKEN 'T_MUL_EQUAL (match-beginning 0) (match-end 0)))
+
+     ((and ST_IN_SCRIPTING (looking-at "\\*\\\\\\*="))
+      (phps-mode-lexer-RETURN_TOKEN 'T_POW_EQUAL (match-beginning 0) (match-end 0)))
+
+     ((and ST_IN_SCRIPTING (looking-at "\\*\\\\\\*"))
+      (phps-mode-lexer-RETURN_TOKEN 'T_POW (match-beginning 0) (match-end 0)))
+
+     ((and ST_IN_SCRIPTING (looking-at "/="))
+      (phps-mode-lexer-RETURN_TOKEN 'T_DIV_EQUAL (match-beginning 0) (match-end 0)))
+
+     ((and ST_IN_SCRIPTING (looking-at "\\.="))
+      (phps-mode-lexer-RETURN_TOKEN 'T_CONCAT_EQUAL (match-beginning 0) (match-end 0)))
+
+     ((and ST_IN_SCRIPTING (looking-at "%="))
+      (phps-mode-lexer-RETURN_TOKEN 'T_MOD_EQUAL (match-beginning 0) (match-end 0)))
+
+     ((and ST_IN_SCRIPTING (looking-at "<<="))
+      (phps-mode-lexer-RETURN_TOKEN 'T_SL_EQUAL (match-beginning 0) (match-end 0)))
+
+     ((and ST_IN_SCRIPTING (looking-at ">>="))
+      (phps-mode-lexer-RETURN_TOKEN 'T_SR_EQUAL (match-beginning 0) (match-end 0)))
+
+     ((and ST_IN_SCRIPTING (looking-at "&="))
+      (phps-mode-lexer-RETURN_TOKEN 'T_AND_EQUAL (match-beginning 0) (match-end 0)))
+
+     ((and ST_IN_SCRIPTING (looking-at "|="))
+      (phps-mode-lexer-RETURN_TOKEN 'T_OR_EQUAL (match-beginning 0) (match-end 0)))
+
+     ((and ST_IN_SCRIPTING (looking-at "\\^="))
+      (phps-mode-lexer-RETURN_TOKEN 'T_XOR_EQUAL (match-beginning 0) (match-end 0)))
+
+     ((and ST_IN_SCRIPTING (looking-at "\\?\\?="))
+      (phps-mode-lexer-RETURN_TOKEN 'T_COALESCE_EQUAL (match-beginning 0) (match-end 0)))
+
+     ((and ST_IN_SCRIPTING (looking-at "||"))
+      (phps-mode-lexer-RETURN_TOKEN 'T_BOOLEAN_OR (match-beginning 0) (match-end 0)))
+
+     ((and ST_IN_SCRIPTING (looking-at "&&"))
+      (phps-mode-lexer-RETURN_TOKEN 'T_BOOLEAN_AND (match-beginning 0) (match-end 0)))
+
+     ((and ST_IN_SCRIPTING (looking-at (concat "OR" phps-mode-lexer-NOT-LABEL)))
+      (phps-mode-lexer-RETURN_TOKEN 'T_LOGICAL_OR (match-beginning 0) (1- (match-end 0))))
+
+     ((and ST_IN_SCRIPTING (looking-at (concat "AND" phps-mode-lexer-NOT-LABEL)))
+      (phps-mode-lexer-RETURN_TOKEN 'T_LOGICAL_AND (match-beginning 0) (1- (match-end 0))))
+
+     ((and ST_IN_SCRIPTING (looking-at (concat "XOR" phps-mode-lexer-NOT-LABEL)))
+      (phps-mode-lexer-RETURN_TOKEN 'T_LOGICAL_XOR (match-beginning 0) (1- (match-end 0))))
+
+     ((and ST_IN_SCRIPTING (looking-at (concat "<<" "[^<]")))
+      (phps-mode-lexer-RETURN_TOKEN 'T_SL (match-beginning 0) (1- (match-end 0))))
+
+     ((and ST_IN_SCRIPTING (looking-at (concat ">>" "[^>]")))
+      (phps-mode-lexer-RETURN_TOKEN 'T_SR (match-beginning 0) (1- (match-end 0))))
 
      ((and ST_IN_SCRIPTING (looking-at "\\?>\n?"))
       (let ((start (match-beginning 0))
@@ -547,139 +814,6 @@
 
         (phps-mode-lexer-RETURN_TOKEN 'T_START_HEREDOC start end)))
 
-     ((and ST_IN_SCRIPTING (looking-at "::"))
-      (phps-mode-lexer-RETURN_TOKEN 'T_PAAMAYIM_NEKUDOTAYIM (match-beginning 0) (match-end 0)))
-     ((and ST_IN_SCRIPTING (looking-at "\\\\"))
-      (phps-mode-lexer-RETURN_TOKEN 'T_NS_SEPARATOR (match-beginning 0) (match-end 0)))
-     ((and ST_IN_SCRIPTING (looking-at "\\.\\.\\."))
-      (phps-mode-lexer-RETURN_TOKEN 'T_ELLIPSIS (match-beginning 0) (match-end 0)))
-     ((and ST_IN_SCRIPTING (looking-at "\\?\\?"))
-      (phps-mode-lexer-RETURN_TOKEN 'T_COALESCE (match-beginning 0) (match-end 0)))
-     ((and ST_IN_SCRIPTING (looking-at (concat "new" phps-mode-lexer-NOT-LABEL)))
-      (phps-mode-lexer-RETURN_TOKEN 'T_NEW (match-beginning 0) (1- (match-end 0))))
-     ((and ST_IN_SCRIPTING (looking-at (concat "clone" phps-mode-lexer-NOT-LABEL)))
-      (phps-mode-lexer-RETURN_TOKEN 'T_CLONE (match-beginning 0) (1- (match-end 0))))
-     ((and ST_IN_SCRIPTING (looking-at (concat "var" phps-mode-lexer-NOT-LABEL)))
-      (phps-mode-lexer-RETURN_TOKEN 'T_VAR (match-beginning 0) (1- (match-end 0))))
-     ((and ST_IN_SCRIPTING (looking-at (concat "(" phps-mode-lexer-TABS_AND_SPACES "\\(integer\\|int\\)" phps-mode-lexer-TABS_AND_SPACES ")")))
-      (phps-mode-lexer-RETURN_TOKEN 'T_INT_CAST (match-beginning 0) (match-end 0)))
-     ((and ST_IN_SCRIPTING (looking-at (concat "(" phps-mode-lexer-TABS_AND_SPACES "\\(real\\|double\\|float\\)" phps-mode-lexer-TABS_AND_SPACES ")")))
-      (phps-mode-lexer-RETURN_TOKEN 'T_DOUBLE_CAST (match-beginning 0) (match-end 0)))
-     ((and ST_IN_SCRIPTING (looking-at (concat "(" phps-mode-lexer-TABS_AND_SPACES "\\(string\\|binary\\)" phps-mode-lexer-TABS_AND_SPACES ")")))
-      (phps-mode-lexer-RETURN_TOKEN 'T_STRING_CAST (match-beginning 0) (match-end 0)))
-     ((and ST_IN_SCRIPTING (looking-at (concat "(" phps-mode-lexer-TABS_AND_SPACES "array" phps-mode-lexer-TABS_AND_SPACES ")")))
-      (phps-mode-lexer-RETURN_TOKEN 'T_ARRAY_CAST (match-beginning 0) (match-end 0)))
-     ((and ST_IN_SCRIPTING (looking-at (concat "(" phps-mode-lexer-TABS_AND_SPACES "object" phps-mode-lexer-TABS_AND_SPACES ")")))
-      (phps-mode-lexer-RETURN_TOKEN 'T_OBJECT_CAST (match-beginning 0) (match-end 0)))
-     ((and ST_IN_SCRIPTING (looking-at (concat "(" phps-mode-lexer-TABS_AND_SPACES "\\(boolean\\|bool\\)" phps-mode-lexer-TABS_AND_SPACES ")")))
-      (phps-mode-lexer-RETURN_TOKEN 'T_BOOL_CAST (match-beginning 0) (match-end 0)))
-     ((and ST_IN_SCRIPTING (looking-at (concat "(" phps-mode-lexer-TABS_AND_SPACES "unset" phps-mode-lexer-TABS_AND_SPACES ")")))
-      (phps-mode-lexer-RETURN_TOKEN 'T_UNSET_CAST (match-beginning 0) (match-end 0)))
-     ((and ST_IN_SCRIPTING (looking-at (concat "eval" phps-mode-lexer-NOT-LABEL)))
-      (phps-mode-lexer-RETURN_TOKEN 'T_EVAL (match-beginning 0) (1- (match-end 0))))
-     ((and ST_IN_SCRIPTING (looking-at (concat "include_once" phps-mode-lexer-NOT-LABEL)))
-      (phps-mode-lexer-RETURN_TOKEN 'T_INCLUDE_ONCE (match-beginning 0) (1- (match-end 0))))
-     ((and ST_IN_SCRIPTING (looking-at (concat "include" phps-mode-lexer-NOT-LABEL)))
-      (phps-mode-lexer-RETURN_TOKEN 'T_INCLUDE (match-beginning 0) (1- (match-end 0))))
-     ((and ST_IN_SCRIPTING (looking-at (concat "require_once" phps-mode-lexer-NOT-LABEL)))
-      (phps-mode-lexer-RETURN_TOKEN 'T_REQUIRE_ONCE (match-beginning 0) (1- (match-end 0))))
-     ((and ST_IN_SCRIPTING (looking-at (concat "require" phps-mode-lexer-NOT-LABEL)))
-      (phps-mode-lexer-RETURN_TOKEN 'T_REQUIRE (match-beginning 0) (1- (match-end 0))))
-     ((and ST_IN_SCRIPTING (looking-at (concat "namespace" phps-mode-lexer-NOT-LABEL)))
-      (setq phps-mode-lexer-declaring_namespace t)
-      (phps-mode-lexer-RETURN_TOKEN 'T_NAMESPACE (match-beginning 0) (1- (match-end 0))))
-     ((and ST_IN_SCRIPTING (looking-at (concat "use" phps-mode-lexer-NOT-LABEL)))
-      (phps-mode-lexer-RETURN_TOKEN 'T_USE (match-beginning 0) (1- (match-end 0))))
-     ((and ST_IN_SCRIPTING (looking-at (concat "insteadof" phps-mode-lexer-NOT-LABEL)))
-      (phps-mode-lexer-RETURN_TOKEN 'T_INSTEADOF (match-beginning 0) (1- (match-end 0))))
-     ((and ST_IN_SCRIPTING (looking-at (concat "global" phps-mode-lexer-NOT-LABEL)))
-      (phps-mode-lexer-RETURN_TOKEN 'T_GLOBAL (match-beginning 0) (1- (match-end 0))))
-     ((and ST_IN_SCRIPTING (looking-at (concat "isset" phps-mode-lexer-NOT-LABEL)))
-      (phps-mode-lexer-RETURN_TOKEN 'T_ISSET (match-beginning 0) (1- (match-end 0))))
-     ((and ST_IN_SCRIPTING (looking-at (concat "empty" phps-mode-lexer-NOT-LABEL)))
-      (phps-mode-lexer-RETURN_TOKEN 'T_EMPTY (match-beginning 0) (1- (match-end 0))))
-     ((and ST_IN_SCRIPTING (looking-at (concat "__halt_compiler" phps-mode-lexer-NOT-LABEL)))
-      (phps-mode-lexer-RETURN_TOKEN 'T_HALT_COMPILER (match-beginning 0) (1- (match-end 0))))
-     ((and ST_IN_SCRIPTING (looking-at (concat "static" phps-mode-lexer-NOT-LABEL)))
-      (phps-mode-lexer-RETURN_TOKEN 'T_STATIC (match-beginning 0) (1- (match-end 0))))
-     ((and ST_IN_SCRIPTING (looking-at (concat "abstract" phps-mode-lexer-NOT-LABEL)))
-      (phps-mode-lexer-RETURN_TOKEN 'T_ABSTRACT (match-beginning 0) (1- (match-end 0))))
-     ((and ST_IN_SCRIPTING (looking-at (concat "final" phps-mode-lexer-NOT-LABEL)))
-      (phps-mode-lexer-RETURN_TOKEN 'T_FINAL (match-beginning 0) (1- (match-end 0))))
-     ((and ST_IN_SCRIPTING (looking-at (concat "private" phps-mode-lexer-NOT-LABEL)))
-      (phps-mode-lexer-RETURN_TOKEN 'T_PRIVATE (match-beginning 0) (1- (match-end 0))))
-     ((and ST_IN_SCRIPTING (looking-at (concat "protected" phps-mode-lexer-NOT-LABEL)))
-      (phps-mode-lexer-RETURN_TOKEN 'T_PROTECTED (match-beginning 0) (1- (match-end 0))))
-     ((and ST_IN_SCRIPTING (looking-at (concat "public" phps-mode-lexer-NOT-LABEL)))
-      (phps-mode-lexer-RETURN_TOKEN 'T_PUBLIC (match-beginning 0) (1- (match-end 0))))
-     ((and ST_IN_SCRIPTING (looking-at (concat "unset" phps-mode-lexer-NOT-LABEL)))
-      (phps-mode-lexer-RETURN_TOKEN 'T_UNSET (match-beginning 0) (1- (match-end 0))))
-     ((and ST_IN_SCRIPTING (looking-at "=>"))
-      (phps-mode-lexer-RETURN_TOKEN 'T_DOUBLE_ARROW (match-beginning 0) (match-end 0)))
-     ((and ST_IN_SCRIPTING (looking-at (concat "list" phps-mode-lexer-NOT-LABEL)))
-      (phps-mode-lexer-RETURN_TOKEN 'T_LIST (match-beginning 0) (1- (match-end 0))))
-     ((and ST_IN_SCRIPTING (looking-at (concat "array" phps-mode-lexer-NOT-LABEL)))
-      (phps-mode-lexer-RETURN_TOKEN 'T_ARRAY (match-beginning 0) (1- (match-end 0))))
-     ((and ST_IN_SCRIPTING (looking-at (concat "callable" phps-mode-lexer-NOT-LABEL)))
-      (phps-mode-lexer-RETURN_TOKEN 'T_CALLABLE (match-beginning 0) (1- (match-end 0))))
-     ((and ST_IN_SCRIPTING (looking-at "\\+\\+"))
-      (phps-mode-lexer-RETURN_TOKEN 'T_INC (match-beginning 0) (match-end 0)))
-     ((and ST_IN_SCRIPTING (looking-at "--"))
-      (phps-mode-lexer-RETURN_TOKEN 'T_DEC (match-beginning 0) (match-end 0)))
-     ((and ST_IN_SCRIPTING (looking-at "==="))
-      (phps-mode-lexer-RETURN_TOKEN 'T_IS_IDENTICAL (match-beginning 0) (match-end 0)))
-     ((and ST_IN_SCRIPTING (looking-at "!=="))
-      (phps-mode-lexer-RETURN_TOKEN 'T_IS_NOT_IDENTICAL (match-beginning 0) (match-end 0)))
-     ((and ST_IN_SCRIPTING (looking-at "=="))
-      (phps-mode-lexer-RETURN_TOKEN 'T_IS_EQUAL (match-beginning 0) (match-end 0)))
-     ((and ST_IN_SCRIPTING (looking-at "\\(!=\\|<>\\)"))
-      (phps-mode-lexer-RETURN_TOKEN 'T_IS_NOT_EQUAL (match-beginning 0) (match-end 0)))
-     ((and ST_IN_SCRIPTING (looking-at "<=>"))
-      (phps-mode-lexer-RETURN_TOKEN 'T_SPACESHIP (match-beginning 0) (match-end 0)))
-     ((and ST_IN_SCRIPTING (looking-at "<="))
-      (phps-mode-lexer-RETURN_TOKEN 'T_IS_SMALLER_OR_EQUAL (match-beginning 0) (match-end 0)))
-     ((and ST_IN_SCRIPTING (looking-at ">="))
-      (phps-mode-lexer-RETURN_TOKEN 'T_IS_GREATER_OR_EQUAL (match-beginning 0) (match-end 0)))
-     ((and ST_IN_SCRIPTING (looking-at "\\+="))
-      (phps-mode-lexer-RETURN_TOKEN 'T_PLUS_EQUAL (match-beginning 0) (match-end 0)))
-     ((and ST_IN_SCRIPTING (looking-at "-="))
-      (phps-mode-lexer-RETURN_TOKEN 'T_MINUS_EQUAL (match-beginning 0) (match-end 0)))
-     ((and ST_IN_SCRIPTING (looking-at "\\*="))
-      (phps-mode-lexer-RETURN_TOKEN 'T_MUL_EQUAL (match-beginning 0) (match-end 0)))
-     ((and ST_IN_SCRIPTING (looking-at "\\*\\\\\\*="))
-      (phps-mode-lexer-RETURN_TOKEN 'T_POW_EQUAL (match-beginning 0) (match-end 0)))
-     ((and ST_IN_SCRIPTING (looking-at "\\*\\\\\\*"))
-      (phps-mode-lexer-RETURN_TOKEN 'T_POW (match-beginning 0) (match-end 0)))
-     ((and ST_IN_SCRIPTING (looking-at "/="))
-      (phps-mode-lexer-RETURN_TOKEN 'T_DIV_EQUAL (match-beginning 0) (match-end 0)))
-     ((and ST_IN_SCRIPTING (looking-at "\\.="))
-      (phps-mode-lexer-RETURN_TOKEN 'T_CONCAT_EQUAL (match-beginning 0) (match-end 0)))
-     ((and ST_IN_SCRIPTING (looking-at "%="))
-      (phps-mode-lexer-RETURN_TOKEN 'T_MOD_EQUAL (match-beginning 0) (match-end 0)))
-     ((and ST_IN_SCRIPTING (looking-at "<<="))
-      (phps-mode-lexer-RETURN_TOKEN 'T_SL_EQUAL (match-beginning 0) (match-end 0)))
-     ((and ST_IN_SCRIPTING (looking-at ">>="))
-      (phps-mode-lexer-RETURN_TOKEN 'T_SR_EQUAL (match-beginning 0) (match-end 0)))
-     ((and ST_IN_SCRIPTING (looking-at "&="))
-      (phps-mode-lexer-RETURN_TOKEN 'T_AND_EQUAL (match-beginning 0) (match-end 0)))
-     ((and ST_IN_SCRIPTING (looking-at "|="))
-      (phps-mode-lexer-RETURN_TOKEN 'T_OR_EQUAL (match-beginning 0) (match-end 0)))
-     ((and ST_IN_SCRIPTING (looking-at "\\^="))
-      (phps-mode-lexer-RETURN_TOKEN 'T_XOR_EQUAL (match-beginning 0) (match-end 0)))
-     ((and ST_IN_SCRIPTING (looking-at "||"))
-      (phps-mode-lexer-RETURN_TOKEN 'T_BOOLEAN_OR (match-beginning 0) (match-end 0)))
-     ((and ST_IN_SCRIPTING (looking-at "&&"))
-      (phps-mode-lexer-RETURN_TOKEN 'T_BOOLEAN_AND (match-beginning 0) (match-end 0)))
-     ((and ST_IN_SCRIPTING (looking-at (concat "XOR" phps-mode-lexer-NOT-LABEL)))
-      (phps-mode-lexer-RETURN_TOKEN 'T_LOGICAL_XOR (match-beginning 0) (1- (match-end 0))))
-     ((and ST_IN_SCRIPTING (looking-at (concat "OR" phps-mode-lexer-NOT-LABEL)))
-      (phps-mode-lexer-RETURN_TOKEN 'T_LOGICAL_OR (match-beginning 0) (1- (match-end 0))))
-     ((and ST_IN_SCRIPTING (looking-at (concat "AND" phps-mode-lexer-NOT-LABEL)))
-      (phps-mode-lexer-RETURN_TOKEN 'T_LOGICAL_AND (match-beginning 0) (1- (match-end 0))))
-     ((and ST_IN_SCRIPTING (looking-at "<<"))
-      (phps-mode-lexer-RETURN_TOKEN 'T_SL (match-beginning 0) (match-end 0)))
-     ((and ST_IN_SCRIPTING (looking-at ">>"))
-      (phps-mode-lexer-RETURN_TOKEN 'T_SR (match-beginning 0) (match-end 0)))
 
      ((and ST_IN_SCRIPTING (looking-at "{"))
       (phps-mode-lexer-yy_push_state phps-mode-lexer-ST_IN_SCRIPTING)
@@ -875,13 +1009,6 @@
       (phps-mode-lexer-BEGIN phps-mode-lexer-ST_BACKQUOTE)
       (phps-mode-lexer-RETURN_TOKEN "`" (match-beginning 0) (match-end 0)))
 
-     ((and ST_IN_SCRIPTING (looking-at phps-mode-lexer-WHITESPACE))
-      (let* ((start (match-beginning 0))
-             (end (match-end 0))
-             (data (buffer-substring-no-properties start end)))
-        (if phps-mode-lexer-PARSER_MODE
-            (phps-mode-lexer-MOVE_FORWARD end)
-          (phps-mode-lexer-RETURN_TOKEN data start end))))
 
      ((and ST_IN_SCRIPTING (looking-at phps-mode-lexer-LABEL))
       ;; (message "Adding T_STRING from %s to %s" (match-beginning 0) (match-end 0))
@@ -936,36 +1063,7 @@
               (phps-mode-lexer-RETURN_TOKEN 'T_INLINE_HTML start (- string-start 2))
             (phps-mode-lexer-RETURN_TOKEN 'T_INLINE_HTML start (point-max))))))
 
-
-     ;; ST_LOOKING_FOR_PROPERTY
-
-
-     ((and ST_LOOKING_FOR_PROPERTY (looking-at phps-mode-lexer-WHITESPACE))
-      (let* ((start (match-beginning 0))
-             (end (match-end 0))
-             (_data (buffer-substring-no-properties start end)))
-        (if phps-mode-lexer-PARSER_MODE
-            (phps-mode-lexer-MOVE_FORWARD end)
-          (phps-mode-lexer-RETURN_TOKEN 'T_WHITESPACE start end))))
-
-     ((and ST_LOOKING_FOR_PROPERTY (looking-at "->"))
-      (phps-mode-lexer-RETURN_TOKEN 'T_OBJECT_OPERATOR (match-beginning 0) (match-end 0)))
-
-     ((and ST_LOOKING_FOR_PROPERTY (looking-at phps-mode-lexer-LABEL))
-      (let ((start (match-beginning 0))
-            (end (match-end 0)))
-        (phps-mode-lexer-yy_pop_state)
-        (phps-mode-lexer-RETURN_TOKEN 'T_STRING start end)))
-
-     ((and ST_LOOKING_FOR_PROPERTY (looking-at phps-mode-lexer-ANY_CHAR))
-      (let ((_start (match-beginning 0))
-            (end (match-end 0)))
-        (phps-mode-lexer-yy_pop_state)
-        ;; TODO goto restart here?
-        ;; (message "Restart here")
-        (phps-mode-lexer-MOVE_FORWARD end)))
-
-
+     
      ;; ST_DOUBLE_QUOTES
 
 
