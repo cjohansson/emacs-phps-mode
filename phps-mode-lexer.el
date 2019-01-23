@@ -234,6 +234,7 @@
      (string= token ">")
      (string= token ":")
      (string= token ",")
+     (string= token ".")
      (string= token "(")
      (string= token ")")
      (string= token "[")
