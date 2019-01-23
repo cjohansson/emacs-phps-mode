@@ -36,11 +36,16 @@
 ;;; Code:
 
 
-(autoload 'phps-mode-function-get-buffer-changes-start "phps-mode-functions")
+(autoload 'phps-mode-functions-get-buffer-changes-start "phps-mode-functions")
 (autoload 'phps-mode-functions-reset-buffer-changes-start "phps-mode-functions")
 
-(require 'semantic)
-(require 'semantic/lex)
+(autoload 'semantic-lex-reset-functions "semantic")
+(autoload 'define-lex "semantic/lex")
+(autoload 'semantic-lex "semantic/lex")
+(autoload 'semantic-lex-buffer "semantic/lex")
+(autoload 'semantic-lex-token "semantic/lex")
+(autoload 'semantic-lex-push-token "semantic/lex")
+(autoload 'define-lex-analyzer "semantic/lex")
 
 ;; Define the lexer for this grammar
 
@@ -193,7 +198,8 @@
 
 (defun phps-mode-lexer-MOVE_FORWARD (position)
   "Move forward to POSITION."
-  (setq semantic-lex-end-point position))
+  (when (boundp 'semantic-lex-end-point)
+    (setq semantic-lex-end-point position)))
 
 (defun phps-mode-lexer-COLOR_SYNTAX (token start end)
   "Syntax coloring for TOKEN from START to END."
@@ -1464,9 +1470,11 @@
 
 (defun phps-mode-lexer-init ()
   "Initialize lexer."
-  (when (boundp 'phps-mode-syntax-table)
+  (when (and (boundp 'semantic-lex-syntax-table)
+             (boundp 'phps-mode-syntax-table))
     (setq semantic-lex-syntax-table phps-mode-syntax-table))
-  (setq semantic-lex-analyzer #'phps-mode-lexer-lex)
+  (when (boundp 'semantic-lex-analyzer)
+    (setq semantic-lex-analyzer 'phps-mode-lexer-lex))
   (add-hook 'semantic-lex-reset-functions #'phps-mode-lexer-setup)
   (phps-mode-lexer-run))
 
