@@ -414,6 +414,8 @@
 
 ;; LEXERS
 
+;; TODO If multiple rules match, re2c prefers the longest match. If rules match the same string, the earlier rule has priority.
+;; @see http://re2c.org/manual/syntax/syntax.html
 
 (define-lex-analyzer phps-mode-lexer-lex-analyzer
   "Elisp port of original Zend re2c lexer."
