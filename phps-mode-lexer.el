@@ -411,11 +411,14 @@
   "Skip TOKEN to list with START and END."
   )
 
-(defvar phps-mode-lexer-re2c-matching-body nil)
+(defvar phps-mode-lexer-re2c-matching-body nil
+  "Lambda-expression for longest matching condition.")
 
-(defvar phps-mode-lexer-re2c-matching-length nil)
+(defvar phps-mode-lexer-re2c-matching-length nil
+  "Length of longest matching condition.")
 
-(defvar phps-mode-lexer-re2c-matching-data nil)
+(defvar phps-mode-lexer-re2c-matching-data nil
+  "Match data for longest matching condition.")
 
 (defun phps-mode-lexer-re2c-rule (condition body)
   "Process rule with CONDITION and BODY."
