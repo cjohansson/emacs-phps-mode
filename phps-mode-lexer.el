@@ -1137,18 +1137,12 @@
              (phps-mode-lexer-RETURN_TOKEN 'T_DNUMBER start end)
            (phps-mode-lexer-RETURN_TOKEN 'T_LNUMBER start end)))))
 
-    ;; TODO Implement this
-    ;; (phps-mode-lexer-re2c-rule
-    ;;  (and ST_VAR_OFFSET (looking-at "\\([0]\\|\\([1-9][0-9]*\\)\\)"))
-    ;;  (lambda()
-    ;;    (let* ((start (match-beginning 0))
-    ;;           (end (match-end 0))
-    ;;           (data (buffer-substring-no-properties (+ start 2) end))
-    ;;           (long-number (string-to-number data 16)))
-    ;;      ;; (message "Hexadecimal number %s from %s" long-number data)
-    ;;      (if (> long-number phps-mode-lexer-long-limit)
-    ;;          (phps-mode-lexer-RETURN_TOKEN 'T_DNUMBER start end)
-    ;;        (phps-mode-lexer-RETURN_TOKEN 'T_LNUMBER start end)))))
+    (phps-mode-lexer-re2c-rule
+     (and ST_VAR_OFFSET (looking-at "\\([0]\\|[1-9][0-9]*\\)"))
+     (lambda()
+       (let ((start (match-beginning 0))
+              (end (match-end 0)))
+         (phps-mode-lexer-RETURN_TOKEN 'T_NUM_STRING start end))))
 
     (phps-mode-lexer-re2c-rule
      (and ST_VAR_OFFSET (looking-at (concat "\\("
