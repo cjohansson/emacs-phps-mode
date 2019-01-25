@@ -151,10 +151,6 @@
   "[a-zA-Z_\x80-\xff][a-zA-Z0-9_\x80-\xff]*"
   "Labels are used for names.")
 
-(defvar phps-mode-lexer-NOT-LABEL
-  "[^a-zA-Z_\x80-\xff]"
-  "Characters not starting a label.")
-
 (defvar phps-mode-lexer-WHITESPACE "[ \n\r\t]+"
   "White-space.")
 
@@ -481,19 +477,19 @@
        (phps-mode-lexer-RETURN_TOKEN 'T_DIE (match-beginning 0) (match-end 0))))
 
     (phps-mode-lexer-re2c-rule
-     (and ST_IN_SCRIPTING (looking-at (concat "function" phps-mode-lexer-NOT-LABEL)))
+     (and ST_IN_SCRIPTING (looking-at "function"))
      (lambda()
-       (phps-mode-lexer-RETURN_TOKEN 'T_FUNCTION (match-beginning 0) (1- (match-end 0)))))
+       (phps-mode-lexer-RETURN_TOKEN 'T_FUNCTION (match-beginning 0) (match-end 0))))
 
     (phps-mode-lexer-re2c-rule
-     (and ST_IN_SCRIPTING (looking-at (concat "const" phps-mode-lexer-NOT-LABEL)))
+     (and ST_IN_SCRIPTING (looking-at "const"))
      (lambda()
-       (phps-mode-lexer-RETURN_TOKEN 'T_CONST (match-beginning 0) (1- (match-end 0)))))
+       (phps-mode-lexer-RETURN_TOKEN 'T_CONST (match-beginning 0) (match-end 0))))
 
     (phps-mode-lexer-re2c-rule
-     (and ST_IN_SCRIPTING (looking-at (concat "return" phps-mode-lexer-NOT-LABEL)))
+     (and ST_IN_SCRIPTING (looking-at "return"))
      (lambda()
-       (phps-mode-lexer-RETURN_TOKEN 'T_RETURN (match-beginning 0) (1- (match-end 0)))))
+       (phps-mode-lexer-RETURN_TOKEN 'T_RETURN (match-beginning 0) (match-end 0))))
 
     (phps-mode-lexer-re2c-rule
      (and ST_IN_SCRIPTING (looking-at (concat "yield" phps-mode-lexer-WHITESPACE "from" "[^a-zA-Z0-9_\x80-\xff]")))
@@ -501,174 +497,174 @@
        (phps-mode-lexer-RETURN_TOKEN 'T_YIELD_FROM (match-beginning 0) (match-end 0))))
 
     (phps-mode-lexer-re2c-rule
-     (and ST_IN_SCRIPTING (looking-at (concat "yield" phps-mode-lexer-NOT-LABEL)))
+     (and ST_IN_SCRIPTING (looking-at "yield"))
      (lambda()
-       (phps-mode-lexer-RETURN_TOKEN 'T_YIELD (match-beginning 0) (1- (match-end 0)))))
+       (phps-mode-lexer-RETURN_TOKEN 'T_YIELD (match-beginning 0) (match-end 0))))
 
     (phps-mode-lexer-re2c-rule
-     (and ST_IN_SCRIPTING (looking-at (concat "try" phps-mode-lexer-NOT-LABEL)))
+     (and ST_IN_SCRIPTING (looking-at "try"))
      (lambda()
-       (phps-mode-lexer-RETURN_TOKEN 'T_TRY (match-beginning 0) (1- (match-end 0)))))
+       (phps-mode-lexer-RETURN_TOKEN 'T_TRY (match-beginning 0) (match-end 0))))0
 
     (phps-mode-lexer-re2c-rule
-     (and ST_IN_SCRIPTING (looking-at (concat "catch" phps-mode-lexer-NOT-LABEL)))
+     (and ST_IN_SCRIPTING (looking-at "catch"))
      (lambda()
-       (phps-mode-lexer-RETURN_TOKEN 'T_CATCH (match-beginning 0) (1- (match-end 0)))))
+       (phps-mode-lexer-RETURN_TOKEN 'T_CATCH (match-beginning 0) (match-end 0))))
 
     (phps-mode-lexer-re2c-rule
-     (and ST_IN_SCRIPTING (looking-at (concat "finally" phps-mode-lexer-NOT-LABEL)))
+     (and ST_IN_SCRIPTING (looking-at "finally"))
      (lambda()
-       (phps-mode-lexer-RETURN_TOKEN 'T_FINALLY (match-beginning 0) (1- (match-end 0)))))
+       (phps-mode-lexer-RETURN_TOKEN 'T_FINALLY (match-beginning 0) (match-end 0))))
 
     (phps-mode-lexer-re2c-rule
-     (and ST_IN_SCRIPTING (looking-at (concat "throw" phps-mode-lexer-NOT-LABEL)))
+     (and ST_IN_SCRIPTING (looking-at "throw"))
      (lambda()
-       (phps-mode-lexer-RETURN_TOKEN 'T_THROW (match-beginning 0) (1- (match-end 0)))))
+       (phps-mode-lexer-RETURN_TOKEN 'T_THROW (match-beginning 0) (match-end 0))))
 
     (phps-mode-lexer-re2c-rule
-     (and ST_IN_SCRIPTING (looking-at (concat "if" phps-mode-lexer-NOT-LABEL)))
+     (and ST_IN_SCRIPTING (looking-at "if"))
      (lambda()
-       (phps-mode-lexer-RETURN_TOKEN 'T_IF (match-beginning 0) (1- (match-end 0)))))
+       (phps-mode-lexer-RETURN_TOKEN 'T_IF (match-beginning 0) (match-end 0))))
 
     (phps-mode-lexer-re2c-rule
-     (and ST_IN_SCRIPTING (looking-at (concat "elseif" phps-mode-lexer-NOT-LABEL)))
+     (and ST_IN_SCRIPTING (looking-at "elseif"))
      (lambda()
-       (phps-mode-lexer-RETURN_TOKEN 'T_ELSEIF (match-beginning 0) (1- (match-end 0)))))
+       (phps-mode-lexer-RETURN_TOKEN 'T_ELSEIF (match-beginning 0) (match-end 0))))
 
     (phps-mode-lexer-re2c-rule
-     (and ST_IN_SCRIPTING (looking-at (concat "endif" phps-mode-lexer-NOT-LABEL)))
+     (and ST_IN_SCRIPTING (looking-at "endif"))
      (lambda()
-       (phps-mode-lexer-RETURN_TOKEN 'T_ENDIF (match-beginning 0) (1- (match-end 0)))))
+       (phps-mode-lexer-RETURN_TOKEN 'T_ENDIF (match-beginning 0) (match-end 0))))
 
     (phps-mode-lexer-re2c-rule
-     (and ST_IN_SCRIPTING (looking-at (concat "else" phps-mode-lexer-NOT-LABEL)))
+     (and ST_IN_SCRIPTING (looking-at "else"))
      (lambda()
-       (phps-mode-lexer-RETURN_TOKEN 'T_ELSE (match-beginning 0) (1- (match-end 0)))))
+       (phps-mode-lexer-RETURN_TOKEN 'T_ELSE (match-beginning 0) (match-end 0))))
 
     (phps-mode-lexer-re2c-rule
-     (and ST_IN_SCRIPTING (looking-at (concat "while" phps-mode-lexer-NOT-LABEL)))
+     (and ST_IN_SCRIPTING (looking-at "while"))
      (lambda()
-       (phps-mode-lexer-RETURN_TOKEN 'T_WHILE (match-beginning 0) (1- (match-end 0)))))
+       (phps-mode-lexer-RETURN_TOKEN 'T_WHILE (match-beginning 0) (match-end 0))))
 
     (phps-mode-lexer-re2c-rule
-     (and ST_IN_SCRIPTING (looking-at (concat "endwhile" phps-mode-lexer-NOT-LABEL)))
+     (and ST_IN_SCRIPTING (looking-at "endwhile"))
      (lambda()
-       (phps-mode-lexer-RETURN_TOKEN 'T_ENDWHILE (match-beginning 0) (1- (match-end 0)))))
+       (phps-mode-lexer-RETURN_TOKEN 'T_ENDWHILE (match-beginning 0) (match-end 0))))
 
     (phps-mode-lexer-re2c-rule
-     (and ST_IN_SCRIPTING (looking-at (concat "do" phps-mode-lexer-NOT-LABEL)))
+     (and ST_IN_SCRIPTING (looking-at "do"))
      (lambda()
-       (phps-mode-lexer-RETURN_TOKEN 'T_DO (match-beginning 0) (1- (match-end 0)))))
+       (phps-mode-lexer-RETURN_TOKEN 'T_DO (match-beginning 0) (match-end 0))))
 
     (phps-mode-lexer-re2c-rule
-     (and ST_IN_SCRIPTING (looking-at (concat "for" phps-mode-lexer-NOT-LABEL)))
+     (and ST_IN_SCRIPTING (looking-at "for"))
      (lambda()
-       (phps-mode-lexer-RETURN_TOKEN 'T_FOR (match-beginning 0) (1- (match-end 0)))))
+       (phps-mode-lexer-RETURN_TOKEN 'T_FOR (match-beginning 0) (match-end 0))))
 
     (phps-mode-lexer-re2c-rule
-     (and ST_IN_SCRIPTING (looking-at (concat "endfor" phps-mode-lexer-NOT-LABEL)))
+     (and ST_IN_SCRIPTING (looking-at "endfor"))
      (lambda()
-       (phps-mode-lexer-RETURN_TOKEN 'T_ENDFOR (match-beginning 0) (1- (match-end 0)))))
+       (phps-mode-lexer-RETURN_TOKEN 'T_ENDFOR (match-beginning 0) (match-end 0))))
 
     (phps-mode-lexer-re2c-rule
-     (and ST_IN_SCRIPTING (looking-at (concat "foreach" phps-mode-lexer-NOT-LABEL)))
+     (and ST_IN_SCRIPTING (looking-at "foreach"))
      (lambda()
-       (phps-mode-lexer-RETURN_TOKEN 'T_FOREACH (match-beginning 0) (1- (match-end 0)))))
+       (phps-mode-lexer-RETURN_TOKEN 'T_FOREACH (match-beginning 0) (match-end 0))))
 
     (phps-mode-lexer-re2c-rule
-     (and ST_IN_SCRIPTING (looking-at (concat "endforeach" phps-mode-lexer-NOT-LABEL)))
+     (and ST_IN_SCRIPTING (looking-at "endforeach"))
      (lambda()
-       (phps-mode-lexer-RETURN_TOKEN 'T_ENDFOREACH (match-beginning 0) (1- (match-end 0)))))
+       (phps-mode-lexer-RETURN_TOKEN 'T_ENDFOREACH (match-beginning 0) (match-end 0))))
 
     (phps-mode-lexer-re2c-rule
-     (and ST_IN_SCRIPTING (looking-at (concat "declare" phps-mode-lexer-NOT-LABEL)))
+     (and ST_IN_SCRIPTING (looking-at "declare"))
      (lambda()
-       (phps-mode-lexer-RETURN_TOKEN 'T_DECLARE (match-beginning 0) (1- (match-end 0)))))
+       (phps-mode-lexer-RETURN_TOKEN 'T_DECLARE (match-beginning 0) (match-end 0))))
 
     (phps-mode-lexer-re2c-rule
-     (and ST_IN_SCRIPTING (looking-at (concat "enddeclare" phps-mode-lexer-NOT-LABEL)))
+     (and ST_IN_SCRIPTING (looking-at "enddeclare"))
      (lambda()
-       (phps-mode-lexer-RETURN_TOKEN 'T_ENDDECLARE (match-beginning 0) (1- (match-end 0)))))
+       (phps-mode-lexer-RETURN_TOKEN 'T_ENDDECLARE (match-beginning 0) (match-end 0))))
 
     (phps-mode-lexer-re2c-rule
-     (and ST_IN_SCRIPTING (looking-at (concat "instanceof" phps-mode-lexer-NOT-LABEL)))
+     (and ST_IN_SCRIPTING (looking-at "instanceof"))
      (lambda()
-       (phps-mode-lexer-RETURN_TOKEN 'T_INSTANCEOF (match-beginning 0) (1- (match-end 0)))))
+       (phps-mode-lexer-RETURN_TOKEN 'T_INSTANCEOF (match-beginning 0) (match-end 0))))
 
     (phps-mode-lexer-re2c-rule
-     (and ST_IN_SCRIPTING (looking-at (concat "as" phps-mode-lexer-NOT-LABEL)))
+     (and ST_IN_SCRIPTING (looking-at "as"))
      (lambda()
-       (phps-mode-lexer-RETURN_TOKEN 'T_AS (match-beginning 0) (1- (match-end 0)))))
+       (phps-mode-lexer-RETURN_TOKEN 'T_AS (match-beginning 0) (match-end 0))))
 
     (phps-mode-lexer-re2c-rule
-     (and ST_IN_SCRIPTING (looking-at (concat "switch" phps-mode-lexer-NOT-LABEL)))
+     (and ST_IN_SCRIPTING (looking-at "switch"))
      (lambda()
-       (phps-mode-lexer-RETURN_TOKEN 'T_SWITCH (match-beginning 0) (1- (match-end 0)))))
+       (phps-mode-lexer-RETURN_TOKEN 'T_SWITCH (match-beginning 0) (match-end 0))))
 
     (phps-mode-lexer-re2c-rule
-     (and ST_IN_SCRIPTING (looking-at (concat "endswitch" phps-mode-lexer-NOT-LABEL)))
+     (and ST_IN_SCRIPTING (looking-at "endswitch"))
      (lambda()
-       (phps-mode-lexer-RETURN_TOKEN 'T_ENDSWITCH (match-beginning 0) (1- (match-end 0)))))
+       (phps-mode-lexer-RETURN_TOKEN 'T_ENDSWITCH (match-beginning 0) (match-end 0))))
 
     (phps-mode-lexer-re2c-rule
-     (and ST_IN_SCRIPTING (looking-at (concat "case" phps-mode-lexer-NOT-LABEL)))
+     (and ST_IN_SCRIPTING (looking-at "case"))
      (lambda()
-       (phps-mode-lexer-RETURN_TOKEN 'T_CASE (match-beginning 0) (1- (match-end 0)))))
+       (phps-mode-lexer-RETURN_TOKEN 'T_CASE (match-beginning 0) (match-end 0))))
 
     (phps-mode-lexer-re2c-rule
-     (and ST_IN_SCRIPTING (looking-at (concat "default" phps-mode-lexer-NOT-LABEL)))
+     (and ST_IN_SCRIPTING (looking-at "default"))
      (lambda()
-       (phps-mode-lexer-RETURN_TOKEN 'T_DEFAULT (match-beginning 0) (1- (match-end 0)))))
+       (phps-mode-lexer-RETURN_TOKEN 'T_DEFAULT (match-beginning 0) (match-end 0))))
 
     (phps-mode-lexer-re2c-rule
-     (and ST_IN_SCRIPTING (looking-at (concat "break" phps-mode-lexer-NOT-LABEL)))
+     (and ST_IN_SCRIPTING (looking-at "break"))
      (lambda()
-       (phps-mode-lexer-RETURN_TOKEN 'T_BREAK (match-beginning 0) (1- (match-end 0)))))
+       (phps-mode-lexer-RETURN_TOKEN 'T_BREAK (match-beginning 0) (match-end 0))))
 
     (phps-mode-lexer-re2c-rule
-     (and ST_IN_SCRIPTING (looking-at (concat "continue" phps-mode-lexer-NOT-LABEL)))
+     (and ST_IN_SCRIPTING (looking-at "continue"))
      (lambda()
-       (phps-mode-lexer-RETURN_TOKEN 'T_CONTINUE (match-beginning 0) (1- (match-end 0)))))
+       (phps-mode-lexer-RETURN_TOKEN 'T_CONTINUE (match-beginning 0) (match-end 0))))
 
     (phps-mode-lexer-re2c-rule
-     (and ST_IN_SCRIPTING (looking-at (concat "goto" phps-mode-lexer-NOT-LABEL)))
+     (and ST_IN_SCRIPTING (looking-at "goto"))
      (lambda()
-       (phps-mode-lexer-RETURN_TOKEN 'T_GOTO (match-beginning 0) (1- (match-end 0)))))
+       (phps-mode-lexer-RETURN_TOKEN 'T_GOTO (match-beginning 0) (match-end 0))))
 
     (phps-mode-lexer-re2c-rule
-     (and ST_IN_SCRIPTING (looking-at (concat "echo" phps-mode-lexer-NOT-LABEL)))
+     (and ST_IN_SCRIPTING (looking-at "echo"))
      (lambda()
-       (phps-mode-lexer-RETURN_TOKEN 'T_ECHO (match-beginning 0) (1- (match-end 0)))))
+       (phps-mode-lexer-RETURN_TOKEN 'T_ECHO (match-beginning 0) (match-end 0))))
 
     (phps-mode-lexer-re2c-rule
-     (and ST_IN_SCRIPTING (looking-at (concat "print" phps-mode-lexer-NOT-LABEL)))
+     (and ST_IN_SCRIPTING (looking-at "print"))
      (lambda()
-       (phps-mode-lexer-RETURN_TOKEN 'T_PRINT (match-beginning 0) (1- (match-end 0)))))
+       (phps-mode-lexer-RETURN_TOKEN 'T_PRINT (match-beginning 0) (match-end 0))))
 
     (phps-mode-lexer-re2c-rule
-     (and ST_IN_SCRIPTING (looking-at (concat "class" phps-mode-lexer-NOT-LABEL)))
+     (and ST_IN_SCRIPTING (looking-at "class"))
      (lambda()
-       (phps-mode-lexer-RETURN_TOKEN 'T_CLASS (match-beginning 0) (1- (match-end 0)))))
+       (phps-mode-lexer-RETURN_TOKEN 'T_CLASS (match-beginning 0) (match-end 0))))
 
     (phps-mode-lexer-re2c-rule
-     (and ST_IN_SCRIPTING (looking-at (concat "interface" phps-mode-lexer-NOT-LABEL)))
+     (and ST_IN_SCRIPTING (looking-at "interface"))
      (lambda()
-       (phps-mode-lexer-RETURN_TOKEN 'T_INTERFACE (match-beginning 0) (1- (match-end 0)))))
+       (phps-mode-lexer-RETURN_TOKEN 'T_INTERFACE (match-beginning 0) (match-end 0))))
 
     (phps-mode-lexer-re2c-rule
-     (and ST_IN_SCRIPTING (looking-at (concat "trait" phps-mode-lexer-NOT-LABEL)))
+     (and ST_IN_SCRIPTING (looking-at "trait"))
      (lambda()
-       (phps-mode-lexer-RETURN_TOKEN 'T_TRAIT (match-beginning 0) (1- (match-end 0)))))
+       (phps-mode-lexer-RETURN_TOKEN 'T_TRAIT (match-beginning 0) (match-end 0))))
 
     (phps-mode-lexer-re2c-rule
-     (and ST_IN_SCRIPTING (looking-at (concat "extends" phps-mode-lexer-NOT-LABEL)))
+     (and ST_IN_SCRIPTING (looking-at "extends"))
      (lambda()
-       (phps-mode-lexer-RETURN_TOKEN 'T_EXTENDS (match-beginning 0) (1- (match-end 0)))))
+       (phps-mode-lexer-RETURN_TOKEN 'T_EXTENDS (match-beginning 0) (match-end 0))))
 
     (phps-mode-lexer-re2c-rule
-     (and ST_IN_SCRIPTING (looking-at (concat "implements" phps-mode-lexer-NOT-LABEL)))
+     (and ST_IN_SCRIPTING (looking-at "implements"))
      (lambda()
-       (phps-mode-lexer-RETURN_TOKEN 'T_IMPLEMENTS (match-beginning 0) (1- (match-end 0)))))
+       (phps-mode-lexer-RETURN_TOKEN 'T_IMPLEMENTS (match-beginning 0) (match-end 0))))
 
     (phps-mode-lexer-re2c-rule
      (and ST_IN_SCRIPTING (looking-at "->"))
@@ -726,24 +722,24 @@
        (phps-mode-lexer-RETURN_TOKEN 'T_ELLIPSIS (match-beginning 0) (match-end 0))))
 
     (phps-mode-lexer-re2c-rule
-     (and ST_IN_SCRIPTING (looking-at (concat "\\?\\?" "[^\\=]")))
+     (and ST_IN_SCRIPTING (looking-at "\\?\\?"))
      (lambda()
-       (phps-mode-lexer-RETURN_TOKEN 'T_COALESCE (match-beginning 0) (1- (match-end 0)))))
+       (phps-mode-lexer-RETURN_TOKEN 'T_COALESCE (match-beginning 0) (match-end 0))))
 
     (phps-mode-lexer-re2c-rule
-     (and ST_IN_SCRIPTING (looking-at (concat "new" phps-mode-lexer-NOT-LABEL)))
+     (and ST_IN_SCRIPTING (looking-at "new"))
      (lambda()
-       (phps-mode-lexer-RETURN_TOKEN 'T_NEW (match-beginning 0) (1- (match-end 0)))))
+       (phps-mode-lexer-RETURN_TOKEN 'T_NEW (match-beginning 0) (match-end 0))))
 
     (phps-mode-lexer-re2c-rule
-     (and ST_IN_SCRIPTING (looking-at (concat "clone" phps-mode-lexer-NOT-LABEL)))
+     (and ST_IN_SCRIPTING (looking-at "clone"))
      (lambda()
-       (phps-mode-lexer-RETURN_TOKEN 'T_CLONE (match-beginning 0) (1- (match-end 0)))))
+       (phps-mode-lexer-RETURN_TOKEN 'T_CLONE (match-beginning 0) (match-end 0))))
 
     (phps-mode-lexer-re2c-rule
-     (and ST_IN_SCRIPTING (looking-at (concat "var" phps-mode-lexer-NOT-LABEL)))
+     (and ST_IN_SCRIPTING (looking-at "var"))
      (lambda()
-       (phps-mode-lexer-RETURN_TOKEN 'T_VAR (match-beginning 0) (1- (match-end 0)))))
+       (phps-mode-lexer-RETURN_TOKEN 'T_VAR (match-beginning 0) (match-end 0))))
 
     (phps-mode-lexer-re2c-rule
      (and ST_IN_SCRIPTING (looking-at (concat "(" phps-mode-lexer-TABS_AND_SPACES "\\(int\\|integer\\)" phps-mode-lexer-TABS_AND_SPACES ")")))
@@ -781,100 +777,100 @@
        (phps-mode-lexer-RETURN_TOKEN 'T_UNSET_CAST (match-beginning 0) (match-end 0))))
 
     (phps-mode-lexer-re2c-rule
-     (and ST_IN_SCRIPTING (looking-at (concat "eval" phps-mode-lexer-NOT-LABEL)))
+     (and ST_IN_SCRIPTING (looking-at "eval"))
      (lambda()
-       (phps-mode-lexer-RETURN_TOKEN 'T_EVAL (match-beginning 0) (1- (match-end 0)))))
+       (phps-mode-lexer-RETURN_TOKEN 'T_EVAL (match-beginning 0) (match-end 0))))
 
     (phps-mode-lexer-re2c-rule
-     (and ST_IN_SCRIPTING (looking-at (concat "include" phps-mode-lexer-NOT-LABEL)))
+     (and ST_IN_SCRIPTING (looking-at "include"))
      (lambda()
-       (phps-mode-lexer-RETURN_TOKEN 'T_INCLUDE (match-beginning 0) (1- (match-end 0)))))
+       (phps-mode-lexer-RETURN_TOKEN 'T_INCLUDE (match-beginning 0) (match-end 0))))
 
     (phps-mode-lexer-re2c-rule
-     (and ST_IN_SCRIPTING (looking-at (concat "include_once" phps-mode-lexer-NOT-LABEL)))
+     (and ST_IN_SCRIPTING (looking-at "include_once"))
      (lambda()
-       (phps-mode-lexer-RETURN_TOKEN 'T_INCLUDE_ONCE (match-beginning 0) (1- (match-end 0)))))
+       (phps-mode-lexer-RETURN_TOKEN 'T_INCLUDE_ONCE (match-beginning 0) (match-end 0))))
 
     (phps-mode-lexer-re2c-rule
-     (and ST_IN_SCRIPTING (looking-at (concat "require" phps-mode-lexer-NOT-LABEL)))
+     (and ST_IN_SCRIPTING (looking-at "require"))
      (lambda()
-       (phps-mode-lexer-RETURN_TOKEN 'T_REQUIRE (match-beginning 0) (1- (match-end 0)))))
+       (phps-mode-lexer-RETURN_TOKEN 'T_REQUIRE (match-beginning 0) (match-end 0))))
 
     (phps-mode-lexer-re2c-rule
-     (and ST_IN_SCRIPTING (looking-at (concat "require_once" phps-mode-lexer-NOT-LABEL)))
+     (and ST_IN_SCRIPTING (looking-at "require_once"))
      (lambda()
-       (phps-mode-lexer-RETURN_TOKEN 'T_REQUIRE_ONCE (match-beginning 0) (1- (match-end 0)))))
+       (phps-mode-lexer-RETURN_TOKEN 'T_REQUIRE_ONCE (match-beginning 0) (match-end 0))))
 
     (phps-mode-lexer-re2c-rule
-     (and ST_IN_SCRIPTING (looking-at (concat "namespace" phps-mode-lexer-NOT-LABEL)))
+     (and ST_IN_SCRIPTING (looking-at "namespace"))
      (lambda()
        (setq phps-mode-lexer-declaring_namespace t)
-       (phps-mode-lexer-RETURN_TOKEN 'T_NAMESPACE (match-beginning 0) (1- (match-end 0)))))
+       (phps-mode-lexer-RETURN_TOKEN 'T_NAMESPACE (match-beginning 0) (match-end 0))))
 
     (phps-mode-lexer-re2c-rule
-     (and ST_IN_SCRIPTING (looking-at (concat "use" phps-mode-lexer-NOT-LABEL)))
+     (and ST_IN_SCRIPTING (looking-at "use"))
      (lambda()
-       (phps-mode-lexer-RETURN_TOKEN 'T_USE (match-beginning 0) (1- (match-end 0)))))
+       (phps-mode-lexer-RETURN_TOKEN 'T_USE (match-beginning 0) (match-end 0))))
 
     (phps-mode-lexer-re2c-rule
-     (and ST_IN_SCRIPTING (looking-at (concat "insteadof" phps-mode-lexer-NOT-LABEL)))
+     (and ST_IN_SCRIPTING (looking-at "insteadof"))
      (lambda()
-       (phps-mode-lexer-RETURN_TOKEN 'T_INSTEADOF (match-beginning 0) (1- (match-end 0)))))
+       (phps-mode-lexer-RETURN_TOKEN 'T_INSTEADOF (match-beginning 0) (match-end 0))))
 
     (phps-mode-lexer-re2c-rule
-     (and ST_IN_SCRIPTING (looking-at (concat "global" phps-mode-lexer-NOT-LABEL)))
+     (and ST_IN_SCRIPTING (looking-at "global"))
      (lambda()
-       (phps-mode-lexer-RETURN_TOKEN 'T_GLOBAL (match-beginning 0) (1- (match-end 0)))))
+       (phps-mode-lexer-RETURN_TOKEN 'T_GLOBAL (match-beginning 0) (match-end 0))))
 
     (phps-mode-lexer-re2c-rule
-     (and ST_IN_SCRIPTING (looking-at (concat "isset" phps-mode-lexer-NOT-LABEL)))
+     (and ST_IN_SCRIPTING (looking-at "isset"))
      (lambda()
-       (phps-mode-lexer-RETURN_TOKEN 'T_ISSET (match-beginning 0) (1- (match-end 0)))))
+       (phps-mode-lexer-RETURN_TOKEN 'T_ISSET (match-beginning 0) (match-end 0))))
 
     (phps-mode-lexer-re2c-rule
-     (and ST_IN_SCRIPTING (looking-at (concat "empty" phps-mode-lexer-NOT-LABEL)))
+     (and ST_IN_SCRIPTING (looking-at "empty"))
      (lambda()
-       (phps-mode-lexer-RETURN_TOKEN 'T_EMPTY (match-beginning 0) (1- (match-end 0)))))
+       (phps-mode-lexer-RETURN_TOKEN 'T_EMPTY (match-beginning 0) (match-end 0))))
 
     (phps-mode-lexer-re2c-rule
-     (and ST_IN_SCRIPTING (looking-at (concat "__halt_compiler" phps-mode-lexer-NOT-LABEL)))
+     (and ST_IN_SCRIPTING (looking-at "__halt_compiler"))
      (lambda()
-       (phps-mode-lexer-RETURN_TOKEN 'T_HALT_COMPILER (match-beginning 0) (1- (match-end 0)))))
+       (phps-mode-lexer-RETURN_TOKEN 'T_HALT_COMPILER (match-beginning 0) (match-end 0))))
 
     (phps-mode-lexer-re2c-rule
-     (and ST_IN_SCRIPTING (looking-at (concat "static" phps-mode-lexer-NOT-LABEL)))
+     (and ST_IN_SCRIPTING (looking-at "static"))
      (lambda()
-       (phps-mode-lexer-RETURN_TOKEN 'T_STATIC (match-beginning 0) (1- (match-end 0)))))
+       (phps-mode-lexer-RETURN_TOKEN 'T_STATIC (match-beginning 0) (match-end 0))))
 
     (phps-mode-lexer-re2c-rule
-     (and ST_IN_SCRIPTING (looking-at (concat "abstract" phps-mode-lexer-NOT-LABEL)))
+     (and ST_IN_SCRIPTING (looking-at "abstract"))
      (lambda()
-       (phps-mode-lexer-RETURN_TOKEN 'T_ABSTRACT (match-beginning 0) (1- (match-end 0)))))
+       (phps-mode-lexer-RETURN_TOKEN 'T_ABSTRACT (match-beginning 0) (match-end 0))))
 
     (phps-mode-lexer-re2c-rule
-     (and ST_IN_SCRIPTING (looking-at (concat "final" phps-mode-lexer-NOT-LABEL)))
+     (and ST_IN_SCRIPTING (looking-at "final"))
      (lambda()
-       (phps-mode-lexer-RETURN_TOKEN 'T_FINAL (match-beginning 0) (1- (match-end 0)))))
+       (phps-mode-lexer-RETURN_TOKEN 'T_FINAL (match-beginning 0) (match-end 0))))
 
     (phps-mode-lexer-re2c-rule
-     (and ST_IN_SCRIPTING (looking-at (concat "private" phps-mode-lexer-NOT-LABEL)))
+     (and ST_IN_SCRIPTING (looking-at "private"))
      (lambda()
-       (phps-mode-lexer-RETURN_TOKEN 'T_PRIVATE (match-beginning 0) (1- (match-end 0)))))
+       (phps-mode-lexer-RETURN_TOKEN 'T_PRIVATE (match-beginning 0) (match-end 0))))
 
     (phps-mode-lexer-re2c-rule
-     (and ST_IN_SCRIPTING (looking-at (concat "protected" phps-mode-lexer-NOT-LABEL)))
+     (and ST_IN_SCRIPTING (looking-at "protected"))
      (lambda()
-       (phps-mode-lexer-RETURN_TOKEN 'T_PROTECTED (match-beginning 0) (1- (match-end 0)))))
+       (phps-mode-lexer-RETURN_TOKEN 'T_PROTECTED (match-beginning 0) (match-end 0))))
 
     (phps-mode-lexer-re2c-rule
-     (and ST_IN_SCRIPTING (looking-at (concat "public" phps-mode-lexer-NOT-LABEL)))
+     (and ST_IN_SCRIPTING (looking-at "public"))
      (lambda()
-       (phps-mode-lexer-RETURN_TOKEN 'T_PUBLIC (match-beginning 0) (1- (match-end 0)))))
+       (phps-mode-lexer-RETURN_TOKEN 'T_PUBLIC (match-beginning 0) (match-end 0))))
 
     (phps-mode-lexer-re2c-rule
-     (and ST_IN_SCRIPTING (looking-at (concat "unset" phps-mode-lexer-NOT-LABEL)))
+     (and ST_IN_SCRIPTING (looking-at "unset"))
      (lambda()
-       (phps-mode-lexer-RETURN_TOKEN 'T_UNSET (match-beginning 0) (1- (match-end 0)))))
+       (phps-mode-lexer-RETURN_TOKEN 'T_UNSET (match-beginning 0) (match-end 0))))
 
     (phps-mode-lexer-re2c-rule
      (and ST_IN_SCRIPTING (looking-at "=>"))
@@ -882,19 +878,19 @@
        (phps-mode-lexer-RETURN_TOKEN 'T_DOUBLE_ARROW (match-beginning 0) (match-end 0))))
 
     (phps-mode-lexer-re2c-rule
-     (and ST_IN_SCRIPTING (looking-at (concat "list" phps-mode-lexer-NOT-LABEL)))
+     (and ST_IN_SCRIPTING (looking-at "list"))
      (lambda()
-       (phps-mode-lexer-RETURN_TOKEN 'T_LIST (match-beginning 0) (1- (match-end 0)))))
+       (phps-mode-lexer-RETURN_TOKEN 'T_LIST (match-beginning 0) (match-end 0))))
 
     (phps-mode-lexer-re2c-rule
-     (and ST_IN_SCRIPTING (looking-at (concat "array" phps-mode-lexer-NOT-LABEL)))
+     (and ST_IN_SCRIPTING (looking-at "array"))
      (lambda()
-       (phps-mode-lexer-RETURN_TOKEN 'T_ARRAY (match-beginning 0) (1- (match-end 0)))))
+       (phps-mode-lexer-RETURN_TOKEN 'T_ARRAY (match-beginning 0) (match-end 0))))
 
     (phps-mode-lexer-re2c-rule
-     (and ST_IN_SCRIPTING (looking-at (concat "callable" phps-mode-lexer-NOT-LABEL)))
+     (and ST_IN_SCRIPTING (looking-at "callable"))
      (lambda()
-       (phps-mode-lexer-RETURN_TOKEN 'T_CALLABLE (match-beginning 0) (1- (match-end 0)))))
+       (phps-mode-lexer-RETURN_TOKEN 'T_CALLABLE (match-beginning 0) (match-end 0))))
 
     (phps-mode-lexer-re2c-rule
      (and ST_IN_SCRIPTING (looking-at "\\+\\+"))
@@ -1022,232 +1018,29 @@
        (phps-mode-lexer-RETURN_TOKEN 'T_BOOLEAN_AND (match-beginning 0) (match-end 0))))
 
     (phps-mode-lexer-re2c-rule
-     (and ST_IN_SCRIPTING (looking-at (concat "OR" phps-mode-lexer-NOT-LABEL)))
+     (and ST_IN_SCRIPTING (looking-at "OR"))
      (lambda()
-       (phps-mode-lexer-RETURN_TOKEN 'T_LOGICAL_OR (match-beginning 0) (1- (match-end 0)))))
+       (phps-mode-lexer-RETURN_TOKEN 'T_LOGICAL_OR (match-beginning 0) (match-end 0))))
 
     (phps-mode-lexer-re2c-rule
-     (and ST_IN_SCRIPTING (looking-at (concat "AND" phps-mode-lexer-NOT-LABEL)))
+     (and ST_IN_SCRIPTING (looking-at "AND"))
      (lambda()
-       (phps-mode-lexer-RETURN_TOKEN 'T_LOGICAL_AND (match-beginning 0) (1- (match-end 0)))))
+       (phps-mode-lexer-RETURN_TOKEN 'T_LOGICAL_AND (match-beginning 0) (match-end 0))))
 
     (phps-mode-lexer-re2c-rule
-     (and ST_IN_SCRIPTING (looking-at (concat "XOR" phps-mode-lexer-NOT-LABEL)))
+     (and ST_IN_SCRIPTING (looking-at "XOR"))
      (lambda()
-       (phps-mode-lexer-RETURN_TOKEN 'T_LOGICAL_XOR (match-beginning 0) (1- (match-end 0)))))
+       (phps-mode-lexer-RETURN_TOKEN 'T_LOGICAL_XOR (match-beginning 0) (match-end 0))))
 
     (phps-mode-lexer-re2c-rule
-     (and ST_IN_SCRIPTING (looking-at (concat "<<" "[^<]")))
+     (and ST_IN_SCRIPTING (looking-at "<<"))
      (lambda()
-       (phps-mode-lexer-RETURN_TOKEN 'T_SL (match-beginning 0) (1- (match-end 0)))))
+       (phps-mode-lexer-RETURN_TOKEN 'T_SL (match-beginning 0) (match-end 0))))
 
     (phps-mode-lexer-re2c-rule
-     (and ST_IN_SCRIPTING (looking-at (concat ">>" "[^>]")))
+     (and ST_IN_SCRIPTING (looking-at ">>"))
      (lambda()
-       (phps-mode-lexer-RETURN_TOKEN 'T_SR (match-beginning 0) (1- (match-end 0)))))
-
-    (phps-mode-lexer-re2c-rule
-     (and ST_IN_SCRIPTING (looking-at "\\?>\n?"))
-     (lambda()
-       (let ((start (match-beginning 0))
-             (end (match-end 0)))
-         (when (= (- end start) 3)
-           (setq end (1- end)))
-         (phps-mode-lexer-BEGIN phps-mode-lexer-ST_INITIAL)
-         (when phps-mode-lexer-PARSER_MODE
-           (phps-mode-lexer-RETURN_TOKEN ";" start end))
-         (phps-mode-lexer-RETURN_TOKEN 'T_CLOSE_TAG start end))))
-
-    ;; HEREDOC and NOWDOC
-    (phps-mode-lexer-re2c-rule
-     (and ST_IN_SCRIPTING (looking-at (concat "<<<" phps-mode-lexer-TABS_AND_SPACES "\\(" phps-mode-lexer-LABEL "\\|'" phps-mode-lexer-LABEL "'\\|\"" phps-mode-lexer-LABEL "\"\\)" phps-mode-lexer-NEWLINE)))
-     (lambda()
-       (let* ((start (match-beginning 0))
-              (end (match-end 0))
-              (data (buffer-substring-no-properties (match-beginning 1) (match-end 1)))
-              (heredoc_label))
-
-         ;; Determine if it's HEREDOC or NOWDOC and extract label here
-         (if (string= (substring data 0 1) "'")
-             (progn
-               (setq heredoc_label (substring data 1 (- (length data) 1)))
-               (phps-mode-lexer-BEGIN phps-mode-lexer-ST_NOWDOC))
-           (progn
-             (if (string= (substring data 0 1) "\"")
-                 (setq heredoc_label (substring data 1 (- (length data) 1)))
-               (setq heredoc_label data))
-             (phps-mode-lexer-BEGIN phps-mode-lexer-ST_HEREDOC)))
-
-         ;; Check for ending label on the next line
-         (when (string= (buffer-substring-no-properties end (+ end (length heredoc_label))) heredoc_label)
-           (phps-mode-lexer-BEGIN phps-mode-lexer-ST_END_HEREDOC))
-
-         (push heredoc_label phps-mode-lexer-heredoc_label_stack)
-         ;; (message "Found heredoc or nowdoc at %s with label %s" data heredoc_label)
-
-         (phps-mode-lexer-RETURN_TOKEN 'T_START_HEREDOC start end))))
-
-
-    (phps-mode-lexer-re2c-rule
-     (and ST_IN_SCRIPTING (looking-at "{"))
-     (lambda()
-       (phps-mode-lexer-yy_push_state phps-mode-lexer-ST_IN_SCRIPTING)
-       (when phps-mode-lexer-declaring_namespace
-         (setq phps-mode-lexer-declaring_namespace nil))
-       (phps-mode-lexer-RETURN_TOKEN "{" (match-beginning 0) (match-end 0))))
-
-    (phps-mode-lexer-re2c-rule
-     (and ST_IN_SCRIPTING (looking-at "}"))
-     (lambda()
-       (when phps-mode-lexer-state_stack
-         ;; (message "State stack %s" phps-mode-lexer-state_stack)
-         ;; (message "popping state from } %s at %s-%s" (length phps-mode-lexer-state_stack) (match-beginning 0) (match-end 0))
-         (phps-mode-lexer-yy_pop_state)
-         ;; (message "New state: %s" phps-mode-lexer-STATE)
-         )
-       (phps-mode-lexer-RETURN_TOKEN "}" (match-beginning 0) (match-end 0))))
-
-    (phps-mode-lexer-re2c-rule
-     (and ST_IN_SCRIPTING (looking-at phps-mode-lexer-BNUM))
-     (lambda()
-       (let* ((start (match-beginning 0))
-              (end (match-end 0))
-              (data (buffer-substring-no-properties (+ start 2) end))
-              (long-number (string-to-number data 2)))
-         ;; (message "Binary number %s from %s" long-number data)
-         (if (> long-number phps-mode-lexer-long-limit)
-             (phps-mode-lexer-RETURN_TOKEN 'T_DNUMBER start end)
-           (phps-mode-lexer-RETURN_TOKEN 'T_LNUMBER start end)))))
-
-    (phps-mode-lexer-re2c-rule
-     (and ST_IN_SCRIPTING (looking-at phps-mode-lexer-HNUM))
-     (lambda()
-       (let* ((start (match-beginning 0))
-              (end (match-end 0))
-              (data (buffer-substring-no-properties (+ start 2) end))
-              (long-number (string-to-number data 16)))
-         ;; (message "Hexadecimal number %s from %s" long-number data)
-         (if (> long-number phps-mode-lexer-long-limit)
-             (phps-mode-lexer-RETURN_TOKEN 'T_DNUMBER start end)
-           (phps-mode-lexer-RETURN_TOKEN 'T_LNUMBER start end)))))
-
-    (phps-mode-lexer-re2c-rule
-     (and ST_IN_SCRIPTING (or (looking-at phps-mode-lexer-EXPONENT_DNUM)
-                              (looking-at phps-mode-lexer-DNUM)))
-     (lambda()
-       (let* ((start (match-beginning 0))
-              (end (match-end 0))
-              (_data (buffer-substring-no-properties start end)))
-         ;; (message "Exponent/double at: %s" _data)
-         (phps-mode-lexer-RETURN_TOKEN 'T_DNUMBER start end))))
-
-    (phps-mode-lexer-re2c-rule
-     (and ST_IN_SCRIPTING (looking-at phps-mode-lexer-LNUM))
-     (lambda()
-       (let* ((start (match-beginning 0))
-              (end (match-end 0))
-              (data (string-to-number (buffer-substring-no-properties start end))))
-         ;; (message "Long number: %d" data)
-         (if (> data phps-mode-lexer-long-limit)
-             (phps-mode-lexer-RETURN_TOKEN 'T_DNUMBER start end)
-           (phps-mode-lexer-RETURN_TOKEN 'T_LNUMBER start end)))))
-
-    (phps-mode-lexer-re2c-rule
-     (and ST_IN_SCRIPTING (looking-at (concat "__CLASS__" phps-mode-lexer-NOT-LABEL)))
-     (lambda()
-       (phps-mode-lexer-RETURN_TOKEN 'T_CLASS_C (match-beginning 0) (1- (match-end 0)))))
-
-    (phps-mode-lexer-re2c-rule
-     (and ST_IN_SCRIPTING (looking-at (concat "__TRAIT__" phps-mode-lexer-NOT-LABEL)))
-     (lambda()
-       (phps-mode-lexer-RETURN_TOKEN 'T_TRAIT_C (match-beginning 0) (1- (match-end 0)))))
-
-    (phps-mode-lexer-re2c-rule
-     (and ST_IN_SCRIPTING (looking-at (concat "__FUNCTION__" phps-mode-lexer-NOT-LABEL)))
-     (lambda()
-       (phps-mode-lexer-RETURN_TOKEN 'T_FUNC_C (match-beginning 0) (1- (match-end 0)))))
-
-    (phps-mode-lexer-re2c-rule
-     (and ST_IN_SCRIPTING (looking-at (concat "__METHOD__" phps-mode-lexer-NOT-LABEL)))
-     (lambda()
-       (phps-mode-lexer-RETURN_TOKEN 'T_METHOD_C (match-beginning 0) (1- (match-end 0)))))
-
-    (phps-mode-lexer-re2c-rule
-     (and ST_IN_SCRIPTING (looking-at (concat "__LINE__" phps-mode-lexer-NOT-LABEL)))
-     (lambda()
-       (phps-mode-lexer-RETURN_TOKEN 'T_LINE (match-beginning 0) (1- (match-end 0)))))
-
-    (phps-mode-lexer-re2c-rule
-     (and ST_IN_SCRIPTING (looking-at (concat "__FILE__" phps-mode-lexer-NOT-LABEL)))
-     (lambda()
-       (phps-mode-lexer-RETURN_TOKEN 'T_FILE (match-beginning 0) (1- (match-end 0)))))
-
-    (phps-mode-lexer-re2c-rule
-     (and ST_IN_SCRIPTING (looking-at (concat "__DIR__" phps-mode-lexer-NOT-LABEL)))
-     (lambda()
-       (phps-mode-lexer-RETURN_TOKEN 'T_DIR (match-beginning 0) (1- (match-end 0)))))
-
-    (phps-mode-lexer-re2c-rule
-     (and ST_IN_SCRIPTING (looking-at (concat "__NAMESPACE__" phps-mode-lexer-NOT-LABEL)))
-     (lambda()
-       (phps-mode-lexer-RETURN_TOKEN 'T_NS_C (match-beginning 0) (1- (match-end 0)))))
-
-    (phps-mode-lexer-re2c-rule
-     (and ST_IN_SCRIPTING (looking-at "\\(//\\|#\\)"))
-     (lambda()
-       (let* ((start (match-beginning 0))
-              (end (match-end 0))
-              (_data (buffer-substring-no-properties start end))
-              (line (buffer-substring-no-properties end (line-end-position))))
-         (if (string-match "\\?>" line)
-             (progn
-               ;; (message "Found comment 1 from %s to %s %s in %s" end (+ end (match-beginning 0)) (match-beginning 0) line)
-               (phps-mode-lexer-RETURN_TOKEN 'T_COMMENT start (+ end (match-beginning 0)))
-               )
-           (progn
-             ;; TODO Handle expecting values here
-             ;; (message "Found comment 2 from %s to %s" start (line-end-position))
-             (phps-mode-lexer-RETURN_TOKEN 'T_COMMENT start (line-end-position))
-             )))))
-
-    (phps-mode-lexer-re2c-rule
-     (and ST_IN_SCRIPTING (looking-at (concat "/\\*\\*" phps-mode-lexer-WHITESPACE)))
-     (lambda()
-       (let* ((start (match-beginning 0))
-              (end (match-end 0))
-              (_data (buffer-substring-no-properties start end)))
-         (let ((string-start (search-forward "*/" nil t))
-               position)
-           (if string-start
-               (setq position string-start)
-             (progn
-               (setq position (point-max))
-               (phps-mode-lexer-MOVE_FORWARD (point-max))))
-           (phps-mode-lexer-RETURN_TOKEN 'T_DOC_COMMENT start position)
-           ))))
-
-    (phps-mode-lexer-re2c-rule
-     (and ST_IN_SCRIPTING (looking-at "/\\*"))
-     (lambda()
-       (let* ((start (match-beginning 0))
-              (end (match-end 0))
-              (_data (buffer-substring-no-properties start end)))
-         (let ((string-start (search-forward "*/" nil t))
-               position)
-           (if string-start
-               (setq position string-start)
-             (progn
-               (setq position (point-max))
-               (phps-mode-lexer-MOVE_FORWARD (point-max))))
-           (phps-mode-lexer-RETURN_TOKEN 'T_COMMENT start position)
-           ))))
-
-    (phps-mode-lexer-re2c-rule
-     (and ST_IN_SCRIPTING (looking-at (concat "\\$" phps-mode-lexer-LABEL)))
-     (lambda()
-       (let ((start (match-beginning 0))
-             (end (match-end 0)))
-         (phps-mode-lexer-RETURN_TOKEN 'T_VARIABLE start end))))
+       (phps-mode-lexer-RETURN_TOKEN 'T_SR (match-beginning 0) (match-end 0))))
 
     (phps-mode-lexer-re2c-rule
      (and ST_IN_SCRIPTING (looking-at phps-mode-lexer-TOKENS))
@@ -1267,6 +1060,290 @@
          (if use-brace
              (phps-mode-lexer-RETURN_TOKEN "{" start end)
            (phps-mode-lexer-RETURN_TOKEN data start end)))))
+
+    (phps-mode-lexer-re2c-rule
+     (and ST_IN_SCRIPTING (looking-at "{"))
+     (lambda()
+       (phps-mode-lexer-yy_push_state phps-mode-lexer-ST_IN_SCRIPTING)
+       (when phps-mode-lexer-declaring_namespace
+         (setq phps-mode-lexer-declaring_namespace nil))
+       (phps-mode-lexer-RETURN_TOKEN "{" (match-beginning 0) (match-end 0))))
+
+    (phps-mode-lexer-re2c-rule
+     (and (or ST_DOUBLE_QUOTES ST_BACKQUOTE ST_HEREDOC) (looking-at "\\${"))
+     (lambda()
+       (phps-mode-lexer-yy_push_state phps-mode-lexer-ST_LOOKING_FOR_VARNAME)
+       (phps-mode-lexer-RETURN_TOKEN 'T_DOLLAR_OPEN_CURLY_BRACES (match-beginning 0) (match-end 0))))
+
+    (phps-mode-lexer-re2c-rule
+     (and ST_IN_SCRIPTING (looking-at "}"))
+     (lambda()
+       (when phps-mode-lexer-state_stack
+         ;; (message "State stack %s" phps-mode-lexer-state_stack)
+         ;; (message "popping state from } %s at %s-%s" (length phps-mode-lexer-state_stack) (match-beginning 0) (match-end 0))
+         (phps-mode-lexer-yy_pop_state)
+         ;; (message "New state: %s" phps-mode-lexer-STATE)
+         )
+       (phps-mode-lexer-RETURN_TOKEN "}" (match-beginning 0) (match-end 0))))
+
+    (phps-mode-lexer-re2c-rule
+     (and ST_LOOKING_FOR_VARNAME (looking-at (concat phps-mode-lexer-LABEL "[\\[}]")))
+     (lambda()
+       (let ((start (match-beginning 0))
+             (end (- (match-end 0) 1)))
+         ;; (message "Stopped here")
+         (phps-mode-lexer-yy_pop_state)
+         (phps-mode-lexer-yy_push_state phps-mode-lexer-ST_IN_SCRIPTING)
+         (phps-mode-lexer-RETURN_TOKEN 'T_STRING_VARNAME start end))))
+
+    (phps-mode-lexer-re2c-rule
+     (and ST_LOOKING_FOR_VARNAME (looking-at phps-mode-lexer-ANY_CHAR))
+     (lambda()
+       (phps-mode-lexer-yy_pop_state)
+       (phps-mode-lexer-yy_push_state phps-mode-lexer-ST_IN_SCRIPTING)))
+
+    (phps-mode-lexer-re2c-rule
+     (and ST_IN_SCRIPTING (looking-at phps-mode-lexer-BNUM))
+     (lambda()
+       (let* ((start (match-beginning 0))
+              (end (match-end 0))
+              (data (buffer-substring-no-properties (+ start 2) end))
+              (long-number (string-to-number data 2)))
+         ;; (message "Binary number %s from %s" long-number data)
+         (if (> long-number phps-mode-lexer-long-limit)
+             (phps-mode-lexer-RETURN_TOKEN 'T_DNUMBER start end)
+           (phps-mode-lexer-RETURN_TOKEN 'T_LNUMBER start end)))))
+
+    (phps-mode-lexer-re2c-rule
+     (and ST_IN_SCRIPTING (looking-at phps-mode-lexer-LNUM))
+     (lambda()
+       (let* ((start (match-beginning 0))
+              (end (match-end 0))
+              (data (string-to-number (buffer-substring-no-properties start end))))
+         ;; (message "Long number: %d" data)
+         (if (> data phps-mode-lexer-long-limit)
+             (phps-mode-lexer-RETURN_TOKEN 'T_DNUMBER start end)
+           (phps-mode-lexer-RETURN_TOKEN 'T_LNUMBER start end)))))
+
+    (phps-mode-lexer-re2c-rule
+     (and ST_IN_SCRIPTING (looking-at phps-mode-lexer-HNUM))
+     (lambda()
+       (let* ((start (match-beginning 0))
+              (end (match-end 0))
+              (data (buffer-substring-no-properties (+ start 2) end))
+              (long-number (string-to-number data 16)))
+         ;; (message "Hexadecimal number %s from %s" long-number data)
+         (if (> long-number phps-mode-lexer-long-limit)
+             (phps-mode-lexer-RETURN_TOKEN 'T_DNUMBER start end)
+           (phps-mode-lexer-RETURN_TOKEN 'T_LNUMBER start end)))))
+
+    ;; TODO Implement this
+    ;; (phps-mode-lexer-re2c-rule
+    ;;  (and ST_VAR_OFFSET (looking-at "\\([0]\\|\\([1-9][0-9]*\\)\\)"))
+    ;;  (lambda()
+    ;;    (let* ((start (match-beginning 0))
+    ;;           (end (match-end 0))
+    ;;           (data (buffer-substring-no-properties (+ start 2) end))
+    ;;           (long-number (string-to-number data 16)))
+    ;;      ;; (message "Hexadecimal number %s from %s" long-number data)
+    ;;      (if (> long-number phps-mode-lexer-long-limit)
+    ;;          (phps-mode-lexer-RETURN_TOKEN 'T_DNUMBER start end)
+    ;;        (phps-mode-lexer-RETURN_TOKEN 'T_LNUMBER start end)))))
+
+    (phps-mode-lexer-re2c-rule
+     (and ST_VAR_OFFSET (looking-at (concat "\\("
+                                            phps-mode-lexer-LNUM "\\|"
+                                            phps-mode-lexer-HNUM "\\|"
+                                            phps-mode-lexer-BNUM "\\)")))
+     (lambda()
+       (phps-mode-lexer-RETURN_TOKEN 'T_NUM_STRING (match-beginning 0) (match-end 0))))
+
+    (phps-mode-lexer-re2c-rule
+     (and ST_IN_SCRIPTING (or (looking-at phps-mode-lexer-EXPONENT_DNUM)
+                              (looking-at phps-mode-lexer-DNUM)))
+     (lambda()
+       (let* ((start (match-beginning 0))
+              (end (match-end 0))
+              (_data (buffer-substring-no-properties start end)))
+         ;; (message "Exponent/double at: %s" _data)
+         (phps-mode-lexer-RETURN_TOKEN 'T_DNUMBER start end))))
+
+    (phps-mode-lexer-re2c-rule
+     (and ST_IN_SCRIPTING (looking-at "__CLASS__"))
+     (lambda()
+       (phps-mode-lexer-RETURN_TOKEN 'T_CLASS_C (match-beginning 0) (match-end 0))))
+
+    (phps-mode-lexer-re2c-rule
+     (and ST_IN_SCRIPTING (looking-at "__TRAIT__"))
+     (lambda()
+       (phps-mode-lexer-RETURN_TOKEN 'T_TRAIT_C (match-beginning 0) (match-end 0))))
+
+    (phps-mode-lexer-re2c-rule
+     (and ST_IN_SCRIPTING (looking-at "__FUNCTION__"))
+     (lambda()
+       (phps-mode-lexer-RETURN_TOKEN 'T_FUNC_C (match-beginning 0) (match-end 0))))
+
+    (phps-mode-lexer-re2c-rule
+     (and ST_IN_SCRIPTING (looking-at "__METHOD__"))
+     (lambda()
+       (phps-mode-lexer-RETURN_TOKEN 'T_METHOD_C (match-beginning 0) (match-end 0))))
+
+    (phps-mode-lexer-re2c-rule
+     (and ST_IN_SCRIPTING (looking-at "__LINE__"))
+     (lambda()
+       (phps-mode-lexer-RETURN_TOKEN 'T_LINE (match-beginning 0) (match-end 0))))
+
+    (phps-mode-lexer-re2c-rule
+     (and ST_IN_SCRIPTING (looking-at "__FILE__"))
+     (lambda()
+       (phps-mode-lexer-RETURN_TOKEN 'T_FILE (match-beginning 0) (match-end 0))))
+
+    (phps-mode-lexer-re2c-rule
+     (and ST_IN_SCRIPTING (looking-at "__DIR__"))
+     (lambda()
+       (phps-mode-lexer-RETURN_TOKEN 'T_DIR (match-beginning 0) (match-end 0))))
+
+    (phps-mode-lexer-re2c-rule
+     (and ST_IN_SCRIPTING (looking-at "__NAMESPACE__"))
+     (lambda()
+       (phps-mode-lexer-RETURN_TOKEN 'T_NS_C (match-beginning 0) (match-end 0))))
+
+    (phps-mode-lexer-re2c-rule
+     (and ST_INITIAL (looking-at "<\\?="))
+     (lambda()
+       (let ((start (match-beginning 0))
+             (end (match-end 0)))
+         (phps-mode-lexer-BEGIN phps-mode-lexer-ST_IN_SCRIPTING)
+         ;; (message "Starting scripting after <?=")
+         (when phps-mode-lexer-PARSER_MODE
+           (phps-mode-lexer-RETURN_TOKEN 'T_ECHO start end))
+         (phps-mode-lexer-RETURN_TOKEN 'T_OPEN_TAG_WITH_ECHO start end))))
+
+    (phps-mode-lexer-re2c-rule
+     (and ST_INITIAL (looking-at "<\\?php\\([ \t]\\|\n\\)"))
+     (lambda()
+       (let ((start (match-beginning 0))
+             (end (match-end 0)))
+         (phps-mode-lexer-BEGIN phps-mode-lexer-ST_IN_SCRIPTING)
+         ;; (message "Starting scripting after <?php")
+         (when phps-mode-lexer-EXPECTED
+           (phps-mode-lexer-SKIP_TOKEN 'T_OPEN_TAG start end))
+         (phps-mode-lexer-RETURN_TOKEN 'T_OPEN_TAG start end))))
+
+    (phps-mode-lexer-re2c-rule
+     (and ST_INITIAL (looking-at "<\\?"))
+     (lambda()
+       (when phps-mode-lexer-SHORT_TAGS
+         (let ((start (match-beginning 0))
+               (end (match-end 0)))
+           (phps-mode-lexer-BEGIN phps-mode-lexer-ST_IN_SCRIPTING)
+           (when phps-mode-lexer-EXPECTED
+             (phps-mode-lexer-SKIP_TOKEN 'T_OPEN_TAG start end))
+           ;; (message "Starting scripting after <?")
+           (phps-mode-lexer-RETURN_TOKEN 'T_OPEN_TAG start end)))))
+
+    ;; NOTE: mimics inline_char_handler
+    (phps-mode-lexer-re2c-rule
+     (and ST_INITIAL (looking-at phps-mode-lexer-ANY_CHAR))
+     (lambda()
+       (let ((start (match-beginning 0)))
+         (let ((string-start (search-forward "<?" nil t)))
+           (if string-start
+               (phps-mode-lexer-RETURN_TOKEN 'T_INLINE_HTML start (- string-start 2))
+             (phps-mode-lexer-RETURN_TOKEN 'T_INLINE_HTML start (point-max)))))))
+
+    (phps-mode-lexer-re2c-rule
+     (and (or ST_DOUBLE_QUOTES ST_HEREDOC ST_BACKQUOTE) (looking-at (concat "\\$" phps-mode-lexer-LABEL "->" "[a-zA-Z_\x80-\xff]")))
+     (lambda()
+       (phps-mode-lexer-yy_push_state phps-mode-lexer-ST_LOOKING_FOR_PROPERTY)
+       (forward-char -3)
+       (phps-mode-lexer-RETURN_TOKEN 'T_VARIABLE (match-beginning 0) (- (match-end 0) 3))))
+
+    (phps-mode-lexer-re2c-rule
+     (and (or ST_DOUBLE_QUOTES ST_HEREDOC ST_BACKQUOTE) (looking-at (concat "\\$" phps-mode-lexer-LABEL "\\[")))
+     (lambda()
+       (phps-mode-lexer-yy_push_state phps-mode-lexer-ST_VAR_OFFSET)
+       (phps-mode-lexer-RETURN_TOKEN 'T_VARIABLE (match-beginning 0) (match-end 0))))
+
+    (phps-mode-lexer-re2c-rule
+     (and (or ST_IN_SCRIPTING ST_DOUBLE_QUOTES ST_HEREDOC ST_BACKQUOTE ST_VAR_OFFSET) (looking-at (concat "\\$" phps-mode-lexer-LABEL)))
+     (lambda()
+       (phps-mode-lexer-RETURN_TOKEN 'T_VARIABLE (match-beginning 0) (match-end 0))))
+
+    (phps-mode-lexer-re2c-rule
+     (and ST_VAR_OFFSET (looking-at "\\]"))
+     (lambda()
+       (phps-mode-lexer-yy_pop_state)
+       (phps-mode-lexer-RETURN_TOKEN "]" (match-beginning 0) (match-end 0))))
+
+    (phps-mode-lexer-re2c-rule
+     (and ST_VAR_OFFSET (looking-at (concat "\\(" phps-mode-lexer-TOKENS
+                                            "\\|[{}\"`]\\)")))
+     (lambda()
+       (let* ((start (match-beginning 0))
+              (end (match-end 0))
+              (data (buffer-substring-no-properties start end)))
+         (phps-mode-lexer-RETURN_TOKEN data start end))))
+
+    (phps-mode-lexer-re2c-rule
+     (and ST_VAR_OFFSET (looking-at (concat "[ \n\r\t'#]")))
+     (lambda()
+       (let* ((start (match-beginning 0))
+              (end (- (match-end 0) 1)))
+         (phps-mode-lexer-yy_pop_state)
+         (phps-mode-lexer-RETURN_TOKEN 'T_ENCAPSED_AND_WHITESPACE start end))))
+
+    (phps-mode-lexer-re2c-rule
+     (and (or ST_IN_SCRIPTING ST_VAR_OFFSET) (looking-at phps-mode-lexer-LABEL))
+     (lambda()
+       ;; (message "Adding T_STRING from %s to %s" (match-beginning 0) (match-end 0))
+       (phps-mode-lexer-RETURN_TOKEN 'T_STRING (match-beginning 0) (match-end 0))))
+
+    (phps-mode-lexer-re2c-rule
+     (and ST_IN_SCRIPTING (looking-at "\\(#\\|//\\)"))
+     (lambda()
+       (let* ((start (match-beginning 0))
+              (end (match-end 0))
+              (_data (buffer-substring-no-properties start end))
+              (line (buffer-substring-no-properties end (line-end-position))))
+         (if (string-match "\\?>" line)
+             (progn
+               ;; (message "Found comment 1 from %s to %s %s in %s" end (+ end (match-beginning 0)) (match-beginning 0) line)
+               (phps-mode-lexer-RETURN_TOKEN 'T_COMMENT start (+ end (match-beginning 0)))
+               )
+           (progn
+             ;; TODO Handle expecting values here
+             ;; (message "Found comment 2 from %s to %s" start (line-end-position))
+             (phps-mode-lexer-RETURN_TOKEN 'T_COMMENT start (line-end-position))
+             )))))
+
+    (phps-mode-lexer-re2c-rule
+     (and ST_IN_SCRIPTING (looking-at (concat "\\(/\\*\\|/\\*\\*\\)" phps-mode-lexer-WHITESPACE)))
+     (lambda()
+       (let* ((start (match-beginning 0))
+              (end (match-end 0))
+              (_data (buffer-substring-no-properties start end)))
+         (let ((string-start (search-forward "*/" nil t))
+               position)
+           (if string-start
+               (setq position string-start)
+             (progn
+               (setq position (point-max))
+               (phps-mode-lexer-MOVE_FORWARD (point-max))))
+           (phps-mode-lexer-RETURN_TOKEN 'T_DOC_COMMENT start position)
+           ))))
+
+    (phps-mode-lexer-re2c-rule
+     (and ST_IN_SCRIPTING (looking-at "\\?>\n?"))
+     (lambda()
+       (let ((start (match-beginning 0))
+             (end (match-end 0)))
+         (when (= (- end start) 3)
+           (setq end (1- end)))
+         (phps-mode-lexer-BEGIN phps-mode-lexer-ST_INITIAL)
+         (when phps-mode-lexer-PARSER_MODE
+           (phps-mode-lexer-RETURN_TOKEN ";" start end))
+         (phps-mode-lexer-RETURN_TOKEN 'T_CLOSE_TAG start end))))
 
     (phps-mode-lexer-re2c-rule
      (and ST_IN_SCRIPTING (looking-at "'"))
@@ -1327,113 +1404,55 @@
                  (phps-mode-lexer-MOVE_FORWARD (point-max)))))))))
 
     (phps-mode-lexer-re2c-rule
+     (and ST_IN_SCRIPTING (looking-at (concat "<<<" phps-mode-lexer-TABS_AND_SPACES "\\(" phps-mode-lexer-LABEL "\\|'" phps-mode-lexer-LABEL "'\\|\"" phps-mode-lexer-LABEL "\"\\)" phps-mode-lexer-NEWLINE)))
+     (lambda()
+       (let* ((start (match-beginning 0))
+              (end (match-end 0))
+              (data (buffer-substring-no-properties (match-beginning 1) (match-end 1)))
+              (heredoc_label))
+
+         ;; Determine if it's HEREDOC or NOWDOC and extract label here
+         (if (string= (substring data 0 1) "'")
+             (progn
+               (setq heredoc_label (substring data 1 (- (length data) 1)))
+               (phps-mode-lexer-BEGIN phps-mode-lexer-ST_NOWDOC))
+           (progn
+             (if (string= (substring data 0 1) "\"")
+                 (setq heredoc_label (substring data 1 (- (length data) 1)))
+               (setq heredoc_label data))
+             (phps-mode-lexer-BEGIN phps-mode-lexer-ST_HEREDOC)))
+
+         ;; Check for ending label on the next line
+         (when (string= (buffer-substring-no-properties end (+ end (length heredoc_label))) heredoc_label)
+           (phps-mode-lexer-BEGIN phps-mode-lexer-ST_END_HEREDOC))
+
+         (push heredoc_label phps-mode-lexer-heredoc_label_stack)
+         ;; (message "Found heredoc or nowdoc at %s with label %s" data heredoc_label)
+
+         (phps-mode-lexer-RETURN_TOKEN 'T_START_HEREDOC start end))))
+
+    (phps-mode-lexer-re2c-rule
      (and ST_IN_SCRIPTING (looking-at "[`]"))
      (lambda()
        ;; (message "Begun backquote at %s-%s" (match-beginning 0) (match-end 0))
        (phps-mode-lexer-BEGIN phps-mode-lexer-ST_BACKQUOTE)
        (phps-mode-lexer-RETURN_TOKEN "`" (match-beginning 0) (match-end 0))))
 
-
     (phps-mode-lexer-re2c-rule
-     (and ST_IN_SCRIPTING (looking-at phps-mode-lexer-LABEL))
+     (and ST_END_HEREDOC (looking-at (concat phps-mode-lexer-ANY_CHAR)))
      (lambda()
-       ;; (message "Adding T_STRING from %s to %s" (match-beginning 0) (match-end 0))
-       (phps-mode-lexer-RETURN_TOKEN 'T_STRING (match-beginning 0) (match-end 0))))
-
-    (phps-mode-lexer-re2c-rule
-     (and ST_IN_SCRIPTING (looking-at phps-mode-lexer-TOKENS))
-     (lambda()
-       (phps-mode-lexer-RETURN_TOKEN (match-string 0) (match-beginning 0) (match-end 0))))
-
-    (phps-mode-lexer-re2c-rule
-     (and ST_IN_SCRIPTING (looking-at phps-mode-lexer-ANY_CHAR))
-     (lambda()
-       ;; Unexpected character
-       ;; (message "Unexpected character '%s'" (buffer-substring-no-properties (match-beginning 0) (match-end 0)))
-       (phps-mode-lexer-RETURN_TOKEN 'T_ERROR (match-beginning 0) (point-max))
-       (phps-mode-lexer-MOVE_FORWARD (point-max))))
-
-
-    ;; ST_INITIAL
-
-
-    (phps-mode-lexer-re2c-rule
-     (and ST_INITIAL (looking-at "<\\?="))
-     (lambda()
-       (let ((start (match-beginning 0))
-             (end (match-end 0)))
+       (let* ((start (match-beginning 0))
+              (end (+ start (length heredoc_label) 1))
+              (_data (buffer-substring-no-properties start end)))
+         ;; (message "Found ending heredoc at %s, %s of %s" _data (thing-at-point 'line) heredoc_label)
+         (pop phps-mode-lexer-heredoc_label_stack)
          (phps-mode-lexer-BEGIN phps-mode-lexer-ST_IN_SCRIPTING)
-         ;; (message "Starting scripting after <?=")
-         (when phps-mode-lexer-PARSER_MODE
-           (phps-mode-lexer-RETURN_TOKEN 'T_ECHO start end))
-         (phps-mode-lexer-RETURN_TOKEN 'T_OPEN_TAG_WITH_ECHO start end))))
+         (phps-mode-lexer-RETURN_TOKEN 'T_END_HEREDOC start end))))
 
     (phps-mode-lexer-re2c-rule
-     (and ST_INITIAL (looking-at "<\\?php\\([ \t]\\|\n\\)"))
-     (lambda()
-       (let ((start (match-beginning 0))
-             (end (match-end 0)))
-         (phps-mode-lexer-BEGIN phps-mode-lexer-ST_IN_SCRIPTING)
-         ;; (message "Starting scripting after <?php")
-         (when phps-mode-lexer-EXPECTED
-           (phps-mode-lexer-SKIP_TOKEN 'T_OPEN_TAG start end))
-         (phps-mode-lexer-RETURN_TOKEN 'T_OPEN_TAG start end))))
-
-    (phps-mode-lexer-re2c-rule
-     (and ST_INITIAL (looking-at "<\\?"))
-     (lambda()
-       (when phps-mode-lexer-SHORT_TAGS
-         (let ((start (match-beginning 0))
-               (end (match-end 0)))
-           (phps-mode-lexer-BEGIN phps-mode-lexer-ST_IN_SCRIPTING)
-           (when phps-mode-lexer-EXPECTED
-             (phps-mode-lexer-SKIP_TOKEN 'T_OPEN_TAG start end))
-           ;; (message "Starting scripting after <?")
-           (phps-mode-lexer-RETURN_TOKEN 'T_OPEN_TAG start end)))))
-
-    ;; NOTE: mimics inline_char_handler
-    (phps-mode-lexer-re2c-rule
-     (and ST_INITIAL (looking-at phps-mode-lexer-ANY_CHAR))
-     (lambda()
-       (let ((start (match-beginning 0)))
-         (let ((string-start (search-forward "<?" nil t)))
-           (if string-start
-               (phps-mode-lexer-RETURN_TOKEN 'T_INLINE_HTML start (- string-start 2))
-             (phps-mode-lexer-RETURN_TOKEN 'T_INLINE_HTML start (point-max)))))))
-
-    
-    ;; ST_DOUBLE_QUOTES
-
-
-    (phps-mode-lexer-re2c-rule
-     (and ST_DOUBLE_QUOTES (looking-at "\\${"))
-     (lambda()
-       (phps-mode-lexer-yy_push_state phps-mode-lexer-ST_LOOKING_FOR_VARNAME)
-       (phps-mode-lexer-RETURN_TOKEN 'T_DOLLAR_OPEN_CURLY_BRACES (match-beginning 0) (match-end 0))))
-
-    (phps-mode-lexer-re2c-rule
-     (and ST_DOUBLE_QUOTES (looking-at (concat "\\$" phps-mode-lexer-LABEL "->" "[a-zA-Z_\x80-\xff]")))
-     (lambda()
-       (phps-mode-lexer-yy_push_state phps-mode-lexer-ST_LOOKING_FOR_PROPERTY)
-       (forward-char -3)
-       (phps-mode-lexer-RETURN_TOKEN 'T_VARIABLE (match-beginning 0) (- (match-end 0) 3))))
-
-    (phps-mode-lexer-re2c-rule
-     (and ST_DOUBLE_QUOTES (looking-at (concat "\\$" phps-mode-lexer-LABEL "\\[")))
-     (lambda()
-       (phps-mode-lexer-yy_push_state phps-mode-lexer-ST_VAR_OFFSET)
-       (phps-mode-lexer-RETURN_TOKEN 'T_VARIABLE (match-beginning 0) (match-end 0))))
-
-    (phps-mode-lexer-re2c-rule
-     (and ST_DOUBLE_QUOTES (looking-at (concat "\\$" phps-mode-lexer-LABEL)))
-     (lambda()
-       (phps-mode-lexer-RETURN_TOKEN 'T_VARIABLE (match-beginning 0) (match-end 0))))
-
-    (phps-mode-lexer-re2c-rule
-     (and ST_DOUBLE_QUOTES (looking-at "{\\$"))
+     (and (or ST_DOUBLE_QUOTES ST_BACKQUOTE ST_HEREDOC) (looking-at (concat "{\\$")))
      (lambda()
        (phps-mode-lexer-yy_push_state phps-mode-lexer-ST_IN_SCRIPTING)
-       ;; (message "Starting ST_IN_SCRIPTING from double-quoted string at %s-%s" (match-beginning 0) (- (match-end 0) 1))
        (phps-mode-lexer-RETURN_TOKEN 'T_CURLY_OPEN (match-beginning 0) (- (match-end 0) 1))))
 
     (phps-mode-lexer-re2c-rule
@@ -1442,6 +1461,12 @@
        (phps-mode-lexer-BEGIN phps-mode-lexer-ST_IN_SCRIPTING)
        ;; (message "Ended double-quote at %s" (match-beginning 0))
        (phps-mode-lexer-RETURN_TOKEN "\"" (match-beginning 0) (match-end 0))))
+
+    (phps-mode-lexer-re2c-rule
+     (and ST_BACKQUOTE (looking-at "[`]"))
+     (lambda()
+       (phps-mode-lexer-BEGIN phps-mode-lexer-ST_IN_SCRIPTING)
+       (phps-mode-lexer-RETURN_TOKEN "`" (match-beginning 0) (match-end 0))))
 
     (phps-mode-lexer-re2c-rule
      (and ST_DOUBLE_QUOTES (looking-at phps-mode-lexer-ANY_CHAR))
@@ -1470,46 +1495,6 @@
                (phps-mode-lexer-RETURN_TOKEN 'T_ERROR start (point-max))
                (phps-mode-lexer-MOVE_FORWARD (point-max))))))))
 
-
-    ;; ST_BACKQUOTE
-
-
-    (phps-mode-lexer-re2c-rule
-     (and ST_BACKQUOTE (looking-at "\\${"))
-     (lambda()
-       (phps-mode-lexer-yy_push_state phps-mode-lexer-ST_LOOKING_FOR_VARNAME)
-       (phps-mode-lexer-RETURN_TOKEN 'T_DOLLAR_OPEN_CURLY_BRACES (match-beginning 0) (match-end 0))))
-
-    (phps-mode-lexer-re2c-rule
-     (and ST_BACKQUOTE (looking-at (concat "\\$" phps-mode-lexer-LABEL "->" "[a-zA-Z_\x80-\xff]")))
-     (lambda()
-       (phps-mode-lexer-yy_push_state phps-mode-lexer-ST_LOOKING_FOR_PROPERTY)
-       (forward-char -3)
-       (phps-mode-lexer-RETURN_TOKEN 'T_VARIABLE (match-beginning 0) (- (match-end 0) 3))))
-
-    (phps-mode-lexer-re2c-rule
-     (and ST_BACKQUOTE (looking-at (concat "\\$" phps-mode-lexer-LABEL "\\[")))
-     (lambda()
-       (phps-mode-lexer-yy_push_state phps-mode-lexer-ST_VAR_OFFSET)
-       (phps-mode-lexer-RETURN_TOKEN 'T_VARIABLE (match-beginning 0) (match-end 0))))
-
-    (phps-mode-lexer-re2c-rule
-     (and ST_BACKQUOTE (looking-at (concat "\\$" phps-mode-lexer-LABEL)))
-     (lambda()
-       (phps-mode-lexer-RETURN_TOKEN 'T_VARIABLE (match-beginning 0) (match-end 0))))
-
-    (phps-mode-lexer-re2c-rule
-     (and ST_BACKQUOTE (looking-at "{\\$"))
-     (lambda()
-       (phps-mode-lexer-yy_push_state phps-mode-lexer-ST_IN_SCRIPTING)
-       (phps-mode-lexer-RETURN_TOKEN 'T_CURLY_OPEN (match-beginning 0) (- (match-end 0) 1))))
-
-    (phps-mode-lexer-re2c-rule
-     (and ST_BACKQUOTE (looking-at "[`]"))
-     (lambda()
-       (phps-mode-lexer-BEGIN phps-mode-lexer-ST_IN_SCRIPTING)
-       (phps-mode-lexer-RETURN_TOKEN "`" (match-beginning 0) (match-end 0))))
-
     (phps-mode-lexer-re2c-rule
      (and ST_BACKQUOTE (looking-at phps-mode-lexer-ANY_CHAR))
      (lambda()
@@ -1523,39 +1508,6 @@
              ;; (message "Found no end of backquote.. skipping to end from %s" (buffer-substring-no-properties (point) (point-max)))
              (phps-mode-lexer-RETURN_TOKEN 'T_ERROR old-start (point-max))
              (phps-mode-lexer-MOVE_FORWARD (point-max)))))))
-
-
-    ;; ST_HEREDOC
-
-    (phps-mode-lexer-re2c-rule
-     (and ST_HEREDOC (looking-at "\\${"))
-     (lambda()
-       (phps-mode-lexer-yy_push_state phps-mode-lexer-ST_LOOKING_FOR_VARNAME)
-       (phps-mode-lexer-RETURN_TOKEN 'T_DOLLAR_OPEN_CURLY_BRACES (match-beginning 0) (match-end 0))))
-
-    (phps-mode-lexer-re2c-rule
-     (and ST_HEREDOC (looking-at (concat "\\$" phps-mode-lexer-LABEL "->" "[a-zA-Z_\x80-\xff]")))
-     (lambda()
-       (phps-mode-lexer-yy_push_state phps-mode-lexer-ST_LOOKING_FOR_PROPERTY)
-       (forward-char -3)
-       (phps-mode-lexer-RETURN_TOKEN 'T_VARIABLE (match-beginning 0) (- (match-end 0) 3))))
-
-    (phps-mode-lexer-re2c-rule
-     (and ST_HEREDOC (looking-at (concat "\\$" phps-mode-lexer-LABEL "\\[")))
-     (lambda()
-       (phps-mode-lexer-yy_push_state phps-mode-lexer-ST_VAR_OFFSET)
-       (phps-mode-lexer-RETURN_TOKEN 'T_VARIABLE (match-beginning 0) (match-end 0))))
-
-    (phps-mode-lexer-re2c-rule
-     (and ST_HEREDOC (looking-at (concat "\\$" phps-mode-lexer-LABEL)))
-     (lambda()
-       (phps-mode-lexer-RETURN_TOKEN 'T_VARIABLE (match-beginning 0) (match-end 0))))
-
-    (phps-mode-lexer-re2c-rule
-     (and ST_HEREDOC (looking-at (concat "{\\$")))
-     (lambda()
-       (phps-mode-lexer-yy_push_state phps-mode-lexer-ST_IN_SCRIPTING)
-       (phps-mode-lexer-RETURN_TOKEN 'T_CURLY_OPEN (match-beginning 0) (- (match-end 0) 1))))
 
     (phps-mode-lexer-re2c-rule
      (and ST_HEREDOC (looking-at phps-mode-lexer-ANY_CHAR))
@@ -1588,10 +1540,6 @@
              (phps-mode-lexer-MOVE_FORWARD (point-max))
              )))))
 
-
-    ;; ST_NOWDOC
-
-
     (phps-mode-lexer-re2c-rule
      (and ST_NOWDOC (looking-at phps-mode-lexer-ANY_CHAR))
      (lambda()
@@ -1611,93 +1559,11 @@
              (phps-mode-lexer-MOVE_FORWARD (point-max))
              )))))
 
-
-    ;; ST_LOOKING_FOR_VARNAME
-
-
     (phps-mode-lexer-re2c-rule
-     (and ST_LOOKING_FOR_VARNAME (looking-at (concat phps-mode-lexer-LABEL "[\\[}]")))
-     (lambda()
-       (let ((start (match-beginning 0))
-             (end (- (match-end 0) 1)))
-         ;; (message "Stopped here")
-         (phps-mode-lexer-yy_pop_state)
-         (phps-mode-lexer-yy_push_state phps-mode-lexer-ST_IN_SCRIPTING)
-         (phps-mode-lexer-RETURN_TOKEN 'T_STRING_VARNAME start end))))
-
-    (phps-mode-lexer-re2c-rule
-     (and ST_LOOKING_FOR_VARNAME (looking-at phps-mode-lexer-ANY_CHAR))
-     (lambda()
-       (phps-mode-lexer-yy_pop_state)
-       (phps-mode-lexer-yy_push_state phps-mode-lexer-ST_IN_SCRIPTING)))
-
-
-    ;; ST_END_HEREDOC
-
-
-    (phps-mode-lexer-re2c-rule
-     (and ST_END_HEREDOC (looking-at (concat phps-mode-lexer-ANY_CHAR)))
-     (lambda()
-
-       (let* ((start (match-beginning 0))
-              (end (+ start (length heredoc_label) 1))
-              (_data (buffer-substring-no-properties start end)))
-         ;; (message "Found ending heredoc at %s, %s of %s" _data (thing-at-point 'line) heredoc_label)
-         (pop phps-mode-lexer-heredoc_label_stack)
-         (phps-mode-lexer-BEGIN phps-mode-lexer-ST_IN_SCRIPTING)
-         (phps-mode-lexer-RETURN_TOKEN 'T_END_HEREDOC start end)
-
-         )))
-
-
-    ;; ST_VAR_OFFSET
-
-
-    (phps-mode-lexer-re2c-rule
-     (and ST_VAR_OFFSET (looking-at (concat "\\("
-                                            phps-mode-lexer-LNUM "\\|"
-                                            phps-mode-lexer-HNUM "\\|"
-                                            phps-mode-lexer-BNUM "\\)")))
-     (lambda()
-       (phps-mode-lexer-RETURN_TOKEN 'T_NUM_STRING (match-beginning 0) (match-end 0))))
-
-    (phps-mode-lexer-re2c-rule
-     (and ST_VAR_OFFSET (looking-at (concat "\\$" phps-mode-lexer-LABEL)))
-     (lambda()
-       (phps-mode-lexer-RETURN_TOKEN 'T_VARIABLE (match-beginning 0) (match-end 0))))
-
-    (phps-mode-lexer-re2c-rule
-     (and ST_VAR_OFFSET (looking-at "\\]"))
-     (lambda()
-       (phps-mode-lexer-yy_pop_state)
-       (phps-mode-lexer-RETURN_TOKEN "]" (match-beginning 0) (match-end 0))))
-
-    (phps-mode-lexer-re2c-rule
-     (and ST_VAR_OFFSET (looking-at (concat "\\(" phps-mode-lexer-TOKENS
-                                            "\\|[{}\"`]\\)")))
-     (lambda()
-       (let* ((start (match-beginning 0))
-              (end (match-end 0))
-              (data (buffer-substring-no-properties start end)))
-         (phps-mode-lexer-RETURN_TOKEN data start end))))
-
-    (phps-mode-lexer-re2c-rule
-     (and ST_VAR_OFFSET (looking-at (concat "[ \n\r\t'#]")))
-     (lambda()
-       (let* ((start (match-beginning 0))
-              (end (- (match-end 0) 1)))
-         (phps-mode-lexer-yy_pop_state)
-         (phps-mode-lexer-RETURN_TOKEN 'T_ENCAPSED_AND_WHITESPACE start end))))
-
-    (phps-mode-lexer-re2c-rule
-     (and ST_VAR_OFFSET (looking-at phps-mode-lexer-LABEL))
-     (lambda()
-       (phps-mode-lexer-RETURN_TOKEN 'T_STRING (match-beginning 0) (match-end 0))))
-
-    (phps-mode-lexer-re2c-rule
-     (and ST_VAR_OFFSET (looking-at phps-mode-lexer-ANY_CHAR))
+     (and (or ST_IN_SCRIPTING ST_VAR_OFFSET) (looking-at phps-mode-lexer-ANY_CHAR))
      (lambda()
        ;; Unexpected character
+       ;; (message "Unexpected character '%s'" (buffer-substring-no-properties (match-beginning 0) (match-end 0)))
        (phps-mode-lexer-RETURN_TOKEN 'T_ERROR (match-beginning 0) (point-max))
        (phps-mode-lexer-MOVE_FORWARD (point-max))))
 
