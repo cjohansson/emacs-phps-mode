@@ -10,9 +10,9 @@ This mode does not require PHP installed on computer because it has a elisp base
 
 * GPLv3 license (100%)
 * Flycheck support (PHP Mess Detector, PHP Code Sniffer) (100%)
+* Lexer based on official PHP re2c lexer (100%)
 * Syntax coloring based on lexer tokens (100%)
 * PSR-1 and PSR-2 indentation based on lexer tokens (100%)
-* Lexer based on official PHP re2c lexer (100%)
 * Imenu support (100%)
 * Incremental lexer and syntax coloring after buffer changes (75%)
 * Incremental indentation and imenu calculation after buffer changes (50%)
