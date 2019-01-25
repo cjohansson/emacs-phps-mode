@@ -171,7 +171,7 @@
   (phps-mode-test-with-buffer
    "<?php\necho $array['abc'];\necho \"My $array[12] random statement\";\n"
    "Long inside array offset"
-   (message "Tokens: %s" (phps-mode-lexer-get-tokens))
+   ;; (message "Tokens: %s" (phps-mode-lexer-get-tokens))
    (should (equal (phps-mode-lexer-get-tokens)
                   '((T_OPEN_TAG 1 . 7) (T_ECHO 7 . 11) (T_VARIABLE 12 . 18) ("[" 18 . 19) (T_CONSTANT_ENCAPSED_STRING 19 . 24) ("]" 24 . 25) (";" 25 . 26) (T_ECHO 27 . 31) ("\"" 32 . 33) (T_ENCAPSED_AND_WHITESPACE 33 . 36) (T_VARIABLE 36 . 43) (T_NUM_STRING 43 . 45) ("]" 45 . 46) (T_CONSTANT_ENCAPSED_STRING 46 . 63) ("\"" 63 . 64) (";" 64 . 65)))))
 
