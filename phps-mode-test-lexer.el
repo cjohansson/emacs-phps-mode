@@ -162,11 +162,11 @@
                   '((T_OPEN_TAG 1 . 7) (T_STRING 7 . 18) ("(" 18 . 19) (T_VARIABLE 19 . 24) ("," 24 . 25) (T_VARIABLE 26 . 31) (")" 31 . 32)))))
 
   (phps-mode-test-with-buffer
-   "<?php\n$username = $_GET['user'] ?? 'nobody';\n$username ??= $_GET['user'] : 'nobody2';\n"
-   "Coalescing operator and coalescing assignment"
+   "<?php\n$username = $_GET['user'] ?? 'nobody';\n$this->request->data['comments']['user_id'] ??= 'value';\n"
+   "Coalescing comparison operator and coalescing assignment operator"
    ;; (message "Tokens: %s" (phps-mode-lexer-get-tokens))
    (should (equal (phps-mode-lexer-get-tokens)
-                  '((T_OPEN_TAG 1 . 7) (T_VARIABLE 7 . 16) ("=" 17 . 18) (T_VARIABLE 19 . 24) ("[" 24 . 25) (T_CONSTANT_ENCAPSED_STRING 25 . 31) ("]" 31 . 32) (T_COALESCE 33 . 35) (T_CONSTANT_ENCAPSED_STRING 36 . 44) (";" 44 . 45) (T_VARIABLE 46 . 55) (T_COALESCE_EQUAL 56 . 59) (T_VARIABLE 60 . 65) ("[" 65 . 66) (T_CONSTANT_ENCAPSED_STRING 66 . 72) ("]" 72 . 73) (":" 74 . 75) (T_CONSTANT_ENCAPSED_STRING 76 . 85) (";" 85 . 86)))))
+                  '((T_OPEN_TAG 1 . 7) (T_VARIABLE 7 . 16) ("=" 17 . 18) (T_VARIABLE 19 . 24) ("[" 24 . 25) (T_CONSTANT_ENCAPSED_STRING 25 . 31) ("]" 31 . 32) (T_COALESCE 33 . 35) (T_CONSTANT_ENCAPSED_STRING 36 . 44) (";" 44 . 45) (T_VARIABLE 46 . 51) (T_OBJECT_OPERATOR 51 . 53) (T_STRING 53 . 60) (T_OBJECT_OPERATOR 60 . 62) (T_STRING 62 . 66) ("[" 66 . 67) (T_CONSTANT_ENCAPSED_STRING 67 . 77) ("]" 77 . 78) ("[" 78 . 79) (T_CONSTANT_ENCAPSED_STRING 79 . 88) ("]" 88 . 89) (T_COALESCE_EQUAL 90 . 93) (T_CONSTANT_ENCAPSED_STRING 94 . 101) (";" 101 . 102)))))
 
   ;; TODO Add test for long as var offset
 
