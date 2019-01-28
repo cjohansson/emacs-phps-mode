@@ -343,7 +343,6 @@
    (message "Indent: %s" (phps-mode-test-hash-to-list (phps-mode-functions-get-lines-indent)))
    (should (equal '((1 (0 0)) (2 (0 0)) (3 (1 0)) (4 (2 0)) (5 (3 0)) (6 (3 0)) (7 (2 0)) (8 (3 0)) (9 (2 0)) (10 (3 0)) (11 (1 0)) (12 (1 0)) (13 (2 0)) (14 (2 0)) (15 (1 0)) (16 (0 0))) (phps-mode-test-hash-to-list (phps-mode-functions-get-lines-indent)))))
 
-
   (phps-mode-test-with-buffer
    "<?php\nif (true) {\n    switch ($condition) {\n        case true:\n            echo 'here';\n            echo 'here 2';\n        case false:\n            echo 'here 4';\n        default:\n            echo 'here 3';\n    }\n    sprintf(__(\n        'Error: %s',\n        $error\n    ));\n}\n"
    "Curly switch, case, default with exception after it"
@@ -633,7 +632,7 @@
 (defun phps-mode-test-functions ()
   "Run test for functions."
   ;; (setq debug-on-error t)
-  ;; (setq phps-mode-functions-verbose t)
+  (setq phps-mode-functions-verbose t)
   (phps-mode-test-functions-get-lines-lindent-if)
   (phps-mode-test-functions-get-lines-indent-classes)
   (phps-mode-test-functions-get-lines-indent-inline-if)

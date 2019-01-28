@@ -501,7 +501,7 @@
                         (if allow-custom-column-decrement
                             (progn
                               (setq column-level (- column-level (- nesting-start nesting-end)))
-                              (setq allow-custom-column-increment nil))
+                              (setq allow-custom-column-decrement nil))
                           (setq column-level (1- column-level)))
 
                         ;; Prevent negative column-values
@@ -515,7 +515,7 @@
                     (if allow-custom-column-decrement
                         (progn
                           (setq temp-post-indent (- temp-post-indent (- nesting-start nesting-end)))
-                          (setq allow-custom-column-increment nil))
+                          (setq allow-custom-column-decrement nil))
                       (setq temp-post-indent (1- temp-post-indent)))
 
                     ;; Prevent negative column-values
