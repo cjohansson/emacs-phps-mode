@@ -1316,16 +1316,18 @@
      (lambda()
        (let* ((start (match-beginning 0))
               (end (match-end 0))
-              (_data (buffer-substring-no-properties start end)))
+              (_data (buffer-substring-no-properties start end))
+              (doc-com (looking-at-p (concat "/\\*\\*" phps-mode-lexer-WHITESPACE))))
          (let ((string-start (search-forward "*/" nil t))
                position)
            (if string-start
-               (setq position string-start)
+               (if doc-com
+                   (phps-mode-lexer-RETURN_TOKEN 'T_DOC_COMMENT start (match-end 0))
+                 (phps-mode-lexer-RETURN_TOKEN 'T_COMMENT start (match-end 0)))
              (progn
-               (setq position (point-max))
-               (phps-mode-lexer-MOVE_FORWARD (point-max))))
-           (phps-mode-lexer-RETURN_TOKEN 'T_DOC_COMMENT start position)
-           ))))
+               (display-warning "phps-mode" "PHPs Lexer Error - Unterminated comment starting at %s" start)
+               (phps-mode-lexer-RETURN_TOKEN 'T_ERROR start (point-max))
+               (phps-mode-lexer-MOVE_FORWARD (point-max))))))))
 
     (phps-mode-lexer-re2c-rule
      (and ST_IN_SCRIPTING (looking-at "\\?>\n?"))

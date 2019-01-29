@@ -178,7 +178,7 @@
   (phps-mode-test-with-buffer
    "<?php\n/*my comment */\n/** my doc comment */"
    "Comment vs doc-comment"
-   (message "Tokens: %s" (phps-mode-lexer-get-tokens))
+   ;; (message "Tokens: %s" (phps-mode-lexer-get-tokens))
    (should (equal (phps-mode-lexer-get-tokens)
                   '((T_OPEN_TAG 1 . 7) (T_COMMENT 7 . 22) (T_DOC_COMMENT 23 . 44)))))
 
