@@ -49,6 +49,8 @@
    "Round and square bracket expressions"
    (should (equal '((1 (0 0)) (2 (0 0)) (3 (1 0)) (4 (1 0)) (5 (2 0)) (6 (1 0)) (7 (1 0)) (8 (0 0))) (phps-mode-test-hash-to-list (phps-mode-functions-get-lines-indent)))))
 
+  ;; TODO Test <?php\necho 'blaha'\n    . 'ijeije' . __(\n        'okeoke'\n    )\n    'okeoke';\n?>
+
   (phps-mode-test-with-buffer
    "<?php\nvar_dump(array(<<<EOD\nfoobar!\nEOD\n));\n?>"
    "HEREDOC in arguments example"
