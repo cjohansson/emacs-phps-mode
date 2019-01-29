@@ -1312,7 +1312,7 @@
              )))))
 
     (phps-mode-lexer-re2c-rule
-     (and ST_IN_SCRIPTING (looking-at (concat "\\(/\\*\\|/\\*\\*\\)" phps-mode-lexer-WHITESPACE)))
+     (and ST_IN_SCRIPTING (looking-at (concat "\\(/\\*\\|/\\*\\*" phps-mode-lexer-WHITESPACE "\\)")))
      (lambda()
        (let* ((start (match-beginning 0))
               (end (match-end 0))
