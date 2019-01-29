@@ -305,6 +305,7 @@
                       (message "Ended switch curly stack at %s" curly-bracket-level))
 
                     (setq allow-custom-column-decrement t)
+                    (pop nesting-stack)
                     (setq alternative-control-structure-level (1- alternative-control-structure-level))
                     (pop switch-curly-stack))
                   
@@ -329,6 +330,7 @@
                     (pop switch-alternative-stack)
                     (pop switch-case-alternative-stack)
                     (setq allow-custom-column-decrement t)
+                    (pop nesting-stack)
                     (setq alternative-control-structure-level (1- alternative-control-structure-level)))
 
                   (when first-token-on-line
@@ -473,6 +475,9 @@
                   (push alternative-control-structure-level switch-case-alternative-stack)))
 
               (when token
+
+                (when phps-mode-functions-verbose
+                  (message "Processing token: %s" token))
                 
                 ;; Calculate nesting
                 (setq nesting-end (+ round-bracket-level square-bracket-level curly-bracket-level alternative-control-structure-level in-assignment-level in-class-declaration-level concatenation-level))
@@ -500,20 +505,28 @@
                         ;; Decrement column
                         (if allow-custom-column-decrement
                             (progn
+                              (when phps-mode-functions-verbose
+                                (message "Doing custom decrement 1 from %s to %s" column-level (- column-level (- nesting-start nesting-end))))
                               (setq column-level (- column-level (- nesting-start nesting-end)))
                               (setq allow-custom-column-decrement nil))
+                          (when phps-mode-functions-verbose
+                            (message "Doing regular decrement 1 from %s to %s" column-level (1- column-level)))
                           (setq column-level (1- column-level)))
 
                         ;; Prevent negative column-values
                         (when (< column-level 0)
                           (setq column-level 0)))
 
-                    (when (not temp-post-indent)
+                    (unless temp-post-indent
+                      (when phps-mode-functions-verbose
+                        (message "Temporary setting post indent %s" column-level))
                       (setq temp-post-indent column-level))
 
                     ;; Decrement column
                     (if allow-custom-column-decrement
                         (progn
+                          (when phps-mode-functions-verbose
+                                (message "Doing custom decrement 2 from %s to %s" column-level (- column-level (- nesting-start nesting-end))))
                           (setq temp-post-indent (- temp-post-indent (- nesting-start nesting-end)))
                           (setq allow-custom-column-decrement nil))
                       (setq temp-post-indent (1- temp-post-indent)))
