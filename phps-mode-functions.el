@@ -116,7 +116,7 @@
               (token-start nil)
               (token-end nil)
               (token-start-line-number 0)
-              (token-end-line-number)
+              (token-end-line-number 0)
               (tokens (nreverse phps-mode-lexer-tokens))
               (nesting-stack nil)
               (class-declaration-started-this-line nil)
