@@ -178,7 +178,7 @@
   )
 
 (defun phps-mode-test-functions-get-lines-indent-psr-2 ()
-  "Test PSR-2 examples from: https://www.php-fig.org/psr/psr-2/"
+  "Test PSR-2 examples from: https://www.php-fig.org/psr/psr-2/."
 
   (phps-mode-test-with-buffer
    "<?php\nnamespace Vendor\\Package;\n\nuse FooInterface;\nuse BarClass as Bar;\nuse OtherVendor\\OtherPackage\\BazClass;\n\nclass Foo extends Bar implements FooInterface\n{\n    public function sampleMethod($a, $b = null)\n    {\n        if ($a === $b) {\n            bar();\n        } elseif ($a > $b) {\n            $foo->bar($arg1);\n        } else {\n            BazClass::bar($arg2, $arg3);\n        }\n    }\n\n    final public static function bar()\n    {\n        // method body\n    }\n}\n"
@@ -203,6 +203,47 @@
    "PSR-2 : 4.1. Extends and Implements : Example 2"
    ;; (message "Indent: %s" (phps-mode-test-hash-to-list (phps-mode-functions-get-lines-indent)))
    (should (equal '((1 (0 0)) (2 (0 0)) (3 (0 0)) (4 (0 0)) (5 (0 0)) (6 (0 0)) (7 (0 0)) (8 (0 0)) (9 (1 0)) (10 (1 0)) (11 (1 0)) (12 (0 0)) (13 (1 0)) (14 (0 0))) (phps-mode-test-hash-to-list (phps-mode-functions-get-lines-indent)))))
+
+  (phps-mode-test-with-buffer
+   "<?php\nnamespace Vendor\Package;\n\nclass ClassName\n{\n    public $foo = null;\n}"
+   "PSR-2 : 4.2. Properties"
+   ;; (message "Indent: %s" (phps-mode-test-hash-to-list (phps-mode-functions-get-lines-indent)))
+   (should (equal '((1 (0 0)) (2 (0 0)) (3 (0 0)) (4 (0 0)) (5 (0 0)) (6 (1 0)) (7 (0 0))) (phps-mode-test-hash-to-list (phps-mode-functions-get-lines-indent)))))
+
+  (phps-mode-test-with-buffer
+   "<?php\nnamespace Vendor\Package;\n\nclass ClassName\n{\n    public function fooBarBaz($arg1, &$arg2, $arg3 = [])\n    {\n        // method body\n    }\n}"
+   "PSR-2 : 4.3. Methods"
+   ;; (message "Indent: %s" (phps-mode-test-hash-to-list (phps-mode-functions-get-lines-indent)))
+   (should (equal '((1 (0 0)) (2 (0 0)) (3 (0 0)) (4 (0 0)) (5 (0 0)) (6 (1 0)) (7 (1 0)) (8 (2 0)) (9 (1 0)) (10 (0 0))) (phps-mode-test-hash-to-list (phps-mode-functions-get-lines-indent)))))
+
+  (phps-mode-test-with-buffer
+   "<?php\nnamespace Vendor\Package;\n\nclass ClassName\n{\n    public function foo($arg1, &$arg2, $arg3 = [])\n    {\n        // method body\n    }\n}"
+   "PSR-2 : 4.4. Method Arguments : Example 1"
+   ;; (message "Indent: %s" (phps-mode-test-hash-to-list (phps-mode-functions-get-lines-indent)))
+   (should (equal '((1 (0 0)) (2 (0 0)) (3 (0 0)) (4 (0 0)) (5 (0 0)) (6 (1 0)) (7 (1 0)) (8 (2 0)) (9 (1 0)) (10 (0 0))) (phps-mode-test-hash-to-list (phps-mode-functions-get-lines-indent)))))
+
+  ;; TODO Fix this
+
+  (phps-mode-test-with-buffer
+   "<?php\nnamespace Vendor\Package;\n\nclass ClassName\n{\n    public function aVeryLongMethodName(\n        ClassTypeHint $arg1,\n        &$arg2,\n        array $arg3 = []\n    ) {\n        // method body\n    }\n}"
+   "PSR-2 : 4.4. Method Arguments : Example 2"
+   (message "Indent: %s" (phps-mode-test-hash-to-list (phps-mode-functions-get-lines-indent)))
+   (should (equal '((1 (0 0)) (2 (0 0)) (3 (0 0)) (4 (0 0)) (5 (0 0)) (6 (1 0)) (7 (2 0)) (8 (2 0)) (9 (2 0)) (10 (1 0)) (11 (2 0)) (12 (1 0)) (13 (0 0))) (phps-mode-test-hash-to-list (phps-mode-functions-get-lines-indent)))))
+
+  ;; TODO 4.5. abstract, final, and static
+  ;; TODO 4.6. Method and Function Calls : Example 1
+  ;; TODO 4.6. Method and Function Calls : Example 2
+  ;; TODO 5.1. if, elseif, else
+  ;; TODO 5.2. switch, case
+  ;; TODO 5.3. while, do while : Example 1
+  ;; TODO 5.3. while, do while : Example 2
+  ;; TODO 5.4. for
+  ;; TODO 5.5. foreach
+  ;; TODO 5.6. try, catch
+  ;; TODO 6. Closures : Example 1
+  ;; TODO 6. Closures : Example 2
+  ;; TODO 6. Closures : Example 3
+  
 
   )
 
