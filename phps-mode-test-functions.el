@@ -164,11 +164,20 @@
 
   ;; TODO Fix below
 
-  
+  (phps-mode-test-with-buffer
+   "<?php\n$myVar = 'blaha'\n    . 'ijeije' . __(\n        'okeoke'\n    ) . 'okeoke';\n?>"
+   "Concatenated assignment string with function call"
+   (should (equal '((1 (0 0)) (2 (0 0)) (3 (1 0)) (4 (2 0)) (5 (1 0)) (6 (0 0))) (phps-mode-test-hash-to-list (phps-mode-functions-get-lines-indent)))))
+
   (phps-mode-test-with-buffer
    "<?php\n$myVar = 'blaha'\n    . 'ijeije' . __(\n        'okeoke'\n    )\n    . 'okeoke';\n?>"
    "Concatenated assignment string with function call"
    (should (equal '((1 (0 0)) (2 (0 0)) (3 (1 0)) (4 (2 0)) (5 (1 0)) (6 (1 0)) (7 (0 0))) (phps-mode-test-hash-to-list (phps-mode-functions-get-lines-indent)))))
+
+  (phps-mode-test-with-buffer
+   "<?php\necho 'blaha'\n    . 'ijeije' . __(\n        'okeoke'\n    ) . 'okeoke';\n?>"
+   "Concatenated echo string with function call"
+   (should (equal '((1 (0 0)) (2 (0 0)) (3 (1 0)) (4 (2 0)) (5 (1 0)) (6 (0 0))) (phps-mode-test-hash-to-list (phps-mode-functions-get-lines-indent)))))
 
   (phps-mode-test-with-buffer
    "<?php\necho 'blaha'\n    . 'ijeije' . __(\n        'okeoke'\n    )\n    . 'okeoke';\n?>"
@@ -221,8 +230,6 @@
    "PSR-2 : 4.4. Method Arguments : Example 1"
    ;; (message "Indent: %s" (phps-mode-test-hash-to-list (phps-mode-functions-get-lines-indent)))
    (should (equal '((1 (0 0)) (2 (0 0)) (3 (0 0)) (4 (0 0)) (5 (0 0)) (6 (1 0)) (7 (1 0)) (8 (2 0)) (9 (1 0)) (10 (0 0))) (phps-mode-test-hash-to-list (phps-mode-functions-get-lines-indent)))))
-
-  ;; TODO Fix this below
 
   (phps-mode-test-with-buffer
    "<?php\nnamespace Vendor\\Package;\n\nclass ClassName\n{\n    public function aVeryLongMethodName(\n        ClassTypeHint $arg1,\n        &$arg2,\n        array $arg3 = []\n    ) {\n        // method body\n    }\n}"

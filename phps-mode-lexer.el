@@ -399,8 +399,7 @@
   ;; Push token start, end, lexer state and state stack to variable
   (push (list start end phps-mode-lexer-STATE phps-mode-lexer-state_stack) phps-mode-lexer-states)
 
-  (semantic-lex-push-token
-   (semantic-lex-token token start end)))
+  (semantic-lex-push-token (semantic-lex-token token start end)))
 
 ;; TODO Figure out what this does
 (defun phps-mode-lexer-SKIP_TOKEN (_token _start _end)
@@ -1691,9 +1690,12 @@
             ;; Build new list of tokens before point of change
             (catch 'stop-iteration
               (dolist (token tokens)
-                (let ((start (car (cdr token))))
+                (let ((start (car (cdr token)))
+                      (end (cdr (cdr token))))
                   (if (< start previous-token-end)
-                      (push token old-tokens)
+                      (progn
+                        (semantic-lex-push-token (semantic-lex-token token start end))
+                        (push token old-tokens))
                     (throw 'stop-iteration nil)))))
             (setq old-tokens (nreverse old-tokens))
 
@@ -1731,6 +1733,7 @@
   (when (boundp 'semantic-lex-analyzer)
     (setq semantic-lex-analyzer 'phps-mode-lexer-lex))
   (add-hook 'semantic-lex-reset-functions #'phps-mode-lexer-setup)
+  (set (make-local-variable 'phps-mode-lexer-tokens) nil)
   (phps-mode-lexer-run))
 
 (provide 'phps-mode-lexer)
