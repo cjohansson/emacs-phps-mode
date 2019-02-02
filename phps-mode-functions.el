@@ -109,6 +109,8 @@
               (allow-custom-column-increment nil)
               (allow-custom-column-decrement nil)
               (in-assignment nil)
+              (in-assignment-round-bracket-level nil)
+              (in-assignment-square-bracket-level nil)
               (in-assignment-level 0)
               (in-class-declaration nil)
               (in-class-declaration-level 0)
@@ -442,7 +444,10 @@
                 ;; Keep track of assignments
                 (if in-assignment
                     (if (or (string= token ";")
-                            (< round-bracket-level in-assignment))
+                            (and (string= token ")")
+                                 (<= round-bracket-level in-assignment-round-bracket-level))
+                            (and (string= token"]")
+                                 (<= square-bracket-level in-assignment-square-bracket-level)))
                         (progn
                           (setq in-assignment nil)
                           (setq in-assignment-level 0))
@@ -453,7 +458,9 @@
                   (when (and (not after-special-control-structure)
                              (string= token "="))
                     ;; (message "Started assignment")
-                    (setq in-assignment round-bracket-level)
+                    (setq in-assignment t)
+                    (setq in-assignment-round-bracket-level round-bracket-level)
+                    (setq in-assignment-square-bracket-level square-bracket-level)
                     (setq in-assignment-level 1)))
 
                 ;; Did we encounter a token that supports extra special alternative control structures?
