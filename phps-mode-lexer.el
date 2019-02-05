@@ -1694,7 +1694,8 @@
                       (end (cdr (cdr token))))
                   (if (< start previous-token-end)
                       (progn
-                        (semantic-lex-push-token (semantic-lex-token token start end))
+                        ;; NOTE Does following line make any difference?
+                        ;; (semantic-lex-push-token (semantic-lex-token token start end))
                         (push token old-tokens))
                     (throw 'stop-iteration nil)))))
             (setq old-tokens (nreverse old-tokens))

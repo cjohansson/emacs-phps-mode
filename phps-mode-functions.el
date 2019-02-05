@@ -95,7 +95,10 @@
               (round-bracket-level 0)
               (square-bracket-level 0)
               (alternative-control-structure-level 0)
-              (concatenation-level 0)
+              (in-concatenation nil)
+              (in-concatenation-round-bracket-level nil)
+              (in-concatenation-square-bracket-level nil)
+              (in-concatenation-level 0)
               (column-level 0)
               (column-level-start 0)
               (tuning-level 0)
@@ -397,15 +400,23 @@
                     (setq first-token-is-nesting-decrease t))
                   (setq after-extra-special-control-structure nil))
 
-                ;; Keep track of concatenations
-                (when (> next-token-start-line-number token-end-line-number)
-                  (if (or (string= token ".")
-                          (string= next-token "."))
-                      (progn
-                        (when phps-mode-functions-verbose
-                          (message "\nFound ending dot, indenting next line with one.\n"))
-                        (setq concatenation-level 1))
-                    (setq concatenation-level 0)))
+                ;; Keep track of concatenation
+                (if in-concatenation
+                    (when (or (string= token ";")
+                              (and (string= token ")")
+                                   (<= round-bracket-level in-concatenation-round-bracket-level))
+                              (and (string= token"]")
+                                   (<= square-bracket-level in-concatenation-square-bracket-level)))
+                      (setq in-concatenation nil)
+                      (setq in-concatenation-level 0))
+                  (when (and (> next-token-start-line-number token-end-line-number)
+                             (or (string= token ".")
+                                 (string= next-token ".")))
+                    ;; (message "Started assignment")
+                    (setq in-concatenation t)
+                    (setq in-concatenation-round-bracket-level round-bracket-level)
+                    (setq in-concatenation-square-bracket-level square-bracket-level)
+                    (setq in-concatenation-level 1)))
 
                 ;; Did we reach a semicolon inside a inline block? Close the inline block
                 (when (and in-inline-control-structure
@@ -487,7 +498,7 @@
                   (message "Processing token: %s" token))
                 
                 ;; Calculate nesting
-                (setq nesting-end (+ round-bracket-level square-bracket-level curly-bracket-level alternative-control-structure-level in-assignment-level in-class-declaration-level concatenation-level))
+                (setq nesting-end (+ round-bracket-level square-bracket-level curly-bracket-level alternative-control-structure-level in-assignment-level in-class-declaration-level in-concatenation-level))
 
                 ;; Keep track of whether we are inside a HEREDOC or NOWDOC
                 (when (equal token 'T_START_HEREDOC)
@@ -653,7 +664,7 @@
 
 
                       ;; Calculate indentation level at start of line
-                      (setq nesting-start (+ round-bracket-level square-bracket-level curly-bracket-level alternative-control-structure-level in-assignment-level in-class-declaration-level concatenation-level))
+                      (setq nesting-start (+ round-bracket-level square-bracket-level curly-bracket-level alternative-control-structure-level in-assignment-level in-class-declaration-level in-concatenation-level))
 
                       ;; Set initial values for tracking first token
                       (when (> token-start-line-number last-line-number)
