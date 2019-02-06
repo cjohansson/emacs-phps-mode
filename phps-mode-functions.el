@@ -459,13 +459,16 @@
                 (if in-assignment
                     (when (or (string= token ";")
                               (and (string= token ")")
-                                   (<= round-bracket-level in-assignment-round-bracket-level))
+                                   (< round-bracket-level (car in-assignment-round-bracket-level)))
                               (and (string= token ",")
-                                   (<= round-bracket-level in-assignment-round-bracket-level))
+                                   (= round-bracket-level (car in-assignment-round-bracket-level)))
                               (and (string= token"]")
                                    (<= square-bracket-level in-assignment-square-bracket-level)))
                       (when phps-mode-functions-verbose
                         (message "Ended assignment"))
+                      (when first-token-on-line
+                        )
+                      (pop in-assignment-round-bracket-level)
                       (setq in-assignment nil)
                       (setq in-assignment-level 0))
                   (when (and (not after-special-control-structure)
@@ -473,7 +476,7 @@
                     (when phps-mode-functions-verbose
                       (message "Started assignment"))
                     (setq in-assignment t)
-                    (setq in-assignment-round-bracket-level round-bracket-level)
+                    (push round-bracket-level in-assignment-round-bracket-level)
                     (setq in-assignment-square-bracket-level square-bracket-level)
                     (setq in-assignment-level 1)))
 
