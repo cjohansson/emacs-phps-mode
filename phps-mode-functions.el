@@ -404,22 +404,25 @@
                 (if in-concatenation
                     (when (or (string= token ";")
                               (and (string= token ")")
-                                   (< round-bracket-level in-concatenation-round-bracket-level))
+                                   (< round-bracket-level (car in-concatenation-round-bracket-level)))
                               (and (string= token"]")
-                                   (< square-bracket-level in-concatenation-square-bracket-level)))
+                                   (< square-bracket-level (car in-concatenation-square-bracket-level))))
                       (when phps-mode-functions-verbose
                         (message "Ended concatenation"))
-                      (setq in-concatenation nil)
-                      (setq in-concatenation-level 0))
+                      (pop in-concatenation-round-bracket-level)
+                      (pop in-concatenation-square-bracket-level)
+                      (unless in-concatenation-round-bracket-level
+                        (setq in-concatenation nil))
+                      (setq in-concatenation-level (1- in-concatenation-level)))
                   (when (and (> next-token-start-line-number token-end-line-number)
                              (or (string= token ".")
                                  (string= next-token ".")))
                     (when phps-mode-functions-verbose
                       (message "Started concatenation"))
                     (setq in-concatenation t)
-                    (setq in-concatenation-round-bracket-level round-bracket-level)
-                    (setq in-concatenation-square-bracket-level square-bracket-level)
-                    (setq in-concatenation-level 1)))
+                    (push round-bracket-level in-concatenation-round-bracket-level)
+                    (push square-bracket-level in-concatenation-square-bracket-level)
+                    (setq in-concatenation-level (1+ in-concatenation-level))))
 
                 ;; Did we reach a semicolon inside a inline block? Close the inline block
                 (when (and in-inline-control-structure
@@ -463,22 +466,24 @@
                               (and (string= token ",")
                                    (= round-bracket-level (car in-assignment-round-bracket-level)))
                               (and (string= token"]")
-                                   (<= square-bracket-level in-assignment-square-bracket-level)))
+                                   (<= square-bracket-level (car in-assignment-square-bracket-level))))
                       (when phps-mode-functions-verbose
                         (message "Ended assignment"))
                       (when first-token-on-line
                         )
+                      (pop in-assignment-square-bracket-level)
                       (pop in-assignment-round-bracket-level)
-                      (setq in-assignment nil)
-                      (setq in-assignment-level 0))
+                      (unless in-assignment-round-bracket-level
+                        (setq in-assignment nil))
+                      (setq in-assignment-level (1- in-assignment-level)))
                   (when (and (not after-special-control-structure)
                              (string= token "="))
                     (when phps-mode-functions-verbose
                       (message "Started assignment"))
                     (setq in-assignment t)
                     (push round-bracket-level in-assignment-round-bracket-level)
-                    (setq in-assignment-square-bracket-level square-bracket-level)
-                    (setq in-assignment-level 1)))
+                    (push square-bracket-level in-assignment-square-bracket-level)
+                    (setq in-assignment-level (1+ in-assignment-level))))
 
                 ;; TODO Fix issue with indentation for assignments with chained object operators
 
