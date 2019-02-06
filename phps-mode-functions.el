@@ -466,11 +466,9 @@
                               (and (string= token ",")
                                    (= round-bracket-level (car in-assignment-round-bracket-level)))
                               (and (string= token"]")
-                                   (<= square-bracket-level (car in-assignment-square-bracket-level))))
+                                   (< square-bracket-level (car in-assignment-square-bracket-level))))
                       (when phps-mode-functions-verbose
                         (message "Ended assignment"))
-                      (when first-token-on-line
-                        )
                       (pop in-assignment-square-bracket-level)
                       (pop in-assignment-round-bracket-level)
                       (unless in-assignment-round-bracket-level
@@ -484,8 +482,6 @@
                     (push round-bracket-level in-assignment-round-bracket-level)
                     (push square-bracket-level in-assignment-square-bracket-level)
                     (setq in-assignment-level (1+ in-assignment-level))))
-
-                ;; TODO Fix issue with indentation for assignments with chained object operators
 
                 ;; Keep track of object operators
                 (when (and (equal token 'T_OBJECT_OPERATOR)
@@ -528,6 +524,8 @@
                 ;; Has nesting increased?
                 (when (and nesting-stack
                            (<= nesting-end (car (car nesting-stack))))
+
+                  ;; TODO Handle case were nesting has decreased less than next as well
 
                   (when phps-mode-functions-verbose
                     (message "\nPopping %s from nesting-stack since %s is lesser or equal to %s, next value is: %s\n" (car nesting-stack) nesting-end (car (car nesting-stack)) (nth 1 nesting-stack))
