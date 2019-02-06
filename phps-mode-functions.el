@@ -404,15 +404,18 @@
                 (if in-concatenation
                     (when (or (string= token ";")
                               (and (string= token ")")
-                                   (<= round-bracket-level in-concatenation-round-bracket-level))
+                                   (< round-bracket-level in-concatenation-round-bracket-level))
                               (and (string= token"]")
-                                   (<= square-bracket-level in-concatenation-square-bracket-level)))
+                                   (< square-bracket-level in-concatenation-square-bracket-level)))
+                      (when phps-mode-functions-verbose
+                        (message "Ended concatenation"))
                       (setq in-concatenation nil)
                       (setq in-concatenation-level 0))
                   (when (and (> next-token-start-line-number token-end-line-number)
                              (or (string= token ".")
                                  (string= next-token ".")))
-                    ;; (message "Started assignment")
+                    (when phps-mode-functions-verbose
+                      (message "Started concatenation"))
                     (setq in-concatenation t)
                     (setq in-concatenation-round-bracket-level round-bracket-level)
                     (setq in-concatenation-square-bracket-level square-bracket-level)
@@ -454,27 +457,31 @@
 
                 ;; Keep track of assignments
                 (if in-assignment
-                    (if (or (string= token ";")
-                            (and (string= token ")")
-                                 (<= round-bracket-level in-assignment-round-bracket-level))
-                            (and (string= token ",")
-                                 (<= round-bracket-level in-assignment-round-bracket-level))
-                            (and (string= token"]")
-                                 (<= square-bracket-level in-assignment-square-bracket-level)))
-                        (progn
-                          (setq in-assignment nil)
-                          (setq in-assignment-level 0))
-                      (when first-token-on-line
-                        (setq in-assignment-level 1)
-                        ;; (message "In assignment on new-line at %s" token)
-                        ))
+                    (when (or (string= token ";")
+                              (and (string= token ")")
+                                   (<= round-bracket-level in-assignment-round-bracket-level))
+                              (and (string= token ",")
+                                   (<= round-bracket-level in-assignment-round-bracket-level))
+                              (and (string= token"]")
+                                   (<= square-bracket-level in-assignment-square-bracket-level)))
+                      (when phps-mode-functions-verbose
+                        (message "Ended assignment"))
+                      (setq in-assignment nil)
+                      (setq in-assignment-level 0))
                   (when (and (not after-special-control-structure)
                              (string= token "="))
-                    (message "Started assignment")
+                    (when phps-mode-functions-verbose
+                      (message "Started assignment"))
                     (setq in-assignment t)
                     (setq in-assignment-round-bracket-level round-bracket-level)
                     (setq in-assignment-square-bracket-level square-bracket-level)
                     (setq in-assignment-level 1)))
+
+                ;; TODO Fix issue with indentation for assignments with chained object operators
+
+                ;; Keep track of object operators
+                (when (and (equal token 'T_OBJECT_OPERATOR)
+                           first-token-on-line))
 
                 ;; Did we encounter a token that supports extra special alternative control structures?
                 (when (equal token 'T_CASE)
