@@ -467,7 +467,8 @@
                                    (= round-bracket-level (car in-assignment-round-bracket-level)))
                               (and (string= token"]")
                                    (< square-bracket-level (car in-assignment-square-bracket-level)))
-                              (and (equal token 'T_FUNCTION)))
+                              (and (equal token 'T_FUNCTION)
+                                   (= round-bracket-level (car in-assignment-round-bracket-level))))
 
                       ;; NOTE Ending an assignment because of function token is to support PSR-2 Closures
                       
