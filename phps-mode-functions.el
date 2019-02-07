@@ -524,51 +524,53 @@
                 ;; Has nesting increased?
                 (when (and nesting-stack
                            (<= nesting-end (car (car nesting-stack))))
+                  (let ((nesting-decrement 0))
 
-                  ;; TODO Handle case were nesting has decreased less than next as well
-
-                  (when phps-mode-functions-verbose
-                    (message "\nPopping %s from nesting-stack since %s is lesser or equal to %s, next value is: %s\n" (car nesting-stack) nesting-end (car (car nesting-stack)) (nth 1 nesting-stack))
-                    )
-                  (pop nesting-stack)
-
-                  (if first-token-is-nesting-decrease
-
-                      (progn
-                        ;; Decrement column
-                        (if allow-custom-column-decrement
-                            (progn
-                              (when phps-mode-functions-verbose
-                                (message "Doing custom decrement 1 from %s to %s" column-level (- column-level (- nesting-start nesting-end))))
-                              (setq column-level (- column-level (- nesting-start nesting-end)))
-                              (setq allow-custom-column-decrement nil))
-                          (when phps-mode-functions-verbose
-                            (message "Doing regular decrement 1 from %s to %s" column-level (1- column-level)))
-                          (setq column-level (1- column-level)))
-
-                        ;; Prevent negative column-values
-                        (when (< column-level 0)
-                          (setq column-level 0)))
-
-                    (unless temp-post-indent
+                    ;; Handle case were nesting has decreased less than next as well
+                    (while (and nesting-stack
+                                (<= nesting-end (car (car nesting-stack))))
                       (when phps-mode-functions-verbose
-                        (message "Temporary setting post indent %s" column-level))
-                      (setq temp-post-indent column-level))
+                        (message "\nPopping %s from nesting-stack since %s is lesser or equal to %s, next value is: %s\n" (car nesting-stack) nesting-end (car (car nesting-stack)) (nth 1 nesting-stack)))
+                      (pop nesting-stack)
+                      (setq nesting-decrement (1+ nesting-decrement)))
 
-                    ;; Decrement column
-                    (if allow-custom-column-decrement
+                    (if first-token-is-nesting-decrease
+
                         (progn
-                          (when phps-mode-functions-verbose
-                                (message "Doing custom decrement 2 from %s to %s" column-level (- column-level (- nesting-start nesting-end))))
-                          (setq temp-post-indent (- temp-post-indent (- nesting-start nesting-end)))
-                          (setq allow-custom-column-decrement nil))
-                      (setq temp-post-indent (1- temp-post-indent)))
+                          ;; Decrement column
+                          (if allow-custom-column-decrement
+                              (progn
+                                (when phps-mode-functions-verbose
+                                  (message "Doing custom decrement 1 from %s to %s" column-level (- column-level (- nesting-start nesting-end))))
+                                (setq column-level (- column-level (- nesting-start nesting-end)))
+                                (setq allow-custom-column-decrement nil))
+                            (when phps-mode-functions-verbose
+                              (message "Doing regular decrement 1 from %s to %s" column-level (1- column-level)))
+                            (setq column-level (- column-level nesting-decrement)))
 
-                    ;; Prevent negative column-values
-                    (when (< temp-post-indent 0)
-                      (setq temp-post-indent 0))
+                          ;; Prevent negative column-values
+                          (when (< column-level 0)
+                            (setq column-level 0)))
 
-                    ))
+                      (unless temp-post-indent
+                        (when phps-mode-functions-verbose
+                          (message "Temporary setting post indent %s" column-level))
+                        (setq temp-post-indent column-level))
+
+                      ;; Decrement column
+                      (if allow-custom-column-decrement
+                          (progn
+                            (when phps-mode-functions-verbose
+                              (message "Doing custom decrement 2 from %s to %s" column-level (- column-level (- nesting-start nesting-end))))
+                            (setq temp-post-indent (- temp-post-indent (- nesting-start nesting-end)))
+                            (setq allow-custom-column-decrement nil))
+                        (setq temp-post-indent (- temp-post-indent nesting-decrement)))
+
+                      ;; Prevent negative column-values
+                      (when (< temp-post-indent 0)
+                        (setq temp-post-indent 0))
+
+                      )))
 
                 ;; Are we on a new line or is it the last token of the buffer?
                 (if (> next-token-start-line-number token-start-line-number)
