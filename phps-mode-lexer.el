@@ -1317,8 +1317,7 @@
               (end (match-end 0))
               (_data (buffer-substring-no-properties start end))
               (doc-com (looking-at-p (concat "/\\*\\*" phps-mode-lexer-WHITESPACE))))
-         (let ((string-start (search-forward "*/" nil t))
-               position)
+         (let ((string-start (search-forward "*/" nil t)))
            (if string-start
                (if doc-com
                    (phps-mode-lexer-RETURN_TOKEN 'T_DOC_COMMENT start (match-end 0))
@@ -1691,11 +1690,11 @@
             (catch 'stop-iteration
               (dolist (token tokens)
                 (let ((start (car (cdr token)))
-                      (end (cdr (cdr token))))
+                      (_end (cdr (cdr token))))
                   (if (< start previous-token-end)
                       (progn
                         ;; NOTE Does following line make any difference?
-                        ;; (semantic-lex-push-token (semantic-lex-token token start end))
+                        ;; (semantic-lex-push-token (semantic-lex-token token start _end))
                         (push token old-tokens))
                     (throw 'stop-iteration nil)))))
             (setq old-tokens (nreverse old-tokens))

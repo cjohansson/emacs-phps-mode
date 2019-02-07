@@ -78,7 +78,7 @@
   (phps-mode-test-with-buffer
    "<?php echo $var = array('');"
    "Simple PHP via array declaration"
-   (should (equal phps-mode-lexer-tokens
+   (should (equal (phps-mode-lexer-get-tokens)
                   '((T_OPEN_TAG 1 . 7) (T_ECHO 7 . 11) (T_VARIABLE 12 . 16) ("=" 17 . 18) (T_ARRAY 19 . 24) ("(" 24 . 25) (T_CONSTANT_ENCAPSED_STRING 25 . 27) (")" 27 . 28) (";" 28 . 29)))))
 
   (phps-mode-test-with-buffer

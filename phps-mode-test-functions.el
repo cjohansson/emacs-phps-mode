@@ -33,6 +33,7 @@
 (autoload 'phps-mode-functions-verbose "phps-mode-functions")
 (autoload 'phps-mode-functions-indent-line "phps-mode-functions")
 (autoload 'phps-mode-functions-get-lines-indent "phps-mode-functions")
+(autoload 'phps-mode-functions-get-imenu "phps-mode-functions")
 (autoload 'phps-mode-test-hash-to-list "phps-mode-test")
 (autoload 'should "ert")
 
