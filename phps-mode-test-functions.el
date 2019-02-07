@@ -231,7 +231,7 @@
   (phps-mode-test-with-buffer
    "<?php\nnamespace Vendor\\Package;\n\nclass ClassName\n{\n    public function aVeryLongMethodName(\n        ClassTypeHint $arg1,\n        &$arg2,\n        array $arg3 = []\n    ) {\n        // method body\n    }\n}"
    "PSR-2 : 4.4. Method Arguments : Example 2"
-   (message "Indent: %s" (phps-mode-test-hash-to-list (phps-mode-functions-get-lines-indent)))
+   ;; (message "Indent: %s" (phps-mode-test-hash-to-list (phps-mode-functions-get-lines-indent)))
    (should (equal '((1 (0 0)) (2 (0 0)) (3 (0 0)) (4 (0 0)) (5 (0 0)) (6 (1 0)) (7 (2 0)) (8 (2 0)) (9 (2 0)) (10 (1 0)) (11 (2 0)) (12 (1 0)) (13 (0 0))) (phps-mode-test-hash-to-list (phps-mode-functions-get-lines-indent)))))
 
   (phps-mode-test-with-buffer
@@ -298,7 +298,7 @@
   (phps-mode-test-with-buffer
    "<?php\n$foo->bar(\n    $arg1,\n    function ($arg2) use ($var1) {\n        // body\n    },\n    $arg3\n);"
    "PSR-2 : 6. Closures : Example 3"
-   (should (equal '((1 (0 0)) (2 (0 0)) (3 (1 0)) (4 (1 0)) (5 (2 0)) (6 (1 0)) (7 (1 0)) (8 (0 0))) (phps-mode-test-hash-to-list (phps-mode-functions-get-lines-indent)))))  
+   (should (equal '((1 (0 0)) (2 (0 0)) (3 (1 0)) (4 (1 0)) (5 (2 0)) (6 (1 0)) (7 (1 0)) (8 (0 0))) (phps-mode-test-hash-to-list (phps-mode-functions-get-lines-indent)))))
 
   )
 
@@ -774,7 +774,7 @@
 (defun phps-mode-test-functions ()
   "Run test for functions."
   ;; (setq debug-on-error t)
-  (setq phps-mode-functions-verbose t)
+  ;; (setq phps-mode-functions-verbose t)
   (phps-mode-test-functions-get-lines-lindent-if)
   (phps-mode-test-functions-get-lines-indent-classes)
   (phps-mode-test-functions-get-lines-indent-inline-if)
