@@ -464,7 +464,8 @@
                               (and (string= token ")")
                                    (< round-bracket-level (car in-assignment-round-bracket-level)))
                               (and (string= token ",")
-                                   (= round-bracket-level (car in-assignment-round-bracket-level)))
+                                   (= round-bracket-level (car in-assignment-round-bracket-level))
+                                   (= square-bracket-level (car in-assignment-square-bracket-level)))
                               (and (string= token"]")
                                    (< square-bracket-level (car in-assignment-square-bracket-level)))
                               (and (equal token 'T_FUNCTION)
@@ -473,7 +474,7 @@
                       ;; NOTE Ending an assignment because of function token is to support PSR-2 Closures
                       
                       (when phps-mode-functions-verbose
-                        (message "Ended assignment"))
+                        (message "Ended assignment at %s" token))
                       (pop in-assignment-square-bracket-level)
                       (pop in-assignment-round-bracket-level)
                       (unless in-assignment-round-bracket-level
