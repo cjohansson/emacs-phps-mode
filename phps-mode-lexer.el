@@ -47,10 +47,11 @@
 (autoload 'semantic-lex-push-token "semantic/lex")
 (autoload 'define-lex-analyzer "semantic/lex")
 
+;; NOTE This line is required to pass byte-compilation
+(require 'semantic/wisent)
+
+
 ;; Fix for byte-compilation warnings
-(defvar phps-mode-lexer-lex)
-(defvar semantic-lex-default-action)
-(defvar phps-mode-lexer-lex-analyzer)
 
 
 ;; Define the lexer for this grammar
