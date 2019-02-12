@@ -782,6 +782,15 @@
 
 
   ;; TODO Implement this
+  (phps-mode-test-with-buffer
+   "<?php\n$var = abc;"
+   "Double quotes around letters"
+   (goto-char 14)
+   (set-mark (point))
+   (forward-char 3)
+   (execute-kbd-macro (kbd "\""))
+   (let ((buffer-contents (buffer-substring-no-properties (point-min) (point-max))))
+     (should (equal buffer-contents "<?php\n$var = \"abc\";"))))
 
   )
 
