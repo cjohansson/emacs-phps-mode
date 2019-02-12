@@ -807,6 +807,13 @@
   (set (make-local-variable 'phps-mode-functions-imenu) nil)
   (set (make-local-variable 'phps-mode-functions-processed-buffer) nil)
 
+  ;; Make (comment-region) work
+  (set (make-local-variable 'comment-start) "/* ")
+  (set (make-local-variable 'comment-end) " */")
+
+  ;; TODO Make (uncomment-region) work
+  ;; TODO Make selecting region and clicking ' wrap region in single quotes
+
   ;; Support for change detection
   (add-hook 'after-change-functions #'phps-mode-functions-after-change))
 

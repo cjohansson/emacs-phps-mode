@@ -777,6 +777,33 @@
 
   )
 
+(defun phps-mode-test-functions-quote-region ()
+  "Test double quotes, single quotes, curly bracket, square bracket, round bracket, back-quotes on regions."
+
+
+  ;; TODO Implement this
+
+  )
+
+(defun phps-mode-test-functions-comment-uncomment-region ()
+  "Test (comment-region) and (uncomment-region)."
+
+  (phps-mode-test-with-buffer
+   "<?php\nnamespace myNamespace;\nclass myClass extends myAbstract implements myInterface {\n    public function myFunctionA($myArg = null) {}\n    protected function myFunctionB($myArg = 'abc') {}\n}\n"
+   "Comment object-oriented file with bracket-less namespace, class that extends and implements and functions with optional arguments"
+   (comment-region (point-min) (point-max))
+   (let ((buffer-contents (buffer-substring-no-properties (point-min) (point-max))))
+     (should (equal buffer-contents "/* <?php */\n/* namespace myNamespace; */\n/* class myClass extends myAbstract implements myInterface { */\n/*     public function myFunctionA($myArg = null) {} */\n/*     protected function myFunctionB($myArg = 'abc') {} */\n/* } */\n"))))
+
+  (phps-mode-test-with-buffer
+   "/* <?php */\n/* namespace myNamespace; */\n/* class myClass extends myAbstract implements myInterface { */\n/*     public function myFunctionA($myArg = null) {} */\n/*     protected function myFunctionB($myArg = 'abc') {} */\n/* } */\n"
+   "Uncomment object-oriented file with bracket-less namespace, class that extends and implements and functions with optional arguments"
+   (uncomment-region (point-min) (point-max))
+   (let ((buffer-contents (buffer-substring-no-properties (point-min) (point-max))))
+     (should (equal buffer-contents "<?php\nnamespace myNamespace;\nclass myClass extends myAbstract implements myInterface {\n    public function myFunctionA($myArg = null) {}\n    protected function myFunctionB($myArg = 'abc') {}\n}\n"))))
+
+  )
+
 (defun phps-mode-test-functions ()
   "Run test for functions."
   ;; (setq debug-on-error t)
@@ -790,7 +817,9 @@
   (phps-mode-test-functions-get-lines-indent)
   (phps-mode-test-functions-get-lines-indent-psr-2)
   (phps-mode-test-functions-indent-line)
-  (phps-mode-test-functions-imenu))
+  (phps-mode-test-functions-imenu)
+  (phps-mode-test-functions-comment-uncomment-region)
+  (phps-mode-test-functions-quote-region))
 
 (phps-mode-test-functions)
 
