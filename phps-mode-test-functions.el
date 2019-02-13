@@ -780,10 +780,6 @@
 (defun phps-mode-test-functions-quote-region ()
   "Test double quotes, single quotes, curly bracket, square bracket, round bracket, back-quotes on regions."
 
-  ;; NOTE: These are required for wrapping region functionality
-  (transient-mark-mode)
-  (electric-pair-mode)
-
   (phps-mode-test-with-buffer
    "<?php\n$var = abc;"
    "Double quotes around region"

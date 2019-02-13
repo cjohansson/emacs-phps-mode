@@ -14,6 +14,7 @@ This mode does not require PHP installed on computer because it has a elisp base
 * Syntax coloring based on lexer tokens (100%)
 * PSR-1 and PSR-2 indentation based on lexer tokens (100%)
 * Imenu support (100%)
+* Integration with (electric-pair) (100%)
 * Incremental lexer and syntax coloring after buffer changes (75%)
 * Incremental indentation and imenu calculation after buffer changes (50%)
 * Wisent LALR parser based on official PHP yacc parser automatically converted grammar (50%)
