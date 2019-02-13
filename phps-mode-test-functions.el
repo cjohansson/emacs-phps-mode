@@ -802,7 +802,7 @@
    (goto-char 17)
    (execute-kbd-macro (kbd "'"))
    (let ((buffer-contents (buffer-substring-no-properties (point-min) (point-max))))
-     (should (equal buffer-contents "<?php\n$var = 'abc';"))))    
+     (should (equal buffer-contents "<?php\n$var = 'abc';"))))
 
   (phps-mode-test-with-buffer
    "<?php\n$var = abc;"
