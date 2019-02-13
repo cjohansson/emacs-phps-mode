@@ -1718,10 +1718,8 @@
               (setq phps-mode-lexer-state_stack state-stack)
               (setq phps-mode-lexer-states new-states)
               
-              ;; TODO Should clear overlays after point of change here
               ;; (message "Rewinding lex to state: %s and stack: %s and states: %s and start: %s old tokens: %s" state state-stack new-states previous-token-start old-tokens)
 
-              ;; TODO Here clear all tokens after previous-token-start and add new tokens to stack
               ))
         ;; (display-warning "phps-mode" (format "Found no state to rewind to for %s in stack %s, buffer point max: %s" change-start states (point-max)))
         (phps-mode-lexer-run)))

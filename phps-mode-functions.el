@@ -46,7 +46,6 @@
 
 ;; NOTE Also format white-space inside the line, i.e. after function declarations?
 
-;; TODO Add support for automatic parenthesis, bracket, square-bracket, single-quote and double-quote encapsulations
 
 (defun phps-mode-functions-get-buffer-changes-start ()
   "Get buffer change start."
@@ -810,9 +809,6 @@
   ;; Make (comment-region) work
   (set (make-local-variable 'comment-start) "/* ")
   (set (make-local-variable 'comment-end) " */")
-
-  ;; TODO Make (uncomment-region) work
-  ;; TODO Make selecting region and clicking ' wrap region in single quotes
 
   ;; Support for change detection
   (add-hook 'after-change-functions #'phps-mode-functions-after-change))
