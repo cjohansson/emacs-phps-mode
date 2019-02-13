@@ -31,7 +31,25 @@ This mode does not require PHP installed on computer because it has a elisp base
 
 If you have emacs at a customized location prefix the commands with your path, i.e.
 
-`export emacs="~/Documents/emacs/src/emacs" && make test-lexer`
+`export emacs="~/Documents/emacs/src/emacs" && make tests`
+
+Run all tests with `make tests`.
+
+### Functions
+
+Indentations, incremental processes, Imenu-support.
+
+``` bash
+make test-functions
+```
+
+## Integration
+
+This should test all other parts in collaboration.
+
+``` bash
+make test-integration
+```
 
 ### Lexer
 
@@ -49,26 +67,12 @@ Semantic grammar. Not ready yet.
 make test-parser
 ```
 
-### Functions
+### Syntax-table
 
-Indentations, incremental processes, Imenu-support.
-
-``` bash
-make test-functions
-```
-
-## Integration tests
-
-This should test all other parts in collaboration.
+Basic point and region behaviour.
 
 ``` bash
-make test-integration
-```
-
-## All tests
-
-``` bash
-make tests
+make test-syntax-table
 ```
 
 ## Compilation

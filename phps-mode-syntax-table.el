@@ -112,7 +112,7 @@
 
   ;; NOTE: These are required for wrapping region functionality
   (transient-mark-mode)
-  (electric-pair-mode)
+  (electric-pair-local-mode)
 
   (when (boundp 'electric-pair-pairs)
 

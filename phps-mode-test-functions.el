@@ -777,72 +777,6 @@
 
   )
 
-(defun phps-mode-test-functions-quote-region ()
-  "Test double quotes, single quotes, curly bracket, square bracket, round bracket, back-quotes on regions."
-
-  (phps-mode-test-with-buffer
-   "<?php\n$var = abc;"
-   "Double quotes around region"
-   (goto-char 14)
-   (push-mark nil t t)
-   (goto-char 17)
-   (execute-kbd-macro (kbd "\""))
-   (let ((buffer-contents (buffer-substring-no-properties (point-min) (point-max))))
-     (should (equal buffer-contents "<?php\n$var = \"abc\";"))))
-
-  (phps-mode-test-with-buffer
-   "<?php\n$var = abc;"
-   "Single-quotes brackets around region"
-   (goto-char 14)
-   (push-mark nil t t)
-   (goto-char 17)
-   (execute-kbd-macro (kbd "'"))
-   (let ((buffer-contents (buffer-substring-no-properties (point-min) (point-max))))
-     (should (equal buffer-contents "<?php\n$var = 'abc';"))))
-
-  (phps-mode-test-with-buffer
-   "<?php\n$var = abc;"
-   "Round brackets around region"
-   (goto-char 14)
-   (push-mark nil t t)
-   (goto-char 17)
-   (execute-kbd-macro (kbd "("))
-   (let ((buffer-contents (buffer-substring-no-properties (point-min) (point-max))))
-     (should (equal buffer-contents "<?php\n$var = (abc);"))))
-
-  (phps-mode-test-with-buffer
-   "<?php\n$var = abc;"
-   "Square brackets around region"
-   (goto-char 14)
-   (push-mark nil t t)
-   (goto-char 17)
-   (execute-kbd-macro (kbd "["))
-   (let ((buffer-contents (buffer-substring-no-properties (point-min) (point-max))))
-     (should (equal buffer-contents "<?php\n$var = [abc];"))))
-
-  (phps-mode-test-with-buffer
-   "<?php\n$var = abc;"
-   "Curly brackets around region"
-   (goto-char 14)
-   (push-mark nil t t)
-   (goto-char 17)
-   (execute-kbd-macro (kbd "{"))
-   (let ((buffer-contents (buffer-substring-no-properties (point-min) (point-max))))
-     (should (equal buffer-contents "<?php\n$var = {abc};"))))
-
-  (phps-mode-test-with-buffer
-   "<?php\n$var = abc;"
-   "Backquotes brackets around region"
-   (goto-char 14)
-   (push-mark nil t t)
-   (goto-char 17)
-   (execute-kbd-macro (kbd "`"))
-   (let ((buffer-contents (buffer-substring-no-properties (point-min) (point-max))))
-     (should (equal buffer-contents "<?php\n$var = `abc`;"))))
-  
-
-  )
-
 (defun phps-mode-test-functions-comment-uncomment-region ()
   "Test (comment-region) and (uncomment-region)."
 
@@ -876,8 +810,7 @@
   (phps-mode-test-functions-get-lines-indent-psr-2)
   (phps-mode-test-functions-indent-line)
   (phps-mode-test-functions-imenu)
-  (phps-mode-test-functions-comment-uncomment-region)
-  (phps-mode-test-functions-quote-region))
+  (phps-mode-test-functions-comment-uncomment-region))
 
 (phps-mode-test-functions)
 
