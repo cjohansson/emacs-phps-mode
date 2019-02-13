@@ -27,7 +27,7 @@ This mode does not require PHP installed on computer because it has a elisp base
 * Add to ELPA (0%)
 * From first stable release, use master branch for stable releases and develop branch for on-going work (0%)
 
-## Unit tests
+## Tests
 
 If you have emacs at a customized location prefix the commands with your path, i.e.
 
@@ -43,7 +43,7 @@ Indentations, incremental processes, Imenu-support.
 make test-functions
 ```
 
-## Integration
+### Integration
 
 This should test all other parts in collaboration.
 
@@ -53,7 +53,7 @@ make test-integration
 
 ### Lexer
 
-Semantic token generation.
+Lexer token generation.
 
 ``` bash
 make test-lexer
@@ -75,8 +75,9 @@ Basic point and region behaviour.
 make test-syntax-table
 ```
 
-## Compilation
+## Byte-compilation
 
+Plug-in should support byte-compilation and it is recommended.
 
 ### Compile
 
