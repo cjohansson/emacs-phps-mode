@@ -46,7 +46,6 @@
 
 ;; NOTE Also format white-space inside the line, i.e. after function declarations?
 
-;; TODO Add support for automatic parenthesis, bracket, square-bracket, single-quote and double-quote encapsulations
 
 (defun phps-mode-functions-get-buffer-changes-start ()
   "Get buffer change start."
@@ -54,6 +53,7 @@
 
 (defun phps-mode-functions-reset-buffer-changes-start ()
   "Reset buffer change start."
+  (message "Reset flag for buffer changes")
   (setq phps-mode-functions-buffer-changes-start nil))
 
 (defun phps-mode-functions-process-current-buffer ()
@@ -755,7 +755,7 @@
 
               )))))))
 
-(defun phps-mode-functions-after-change (start _stop _length)
+(defun phps-mode-functions-after-change (start stop _length)
   "Track buffer change from START to STOP with length LENGTH."
   (when (string= major-mode "phps-mode")
 
@@ -763,15 +763,14 @@
     (when (and (not phps-mode-functions-buffer-changes-start)
                (boundp 'phps-mode-idle-interval)
                phps-mode-idle-interval)
-      ;; (message "Enqueued incremental lexer")
-
+      (message "Enqueued incremental lexer")
       (run-with-idle-timer phps-mode-idle-interval nil #'phps-mode-lexer-run-incremental))
 
     ;; When point of change is not set or when start of new changes precedes old change - update the point
     (when (or (not phps-mode-functions-buffer-changes-start)
               (< start phps-mode-functions-buffer-changes-start))
-      ;; (message "Setting start of changes from %s to %s" phps-mode-functions-buffer-changes-start start)
-      (setq phps-mode-functions-buffer-changes-start start))
+      (setq phps-mode-functions-buffer-changes-start start)
+      (message "Setting start of changes to: %s-%s" phps-mode-functions-buffer-changes-start stop))
 
     ;; (message "phps-mode-functions-after-change %s %s %s" start stop length)
     ))
@@ -810,9 +809,6 @@
   ;; Make (comment-region) work
   (set (make-local-variable 'comment-start) "/* ")
   (set (make-local-variable 'comment-end) " */")
-
-  ;; TODO Make (uncomment-region) work
-  ;; TODO Make selecting region and clicking ' wrap region in single quotes
 
   ;; Support for change detection
   (add-hook 'after-change-functions #'phps-mode-functions-after-change))

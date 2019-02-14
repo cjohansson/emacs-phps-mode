@@ -211,30 +211,35 @@
   (cond
 
    ((or
+     (string= token 'T_STRING)
      (string= token 'T_VARIABLE)
      (string= token 'T_STRING_VARNAME))
     (overlay-put (make-overlay start end) 'font-lock-face 'font-lock-variable-name-face))
 
-   ((or (string= token 'T_STRING)
-        (string= token 'T_NUM_STRING))
-    (overlay-put (make-overlay start end) 'font-lock-face 'font-lock-string-face))
+   ((or (string= token 'T_FUNCTION))
+    (overlay-put (make-overlay start end) 'font-lock-face 'font-lock-function-name-face))
 
    ((string= token 'T_INLINE_HTML)
-    (overlay-put (make-overlay start end) 'font-lock-face 'font-lock-reference-face))
+    (overlay-put (make-overlay start end) 'font-lock-face 'font-lock-comment-delimiter-face))
 
    ((string= token 'T_COMMENT)
     (overlay-put (make-overlay start end) 'font-lock-face 'font-lock-comment-face))
 
    ((string= token 'T_DOC_COMMENT)
-    (overlay-put (make-overlay start end) 'font-lock-face 'font-lock-comment-delimiter-face))
+    (overlay-put (make-overlay start end) 'font-lock-face 'font-lock-doc-face))
 
    ((or
      (string= token 'T_CONSTANT_ENCAPSED_STRING)
      (string= token 'T_ENCAPSED_AND_WHITESPACE)
+     (string= token 'T_NUM_STRING)
      (string= token 'T_DNUMBER)
      (string= token 'T_LNUMBER)
      )
     (overlay-put (make-overlay start end) 'font-lock-face 'font-lock-string-face))
+
+   ((or
+     (string= token 'T_CONST))
+    (overlay-put (make-overlay start end) 'font-lock-face 'font-lock-constant-face))
 
    ((or
      (string= token "?")
@@ -257,8 +262,6 @@
      (string= token 'T_NS_SEPARATOR)
      (string= token 'T_EXIT)
      (string= token 'T_DIE)
-     (string= token 'T_FUNCTION)
-     (string= token 'T_CONST)
      (string= token 'T_RETURN)
      (string= token 'T_YIELD_FROM)
      (string= token 'T_YIELD)
@@ -1594,7 +1597,7 @@
 
 (defun phps-mode-lexer-setup (start end)
   "Just prepare other lexers for lexing region START to END."
-  ;; (message "phps-mode-lexer-setup %s %s" start end)
+  (message "phps-mode-lexer-setup %s %s" start end)
 
   ;; Flag that buffer has not been processed
   (when (and (boundp 'phps-mode-functions-processed-buffer)
@@ -1612,6 +1615,7 @@
 (defun phps-mode-lexer-run ()
   "Run lexer."
   (interactive)
+  (message "Running lexer")
   (setq phps-mode-lexer-tokens (semantic-lex-buffer)))
 
 (defun phps-mode-lexer-move-states (start diff)
@@ -1662,6 +1666,7 @@
 
 (defun phps-mode-lexer-run-incremental ()
   "Run incremental lexer based on `(phps-mode-functions-get-buffer-changes-start)'."
+  (message "Running incremental lexer")
   (when (and (phps-mode-functions-get-buffer-changes-start)
              phps-mode-lexer-states)
     (let ((state nil)
@@ -1718,14 +1723,12 @@
               (setq phps-mode-lexer-state_stack state-stack)
               (setq phps-mode-lexer-states new-states)
               
-              ;; TODO Should clear overlays after point of change here
               ;; (message "Rewinding lex to state: %s and stack: %s and states: %s and start: %s old tokens: %s" state state-stack new-states previous-token-start old-tokens)
 
-              ;; TODO Here clear all tokens after previous-token-start and add new tokens to stack
               ))
         ;; (display-warning "phps-mode" (format "Found no state to rewind to for %s in stack %s, buffer point max: %s" change-start states (point-max)))
-        (phps-mode-lexer-run)))
-    (phps-mode-functions-reset-buffer-changes-start)))
+        (phps-mode-lexer-run))))
+  (phps-mode-functions-reset-buffer-changes-start))
 
 (define-lex phps-mode-lexer-lex
   "Call lexer analyzer action."
