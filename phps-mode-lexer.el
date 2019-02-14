@@ -131,6 +131,9 @@
 (defconst phps-mode-lexer-ST_VAR_OFFSET 9
   "Flag whether we are looking for variable offset or not.")
 
+(defvar phps-mode-lexer-COLOR_SYNTAX-previous-token nil
+  "Store previous token for color-syntax.")
+
 
 ;; REGULAR EXPRESSIONS
 
@@ -208,16 +211,28 @@
   "Syntax coloring for TOKEN from START to END."
   ;; Syntax coloring
   ;; see https://www.gnu.org/software/emacs/manual/html_node/elisp/Faces-for-Font-Lock.html#Faces-for-Font-Lock
+  ;; (message "Color token %s %s %s" token start end)
   (cond
+
+   ((and
+     phps-mode-lexer-COLOR_SYNTAX-previous-token
+     (string= phps-mode-lexer-COLOR_SYNTAX-previous-token 'T_CONST)
+     (string= token 'T_STRING))
+    (overlay-put (make-overlay start end) 'font-lock-face 'font-lock-constant-face))
+
+   ((and
+     phps-mode-lexer-COLOR_SYNTAX-previous-token
+     (or (string= phps-mode-lexer-COLOR_SYNTAX-previous-token 'T_NAMESPACE)
+         (string= phps-mode-lexer-COLOR_SYNTAX-previous-token 'T_CLASS)
+         (string= phps-mode-lexer-COLOR_SYNTAX-previous-token 'T_FUNCTION))
+     (string= token 'T_STRING))
+    (overlay-put (make-overlay start end) 'font-lock-face 'font-lock-function-name-face))
 
    ((or
      (string= token 'T_STRING)
      (string= token 'T_VARIABLE)
      (string= token 'T_STRING_VARNAME))
     (overlay-put (make-overlay start end) 'font-lock-face 'font-lock-variable-name-face))
-
-   ((or (string= token 'T_FUNCTION))
-    (overlay-put (make-overlay start end) 'font-lock-face 'font-lock-function-name-face))
 
    ((string= token 'T_INLINE_HTML)
     (overlay-put (make-overlay start end) 'font-lock-face 'font-lock-comment-delimiter-face))
@@ -236,10 +251,6 @@
      (string= token 'T_LNUMBER)
      )
     (overlay-put (make-overlay start end) 'font-lock-face 'font-lock-string-face))
-
-   ((or
-     (string= token 'T_CONST))
-    (overlay-put (make-overlay start end) 'font-lock-face 'font-lock-constant-face))
 
    ((or
      (string= token "?")
@@ -276,6 +287,8 @@
      (string= token 'T_WHILE)
      (string= token 'T_ENDWHILE)
      (string= token 'T_DO)
+     (string= token 'T_FUNCTION)
+     (string= token 'T_CONST)
      (string= token 'T_FOREACH)
      (string= token 'T_ENDFOREACH)
      (string= token 'T_FOR)
@@ -391,7 +404,9 @@
    ((string= token 'T_ERROR)
     (overlay-put (make-overlay start end) 'font-lock-face 'font-lock-warning-face))
 
-   ))
+   )
+
+  (setq phps-mode-lexer-COLOR_SYNTAX-previous-token token))
 
 (defun phps-mode-lexer-RETURN_TOKEN (token start end)
   "Push TOKEN to list with START and END."
@@ -1597,7 +1612,8 @@
 
 (defun phps-mode-lexer-setup (start end)
   "Just prepare other lexers for lexing region START to END."
-  (message "phps-mode-lexer-setup %s %s" start end)
+  ;; (message "phps-mode-lexer-setup %s %s" start end)
+  (setq phps-mode-lexer-COLOR_SYNTAX-previous-token nil)
 
   ;; Flag that buffer has not been processed
   (when (and (boundp 'phps-mode-functions-processed-buffer)
@@ -1615,7 +1631,7 @@
 (defun phps-mode-lexer-run ()
   "Run lexer."
   (interactive)
-  (message "Running lexer")
+  ;; (message "Running lexer")
   (setq phps-mode-lexer-tokens (semantic-lex-buffer)))
 
 (defun phps-mode-lexer-move-states (start diff)
@@ -1666,7 +1682,7 @@
 
 (defun phps-mode-lexer-run-incremental ()
   "Run incremental lexer based on `(phps-mode-functions-get-buffer-changes-start)'."
-  (message "Running incremental lexer")
+  ;; (message "Running incremental lexer")
   (when (and (phps-mode-functions-get-buffer-changes-start)
              phps-mode-lexer-states)
     (let ((state nil)
