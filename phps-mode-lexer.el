@@ -1684,7 +1684,7 @@
 (defun phps-mode-lexer-run-incremental ()
   "Run incremental lexer based on `(phps-mode-functions-get-buffer-changes-start)'."
   ;; (message "Running incremental lexer")
-  (when (and (phps-mode-functions-get-buffer-changes-start)
+  (when (and (> (phps-mode-functions-get-buffer-changes-start) 1)
              phps-mode-lexer-states)
     (let ((state nil)
           (state-stack nil)
@@ -1694,7 +1694,6 @@
           (previous-token-start nil)
           (previous-token-end nil)
           (tokens phps-mode-lexer-tokens))
-      ;; (message "Looking for state to rewind to for %s in stack %s" change-start states)
 
       ;; Find state and state stack before point of change
       ;; also determine were previous token to change starts
@@ -1744,7 +1743,8 @@
 
               ))
         ;; (display-warning "phps-mode" (format "Found no state to rewind to for %s in stack %s, buffer point max: %s" change-start states (point-max)))
-        (phps-mode-lexer-run))))
+        )))
+  (phps-mode-lexer-run)
   (phps-mode-functions-reset-buffer-changes-start))
 
 (define-lex phps-mode-lexer-lex

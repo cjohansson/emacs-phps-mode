@@ -69,6 +69,15 @@
    (execute-kbd-macro (kbd "<backspace>"))
    (should (equal (phps-mode-functions-get-buffer-changes-start) 55)))
 
+  (phps-mode-test-incremental-vs-intial-buffer
+   ""
+   "Integration-test 3 for function-oriented PHP"
+
+   ;; Make changes
+   (goto-char 1)
+   (insert "<?php\nfunction myFunctionA()\n{\n    echo 'my second statement';\n}\n")
+   (should (equal (phps-mode-functions-get-buffer-changes-start) 1)))
+
   )
 
 (defun phps-mode-test-integration ()
