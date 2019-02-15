@@ -806,9 +806,12 @@
   (set (make-local-variable 'phps-mode-functions-imenu) nil)
   (set (make-local-variable 'phps-mode-functions-processed-buffer) nil)
 
-  ;; Make (comment-region) work
-  (set (make-local-variable 'comment-start) "/* ")
-  (set (make-local-variable 'comment-end) " */")
+  ;; Make (comment-region) and (uncomment-region) work
+  (set (make-local-variable 'comment-start) "/*")
+  (set (make-local-variable 'comment-padding) " ")
+  (set (make-local-variable 'comment-end) "*/")
+  (set (make-local-variable 'comment-use-syntax) nil)
+  (set (make-local-variable 'comment-start-skip) "\/\\* ")
 
   ;; Support for change detection
   (add-hook 'after-change-functions #'phps-mode-functions-after-change))
