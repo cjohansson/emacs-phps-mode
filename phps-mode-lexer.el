@@ -1718,12 +1718,12 @@
             ;; Build new list of tokens before point of change
             (catch 'stop-iteration
               (dolist (token tokens)
-                (let ((start (car (cdr token)))
-                      (_end (cdr (cdr token))))
-                  (if (< start previous-token-end)
+                (let ((_start (car (cdr token)))
+                      (end (cdr (cdr token))))
+                  (if (< end previous-token-end)
                       (progn
                         ;; NOTE Does following line make any difference?
-                        ;; (semantic-lex-push-token (semantic-lex-token token start _end))
+                        ;; (semantic-lex-push-token (semantic-lex-token token _start end))
                         (push token old-tokens))
                     (throw 'stop-iteration nil)))))
             (setq old-tokens (nreverse old-tokens))
