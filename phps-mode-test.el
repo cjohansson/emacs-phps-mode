@@ -1,6 +1,6 @@
 ;;; phps-mode-test.el --- Commons for tests -*- lexical-binding: t -*-
 
-;; Copyright (C) 2018 Christian Johansson
+;; Copyright (C) 2018-2019 Christian Johansson
 
 ;; This file is not part of GNU Emacs.
 
@@ -27,6 +27,67 @@
 
 
 (autoload 'phps-mode "phps-mode")
+(autoload 'phps-mode-lexer-get-tokens "phps-mode-lexer")
+(autoload 'phps-mode-functions-get-imenu "phps-mode-functions")
+(autoload 'phps-mode-functions-get-lines-indent "phps-mode-functions")
+(autoload 'should "ert")
+
+(defmacro phps-mode-test-incremental-vs-intial-buffer (source &optional title &rest change)
+  "Set up test buffer with SOURCE, TITLE, apply CHANGE and compare incremental values with initial values."
+  `(let ((test-buffer-incremental (generate-new-buffer "test-incremental"))
+         (incremental-tokens nil)
+         (incremental-imenu nil)
+         (incremental-indent nil)
+         (incremental-buffer nil)
+         (test-buffer-initial (generate-new-buffer "test-initial"))
+         (initial-tokens nil)
+         (initial-imenu nil)
+         (initial-indent nil)
+         (initial-buffer nil))
+
+     ;; Setup incremental buffer
+     (switch-to-buffer test-buffer-incremental)
+     (insert ,source)
+     (goto-char 0)
+     (when (and (boundp 'phps-mode-functions-verbose)
+                phps-mode-functions-verbose)
+       (message "\nTesting incremental buffer '%s':\n'%s'\n" ,title ,source))
+     (phps-mode)
+     ,@change
+     (phps-mode-lexer-run-incremental)
+     (setq incremental-tokens (phps-mode-lexer-get-tokens))
+     (setq incremental-imenu (phps-mode-functions-get-imenu))
+     (setq incremental-indent (phps-mode-test-hash-to-list (phps-mode-functions-get-lines-indent)))
+     (setq incremental-buffer (buffer-substring-no-properties (point-min) (point-max)))
+     (kill-buffer test-buffer-incremental)
+
+     ;; Setup incremental buffer
+     (switch-to-buffer test-buffer-initial)
+     (insert incremental-buffer)
+     (goto-char 0)
+     (when (and (boundp 'phps-mode-functions-verbose)
+                phps-mode-functions-verbose)
+       (message "\nTesting initial buffer '%s':\n'%s'\n" ,title incremental-buffer))
+     (phps-mode)
+     (setq initial-tokens (phps-mode-lexer-get-tokens))
+     (setq initial-imenu (phps-mode-functions-get-imenu))
+     (setq initial-indent (phps-mode-test-hash-to-list (phps-mode-functions-get-lines-indent)))
+     (setq initial-buffer (buffer-substring-no-properties (point-min) (point-max)))
+     (kill-buffer test-buffer-initial)
+
+     ;; Run tests
+     (when (and (boundp 'phps-mode-functions-verbose)
+                phps-mode-functions-verbose)
+       (message "\nComparing tokens, lines indent and imenu between buffer:\n\n'%s'\n\nand:\n\n'%s'\n" initial-buffer incremental-buffer))
+     (should (equal initial-buffer incremental-buffer))
+     ;; (message "Initial tokens: %s\n" initial-tokens)
+     ;; (message "Incremental tokens: %s\n" incremental-tokens)
+     (should (equal initial-tokens incremental-tokens))
+     (should (equal initial-indent incremental-indent))
+     (should (equal initial-imenu incremental-imenu))
+
+     (when ,title
+       (message "\nPassed incremental tests for '%s'\n" ,title))))
 
 (defmacro phps-mode-test-with-buffer (source &optional title &rest body)
   "Set up test buffer with SOURCE, TITLE and BODY."
@@ -36,7 +97,7 @@
      (goto-char 0)
      (when (and (boundp 'phps-mode-functions-verbose)
                 phps-mode-functions-verbose)
-       (message "\nTesting buffer:\n'%s'\n" ,source))
+       (message "\nTesting buffer '%s':\n'%s'\n" ,title ,source))
      (phps-mode)
      ,@body
      (kill-buffer test-buffer)
