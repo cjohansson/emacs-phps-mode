@@ -53,7 +53,7 @@
 
 (defun phps-mode-functions-reset-buffer-changes-start ()
   "Reset buffer change start."
-  (message "Reset flag for buffer changes")
+  ;; (message "Reset flag for buffer changes")
   (setq phps-mode-functions-buffer-changes-start nil))
 
 (defun phps-mode-functions-process-current-buffer ()
