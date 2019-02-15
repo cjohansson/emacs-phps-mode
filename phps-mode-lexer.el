@@ -223,6 +223,7 @@
    ((and
      phps-mode-lexer-COLOR_SYNTAX-previous-token
      (or (string= phps-mode-lexer-COLOR_SYNTAX-previous-token 'T_NAMESPACE)
+         (string= phps-mode-lexer-COLOR_SYNTAX-previous-token 'T_NS_SEPARATOR)
          (string= phps-mode-lexer-COLOR_SYNTAX-previous-token 'T_CLASS)
          (string= phps-mode-lexer-COLOR_SYNTAX-previous-token 'T_FUNCTION))
      (string= token 'T_STRING))
