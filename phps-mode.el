@@ -34,10 +34,6 @@
 
 ;; Please see README.md from the same repository for extended documentation.
 
-;; TODO 0. Add tests for semantic like semantic-php project
-;; TODO 1. Get semantic working based on zend_language_parser.y
-;; TODO 2. Add support for flymake
-
 ;; NOTE use wisent-parse-toggle-verbose-flag and (semantic-debug) to debug parsing
 
 
@@ -59,7 +55,7 @@
 (defvar phps-mode-use-psr-2 t
   "Whether to use PSR-2 guidelines for white-space or not.")
 
-(defvar phps-mode-idle-interval 0.8
+(defvar phps-mode-idle-interval 1.0
   "Idle seconds before running incremental lexer.")
 
 (define-derived-mode phps-mode prog-mode "PHPs"
