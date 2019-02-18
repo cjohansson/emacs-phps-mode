@@ -1685,67 +1685,67 @@
   "Run incremental lexer based on `(phps-mode-functions-get-buffer-changes-start)'."
   ;; (message "Running incremental lexer")
   (let ((change-start (phps-mode-functions-get-buffer-changes-start)))
-    (when (and change-start
-               (> change-start 1)
-               phps-mode-lexer-states)
-      (let ((state nil)
-            (state-stack nil)
-            (new-states '())
-            (states (nreverse phps-mode-lexer-states))
-            (previous-token-start nil)
-            (previous-token-end nil)
-            (tokens phps-mode-lexer-tokens))
+    (when change-start
+      (when (and (> change-start 1)
+                 phps-mode-lexer-states)
+        (let ((state nil)
+              (state-stack nil)
+              (new-states '())
+              (states (nreverse phps-mode-lexer-states))
+              (previous-token-start nil)
+              (previous-token-end nil)
+              (tokens phps-mode-lexer-tokens))
 
-        ;; Find state and state stack before point of change
-        ;; also determine were previous token to change starts
-        (catch 'stop-iteration
-          (dolist (state-object states)
-            (let ((start (nth 0 state-object))
-                  (end (nth 1 state-object)))
-              (when (< end change-start)
-                (setq state (nth 2 state-object))
-                (setq state-stack (nth 3 state-object))
-                (setq previous-token-start start)
-                (setq previous-token-end end)
-                (push state-object new-states))
-              (when (> start change-start)
-                (throw 'stop-iteration nil)))))
+          ;; Find state and state stack before point of change
+          ;; also determine were previous token to change starts
+          (catch 'stop-iteration
+            (dolist (state-object states)
+              (let ((start (nth 0 state-object))
+                    (end (nth 1 state-object)))
+                (when (< end change-start)
+                  (setq state (nth 2 state-object))
+                  (setq state-stack (nth 3 state-object))
+                  (setq previous-token-start start)
+                  (setq previous-token-end end)
+                  (push state-object new-states))
+                (when (> start change-start)
+                  (throw 'stop-iteration nil)))))
 
-        (if (and state
-                 state-stack)
-            (let ((old-tokens '()))
+          (if (and state
+                   state-stack)
+              (let ((old-tokens '()))
 
-              ;; Build new list of tokens before point of change
-              (catch 'stop-iteration
-                (dolist (token tokens)
-                  (let ((_start (car (cdr token)))
-                        (end (cdr (cdr token))))
-                    (if (< end previous-token-end)
-                        (progn
-                          ;; NOTE Does following line make any difference?
-                          ;; (semantic-lex-push-token (semantic-lex-token token _start end))
-                          (push token old-tokens))
-                      (throw 'stop-iteration nil)))))
-              (setq old-tokens (nreverse old-tokens))
+                ;; Build new list of tokens before point of change
+                (catch 'stop-iteration
+                  (dolist (token tokens)
+                    (let ((_start (car (cdr token)))
+                          (end (cdr (cdr token))))
+                      (if (< end previous-token-end)
+                          (progn
+                            ;; NOTE Does following line make any difference?
+                            ;; (semantic-lex-push-token (semantic-lex-token token _start end))
+                            (push token old-tokens))
+                        (throw 'stop-iteration nil)))))
+                (setq old-tokens (nreverse old-tokens))
 
-              ;; Delete all overlays from point of change to end of buffer
-              (dolist (overlay (overlays-in previous-token-end (point-max)))
-                (delete-overlay overlay))
-              
-              (let* ((new-tokens (semantic-lex previous-token-start (point-max)))
-                     (appended-tokens (append old-tokens new-tokens)))
-                ;; (message "old-tokens: %s, new-tokens: %s" old-tokens new-tokens)
-                (setq phps-mode-lexer-tokens appended-tokens)
-                (setq phps-mode-lexer-STATE state)
-                (setq phps-mode-lexer-state_stack state-stack)
-                (setq phps-mode-lexer-states new-states)
+                ;; Delete all overlays from point of change to end of buffer
+                (dolist (overlay (overlays-in previous-token-end (point-max)))
+                  (delete-overlay overlay))
                 
-                ;; (message "Rewinding lex to state: %s and stack: %s and states: %s and start: %s old tokens: %s" state state-stack new-states previous-token-start old-tokens)
+                (let* ((new-tokens (semantic-lex previous-token-start (point-max)))
+                       (appended-tokens (append old-tokens new-tokens)))
+                  ;; (message "old-tokens: %s, new-tokens: %s" old-tokens new-tokens)
+                  (setq phps-mode-lexer-tokens appended-tokens)
+                  (setq phps-mode-lexer-STATE state)
+                  (setq phps-mode-lexer-state_stack state-stack)
+                  (setq phps-mode-lexer-states new-states)
+                  
+                  ;; (message "Rewinding lex to state: %s and stack: %s and states: %s and start: %s old tokens: %s" state state-stack new-states previous-token-start old-tokens)
 
-                ))
-          ;; (display-warning "phps-mode" (format "Found no state to rewind to for %s in stack %s, buffer point max: %s" change-start states (point-max)))
-          ))))
-  (phps-mode-lexer-run)
+                  ))
+            ;; (display-warning "phps-mode" (format "Found no state to rewind to for %s in stack %s, buffer point max: %s" change-start states (point-max)))
+            )))
+      (phps-mode-lexer-run)))
   (phps-mode-functions-reset-buffer-changes-start))
 
 (define-lex phps-mode-lexer-lex

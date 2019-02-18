@@ -756,7 +756,8 @@
               (phps-mode-lexer-move-tokens line-start indent-diff)
               (phps-mode-lexer-move-states line-start indent-diff)
 
-              )))))))
+              ;; Reset change flag
+              (phps-mode-functions-reset-buffer-changes-start))))))))
 
 (defun phps-mode-functions-after-change (start _stop _length)
   "Track buffer change from START to STOP with length LENGTH."
