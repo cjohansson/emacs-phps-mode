@@ -58,9 +58,10 @@
 
 (defun phps-mode-functions-process-current-buffer ()
   "Process current buffer, generate indentations and Imenu."
+  (when (phps-mode-functions-get-buffer-changes-start)
+    (phps-mode-lexer-run-incremental)
+    (setq phps-mode-functions-processed-buffer nil))
   (unless phps-mode-functions-processed-buffer
-    (when (phps-mode-functions-get-buffer-changes-start)
-      (phps-mode-lexer-run-incremental))
     (phps-mode-functions--process-current-buffer)
     (setq phps-mode-functions-processed-buffer t)))
 
