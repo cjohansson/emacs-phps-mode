@@ -408,6 +408,9 @@
                     (when (or (string= token ";")
                               (and (string= token ")")
                                    (< round-bracket-level (car in-concatenation-round-bracket-level)))
+                              (and (string= token ",")
+                                   (= round-bracket-level (car in-concatenation-round-bracket-level))
+                                   (= square-bracket-level (car in-concatenation-square-bracket-level)))
                               (and (string= token"]")
                                    (< square-bracket-level (car in-concatenation-square-bracket-level))))
                       (when phps-mode-functions-verbose
