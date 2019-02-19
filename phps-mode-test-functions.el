@@ -187,6 +187,11 @@
    "Assignment with square bracketed array"
    (should (equal '((1 (0 0)) (2 (0 0)) (3 (1 0)) (4 (2 0)) (5 (2 0)) (6 (1 0)) (7 (0 0))) (phps-mode-test-hash-to-list (phps-mode-functions-get-lines-indent)))))
 
+  (phps-mode-test-with-buffer
+   "<?php\n$options = array(\n    'blaha' .\n        'blaha',\n    123,\n    'blaha'\n);"
+   "Assignment with square bracketed array"
+   (should (equal '((1 (0 0)) (2 (0 0)) (3 (1 0)) (4 (2 0)) (5 (1 0)) (6 (1 0)) (7 (0 0))) (phps-mode-test-hash-to-list (phps-mode-functions-get-lines-indent)))))
+
   )
 
 (defun phps-mode-test-functions-get-lines-indent-psr-2 ()
@@ -416,7 +421,7 @@
 
   )
 
-(defun phps-mode-test-functions-get-lines-lindent-if ()
+(defun phps-mode-test-functions-get-lines-indent-if ()
   "Test for multi-line if expressions."
 
   (phps-mode-test-with-buffer
@@ -800,7 +805,7 @@
   "Run test for functions."
   ;; (setq debug-on-error t)
   ;; (setq phps-mode-functions-verbose t)
-  (phps-mode-test-functions-get-lines-lindent-if)
+  (phps-mode-test-functions-get-lines-indent-if)
   (phps-mode-test-functions-get-lines-indent-classes)
   (phps-mode-test-functions-get-lines-indent-inline-if)
   (phps-mode-test-functions-get-lines-indent-alternative-if)
