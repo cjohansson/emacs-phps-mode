@@ -794,20 +794,36 @@
     (goto-char beg)
 
     (let ((end-line-number (line-number-at-pos end t))
-          (current-line-number (line-number-at-pos)))
+          (current-line-number (line-number-at-pos))
+          (first-line t))
 
-      ;; Do this for every line in region
-      (while (< current-line-number end-line-number)
-        (move-beginning-of-line nil)
+      ;; Does region start at beginning of line?
+      (if (not (= beg (line-beginning-position)))
 
-        ;; Does this line contain something other than white-space?
-        (unless (eq (point) (line-end-position))
-          (insert comment-start)
-          (move-end-of-line nil)
-          (insert comment-end))
+          ;; Use doc comment
+          (progn
+            (goto-char end)
+            (insert " */")
+            (goto-char beg)
+            (insert "/* "))
 
-        (line-move 1)
-        (setq current-line-number (line-number-at-pos))))))
+        ;; Do this for every line in region
+        (while (or first-line
+                   (< current-line-number end-line-number))
+          (move-beginning-of-line nil)
+
+          (when first-line
+            (setq first-line nil))
+
+          ;; Does this line contain something other than white-space?
+          (unless (eq (point) (line-end-position))
+            (insert "// ")
+            (move-end-of-line nil)
+            (insert ""))
+
+          (when (< current-line-number end-line-number)
+            (line-move 1))
+          (setq current-line-number (line-number-at-pos)))))))
 
 (defun phps-mode-functions-uncomment-region (beg end &optional _arg)
   "Comment region from BEG to END with optional ARG."
@@ -817,28 +833,47 @@
     (goto-char beg)
 
     (let ((end-line-number (line-number-at-pos end t))
-          (current-line-number (line-number-at-pos)))
+          (current-line-number (line-number-at-pos))
+          (first-line t))
 
-      ;; Do this for every line in region
-      (while (< current-line-number end-line-number)
-        (move-beginning-of-line nil)
+      ;; Does region start at beginning of line?
+      (if (not (= beg (line-beginning-position)))
+          (progn
+            (goto-char end)
+            (backward-char 3)
+            (when (looking-at-p " \\*\/")
+              (delete-char 3))
 
-        ;; Does this line contain something other than white-space?
-        (unless (>= (+ (point) 3) (line-end-position))
-          (when (looking-at-p "\/\/ ")
-            (delete-char 3))
-          (when (looking-at-p "\/\\* ")
-            (delete-char 3))
+            (goto-char beg)
+            (when (looking-at-p "\/\/ ")
+              (delete-char 3))
+            (when (looking-at-p "\/\\* ")
+              (delete-char 3)))
 
-          (move-end-of-line nil)
+        ;; Do this for every line in region
+        (while (or first-line
+                   (< current-line-number end-line-number))
+          (move-beginning-of-line nil)
 
-          (backward-char 3)
-          (when (looking-at-p " \\*\/")
-            (delete-char 3)))
+          (when first-line
+            (setq first-line nil))
 
-        (line-move 1)
-        (setq current-line-number (line-number-at-pos))))))
+          ;; Does this line contain something other than white-space?
+          (unless (>= (+ (point) 3) (line-end-position))
+            (when (looking-at-p "\/\/ ")
+              (delete-char 3))
+            (when (looking-at-p "\/\\* ")
+              (delete-char 3))
 
+            (move-end-of-line nil)
+
+            (backward-char 3)
+            (when (looking-at-p " \\*\/")
+              (delete-char 3)))
+
+          (when (< current-line-number end-line-number)
+            (line-move 1))
+          (setq current-line-number (line-number-at-pos)))))))
 
 (defun phps-mode-functions-init ()
   "PHP specific init-cleanup routines."
