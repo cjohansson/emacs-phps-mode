@@ -787,6 +787,40 @@
   (phps-mode-functions-process-current-buffer)
   phps-mode-functions-imenu)
 
+(defun phps-mode-functions-comment-region (beg end &optional _arg)
+  "Comment region from BEG to END with optional ARG."
+  (message "phps-mode-functions-comment-region %s %s %s" beg end _arg)
+  (save-excursion
+    ;; Go to start of region
+    (goto-char beg)
+
+    (let ((end-line-number (line-number-at-pos end t))
+          (current-line-number (line-number-at-pos)))
+
+      ;; Do this for every line in region
+      (while (< current-line-number end-line-number)
+        (back-to-indentation)
+
+        ;; Does this line contain something other than white-space?
+        (unless (eq (point) (line-end-position))
+          (insert comment-start)
+          (end-of-line)
+          (insert comment-end))
+
+        (line-move 1)
+        (setq current-line-number (line-number-at-pos))))
+
+    
+    ))
+
+(defun phps-mode-functions-uncomment-region (beg end &optional arg)
+  "Comment region from BEG to END with optional ARG."
+  (save-excursion
+    (message "phps-mode-functions-uncomment-region %s %s %s" beg end arg)
+    )
+  )
+
+
 (defun phps-mode-functions-init ()
   "PHP specific init-cleanup routines."
 
@@ -814,11 +848,10 @@
   (set (make-local-variable 'phps-mode-functions-processed-buffer) nil)
 
   ;; Make (comment-region) and (uncomment-region) work
-  (set (make-local-variable 'comment-start) "/*")
-  (set (make-local-variable 'comment-padding) " ")
-  (set (make-local-variable 'comment-end) "*/")
-  (set (make-local-variable 'comment-use-syntax) nil)
-  (set (make-local-variable 'comment-start-skip) "\/\\* ")
+  (set (make-local-variable 'comment-region-function) #'phps-mode-functions-comment-region)
+  (set (make-local-variable 'uncomment-region-function) #'phps-mode-functions-uncomment-region)
+  (set (make-local-variable 'comment-start) "/* ")
+  (set (make-local-variable 'comment-end) " */")
 
   ;; Support for change detection
   (add-hook 'after-change-functions #'phps-mode-functions-after-change))
