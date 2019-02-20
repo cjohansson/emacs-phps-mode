@@ -790,10 +790,10 @@
    "Comment object-oriented file with bracket-less namespace, class that extends and implements and functions with optional arguments"
    (comment-region (point-min) (point-max))
    (let ((buffer-contents (buffer-substring-no-properties (point-min) (point-max))))
-     (should (equal buffer-contents "/* <?php */\n/* namespace myNamespace; */\n/* class myClass extends myAbstract implements myInterface { */\n    /* public function myFunctionA($myArg = null) {} */\n    /* protected function myFunctionB($myArg = 'abc') {} */\n/* } */\n"))))
+     (should (equal buffer-contents "// <?php\n// namespace myNamespace;\n// class myClass extends myAbstract implements myInterface {\n//     public function myFunctionA($myArg = null) {}\n//     protected function myFunctionB($myArg = 'abc') {}\n// }\n"))))
 
   (phps-mode-test-with-buffer
-   "/* <?php */\n/* namespace myNamespace; */\n/* class myClass extends myAbstract implements myInterface { */\n    /* public function myFunctionA($myArg = null) {} */\n    /* protected function myFunctionB($myArg = 'abc') {} */\n/* } */\n"
+   "// <?php\n// namespace myNamespace;\n// class myClass extends myAbstract implements myInterface {\n//     public function myFunctionA($myArg = null) {}\n//     protected function myFunctionB($myArg = 'abc') {}\n// }\n"
    "Uncomment object-oriented file with bracket-less namespace, class that extends and implements and functions with optional arguments"
    (uncomment-region (point-min) (point-max))
    (let ((buffer-contents (buffer-substring-no-properties (point-min) (point-max))))

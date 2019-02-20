@@ -789,7 +789,6 @@
 
 (defun phps-mode-functions-comment-region (beg end &optional _arg)
   "Comment region from BEG to END with optional ARG."
-  (message "phps-mode-functions-comment-region %s %s %s" beg end _arg)
   (save-excursion
     ;; Go to start of region
     (goto-char beg)
@@ -799,26 +798,46 @@
 
       ;; Do this for every line in region
       (while (< current-line-number end-line-number)
-        (back-to-indentation)
+        (move-beginning-of-line nil)
 
         ;; Does this line contain something other than white-space?
         (unless (eq (point) (line-end-position))
           (insert comment-start)
-          (end-of-line)
+          (move-end-of-line nil)
           (insert comment-end))
 
         (line-move 1)
-        (setq current-line-number (line-number-at-pos))))
+        (setq current-line-number (line-number-at-pos))))))
 
-    
-    ))
-
-(defun phps-mode-functions-uncomment-region (beg end &optional arg)
+(defun phps-mode-functions-uncomment-region (beg end &optional _arg)
   "Comment region from BEG to END with optional ARG."
   (save-excursion
-    (message "phps-mode-functions-uncomment-region %s %s %s" beg end arg)
-    )
-  )
+
+    ;; Go to start of region
+    (goto-char beg)
+
+    (let ((end-line-number (line-number-at-pos end t))
+          (current-line-number (line-number-at-pos)))
+
+      ;; Do this for every line in region
+      (while (< current-line-number end-line-number)
+        (move-beginning-of-line nil)
+
+        ;; Does this line contain something other than white-space?
+        (unless (>= (+ (point) 3) (line-end-position))
+          (when (looking-at-p "\/\/ ")
+            (delete-char 3))
+          (when (looking-at-p "\/\\* ")
+            (delete-char 3))
+
+          (move-end-of-line nil)
+
+          (backward-char 3)
+          (when (looking-at-p " \\*\/")
+            (delete-char 3)))
+
+        (line-move 1)
+        (setq current-line-number (line-number-at-pos))))))
 
 
 (defun phps-mode-functions-init ()
@@ -850,8 +869,8 @@
   ;; Make (comment-region) and (uncomment-region) work
   (set (make-local-variable 'comment-region-function) #'phps-mode-functions-comment-region)
   (set (make-local-variable 'uncomment-region-function) #'phps-mode-functions-uncomment-region)
-  (set (make-local-variable 'comment-start) "/* ")
-  (set (make-local-variable 'comment-end) " */")
+  (set (make-local-variable 'comment-start) "// ")
+  (set (make-local-variable 'comment-end) "")
 
   ;; Support for change detection
   (add-hook 'after-change-functions #'phps-mode-functions-after-change))
