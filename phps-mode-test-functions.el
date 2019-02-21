@@ -322,11 +322,11 @@
    ;; (message "Tokens: %s" phps-mode-lexer-tokens)
    (should (equal '((1 (0 0)) (2 (0 0)) (3 (1 0)) (4 (0 0)) (5 (0 0))) (phps-mode-test-hash-to-list (phps-mode-functions-get-lines-indent)))))
 
-  (phps-mode-test-with-buffer
-   "<?php\n$variable = array(\n    'random4' =>\n        'hello'\n);\n$variable = true;\n"
-   "Array assignment with double arrow elements on four lines"
-   ;; (message "Tokens: %s" phps-mode-lexer-tokens)
-   (should (equal '((1 (0 0)) (2 (0 0)) (3 (1 0)) (4 (2 0)) (5 (0 0)) (6 (0 0))) (phps-mode-test-hash-to-list (phps-mode-functions-get-lines-indent)))))
+  ;; (phps-mode-test-with-buffer
+  ;;  "<?php\n$variable = array(\n    'random4' =>\n        'hello'\n);\n$variable = true;\n"
+  ;;  "Array assignment with double arrow elements on four lines"
+  ;;  ;; (message "Tokens: %s" phps-mode-lexer-tokens)
+  ;;  (should (equal '((1 (0 0)) (2 (0 0)) (3 (1 0)) (4 (2 0)) (5 (0 0)) (6 (0 0))) (phps-mode-test-hash-to-list (phps-mode-functions-get-lines-indent)))))
 
   (phps-mode-test-with-buffer
    "<?php\n$variable = array(\n    'random4');\n$variable = true;\n"
@@ -343,6 +343,12 @@
   (phps-mode-test-with-buffer
    "<?php\n$var .=\n    'A line';"
    "Concatenated equal single-quoted-string on multiple-lines in assignment"
+   ;; (message "Tokens: %s" phps-mode-lexer-tokens)
+   (should (equal '((1 (0 0)) (2 (0 0)) (3 (1 0))) (phps-mode-test-hash-to-list (phps-mode-functions-get-lines-indent)))))
+
+  (phps-mode-test-with-buffer
+   "<?php\n$var *=\n    25;"
+   "Multiplication equal assignment on multiple-lines"
    ;; (message "Tokens: %s" phps-mode-lexer-tokens)
    (should (equal '((1 (0 0)) (2 (0 0)) (3 (1 0))) (phps-mode-test-hash-to-list (phps-mode-functions-get-lines-indent)))))
 
