@@ -465,49 +465,50 @@
                     ))
 
                 ;; Keep track of assignments
-                (if in-assignment
-                    (when (or (string= token ";")
-                              (and (string= token ")")
-                                   (< round-bracket-level (car in-assignment-round-bracket-level)))
-                              (and (string= token ",")
-                                   (= round-bracket-level (car in-assignment-round-bracket-level))
-                                   (= square-bracket-level (car in-assignment-square-bracket-level)))
-                              (and (string= token"]")
-                                   (< square-bracket-level (car in-assignment-square-bracket-level)))
-                              (and (equal token 'T_FUNCTION)
-                                   (= round-bracket-level (car in-assignment-round-bracket-level))))
+                (when in-assignment
+                  (when (or (string= token ";")
+                            (and (string= token ")")
+                                 (< round-bracket-level (car in-assignment-round-bracket-level)))
+                            (and (string= token ",")
+                                 (= round-bracket-level (car in-assignment-round-bracket-level))
+                                 (= square-bracket-level (car in-assignment-square-bracket-level)))
+                            (and (string= token"]")
+                                 (< square-bracket-level (car in-assignment-square-bracket-level)))
+                            (and (equal token 'T_FUNCTION)
+                                 (= round-bracket-level (car in-assignment-round-bracket-level))))
 
-                      ;; NOTE Ending an assignment because of function token is to support PSR-2 Closures
-                      
-                      (when phps-mode-functions-verbose
-                        (message "Ended assignment at %s" token))
-                      (pop in-assignment-square-bracket-level)
-                      (pop in-assignment-round-bracket-level)
-                      (unless in-assignment-round-bracket-level
-                        (setq in-assignment nil))
-                      (setq in-assignment-level (1- in-assignment-level)))
-                  (when (and (not after-special-control-structure)
-                             (or (string= token "=")
-                                 (equal token 'T_DOUBLE_ARROW)
-                                 (equal token 'T_CONCAT_EQUAL)
-                                 (equal token 'T_POW_EQUAL)
-                                 (equal token 'T_DIV_EQUAL)
-                                 (equal token 'T_PLUS_EQUAL)
-                                 (equal token 'T_MINUS_EQUAL)
-                                 (equal token 'T_MUL_EQUAL)
-                                 (equal token 'T_MOD_EQUAL)
-                                 (equal token 'T_SL_EQUAL)
-                                 (equal token 'T_SR_EQUAL)
-                                 (equal token 'T_AND_EQUAL)
-                                 (equal token 'T_OR_EQUAL)
-                                 (equal token 'T_XOR_EQUAL)
-                                 (equal token 'T_COALESCE_EQUAL)))
+                    ;; NOTE Ending an assignment because of function token is to support PSR-2 Closures
+                    
                     (when phps-mode-functions-verbose
-                      (message "Started assignment"))
-                    (setq in-assignment t)
-                    (push round-bracket-level in-assignment-round-bracket-level)
-                    (push square-bracket-level in-assignment-square-bracket-level)
-                    (setq in-assignment-level (1+ in-assignment-level))))
+                      (message "Ended assignment at %s" token))
+                    (pop in-assignment-square-bracket-level)
+                    (pop in-assignment-round-bracket-level)
+                    (unless in-assignment-round-bracket-level
+                      (setq in-assignment nil))
+                    (setq in-assignment-level (1- in-assignment-level))))
+                
+                (when (and (not after-special-control-structure)
+                           (or (string= token "=")
+                               (equal token 'T_DOUBLE_ARROW)
+                               (equal token 'T_CONCAT_EQUAL)
+                               (equal token 'T_POW_EQUAL)
+                               (equal token 'T_DIV_EQUAL)
+                               (equal token 'T_PLUS_EQUAL)
+                               (equal token 'T_MINUS_EQUAL)
+                               (equal token 'T_MUL_EQUAL)
+                               (equal token 'T_MOD_EQUAL)
+                               (equal token 'T_SL_EQUAL)
+                               (equal token 'T_SR_EQUAL)
+                               (equal token 'T_AND_EQUAL)
+                               (equal token 'T_OR_EQUAL)
+                               (equal token 'T_XOR_EQUAL)
+                               (equal token 'T_COALESCE_EQUAL)))
+                  (when phps-mode-functions-verbose
+                    (message "Started assignment"))
+                  (setq in-assignment t)
+                  (push round-bracket-level in-assignment-round-bracket-level)
+                  (push square-bracket-level in-assignment-square-bracket-level)
+                  (setq in-assignment-level (1+ in-assignment-level)))
 
                 ;; Keep track of object operators
                 (when (and (equal token 'T_OBJECT_OPERATOR)
