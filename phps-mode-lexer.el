@@ -202,8 +202,6 @@
       (display-warning "phps-mode" "PHPs Lexer Error - Going back to nil?"))
     ))
 
-;; Error running timer ‘phps-mode-lexer-run-incremental’: (error "phps-mode-lexer-lex: endless loop at 609, after (T_ENCAPSED_AND_WHITESPACE 609 . 609)") [3 times]
-
 (defun phps-mode-lexer-MOVE_FORWARD (position)
   "Move forward to POSITION."
   (when (boundp 'semantic-lex-end-point)
@@ -256,15 +254,6 @@
     (overlay-put (make-overlay start end) 'font-lock-face 'font-lock-string-face))
 
    ((or
-     (string= token "%")
-     (string= token "=")
-     (string= token "?")
-     (string= token "!")
-     (string= token "<")
-     (string= token ">")
-     (string= token ":")
-     (string= token ",")
-     (string= token ".")
      (string= token "(")
      (string= token ")")
      (string= token "[")
@@ -344,8 +333,16 @@
      )
     (overlay-put (make-overlay start end) 'font-lock-face 'font-lock-keyword-face))
 
-
    ((or
+     (string= token "?")
+     (string= token "!")
+     (string= token "<")
+     (string= token ">")
+     (string= token ":")
+     (string= token ",")
+     (string= token ".")
+     (string= token "%")
+     (string= token "=")
      (string= token 'T_OPEN_TAG)
      (string= token 'T_OPEN_TAG_WITH_ECHO)
      (string= token 'T_CLOSE_TAG)
