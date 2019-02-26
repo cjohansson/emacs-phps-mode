@@ -202,6 +202,42 @@
       (display-warning "phps-mode" "PHPs Lexer Error - Going back to nil?"))
     ))
 
+;; TODO This causes error:
+;; <?php
+;; /**
+;; * @var array $listing
+;; */
+;; ?>
+;; <h1>Boat listing</h1>
+;; <pre><?php print_r($listing); ?></pre>
+;; <div class="cvj-sokbat-listing">
+
+;;     <section class="sorting">
+;;         <strong>Sortering</strong>
+;;         <ul>
+;;             <li><a href="#" data-key="date" class="selected">Senaste</a></li>
+;;             <li><a href="#" data-key="price">Pris</a></li>
+;;             <li><a href="#" data-key="alphabetical">A-O</a></li>
+;;         </ul>
+;;     </section>
+
+;;     <section class="items">
+;;         <ul>
+;;     <?php foreach $listing as $item) { ?>
+;; <?php $url = 
+;;             <li>
+;;                 <a href="visa-bat?<?php echo $item['Id']; ?>"></a>
+;;                    </li>
+;; <?php } ?>
+;; </ul>
+;; </section>
+;; </div>
+
+;; TODO Assure syntax coloring for % and =
+
+
+;; Error running timer ‘phps-mode-lexer-run-incremental’: (error "phps-mode-lexer-lex: endless loop at 609, after (T_ENCAPSED_AND_WHITESPACE 609 . 609)") [3 times]
+
 (defun phps-mode-lexer-MOVE_FORWARD (position)
   "Move forward to POSITION."
   (when (boundp 'semantic-lex-end-point)
