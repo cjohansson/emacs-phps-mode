@@ -230,7 +230,6 @@
     (overlay-put (make-overlay start end) 'font-lock-face 'font-lock-function-name-face))
 
    ((or
-     (string= token 'T_STRING)
      (string= token 'T_VARIABLE)
      (string= token 'T_STRING_VARNAME))
     (overlay-put (make-overlay start end) 'font-lock-face 'font-lock-variable-name-face))
@@ -245,6 +244,7 @@
     (overlay-put (make-overlay start end) 'font-lock-face 'font-lock-doc-face))
 
    ((or
+     (string= token 'T_STRING)
      (string= token 'T_CONSTANT_ENCAPSED_STRING)
      (string= token 'T_ENCAPSED_AND_WHITESPACE)
      (string= token 'T_NUM_STRING)
