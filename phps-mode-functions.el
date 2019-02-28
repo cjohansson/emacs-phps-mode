@@ -120,6 +120,9 @@
               (in-assignment-level 0)
               (in-class-declaration nil)
               (in-class-declaration-level 0)
+              (in-return nil)
+              (in-return-curly-bracket-level nil)
+              (in-return-level 0)
               (token nil)
               (token-start nil)
               (token-end nil)
@@ -486,7 +489,6 @@
                     (unless in-assignment-round-bracket-level
                       (setq in-assignment nil))
                     (setq in-assignment-level (1- in-assignment-level))))
-                
                 (when (and (not after-special-control-structure)
                            (or (string= token "=")
                                (equal token 'T_DOUBLE_ARROW)
@@ -509,6 +511,24 @@
                   (push round-bracket-level in-assignment-round-bracket-level)
                   (push square-bracket-level in-assignment-square-bracket-level)
                   (setq in-assignment-level (1+ in-assignment-level)))
+
+                ;; Keep track of return expressions
+                (when in-return
+                  (when (and (string= token ";")
+                             (= curly-bracket-level (car in-return-curly-bracket-level)))
+
+                    (when phps-mode-functions-verbose
+                      (message "Ended return at %s" token))
+                    (pop in-return-curly-bracket-level)
+                    (unless in-return-curly-bracket-level
+                      (setq in-return nil))
+                    (setq in-return-level (1- in-return-level))))
+                (when (equal token 'T_RETURN)
+                  (when phps-mode-functions-verbose
+                    (message "Started return"))
+                  (setq in-return t)
+                  (push curly-bracket-level in-return-curly-bracket-level)
+                  (setq in-return-level (1+ in-return-level)))
 
                 ;; Keep track of object operators
                 (when (and (equal token 'T_OBJECT_OPERATOR)
@@ -538,7 +558,7 @@
                   (message "Processing token: %s" token))
                 
                 ;; Calculate nesting
-                (setq nesting-end (+ round-bracket-level square-bracket-level curly-bracket-level alternative-control-structure-level in-assignment-level in-class-declaration-level in-concatenation-level))
+                (setq nesting-end (+ round-bracket-level square-bracket-level curly-bracket-level alternative-control-structure-level in-assignment-level in-class-declaration-level in-concatenation-level in-return-level))
 
                 ;; Keep track of whether we are inside a HEREDOC or NOWDOC
                 (when (equal token 'T_START_HEREDOC)
@@ -708,7 +728,7 @@
 
 
                       ;; Calculate indentation level at start of line
-                      (setq nesting-start (+ round-bracket-level square-bracket-level curly-bracket-level alternative-control-structure-level in-assignment-level in-class-declaration-level in-concatenation-level))
+                      (setq nesting-start (+ round-bracket-level square-bracket-level curly-bracket-level alternative-control-structure-level in-assignment-level in-class-declaration-level in-concatenation-level in-return-level))
 
                       ;; Set initial values for tracking first token
                       (when (> token-start-line-number last-line-number)
