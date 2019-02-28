@@ -193,6 +193,11 @@
    (should (equal '((1 (0 0)) (2 (0 0)) (3 (1 0)) (4 (2 0)) (5 (1 0)) (6 (1 0)) (7 (0 0))) (phps-mode-test-hash-to-list (phps-mode-functions-get-lines-indent)))))
 
   (phps-mode-test-with-buffer
+   "<?php\nreturn $variable\n    && $variable;"
+   "Multi-line return statement"
+   (should (equal '((1 (0 0)) (2 (0 0)) (3 (1 0))) (phps-mode-test-hash-to-list (phps-mode-functions-get-lines-indent)))))
+
+  (phps-mode-test-with-buffer
    "<?php\n$options = myFunction(\n    array(array(\n        'options' => 123\n    ))\n);"
    "Assignment with double-dimensional array with double arrow assignment inside function call"
    (should (equal '((1 (0 0)) (2 (0 0)) (3 (1 0)) (4 (2 0)) (5 (1 0)) (6 (0 0))) (phps-mode-test-hash-to-list (phps-mode-functions-get-lines-indent)))))
