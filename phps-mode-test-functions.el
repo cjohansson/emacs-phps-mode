@@ -847,6 +847,16 @@
      (should (equal buffer-contents "<?php\nnamespace myNamespace;\nclass myClass extends myAbstract implements myInterface {\n    public function myFunctionA($myArg = null) {}\n    protected function myFunctionB($myArg = 'abc') {}\n}\n"))))
 
   )
+;; TODO Add test for this:
+                        ;; case 34:
+                        ;;     if ($item['IntegerValue'] % 10 == 0) {
+                        ;;         $attributes['boat']['Effekt (hk)'] = ($item['IntegerValue'] / 10);
+                        ;; } else {
+                        ;;     $attributes['boat']['Effekt (hk)'] =
+                        ;;         number_format(($item['IntegerValue'] / 10), 1, '.', '');
+                        ;; }
+                        ;; break;
+
 
 (defun phps-mode-test-functions ()
   "Run test for functions."
