@@ -130,6 +130,7 @@
               (token-end-line-number 0)
               (tokens (nreverse phps-mode-lexer-tokens))
               (nesting-stack nil)
+              (nesting-key nil)
               (class-declaration-started-this-line nil)
               (special-control-structure-started-this-line nil)
               (temp-pre-indent nil)
@@ -450,22 +451,31 @@
                           (equal token 'T_DEFAULT))
                   (setq after-special-control-structure round-bracket-level)
                   (setq after-special-control-structure-token token)
+                  (setq nesting-key token)
                   (setq special-control-structure-started-this-line t)
 
-                  (when (and (or (equal token 'T_ELSE)
-                                 (equal token 'T_ELSEIF)
-                                 (equal token 'T_DEFAULT))
-                             nesting-stack
-                             (string= (car (cdr (cdr (car nesting-stack)))) ":"))
-
+                  ;; ELSE and ELSEIF after a IF, ELSE, ELESIF
+                  ;; and DEFAULT after a CASE
+                  ;; should decrease alternative control structure level
+                  (when (and nesting-stack
+                             (string= (car (cdr (cdr (cdr (car nesting-stack))))) ":")
+                             (or
+                              (and (or (equal token 'T_ELSE)
+                                       (equal token 'T_ELSEIF))
+                                   (or (equal (car (cdr (cdr (car nesting-stack)))) 'T_IF)
+                                       (equal (car (cdr (cdr (car nesting-stack)))) 'T_ELSEIF)
+                                       (equal (car (cdr (cdr (car nesting-stack)))) 'T_ELSE)))
+                              (and (equal token 'T_DEFAULT)
+                                   (equal (car (cdr (cdr (car nesting-stack)))) 'T_CASE))))
                     (setq alternative-control-structure-level (1- alternative-control-structure-level))
 
                     (when first-token-on-line
                       (setq first-token-is-nesting-decrease t))
 
                     (when phps-mode-functions-verbose
-                      (message "\nDecreasing alternative control structure nesting at %s to %s\n" token alternative-control-structure-level))
-                    ))
+                      (message "\nDecreasing alternative control structure nesting at %s to %s\n" token alternative-control-structure-level)))
+
+                  )
 
                 ;; Keep track of assignments
                 (when in-assignment
@@ -537,6 +547,7 @@
                 ;; Did we encounter a token that supports extra special alternative control structures?
                 (when (equal token 'T_CASE)
                   (setq after-extra-special-control-structure t)
+                  (setq nesting-key token)
                   (setq after-extra-special-control-structure-first-on-line first-token-on-line)
 
                   (when (and switch-case-alternative-stack
@@ -675,9 +686,9 @@
                             (setq column-level (1+ column-level)))
 
                           (when phps-mode-functions-verbose
-                            (message "\nPushing (%s %s %s) to nesting-stack since %s is greater than %s or stack is empty\n" nesting-start nesting-end token nesting-end (car (cdr (car nesting-stack))))
+                            (message "\nPushing (%s %s %s %s) to nesting-stack since %s is greater than %s or stack is empty\n" nesting-start nesting-end nesting-key token nesting-end (car (cdr (car nesting-stack))))
                             )
-                          (push `(,nesting-stack-end ,nesting-end ,token) nesting-stack)
+                          (push `(,nesting-stack-end ,nesting-end ,nesting-key ,token) nesting-stack)
                           (when phps-mode-functions-verbose
                             ;; (message "New stack %s, start: %s end: %s\n" nesting-stack (car (car nesting-stack)) (car (cdr (car nesting-stack))))
                             )))

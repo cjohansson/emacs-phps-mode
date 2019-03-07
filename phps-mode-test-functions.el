@@ -205,7 +205,8 @@
   (phps-mode-test-with-buffer
    "<?php\nswitch ($condition) {\n    case 34:\n        if ($item['Random'] % 10 == 0) {\n            $attributes['item'] = ($item['IntegerValue'] / 10);\n        } else {\n            $attributes['item'] =\n                number_format(($item['IntegerValue'] / 10), 1, '.', '');\n        }\n        break;\n}\n"
    "Switch case with conditional modulo expression"
-   (should (equal '((1 (0 0)) (2 (0 0)) (3 (1 0)) (4 (2 0)) (5 (3 0)) (6 (2 0)) (7 (3 0)) (8 (4 0)) (9 (3 0)) (10 (3 0)) (11 (0 0))) (phps-mode-test-hash-to-list (phps-mode-functions-get-lines-indent)))))
+   (message "indent: %s" (phps-mode-test-hash-to-list (phps-mode-functions-get-lines-indent)))
+   (should (equal '((1 (0 0)) (2 (0 0)) (3 (1 0)) (4 (2 0)) (5 (3 0)) (6 (2 0)) (7 (3 0)) (8 (4 0)) (9 (2 0)) (10 (2 0)) (11 (0 0))) (phps-mode-test-hash-to-list (phps-mode-functions-get-lines-indent)))))
 
   (phps-mode-test-with-buffer
    "<?php\n$options = array(\n    'options' => array(array(\n        'errorTo'\n    ))\n);"
