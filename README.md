@@ -12,7 +12,7 @@ This mode does not require PHP installed on computer because it has a elisp base
 * Flycheck support (PHP Mess Detector, PHP Code Sniffer) (100%)
 * Lexer based on official PHP re2c lexer (100%)
 * Syntax coloring based on lexer tokens (100%)
-* PSR-1 and PSR-2 indentation based on lexer tokens (95%)
+* PSR-1 and PSR-2 indentation based on lexer tokens (100%)
 * Imenu support (100%)
 * Integration with `(electric-pair)` (100%)
 * Incremental lexer and syntax coloring after buffer changes (100%)
