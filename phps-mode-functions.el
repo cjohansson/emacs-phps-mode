@@ -47,6 +47,8 @@
 ;; NOTE Also format white-space inside the line, i.e. after function declarations?
 
 
+;; TODO Optimize line-number-at-pos
+
 (defun phps-mode-functions-get-buffer-changes-start ()
   "Get buffer change start."
   phps-mode-functions-buffer-changes-start)
@@ -74,6 +76,19 @@
   "Return Imenu, process buffer if not done already."
   (phps-mode-functions-process-current-buffer)
   phps-mode-functions-imenu)
+
+(defun phps-mode-functions--get-lines-in-buffer (beg end)
+  "Return the number of lines in buffer between BEG and END."
+  (phps-mode-functions--get-lines-in-string (buffer-substring-no-properties beg end)))
+
+(defun phps-mode-functions--get-lines-in-string (string)
+  "Return the number of lines in STRING."
+  (let ((lines-in-string 0)
+        (start 0))
+    (while (string-match "[\n\C-m]" string start)
+      (setq start (match-end 0))
+      (setq lines-in-string (1+ lines-in-string)))
+    lines-in-string))
 
 (defun phps-mode-functions--process-current-buffer ()
   "Process current buffer and generation indentation and Imenu in one iteration.  Complexity: O(n)."
@@ -144,7 +159,8 @@
               (imenu-in-class-name nil)
               (imenu-in-function-declaration nil)
               (imenu-in-function-name nil)
-              (imenu-nesting-level 0))
+              (imenu-nesting-level 0)
+              (incremental-line-number 1))
 
           (push `(END_PARSE ,(point-max) . ,(point-max)) tokens)
 
@@ -157,13 +173,19 @@
                   (next-token-start-line-number nil)
                   (next-token-end-line-number nil))
 
+              (when token
+                (setq incremental-line-number (+ incremental-line-number (phps-mode-functions--get-lines-in-buffer token-end next-token-start))))
+
               ;; Handle the pseudo-token for last-line
               (if (equal next-token 'END_PARSE)
                   (progn
                     (setq next-token-start-line-number (1+ token-start-line-number))
                     (setq next-token-end-line-number (1+ token-end-line-number)))
-                (setq next-token-start-line-number (line-number-at-pos next-token-start t))
-                (setq next-token-end-line-number (line-number-at-pos next-token-end t)))
+                (setq next-token-start-line-number incremental-line-number)
+                (setq incremental-line-number (+ incremental-line-number (phps-mode-functions--get-lines-in-buffer next-token-start next-token-end)))
+                (setq next-token-end-line-number incremental-line-number)
+                (when phps-mode-functions-verbose
+                  (message "Token '%s' pos: %s-%s lines: %s-%s" next-token next-token-start next-token-end next-token-start-line-number next-token-end-line-number)))
 
               ;; Token logic
               (when token
