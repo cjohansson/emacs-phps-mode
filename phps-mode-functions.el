@@ -47,8 +47,6 @@
 ;; NOTE Also format white-space inside the line, i.e. after function declarations?
 
 
-;; TODO Optimize line-number-at-pos
-
 (defun phps-mode-functions-get-buffer-changes-start ()
   "Get buffer change start."
   phps-mode-functions-buffer-changes-start)
@@ -894,7 +892,7 @@
 
           (when (< current-line-number end-line-number)
             (line-move 1))
-          (setq current-line-number (line-number-at-pos)))))))
+          (setq current-line-number (1+ current-line-number)))))))
 
 (defun phps-mode-functions-uncomment-region (beg end &optional _arg)
   "Comment region from BEG to END with optional ARG."
@@ -944,7 +942,7 @@
 
           (when (< current-line-number end-line-number)
             (line-move 1))
-          (setq current-line-number (line-number-at-pos)))))))
+          (setq current-line-number (1+ current-line-number)))))))
 
 (defun phps-mode-functions-init ()
   "PHP specific init-cleanup routines."
