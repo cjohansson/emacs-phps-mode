@@ -983,7 +983,7 @@
     (set (make-local-variable 'indent-tabs-mode) nil))
 
   ;; Add support for moving indexes quickly when making newlines
-  (advice-add #'newline :around #'phps-mode-functions-around-newline)
+  (advice-add 'newline :around #'phps-mode-functions-around-newline)
 
   ;; Reset flags
   (set (make-local-variable 'phps-mode-functions-buffer-changes-start) nil)
