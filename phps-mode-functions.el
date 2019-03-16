@@ -804,11 +804,11 @@
 
 (defun phps-mode-functions-around-newline (old-function &rest arguments)
   "Call OLD-FUNCTION with ARGUMENTS and then shift indexes if the rest of the line is just whitespace."
+  (message "Running advice")
   (let ((old-pos (point))
         (new-pos)
         (looking-at-whitespace (looking-at-p "[\ \n\t\r]*\n")))
     (apply old-function arguments)
-    (message "Running advice")
     (if looking-at-whitespace
         (progn
           (setq new-pos (point))
