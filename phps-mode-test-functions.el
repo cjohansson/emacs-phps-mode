@@ -854,6 +854,19 @@
 
   )
 
+(defun phps-mode-test-functions-whitespace-modifications ()
+  "Test white-space modifications functions."
+  (phps-mode-test-with-buffer
+   "<?php\n$var = 'abc';\n\n$var2 = '123';\n"
+   "Add newline between two assignments and inspect moved tokens and states"
+   (message "Tokens %s" (phps-mode-lexer-get-tokens))
+   (should (equal (phps-mode-lexer-get-tokens)
+                  '((T_OPEN_TAG 1 . 7) (T_VARIABLE 7 . 11) ("=" 12 . 13) (T_CONSTANT_ENCAPSED_STRING 14 . 19) (";" 19 . 20) (T_VARIABLE 22 . 27) ("=" 28 . 29) (T_CONSTANT_ENCAPSED_STRING 30 . 35) (";" 35. 36))))
+   (goto-char 21)
+   (newline-and-indent)
+   (should (equal (phps-mode-lexer-get-tokens)
+                  '((T_OPEN_TAG 1 . 7) (T_VARIABLE 7 . 11) ("=" 12 . 13) (T_CONSTANT_ENCAPSED_STRING 14 . 19) (";" 19 . 20) (T_VARIABLE 23 . 28) ("=" 29 . 30) (T_CONSTANT_ENCAPSED_STRING 31 . 36) (";" 36. 37))))))
+
 (defun phps-mode-test-functions ()
   "Run test for functions."
   ;; (setq debug-on-error t)
@@ -868,7 +881,8 @@
   (phps-mode-test-functions-get-lines-indent)
   (phps-mode-test-functions-indent-line)
   (phps-mode-test-functions-imenu)
-  (phps-mode-test-functions-comment-uncomment-region))
+  (phps-mode-test-functions-comment-uncomment-region)
+  (phps-mode-test-functions-whitespace-modifications))
 
 (phps-mode-test-functions)
 

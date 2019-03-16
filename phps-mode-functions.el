@@ -802,6 +802,24 @@
     (setq phps-mode-functions-imenu nil)
     (setq phps-mode-functions-lines-indent nil)))
 
+(defun phps-mode-functions-around-newline (old-function &rest arguments)
+  "Call OLD-FUNCTION with ARGUMENTS and then shift indexes if the rest of the line is just whitespace."
+  (let ((old-pos (point))
+        (new-pos)
+        (looking-at-whitespace (looking-at-p "[\ \n\t\r]*\n")))
+    (apply old-function arguments)
+    (message "Running advice")
+    (if looking-at-whitespace
+        (progn
+          (setq new-pos (point))
+          (let ((diff (- new-pos old-pos)))
+            (when (> diff 0)
+              (phps-mode-lexer-move-tokens old-pos diff)
+              (phps-mode-lexer-move-states old-pos diff)
+              (message "Old pos %s, new pos: %s, diff: %s" old-pos new-pos diff)
+              )))
+      (message "Not looking at white-space"))))
+
 (defun phps-mode-functions-indent-line ()
   "Indent line."
   (phps-mode-functions-process-current-buffer)
@@ -963,6 +981,9 @@
 
     ;; MUST NOT use tabs for indenting
     (set (make-local-variable 'indent-tabs-mode) nil))
+
+  ;; Add support for moving indexes quickly when making newlines
+  (advice-add #'newline :around #'phps-mode-functions-around-newline)
 
   ;; Reset flags
   (set (make-local-variable 'phps-mode-functions-buffer-changes-start) nil)

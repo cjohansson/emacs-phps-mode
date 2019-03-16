@@ -31,7 +31,6 @@
 
 (autoload 'phps-mode-test-with-buffer "phps-mode-test")
 (autoload 'phps-mode-test-incremental-vs-intial-buffer "phps-mode-test")
-(autoload 'phps-mode-functions-indent-line "phps-mode-functions")
 (autoload 'phps-mode-functions-get-lines-indent "phps-mode-functions")
 (autoload 'phps-mode-functions-get-imenu "phps-mode-functions")
 (autoload 'phps-mode-functions-get-buffer-changes-start "phps-mode-functions")
