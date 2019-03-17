@@ -811,6 +811,7 @@
     (apply old-function arguments)
     (if looking-at-whitespace
         (progn
+          (message "Looking at white-space")
           (setq new-pos (point))
           (let ((diff (- new-pos old-pos)))
             (when (> diff 0)
@@ -983,7 +984,7 @@
     (set (make-local-variable 'indent-tabs-mode) nil))
 
   ;; Add support for moving indexes quickly when making newlines
-  (advice-add 'newline :around #'phps-mode-functions-around-newline)
+  (advice-add #'newline :around #'phps-mode-functions-around-newline)
 
   ;; Reset flags
   (set (make-local-variable 'phps-mode-functions-buffer-changes-start) nil)
