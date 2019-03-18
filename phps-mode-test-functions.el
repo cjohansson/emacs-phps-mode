@@ -859,13 +859,17 @@
   (phps-mode-test-with-buffer
    "<?php\n$var = 'abc';\n\n$var2 = '123';\n"
    "Add newline between two assignments and inspect moved tokens and states"
-   (message "Tokens %s" (phps-mode-lexer-get-tokens))
+   ;; (message "Tokens %s" (phps-mode-lexer-get-tokens))
    (should (equal (phps-mode-lexer-get-tokens)
                   '((T_OPEN_TAG 1 . 7) (T_VARIABLE 7 . 11) ("=" 12 . 13) (T_CONSTANT_ENCAPSED_STRING 14 . 19) (";" 19 . 20) (T_VARIABLE 22 . 27) ("=" 28 . 29) (T_CONSTANT_ENCAPSED_STRING 30 . 35) (";" 35 . 36))))
    (goto-char 21)
-   (newline nil t)
+   (newline nil nil)
+   ;; (message "Tokens %s" (phps-mode-lexer-get-tokens))
    (should (equal (phps-mode-lexer-get-tokens)
-                  '((T_OPEN_TAG 1 . 7) (T_VARIABLE 7 . 11) ("=" 12 . 13) (T_CONSTANT_ENCAPSED_STRING 14 . 19) (";" 19 . 20) (T_VARIABLE 23 . 28) ("=" 29 . 30) (T_CONSTANT_ENCAPSED_STRING 31 . 36) (";" 36 . 37))))))
+                  '((T_OPEN_TAG 1 . 7) (T_VARIABLE 7 . 11) ("=" 12 . 13) (T_CONSTANT_ENCAPSED_STRING 14 . 19) (";" 19 . 20) (T_VARIABLE 23 . 28) ("=" 29 . 30) (T_CONSTANT_ENCAPSED_STRING 31 . 36) (";" 36 . 37))))
+   )
+
+  )
 
 (defun phps-mode-test-functions ()
   "Run test for functions."

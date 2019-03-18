@@ -28,6 +28,9 @@
 (autoload 'phps-mode-lexer-move-tokens "phps-mode-lexer")
 (autoload 'phps-mode-lexer-move-states "phps-mode-lexer")
 
+(defvar phps-mode-functions-allow-after-change t
+  "Flag to tell us whether after change detection is enabled or not.")
+
 (defvar phps-mode-functions-buffer-changes-start nil
   "Start point of buffer changes, nil if none.")
 
@@ -58,6 +61,7 @@
 
 (defun phps-mode-functions-process-current-buffer ()
   "Process current buffer, generate indentations and Imenu."
+  ;; (message "(phps-mode-functions-process-current-buffer)")
   (when (phps-mode-functions-get-buffer-changes-start)
     (phps-mode-lexer-run-incremental)
     (setq phps-mode-functions-processed-buffer nil))
@@ -92,6 +96,7 @@
   "Process current buffer and generation indentation and Imenu in one iteration.  Complexity: O(n)."
   (if (boundp 'phps-mode-lexer-tokens)
       (save-excursion
+        (message "Processing current buffer")
         (goto-char (point-min))
         (when phps-mode-functions-verbose
           (message "\nCalculation indentation for all lines in buffer:\n\n%s" (buffer-substring-no-properties (point-min) (point-max))))
@@ -803,23 +808,31 @@
     (setq phps-mode-functions-lines-indent nil)))
 
 (defun phps-mode-functions-around-newline (old-function &rest arguments)
-  "Call OLD-FUNCTION with ARGUMENTS and then shift indexes if the rest of the line is just whitespace."
-  (message "Running advice")
-  (let ((old-pos (point))
-        (new-pos)
-        (looking-at-whitespace (looking-at-p "[\ \n\t\r]*\n")))
-    (apply old-function arguments)
-    (if looking-at-whitespace
-        (progn
-          (message "Looking at white-space")
-          (setq new-pos (point))
-          (let ((diff (- new-pos old-pos)))
-            (when (> diff 0)
-              (phps-mode-lexer-move-tokens old-pos diff)
-              (phps-mode-lexer-move-states old-pos diff)
-              (message "Old pos %s, new pos: %s, diff: %s" old-pos new-pos diff)
-              )))
-      (message "Not looking at white-space"))))
+  "Call OLD-FUNCTION with ARGUMENTS and then shift indexes if the rest of the line is just white-space."
+  (if (string= major-mode "phps-mode")
+      (progn
+        ;; (message "Running advice")
+        (let ((old-pos (point))
+              (new-pos)
+              (looking-at-whitespace (looking-at-p "[\ \n\t\r]*\n")))
+
+          ;; Temporarily disable change detection to not trigger incremental lexer
+          (setq phps-mode-functions-allow-after-change nil)
+          (apply old-function arguments)
+          (setq phps-mode-functions-allow-after-change t)
+
+          (if looking-at-whitespace
+              (progn
+                (message "Looking at white-space")
+                (setq new-pos (point))
+                (let ((diff (- new-pos old-pos)))
+                  (when (> diff 0)
+                    (phps-mode-lexer-move-tokens old-pos diff)
+                    (phps-mode-lexer-move-states old-pos diff)
+                    (message "Old pos %s, new pos: %s, diff: %s" old-pos new-pos diff)
+                    )))
+            (message "Not looking at white-space"))))
+    (apply old-function arguments)))
 
 (defun phps-mode-functions-indent-line ()
   "Indent line."
@@ -852,7 +865,8 @@
 
 (defun phps-mode-functions-after-change (start _stop _length)
   "Track buffer change from START to STOP with length LENGTH."
-  (when (string= major-mode "phps-mode")
+  (when (and (string= major-mode "phps-mode")
+             phps-mode-functions-allow-after-change)
 
     ;; If we haven't scheduled incremental lexer before - do it
     (when (and (not phps-mode-functions-buffer-changes-start)
@@ -987,6 +1001,7 @@
   (advice-add #'newline :around #'phps-mode-functions-around-newline)
 
   ;; Reset flags
+  (set (make-local-variable 'phps-mode-functions-allow-after-change) t)
   (set (make-local-variable 'phps-mode-functions-buffer-changes-start) nil)
   (set (make-local-variable 'phps-mode-functions-lines-indent) nil)
   (set (make-local-variable 'phps-mode-functions-imenu) nil)
