@@ -1683,7 +1683,7 @@
 
 (defun phps-mode-lexer-run-incremental ()
   "Run incremental lexer based on `(phps-mode-functions-get-buffer-changes-start)'."
-  (message "Running incremental lexer")
+  ;; (message "Running incremental lexer")
   (let ((change-start (phps-mode-functions-get-buffer-changes-start)))
     (when change-start
       (when (and (> change-start 1)
