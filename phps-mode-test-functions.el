@@ -856,6 +856,7 @@
 
 (defun phps-mode-test-functions-whitespace-modifications ()
   "Test white-space modifications functions."
+
   (phps-mode-test-with-buffer
    "<?php\n$var = 'abc';\n\n$var2 = '123';\n"
    "Add newline between two assignments and inspect moved tokens and states"
@@ -867,6 +868,20 @@
    ;; (message "Tokens %s" (phps-mode-lexer-get-tokens))
    (should (equal (phps-mode-lexer-get-tokens)
                   '((T_OPEN_TAG 1 . 7) (T_VARIABLE 7 . 11) ("=" 12 . 13) (T_CONSTANT_ENCAPSED_STRING 14 . 19) (";" 19 . 20) (T_VARIABLE 23 . 28) ("=" 29 . 30) (T_CONSTANT_ENCAPSED_STRING 31 . 36) (";" 36 . 37))))
+   )
+
+  (phps-mode-test-with-buffer
+   "<?php\nif (true):\n    $var = 'abc';\n    $var2 = '123';\nendif;\n"
+   "Add newline inside if body after two assignments and inspect moved tokens and states"
+   (message "Tokens %s" (phps-mode-lexer-get-tokens))
+   (should (equal (phps-mode-lexer-get-tokens)
+                  '((T_OPEN_TAG 1 . 7) (T_IF 7 . 9) ("(" 10 . 11) (T_STRING 11 . 15) (")" 15 . 16) (":" 16 . 17) (T_VARIABLE 22 . 26) ("=" 27 . 28) (T_CONSTANT_ENCAPSED_STRING 29 . 34) (";" 34 . 35) (T_VARIABLE 40 . 45) ("=" 46 . 47) (T_CONSTANT_ENCAPSED_STRING 48 . 53) (";" 53 . 54) (T_ENDIF 55 . 60) (";" 60 . 61))))
+   (goto-char 54)
+   (newline-and-indent)
+   (message "Tokens %s" (phps-mode-lexer-get-tokens))
+   (should (equal (phps-mode-lexer-get-tokens)
+                  '(should (equal (phps-mode-lexer-get-tokens)
+                  '((T_OPEN_TAG 1 . 7) (T_IF 7 . 9) ("(" 10 . 11) (T_STRING 11 . 15) (")" 15 . 16) (":" 16 . 17) (T_VARIABLE 22 . 26) ("=" 27 . 28) (T_CONSTANT_ENCAPSED_STRING 29 . 34) (";" 34 . 35) (T_VARIABLE 40 . 45) ("=" 46 . 47) (T_CONSTANT_ENCAPSED_STRING 48 . 53) (";" 53 . 54) (T_ENDIF 55 . 60) (";" 60 . 61))))))
    )
 
   )

@@ -96,7 +96,7 @@
   "Process current buffer and generation indentation and Imenu in one iteration.  Complexity: O(n)."
   (if (boundp 'phps-mode-lexer-tokens)
       (save-excursion
-        (message "Processing current buffer")
+        ;; (message "Processing current buffer")
         (goto-char (point-min))
         (when phps-mode-functions-verbose
           (message "\nCalculation indentation for all lines in buffer:\n\n%s" (buffer-substring-no-properties (point-min) (point-max))))
@@ -823,15 +823,16 @@
 
           (if looking-at-whitespace
               (progn
-                (message "Looking at white-space")
+                ;; (message "Looking at white-space")
                 (setq new-pos (point))
                 (let ((diff (- new-pos old-pos)))
                   (when (> diff 0)
                     (phps-mode-lexer-move-tokens old-pos diff)
                     (phps-mode-lexer-move-states old-pos diff)
-                    (message "Old pos %s, new pos: %s, diff: %s" old-pos new-pos diff)
+                    ;; (message "Old pos %s, new pos: %s, diff: %s" old-pos new-pos diff)
                     )))
-            (message "Not looking at white-space"))))
+            ;; (message "Not looking at white-space")
+            )))
     (apply old-function arguments)))
 
 (defun phps-mode-functions-indent-line ()
