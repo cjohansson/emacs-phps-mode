@@ -35,6 +35,7 @@
 (autoload 'phps-mode-functions-get-lines-indent "phps-mode-functions")
 (autoload 'phps-mode-functions-get-imenu "phps-mode-functions")
 (autoload 'phps-mode-test-hash-to-list "phps-mode-test")
+(autoload 'phps-mode-lexer-get-tokens "phps-mode-lexer")
 (autoload 'should "ert")
 
 (defun phps-mode-test-functions-get-lines-indent ()
