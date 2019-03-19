@@ -69,20 +69,24 @@
     (phps-mode-functions--process-current-buffer)
     (setq phps-mode-functions-processed-buffer t)))
 
-;; TODO Fix this function
+(defun phps-mode-functions-get-moved-lines-indent (old-lines-indents start-line-number diff)
+  "Move OLD-LINES-INDENTS from START-LINE-NUMBER with DIFF points."
+  (let ((lines-indents (make-hash-table :test 'equal))
+        (line-number 1))
+    (let ((line-indent (gethash line-number old-lines-indents)))
+      (while line-indent
+        (if (< line-number start-line-number)
+            (puthash line-number line-indent lines-indents)
+          (setq new-line-number (1+ line-number))
+          (puthash new-line-number line-indent lines-indents)
+          (message "Added new indent %s from %s to %s" line-indent line-number new-line-number))
+        (setq line-number (1+ line-number))
+        (setq line-indent (gethash line-number old-lines-indents))))
+    lines-indents))
+
 (defun phps-mode-functions-move-lines-indent (start-line-number diff)
-  "Move line-indent index from START-LINE-NUMBER with DIFF amount."
-  (let ((lines-indent (phps-mode-functions-get-lines-indent))
-        (line-number (+ start-line-number diff)))
-    (when lines-indent
-      (let ((line-indent (gethash line-number phps-mode-functions-lines-indent)))
-        (while line-indent
-          (when (not (= line-number start-line-number))
-            (puthash (1- line-number) line-indent lines-indent)
-            )
-          (setq line-number (1+ line-number))
-          (setq line-indent (gethash line-number lines-indent)))
-        (setq phps-mode-functions-lines-indent lines-indent)))))
+  "Move lines indent from START-LINE-NUMBER with DIFF points."
+  (setq phps-mode-functions-lines-indent (phps-mode-functions-get-moved-lines-indent phps-mode-functions-lines-indent start-line-number diff)))
 
 (defun phps-mode-functions-get-lines-indent ()
   "Return lines indent, process buffer if not done already."

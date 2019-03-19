@@ -34,9 +34,21 @@
 (autoload 'phps-mode-functions-indent-line "phps-mode-functions")
 (autoload 'phps-mode-functions-get-lines-indent "phps-mode-functions")
 (autoload 'phps-mode-functions-get-imenu "phps-mode-functions")
+(autoload 'phps-mode-functions-get-moved-lines-indent "phps-mode-functions")
 (autoload 'phps-mode-test-hash-to-list "phps-mode-test")
 (autoload 'phps-mode-lexer-get-tokens "phps-mode-lexer")
 (autoload 'should "ert")
+
+(defun phps-mode-test-functions-move-lines-indent ()
+  "Test `phps-mode-functions-move-lines-indent'."
+
+  (phps-mode-test-with-buffer
+   "<?php\n/**\n * Bla\n */"
+   "DOC-COMMENT"
+   (should (equal '((1 (0 0)) (2 (0 0)) (3 (0 1)) (4 (0 1))) (phps-mode-test-hash-to-list (phps-mode-functions-get-lines-indent))))
+   (should (equal '((1 (0 0)) (2 (0 0)) (3 (0 0)) (4 (0 1)) (5 (0 1))) (phps-mode-test-hash-to-list (phps-mode-functions-get-moved-lines-indent (phps-mode-functions-get-lines-indent) 2 1)))))
+
+  )
 
 (defun phps-mode-test-functions-get-lines-indent ()
   "Test `phps-mode-functions-get-lines-indent' function."
@@ -902,6 +914,7 @@
   (phps-mode-test-functions-indent-line)
   (phps-mode-test-functions-imenu)
   (phps-mode-test-functions-comment-uncomment-region)
+  (phps-mode-test-functions-move-lines-indent)
   (phps-mode-test-functions-whitespace-modifications))
 
 (phps-mode-test-functions)
