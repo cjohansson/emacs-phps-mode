@@ -69,6 +69,21 @@
     (phps-mode-functions--process-current-buffer)
     (setq phps-mode-functions-processed-buffer t)))
 
+;; TODO Fix this function
+(defun phps-mode-functions-move-lines-indent (start-line-number diff)
+  "Move line-indent index from START-LINE-NUMBER with DIFF amount."
+  (let ((lines-indent (phps-mode-functions-get-lines-indent))
+        (line-number (+ start-line-number diff)))
+    (when lines-indent
+      (let ((line-indent (gethash line-number phps-mode-functions-lines-indent)))
+        (while line-indent
+          (when (not (= line-number start-line-number))
+            (puthash (1- line-number) line-indent lines-indent)
+            )
+          (setq line-number (1+ line-number))
+          (setq line-indent (gethash line-number lines-indent)))
+        (setq phps-mode-functions-lines-indent lines-indent)))))
+
 (defun phps-mode-functions-get-lines-indent ()
   "Return lines indent, process buffer if not done already."
   (phps-mode-functions-process-current-buffer)
@@ -814,7 +829,8 @@
         ;; (message "Running advice")
         (let ((old-pos (point))
               (new-pos)
-              (looking-at-whitespace (looking-at-p "[\ \n\t\r]*\n")))
+              (looking-at-whitespace (looking-at-p "[\ \n\t\r]*\n"))
+              (old-line-number (line-number-at-pos)))
 
           ;; Temporarily disable change detection to not trigger incremental lexer
           (setq phps-mode-functions-allow-after-change nil)
@@ -829,6 +845,8 @@
                   (when (> diff 0)
                     (phps-mode-lexer-move-tokens old-pos diff)
                     (phps-mode-lexer-move-states old-pos diff)
+                    (phps-mode-functions-move-lines-indent old-line-number 1)
+                    ;; TODO Move imenu-index?
                     ;; (message "Old pos %s, new pos: %s, diff: %s" old-pos new-pos diff)
                     )))
             ;; (message "Not looking at white-space")

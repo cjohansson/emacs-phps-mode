@@ -882,7 +882,7 @@
    (message "Tokens %s" (phps-mode-lexer-get-tokens))
    (should (equal (phps-mode-lexer-get-tokens)
                   '(should (equal (phps-mode-lexer-get-tokens)
-                  '((T_OPEN_TAG 1 . 7) (T_IF 7 . 9) ("(" 10 . 11) (T_STRING 11 . 15) (")" 15 . 16) (":" 16 . 17) (T_VARIABLE 22 . 26) ("=" 27 . 28) (T_CONSTANT_ENCAPSED_STRING 29 . 34) (";" 34 . 35) (T_VARIABLE 40 . 45) ("=" 46 . 47) (T_CONSTANT_ENCAPSED_STRING 48 . 53) (";" 53 . 54) (T_ENDIF 55 . 60) (";" 60 . 61))))))
+                  '((T_OPEN_TAG 1 . 7) (T_IF 7 . 9) ("(" 10 . 11) (T_STRING 11 . 15) (")" 15 . 16) (":" 16 . 17) (T_VARIABLE 22 . 26) ("=" 27 . 28) (T_CONSTANT_ENCAPSED_STRING 29 . 34) (";" 34 . 35) (T_VARIABLE 40 . 45) ("=" 46 . 47) (T_CONSTANT_ENCAPSED_STRING 48 . 53) (";" 53 . 54) (T_ENDIF 60 . 65) (";" 65 . 66) (END_PARSE 68 . 68))))))
    )
 
   )
