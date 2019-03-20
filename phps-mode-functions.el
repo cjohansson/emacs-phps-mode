@@ -73,16 +73,19 @@
   "Move OLD-LINES-INDENTS from START-LINE-NUMBER with DIFF points."
   (let ((lines-indents (make-hash-table :test 'equal))
         (line-number 1))
-    (let ((line-indent (gethash line-number old-lines-indents)))
-      (while line-indent
-        (if (< line-number start-line-number)
-            (puthash line-number line-indent lines-indents)
-          (setq new-line-number (1+ line-number))
-          (puthash new-line-number line-indent lines-indents)
-          (message "Added new indent %s from %s to %s" line-indent line-number new-line-number))
-        (setq line-number (1+ line-number))
-        (setq line-indent (gethash line-number old-lines-indents))))
-    lines-indents))
+    (when old-lines-indents
+      (let ((line-indent (gethash line-number old-lines-indents))
+            (new-line-number))
+        (while line-indent
+          (when (<= line-number start-line-number)
+            (puthash line-number line-indent lines-indents))
+          (when (>= line-number start-line-number)
+            (setq new-line-number (+ line-number diff))
+            (message "Added new indent %s from %s to %s" line-indent line-number new-line-number)
+            (puthash new-line-number line-indent lines-indents))
+          (setq line-number (1+ line-number))
+          (setq line-indent (gethash line-number old-lines-indents))))
+      lines-indents)))
 
 (defun phps-mode-functions-move-lines-indent (start-line-number diff)
   "Move lines indent from START-LINE-NUMBER with DIFF points."

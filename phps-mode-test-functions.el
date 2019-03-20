@@ -44,9 +44,15 @@
 
   (phps-mode-test-with-buffer
    "<?php\n/**\n * Bla\n */"
-   "DOC-COMMENT"
+   "Move line-indents one line down"
    (should (equal '((1 (0 0)) (2 (0 0)) (3 (0 1)) (4 (0 1))) (phps-mode-test-hash-to-list (phps-mode-functions-get-lines-indent))))
    (should (equal '((1 (0 0)) (2 (0 0)) (3 (0 0)) (4 (0 1)) (5 (0 1))) (phps-mode-test-hash-to-list (phps-mode-functions-get-moved-lines-indent (phps-mode-functions-get-lines-indent) 2 1)))))
+
+  (phps-mode-test-with-buffer
+   "<?php\n/**\n * Bla\n */"
+   "Move line-indents one line up"
+   (should (equal '((1 (0 0)) (2 (0 0)) (3 (0 1)) (4 (0 1))) (phps-mode-test-hash-to-list (phps-mode-functions-get-lines-indent))))
+   (should (equal '((1 (0 0)) (2 (0 0)) (3 (0 1))) (phps-mode-test-hash-to-list (phps-mode-functions-get-moved-lines-indent (phps-mode-functions-get-lines-indent) 3 -1)))))
 
   )
 
