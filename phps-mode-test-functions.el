@@ -64,7 +64,13 @@
    "<?php\n/**\n * Bla\n */"
    "Move line-indents one line up"
    (should (equal '((1 (0 0)) (2 (0 0)) (3 (0 1)) (4 (0 1))) (phps-mode-test-hash-to-list (phps-mode-functions-get-lines-indent))))
-   (should (equal '((1 (0 0)) (2 (0 0)) (3 (0 1))) (phps-mode-test-hash-to-list (phps-mode-functions-get-moved-lines-indent (phps-mode-functions-get-lines-indent) 3 -1)))))
+   (should (equal '((1 (0 0)) (2 (0 1)) (3 (0 1))) (phps-mode-test-hash-to-list (phps-mode-functions-get-moved-lines-indent (phps-mode-functions-get-lines-indent) 3 -1)))))
+
+  (phps-mode-test-with-buffer
+   "<?php\n/**\n * Bla\n */"
+   "Move line-indents two lines up"
+   (should (equal '((1 (0 0)) (2 (0 0)) (3 (0 1)) (4 (0 1))) (phps-mode-test-hash-to-list (phps-mode-functions-get-lines-indent))))
+   (should (equal '((1 (0 1)) (2 (0 1))) (phps-mode-test-hash-to-list (phps-mode-functions-get-moved-lines-indent (phps-mode-functions-get-lines-indent) 3 -2)))))
 
   )
 

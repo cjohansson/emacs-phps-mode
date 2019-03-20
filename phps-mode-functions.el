@@ -77,12 +77,22 @@
       (let ((line-indent (gethash line-number old-lines-indents))
             (new-line-number))
         (while line-indent
-          (when (<= line-number start-line-number)
+
+          (when (< line-number start-line-number)
+            ;; (message "Added new indent 3 %s from %s to %s" line-indent line-number line-number)
             (puthash line-number line-indent lines-indents))
+
+          (when (and (> diff 0)
+                     (>= line-number start-line-number)
+                     (< line-number (+ start-line-number diff)))
+            ;; (message "Added new indent 2 %s from %s to %s" line-indent line-number line-number)
+            (puthash line-number (gethash start-line-number old-lines-indents) lines-indents))
+
           (when (>= line-number start-line-number)
             (setq new-line-number (+ line-number diff))
             ;; (message "Added new indent %s from %s to %s" line-indent line-number new-line-number)
             (puthash new-line-number line-indent lines-indents))
+
           (setq line-number (1+ line-number))
           (setq line-indent (gethash line-number old-lines-indents))))
       lines-indents)))
