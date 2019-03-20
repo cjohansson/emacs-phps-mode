@@ -81,7 +81,7 @@
             (puthash line-number line-indent lines-indents))
           (when (>= line-number start-line-number)
             (setq new-line-number (+ line-number diff))
-            (message "Added new indent %s from %s to %s" line-indent line-number new-line-number)
+            ;; (message "Added new indent %s from %s to %s" line-indent line-number new-line-number)
             (puthash new-line-number line-indent lines-indents))
           (setq line-number (1+ line-number))
           (setq line-indent (gethash line-number old-lines-indents))))
