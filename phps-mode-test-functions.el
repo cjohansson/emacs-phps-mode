@@ -37,6 +37,7 @@
 (autoload 'phps-mode-functions-get-moved-lines-indent "phps-mode-functions")
 (autoload 'phps-mode-test-hash-to-list "phps-mode-test")
 (autoload 'phps-mode-lexer-get-tokens "phps-mode-lexer")
+(autoload 'phps-mode-lexer-get-states "phps-mode-lexer")
 (autoload 'should "ert")
 
 (defun phps-mode-test-functions-move-lines-indent ()
@@ -892,6 +893,7 @@
   )
 
 ;; TODO Add functionality for (delete-backward-char) as well
+;; TODO Test states as well
 (defun phps-mode-test-functions-whitespace-modifications ()
   "Test white-space modifications functions."
 
@@ -899,13 +901,26 @@
    "<?php\n$var = 'abc';\n\n$var2 = '123';\n"
    "Add newline between two assignments and inspect moved tokens and states"
    ;; (message "Tokens %s" (phps-mode-lexer-get-tokens))
+   ;; (message "States: %s" (phps-mode-lexer-get-states))
+
+   ;; Initial state
    (should (equal (phps-mode-lexer-get-tokens)
                   '((T_OPEN_TAG 1 . 7) (T_VARIABLE 7 . 11) ("=" 12 . 13) (T_CONSTANT_ENCAPSED_STRING 14 . 19) (";" 19 . 20) (T_VARIABLE 22 . 27) ("=" 28 . 29) (T_CONSTANT_ENCAPSED_STRING 30 . 35) (";" 35 . 36))))
+   (should (equal (phps-mode-lexer-get-states)
+                  '((35 36 1 (1 1 1 1 1)) (30 35 1 (1 1 1 1 1)) (28 29 1 (1 1 1 1 1)) (22 27 1 (1 1 1 1 1)) (19 20 1 (1 1 1 1 1)) (14 19 1 (1 1 1 1 1)) (12 13 1 (1 1 1 1 1)) (7 11 1 (1 1 1 1 1)) (1 7 1 (1 1 1 1 1)))))
+
+   ;; Change
    (goto-char 21)
    (newline nil nil)
+
+   ;; Final state
    ;; (message "Tokens %s" (phps-mode-lexer-get-tokens))
+   ;; (message "States: %s" (phps-mode-lexer-get-states))
    (should (equal (phps-mode-lexer-get-tokens)
                   '((T_OPEN_TAG 1 . 7) (T_VARIABLE 7 . 11) ("=" 12 . 13) (T_CONSTANT_ENCAPSED_STRING 14 . 19) (";" 19 . 20) (T_VARIABLE 23 . 28) ("=" 29 . 30) (T_CONSTANT_ENCAPSED_STRING 31 . 36) (";" 36 . 37))))
+   (should (equal (phps-mode-lexer-get-states)
+               '((36 37 1 (1 1 1 1 1)) (31 36 1 (1 1 1 1 1)) (29 30 1 (1 1 1 1 1)) (23 28 1 (1 1 1 1 1)) (19 20 1 (1 1 1 1 1)) (14 19 1 (1 1 1 1 1)) (12 13 1 (1 1 1 1 1)) (7 11 1 (1 1 1 1 1)) (1 7 1 (1 1 1 1 1)))))
+   
    )
 
   (phps-mode-test-with-buffer

@@ -1590,8 +1590,12 @@
     (phps-mode-lexer-re2c-execute)))
 
 (defun phps-mode-lexer-get-tokens ()
-  "Get tokens."
+  "Get lexer tokens."
   phps-mode-lexer-tokens)
+
+(defun phps-mode-lexer-get-states ()
+  "Get lexer states."
+  phps-mode-lexer-states)
 
 (defun phps-mode-lexer--get-next-unescaped (character)
   "Find where next un-escaped CHARACTER comes, if none is found return nil."
