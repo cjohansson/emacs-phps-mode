@@ -891,6 +891,7 @@
 
   )
 
+;; TODO Add functionality for (delete-backward-char) as well
 (defun phps-mode-test-functions-whitespace-modifications ()
   "Test white-space modifications functions."
 
