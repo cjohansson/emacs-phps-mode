@@ -178,7 +178,7 @@
               (token-end nil)
               (token-start-line-number 0)
               (token-end-line-number 0)
-              (tokens (nreverse phps-mode-lexer-tokens))
+              (tokens (nreverse (copy-sequence phps-mode-lexer-tokens)))
               (nesting-stack nil)
               (nesting-key nil)
               (class-declaration-started-this-line nil)
