@@ -39,6 +39,7 @@
 (autoload 'phps-mode-test-hash-to-list "phps-mode-test")
 (autoload 'should "ert")
 
+;; TODO Add test for making changes inside tokens that is (and (> token-start) (< token-end))
 (defun phps-mode-test-integration-incremental ()
   "Test for object-oriented PHP file."
 

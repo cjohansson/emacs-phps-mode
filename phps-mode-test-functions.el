@@ -893,6 +893,7 @@
   )
 
 ;; TODO Add functionality for (delete-backward-char) as well
+;; TODO Add test for inserting newlines inside token
 (defun phps-mode-test-functions-whitespace-modifications ()
   "Test white-space modifications functions."
 
