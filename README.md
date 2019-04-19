@@ -1,5 +1,8 @@
 # PHPs - Experiment with a Semantic Mode for Emacs
 
+[![License GPL 3](https://img.shields.io/badge/license-GPL_3-green.svg)](https://www.gnu.org/licenses/gpl-3.0.txt)
+[![Build Status](https://travis-ci.org/cjohansson/emacs-phps-mode.svg?branch=master)](https://travis-ci.org/cjohansson/emacs-phps-mode)
+
 An Emacs major mode for PHP scripting language which aims at making a full semantic integration. Currently at *usable* stage.
 
 This mode does not require PHP installed on computer because it has a elisp based lexer and parser. It supports all PHP versions and Emacs >= 24.
@@ -18,6 +21,7 @@ This mode does not require PHP installed on computer because it has a elisp base
 * Incremental lexer and syntax coloring after buffer changes (100%)
 * Incremental indentation and imenu calculation after buffer changes (100%)
 * Supports `(comment-region)` and `(uncomment-region)` (100%)
+* A set of heuristics to improve large-file incremental change handling (20%)
 * Wisent LALR parser based on official PHP yacc parser automatically converted grammar (50%)
 * Approach flycheck about including support for this module by default (0%)
 * Full integration with Emacs Semantic subsystem (30%)
