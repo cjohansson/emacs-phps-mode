@@ -3,14 +3,14 @@
 ;; Author: Christian Johansson <github.com/cjohansson>
 ;; Maintainer: Christian Johansson <github.com/cjohansson>
 ;; Created: 3 Mar 2018
-;; Modified: .
-;; Version: 0.1
+;; Modified: 20 Apr 2019
+;; Version: 0.2
 ;; Keywords: tools, convenience
 ;; URL: https://github.com/cjohansson/emacs-phps-mode
 
-;; Package-Requires: ((emacs "24"))
+;; Package-Requires: ((emacs "26"))
 
-;; Copyright (C) 2017 Christian Johansson
+;; Copyright (C) 2018-2019 Christian Johansson
 
 ;; This file is not part of GNU Emacs.
 

@@ -5,7 +5,7 @@
 
 An Emacs major mode for PHP scripting language which aims at making a full semantic integration. Currently at *usable* stage.
 
-This mode does not require PHP installed on computer because it has a elisp based lexer and parser. It supports all PHP versions and Emacs >= 24.
+This mode does not require PHP installed on your computer because it has a built-in elisp based lexer and parser. It supports all PHP versions and Emacs >= 26.
 
 ## Goals
 
