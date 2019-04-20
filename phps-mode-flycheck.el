@@ -1,6 +1,6 @@
 ;;; phps-mode-flycheck.el --- Flycheck support for PHPs -*- lexical-binding: t -*-
 
-;; Copyright (C) 2018 Christian Johansson
+;; Copyright (C) 2018-2019 Christian Johansson
 
 ;; This file is not part of GNU Emacs.
 
@@ -28,6 +28,7 @@
 
 ;;; Code:
 
+(require 'flycheck)
 
 (defun phps-mode-flycheck-init ()
   "Add flycheck support for PHP Semantic mode."

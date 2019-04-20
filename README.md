@@ -100,11 +100,14 @@ make clean
 
 Download to `~/.emacs.d/phps-mode/` and then add this to your init file:
 
-### Using use-package
+### Using use-package with flycheck support
 
 ``` emacs-lisp
 (add-to-list 'load-path (expand-file-name "~/.emacs.d/phps-mode/"))
 (use-package phps-mode
-    :mode ("\\.php\\'" "\\.phtml\\'"))
+    :after flycheck
+    :mode ("\\.php\\" "\\.phtml\\")
+    :config
+    (setq phps-mode-flycheck-support t))
 ```
 
