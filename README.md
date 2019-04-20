@@ -106,7 +106,7 @@ Download to `~/.emacs.d/phps-mode/` and then add this to your init file:
 (add-to-list 'load-path (expand-file-name "~/.emacs.d/phps-mode/"))
 (use-package phps-mode
     :after flycheck
-    :mode ("\\.php\\" "\\.phtml\\")
+    :mode ("\\.php\\'" "\\.phtml\\'")
     :config
     (setq phps-mode-flycheck-support t))
 ```
