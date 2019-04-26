@@ -849,14 +849,15 @@
               (looking-at-whitespace (looking-at-p "[\ \n\t\r]*\n"))
               (old-line-number (line-number-at-pos)))
 
-          ;; Temporarily disable change detection to not trigger incremental lexer
-          (setq phps-mode-functions-allow-after-change nil)
-          (apply old-function arguments)
-          (setq phps-mode-functions-allow-after-change t)
-
           (if looking-at-whitespace
               (progn
                 ;; (message "Looking at white-space")
+
+                ;; Temporarily disable change detection to not trigger incremental lexer
+                (setq phps-mode-functions-allow-after-change nil)
+                (apply old-function arguments)
+                (setq phps-mode-functions-allow-after-change t)
+                
                 (setq new-pos (point))
                 (let ((diff (- new-pos old-pos)))
                   (when (> diff 0)
@@ -866,6 +867,7 @@
                     ;; TODO Move imenu-index?
                     ;; (message "Old pos %s, new pos: %s, diff: %s" old-pos new-pos diff)
                     )))
+            (apply old-function arguments)
             ;; (message "Not looking at white-space")
             )))
     (apply old-function arguments)))
