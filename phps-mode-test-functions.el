@@ -1,6 +1,6 @@
 ;;; phps-mode-test-functions.el --- Tests for functions -*- lexical-binding: t -*-
 
-;; Copyright (C) 2018 Christian Johansson
+;; Copyright (C) 2018-2019 Christian Johansson
 
 ;; This file is not part of GNU Emacs.
 
@@ -857,6 +857,11 @@
    "Imenu object-oriented file with bracket-less namespace, class that extends and implements and functions with optional arguments"
    (should (equal (phps-mode-functions-get-imenu) '(("\\myNamespace" . 17) ("\\myNamespace\\myClass" . 36) ("\\myNamespace\\myClass->myFunctionA()" . 108) ("\\myNamespace\\myClass->myFunctionB()" . 161)))))
 
+  (phps-mode-test-with-buffer
+   "<?php\nnamespace myNamespace\\myNamespace2;\nclass myClass extends myAbstract implements myInterface {\n    public function myFunctionA($myArg = null) {}\n    protected function myFunctionB($myArg = 'abc') {}\n}\n"
+   "Imenu object-oriented file with bracket-less namespace, class that extends and implements and functions with optional arguments"
+   (should (equal (phps-mode-functions-get-imenu) '(("\\myNamespace\\myNamespace2" . 17) ("\\myNamespace\\myClass" . 50) ("\\myNamespace\\myClass->myFunctionA()" . 122) ("\\myNamespace\\myClass->myFunctionB()" . 175)))))
+
   )
 
 (defun phps-mode-test-functions-comment-uncomment-region ()
@@ -957,7 +962,7 @@
 
 (defun phps-mode-test-functions ()
   "Run test for functions."
-  (setq debug-on-error t)
+  ;; (setq debug-on-error t)
   ;; (setq phps-mode-functions-verbose t)
   (phps-mode-test-functions-get-lines-indent-if)
   (phps-mode-test-functions-get-lines-indent-classes)

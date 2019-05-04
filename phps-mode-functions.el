@@ -1,6 +1,6 @@
 ;;; phps-mode-functions.el --- Mode functions for PHPs -*- lexical-binding: t -*-
 
-;; Copyright (C) 2018 Christian Johansson
+;; Copyright (C) 2018-2019 Christian Johansson
 
 ;; This file is not part of GNU Emacs.
 
@@ -45,10 +45,6 @@
 
 (defvar phps-mode-functions-verbose nil
   "Verbose messaging, default nil.")
-
-
-;; NOTE Also format white-space inside the line, i.e. after function declarations?
-
 
 (defun phps-mode-functions-get-buffer-changes-start ()
   "Get buffer change start."
@@ -222,14 +218,17 @@
                 (when phps-mode-functions-verbose
                   (message "Token '%s' pos: %s-%s lines: %s-%s" next-token next-token-start next-token-end next-token-start-line-number next-token-end-line-number)))
 
-              ;; Token logic
+              ;; Token logic - we have one token look-ahead at this point
               (when token
+
 
                 ;; IMENU LOGIC
 
                 (cond
+
                  ((string= token "{")
                   (setq imenu-nesting-level (1+ imenu-nesting-level)))
+
                  ((string= token "}")
 
                   (when (and imenu-open-namespace-level
@@ -313,6 +312,7 @@
                      ((equal token 'T_FUNCTION)
                       (setq imenu-in-function-name nil)
                       (setq imenu-in-function-declaration t)))))
+
 
                 ;; INDENTATION LOGIC
 
@@ -1053,7 +1053,6 @@
 
   ;; Support for change detection
   (add-hook 'after-change-functions #'phps-mode-functions-after-change))
-
 
 (provide 'phps-mode-functions)
 
