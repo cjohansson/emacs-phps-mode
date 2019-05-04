@@ -250,17 +250,16 @@
 
                    ((string= token "{")
                     (setq imenu-open-namespace-level imenu-nesting-level)
-                    (setq imenu-in-namespace-declaration nil))
+                    (setq imenu-in-namespace-declaration nil)
+                    (push `(,imenu-in-namespace-name . ,token-start) imenu-index))
 
                    ((string= token ";")
-                    (setq imenu-in-namespace-declaration nil))
+                    (setq imenu-in-namespace-declaration nil)
+                    (push `(,imenu-in-namespace-name . ,token-start) imenu-index))
 
-                   ((and (equal token 'T_STRING)
-                         (not imenu-in-namespace-name))
-                    (let ((imenu-index-name (format "\\%s" (buffer-substring-no-properties token-start token-end)))
-                          (imenu-index-pos token-start))
-                      (setq imenu-in-namespace-name imenu-index-name)
-                      (push `(,imenu-index-name . ,imenu-index-pos) imenu-index)))))
+                   ((and (or (equal token 'T_STRING)
+                             (equal token 'T_NS_SEPARATOR))
+                         (setq imenu-in-namespace-name (concat imenu-in-namespace-name (buffer-substring-no-properties token-start token-end)))))))
 
                  (imenu-in-class-declaration
                   (cond
