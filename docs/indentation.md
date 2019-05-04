@@ -1,4 +1,4 @@
-# Indentation algorithm for PHP
+# Indentation algorithm
 
 Document describing indentation algorithm.
 
@@ -13,7 +13,7 @@ Document describing indentation algorithm.
 
 ## Algorithm
 
-Here follows pseudo-code for a algorithm that calculates indentation for each line in buffer.
+Here follows pseudo-code for a algorithm that calculates indentation for each line in buffer. Tokens are from the official re2c PHP lexer.
 
 ```php
 foreach token in buffer:
@@ -116,11 +116,11 @@ PHP examples using algorithms defined above, explained each line.
 
 ## Basic multi-line if-expression 1
 
-```php				// #save indent: 0
+```php			// #save indent: 0
 if (function(		// #save indent: 0, #increase push (0 2) indent: 1
-    false)			// #save indent: 1
+    false)		// #save indent: 1
 ) {				// #decrease pop (0 2) indent: 0, #save indent: 0, #increase push (0 1) indent: 1
-    echo true;		// #save indent: 1
+    echo true;	// #save indent: 1
 }					// #decrease pop (0 1) indent: 0, #save indent: 0
 ```
 
@@ -163,7 +163,7 @@ endif;					// #decrease pop (0 1) indent: 0, #save indent: 0
 <?php				// #save indent: 0
 $var = array(		// #save indent: 0, #increase push (0 2) indent: 1
     'def'			// #save indent: 1
-);					// #decrease pop (0 2) indent: 0, #save indent: 0
+);				// #decrease pop (0 2) indent: 0, #save indent: 0
 ```
 
 ## Multi-line assignments 2
