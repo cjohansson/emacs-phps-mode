@@ -840,7 +840,7 @@
   (phps-mode-test-with-buffer
    "<?php\nnamespace myNamespace;\nclass myClass {\n    public function myFunctionA() {}\n    protected function myFunctionB() {}\n}\n"
    "Imenu object-oriented file with bracket-less namespace, class and function"
-   (should (equal (phps-mode-functions-get-imenu) '(("namespace myNamespace" . 17) ("myNamespace" . (("class myClass" . 36) ("myClass" . (("myFunctionA" . 66) ("myFunctionB" . 106)))))))))
+   (should (equal (phps-mode-functions-get-imenu) '(("namespace myNamespace" . 17) ("myNamespace" ("myClass" . (("class myClass" . 41) ("myFunctionA" . 75) ("myFunctionB" . 119))))))))
 
   (phps-mode-test-with-buffer
    "<?php\nnamespace myNamespace {\n    class myClass extends myAbstract {\n        public function myFunctionA() {}\n        protected function myFunctionB() {}\n    }\n}\n"

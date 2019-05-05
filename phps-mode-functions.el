@@ -290,7 +290,7 @@
                     (setq imenu-class-index '())
                     (let ((imenu-label (format "class %s" imenu-in-class-name)))
                       (if imenu-in-namespace-name
-                          (push `(,imenu-label . ,imenu-in-class-index) imenu-namespace-index)
+                          (push `(,imenu-label . ,imenu-in-class-index) imenu-class-index)
                         (push `(,imenu-label . ,imenu-in-class-index) imenu-index))))
 
                    ((and (equal token 'T_STRING)
