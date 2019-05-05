@@ -830,37 +830,37 @@
   (phps-mode-test-with-buffer
    "<?php\nclass myClass {\n    public function myFunctionA() {}\n    protected function myFunctionB() {}\n}\n"
    "Imenu object-oriented file"
-   (should (equal (phps-mode-functions-get-imenu) '(("class myClass" . 13) ("myClass" ("myFunctionA" . 43) ("myFunctionB" . 83))))))
+   (should (equal (phps-mode-functions-get-imenu) '(("class myClass" . 13) ("myClass" . (("myFunctionA" . 43) ("myFunctionB" . 83)))))))
 
   (phps-mode-test-with-buffer
    "<?php\nnamespace myNamespace {\n    class myClass {\n        public function myFunctionA() {}\n        protected function myFunctionB() {}\n    }\n}\n"
    "Imenu object-oriented file with namespace, class and function"
-   (should (equal (phps-mode-functions-get-imenu) '(("namespace myNamespace" . 17) ("myNamespace" ("class myClass" . 41) ("myClass" ("myFunctionA" . 75) ("myFunctionB" . 119)))))))
+   (should (equal (phps-mode-functions-get-imenu) '(("namespace myNamespace" . 17) ("myNamespace" (("class myClass" . 41) ("myClass" . (("myFunctionA" . 75) ("myFunctionB" . 119)))))))))
 
   (phps-mode-test-with-buffer
    "<?php\nnamespace myNamespace;\nclass myClass {\n    public function myFunctionA() {}\n    protected function myFunctionB() {}\n}\n"
    "Imenu object-oriented file with bracket-less namespace, class and function"
-   (should (equal (phps-mode-functions-get-imenu) '(("namespace myNamespace" . 17) ("myNamespace" ("class myClass" . 36) ("myClass" ("myFunctionA" . 66) ("myFunctionB" . 106)))))))
+   (should (equal (phps-mode-functions-get-imenu) '(("namespace myNamespace" . 17) ("myNamespace" . (("class myClass" . 36) ("myClass" . (("myFunctionA" . 66) ("myFunctionB" . 106)))))))))
 
   (phps-mode-test-with-buffer
    "<?php\nnamespace myNamespace {\n    class myClass extends myAbstract {\n        public function myFunctionA() {}\n        protected function myFunctionB() {}\n    }\n}\n"
    "Imenu object-oriented file with namespace, class that extends and functions"
-   (should (equal (phps-mode-functions-get-imenu) '(("namespace myNamespace" . 17) ("myNamespace" ("class myClass" . 41) ("myClass" ("myFunctionA" . 94) ("myFunctionB" . 138)))))))
+   (should (equal (phps-mode-functions-get-imenu) '(("namespace myNamespace" . 17) ("myNamespace" . (("class myClass" . 41) ("myClass" . (("myFunctionA" . 94) ("myFunctionB" . 138)))))))))
 
   (phps-mode-test-with-buffer
    "<?php\nnamespace myNamespace;\nclass myClass extends myAbstract implements myInterface {\n    public function myFunctionA() {}\n    protected function myFunctionB() {}\n}\n"
    "Imenu object-oriented file with bracket-less namespace, class that extends and implements and functions"
-   (should (equal (phps-mode-functions-get-imenu) '(("namespace myNamespace" . 17) ("myNamespace" ("class myClass" . 36) ("myClass" ("myFunctionA" . 108) ("myFunctionB" . 148)))))))
+   (should (equal (phps-mode-functions-get-imenu) '(("namespace myNamespace" . 17) ("myNamespace" . (("class myClass" . 36) ("myClass" . (("myFunctionA" . 108) ("myFunctionB" . 148)))))))))
 
   (phps-mode-test-with-buffer
    "<?php\nnamespace myNamespace;\nclass myClass extends myAbstract implements myInterface {\n    public function myFunctionA($myArg = null) {}\n    protected function myFunctionB($myArg = 'abc') {}\n}\n"
    "Imenu object-oriented file with bracket-less namespace, class that extends and implements and functions with optional arguments"
-   (should (equal (phps-mode-functions-get-imenu) '(("namespace myNamespace" . 17) ("myNamespace" ("class myClass" . 36) ("myClass" ("myFunctionA" . 108) ("myFunctionB" . 161)))))))
+   (should (equal (phps-mode-functions-get-imenu) '(("namespace myNamespace" . 17) ("myNamespace" . (("class myClass" . 36) ("myClass" . (("myFunctionA" . 108) ("myFunctionB" . 161)))))))))
 
   (phps-mode-test-with-buffer
    "<?php\nnamespace myNamespace\\myNamespace2;\nclass myClass extends myAbstract implements myInterface {\n    public function myFunctionA($myArg = null) {}\n    protected function myFunctionB($myArg = 'abc') {}\n}\n"
    "Imenu object-oriented file with bracket-less namespace with multiple levels, class that extends and implements and functions with optional arguments"
-   (should (equal (phps-mode-functions-get-imenu) '(("namespace myNamespace\\myNamespace2" . 29) ("myNamespace\\myNamespace2" ("class myClass" . 49) ("myClass" ("myFunctionA" . 121) ("myFunctionB" . 174)))))))
+   (should (equal (phps-mode-functions-get-imenu) '(("namespace myNamespace\\myNamespace2" . 29) ("myNamespace\\myNamespace2" . (("class myClass" 49) ("myClass" . (("myFunctionA" . 121) ("myFunctionB" . 174)))))))))
 
   )
 
