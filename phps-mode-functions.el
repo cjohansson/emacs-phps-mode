@@ -241,7 +241,8 @@
                              (= imenu-open-namespace-level imenu-nesting-level)
                              imenu-in-namespace-name)
                     (let ((imenu-add-list (nreverse imenu-namespace-index)))
-                      (push `(,imenu-in-namespace-name . ,imenu-add-list) imenu-index))
+                      ;; (message "Pushing %s to imenu-index" imenu-add-list)
+                      (push `(,imenu-in-namespace-name . ,(list imenu-add-list)) imenu-index))
                     (setq imenu-in-namespace-name nil))
 
                   (when (and imenu-open-class-level
@@ -249,8 +250,14 @@
                              imenu-in-class-name)
                     (let ((imenu-add-list (nreverse imenu-class-index)))
                       (if imenu-in-namespace-name
-                          (push `(,imenu-in-class-name . ,imenu-add-list) imenu-namespace-index)
-                        (push `(,imenu-in-class-name . ,imenu-add-list) imenu-index)))
+                          (progn
+                            ;; (message "Pushing %s to imenu-namespace-index" imenu-add-list)
+                            (push `(,imenu-in-class-name . ,(list imenu-add-list)) imenu-namespace-index)
+                            ;; (message "Namespace-index is now %s" imenu-namespace-index)
+                            )
+                        (push `(,imenu-in-class-name . ,imenu-add-list) imenu-index)
+                        ;; (message "Pushing %s to imenu-index" imenu-add-list)
+                        ))
                     (setq imenu-in-class-name nil))
 
                   (setq imenu-nesting-level (1- imenu-nesting-level))))
@@ -259,6 +266,7 @@
                            imenu-in-namespace-name
                            (not imenu-in-namespace-with-brackets))
                   (let ((imenu-add-list (nreverse imenu-namespace-index)))
+                    ;; (message "Pushing %s to imenu-index" imenu-add-list)
                     (push `(,imenu-in-namespace-name . ,imenu-add-list) imenu-index))
                   (setq imenu-in-namespace-name nil))
                 
