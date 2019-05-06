@@ -241,8 +241,7 @@
                              (= imenu-open-namespace-level imenu-nesting-level)
                              imenu-in-namespace-name)
                     (let ((imenu-add-list (nreverse imenu-namespace-index)))
-                      ;; (message "Pushing %s to imenu-index" imenu-add-list)
-                      (push `(,imenu-in-namespace-name . ,(list imenu-add-list)) imenu-index))
+                      (push `(,imenu-in-namespace-name . ,imenu-add-list) imenu-index))
                     (setq imenu-in-namespace-name nil))
 
                   (when (and imenu-open-class-level
@@ -250,14 +249,8 @@
                              imenu-in-class-name)
                     (let ((imenu-add-list (nreverse imenu-class-index)))
                       (if imenu-in-namespace-name
-                          (progn
-                            ;; (message "Pushing %s to imenu-namespace-index" imenu-add-list)
-                            (push `(,imenu-in-class-name . ,(list imenu-add-list)) imenu-namespace-index)
-                            ;; (message "Namespace-index is now %s" imenu-namespace-index)
-                            )
-                        (push `(,imenu-in-class-name . ,imenu-add-list) imenu-index)
-                        ;; (message "Pushing %s to imenu-index" imenu-add-list)
-                        ))
+                          (push `(,imenu-in-class-name . ,imenu-add-list) imenu-namespace-index)
+                        (push `(,imenu-in-class-name . ,imenu-add-list) imenu-index)))
                     (setq imenu-in-class-name nil))
 
                   (setq imenu-nesting-level (1- imenu-nesting-level))))
@@ -266,7 +259,6 @@
                            imenu-in-namespace-name
                            (not imenu-in-namespace-with-brackets))
                   (let ((imenu-add-list (nreverse imenu-namespace-index)))
-                    ;; (message "Pushing %s to imenu-index" imenu-add-list)
                     (push `(,imenu-in-namespace-name . ,imenu-add-list) imenu-index))
                   (setq imenu-in-namespace-name nil))
                 
@@ -280,9 +272,7 @@
                     (setq imenu-in-namespace-with-brackets (string= token "{"))
                     (setq imenu-open-namespace-level imenu-nesting-level)
                     (setq imenu-namespace-index '())
-                    (setq imenu-in-namespace-declaration nil)
-                    (let ((imenu-label (format "namespace %s" imenu-in-namespace-name)))
-                      (push `(,imenu-label . ,imenu-in-namespace-index) imenu-index)))
+                    (setq imenu-in-namespace-declaration nil))
 
                     ((and (or (equal token 'T_STRING)
                               (equal token 'T_NS_SEPARATOR))
@@ -295,11 +285,7 @@
                    ((string= token "{")
                     (setq imenu-open-class-level imenu-nesting-level)
                     (setq imenu-in-class-declaration nil)
-                    (setq imenu-class-index '())
-                    (let ((imenu-label (format "class %s" imenu-in-class-name)))
-                      (if imenu-in-namespace-name
-                          (push `(,imenu-label . ,imenu-in-class-index) imenu-class-index)
-                        (push `(,imenu-label . ,imenu-in-class-index) imenu-index))))
+                    (setq imenu-class-index '()))
 
                    ((and (equal token 'T_STRING)
                          (not imenu-in-class-name))
@@ -313,7 +299,9 @@
                         (string= token ";"))
                     (if imenu-in-class-name
                         (push `(,imenu-in-function-name . ,imenu-in-function-index) imenu-class-index)
-                      (push `(,imenu-in-function-name . ,imenu-in-function-index) imenu-index))
+                      (if imenu-in-namespace-name
+                          (push `(,imenu-in-function-name . ,imenu-in-function-index) imenu-namespace-index)
+                        (push `(,imenu-in-function-name . ,imenu-in-function-index) imenu-index)))
                     (setq imenu-in-function-name nil)
                     (setq imenu-in-function-declaration nil))
 
