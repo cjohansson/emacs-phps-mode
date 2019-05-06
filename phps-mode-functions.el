@@ -186,13 +186,11 @@
               (imenu-class-index '())
               (imenu-in-namespace-declaration nil)
               (imenu-in-namespace-name nil)
-              (imenu-in-namespace-index nil)
               (imenu-in-namespace-with-brackets nil)
               (imenu-open-namespace-level nil)
               (imenu-in-class-declaration nil)
               (imenu-open-class-level nil)
               (imenu-in-class-name nil)
-              (imenu-in-class-index nil)
               (imenu-in-function-declaration nil)
               (imenu-in-function-name nil)
               (imenu-in-function-index nil)
@@ -276,7 +274,6 @@
 
                     ((and (or (equal token 'T_STRING)
                               (equal token 'T_NS_SEPARATOR))
-                          (setq imenu-in-namespace-index token-start)
                           (setq imenu-in-namespace-name (concat imenu-in-namespace-name (buffer-substring-no-properties token-start token-end)))))))
 
                  (imenu-in-class-declaration
@@ -289,8 +286,7 @@
 
                    ((and (equal token 'T_STRING)
                          (not imenu-in-class-name))
-                    (setq imenu-in-class-name (buffer-substring-no-properties token-start token-end))
-                    (setq imenu-in-class-index token-start))))
+                    (setq imenu-in-class-name (buffer-substring-no-properties token-start token-end)))))
 
                  (imenu-in-function-declaration
                   (cond
