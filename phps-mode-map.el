@@ -1,6 +1,6 @@
 ;; phps-mode-map.el --- Map for PHPs -*- lexical-binding: t -*-
 
-;; Copyright (C) 2018 Christian Johansson
+;; Copyright (C) 2018-2019 Christian Johansson
 
 ;; This file is not part of GNU Emacs.
 

@@ -20,10 +20,12 @@ This mode does not require PHP installed on your computer because it has a built
 * Incremental lexer and syntax coloring after buffer changes (100%)
 * Incremental indentation and imenu calculation after buffer changes (100%)
 * Supports `(comment-region)` and `(uncomment-region)` (100%)
+* From first stable release, use master branch for stable releases and develop branch for on-going work (100%)
 * Travis support (100%)
-* Imenu support (90%)
+* Imenu support (100%)
 * A set of heuristics to improve large-file incremental change handling (50%)
 * Wisent LALR parser based on official PHP yacc parser automatically converted grammar (50%)
+* Minimal mode map (0%)
 * Full integration with Emacs Semantic subsystem (30%)
 * Approach flycheck about including support for this module by default (0%)
 * Eldoc support (0%)
@@ -31,7 +33,6 @@ This mode does not require PHP installed on your computer because it has a built
 * PSR-2 auto-formatting tool based on lexer tokens (0%)
 * Add to MELPA (0%)
 * Add to ELPA (0%)
-* From first stable release, use master branch for stable releases and develop branch for on-going work (0%)
 
 ## Tests
 
