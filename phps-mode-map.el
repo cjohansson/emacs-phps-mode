@@ -31,7 +31,8 @@
 
 (defvar phps-mode-map
   (let ((map (make-keymap)))
-    ;; TODO keys here
+    (define-key map (kbd "C-c /") #'comment-region)
+    (define-key map (kbd "C-c DEL") #'uncomment-region)
     map)
   "Key-map for major mode.")
 
