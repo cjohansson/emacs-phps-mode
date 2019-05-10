@@ -214,21 +214,6 @@
   ;; (message "Color token %s %s %s" token start end)
   (cond
 
-   ((and
-     phps-mode-lexer-COLOR_SYNTAX-previous-token
-     (string= phps-mode-lexer-COLOR_SYNTAX-previous-token 'T_CONST)
-     (string= token 'T_STRING))
-    (overlay-put (make-overlay start end) 'font-lock-face 'font-lock-constant-face))
-
-   ((and
-     phps-mode-lexer-COLOR_SYNTAX-previous-token
-     (or (string= phps-mode-lexer-COLOR_SYNTAX-previous-token 'T_NAMESPACE)
-         (string= phps-mode-lexer-COLOR_SYNTAX-previous-token 'T_NS_SEPARATOR)
-         (string= phps-mode-lexer-COLOR_SYNTAX-previous-token 'T_CLASS)
-         (string= phps-mode-lexer-COLOR_SYNTAX-previous-token 'T_FUNCTION))
-     (string= token 'T_STRING))
-    (overlay-put (make-overlay start end) 'font-lock-face 'font-lock-function-name-face))
-
    ((or
      (string= token 'T_VARIABLE)
      (string= token 'T_STRING_VARNAME))
