@@ -1,4 +1,4 @@
-;; phps-mode-map.el --- Map for PHPs -*- lexical-binding: t -*-
+;; phps-mode-map.el --- Map for PHPs -*- lexical-binding:t -*-
 
 ;; Copyright (C) 2018-2019 Christian Johansson
 
@@ -29,15 +29,13 @@
 ;;; Code:
 
 
-(defvar phps-mode-map
-  (let ((map (make-keymap)))
-    (define-key map (kbd "C-c /") #'comment-region)
-    (define-key map (kbd "C-c DEL") #'uncomment-region)
-    map)
-  "Key-map for major mode.")
+;; NOTE This variable will be created automatically
+(defvar phps-mode-map nil "Key-map for major mode.")
 
 (defun phps-mode-map-init ()
   "Apply map to mode."
+  (define-key phps-mode-map (kbd "C-c /") #'comment-region)
+  (define-key phps-mode-map (kbd "C-c DEL") #'uncomment-region)
   (use-local-map phps-mode-map))
 
 (provide 'phps-mode-map)
