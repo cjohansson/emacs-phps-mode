@@ -5,23 +5,26 @@
 
 An Emacs major mode for PHP scripting language which aims at making a full semantic integration. Currently at *usable* stage.
 
-This mode does not require PHP installed on your computer because it has a built-in elisp based lexer and parser. It supports all PHP versions and Emacs >= 26.
+This mode does not require PHP installed on your computer because it has a built-in elisp based semantic lexer and semantic parser. It supports all PHP versions and Emacs >= 26.
 
 ## Features
 
 * GPLv3 license
 * Flycheck support (PHP Mess Detector, PHP Code Sniffer)
-* Lexer based on official PHP re2c lexer
+* Semantic lexer based on official PHP re2c lexer
 * Syntax coloring based on lexer tokens
 * PSR-1 and PSR-2 indentation based on lexer tokens
 * Integration with `(electric-pair)`
 * Incremental lexer and syntax coloring after buffer changes
 * Incremental indentation and imenu calculation after buffer changes
 * Supports `(comment-region)` and `(uncomment-region)`
-* From first stable release, use master branch for stable releases and develop branch for on-going work
 * Travis support
 * Imenu support
 * Minimal mode map
+
+## Develop
+
+Make pull requests to develop branch or branches from develop branch. Tested changes are merged to master.
 
 ## Tests
 
