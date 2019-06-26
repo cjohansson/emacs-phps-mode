@@ -131,9 +131,6 @@
 (defconst phps-mode-lexer-ST_VAR_OFFSET 9
   "Flag whether we are looking for variable offset or not.")
 
-(defvar phps-mode-lexer-COLOR_SYNTAX-previous-token nil
-  "Store previous token for color-syntax.")
-
 
 ;; REGULAR EXPRESSIONS
 
@@ -239,12 +236,6 @@
     (overlay-put (make-overlay start end) 'font-lock-face 'font-lock-string-face))
 
    ((or
-     (string= token "(")
-     (string= token ")")
-     (string= token "[")
-     (string= token "]")
-     (string= token "{")
-     (string= token "}")
      (string= token 'T_DOLLAR_OPEN_CURLY_BRACES)
      (string= token 'T_CURLY_OPEN)
      (string= token 'T_OBJECT_OPERATOR)
@@ -319,23 +310,11 @@
     (overlay-put (make-overlay start end) 'font-lock-face 'font-lock-keyword-face))
 
    ((or
-     (string= token "?")
-     (string= token "!")
-     (string= token "<")
-     (string= token ">")
-     (string= token ":")
-     (string= token ",")
-     (string= token ".")
-     (string= token "%")
-     (string= token "=")
      (string= token 'T_OPEN_TAG)
      (string= token 'T_OPEN_TAG_WITH_ECHO)
      (string= token 'T_CLOSE_TAG)
      (string= token 'T_START_HEREDOC)
      (string= token 'T_END_HEREDOC)
-     (string= token "`")
-     (string= token "\"")
-     (string= token ";")
      (string= token 'T_ELLIPSIS)
      (string= token 'T_COALESCE)
      (string= token 'T_DOUBLE_ARROW)
@@ -391,9 +370,8 @@
    ((string= token 'T_ERROR)
     (overlay-put (make-overlay start end) 'font-lock-face 'font-lock-warning-face))
 
-   )
-
-  (setq phps-mode-lexer-COLOR_SYNTAX-previous-token token))
+   (t (overlay-put (make-overlay start end) 'font-lock-face 'font-lock-constant-face)))
+  )
 
 (defun phps-mode-lexer-RETURN_TOKEN (token start end)
   "Push TOKEN to list with START and END."
@@ -1603,7 +1581,6 @@
 (defun phps-mode-lexer-setup (start end)
   "Just prepare other lexers for lexing region START to END."
   ;; (message "phps-mode-lexer-setup %s %s" start end)
-  (setq phps-mode-lexer-COLOR_SYNTAX-previous-token nil)
 
   ;; Flag that buffer has not been processed
   (when (and (boundp 'phps-mode-functions-processed-buffer)
