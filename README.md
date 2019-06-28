@@ -10,17 +10,18 @@ This mode does not require PHP installed on your computer because it has a built
 ## Features
 
 * GPLv3 license
-* Flycheck support (PHP Mess Detector, PHP Code Sniffer)
+* Flycheck support
 * Semantic lexer based on official PHP re2c lexer
-* Syntax coloring based on lexer tokens
+* Syntax coloring based on lexer tokens, make it easier to spot invalid code
 * PSR-1 and PSR-2 indentation based on lexer tokens
 * Integration with `(electric-pair)`
 * Incremental lexer and syntax coloring after buffer changes
 * Incremental indentation and imenu calculation after buffer changes
 * Supports `(comment-region)` and `(uncomment-region)`
-* Travis support
 * Imenu support
-* Minimal mode map
+* Minimal mode map* Tested using unit tests and integration tests
+* Travis support
+
 
 ## Develop
 
