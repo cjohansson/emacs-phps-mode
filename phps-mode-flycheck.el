@@ -28,72 +28,14 @@
 
 ;;; Code:
 
-(require 'flycheck)
 
 (defun phps-mode-flycheck-init ()
-  "Add flycheck support for PHP Semantic mode."
+  "Add flycheck support for phps-mode."
 
-  ;; Is flycheck available?
-  (when (fboundp 'flycheck-define-checker)
-
-    ;; Add PHP checker
-    (flycheck-define-checker php
-      "A PHP syntax checker using the PHP command line interpreter.
-
-See URL `http://php.net/manual/en/features.commandline.php'."
-      :command ("php" "-l" "-d" "error_reporting=E_ALL" "-d" "display_errors=1"
-                "-d" "log_errors=0" source)
-      :error-patterns
-      ((error line-start (or "Parse" "Fatal" "syntax") " error" (any ":" ",") " "
-              (message) " in " (file-name) " on line " line line-end))
-      :modes (phps-mode)
-      :next-checkers ((warning . php-phpmd)
-                      (warning . php-phpcs)))
-
-    ;; Add PHP Mess Detector checker
-    (flycheck-define-checker php-phpmd
-      "A PHP style checker using PHP Mess Detector.
-
-See URL `https://phpmd.org/'."
-      :command ("phpmd" source "xml"
-                (eval (flycheck-option-comma-separated-list
-                       flycheck-phpmd-rulesets)))
-      :error-parser flycheck-parse-phpmd
-      :modes (phps-mode)
-      :next-checkers ((warning . php-phpcs)))
-
-    ;; Add PHP Code Sniffer checker
-    (flycheck-define-checker php-phpcs
-      "A PHP style checker using PHP Code Sniffer.
-
-Needs PHP Code Sniffer 2.6 or newer.
-
-See URL `http://pear.php.net/package/PHP_CodeSniffer/'."
-      :command ("phpcs" "--report=checkstyle"
-                ;; Use -q flag to force quiet mode
-                ;; Quiet mode prevents errors from extra output when phpcs has
-                ;; been configured with show_progress enabled
-                "-q"
-                (option "--standard=" flycheck-phpcs-standard concat)
-                ;; Pass original file name to phpcs.  We need to concat explicitly
-                ;; here, because phpcs really insists to get option and argument as
-                ;; a single command line argument :|
-                (eval (when (buffer-file-name)
-                        (concat "--stdin-path=" (buffer-file-name))))
-                ;; Read from standard input
-                "-")
-      :standard-input t
-      :error-parser flycheck-parse-checkstyle
-      :error-filter
-      (lambda (errors)
-        (flycheck-sanitize-errors
-         (flycheck-remove-error-file-names "STDIN" errors)))
-      :modes (php-mode php+-mode phps-mode)
-      ;; phpcs seems to choke on empty standard input, hence skip phpcs if the
-      ;; buffer is empty, see https://github.com/flycheck/flycheck/issues/907
-      :predicate (lambda () (not (flycheck-buffer-empty-p))))
-
-    ))
+  (when (fboundp 'flycheck-add-mode)
+    (flycheck-add-mode 'php 'phps-mode)
+    (flycheck-add-mode 'php-phpmd 'phps-mode)
+    (flycheck-add-mode 'php-phpcs 'phps-mode)))
 
 
 (provide 'phps-mode-flycheck)

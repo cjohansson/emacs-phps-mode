@@ -58,9 +58,6 @@
 (defvar phps-mode-idle-interval 1.0
   "Idle seconds before running incremental lexer.")
 
-(defvar phps-mode-flycheck-support nil
-  "Boolean whether flycheck support should be enabled or not.")
-
 (define-derived-mode phps-mode prog-mode "PHPs"
   "Major mode for PHP with Semantic integration."
 
@@ -77,8 +74,7 @@
   ;; (phps-mode-flymake-init)
 
   ;; Flycheck
-  (when phps-mode-flycheck-support
-    (phps-mode-flycheck-init))
+  (phps-mode-flycheck-init)
 
   ;; Override functions
   (phps-mode-functions-init)
