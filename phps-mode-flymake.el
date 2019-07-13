@@ -1,6 +1,6 @@
 ;;; phps-mode-flymake.el --- Flymake support for PHPs -*- lexical-binding: t -*-
 
-;; Copyright (C) 2018 Christian Johansson
+;; Copyright (C) 2018-2019  Free Software Foundation, Inc.
 
 ;; This file is not part of GNU Emacs.
 
@@ -15,21 +15,19 @@
 ;; General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Spathoftware Foundation, Inc., 59 Temple Place - Suite 330,
-;; Boston, MA 02111-1307, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 
 ;;; Commentary:
-
 
 ;; Please see README.md from the same repository for extended documentation.
 
 
 ;;; Code:
 
-
 (require 'flymake)
+
+;; TODO Implement this
 
 (defun phps-mode-flymake-init ()
   "PHP specific init-cleanup routines.

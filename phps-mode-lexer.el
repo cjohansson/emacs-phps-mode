@@ -1,11 +1,6 @@
 ;;; phps-mode-lexer.el -- Lexer for PHPs -*- lexical-binding: t -*-
 
-;; Copyright (C) 2018 Free Software Foundation, Inc.
-;;
-;; Author: Christian Johansson <christian@cvj.se>
-;; Maintainer: Christian Johansson <christian@cvj.se>
-;; Created: 11 Mar 2018
-;; Keywords: syntax
+;; Copyright (C) 2018-2019  Free Software Foundation, Inc.
 
 ;; This file is not part of GNU Emacs.
 
@@ -25,7 +20,6 @@
 
 ;;; Commentary:
 
-
 ;; Based on the Zend PHP Lexer and Parser https://github.com/php/php-src/blob/master/Zend/zend_language_scanner.l
 ;; which is using re2c.
 ;;
@@ -34,7 +28,6 @@
 
 
 ;;; Code:
-
 
 (autoload 'phps-mode-functions-get-buffer-changes-start "phps-mode-functions")
 (autoload 'phps-mode-functions-reset-buffer-changes-start "phps-mode-functions")

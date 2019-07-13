@@ -1,5 +1,7 @@
 ;;; phps-mode-tags.el --- PHP LALR parser for Emacs -*- lexical-binding: t -*-
 
+;; Copyright (C) 2017-2019  Free Software Foundation, Inc.
+
 ;; This file is not part of GNU Emacs.
 
 ;; GNU Emacs is free software: you can redistribute it and/or modify
@@ -15,9 +17,11 @@
 ;; You should have received a copy of the GNU General Public License
 ;; along with GNU Emacs.  If not, see <https://www.gnu.org/licenses/>.
 
+
 ;;; Commentary:
 
 ;; TODO Make similar to /Users/christianjohansson/Documents/emacs/nextstep/Emacs.app/Contents/Resources/lisp/cedet/semantic/wisent/java-tags.el.gz
+
 
 ;;; Code:
 

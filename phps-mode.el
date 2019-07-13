@@ -1,5 +1,7 @@
 ;;; phps-mode.el --- Major mode for PHP with Semantic integration -*- lexical-binding: t -*-
 
+;; Copyright (C) 2018-2019  Free Software Foundation, Inc.
+
 ;; Author: Christian Johansson <github.com/cjohansson>
 ;; Maintainer: Christian Johansson <github.com/cjohansson>
 ;; Created: 3 Mar 2018
@@ -9,8 +11,6 @@
 ;; URL: https://github.com/cjohansson/emacs-phps-mode
 
 ;; Package-Requires: ((emacs "26"))
-
-;; Copyright (C) 2018-2019 Christian Johansson
 
 ;; This file is not part of GNU Emacs.
 
@@ -25,9 +25,7 @@
 ;; General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Spathoftware Foundation, Inc., 59 Temple Place - Suite 330,
-;; Boston, MA 02111-1307, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 
 ;;; Commentary:
@@ -38,7 +36,6 @@
 
 
 ;;; Code:
-
 
 (autoload 'phps-mode-flycheck-init "phps-mode-flycheck")
 (autoload 'phps-mode-flymake-init "phps-mode-flymake")

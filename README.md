@@ -1,4 +1,4 @@
-# PHPs - Experiment with a Semantic Mode for Emacs
+# PHPs - Another Semantic Major-Mode for PHP in Emacs
 
 [![License GPL 3](https://img.shields.io/badge/license-GPL_3-green.svg)](https://www.gnu.org/licenses/gpl-3.0.txt)
 [![Build Status](https://travis-ci.org/cjohansson/emacs-phps-mode.svg?branch=master)](https://travis-ci.org/cjohansson/emacs-phps-mode)
