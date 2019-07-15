@@ -27,7 +27,7 @@
 
 ;;; Code:
 
-(add-to-list 'load-path (expand-file-name "~/.emacs.d/emacs-wisent-grammar-converter/"))
+(add-to-list 'load-path (expand-file-name (concat user-emacs-directory "emacs-wisent-grammar-converter/")))
 (autoload 'emacs-wisent-grammar-converter/generate-grammar-from-filename "emacs-wisent-grammar-converter")
 
 (let ((php-yacc-url "https://raw.githubusercontent.com/php/php-src/master/Zend/zend_language_parser.y")
@@ -38,7 +38,7 @@
   (unless (file-exists-p php-yacc-file)
     (message "Downloading PHP Yacc grammar..")
     (url-copy-file php-yacc-url php-yacc-file t t)
-    (message "Downlad completed"))
+    (message "Download completed"))
 
   ;; Generate grammar
   (message "Generating Wisent grammar..")

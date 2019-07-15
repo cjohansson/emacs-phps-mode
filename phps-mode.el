@@ -67,7 +67,7 @@
   ;; Font lock
   (phps-mode-font-lock-init)
 
-  ;; Flymake
+  ;; Flymake TODO
   ;; (phps-mode-flymake-init)
 
   ;; Flycheck
@@ -75,9 +75,6 @@
 
   ;; Override functions
   (phps-mode-functions-init)
-
-  (setq major-mode 'phps-mode)
-  (setq mode-name "PHPs")
 
   ;; Lexer
   (phps-mode-lexer-init)
