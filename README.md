@@ -119,7 +119,7 @@ This project is licensed to Free Software Foundation so sign the needed papers. 
 
 ## Docs
 
-* [TODO](docs/TODO.md)
+* [TODO](docs/todo.md)
 * [Heuristics](docs/heuristics.md)
 * [Imenu algorithm](docs/imenu.md)
 * [Indentation algorithm](docs/indentation.md)
