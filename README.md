@@ -109,7 +109,8 @@ If you have downloaded manually i.e. to `~/.emacs.d/phps-mode/` you need to add 
 
 ### Load using regular elisp
 ``` emacs-lisp
-(add-to-list 'auto-mode-alist '("\\.\\(php\\|phtml\\)'" . phps-mode))
+(require 'phps-mode)
+(add-to-list 'auto-mode-alist '("\\.\\(php\\|phtml\\)\\'" . phps-mode))
 ```
 
 ## Contribute
