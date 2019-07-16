@@ -1,4 +1,4 @@
-## TODOs
+## TODO
 
 *With current progress estimates:*
 
@@ -12,3 +12,5 @@
 * PSR-2 auto-formatting tool based on lexer tokens (0%)
 * Add to MELPA (0%)
 * Add to ELPA (0%)
+
+[Back to start](../../../)

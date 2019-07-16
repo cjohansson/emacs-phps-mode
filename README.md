@@ -115,3 +115,10 @@ If you have downloaded manually i.e. to `~/.emacs.d/phps-mode/` you need to add 
 ## Contribute
 
 This project is licensed to Free Software Foundation so sign the needed papers. Then create a branch based on a updated `develop`. Make pull request.
+
+## Docs
+
+* [TODO](docs/TODO.md)
+* [Heuristics](docs/heuristics.md)
+* [Imenu algorithm](docs/imenu.md)
+* [Indentation algorithm](docs/indentation.md)
