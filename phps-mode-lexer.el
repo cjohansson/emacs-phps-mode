@@ -148,8 +148,9 @@
   "Exponent double number.")
 
 (defvar phps-mode-lexer-LABEL
-  "[a-zA-Z_\x80-\xff][a-zA-Z0-9_\x80-\xff]*"
+  "[a-zA-Z_\u0080-\u00FF][a-zA-Z0-9_\x80-\xff]*"
   "Labels are used for names.")
+;; NOTE original \x80-\xff replaced with \u0080-\u00FF, since original means raw bytes in emacs-lisp
 
 (defvar phps-mode-lexer-WHITESPACE "[ \n\r\t]+"
   "White-space.")
@@ -157,8 +158,9 @@
 (defvar phps-mode-lexer-TABS_AND_SPACES "[ \t]*"
   "Tabs and white-spaces.")
 
-(defvar phps-mode-lexer-TOKENS "[][;\\:,\.()|^&+-/*=%!~\\$<>?@]"
+(defvar phps-mode-lexer-TOKENS "[][;:,.()|^&+/*=%!~$<>?@-]"
   "Tokens.")
+;; NOTE The hyphen moved last since it has special meaning and to avoid it being interpreted as a range.
 
 (defvar phps-mode-lexer-ANY_CHAR ".\\|\n"
   "Any character.  The Zend equivalent is [^] but is not possible in Emacs Lisp.")
@@ -1364,7 +1366,7 @@
                    ;; (message "Double quoted string %s" double-quoted-string)
                    ;; Do we find variable inside quote?
                    (goto-char string-start)
-                   (if (looking-at "[^\\\\]\"")
+                   (if (looking-at "[^\\]\"")
                        (progn
                          (let ((_double-quoted-string (buffer-substring-no-properties start (+ string-start 2))))
                            ;; (message "Double quoted string: %s" _double-quoted-string)

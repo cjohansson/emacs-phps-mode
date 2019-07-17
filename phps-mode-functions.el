@@ -987,13 +987,13 @@
           (progn
             (goto-char end)
             (backward-char 3)
-            (when (looking-at-p " \\*\/")
+            (when (looking-at-p " \\*/")
               (delete-char 3))
 
             (goto-char beg)
-            (when (looking-at-p "\/\/ ")
+            (when (looking-at-p "// ")
               (delete-char 3))
-            (when (looking-at-p "\/\\* ")
+            (when (looking-at-p "/\\* ")
               (delete-char 3)))
 
         ;; Do this for every line in region
@@ -1006,15 +1006,15 @@
 
           ;; Does this line contain something other than white-space?
           (unless (>= (+ (point) 3) (line-end-position))
-            (when (looking-at-p "\/\/ ")
+            (when (looking-at-p "// ")
               (delete-char 3))
-            (when (looking-at-p "\/\\* ")
+            (when (looking-at-p "/\\* ")
               (delete-char 3))
 
             (move-end-of-line nil)
 
             (backward-char 3)
-            (when (looking-at-p " \\*\/")
+            (when (looking-at-p " \\*/")
               (delete-char 3)))
 
           (when (< current-line-number end-line-number)

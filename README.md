@@ -21,6 +21,7 @@ This mode does not require PHP installed on your computer because it has a built
 * Imenu support
 * Minimal mode map* Tested using unit tests and integration tests
 * Travis support
+* Included in ELPA
 
 
 ## Develop
@@ -91,18 +92,50 @@ make compile
 make clean
 ```
 
-## Installation example
+## Installation
 
-Download to `~/.emacs.d/phps-mode/` and then add this to your init file:
+### Install manually
 
-### Using use-package with flycheck support
+If you have downloaded manually i.e. to `~/.emacs.d/phps-mode/` you need to add this first to your init file:
 
 ``` emacs-lisp
 (add-to-list 'load-path (expand-file-name "~/.emacs.d/phps-mode/"))
-(use-package phps-mode
-    :after flycheck
-    :mode ("\\.php\\'" "\\.phtml\\'")
-    :config
-    (setq phps-mode-flycheck-support t))
 ```
 
+### Install via package manager
+
+You can install via ELPA (`M-x package-install` `phps-mode`), package will be loaded automatically then.
+
+### Install, load and configure via use-package
+
+``` emacs-lisp
+(use-package phps-mode
+    :after flycheck
+    :ensure t
+    :mode ("\\.php\\'" "\\.phtml\\'"))
+```
+
+### Load and configure using use-package
+
+``` emacs-lisp
+(use-package phps-mode
+    :after flycheck
+    :mode ("\\.php\\'" "\\.phtml\\'"))
+```
+
+### Load and configure using regular emacs-lisp
+``` emacs-lisp
+(require 'phps-mode)
+(add-to-list 'auto-mode-alist '("\\.\\(php\\|phtml\\)\\'" . phps-mode))
+```
+
+## Contribute
+
+This project is licensed to Free Software Foundation so sign the needed papers. Then create a branch based on a updated `develop`. Make pull request.
+
+## Docs
+
+* [TODO](docs/todo.md)
+* [Heuristics](docs/heuristics.md)
+* [Imenu algorithm](docs/imenu.md)
+* [Indentation algorithm](docs/indentation.md)
