@@ -37,7 +37,7 @@
   "Run test for lexer."
 
   (phps-mode-test-with-buffer
-   "<?php\t$var=1; exit $var;\t?>"
+   "<?php\t$öar=1; exit $var;\t?>"
    "Simple PHP with two expression"
    (should (equal (phps-mode-lexer-get-tokens)
                   '((T_OPEN_TAG 1 . 7) (T_VARIABLE 7 . 11) ("=" 11 . 12) (T_LNUMBER 12 . 13) (";" 13 . 14) (T_EXIT 15 . 19) (T_VARIABLE 20 . 24) (";" 24 . 25) (";" 26 . 28) (T_CLOSE_TAG 26 . 28)))))
@@ -72,7 +72,7 @@
   "Run test for simple tokens."
 
   (phps-mode-test-with-buffer
-   "<?php echo $var = array('');"
+   "<?php echo $vür = array('');"
    "Simple PHP via array declaration"
    (should (equal (phps-mode-lexer-get-tokens)
                   '((T_OPEN_TAG 1 . 7) (T_ECHO 7 . 11) (T_VARIABLE 12 . 16) ("=" 17 . 18) (T_ARRAY 19 . 24) ("(" 24 . 25) (T_CONSTANT_ENCAPSED_STRING 25 . 27) (")" 27 . 28) (";" 28 . 29)))))

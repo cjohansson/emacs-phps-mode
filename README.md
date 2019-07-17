@@ -16,12 +16,13 @@ This mode does not require PHP installed on your computer because it has a built
 * PSR-1 and PSR-2 indentation based on lexer tokens
 * Integration with `(electric-pair)`
 * Incremental lexer and syntax coloring after buffer changes
-* Incremental indentation and imenu calculation after buffer changes
+* Incremental indentation and imenu generation after buffer changes
 * Supports `(comment-region)` and `(uncomment-region)`
 * Imenu support
-* Minimal mode map* Tested using unit tests and integration tests
+* Minimal mode map
+* Tested using unit tests and integration tests
 * Travis support
-* Included in ELPA
+* Included in GNU ELPA package archives
 
 
 ## Develop
