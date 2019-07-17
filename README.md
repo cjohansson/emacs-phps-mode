@@ -104,9 +104,9 @@ If you have downloaded manually i.e. to `~/.emacs.d/phps-mode/` you need to add 
 
 ### Install via package manager
 
-You can install via ELPA, package will be loaded automatically then.
+You can install via ELPA (`M-x package-install` `phps-mode`), package will be loaded automatically then.
 
-### Install and load via use-package
+### Install, load and configure via use-package
 
 ``` emacs-lisp
 (use-package phps-mode
@@ -115,7 +115,7 @@ You can install via ELPA, package will be loaded automatically then.
     :mode ("\\.php\\'" "\\.phtml\\'"))
 ```
 
-### Load using use-package
+### Load and configure using use-package
 
 ``` emacs-lisp
 (use-package phps-mode
@@ -123,7 +123,7 @@ You can install via ELPA, package will be loaded automatically then.
     :mode ("\\.php\\'" "\\.phtml\\'"))
 ```
 
-### Load using regular elisp
+### Load and configure using regular emacs-lisp
 ``` emacs-lisp
 (require 'phps-mode)
 (add-to-list 'auto-mode-alist '("\\.\\(php\\|phtml\\)\\'" . phps-mode))
