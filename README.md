@@ -92,12 +92,27 @@ make compile
 make clean
 ```
 
-## Installation example
+## Installation
+
+### Install manually
 
 If you have downloaded manually i.e. to `~/.emacs.d/phps-mode/` you need to add this first to your init file:
 
 ``` emacs-lisp
 (add-to-list 'load-path (expand-file-name "~/.emacs.d/phps-mode/"))
+```
+
+### Install via package manager
+
+You can install via ELPA, package will be loaded automatically then.
+
+### Install and load via use-package
+
+``` emacs-lisp
+(use-package phps-mode
+    :after flycheck
+    :ensure t
+    :mode ("\\.php\\'" "\\.phtml\\'"))
 ```
 
 ### Load using use-package
