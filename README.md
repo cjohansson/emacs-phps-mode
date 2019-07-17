@@ -22,7 +22,7 @@ This mode does not require PHP installed on your computer because it has a built
 * Minimal mode map
 * Tested using unit tests and integration tests
 * Travis support
-* Included in ELPA
+* Included in GNU ELPA package archives
 
 
 ## Develop

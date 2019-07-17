@@ -148,9 +148,10 @@
   "Exponent double number.")
 
 (defvar phps-mode-lexer-LABEL
-  "[a-zA-Z_\u0080-\u00FF][a-zA-Z0-9_\x80-\xff]*"
+  "[A-Za-z_[:nonascii:]][0-9A-Za-z_[:nonascii:]]*"
   "Labels are used for names.")
-;; NOTE original \x80-\xff replaced with \u0080-\u00FF, since original means raw bytes in emacs-lisp
+;; NOTE original is [a-zA-Z_\x80-\xff][a-zA-Z0-9_\x80-\xff]*
+;; NOTE Rebuilt for comparability with emacs-lisp
 
 (defvar phps-mode-lexer-WHITESPACE "[ \n\r\t]+"
   "White-space.")
@@ -160,6 +161,7 @@
 
 (defvar phps-mode-lexer-TOKENS "[][;:,.()|^&+/*=%!~$<>?@-]"
   "Tokens.")
+;; NOTE Original is [;:,.\[\]()|^&+-/*=%!~$<>?@]
 ;; NOTE The hyphen moved last since it has special meaning and to avoid it being interpreted as a range.
 
 (defvar phps-mode-lexer-ANY_CHAR ".\\|\n"
