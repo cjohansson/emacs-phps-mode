@@ -350,7 +350,7 @@
                           (setq in-class-declaration nil)
                           (setq in-class-declaration-level 0)
 
-                          (when (not class-declaration-started-this-line)
+                          (unless class-declaration-started-this-line
                             (setq column-level (1- column-level))
                             (pop nesting-stack))
 
@@ -452,7 +452,7 @@
                             )
 
                         ;; Don't start inline control structures after a while ($condition); expression
-                        (when (not (string= token ";"))
+                        (unless (string= token ";")
                           (when phps-mode-functions-verbose
                             (message "\nStarted inline control-structure after %s at %s\n" after-special-control-structure-token token))
 
@@ -889,7 +889,7 @@
               (current-indentation (current-indentation))
               (line-start (line-beginning-position)))
 
-          (when (null current-indentation)
+          (unless current-indentation
             (setq current-indentation 0))
 
           ;; Only continue if current indentation is wrong
