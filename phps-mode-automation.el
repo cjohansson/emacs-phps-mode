@@ -45,5 +45,5 @@
   (emacs-wisent-grammar-converter/generate-grammar-from-filename php-yacc-file wisent-destination)
   (message "Automation completed"))
 
-(provide 'phps-automation)
-;;; phps-automation.el ends here
+(provide 'phps-mode-automation)
+;;; phps-mode-automation.el ends here

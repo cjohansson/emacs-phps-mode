@@ -1724,7 +1724,7 @@
   (when (boundp 'semantic-lex-analyzer)
     (setq semantic-lex-analyzer 'phps-mode-lexer-lex))
   (add-hook 'semantic-lex-reset-functions #'phps-mode-lexer-setup)
-  (set (make-local-variable 'phps-mode-lexer-tokens) nil)
+  (setq-local phps-mode-lexer-tokens nil)
   (phps-mode-lexer-run))
 
 (provide 'phps-mode-lexer)
