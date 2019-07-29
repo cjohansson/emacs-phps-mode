@@ -40,9 +40,7 @@
 
 ;; NOTE use wisent-parse-toggle-verbose-flag and (semantic-debug) to debug parsing
 
-(autoload 'phps-mode-flycheck-init "phps-mode-flycheck")
 (autoload 'phps-mode-flymake-init "phps-mode-flymake")
-(autoload 'phps-mode-font-lock-init "phps-mode-font-lock")
 (autoload 'phps-mode-functions-init "phps-mode-functions")
 (autoload 'phps-mode-map-init "phps-mode-map")
 (autoload 'phps-mode-lexer-init "phps-mode-lexer")
@@ -56,7 +54,9 @@
   "Whether to use PSR-2 guidelines for white-space or not.")
 
 (defvar phps-mode-idle-interval 1.0
-  "Idle seconds before running incremental lexer.")
+  "Idle seconds before running the incremental lexer.")
+
+(defvar phps-mode-flycheck-applied nil "Boolean flag whether flycheck configuration has been applied or not.")
 
 (define-derived-mode phps-mode prog-mode "PHPs"
   "Major mode for PHP with Semantic integration."
@@ -76,7 +76,12 @@
   ;; (phps-mode-flymake-init)
 
   ;; Flycheck
-  (phps-mode-flycheck-init)
+  ;; Add support for flycheck PHP checkers: PHP, PHPMD and PHPCS here, do it once if flycheck is loaded
+  (when (and (fboundp 'flycheck-add-mode)
+             (not phps-mode-flycheck-applied))
+    (flycheck-add-mode 'php 'phps-mode)
+    (flycheck-add-mode 'php-phpmd 'phps-mode)
+    (flycheck-add-mode 'php-phpcs 'phps-mode))
 
   ;; Override functions
   (phps-mode-functions-init)
