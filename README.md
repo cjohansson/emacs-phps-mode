@@ -22,7 +22,7 @@ This mode does not require PHP installed on your computer because it has a built
 * Minimal mode map
 * Tested using unit tests and integration tests
 * Travis support
-* Included in GNU ELPA package archives
+* Included in GNU ELPA package archive
 
 
 ## Develop
@@ -105,7 +105,7 @@ If you have downloaded manually i.e. to `~/.emacs.d/phps-mode/` you need to add 
 
 ### Install via package manager
 
-You can install via ELPA (`M-x package-install` `phps-mode`), package will be loaded automatically then.
+You can install via ELPA (`M-x package-install` + `RET` + `phps-mode` + `RET`), package will now be loaded automatically when Emacs starts.
 
 ### Install, load and configure via use-package
 
