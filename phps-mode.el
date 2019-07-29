@@ -68,7 +68,9 @@
   (phps-mode-syntax-table-init)
 
   ;; Font lock
-  (phps-mode-font-lock-init)
+  ;; This makes it possible to have full control over syntax coloring from the lexer
+  (set (make-local-variable 'font-lock-keywords-only) nil)
+  (set (make-local-variable 'font-lock-defaults) '(nil t))
 
   ;; Flymake TODO
   ;; (phps-mode-flymake-init)
@@ -82,10 +84,13 @@
   ;; Lexer
   (phps-mode-lexer-init)
 
-  ;; Wisent LALR parser
+  ;; Wisent LALR parser TODO
   ;; (phps-mode-tags-init)
 
+  ;; Add compatibility for plug-ins here
   (run-hooks 'phps-mode-hook)
+
+  ;; Run semantic functions for new buffer
   (semantic-new-buffer-fcn))
 
 (provide 'phps-mode)
