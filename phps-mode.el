@@ -81,8 +81,8 @@
 
   ;; Font lock
   ;; This makes it possible to have full control over syntax coloring from the lexer
-  (setq-local 'font-lock-keywords-only nil)
-  (setq-local 'font-lock-defaults '(nil t))
+  (setq-local font-lock-keywords-only nil)
+  (setq-local font-lock-defaults '(nil t))
 
   ;; Flymake TODO
   ;; (phps-mode-flymake-init)
