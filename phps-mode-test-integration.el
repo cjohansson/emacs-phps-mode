@@ -25,15 +25,10 @@
 
 ;;; Code:
 
-(autoload 'phps-mode-test-with-buffer "phps-mode-test")
-(autoload 'phps-mode-test-incremental-vs-intial-buffer "phps-mode-test")
-(autoload 'phps-mode-functions-get-lines-indent "phps-mode-functions")
-(autoload 'phps-mode-functions-get-imenu "phps-mode-functions")
-(autoload 'phps-mode-functions-get-buffer-changes-start "phps-mode-functions")
-(autoload 'phps-mode-lexer-get-tokens "phps-mode-lexer")
-(autoload 'phps-mode-lexer-run-incremental "phps-mode-lexer")
-(autoload 'phps-mode-test-hash-to-list "phps-mode-test")
-(autoload 'should "ert")
+(require 'ert)
+(require 'phps-mode-functions)
+(require 'phps-mode-lexer)
+(require 'phps-mode-test)
 
 ;; TODO Add test for making changes inside tokens that is (and (> token-start) (< token-end))
 (defun phps-mode-test-integration-incremental ()

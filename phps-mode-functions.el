@@ -23,9 +23,7 @@
 
 ;;; Code:
 
-(autoload 'phps-mode-lexer-run-incremental "phps-mode-lexer")
-(autoload 'phps-mode-lexer-move-tokens "phps-mode-lexer")
-(autoload 'phps-mode-lexer-move-states "phps-mode-lexer")
+(require 'phps-mode-lexer)
 
 (defvar phps-mode-functions-allow-after-change t
   "Flag to tell us whether after change detection is enabled or not.")
@@ -1020,45 +1018,6 @@
           (when (< current-line-number end-line-number)
             (line-move 1))
           (setq current-line-number (1+ current-line-number)))))))
-
-(defun phps-mode-functions-init ()
-  "PHP specific init-cleanup routines."
-
-  ;; Custom indentation
-  ;; NOTE Indent-region will call this on each line of region
-  (set (make-local-variable 'indent-line-function) #'phps-mode-functions-indent-line)
-
-  ;; Custom Imenu
-  (set (make-local-variable 'imenu-create-index-function) #'phps-mode-functions-imenu-create-index)
-
-  ;; Should we follow PSR-2?
-  (when (and (boundp 'phps-mode-use-psr-2)
-             phps-mode-use-psr-2)
-
-    ;; Code MUST use an indent of 4 spaces
-    (set (make-local-variable 'tab-width) 4)
-
-    ;; MUST NOT use tabs for indenting
-    (set (make-local-variable 'indent-tabs-mode) nil))
-
-  ;; Add support for moving indexes quickly when making newlines
-  (advice-add #'newline :around #'phps-mode-functions-around-newline)
-
-  ;; Reset flags
-  (set (make-local-variable 'phps-mode-functions-allow-after-change) t)
-  (set (make-local-variable 'phps-mode-functions-buffer-changes-start) nil)
-  (set (make-local-variable 'phps-mode-functions-lines-indent) nil)
-  (set (make-local-variable 'phps-mode-functions-imenu) nil)
-  (set (make-local-variable 'phps-mode-functions-processed-buffer) nil)
-
-  ;; Make (comment-region) and (uncomment-region) work
-  (set (make-local-variable 'comment-region-function) #'phps-mode-functions-comment-region)
-  (set (make-local-variable 'uncomment-region-function) #'phps-mode-functions-uncomment-region)
-  (set (make-local-variable 'comment-start) "// ")
-  (set (make-local-variable 'comment-end) "")
-
-  ;; Support for change detection
-  (add-hook 'after-change-functions #'phps-mode-functions-after-change))
 
 (provide 'phps-mode-functions)
 

@@ -25,16 +25,10 @@
 
 ;;; Code:
 
-(autoload 'phps-mode-test-with-buffer "phps-mode-test")
-(autoload 'phps-mode-functions-verbose "phps-mode-functions")
-(autoload 'phps-mode-functions-indent-line "phps-mode-functions")
-(autoload 'phps-mode-functions-get-lines-indent "phps-mode-functions")
-(autoload 'phps-mode-functions-get-imenu "phps-mode-functions")
-(autoload 'phps-mode-functions-get-moved-lines-indent "phps-mode-functions")
-(autoload 'phps-mode-test-hash-to-list "phps-mode-test")
-(autoload 'phps-mode-lexer-get-tokens "phps-mode-lexer")
-(autoload 'phps-mode-lexer-get-states "phps-mode-lexer")
-(autoload 'should "ert")
+(require 'ert)
+(require 'phps-mode-functions)
+(require 'phps-mode-lexer)
+(require 'phps-mode-test)
 
 (defun phps-mode-test-functions-move-lines-indent ()
   "Test `phps-mode-functions-move-lines-indent'."

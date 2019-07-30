@@ -20,6 +20,8 @@
 
 ;;; Commentary:
 
+;; TODO This entire file needs to be redone
+
 ;; TODO Make similar to /Users/christianjohansson/Documents/emacs/nextstep/Emacs.app/Contents/Resources/lisp/cedet/semantic/wisent/java-tags.el.gz
 
 

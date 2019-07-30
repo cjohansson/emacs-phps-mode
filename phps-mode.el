@@ -40,14 +40,13 @@
 
 ;; NOTE use wisent-parse-toggle-verbose-flag and (semantic-debug) to debug parsing
 
-(autoload 'phps-mode-flymake-init "phps-mode-flymake")
-(autoload 'phps-mode-functions-init "phps-mode-functions")
-(autoload 'phps-mode-lexer-init "phps-mode-lexer")
-(autoload 'phps-mode-syntax-table-init "phps-mode-syntax-table")
-(autoload 'phps-mode-tags-init "phps-mode-tags")
-(autoload 'phps-mode-semantic-init "phps-mode-semantic")
-
-(autoload 'semantic-new-buffer-fcn "semantic")
+(require 'phps-mode-flymake)
+(require 'phps-mode-functions)
+(require 'phps-mode-lexer)
+(require 'phps-mode-semantic)
+(require 'phps-mode-syntax-table)
+(require 'phps-mode-tags)
+(require 'semantic)
 
 (defvar phps-mode-use-psr-2 t
   "Whether to use PSR-2 guidelines for white-space or not.")
@@ -69,6 +68,7 @@
   (setq-local parse-sexp-ignore-comments nil)
 
   ;; Key-map
+  ;; prog-mode will create the key-map and we just modify it here.
   (when (and phps-mode-map
              (not phps-mode-map-applied))
     (define-key phps-mode-map (kbd "C-c /") #'comment-region)
@@ -96,8 +96,41 @@
     (flycheck-add-mode 'php-phpcs 'phps-mode)
     (setq phps-mode-flycheck-applied t))
 
-  ;; Override functions
-  (phps-mode-functions-init)
+    ;; Custom indentation
+  ;; NOTE Indent-region will call this on each line of region
+  (setq-local indent-line-function #'phps-mode-functions-indent-line)
+
+  ;; Custom Imenu
+  (setq-local imenu-create-index-function #'phps-mode-functions-imenu-create-index)
+
+  ;; Should we follow PSR-2?
+  (when (and (boundp 'phps-mode-use-psr-2)
+             phps-mode-use-psr-2)
+
+    ;; Code MUST use an indent of 4 spaces
+    (setq-local tab-width 4)
+
+    ;; MUST NOT use tabs for indenting
+    (setq-local indent-tabs-mode nil))
+
+  ;; Add support for moving indexes quickly when making newlines
+  (advice-add #'newline :around #'phps-mode-functions-around-newline)
+
+  ;; Reset flags
+  (set (make-local-variable 'phps-mode-functions-allow-after-change) t)
+  (set (make-local-variable 'phps-mode-functions-buffer-changes-start) nil)
+  (set (make-local-variable 'phps-mode-functions-lines-indent) nil)
+  (set (make-local-variable 'phps-mode-functions-imenu) nil)
+  (set (make-local-variable 'phps-mode-functions-processed-buffer) nil)
+
+  ;; Make (comment-region) and (uncomment-region) work
+  (setq-local comment-region-function #'phps-mode-functions-comment-region)
+  (setq-local uncomment-region-function #'phps-mode-functions-uncomment-region)
+  (setq-local comment-start "// ")
+  (setq-local comment-end "")
+
+  ;; Support for change detection
+  (add-hook 'after-change-functions #'phps-mode-functions-after-change)
 
   ;; Lexer
   (phps-mode-lexer-init)

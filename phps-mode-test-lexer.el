@@ -25,13 +25,9 @@
 
 ;;; Code:
 
-(autoload 'phps-mode-test-with-buffer "phps-mode-test")
-(autoload 'phps-mode-lexer-init "phps-mode-lexer")
-(autoload 'phps-mode-lexer-get-point-data "phps-mode-lexer")
-(autoload 'phps-mode-lexer-get-moved-tokens "phps-mode-lexer")
-(autoload 'phps-mode-lexer-get-moved-states "phps-mode-lexer")
-(autoload 'phps-mode-lexer-get-tokens "phps-mode-lexer")
-(autoload 'should "ert")
+(require 'ert)
+(require 'phps-mode-lexer)
+(require 'phps-mode-test)
 
 (defun phps-mode-test-lexer-script-boundaries ()
   "Run test for lexer."

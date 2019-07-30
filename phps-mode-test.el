@@ -23,11 +23,10 @@
 
 ;;; Code:
 
-(autoload 'phps-mode "phps-mode")
-(autoload 'phps-mode-lexer-get-tokens "phps-mode-lexer")
-(autoload 'phps-mode-functions-get-imenu "phps-mode-functions")
-(autoload 'phps-mode-functions-get-lines-indent "phps-mode-functions")
-(autoload 'should "ert")
+(require 'ert)
+(require 'phps-mode)
+(require 'phps-mode-functions)
+(require 'phps-mode-lexer)
 
 (defmacro phps-mode-test-incremental-vs-intial-buffer (source &optional title &rest change)
   "Set up test buffer with SOURCE, TITLE, apply CHANGE and compare incremental values with initial values."

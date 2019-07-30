@@ -29,16 +29,8 @@
 
 ;;; Code:
 
-(autoload 'phps-mode-functions-get-buffer-changes-start "phps-mode-functions")
-(autoload 'phps-mode-functions-reset-buffer-changes-start "phps-mode-functions")
-
-(autoload 'semantic-lex-reset-functions "semantic")
-(autoload 'define-lex "semantic/lex")
-(autoload 'semantic-lex "semantic/lex")
-(autoload 'semantic-lex-buffer "semantic/lex")
-(autoload 'semantic-lex-token "semantic/lex")
-(autoload 'semantic-lex-push-token "semantic/lex")
-(autoload 'define-lex-analyzer "semantic/lex")
+(require 'semantic)
+(require 'semantic/lex)
 
 ;; NOTE This line is required to pass byte-compilation
 (require 'semantic/wisent)
