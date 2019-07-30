@@ -42,7 +42,6 @@
 
 (autoload 'phps-mode-flymake-init "phps-mode-flymake")
 (autoload 'phps-mode-functions-init "phps-mode-functions")
-(autoload 'phps-mode-map-init "phps-mode-map")
 (autoload 'phps-mode-lexer-init "phps-mode-lexer")
 (autoload 'phps-mode-syntax-table-init "phps-mode-syntax-table")
 (autoload 'phps-mode-tags-init "phps-mode-tags")
@@ -58,30 +57,44 @@
 
 (defvar phps-mode-flycheck-applied nil "Boolean flag whether flycheck configuration has been applied or not.")
 
+(defvar phps-mode-map-applied nil "Boolean flag whether mode-map has been initialized or not.")
+
 (define-derived-mode phps-mode prog-mode "PHPs"
   "Major mode for PHP with Semantic integration."
 
+  ;; TODO Check whether PSR-2 requires final newlines or not
+  (setq-local require-final-newline nil)
+
+  ;; TODO Verify this setting
+  (setq-local parse-sexp-ignore-comments nil)
+
   ;; Key-map
-  (phps-mode-map-init)
+  (when (and phps-mode-map
+             (not phps-mode-map-applied))
+    (define-key phps-mode-map (kbd "C-c /") #'comment-region)
+    (define-key phps-mode-map (kbd "C-c DEL") #'uncomment-region)
+    (setq phps-mode-map-applied t))
+  (use-local-map phps-mode-map)
 
   ;; Syntax table
   (phps-mode-syntax-table-init)
 
   ;; Font lock
   ;; This makes it possible to have full control over syntax coloring from the lexer
-  (set (make-local-variable 'font-lock-keywords-only) nil)
-  (set (make-local-variable 'font-lock-defaults) '(nil t))
+  (setq-local 'font-lock-keywords-only nil)
+  (setq-local 'font-lock-defaults '(nil t))
 
   ;; Flymake TODO
   ;; (phps-mode-flymake-init)
 
   ;; Flycheck
-  ;; Add support for flycheck PHP checkers: PHP, PHPMD and PHPCS here, do it once if flycheck is loaded
+  ;; Add support for flycheck PHP checkers: PHP, PHPMD and PHPCS here, do it once but only if flycheck is available
   (when (and (fboundp 'flycheck-add-mode)
              (not phps-mode-flycheck-applied))
     (flycheck-add-mode 'php 'phps-mode)
     (flycheck-add-mode 'php-phpmd 'phps-mode)
-    (flycheck-add-mode 'php-phpcs 'phps-mode))
+    (flycheck-add-mode 'php-phpcs 'phps-mode)
+    (setq phps-mode-flycheck-applied t))
 
   ;; Override functions
   (phps-mode-functions-init)
