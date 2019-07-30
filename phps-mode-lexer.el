@@ -29,6 +29,10 @@
 
 ;;; Code:
 
+;; NOTE We use autoload here to circumvent recursive require
+(autoload 'phps-mode-functions-get-buffer-changes-start "phps-mode-functions")
+(autoload 'phps-mode-functions-reset-buffer-changes-start "phps-mode-functions")
+
 (require 'semantic)
 (require 'semantic/lex)
 
