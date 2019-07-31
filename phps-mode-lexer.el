@@ -1344,40 +1344,53 @@
      (lambda()
        (let* ((start (match-beginning 0))
               (end (match-end 0))
-              (_data (buffer-substring-no-properties start end)))
+              (_data (buffer-substring-no-properties start end))
+              (open-quote t))
+
+         ;; Move forward from the double-quote
          (forward-char)
-         ;; Handle the "" case
-         (if (looking-at-p "\"")
-             (progn
-               ;; (message "Empty double quoted string from %s to %s" start (+ start 2))
-               (phps-mode-lexer-RETURN_TOKEN 'T_CONSTANT_ENCAPSED_STRING start (+ start 2))
-               (forward-char))
+
+         (while open-quote
            (let ((string-start (search-forward-regexp (concat
-                                                       "\\([^\\\\]\""
+                                                       "\\(\""
                                                        "\\|\\$" phps-mode-lexer-LABEL
                                                        "\\|\\${" phps-mode-lexer-LABEL
                                                        "\\|{\\$" phps-mode-lexer-LABEL "\\)")
                                                       nil t)))
+
              ;; Do we find a ending double quote or starting variable?
              (if string-start
-                 (let ((string-start (match-beginning 0)))
-                   ;; (message "Double quoted string %s" double-quoted-string)
+                 (let ((string-start (match-beginning 0))
+                       (is-escaped nil))
+
+                   ;; Go to character before match start
+                   (goto-char (1- string-start))
+
+                   ;; Store whether character is escaped or not
+                   (setq is-escaped (looking-at-p "\\\\"))
+
                    ;; Do we find variable inside quote?
                    (goto-char string-start)
-                   (if (looking-at "[^\\]\"")
-                       (progn
+
+                   ;; Process character if it's not escaped
+                   (if is-escaped
+                       (forward-char 2)
+                     (setq open-quote nil)
+                     (if (looking-at "\"")
                          (let ((_double-quoted-string (buffer-substring-no-properties start (+ string-start 2))))
-                           ;; (message "Double quoted string: %s" _double-quoted-string)
-                           (phps-mode-lexer-RETURN_TOKEN 'T_CONSTANT_ENCAPSED_STRING start (+ string-start 2))))
-                     (progn
-                       ;; (message "Found variable after '%s'" (buffer-substring-no-properties start string-start))
-                       (phps-mode-lexer-BEGIN phps-mode-lexer-ST_DOUBLE_QUOTES)
-                       (phps-mode-lexer-RETURN_TOKEN "\"" start (1+ start))
-                       (phps-mode-lexer-RETURN_TOKEN 'T_ENCAPSED_AND_WHITESPACE (1+ start) string-start))))
+                           (message "Double quoted string: %s" _double-quoted-string)
+                           (phps-mode-lexer-RETURN_TOKEN 'T_CONSTANT_ENCAPSED_STRING start (+ string-start 2)))
+                       (progn
+                         (message "Found variable after '%s'" (buffer-substring-no-properties start string-start))
+                         (phps-mode-lexer-BEGIN phps-mode-lexer-ST_DOUBLE_QUOTES)
+                         (phps-mode-lexer-RETURN_TOKEN "\"" start (1+ start))
+                         (phps-mode-lexer-RETURN_TOKEN 'T_ENCAPSED_AND_WHITESPACE (1+ start) string-start))))
+                   )
                (progn
                  ;; (message "Found no ending quote, skipping to end")
                  (phps-mode-lexer-RETURN_TOKEN 'T_ERROR start (point-max))
-                 (phps-mode-lexer-MOVE_FORWARD (point-max)))))))))
+                 (phps-mode-lexer-MOVE_FORWARD (point-max))
+                 (setq open-quote nil))))))))
 
     (phps-mode-lexer-re2c-rule
      (and ST_IN_SCRIPTING (looking-at (concat "<<<" phps-mode-lexer-TABS_AND_SPACES "\\(" phps-mode-lexer-LABEL "\\|'" phps-mode-lexer-LABEL "'\\|\"" phps-mode-lexer-LABEL "\"\\)" phps-mode-lexer-NEWLINE)))
