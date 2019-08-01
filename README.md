@@ -23,6 +23,7 @@ This mode does not require PHP installed on your computer because it has a built
 * Tested using unit tests and integration tests
 * Travis support
 * Included in GNU ELPA package archive
+* Support for `mmm-mode`
 
 
 ## Develop
@@ -128,6 +129,17 @@ You can install via ELPA (`M-x package-install` + `RET` + `phps-mode` + `RET`), 
 ``` emacs-lisp
 (require 'phps-mode)
 (add-to-list 'auto-mode-alist '("\\.\\(php\\|phtml\\)\\'" . phps-mode))
+```
+
+### Use with mmm-mode
+
+Example with web-mode for inline regions
+
+``` emacs-lisp
+(require 'phps-mode)
+(add-to-list 'auto-mode-alist '("\\.\\(php\\|phtml\\)\\'" . phps-mode))
+(setq phps-mode-inline-mmm-submode 'web-mode)
+(mmm-add-mode-ext-class 'phps-mode nil 'phps-web)
 ```
 
 ## Contribute

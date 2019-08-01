@@ -10,3 +10,10 @@ function myFunctionA($myArg1, $myArg2)
     $myArg2 = false;
     echo "some stuff";
 }
+
+?>
+<body>
+    <div>
+        <strong>Hello</strong>
+    </div>
+</body>
