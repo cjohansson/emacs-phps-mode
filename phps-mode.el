@@ -58,6 +58,8 @@
 
 (defvar phps-mode-map-applied nil "Boolean flag whether mode-map has been initialized or not.")
 
+(defvar phps-mode-inline-mmm-submode nil "Symbol declaring what mmm-mode to use as submode in inline areas.")
+
 (define-derived-mode phps-mode prog-mode "PHPs"
   "Major mode for PHP with Semantic integration."
 

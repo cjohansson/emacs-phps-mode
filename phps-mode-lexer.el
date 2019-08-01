@@ -210,7 +210,13 @@
     (overlay-put (make-overlay start end) 'font-lock-face 'font-lock-variable-name-face))
 
    ((string= token 'T_INLINE_HTML)
-    (overlay-put (make-overlay start end) 'font-lock-face 'font-lock-comment-delimiter-face))
+    (overlay-put (make-overlay start end) 'font-lock-face 'font-lock-comment-delimiter-face)
+
+    ;; Optional support for mmm-mode below
+    (when (and (boundp 'phps-mode-inline-mmm-submode)
+               phps-mode-inline-mmm-submode
+               (fboundp 'mmm-make-region))
+      (mmm-make-region phps-mode-inline-mmm-submode start end)))
 
    ((string= token 'T_COMMENT)
     (overlay-put (make-overlay start end) 'font-lock-face 'font-lock-comment-face))
