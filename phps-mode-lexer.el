@@ -210,13 +210,20 @@
     (overlay-put (make-overlay start end) 'font-lock-face 'font-lock-variable-name-face))
 
    ((string= token 'T_INLINE_HTML)
+
     (overlay-put (make-overlay start end) 'font-lock-face 'font-lock-comment-delimiter-face)
 
     ;; Optional support for mmm-mode below
-    (when (and (boundp 'phps-mode-inline-mmm-submode)
-               phps-mode-inline-mmm-submode
-               (fboundp 'mmm-make-region))
-      (mmm-make-region phps-mode-inline-mmm-submode start end)))
+    (if (and (boundp 'phps-mode-inline-mmm-submode)
+             phps-mode-inline-mmm-submode
+             (fboundp 'mmm-make-region))
+        (progn
+          ;; (message "Added mmm-submode '%s' from %s - %s" phps-mode-inline-mmm-submode start end)
+          (dolist (overlay (overlays-in start end))
+            (delete-overlay overlay))
+          ;; (mmm-make-region phps-mode-inline-mmm-submode start end)
+          )
+      ))
 
    ((string= token 'T_COMMENT)
     (overlay-put (make-overlay start end) 'font-lock-face 'font-lock-comment-face))
@@ -1653,8 +1660,10 @@
               (let ((new-token-start (+ token-start diff))
                     (new-token-end (+ token-end diff)))
                 (push `(,token-symbol ,new-token-start . ,new-token-end) new-tokens))
-            (push token new-tokens)))))
-
+            (if (>= token-end start)
+                (let ((new-token-end (+ token-end diff)))
+                  (push `(,token-symbol ,token-start . ,new-token-end) new-tokens))
+              (push token new-tokens))))))
     new-tokens))
 
 (defun phps-mode-lexer-run-incremental ()
