@@ -15,5 +15,8 @@ function myFunctionA($myArg1, $myArg2)
 <body>
     <div>
         <strong>Hello</strong>
+        <p>
+            More stuff
+        </p>
     </div>
 </body>

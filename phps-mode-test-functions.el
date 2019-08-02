@@ -948,6 +948,28 @@
 
    )
 
+  (phps-mode-test-with-buffer
+   "<?php\nif (true):\n    $var = \"abc\nanother line here\nmore text here\";\n    $var2 = '123';\nendif;"
+   "Add test for inserting newlines inside token"
+   ;; (message "Before Tokens %s" (phps-mode-lexer-get-tokens))
+   ;; (message "Before States: %s" (phps-mode-lexer-get-states))
+
+   (should (equal (phps-mode-lexer-get-tokens)
+                  '((T_OPEN_TAG 1 . 7) (T_IF 7 . 9) (( 10 . 11) (T_STRING 11 . 15) (")" 15 . 16) (":" 16 . 17) (T_VARIABLE 22 . 26) ("=" 27 . 28) (T_CONSTANT_ENCAPSED_STRING 29 . 67) (";" 67 . 68) (T_VARIABLE 73 . 78) ("=" 79 . 80) (T_CONSTANT_ENCAPSED_STRING 81 . 86) (";" 86 . 87) (T_ENDIF 88 . 93) (";" 93 . 94)))))
+   (should (equal (phps-mode-lexer-get-states)
+                  '((93 94 1 (1 1 1 1 1)) (88 93 1 (1 1 1 1 1)) (86 87 1 (1 1 1 1 1)) (81 86 1 (1 1 1 1 1)) (79 80 1 (1 1 1 1 1)) (73 78 1 (1 1 1 1 1)) (67 68 1 (1 1 1 1 1)) (29 67 1 (1 1 1 1 1)) (27 28 1 (1 1 1 1 1)) (22 26 1 (1 1 1 1 1)) (16 17 1 (1 1 1 1 1)) (15 16 1 (1 1 1 1 1)) (11 15 1 (1 1 1 1 1)) (10 11 1 (1 1 1 1 1)) (7 9 1 (1 1 1 1 1)) (1 7 1 (1 1 1 1 1)))))
+
+   ;; Insert newline and then indent
+   (goto-char 51)
+   (newline-and-indent)
+
+   (should (equal (phps-mode-lexer-get-tokens)
+                  '((T_OPEN_TAG 1 . 7) (T_IF 7 . 9) (( 10 . 11) (T_STRING 11 . 15) (")" 15 . 16) (":" 16 . 17) (T_VARIABLE 22 . 26) ("=" 27 . 28) (T_CONSTANT_ENCAPSED_STRING 29 . 68) (";" 68 . 69) (T_VARIABLE 74 . 79) ("=" 80 . 81) (T_CONSTANT_ENCAPSED_STRING 82 . 87) (";" 87 . 88) (T_ENDIF 89 . 94) (";" 94 . 95)))))
+   (should (equal (phps-mode-lexer-get-states)
+                  '((94 95 1 (1 1 1 1 1)) (89 94 1 (1 1 1 1 1)) (87 88 1 (1 1 1 1 1)) (82 87 1 (1 1 1 1 1)) (80 81 1 (1 1 1 1 1)) (74 79 1 (1 1 1 1 1)) (68 69 1 (1 1 1 1 1)) (29 68 1 (1 1 1 1 1)) (27 28 1 (1 1 1 1 1)) (22 26 1 (1 1 1 1 1)) (16 17 1 (1 1 1 1 1)) (15 16 1 (1 1 1 1 1)) (11 15 1 (1 1 1 1 1)) (10 11 1 (1 1 1 1 1)) (7 9 1 (1 1 1 1 1)) (1 7 1 (1 1 1 1 1)))))
+
+   )
+
   )
 
 (defun phps-mode-test-functions ()
