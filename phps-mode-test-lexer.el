@@ -358,7 +358,7 @@
 
   (should (equal
            '((T_OPEN_TAG 1 . 8) (T_START_HEREDOC 8 . 17) (T_ERROR 17 . 56))
-           (phps-mode-lexer-get-moved-tokens '((T_OPEN_TAG 1 . 7) (T_START_HEREDOC 7 . 16) (T_ERROR 16 . 55)) 7 1)))
+           (phps-mode-lexer-get-moved-tokens '((T_OPEN_TAG 1 . 7) (T_START_HEREDOC 7 . 16) (T_ERROR 16 . 55)) 6 1)))
 
   (should (equal
            '((T_OPEN_TAG 1 . 7) (T_START_HEREDOC 7 . 16) (T_ERROR 16 . 56))
@@ -382,7 +382,7 @@
             '((66 74 1 '(1))
               (8 65 1 '(1))
               (1 7 1 '(1)))
-            7
+            6
             2)))
 
   (should (equal

@@ -131,17 +131,6 @@ You can install via ELPA (`M-x package-install` + `RET` + `phps-mode` + `RET`), 
 (add-to-list 'auto-mode-alist '("\\.\\(php\\|phtml\\)\\'" . phps-mode))
 ```
 
-### Use with mmm-mode
-
-Example with web-mode for inline regions
-
-``` emacs-lisp
-(require 'phps-mode)
-(add-to-list 'auto-mode-alist '("\\.\\(php\\|phtml\\)\\'" . phps-mode))
-(setq phps-mode-inline-mmm-submode 'web-mode)
-(mmm-add-mode-ext-class 'phps-mode nil 'phps-web)
-```
-
 ## Contribute
 
 This project is licensed to Free Software Foundation so sign the needed papers. Then create a branch based on a updated `develop`. Make pull request.
