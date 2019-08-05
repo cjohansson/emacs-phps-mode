@@ -376,7 +376,7 @@
   (should (equal
            '((68 76 1 '(1))
              (10 67 1 '(1))
-             (1 7 1 '(1)))
+             (1 9 1 '(1)))
            
            (phps-mode-lexer-get-moved-states
             '((66 74 1 '(1))

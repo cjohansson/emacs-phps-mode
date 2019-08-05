@@ -1635,10 +1635,13 @@
               (state-symbol (nth 2 state-object))
               (state-stack (nth 3 state-object)))
           (if (>= state-start start)
-            (let ((new-state-start (+ state-start diff))
-                  (new-state-end (+ state-end diff)))
-              (push (list new-state-start new-state-end state-symbol state-stack) new-states))
-            (push state-object new-states)))))
+              (let ((new-state-start (+ state-start diff))
+                    (new-state-end (+ state-end diff)))
+                (push (list new-state-start new-state-end state-symbol state-stack) new-states))
+            (if (>= state-end start)
+                (let ((new-state-end (+ state-end diff)))
+                  (push (list state-start new-state-end state-symbol state-stack) new-states))
+              (push state-object new-states))))))
 
     new-states))
 
