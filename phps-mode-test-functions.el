@@ -854,6 +854,27 @@
 
   )
 
+(defun phps-mode-test-functions-get-moved-imenu ()
+  "Test for moving imenu index."
+
+  (should (equal
+           '(("myNamespace" ("myClass" ("myFunctionA" . 110) ("myFunctionB" . 163))))
+           (phps-mode-functions-get-moved-imenu '(("myNamespace" ("myClass" ("myFunctionA" . 108) ("myFunctionB" . 161)))) 0 2)))
+
+  (should (equal
+           '(("myNamespace" ("myClass" ("myFunctionA" . 106) ("myFunctionB" . 159))))
+           (phps-mode-functions-get-moved-imenu '(("myNamespace" ("myClass" ("myFunctionA" . 108) ("myFunctionB" . 161)))) 0 -2)))
+
+  (should (equal
+           '(("myNamespace" ("myClass" ("myFunctionA" . 108) ("myFunctionB" . 171))))
+           (phps-mode-functions-get-moved-imenu '(("myNamespace" ("myClass" ("myFunctionA" . 108) ("myFunctionB" . 161)))) 110 10)))
+
+  (should (equal
+           '(("myNamespace" ("myClass" ("myFunctionA" . 108) ("myFunctionB" . 161))))
+           (phps-mode-functions-get-moved-imenu '(("myNamespace" ("myClass" ("myFunctionA" . 108) ("myFunctionB" . 161)))) 180 10)))
+
+  )
+
 (defun phps-mode-test-functions-comment-uncomment-region ()
   "Test (comment-region) and (uncomment-region)."
 
@@ -888,7 +909,6 @@
   )
 
 ;; TODO Add functionality for (delete-backward-char) as well
-;; TODO Add test for inserting newlines inside token
 ;; TODO Test imenu movement here as well
 (defun phps-mode-test-functions-whitespace-modifications ()
   "Test white-space modifications functions."
@@ -990,6 +1010,7 @@
   (phps-mode-test-functions-get-lines-indent)
   (phps-mode-test-functions-indent-line)
   (phps-mode-test-functions-imenu)
+  (phps-mode-test-functions-get-moved-imenu)
   (phps-mode-test-functions-comment-uncomment-region)
   (phps-mode-test-functions-move-lines-indent)
   (phps-mode-test-functions-whitespace-modifications))

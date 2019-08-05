@@ -104,6 +104,24 @@
   (phps-mode-functions-process-current-buffer)
   phps-mode-functions-imenu)
 
+(defun phps-mode-functions-get-moved-imenu (old-index start diff)
+  "Move imenu-index OLD-INDEX beginning from START with DIFF."
+  (let ((new-index '()))
+
+    (when old-index
+      (dolist (item old-index)
+        (let ((item-label (car item)))
+          (if (listp (cdr item))
+              (let ((sub-item (phps-mode-functions-get-moved-imenu item start diff)))
+                (push '(item-label . sub-item)))
+            (let ((item-start (cdr item)))
+              (when (>= item-start start)
+                (setq item-start (+ item-start diff)))
+              (push '(item-label . item-start)))))
+        ))
+
+    new-index))
+
 (defun phps-mode-functions--get-lines-in-buffer (beg end)
   "Return the number of lines in buffer between BEG and END."
   (phps-mode-functions--get-lines-in-string (buffer-substring-no-properties beg end)))
