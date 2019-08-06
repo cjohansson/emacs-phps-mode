@@ -857,6 +857,8 @@
 (defun phps-mode-test-functions-get-moved-imenu ()
   "Test for moving imenu index."
 
+  (message "Moved imenu %s" (phps-mode-functions-get-moved-imenu '(("myNamespace" ("myClass" ("myFunctionA" . 108) ("myFunctionB" . 161)))) 0 2))
+
   (should (equal
            '(("myNamespace" ("myClass" ("myFunctionA" . 110) ("myFunctionB" . 163))))
            (phps-mode-functions-get-moved-imenu '(("myNamespace" ("myClass" ("myFunctionA" . 108) ("myFunctionB" . 161)))) 0 2)))

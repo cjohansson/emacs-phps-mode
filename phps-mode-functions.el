@@ -106,7 +106,6 @@
 
 (defun phps-mode-functions-get-moved-imenu (old-index start diff)
   "Move imenu-index OLD-INDEX beginning from START with DIFF."
-  (message "old-index: %s, start: %s, diff: %s" old-index start diff)
   (let ((new-index '()))
 
     (when old-index
@@ -115,19 +114,16 @@
           (dolist (item old-index)
             (let ((item-label (car item))
                   (sub-item (phps-mode-functions-get-moved-imenu item start diff)))
-              (message "sub-item 1: %s . %s" item-label sub-item)
-              (push (list item-label sub-item) new-index)))
+              (push (car sub-item) new-index)))
         (let ((item old-index))
           (let ((item-label (car item)))
             (if (listp (cdr item))
                 (let ((sub-item (phps-mode-functions-get-moved-imenu (cdr item) start diff)))
-                  (message "sub-item 2: %s . %s" item-label sub-item)
-                  (push (list item-label sub-item) new-index))
+                  (push `(,item-label . ,(nreverse sub-item)) new-index))
               (let ((item-start (cdr item)))
                 (when (>= item-start start)
                   (setq item-start (+ item-start diff)))
-                (message "sub-item 3: %s . %s" item-label item-start)
-                (push (list item-label item-start) new-index))))
+                (push `(,item-label . ,item-start) new-index))))
           )))
 
     new-index))
