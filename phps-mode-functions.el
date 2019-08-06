@@ -90,6 +90,10 @@
           (setq line-indent (gethash line-number old-lines-indents))))
       lines-indents)))
 
+(defun phps-mode-functions-move-imenu-index (start diff)
+  "Moved imenu from START by DIFF points."
+  (setq phps-mode-functions-imenu (phps-mode-functions-get-moved-imenu phps-mode-functions-imenu start diff)))
+
 (defun phps-mode-functions-move-lines-indent (start-line-number diff)
   "Move lines indent from START-LINE-NUMBER with DIFF points."
   (setq phps-mode-functions-lines-indent (phps-mode-functions-get-moved-lines-indent phps-mode-functions-lines-indent start-line-number diff)))
@@ -891,10 +895,8 @@
                   (when (> diff 0)
                     (phps-mode-lexer-move-tokens old-pos diff)
                     (phps-mode-lexer-move-states old-pos diff)
-                    (phps-mode-functions-move-lines-indent old-line-number 1)
-                    ;; TODO Move imenu-index?
-                    ;; (message "Old pos %s, new pos: %s, diff: %s" old-pos new-pos diff)
-                    )))
+                    (phps-mode-functions-move-imenu-index old-pos diff)
+                    (phps-mode-functions-move-lines-indent old-line-number 1))))
             (apply old-function arguments)
             ;; (message "Not looking at white-space")
             )))
@@ -925,6 +927,7 @@
               ;; When indent is changed the trailing tokens and states just need to adjust their positions, this will improve speed of indent-region a lot
               (phps-mode-lexer-move-tokens line-start indent-diff)
               (phps-mode-lexer-move-states line-start indent-diff)
+              (phps-mode-functions-move-imenu-index line-start indent-diff)
 
               ;; Reset change flag
               (phps-mode-functions-reset-buffer-changes-start))))))))
