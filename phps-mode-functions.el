@@ -892,6 +892,8 @@
                 (setq new-pos (point))
                 (let ((diff (- new-pos old-pos)))
                   (when (> diff 0)
+                    (message "Diff after newline at %s is %s" old-pos diff)
+                    (message "Moving indent-index from %s with 1" old-line-number)
                     (phps-mode-lexer-move-tokens old-pos diff)
                     (phps-mode-lexer-move-states old-pos diff)
                     (phps-mode-functions-move-imenu-index old-pos diff)
@@ -923,13 +925,19 @@
 
               (indent-line-to indent-sum)
 
+
               ;; When indent is changed the trailing tokens and states just need to adjust their positions, this will improve speed of indent-region a lot
-              (phps-mode-lexer-move-tokens line-start indent-diff)
-              (phps-mode-lexer-move-states line-start indent-diff)
-              (phps-mode-functions-move-imenu-index line-start indent-diff)
+              (when phps-mode-functions-allow-after-change
+                (phps-mode-lexer-move-tokens line-start indent-diff)
+                (phps-mode-lexer-move-states line-start indent-diff)
+                (phps-mode-functions-move-imenu-index line-start indent-diff))
+
+              (message "Diff after indent at %s is %s" line-start indent-diff)
 
               ;; Reset change flag
-              (phps-mode-functions-reset-buffer-changes-start))))))))
+              (phps-mode-functions-reset-buffer-changes-start)
+
+              )))))))
 
 (defun phps-mode-functions-after-change (start _stop _length)
   "Track buffer change from START to STOP with length LENGTH."
