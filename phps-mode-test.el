@@ -36,14 +36,12 @@
          (incremental-imenu nil)
          (incremental-indent nil)
          (incremental-buffer nil)
-         (incremental-overlays nil)
          (test-buffer-initial (generate-new-buffer "test-initial"))
          (initial-states nil)
          (initial-tokens nil)
          (initial-imenu nil)
          (initial-indent nil)
-         (initial-buffer nil)
-         (initial-overlays nil))
+         (initial-buffer nil))
 
      ;; Setup incremental buffer
      (switch-to-buffer test-buffer-incremental)
@@ -60,7 +58,6 @@
      (setq incremental-imenu (phps-mode-functions-get-imenu))
      (setq incremental-indent (phps-mode-test-hash-to-list (phps-mode-functions-get-lines-indent)))
      (setq incremental-buffer (buffer-substring-no-properties (point-min) (point-max)))
-     (setq incremental-overlays (overlays-in (point-min) (point-max)))
 
      ;; Setup incremental buffer
      (switch-to-buffer test-buffer-initial)
@@ -75,12 +72,11 @@
      (setq initial-imenu (phps-mode-functions-get-imenu))
      (setq initial-indent (phps-mode-test-hash-to-list (phps-mode-functions-get-lines-indent)))
      (setq initial-buffer (buffer-substring-no-properties (point-min) (point-max)))
-     (setq initial-overlays (overlays-in (point-min) (point-max)))
 
      ;; Run tests
      (when (and (boundp 'phps-mode-functions-verbose)
                 phps-mode-functions-verbose)
-       (message "\nComparing tokens, lines indent, imenu and overlays between buffer:\n\n'%s'\n\nand:\n\n'%s'\n" initial-buffer incremental-buffer))
+       (message "\nComparing tokens, lines indent and imenu  between buffer:\n\n'%s'\n\nand:\n\n'%s'\n" initial-buffer incremental-buffer))
      (should (equal initial-buffer incremental-buffer))
      ;; (message "Initial tokens: %s\n" initial-tokens)
      ;; (message "Incremental tokens: %s\n" incremental-tokens)
@@ -91,10 +87,6 @@
      (should (equal initial-indent incremental-indent))
      (should (equal initial-imenu incremental-imenu))
 
-     ;; (message "Initial overlays: %s" initial-overlays)
-     ;; (message "Incremental overlays: %s" incremental-overlays)
-     
-     ;; (should (equal initial-overlays incremental-overlays))
 
      (kill-buffer test-buffer-incremental)
      (kill-buffer test-buffer-initial)
