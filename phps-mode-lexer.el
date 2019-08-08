@@ -1620,7 +1620,8 @@
 
 (defun phps-mode-lexer-move-states (start diff)
   "Move lexer states after (or equal to) START with modification DIFF."
-  (setq phps-mode-lexer-states (phps-mode-lexer-get-moved-states phps-mode-lexer-states start diff)))
+  (when phps-mode-lexer-states
+    (setq phps-mode-lexer-states (phps-mode-lexer-get-moved-states phps-mode-lexer-states start diff))))
 
 (defun phps-mode-lexer-get-moved-states (states start diff)
   "Return moved lexer STATES after (or equal to) START with modification DIFF."
@@ -1647,7 +1648,8 @@
 
 (defun phps-mode-lexer-move-tokens (start diff)
   "Update tokens with moved lexer tokens after or equal to START with modification DIFF."
-  (setq phps-mode-lexer-tokens (phps-mode-lexer-get-moved-tokens phps-mode-lexer-tokens start diff)))
+  (when phps-mode-lexer-tokens
+    (setq phps-mode-lexer-tokens (phps-mode-lexer-get-moved-tokens phps-mode-lexer-tokens start diff))))
 
 (defun phps-mode-lexer-get-moved-tokens (old-tokens start diff)
   "Return moved lexer OLD-TOKENS positions after (or equal to) START with DIFF points."

@@ -92,12 +92,15 @@
 
 (defun phps-mode-functions-move-imenu-index (start diff)
   "Moved imenu from START by DIFF points."
-  (setq phps-mode-functions-imenu (phps-mode-functions-get-moved-imenu phps-mode-functions-imenu start diff)))
+  (when phps-mode-functions-imenu
+    (setq phps-mode-functions-imenu (phps-mode-functions-get-moved-imenu phps-mode-functions-imenu start diff))))
 
 (defun phps-mode-functions-move-lines-indent (start-line-number diff)
   "Move lines indent from START-LINE-NUMBER with DIFF points."
-  (setq phps-mode-functions-lines-indent (phps-mode-functions-get-moved-lines-indent phps-mode-functions-lines-indent start-line-number diff)))
-
+  (when phps-mode-functions-lines-indent
+    (message "Moving line-indent index from %s with %s" start-line-number diff)
+    (setq phps-mode-functions-lines-indent (phps-mode-functions-get-moved-lines-indent phps-mode-functions-lines-indent start-line-number diff))))
+  
 (defun phps-mode-functions-get-lines-indent ()
   "Return lines indent, process buffer if not done already."
   (phps-mode-functions-process-current-buffer)
@@ -885,19 +888,20 @@
                 ;; (message "Looking at white-space")
 
                 ;; Temporarily disable change detection to not trigger incremental lexer
+
+                ;; We move indexes before calling old-function
+                ;; because old-function could be `newline-and-indent'
+                ;; and this would trigger `indent-line'
+                ;; which will trigger processing buffer
+                (phps-mode-lexer-move-tokens old-pos 1)
+                (phps-mode-lexer-move-states old-pos 1)
+                (phps-mode-functions-move-imenu-index old-pos 1)
+                (phps-mode-functions-move-lines-indent old-line-number 1)
+
                 (setq phps-mode-functions-allow-after-change nil)
                 (apply old-function arguments)
-                (setq phps-mode-functions-allow-after-change t)
-                
-                (setq new-pos (point))
-                (let ((diff (- new-pos old-pos)))
-                  (when (> diff 0)
-                    (message "Diff after newline at %s is %s" old-pos diff)
-                    (message "Moving indent-index from %s with 1" old-line-number)
-                    (phps-mode-lexer-move-tokens old-pos diff)
-                    (phps-mode-lexer-move-states old-pos diff)
-                    (phps-mode-functions-move-imenu-index old-pos diff)
-                    (phps-mode-functions-move-lines-indent old-line-number 1))))
+                (setq phps-mode-functions-allow-after-change t))
+
             (apply old-function arguments)
             ;; (message "Not looking at white-space")
             )))
@@ -927,12 +931,11 @@
 
 
               ;; When indent is changed the trailing tokens and states just need to adjust their positions, this will improve speed of indent-region a lot
-              (when phps-mode-functions-allow-after-change
-                (phps-mode-lexer-move-tokens line-start indent-diff)
-                (phps-mode-lexer-move-states line-start indent-diff)
-                (phps-mode-functions-move-imenu-index line-start indent-diff))
+              (phps-mode-lexer-move-tokens line-start indent-diff)
+              (phps-mode-lexer-move-states line-start indent-diff)
+              (phps-mode-functions-move-imenu-index line-start indent-diff)
 
-              (message "Diff after indent at %s is %s" line-start indent-diff)
+              ;; (message "Diff after indent at %s is %s" line-start indent-diff)
 
               ;; Reset change flag
               (phps-mode-functions-reset-buffer-changes-start)

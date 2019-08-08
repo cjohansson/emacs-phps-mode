@@ -73,14 +73,14 @@
    "Integration-test 4 for regular PHP with namespaces, classes and functions, white-space change inside token"
 
    ;; (message "Before tokens: %s" (phps-mode-lexer-get-tokens))
-   ;; (message "Before indent: %s" (phps-mode-test-hash-to-list (phps-mode-functions-get-lines-indent)))
+   ;; (message "Before indent: %s" (phps-mode-test-hash-to-list phps-mode-functions-lines-indent))
 
    ;; Make changes
    (goto-char 13)
    (newline-and-indent)
 
    ;; (message "After tokens: %s" (phps-mode-lexer-get-tokens))
-   ;; (message "After indent: %s" (phps-mode-test-hash-to-list (phps-mode-functions-get-lines-indent)))
+   ;; (message "After indent: %s" (phps-mode-test-hash-to-list phps-mode-functions-lines-indent))
    
    (should (equal (phps-mode-functions-get-buffer-changes-start) nil)))
 
