@@ -98,7 +98,7 @@
 (defun phps-mode-functions-move-lines-indent (start-line-number diff)
   "Move lines indent from START-LINE-NUMBER with DIFF points."
   (when phps-mode-functions-lines-indent
-    (message "Moving line-indent index from %s with %s" start-line-number diff)
+    ;; (message "Moving line-indent index from %s with %s" start-line-number diff)
     (setq phps-mode-functions-lines-indent (phps-mode-functions-get-moved-lines-indent phps-mode-functions-lines-indent start-line-number diff))))
   
 (defun phps-mode-functions-get-lines-indent ()
