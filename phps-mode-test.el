@@ -92,6 +92,10 @@
      ;; (message "Incremental indent: %s\n" incremental-indent)
      (should (equal initial-indent incremental-indent))
      (should (equal initial-imenu incremental-imenu))
+
+     ;; (message "Initial overlays: %s" initial-overlays)
+     ;; (message "Incremental overlays: %s" incremental-overlays)
+     
      ;; (should (equal initial-overlays incremental-overlays))
 
      (when ,title

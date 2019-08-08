@@ -879,7 +879,6 @@
       (progn
         ;; (message "Running advice")
         (let ((old-pos (point))
-              (new-pos)
               (looking-at-whitespace (looking-at-p "[\ \n\t\r]*\n"))
               (old-line-number (line-number-at-pos)))
 
