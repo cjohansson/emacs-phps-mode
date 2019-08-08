@@ -61,7 +61,6 @@
      (setq incremental-indent (phps-mode-test-hash-to-list (phps-mode-functions-get-lines-indent)))
      (setq incremental-buffer (buffer-substring-no-properties (point-min) (point-max)))
      (setq incremental-overlays (overlays-in (point-min) (point-max)))
-     (kill-buffer test-buffer-incremental)
 
      ;; Setup incremental buffer
      (switch-to-buffer test-buffer-initial)
@@ -77,7 +76,6 @@
      (setq initial-indent (phps-mode-test-hash-to-list (phps-mode-functions-get-lines-indent)))
      (setq initial-buffer (buffer-substring-no-properties (point-min) (point-max)))
      (setq initial-overlays (overlays-in (point-min) (point-max)))
-     (kill-buffer test-buffer-initial)
 
      ;; Run tests
      (when (and (boundp 'phps-mode-functions-verbose)
@@ -97,6 +95,9 @@
      ;; (message "Incremental overlays: %s" incremental-overlays)
      
      ;; (should (equal initial-overlays incremental-overlays))
+
+     (kill-buffer test-buffer-incremental)
+     (kill-buffer test-buffer-initial)
 
      (when ,title
        (message "\nPassed incremental tests for '%s'\n" ,title))))
