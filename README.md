@@ -23,7 +23,6 @@ This mode does not require PHP installed on your computer because it has a built
 * Tested using unit tests and integration tests
 * Travis support
 * Included in GNU ELPA package archive
-* Support for `mmm-mode`
 
 
 ## Develop
