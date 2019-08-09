@@ -196,6 +196,7 @@
               (in-return nil)
               (in-return-curly-bracket-level nil)
               (in-return-level 0)
+              (previous-token nil)
               (token nil)
               (token-start nil)
               (token-end nil)
@@ -236,6 +237,7 @@
                   (next-token-end-line-number nil))
 
               (when token
+                ;; NOTE We use a incremental-line-number calculation because `line-at-pos' takes a lot of time
                 (setq incremental-line-number (+ incremental-line-number (phps-mode-functions--get-lines-in-buffer token-end next-token-start))))
 
               ;; Handle the pseudo-token for last-line
@@ -244,12 +246,17 @@
                     (setq next-token-start-line-number (1+ token-start-line-number))
                     (setq next-token-end-line-number (1+ token-end-line-number)))
                 (setq next-token-start-line-number incremental-line-number)
+
+                ;; NOTE We use a incremental-line-number calculation because `line-at-pos' takes a lot of time
                 (setq incremental-line-number (+ incremental-line-number (phps-mode-functions--get-lines-in-buffer next-token-start next-token-end)))
                 (setq next-token-end-line-number incremental-line-number)
                 (when phps-mode-functions-verbose
                   (message "Token '%s' pos: %s-%s lines: %s-%s" next-token next-token-start next-token-end next-token-start-line-number next-token-end-line-number)))
 
-              ;; Token logic - we have one token look-ahead at this point
+              ;; Token logic - we have one-two token look-ahead at this point
+              ;; `token' is previous token
+              ;; `next-token' is current token
+              ;; `previous-token' is maybe two tokens back
               (when token
 
 
@@ -388,7 +395,11 @@
                           )
                       (when first-token-on-line
                         (setq in-class-declaration-level 1)))
-                  (when (equal token 'T_CLASS)
+
+                  ;; If ::class is used as a magical class constant it should not be considered start of a class declaration
+                  (when (and (equal token 'T_CLASS)
+                             (or (not previous-token)
+                                 (not (equal previous-token 'T_PAAMAYIM_NEKUDOTAYIM))))
                     (setq in-class-declaration t)
                     (setq in-class-declaration-level 1)
                     (setq class-declaration-started-this-line t)))
@@ -862,6 +873,7 @@
                     (setq tuning-level 0))))
 
               ;; Update current token
+              (setq previous-token token)
               (setq token next-token)
               (setq token-start next-token-start)
               (setq token-end next-token-end)
@@ -941,6 +953,7 @@
 
               )))))))
 
+;; TODO Consider how imenu-index should be affected by this
 (defun phps-mode-functions-after-change (start _stop _length)
   "Track buffer change from START to STOP with length LENGTH."
   (when (and (string= major-mode "phps-mode")
