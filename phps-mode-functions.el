@@ -191,6 +191,10 @@
               (in-assignment-round-bracket-level nil)
               (in-assignment-square-bracket-level nil)
               (in-assignment-level 0)
+              (in-object-operator nil)
+              (in-object-operator-round-bracket-level nil)
+              (in-object-operator-square-bracket-level nil)
+              (in-object-operator-level 0)
               (in-class-declaration nil)
               (in-class-declaration-level 0)
               (in-return nil)
@@ -604,6 +608,32 @@
                     (unless in-assignment-round-bracket-level
                       (setq in-assignment nil))
                     (setq in-assignment-level (1- in-assignment-level))))
+
+                (when in-object-operator
+                  (when (or (string= token ";")
+                            (and (string= token ")")
+                                 (or (< round-bracket-level (car in-object-operator-round-bracket-level))
+                                     (and
+                                      (= round-bracket-level (car in-object-operator-round-bracket-level))
+                                      (string= next-token ")"))))
+                            (and (string= token ",")
+                                 (= round-bracket-level (car in-object-operator-round-bracket-level))
+                                 (= square-bracket-level (car in-object-operator-square-bracket-level)))
+                            (and (string= token"]")
+                                 (< square-bracket-level (car in-object-operator-square-bracket-level)))
+                            (and (equal token 'T_FUNCTION)
+                                 (= round-bracket-level (car in-object-operator-round-bracket-level))))
+
+                    ;; NOTE Ending object-operator assignment because of function token is to support PSR-2 Closures
+                    
+                    (when phps-mode-functions-verbose
+                      (message "Ended object-operator at %s %s" token next-token))
+                    (pop in-object-operator-square-bracket-level)
+                    (pop in-object-operator-round-bracket-level)
+                    (unless in-object-operator-round-bracket-level
+                      (setq in-object-operator nil))
+                    (setq in-object-operator-level (1- in-object-operator-level))))
+
                 (when (and (not after-special-control-structure)
                            (or (string= token "=")
                                (equal token 'T_DOUBLE_ARROW)
@@ -627,6 +657,14 @@
                   (push square-bracket-level in-assignment-square-bracket-level)
                   (setq in-assignment-level (1+ in-assignment-level)))
 
+                (when (equal token 'T_OBJECT_OPERATOR)
+                  (when phps-mode-functions-verbose
+                    (message "Started object operator"))
+                  (setq in-object-operator t)
+                  (push round-bracket-level in-object-operator-round-bracket-level)
+                  (push square-bracket-level in-object-operator-square-bracket-level)
+                  (setq in-object-operator-level (1+ in-object-operator-level)))
+
                 ;; Keep track of return expressions
                 (when in-return
                   (when (and (string= token ";")
@@ -644,10 +682,6 @@
                   (setq in-return t)
                   (push curly-bracket-level in-return-curly-bracket-level)
                   (setq in-return-level (1+ in-return-level)))
-
-                ;; Keep track of object operators
-                (when (and (equal token 'T_OBJECT_OPERATOR)
-                           first-token-on-line))
 
                 ;; Did we encounter a token that supports extra special alternative control structures?
                 (when (equal token 'T_CASE)
@@ -674,7 +708,7 @@
                   (message "Processing token: %s" token))
                 
                 ;; Calculate nesting
-                (setq nesting-end (+ round-bracket-level square-bracket-level curly-bracket-level alternative-control-structure-level in-assignment-level in-class-declaration-level in-concatenation-level in-return-level))
+                (setq nesting-end (+ round-bracket-level square-bracket-level curly-bracket-level alternative-control-structure-level in-assignment-level in-class-declaration-level in-concatenation-level in-return-level in-object-operator-level))
 
                 ;; Keep track of whether we are inside a HEREDOC or NOWDOC
                 (when (equal token 'T_START_HEREDOC)
@@ -844,7 +878,7 @@
 
 
                       ;; Calculate indentation level at start of line
-                      (setq nesting-start (+ round-bracket-level square-bracket-level curly-bracket-level alternative-control-structure-level in-assignment-level in-class-declaration-level in-concatenation-level in-return-level))
+                      (setq nesting-start (+ round-bracket-level square-bracket-level curly-bracket-level alternative-control-structure-level in-assignment-level in-class-declaration-level in-concatenation-level in-return-level in-object-operator-level))
 
                       ;; Set initial values for tracking first token
                       (when (> token-start-line-number last-line-number)
