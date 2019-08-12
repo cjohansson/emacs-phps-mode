@@ -243,16 +243,19 @@
 
   (phps-mode-test-with-buffer
    "<?php\nif ($myCondition) {\n    $myObject->myMethod(myClass::class)\n        ->myMethod2($myArgument2);\n    }"
-   "Imenu object-oriented file with bracket-less namespace with multiple levels, class that extends and implements and functions with optional arguments"
+   "Object-oriented file with bracket-less namespace with multiple levels, class that extends and implements and functions with optional arguments"
    (should (equal '((1 (0 0)) (2 (0 0)) (3 (1 0)) (4 (2 0)) (5 (0 0))) (phps-mode-test-hash-to-list (phps-mode-functions-get-lines-indent)))))
 
   (phps-mode-test-with-buffer
    "<?php\n$myObj->myFunction()\n    ->mySecondaryFunction();"
    "Indentation of chained class method calls outside of assignments and conditionals"
-   (message "Tokens: %s" (phps-mode-lexer-get-tokens))
+   ;; (message "Tokens: %s" (phps-mode-lexer-get-tokens))
    (should (equal '((1 (0 0)) (2 (0 0)) (3 (1 0))) (phps-mode-test-hash-to-list (phps-mode-functions-get-lines-indent)))))
 
-  
+  (phps-mode-test-with-buffer
+   "<?php\n\n$myVar = $myClass->meMethod()\n    ->mySecondMethod()\n    ->myThirdMethod()\n->myFourthFunction(\n    $myVariable\n);"
+   "Indentation for chained object operators with method call with arguments"
+   (should (equal '((1 (0 0)) (2 (0 0)) (3 (0 0)) (4 (1 0)) (5 (1 0)) (6 (1 0)) (7 (2 0)) (8 (0 0))) (phps-mode-test-hash-to-list (phps-mode-functions-get-lines-indent)))))
 
   )
 
