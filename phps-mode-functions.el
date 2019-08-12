@@ -344,15 +344,18 @@
 
                  (t (cond
 
-                     ((equal token 'T_NAMESPACE)
+                     ((and (not imenu-in-namespace-name)
+                           (equal token 'T_NAMESPACE))
                       (setq imenu-in-namespace-name nil)
                       (setq imenu-in-namespace-declaration t))
 
-                     ((equal token 'T_CLASS)
+                     ((and (not imenu-in-class-name)
+                           (equal token 'T_CLASS))
                       (setq imenu-in-class-name nil)
                       (setq imenu-in-class-declaration t))
 
-                     ((equal token 'T_FUNCTION)
+                     ((and (not imenu-in-function-name)
+                           (equal token 'T_FUNCTION))
                       (setq imenu-in-function-name nil)
                       (setq imenu-in-function-declaration t)))))
 

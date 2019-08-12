@@ -874,6 +874,11 @@
    "Imenu object-oriented file with bracket-less namespace with multiple levels, class that extends and implements and functions with optional arguments"
    (should (equal (phps-mode-functions-get-imenu) '(("myNamespace\\myNamespace2" ("myClass" ("myFunctionA" . 121) ("myFunctionB" . 174)))))))
 
+  (phps-mode-test-with-buffer
+   "<?php\nclass myClass\n{\n\n    public function myFunction1()\n    {\n        echo \"my string with variable {$variable} inside it\";\n    }\n\n    public function myFunction2()\n    {\n    }\n\n}"
+   "Imenu with double quoted string with variable inside it"
+   (should (equal (phps-mode-functions-get-imenu) '(("myClass" ("myFunction1" . 44)) ("myFunction2" . 153)))))
+
   )
 
 (defun phps-mode-test-functions-get-moved-imenu ()
