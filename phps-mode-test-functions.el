@@ -1014,7 +1014,7 @@
 (defun phps-mode-test-functions ()
   "Run test for functions."
   ;; (setq debug-on-error t)
-  (setq phps-mode-functions-verbose t)
+  ;; (setq phps-mode-functions-verbose t)
   (phps-mode-test-functions-get-lines-indent-if)
   (phps-mode-test-functions-get-lines-indent-classes)
   (phps-mode-test-functions-get-lines-indent-inline-if)

@@ -657,7 +657,11 @@
                   (push square-bracket-level in-assignment-square-bracket-level)
                   (setq in-assignment-level (1+ in-assignment-level)))
 
-                (when (equal token 'T_OBJECT_OPERATOR)
+                (when (and (equal token 'T_OBJECT_OPERATOR)
+                           (or (not in-object-operator-round-bracket-level)
+                               (not in-object-operator-square-bracket-level)
+                               (not (= round-bracket-level (car in-object-operator-round-bracket-level)))
+                               (not (= square-bracket-level (car in-object-operator-square-bracket-level)))))
                   (when phps-mode-functions-verbose
                     (message "Started object operator"))
                   (setq in-object-operator t)
