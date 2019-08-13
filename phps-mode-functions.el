@@ -591,24 +591,49 @@
                                  (or (< round-bracket-level (car in-assignment-round-bracket-level))
                                      (and
                                       (= round-bracket-level (car in-assignment-round-bracket-level))
-                                      (string= next-token ")"))))
+                                      (= square-bracket-level (car in-assignment-square-bracket-level))
+                                      (or (string= next-token ")")
+                                          (string= next-token "]")))))
                             (and (string= token ",")
                                  (= round-bracket-level (car in-assignment-round-bracket-level))
                                  (= square-bracket-level (car in-assignment-square-bracket-level)))
-                            (and (string= token"]")
-                                 (< square-bracket-level (car in-assignment-square-bracket-level)))
+                            (and (string= token "]")
+                                 (or (< square-bracket-level (car in-assignment-square-bracket-level))
+                                     (and
+                                      (= square-bracket-level (car in-assignment-square-bracket-level))
+                                      (= round-bracket-level (car in-assignment-round-bracket-level))
+                                      (or (string= next-token "]")
+                                          (string= next-token ")")))))
                             (and (equal token 'T_FUNCTION)
                                  (= round-bracket-level (car in-assignment-round-bracket-level))))
 
-                    ;; NOTE Ending an assignment because of function token is to support PSR-2 Closures
+                    ;; NOTE Ending an assignment because of a T_FUNCTION token is to support PSR-2 Closures
                     
                     (when phps-mode-functions-verbose
-                      (message "Ended assignment at %s %s" token next-token))
+                      (message "Ended assignment %s at %s %s" in-assignment-level token next-token))
                     (pop in-assignment-square-bracket-level)
                     (pop in-assignment-round-bracket-level)
                     (unless in-assignment-round-bracket-level
                       (setq in-assignment nil))
-                    (setq in-assignment-level (1- in-assignment-level))))
+                    (setq in-assignment-level (1- in-assignment-level))
+
+                    ;; Did we end two assignment at once?
+                    (when (and
+                           in-assignment-round-bracket-level
+                           in-assignment-square-bracket-level
+                           (= round-bracket-level (car in-assignment-round-bracket-level))
+                           (= square-bracket-level (car in-assignment-square-bracket-level))
+                           (or (string= next-token ")")
+                               (string= next-token "]")))
+                      (when phps-mode-functions-verbose
+                        (message "Ended another assignment %s at %s %s" in-assignment-level token next-token))
+                      (pop in-assignment-square-bracket-level)
+                      (pop in-assignment-round-bracket-level)
+                      (unless in-assignment-round-bracket-level
+                        (setq in-assignment nil))
+                      (setq in-assignment-level (1- in-assignment-level)))
+
+                    ))
 
                 (when in-object-operator
                   (when (equal token 'T_STRING)

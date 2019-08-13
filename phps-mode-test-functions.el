@@ -263,6 +263,13 @@
    ;; (message "Tokens: %s" (phps-mode-lexer-get-tokens))
    (should (equal '((1 (0 0)) (2 (0 0)) (3 (0 0)) (4 (1 0)) (5 (1 0))) (phps-mode-test-hash-to-list (phps-mode-functions-get-lines-indent)))))
 
+  (phps-mode-test-with-buffer
+   "<?php\n$array = [\n    'second' => [\n        'hello' => true\n        ]\n];\n\n$array = array(\n    'second' => array(\n        'third' => true\n        )\n);"
+   "Indent multi-dimensional arrays without trailing commas"
+   ;; (message "Tokens: %s" (phps-mode-lexer-get-tokens))
+   (should (equal '((1 (0 0)) (2 (0 0)) (3 (1 0)) (4 (2 0)) (5 (1 0)) (6 (0 0)) (7 (0 0)) (8 (0 0)) (9 (1 0)) (10 (2 0)) (11 (1 0)) (12 (0 0))) (phps-mode-test-hash-to-list (phps-mode-functions-get-lines-indent))))
+   )
+
   )
 
 (defun phps-mode-test-functions-get-lines-indent-psr-2 ()
