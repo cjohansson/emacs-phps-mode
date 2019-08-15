@@ -661,18 +661,17 @@
                   (push square-bracket-level in-assignment-square-bracket-level)
                   (setq in-assignment-level (1+ in-assignment-level)))
 
-                ;; TODO A closing parenthesis should not decrease level
-                ;; $myMethod->test()
-                ;;     ->test2();
-
                 ;; Second token after a object-operator
-                (when (and after-object-operator
-                           (= (car after-object-operator) 2)
-                           (<= round-bracket-level (car in-object-operator-round-bracket-level))
-                           (<= square-bracket-level (car in-object-operator-square-bracket-level)))
+                (when (and
+                       in-object-operator-round-bracket-level
+                       (<= round-bracket-level (car in-object-operator-round-bracket-level))
+                       in-object-operator-square-bracket-level
+                       (<= square-bracket-level (car in-object-operator-square-bracket-level))
+                       (not (or
+                             (equal next-token 'T_OBJECT_OPERATOR)
+                             (equal next-token 'T_PAAMAYIM_NEKUDOTAYIM))))
                   (when phps-mode-functions-verbose
                     (message "Ended object-operator at %s %s at level %s" token next-token in-object-operator-level))
-                  (pop after-object-operator)
                   (pop in-object-operator-round-bracket-level)
                   (pop in-object-operator-square-bracket-level)
                   (setq in-object-operator-level (1- in-object-operator-level))
@@ -680,22 +679,23 @@
                     (setq in-object-operator nil)))
 
                 ;; First token after a object-operator
-                (when (and
-                       after-object-operator
-                       (= (car after-object-operator) 1))
-                  (pop after-object-operator)
-                  (push 2 after-object-operator))
+                (when after-object-operator
+                  (when (equal next-token 'T_STRING)
+                    (progn
+                      (when phps-mode-functions-verbose
+                        (message "Started object-operator at %s level %s"  token in-object-operator-level))
+                      (push round-bracket-level in-object-operator-round-bracket-level)
+                      (push square-bracket-level in-object-operator-square-bracket-level)
+                      (setq in-object-operator t)
+                      (setq in-object-operator-level (1+ in-object-operator-level)))
+                    (setq after-object-operator nil)))
 
                 ;; Starting object-operator?
                 (when (or (equal token 'T_OBJECT_OPERATOR)
                           (equal token 'T_PAAMAYIM_NEKUDOTAYIM))
                   (when phps-mode-functions-verbose
-                    (message "Started object-operator at %s level %s"  token in-object-operator-level))
-                  (setq in-object-operator t)
-                  (push round-bracket-level in-object-operator-round-bracket-level)
-                  (push square-bracket-level in-object-operator-square-bracket-level)
-                  (setq in-object-operator-level (1+ in-object-operator-level))
-                  (push 1 after-object-operator))
+                    (message "Started after object-operator at %s level %s"  token in-object-operator-level))
+                  (setq after-object-operator t))
 
                 ;; Keep track of return expressions
                 (when in-return
