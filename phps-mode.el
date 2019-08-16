@@ -135,7 +135,24 @@
   (add-hook 'after-change-functions #'phps-mode-functions-after-change)
 
   ;; Lexer
-  (phps-mode-lexer-init)
+  (if (and (boundp 'semantic-lex-syntax-table)
+           (boundp 'phps-mode-syntax-table))
+      (setq-local semantic-lex-syntax-table phps-mode-syntax-table)
+    (signal 'error "Semantic or regular syntax-table for PHPs-mode missing!"))
+
+  ;; Semantic
+  (if (boundp 'semantic-lex-analyzer)
+      (setq-local semantic-lex-analyzer #'phps-mode-lexer-lex)
+    (signal 'error "Semantic semantic-lex-analyzer missing!"))
+
+  ;; Set semantic-lex initializer function
+  (add-hook 'semantic-lex-reset-functions #'phps-mode-lexer-setup)
+
+  ;; Reset tokens
+  (setq-local phps-mode-lexer-tokens nil)
+
+  ;; Initial run of lexer
+  (phps-mode-lexer-run)
 
   ;; Wisent LALR parser TODO
   ;; (phps-mode-tags-init)

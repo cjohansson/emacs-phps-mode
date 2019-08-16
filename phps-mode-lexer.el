@@ -1744,17 +1744,6 @@
   phps-mode-lexer-lex-analyzer
   semantic-lex-default-action)
 
-(defun phps-mode-lexer-init ()
-  "Initialize lexer."
-  (when (and (boundp 'semantic-lex-syntax-table)
-             (boundp 'phps-mode-syntax-table))
-    (setq semantic-lex-syntax-table phps-mode-syntax-table))
-  (when (boundp 'semantic-lex-analyzer)
-    (setq semantic-lex-analyzer 'phps-mode-lexer-lex))
-  (add-hook 'semantic-lex-reset-functions #'phps-mode-lexer-setup)
-  (setq-local phps-mode-lexer-tokens nil)
-  (phps-mode-lexer-run))
-
 (provide 'phps-mode-lexer)
 
 ;;; phps-mode-lexer.el ends here
