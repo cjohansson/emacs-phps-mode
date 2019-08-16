@@ -663,9 +663,10 @@
 
                 ;; Second token after a object-operator
                 (when (and
+                       in-object-operator
                        in-object-operator-round-bracket-level
-                       (<= round-bracket-level (car in-object-operator-round-bracket-level))
                        in-object-operator-square-bracket-level
+                       (<= round-bracket-level (car in-object-operator-round-bracket-level))
                        (<= square-bracket-level (car in-object-operator-square-bracket-level))
                        (not (or
                              (equal next-token 'T_OBJECT_OPERATOR)
@@ -680,21 +681,23 @@
 
                 ;; First token after a object-operator
                 (when after-object-operator
-                  (when (equal next-token 'T_STRING)
+                  (when (or (equal next-token 'T_STRING)
+                            (string= next-token "("))
                     (progn
                       (when phps-mode-functions-verbose
-                        (message "Started object-operator at %s level %s"  token in-object-operator-level))
+                        (message "Started object-operator at %s %s on level %s"  token next-token in-object-operator-level))
                       (push round-bracket-level in-object-operator-round-bracket-level)
                       (push square-bracket-level in-object-operator-square-bracket-level)
                       (setq in-object-operator t)
-                      (setq in-object-operator-level (1+ in-object-operator-level)))
-                    (setq after-object-operator nil)))
+                      (setq in-object-operator-level (1+ in-object-operator-level))))
+                  (setq after-object-operator nil))
 
                 ;; Starting object-operator?
-                (when (or (equal token 'T_OBJECT_OPERATOR)
-                          (equal token 'T_PAAMAYIM_NEKUDOTAYIM))
+                (when (and (or (equal token 'T_OBJECT_OPERATOR)
+                               (equal token 'T_PAAMAYIM_NEKUDOTAYIM))
+                           (equal next-token 'T_STRING))
                   (when phps-mode-functions-verbose
-                    (message "Started after object-operator at %s level %s"  token in-object-operator-level))
+                    (message "After object-operator at %s level %s"  token in-object-operator-level))
                   (setq after-object-operator t))
 
                 ;; Keep track of return expressions
