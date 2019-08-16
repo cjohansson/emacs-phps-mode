@@ -25,17 +25,11 @@
 
 ;;; Code:
 
-(autoload 'phps-mode-test-with-buffer "phps-mode-test")
-(autoload 'phps-mode-test-incremental-vs-intial-buffer "phps-mode-test")
-(autoload 'phps-mode-functions-get-lines-indent "phps-mode-functions")
-(autoload 'phps-mode-functions-get-imenu "phps-mode-functions")
-(autoload 'phps-mode-functions-get-buffer-changes-start "phps-mode-functions")
-(autoload 'phps-mode-lexer-get-tokens "phps-mode-lexer")
-(autoload 'phps-mode-lexer-run-incremental "phps-mode-lexer")
-(autoload 'phps-mode-test-hash-to-list "phps-mode-test")
-(autoload 'should "ert")
+(require 'ert)
+(require 'phps-mode-functions)
+(require 'phps-mode-lexer)
+(require 'phps-mode-test)
 
-;; TODO Add test for making changes inside tokens that is (and (> token-start) (< token-end))
 (defun phps-mode-test-integration-incremental ()
   "Test for object-oriented PHP file."
 
@@ -73,6 +67,22 @@
    (goto-char 1)
    (insert "<?php\nfunction myFunctionA()\n{\n    echo 'my second statement';\n}\n")
    (should (equal (phps-mode-functions-get-buffer-changes-start) 1)))
+
+  (phps-mode-test-incremental-vs-intial-buffer
+   "<?php\n/**\n *\n */\nnamespace myNamespace\n{\n    class myClass\n    {\n        public function myFunction()\n        {\n            echo 'my statement';\n        }\n    }\n}\n"
+   "Integration-test 4 for regular PHP with namespaces, classes and functions, white-space change inside token"
+
+   ;; (message "Before tokens: %s" (phps-mode-lexer-get-tokens))
+   ;; (message "Before indent: %s" (phps-mode-test-hash-to-list phps-mode-functions-lines-indent))
+
+   ;; Make changes
+   (goto-char 13)
+   (newline-and-indent)
+
+   ;; (message "After tokens: %s" (phps-mode-lexer-get-tokens))
+   ;; (message "After indent: %s" (phps-mode-test-hash-to-list phps-mode-functions-lines-indent))
+   
+   (should (equal (phps-mode-functions-get-buffer-changes-start) nil)))
 
   )
 

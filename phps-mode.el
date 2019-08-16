@@ -5,8 +5,8 @@
 ;; Author: Christian Johansson <github.com/cjohansson>
 ;; Maintainer: Christian Johansson <github.com/cjohansson>
 ;; Created: 3 Mar 2018
-;; Modified: 17 Jul 2019
-;; Version: 0.2.3
+;; Modified: 16 Aug 2019
+;; Version: 0.2.4
 ;; Keywords: tools, convenience
 ;; URL: https://github.com/cjohansson/emacs-phps-mode
 
@@ -25,7 +25,7 @@
 ;; General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
+;; along with GNU Emacs.  If not, see <https://www.gnu.org/licenses/>.
 
 
 ;;; Commentary:
@@ -40,52 +40,110 @@
 
 ;; NOTE use wisent-parse-toggle-verbose-flag and (semantic-debug) to debug parsing
 
-(autoload 'phps-mode-flycheck-init "phps-mode-flycheck")
-(autoload 'phps-mode-flymake-init "phps-mode-flymake")
-(autoload 'phps-mode-font-lock-init "phps-mode-font-lock")
-(autoload 'phps-mode-functions-init "phps-mode-functions")
-(autoload 'phps-mode-map-init "phps-mode-map")
-(autoload 'phps-mode-lexer-init "phps-mode-lexer")
-(autoload 'phps-mode-syntax-table-init "phps-mode-syntax-table")
-(autoload 'phps-mode-tags-init "phps-mode-tags")
-(autoload 'phps-mode-semantic-init "phps-mode-semantic")
-
-(autoload 'semantic-new-buffer-fcn "semantic")
+(require 'phps-mode-flymake)
+(require 'phps-mode-functions)
+(require 'phps-mode-lexer)
+(require 'phps-mode-semantic)
+(require 'phps-mode-syntax-table)
+(require 'phps-mode-tags)
+(require 'semantic)
 
 (defvar phps-mode-use-psr-2 t
   "Whether to use PSR-2 guidelines for white-space or not.")
 
 (defvar phps-mode-idle-interval 1.0
-  "Idle seconds before running incremental lexer.")
+  "Idle seconds before running the incremental lexer.")
+
+(defvar phps-mode-flycheck-applied nil "Boolean flag whether flycheck configuration has been applied or not.")
+
+(defvar phps-mode-map-applied nil "Boolean flag whether mode-map has been initialized or not.")
+
+(defvar phps-mode-inline-mmm-submode nil "Symbol declaring what mmm-mode to use as submode in inline areas.")
 
 (define-derived-mode phps-mode prog-mode "PHPs"
   "Major mode for PHP with Semantic integration."
 
+  ;; TODO Check whether PSR-2 requires final newlines or not
+  (setq-local require-final-newline nil)
+
+  ;; TODO Verify this setting
+  (setq-local parse-sexp-ignore-comments nil)
+
   ;; Key-map
-  (phps-mode-map-init)
+  ;; prog-mode will create the key-map and we just modify it here.
+  (when (and phps-mode-map
+             (not phps-mode-map-applied))
+    (define-key phps-mode-map (kbd "C-c /") #'comment-region)
+    (define-key phps-mode-map (kbd "C-c DEL") #'uncomment-region)
+    (setq phps-mode-map-applied t))
+  (use-local-map phps-mode-map)
 
   ;; Syntax table
   (phps-mode-syntax-table-init)
 
   ;; Font lock
-  (phps-mode-font-lock-init)
+  ;; This makes it possible to have full control over syntax coloring from the lexer
+  (setq-local font-lock-keywords-only nil)
+  (setq-local font-lock-defaults '(nil t))
 
   ;; Flymake TODO
   ;; (phps-mode-flymake-init)
 
   ;; Flycheck
-  (phps-mode-flycheck-init)
+  ;; Add support for flycheck PHP checkers: PHP, PHPMD and PHPCS here, do it once but only if flycheck is available
+  (when (and (fboundp 'flycheck-add-mode)
+             (not phps-mode-flycheck-applied))
+    (flycheck-add-mode 'php 'phps-mode)
+    (flycheck-add-mode 'php-phpmd 'phps-mode)
+    (flycheck-add-mode 'php-phpcs 'phps-mode)
+    (setq phps-mode-flycheck-applied t))
 
-  ;; Override functions
-  (phps-mode-functions-init)
+    ;; Custom indentation
+  ;; NOTE Indent-region will call this on each line of region
+  (setq-local indent-line-function #'phps-mode-functions-indent-line)
+
+  ;; Custom Imenu
+  (setq-local imenu-create-index-function #'phps-mode-functions-imenu-create-index)
+
+  ;; Should we follow PSR-2?
+  (when (and (boundp 'phps-mode-use-psr-2)
+             phps-mode-use-psr-2)
+
+    ;; Code MUST use an indent of 4 spaces
+    (setq-local tab-width 4)
+
+    ;; MUST NOT use tabs for indenting
+    (setq-local indent-tabs-mode nil))
+
+  ;; Add support for moving indexes quickly when making newlines
+  (advice-add #'newline :around #'phps-mode-functions-around-newline)
+
+  ;; Reset flags
+  (set (make-local-variable 'phps-mode-functions-allow-after-change) t)
+  (set (make-local-variable 'phps-mode-functions-buffer-changes-start) nil)
+  (set (make-local-variable 'phps-mode-functions-lines-indent) nil)
+  (set (make-local-variable 'phps-mode-functions-imenu) nil)
+  (set (make-local-variable 'phps-mode-functions-processed-buffer) nil)
+
+  ;; Make (comment-region) and (uncomment-region) work
+  (setq-local comment-region-function #'phps-mode-functions-comment-region)
+  (setq-local uncomment-region-function #'phps-mode-functions-uncomment-region)
+  (setq-local comment-start "// ")
+  (setq-local comment-end "")
+
+  ;; Support for change detection
+  (add-hook 'after-change-functions #'phps-mode-functions-after-change)
 
   ;; Lexer
   (phps-mode-lexer-init)
 
-  ;; Wisent LALR parser
+  ;; Wisent LALR parser TODO
   ;; (phps-mode-tags-init)
 
+  ;; Add compatibility for plug-ins here
   (run-hooks 'phps-mode-hook)
+
+  ;; Run semantic functions for new buffer
   (semantic-new-buffer-fcn))
 
 (provide 'phps-mode)

@@ -21,3 +21,8 @@ switch (true):
         echo 'the default';
 endswitch;
 
+?>
+<html>
+    <body>
+    </body>
+</html>

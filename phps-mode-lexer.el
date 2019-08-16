@@ -29,16 +29,12 @@
 
 ;;; Code:
 
+;; NOTE We use autoload here to circumvent recursive require
 (autoload 'phps-mode-functions-get-buffer-changes-start "phps-mode-functions")
 (autoload 'phps-mode-functions-reset-buffer-changes-start "phps-mode-functions")
 
-(autoload 'semantic-lex-reset-functions "semantic")
-(autoload 'define-lex "semantic/lex")
-(autoload 'semantic-lex "semantic/lex")
-(autoload 'semantic-lex-buffer "semantic/lex")
-(autoload 'semantic-lex-token "semantic/lex")
-(autoload 'semantic-lex-push-token "semantic/lex")
-(autoload 'define-lex-analyzer "semantic/lex")
+(require 'semantic)
+(require 'semantic/lex)
 
 ;; NOTE This line is required to pass byte-compilation
 (require 'semantic/wisent)
@@ -214,7 +210,20 @@
     (overlay-put (make-overlay start end) 'font-lock-face 'font-lock-variable-name-face))
 
    ((string= token 'T_INLINE_HTML)
-    (overlay-put (make-overlay start end) 'font-lock-face 'font-lock-comment-delimiter-face))
+
+    (overlay-put (make-overlay start end) 'font-lock-face 'font-lock-comment-delimiter-face)
+
+    ;; Optional support for mmm-mode below
+    (if (and (boundp 'phps-mode-inline-mmm-submode)
+             phps-mode-inline-mmm-submode
+             (fboundp 'mmm-make-region))
+        (progn
+          ;; (message "Added mmm-submode '%s' from %s - %s" phps-mode-inline-mmm-submode start end)
+          (dolist (overlay (overlays-in start end))
+            (delete-overlay overlay))
+          ;; (mmm-make-region phps-mode-inline-mmm-submode start end)
+          )
+      ))
 
    ((string= token 'T_COMMENT)
     (overlay-put (make-overlay start end) 'font-lock-face 'font-lock-comment-face))
@@ -1348,32 +1357,42 @@
      (lambda()
        (let* ((start (match-beginning 0))
               (end (match-end 0))
-              (_data (buffer-substring-no-properties start end)))
+              (_data (buffer-substring-no-properties start end))
+              (open-quote t))
+
+         ;; Move forward from the double-quote
          (forward-char)
-         ;; Handle the "" case
-         (if (looking-at-p "\"")
-             (progn
-               ;; (message "Empty double quoted string from %s to %s" start (+ start 2))
-               (phps-mode-lexer-RETURN_TOKEN 'T_CONSTANT_ENCAPSED_STRING start (+ start 2))
-               (forward-char))
+
+         (while open-quote
            (let ((string-start (search-forward-regexp (concat
-                                                       "\\([^\\\\]\""
+                                                       "\\(\""
                                                        "\\|\\$" phps-mode-lexer-LABEL
                                                        "\\|\\${" phps-mode-lexer-LABEL
                                                        "\\|{\\$" phps-mode-lexer-LABEL "\\)")
                                                       nil t)))
+
              ;; Do we find a ending double quote or starting variable?
              (if string-start
-                 (let ((string-start (match-beginning 0)))
-                   ;; (message "Double quoted string %s" double-quoted-string)
+                 (let ((string-start (match-beginning 0))
+                       (is-escaped nil))
+
+                   ;; Go to character before match start
+                   (goto-char (1- string-start))
+
+                   ;; Store whether character is escaped or not
+                   (setq is-escaped (looking-at-p "\\\\"))
+
                    ;; Do we find variable inside quote?
                    (goto-char string-start)
-                   (if (looking-at "[^\\]\"")
-                       (progn
-                         (let ((_double-quoted-string (buffer-substring-no-properties start (+ string-start 2))))
+
+                   ;; Process character if it's not escaped
+                   (if is-escaped
+                       (forward-char 2)
+                     (setq open-quote nil)
+                     (if (looking-at "\"")
+                         (let ((_double-quoted-string (buffer-substring-no-properties start (+ string-start 1))))
                            ;; (message "Double quoted string: %s" _double-quoted-string)
-                           (phps-mode-lexer-RETURN_TOKEN 'T_CONSTANT_ENCAPSED_STRING start (+ string-start 2))))
-                     (progn
+                           (phps-mode-lexer-RETURN_TOKEN 'T_CONSTANT_ENCAPSED_STRING start (+ string-start 1)))
                        ;; (message "Found variable after '%s'" (buffer-substring-no-properties start string-start))
                        (phps-mode-lexer-BEGIN phps-mode-lexer-ST_DOUBLE_QUOTES)
                        (phps-mode-lexer-RETURN_TOKEN "\"" start (1+ start))
@@ -1381,7 +1400,8 @@
                (progn
                  ;; (message "Found no ending quote, skipping to end")
                  (phps-mode-lexer-RETURN_TOKEN 'T_ERROR start (point-max))
-                 (phps-mode-lexer-MOVE_FORWARD (point-max)))))))))
+                 (phps-mode-lexer-MOVE_FORWARD (point-max))
+                 (setq open-quote nil))))))))
 
     (phps-mode-lexer-re2c-rule
      (and ST_IN_SCRIPTING (looking-at (concat "<<<" phps-mode-lexer-TABS_AND_SPACES "\\(" phps-mode-lexer-LABEL "\\|'" phps-mode-lexer-LABEL "'\\|\"" phps-mode-lexer-LABEL "\"\\)" phps-mode-lexer-NEWLINE)))
@@ -1600,7 +1620,8 @@
 
 (defun phps-mode-lexer-move-states (start diff)
   "Move lexer states after (or equal to) START with modification DIFF."
-  (setq phps-mode-lexer-states (phps-mode-lexer-get-moved-states phps-mode-lexer-states start diff)))
+  (when phps-mode-lexer-states
+    (setq phps-mode-lexer-states (phps-mode-lexer-get-moved-states phps-mode-lexer-states start diff))))
 
 (defun phps-mode-lexer-get-moved-states (states start diff)
   "Return moved lexer STATES after (or equal to) START with modification DIFF."
@@ -1615,16 +1636,20 @@
               (state-symbol (nth 2 state-object))
               (state-stack (nth 3 state-object)))
           (if (>= state-start start)
-            (let ((new-state-start (+ state-start diff))
-                  (new-state-end (+ state-end diff)))
-              (push (list new-state-start new-state-end state-symbol state-stack) new-states))
-            (push state-object new-states)))))
+              (let ((new-state-start (+ state-start diff))
+                    (new-state-end (+ state-end diff)))
+                (push (list new-state-start new-state-end state-symbol state-stack) new-states))
+            (if (> state-end start)
+                (let ((new-state-end (+ state-end diff)))
+                  (push (list state-start new-state-end state-symbol state-stack) new-states))
+              (push state-object new-states))))))
 
     new-states))
 
 (defun phps-mode-lexer-move-tokens (start diff)
   "Update tokens with moved lexer tokens after or equal to START with modification DIFF."
-  (setq phps-mode-lexer-tokens (phps-mode-lexer-get-moved-tokens phps-mode-lexer-tokens start diff)))
+  (when phps-mode-lexer-tokens
+    (setq phps-mode-lexer-tokens (phps-mode-lexer-get-moved-tokens phps-mode-lexer-tokens start diff))))
 
 (defun phps-mode-lexer-get-moved-tokens (old-tokens start diff)
   "Return moved lexer OLD-TOKENS positions after (or equal to) START with DIFF points."
@@ -1640,10 +1665,13 @@
               (let ((new-token-start (+ token-start diff))
                     (new-token-end (+ token-end diff)))
                 (push `(,token-symbol ,new-token-start . ,new-token-end) new-tokens))
-            (push token new-tokens)))))
-
+            (if (> token-end start)
+                (let ((new-token-end (+ token-end diff)))
+                  (push `(,token-symbol ,token-start . ,new-token-end) new-tokens))
+              (push token new-tokens))))))
     new-tokens))
 
+;; TODO Consider how imenu-index should be affected by this
 (defun phps-mode-lexer-run-incremental ()
   "Run incremental lexer based on `(phps-mode-functions-get-buffer-changes-start)'."
   ;; (message "Running incremental lexer")
@@ -1724,7 +1752,7 @@
   (when (boundp 'semantic-lex-analyzer)
     (setq semantic-lex-analyzer 'phps-mode-lexer-lex))
   (add-hook 'semantic-lex-reset-functions #'phps-mode-lexer-setup)
-  (set (make-local-variable 'phps-mode-lexer-tokens) nil)
+  (setq-local phps-mode-lexer-tokens nil)
   (phps-mode-lexer-run))
 
 (provide 'phps-mode-lexer)

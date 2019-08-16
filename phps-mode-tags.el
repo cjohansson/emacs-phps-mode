@@ -20,6 +20,8 @@
 
 ;;; Commentary:
 
+;; TODO This entire file is WIP / TODO
+
 ;; TODO Make similar to /Users/christianjohansson/Documents/emacs/nextstep/Emacs.app/Contents/Resources/lisp/cedet/semantic/wisent/java-tags.el.gz
 
 
@@ -29,61 +31,6 @@
 
 ;;;; Semantic integration of the PHP LALR parser
 
-;; In semantic/imenu.el, not part of Emacs.
-(defvar semantic-imenu-summary-function)
-
-;;;###autoload
-(defun phps-mode-tags-init ()
-  "Hook run to setup Semantic in `phps-mode'.
-Use the alternate LALR(1) parser."
-
-  (phps-mode-tags--install-parser)
-
-  (require 'semantic/bovine/debug)
-
-  (setq
-
-   ;; Semantic requires this expression for line-comments,
-   ;; if lexing without major mode
-   semantic-lex-comment-regex "\\s<\\|\\(/\\*\\|//\\)"
-
-   ;; Lexical analysis
-   semantic-lex-analyzer 'phps-mode-tags-lexer
-
-   ;; Parsing
-   semantic-tag-expand-function 'semantic-php-expand-tag
-
-   ;; Environment
-   semantic-imenu-summary-function 'semantic-format-tag-prototype
-   imenu-create-index-function 'semantic-create-imenu-index
-   semantic-type-relation-separator-character '("::" "->")
-   semantic-debug-parser-class 'semantic-bovine-debug-parser
-
-   ;; speedbar and imenu buckets name
-   semantic-symbol->name-assoc-list-for-type-parts
-
-   ;; in type parts
-   '((package . "Namespaces")
-     (type     . "Classes")
-     (variable . "Variables")
-     (function . "Functions"))
-   semantic-symbol->name-assoc-list
-
-   ;; everywhere
-   (append semantic-symbol->name-assoc-list-for-type-parts
-           '((namespace  . "Namespaces")))
-
-   ;; navigation inside 'type children
-   senator-step-at-tag-classes '(function variable)
-
-   ;; Remove 'recursive from the default semanticdb find throttle
-   ;; since php imports never recurse.
-   semanticdb-find-default-throttle
-
-   (remq 'recursive (default-value 'semanticdb-find-default-throttle)))
-
-  ;; Setup phpdoc stuff
-  (semantic-php-doc-setup))
 
 (provide 'phps-mode-tags)
 

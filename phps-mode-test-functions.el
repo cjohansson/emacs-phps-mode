@@ -25,16 +25,10 @@
 
 ;;; Code:
 
-(autoload 'phps-mode-test-with-buffer "phps-mode-test")
-(autoload 'phps-mode-functions-verbose "phps-mode-functions")
-(autoload 'phps-mode-functions-indent-line "phps-mode-functions")
-(autoload 'phps-mode-functions-get-lines-indent "phps-mode-functions")
-(autoload 'phps-mode-functions-get-imenu "phps-mode-functions")
-(autoload 'phps-mode-functions-get-moved-lines-indent "phps-mode-functions")
-(autoload 'phps-mode-test-hash-to-list "phps-mode-test")
-(autoload 'phps-mode-lexer-get-tokens "phps-mode-lexer")
-(autoload 'phps-mode-lexer-get-states "phps-mode-lexer")
-(autoload 'should "ert")
+(require 'ert)
+(require 'phps-mode-functions)
+(require 'phps-mode-lexer)
+(require 'phps-mode-test)
 
 (defun phps-mode-test-functions-move-lines-indent ()
   "Test `phps-mode-functions-move-lines-indent'."
@@ -247,6 +241,35 @@
    "Assignment with three-dimensional array with double arrow assignment"
    (should (equal '((1 (0 0)) (2 (0 0)) (3 (1 0)) (4 (2 0)) (5 (1 0)) (6 (0 0))) (phps-mode-test-hash-to-list (phps-mode-functions-get-lines-indent)))))
 
+  (phps-mode-test-with-buffer
+   "<?php\nif ($myCondition) {\n    $myObject->myMethod(myClass::class)\n        ->myMethod2($myArgument2);\n    }"
+   "Object-oriented file with bracket-less namespace with multiple levels, class that extends and implements and functions with optional arguments"
+   (should (equal '((1 (0 0)) (2 (0 0)) (3 (1 0)) (4 (2 0)) (5 (0 0))) (phps-mode-test-hash-to-list (phps-mode-functions-get-lines-indent)))))
+
+  (phps-mode-test-with-buffer
+   "<?php\n$myObj->myFunction()\n    ->mySecondaryFunction();"
+   "Indentation of chained class method calls outside of assignments and conditionals"
+   ;; (message "Tokens: %s" (phps-mode-lexer-get-tokens))
+   (should (equal '((1 (0 0)) (2 (0 0)) (3 (1 0))) (phps-mode-test-hash-to-list (phps-mode-functions-get-lines-indent)))))
+
+  (phps-mode-test-with-buffer
+   "<?php\n\n$myVar = $myClass->meMethod()\n    ->mySecondMethod()\n    ->myThirdMethod()\n->myFourthFunction(\n    $myVariable\n);"
+   "Indentation for chained object operators in assignment with method call with arguments"
+   (should (equal '((1 (0 0)) (2 (0 0)) (3 (0 0)) (4 (1 0)) (5 (1 0)) (6 (1 0)) (7 (2 0)) (8 (0 0))) (phps-mode-test-hash-to-list (phps-mode-functions-get-lines-indent)))))
+
+  (phps-mode-test-with-buffer
+   "<?php\n\n$myResult = !empty($myVar->myMethod3)\n    && $myVar->myMethod\n        && $myVar->myMethod2;\n"
+   "Indentation for chained object operators in assignment"
+   ;; (message "Tokens: %s" (phps-mode-lexer-get-tokens))
+   (should (equal '((1 (0 0)) (2 (0 0)) (3 (0 0)) (4 (1 0)) (5 (1 0))) (phps-mode-test-hash-to-list (phps-mode-functions-get-lines-indent)))))
+
+  (phps-mode-test-with-buffer
+   "<?php\n$array = [\n    'second' => [\n        'hello' => true\n        ]\n];\n\n$array = array(\n    'second' => array(\n        'third' => true\n        )\n);"
+   "Indent multi-dimensional arrays without trailing commas"
+   ;; (message "Tokens: %s" (phps-mode-lexer-get-tokens))
+   (should (equal '((1 (0 0)) (2 (0 0)) (3 (1 0)) (4 (2 0)) (5 (1 0)) (6 (0 0)) (7 (0 0)) (8 (0 0)) (9 (1 0)) (10 (2 0)) (11 (1 0)) (12 (0 0))) (phps-mode-test-hash-to-list (phps-mode-functions-get-lines-indent))))
+   )
+
   )
 
 (defun phps-mode-test-functions-get-lines-indent-psr-2 ()
@@ -417,7 +440,7 @@
    "<?php\n$var =\n    500 .\n    \"200\" .\n    100.0 .\n    '200' .\n    $this->getTail()\n    ->getBottom();"
    "Multi-line assignments"
    ;; (message "Tokens: %s" phps-mode-lexer-tokens)
-   (should (equal '((1 (0 0)) (2 (0 0)) (3 (1 0)) (4 (2 0)) (5 (2 0)) (6 (2 0)) (7 (2 0)) (8 (2 0))) (phps-mode-test-hash-to-list (phps-mode-functions-get-lines-indent)))))
+   (should (equal '((1 (0 0)) (2 (0 0)) (3 (1 0)) (4 (2 0)) (5 (2 0)) (6 (2 0)) (7 (2 0)) (8 (3 0))) (phps-mode-test-hash-to-list (phps-mode-functions-get-lines-indent)))))
 
   )
 
@@ -858,6 +881,34 @@
    "Imenu object-oriented file with bracket-less namespace with multiple levels, class that extends and implements and functions with optional arguments"
    (should (equal (phps-mode-functions-get-imenu) '(("myNamespace\\myNamespace2" ("myClass" ("myFunctionA" . 121) ("myFunctionB" . 174)))))))
 
+  (phps-mode-test-with-buffer
+   "<?php\nclass myClass\n{\n\n    public function myFunction1()\n    {\n        echo \"my string with variable {$variable} inside it\";\n    }\n\n    public function myFunction2()\n    {\n    }\n\n}"
+   "Imenu with double quoted string with variable inside it"
+   (should (equal (phps-mode-functions-get-imenu) '(("myClass" ("myFunction1" . 44)) ("myFunction2" . 153)))))
+
+  )
+
+(defun phps-mode-test-functions-get-moved-imenu ()
+  "Test for moving imenu index."
+
+  (message "Moved imenu %s" (phps-mode-functions-get-moved-imenu '(("myNamespace" ("myClass" ("myFunctionA" . 108) ("myFunctionB" . 161)))) 0 2))
+
+  (should (equal
+           '(("myNamespace" ("myClass" ("myFunctionA" . 110) ("myFunctionB" . 163))))
+           (phps-mode-functions-get-moved-imenu '(("myNamespace" ("myClass" ("myFunctionA" . 108) ("myFunctionB" . 161)))) 0 2)))
+
+  (should (equal
+           '(("myNamespace" ("myClass" ("myFunctionA" . 106) ("myFunctionB" . 159))))
+           (phps-mode-functions-get-moved-imenu '(("myNamespace" ("myClass" ("myFunctionA" . 108) ("myFunctionB" . 161)))) 0 -2)))
+
+  (should (equal
+           '(("myNamespace" ("myClass" ("myFunctionA" . 108) ("myFunctionB" . 171))))
+           (phps-mode-functions-get-moved-imenu '(("myNamespace" ("myClass" ("myFunctionA" . 108) ("myFunctionB" . 161)))) 110 10)))
+
+  (should (equal
+           '(("myNamespace" ("myClass" ("myFunctionA" . 108) ("myFunctionB" . 161))))
+           (phps-mode-functions-get-moved-imenu '(("myNamespace" ("myClass" ("myFunctionA" . 108) ("myFunctionB" . 161)))) 180 10)))
+
   )
 
 (defun phps-mode-test-functions-comment-uncomment-region ()
@@ -894,7 +945,7 @@
   )
 
 ;; TODO Add functionality for (delete-backward-char) as well
-;; TODO Add test for inserting newlines inside token
+;; TODO Test imenu movement here as well
 (defun phps-mode-test-functions-whitespace-modifications ()
   "Test white-space modifications functions."
 
@@ -954,6 +1005,31 @@
 
    )
 
+  (phps-mode-test-with-buffer
+   "<?php\nif (true):\n    $var = \"abc\nanother line here\nmore text here\";\n    $var2 = '123';\nendif;"
+   "Add test for inserting newlines inside token"
+
+   ;; (message "Before Tokens %s" (phps-mode-lexer-get-tokens))
+   ;; (message "Before States: %s" (phps-mode-lexer-get-states))
+
+   (should (equal (phps-mode-lexer-get-tokens)
+                  '((T_OPEN_TAG 1 . 7) (T_IF 7 . 9) ("(" 10 . 11) (T_STRING 11 . 15) (")" 15 . 16) (":" 16 . 17) (T_VARIABLE 22 . 26) ("=" 27 . 28) (T_CONSTANT_ENCAPSED_STRING 29 . 67) (";" 67 . 68) (T_VARIABLE 73 . 78) ("=" 79 . 80) (T_CONSTANT_ENCAPSED_STRING 81 . 86) (";" 86 . 87) (T_ENDIF 88 . 93) (";" 93 . 94))))
+   (should (equal (phps-mode-lexer-get-states)
+                  '((93 94 1 (1 1 1 1 1)) (88 93 1 (1 1 1 1 1)) (86 87 1 (1 1 1 1 1)) (81 86 1 (1 1 1 1 1)) (79 80 1 (1 1 1 1 1)) (73 78 1 (1 1 1 1 1)) (67 68 1 (1 1 1 1 1)) (29 67 1 (1 1 1 1 1)) (27 28 1 (1 1 1 1 1)) (22 26 1 (1 1 1 1 1)) (16 17 1 (1 1 1 1 1)) (15 16 1 (1 1 1 1 1)) (11 15 1 (1 1 1 1 1)) (10 11 1 (1 1 1 1 1)) (7 9 1 (1 1 1 1 1)) (1 7 1 (1 1 1 1 1)))))
+
+   ;; Insert newline and then indent
+   (goto-char 51)
+   (newline-and-indent)
+
+   ;; (message "After Tokens %s" (phps-mode-lexer-get-tokens))
+   ;; (message "After States: %s" (phps-mode-lexer-get-states))
+   (should (equal (phps-mode-lexer-get-tokens)
+                  '((T_OPEN_TAG 1 . 7) (T_IF 7 . 9) ("(" 10 . 11) (T_STRING 11 . 15) (")" 15 . 16) (":" 16 . 17) (T_VARIABLE 22 . 26) ("=" 27 . 28) (T_CONSTANT_ENCAPSED_STRING 29 . 76) (";" 76 . 77) (T_VARIABLE 82 . 87) ("=" 88 . 89) (T_CONSTANT_ENCAPSED_STRING 90 . 95) (";" 95 . 96) (T_ENDIF 97 . 102) (";" 102 . 103))))
+   (should (equal (phps-mode-lexer-get-states)
+                  '((102 103 1 (1 1 1 1 1)) (97 102 1 (1 1 1 1 1)) (95 96 1 (1 1 1 1 1)) (90 95 1 (1 1 1 1 1)) (88 89 1 (1 1 1 1 1)) (82 87 1 (1 1 1 1 1)) (76 77 1 (1 1 1 1 1)) (29 76 1 (1 1 1 1 1)) (27 28 1 (1 1 1 1 1)) (22 26 1 (1 1 1 1 1)) (16 17 1 (1 1 1 1 1)) (15 16 1 (1 1 1 1 1)) (11 15 1 (1 1 1 1 1)) (10 11 1 (1 1 1 1 1)) (7 9 1 (1 1 1 1 1)) (1 7 1 (1 1 1 1 1)))))
+
+   )
+
   )
 
 (defun phps-mode-test-functions ()
@@ -970,6 +1046,7 @@
   (phps-mode-test-functions-get-lines-indent)
   (phps-mode-test-functions-indent-line)
   (phps-mode-test-functions-imenu)
+  (phps-mode-test-functions-get-moved-imenu)
   (phps-mode-test-functions-comment-uncomment-region)
   (phps-mode-test-functions-move-lines-indent)
   (phps-mode-test-functions-whitespace-modifications))

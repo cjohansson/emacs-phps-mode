@@ -25,13 +25,9 @@
 
 ;;; Code:
 
-(autoload 'phps-mode-test-with-buffer "phps-mode-test")
-(autoload 'phps-mode-lexer-init "phps-mode-lexer")
-(autoload 'phps-mode-lexer-get-point-data "phps-mode-lexer")
-(autoload 'phps-mode-lexer-get-moved-tokens "phps-mode-lexer")
-(autoload 'phps-mode-lexer-get-moved-states "phps-mode-lexer")
-(autoload 'phps-mode-lexer-get-tokens "phps-mode-lexer")
-(autoload 'should "ert")
+(require 'ert)
+(require 'phps-mode-lexer)
+(require 'phps-mode-test)
 
 (defun phps-mode-test-lexer-script-boundaries ()
   "Run test for lexer."
@@ -65,6 +61,13 @@
    "Another mixed inline HTML and PHP"
    (should (equal (phps-mode-lexer-get-tokens)
                   '((T_INLINE_HTML 1 . 39) (T_OPEN_TAG 39 . 45) (T_EXIT 47 . 51) (";" 51 . 53) (T_CLOSE_TAG 51 . 53) (T_INLINE_HTML 53 . 78) (T_OPEN_TAG 78 . 84) (T_EXIT 84 . 88) (";" 89 . 91) (T_CLOSE_TAG 89 . 91)))))
+
+  (phps-mode-test-with-buffer
+   "<?php\n\n$k = 'key';\n\necho \"\\$a['{$k}']\";"
+   "A tricky case where variable inside double quote is escaped"
+   ;; (message "Tokens: %s" (phps-mode-lexer-get-tokens))
+   (should (equal (phps-mode-lexer-get-tokens)
+                  '((T_OPEN_TAG 1 . 7) (T_VARIABLE 8 . 10) ("=" 11 . 12) (T_CONSTANT_ENCAPSED_STRING 13 . 18) (";" 18 . 19) (T_ECHO 21 . 25) ("\"" 26 . 27) (T_ENCAPSED_AND_WHITESPACE 27 . 32) (T_CURLY_OPEN 32 . 33) (T_VARIABLE 33 . 35) ("}" 35 . 36) (T_CONSTANT_ENCAPSED_STRING 36 . 38) ("\"" 38 . 39) (";" 39 . 40)))))
 
   )
 
@@ -346,24 +349,24 @@
   "Run test for get moved lexer tokens."
 
   (should (equal
-           '((T_OPEN_TAG 1 . 7) (T_START_HEREDOC 7 . 16) (T_ERROR 21 . 60))
+           '((T_OPEN_TAG 1 . 7) (T_START_HEREDOC 7 . 21) (T_ERROR 21 . 60))
            (phps-mode-lexer-get-moved-tokens '((T_OPEN_TAG 1 . 7) (T_START_HEREDOC 7 . 16) (T_ERROR 16 . 55)) 8 5)))
 
   (should (equal
-           '((T_OPEN_TAG 1 . 7) (T_START_HEREDOC 7 . 16) (T_ERROR 11 . 50))
+           '((T_OPEN_TAG 1 . 7) (T_START_HEREDOC 7 . 11) (T_ERROR 11 . 50))
            (phps-mode-lexer-get-moved-tokens '((T_OPEN_TAG 1 . 7) (T_START_HEREDOC 7 . 16) (T_ERROR 16 . 55)) 8 -5)))
 
   (should (equal
-           '((T_OPEN_TAG 1 . 7) (T_START_HEREDOC 8 . 17) (T_ERROR 17 . 56))
-           (phps-mode-lexer-get-moved-tokens '((T_OPEN_TAG 1 . 7) (T_START_HEREDOC 7 . 16) (T_ERROR 16 . 55)) 7 1)))
+           '((T_OPEN_TAG 1 . 8) (T_START_HEREDOC 8 . 17) (T_ERROR 17 . 56))
+           (phps-mode-lexer-get-moved-tokens '((T_OPEN_TAG 1 . 7) (T_START_HEREDOC 7 . 16) (T_ERROR 16 . 55)) 6 1)))
 
   (should (equal
-           '((T_OPEN_TAG 1 . 7) (T_START_HEREDOC 7 . 16) (T_ERROR 16 . 55))
+           '((T_OPEN_TAG 1 . 7) (T_START_HEREDOC 7 . 16) (T_ERROR 16 . 56))
            (phps-mode-lexer-get-moved-tokens '((T_OPEN_TAG 1 . 7) (T_START_HEREDOC 7 . 16) (T_ERROR 16 . 55)) 20 1)))
 
   (should (equal
-           '((T_OPEN_TAG 2 . 8) (T_START_HEREDOC 8 . 17) (T_ERROR 17 . 56))
-           (phps-mode-lexer-get-moved-tokens '((T_OPEN_TAG 1 . 7) (T_START_HEREDOC 7 . 16) (T_ERROR 16 . 55)) -20 1)))
+           '((T_OPEN_TAG 1 . 7) (T_START_HEREDOC 7 . 16) (T_ERROR 16 . 54))
+           (phps-mode-lexer-get-moved-tokens '((T_OPEN_TAG 1 . 7) (T_START_HEREDOC 7 . 16) (T_ERROR 16 . 55)) 20 -1)))
 
   )
 
@@ -373,13 +376,13 @@
   (should (equal
            '((68 76 1 '(1))
              (10 67 1 '(1))
-             (1 7 1 '(1)))
+             (1 9 1 '(1)))
            
            (phps-mode-lexer-get-moved-states
             '((66 74 1 '(1))
               (8 65 1 '(1))
               (1 7 1 '(1)))
-            7
+            6
             2)))
 
   (should (equal

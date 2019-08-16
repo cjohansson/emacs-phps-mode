@@ -25,13 +25,9 @@
 
 ;;; Code:
 
-(autoload 'phps-mode-test-with-buffer "phps-mode-test")
-(autoload 'phps-mode-functions-verbose "phps-mode-functions")
-(autoload 'phps-mode-functions-indent-line "phps-mode-functions")
-(autoload 'phps-mode-functions-get-lines-indent "phps-mode-functions")
-(autoload 'phps-mode-functions-get-imenu "phps-mode-functions")
-(autoload 'phps-mode-test-hash-to-list "phps-mode-test")
-(autoload 'should "ert")
+(require 'ert)
+(require 'phps-mode-functions)
+(require 'phps-mode-test)
 
 (defun phps-mode-test-syntax-table-quote-region ()
   "Test double quotes, single quotes, curly bracket, square bracket, round bracket, back-quotes on regions."
