@@ -102,24 +102,6 @@
     phps-mode-syntax-table)
   "Syntax table for phps-mode.")
 
-(defun phps-mode-syntax-table-init ()
-  "Apply syntax table."
-  (set-syntax-table phps-mode-syntax-table)
-
-  ;; NOTE: These are required for wrapping region functionality
-  (transient-mark-mode)
-  (electric-pair-local-mode)
-
-  (when (boundp 'electric-pair-pairs)
-
-    ;; Add back-quotes to electric pair list
-    (unless (assoc 96 electric-pair-pairs)
-      (push '(96 . 96) electric-pair-pairs))
-
-    ;; Add single-quotes to electric-pair characters
-    (unless (assoc 39 electric-pair-pairs)
-      (push '(39 . 39) electric-pair-pairs))))
-
 (provide 'phps-mode-syntax-table)
 
 ;;; phps-mode-syntax-table.el ends here

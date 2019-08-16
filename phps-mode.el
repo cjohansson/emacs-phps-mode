@@ -79,7 +79,21 @@
   (use-local-map phps-mode-map)
 
   ;; Syntax table
-  (phps-mode-syntax-table-init)
+  (set-syntax-table phps-mode-syntax-table)
+
+  ;; NOTE: These are required for wrapping region functionality
+  (transient-mark-mode)
+  (electric-pair-local-mode)
+
+  (when (boundp 'electric-pair-pairs)
+
+    ;; Add back-quotes to electric pair list (is not by default)
+    (unless (assoc 96 electric-pair-pairs)
+      (push '(96 . 96) electric-pair-pairs))
+
+    ;; Add single-quotes to electric-pair characters (is not by default)
+    (unless (assoc 39 electric-pair-pairs)
+      (push '(39 . 39) electric-pair-pairs)))
 
   ;; Font lock
   ;; This makes it possible to have full control over syntax coloring from the lexer
@@ -154,14 +168,14 @@
   ;; Initial run of lexer
   (phps-mode-lexer-run)
 
+  ;; Run semantic functions for new buffer
+  (semantic-new-buffer-fcn)
+
   ;; Wisent LALR parser TODO
   ;; (phps-mode-tags-init)
 
   ;; Add compatibility for plug-ins here
-  (run-hooks 'phps-mode-hook)
-
-  ;; Run semantic functions for new buffer
-  (semantic-new-buffer-fcn))
+  (run-hooks 'phps-mode-hook))
 
 (provide 'phps-mode)
 ;;; phps-mode.el ends here
