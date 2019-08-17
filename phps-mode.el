@@ -3,7 +3,7 @@
 ;; Copyright (C) 2018-2019  Free Software Foundation, Inc.
 
 ;; Author: Christian Johansson <github.com/cjohansson>
-;; Maintainer: Christian Johansson <github.com/cjohansson>
+;; Maintainer: Christian Johansson <christian@cvj.se>
 ;; Created: 3 Mar 2018
 ;; Modified: 16 Aug 2019
 ;; Version: 0.2.4
