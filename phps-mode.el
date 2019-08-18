@@ -86,14 +86,17 @@
   (electric-pair-local-mode)
 
   (when (boundp 'electric-pair-pairs)
+    (let ((local-electric-pair-pairs electric-pair-pairs))
 
-    ;; Add back-quotes to electric pair list (is not by default)
-    (unless (assoc 96 electric-pair-pairs)
-      (push '(96 . 96) electric-pair-pairs))
+      ;; Add back-quotes to electric pair list (is not by default)
+      (unless (assoc 96 local-electric-pair-pairs)
+        (push '(96 . 96) local-electric-pair-pairs))
 
-    ;; Add single-quotes to electric-pair characters (is not by default)
-    (unless (assoc 39 electric-pair-pairs)
-      (push '(39 . 39) electric-pair-pairs)))
+      ;; Add single-quotes to electric-pair characters (is not by default)
+      (unless (assoc 39 local-electric-pair-pairs)
+        (push '(39 . 39) local-electric-pair-pairs))
+
+      (setq-local electric-pair-pairs local-electric-pair-pairs)))
 
   ;; Font lock
   ;; This makes it possible to have full control over syntax coloring from the lexer
@@ -104,7 +107,8 @@
   ;; (phps-mode-flymake-init)
 
   ;; Flycheck
-  ;; Add support for flycheck PHP checkers: PHP, PHPMD and PHPCS here, do it once but only if flycheck is available
+  ;; Add support for flycheck PHP checkers: PHP, PHPMD and PHPCS here
+  ;; Do it once but only if flycheck is available
   (when (and (fboundp 'flycheck-add-mode)
              (not phps-mode-flycheck-applied))
     (flycheck-add-mode 'php 'phps-mode)
@@ -113,7 +117,7 @@
     (setq phps-mode-flycheck-applied t))
 
     ;; Custom indentation
-  ;; NOTE Indent-region will call this on each line of region
+  ;; Indent-region will call this on each line of selected region
   (setq-local indent-line-function #'phps-mode-functions-indent-line)
 
   ;; Custom Imenu
