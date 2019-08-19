@@ -67,7 +67,7 @@
   (setq-local require-final-newline nil)
 
   ;; TODO Verify this setting
-  (setq-local parse-sexp-ignore-comments nil)
+  (setq-local parse-sexp-ignore-comments t)
 
   ;; Key-map
   ;; prog-mode will create the key-map and we just modify it here.
@@ -84,19 +84,6 @@
   ;; NOTE: These are required for wrapping region functionality
   (transient-mark-mode)
   (electric-pair-local-mode)
-
-  (when (boundp 'electric-pair-pairs)
-    (let ((local-electric-pair-pairs electric-pair-pairs))
-
-      ;; Add back-quotes to electric pair list (is not by default)
-      (unless (assoc 96 local-electric-pair-pairs)
-        (push '(96 . 96) local-electric-pair-pairs))
-
-      ;; Add single-quotes to electric-pair characters (is not by default)
-      (unless (assoc 39 local-electric-pair-pairs)
-        (push '(39 . 39) local-electric-pair-pairs))
-
-      (setq-local electric-pair-pairs local-electric-pair-pairs)))
 
   ;; Font lock
   ;; This makes it possible to have full control over syntax coloring from the lexer
