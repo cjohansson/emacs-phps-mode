@@ -1718,7 +1718,7 @@
                 (setq old-tokens (nreverse old-tokens))
 
                 ;; Delete all syntax coloring from point of change to end of buffer
-                (set-text-properties previous-token-end (point-max))
+                (set-text-properties previous-token-end (point-max) nil)
                 
                 (let* ((new-tokens (semantic-lex previous-token-start (point-max)))
                        (appended-tokens (append old-tokens new-tokens)))
