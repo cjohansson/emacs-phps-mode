@@ -64,13 +64,14 @@
   "Major mode for PHP with Semantic integration."
 
   ;; TODO Check whether PSR-2 requires final newlines or not
-  (setq-local require-final-newline nil)
+  (setq-local require-final-newline t)
 
-  ;; Verify this setting
+  ;; Skip comments when navigating via syntax-table
   (setq-local parse-sexp-ignore-comments t)
 
   ;; Key-map
   ;; prog-mode will create the key-map and we just modify it here.
+  ;; should break this out to stand-alone variable
   (when (and phps-mode-map
              (not phps-mode-map-applied))
     (define-key phps-mode-map (kbd "C-c /") #'comment-region)
@@ -83,6 +84,8 @@
 
   ;; NOTE: These are required for wrapping region functionality
   (transient-mark-mode)
+
+  ;; TODO Add this as a setting similar to php-mode
   (electric-pair-local-mode)
 
   ;; Font lock

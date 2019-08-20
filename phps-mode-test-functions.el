@@ -884,7 +884,12 @@
   (phps-mode-test-with-buffer
    "<?php\nclass myClass\n{\n\n    public function myFunction1()\n    {\n        echo \"my string with variable {$variable} inside it\";\n    }\n\n    public function myFunction2()\n    {\n    }\n\n}"
    "Imenu with double quoted string with variable inside it"
-   (should (equal (phps-mode-functions-get-imenu) '(("myClass" ("myFunction1" . 44)) ("myFunction2" . 153)))))
+   (should (equal (phps-mode-functions-get-imenu) '(("myClass" ("myFunction1" . 44) ("myFunction2" . 153))))))
+
+  (phps-mode-test-with-buffer
+   "<?php\n\nnamespace MyNamespace;\n\nclass MyClass\n{\n\n    /**\n     *\n     */\n    public function __construct()\n    {\n        if ($test) {\n        }\n    }\n\n    /**\n     *\n     */\n    public function myFunction1()\n    {\n        $this->addMessage(\"My random {$message} here\" . ($random > 1 ? \"A\" : \"\") . \" was here.\");\n    }\n    \n    /**\n     *\n     */\n    public function myFunction2()\n    {\n    }\n\n    /**\n     * It's good\n     */\n    public function myFunction3()\n    {\n    }\n\n    /**\n     *\n     */\n    public function myFunction4()\n    {\n    }\n}\n"
+   "Imenu with double quoted string with variable inside it and concatenated string"
+   (should (equal (phps-mode-functions-get-imenu) '(("MyNamespace" ("MyClass" ("__construct" . 92) ("myFunction1" . 193) ("myFunction2" . 365) ("myFunction3" . 445) ("myFunction4" . 515)))))))
 
   )
 
