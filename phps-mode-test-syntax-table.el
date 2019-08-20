@@ -29,6 +29,8 @@
 (require 'phps-mode-functions)
 (require 'phps-mode-test)
 
+;; TODO Should test `forward-sexp', `forward-word', `forward-list' as well
+
 (defun phps-mode-test-syntax-table-quote-region ()
   "Test double quotes, single quotes, curly bracket, square bracket, round bracket, back-quotes on regions."
 

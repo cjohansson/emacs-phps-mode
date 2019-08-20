@@ -102,15 +102,13 @@
 
     ;; GENERIC COMMENT FENCE
 
-    ;; C-style comments
-    (modify-syntax-entry ?/ ". 14" phps-mode-syntax-table)
+    ;; Double slash starts comment type b
+    (modify-syntax-entry ?/ ". 124b" phps-mode-syntax-table)
     (modify-syntax-entry ?* ". 23" phps-mode-syntax-table)
 
     ;; Newline end comment type b
     (modify-syntax-entry ?\n "> b" phps-mode-syntax-table)
-
-    ;; Double slash starts comment type b
-    (modify-syntax-entry ?/ ". 12b" phps-mode-syntax-table)
+    (modify-syntax-entry ?\r "> b" phps-mode-syntax-table)
 
 
     phps-mode-syntax-table)

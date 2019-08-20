@@ -66,7 +66,7 @@
   ;; TODO Check whether PSR-2 requires final newlines or not
   (setq-local require-final-newline nil)
 
-  ;; TODO Verify this setting
+  ;; Verify this setting
   (setq-local parse-sexp-ignore-comments t)
 
   ;; Key-map
