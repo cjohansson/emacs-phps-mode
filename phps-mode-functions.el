@@ -269,7 +269,9 @@
 
                 (cond
 
-                 ((string= token "{")
+                 ((or (string= token "{")
+                      (equal token 'T_CURLY_OPEN)
+                      (equal token 'T_DOLLAR_OPEN_CURLY_BRACES))
                   (setq imenu-nesting-level (1+ imenu-nesting-level)))
 
                  ((string= token "}")

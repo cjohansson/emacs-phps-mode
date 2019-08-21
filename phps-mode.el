@@ -2,11 +2,11 @@
 
 ;; Copyright (C) 2018-2019  Free Software Foundation, Inc.
 
-;; Author: Christian Johansson <github.com/cjohansson>
+;; Author: Christian Johansson <christian@cvj.se>
 ;; Maintainer: Christian Johansson <christian@cvj.se>
 ;; Created: 3 Mar 2018
-;; Modified: 16 Aug 2019
-;; Version: 0.2.4
+;; Modified: 21 Aug 2019
+;; Version: 0.2.6
 ;; Keywords: tools, convenience
 ;; URL: https://github.com/cjohansson/emacs-phps-mode
 
@@ -64,13 +64,14 @@
   "Major mode for PHP with Semantic integration."
 
   ;; TODO Check whether PSR-2 requires final newlines or not
-  (setq-local require-final-newline nil)
+  (setq-local require-final-newline t)
 
-  ;; TODO Verify this setting
-  (setq-local parse-sexp-ignore-comments nil)
+  ;; Skip comments when navigating via syntax-table
+  (setq-local parse-sexp-ignore-comments t)
 
   ;; Key-map
   ;; prog-mode will create the key-map and we just modify it here.
+  ;; should break this out to stand-alone variable
   (when (and phps-mode-map
              (not phps-mode-map-applied))
     (define-key phps-mode-map (kbd "C-c /") #'comment-region)
@@ -79,7 +80,13 @@
   (use-local-map phps-mode-map)
 
   ;; Syntax table
-  (phps-mode-syntax-table-init)
+  (set-syntax-table phps-mode-syntax-table)
+
+  ;; NOTE: These are required for wrapping region functionality
+  (transient-mark-mode)
+
+  ;; TODO Add this as a setting similar to php-mode
+  (electric-pair-local-mode)
 
   ;; Font lock
   ;; This makes it possible to have full control over syntax coloring from the lexer
@@ -90,7 +97,8 @@
   ;; (phps-mode-flymake-init)
 
   ;; Flycheck
-  ;; Add support for flycheck PHP checkers: PHP, PHPMD and PHPCS here, do it once but only if flycheck is available
+  ;; Add support for flycheck PHP checkers: PHP, PHPMD and PHPCS here
+  ;; Do it once but only if flycheck is available
   (when (and (fboundp 'flycheck-add-mode)
              (not phps-mode-flycheck-applied))
     (flycheck-add-mode 'php 'phps-mode)
@@ -99,7 +107,7 @@
     (setq phps-mode-flycheck-applied t))
 
     ;; Custom indentation
-  ;; NOTE Indent-region will call this on each line of region
+  ;; Indent-region will call this on each line of selected region
   (setq-local indent-line-function #'phps-mode-functions-indent-line)
 
   ;; Custom Imenu
@@ -135,16 +143,33 @@
   (add-hook 'after-change-functions #'phps-mode-functions-after-change)
 
   ;; Lexer
-  (phps-mode-lexer-init)
+  (if (and (boundp 'semantic-lex-syntax-table)
+           (boundp 'phps-mode-syntax-table))
+      (setq-local semantic-lex-syntax-table phps-mode-syntax-table)
+    (signal 'error "Semantic or regular syntax-table for PHPs-mode missing!"))
+
+  ;; Semantic
+  (if (boundp 'semantic-lex-analyzer)
+      (setq-local semantic-lex-analyzer #'phps-mode-lexer-lex)
+    (signal 'error "Semantic semantic-lex-analyzer missing!"))
+
+  ;; Set semantic-lex initializer function
+  (add-hook 'semantic-lex-reset-functions #'phps-mode-lexer-setup)
+
+  ;; Reset tokens
+  (setq-local phps-mode-lexer-tokens nil)
+
+  ;; Initial run of lexer
+  (phps-mode-lexer-run)
+
+  ;; Run semantic functions for new buffer
+  (semantic-new-buffer-fcn)
 
   ;; Wisent LALR parser TODO
   ;; (phps-mode-tags-init)
 
   ;; Add compatibility for plug-ins here
-  (run-hooks 'phps-mode-hook)
-
-  ;; Run semantic functions for new buffer
-  (semantic-new-buffer-fcn))
+  (run-hooks 'phps-mode-hook))
 
 (provide 'phps-mode)
 ;;; phps-mode.el ends here

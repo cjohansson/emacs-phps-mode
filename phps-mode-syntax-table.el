@@ -99,26 +99,20 @@
     ;; Treat back-quoted string as string quote
     (modify-syntax-entry ?` "\"" phps-mode-syntax-table)
 
+
+    ;; GENERIC COMMENT FENCE
+
+    ;; Double slash starts comment type b
+    (modify-syntax-entry ?/ ". 124b" phps-mode-syntax-table)
+    (modify-syntax-entry ?* ". 23" phps-mode-syntax-table)
+
+    ;; Newline end comment type b
+    (modify-syntax-entry ?\n "> b" phps-mode-syntax-table)
+    (modify-syntax-entry ?\r "> b" phps-mode-syntax-table)
+
+
     phps-mode-syntax-table)
   "Syntax table for phps-mode.")
-
-(defun phps-mode-syntax-table-init ()
-  "Apply syntax table."
-  (set-syntax-table phps-mode-syntax-table)
-
-  ;; NOTE: These are required for wrapping region functionality
-  (transient-mark-mode)
-  (electric-pair-local-mode)
-
-  (when (boundp 'electric-pair-pairs)
-
-    ;; Add back-quotes to electric pair list
-    (unless (assoc 96 electric-pair-pairs)
-      (push '(96 . 96) electric-pair-pairs))
-
-    ;; Add single-quotes to electric-pair characters
-    (unless (assoc 39 electric-pair-pairs)
-      (push '(39 . 39) electric-pair-pairs))))
 
 (provide 'phps-mode-syntax-table)
 

@@ -2,7 +2,7 @@
 /**
  * Some comments here
  * @todo was here
- **/
+ */
 
 class MyClass
 {
@@ -39,6 +39,7 @@ class MyClass
 
         $this->var = 'abc';
         $this->var = '\\';
+        $this->var2 = "abc{$this->var} is good";
     }
 
     public function heres_more_information() {
