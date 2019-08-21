@@ -197,8 +197,16 @@
   (when (boundp 'semantic-lex-end-point)
     (setq semantic-lex-end-point position)))
 
-(defun phps-mode-lexer-COLOR_SYNTAX (token start end)
-  "Syntax coloring for TOKEN from START to END."
+(defun phps-mode-lexer-set-region-syntax-color (start end properties)
+  "Do syntax coloring for region START to END with PROPERTIES."
+  (with-silent-modifications (set-text-properties start end properties)))
+
+(defun phps-mode-lexer-clear-region-syntax-color (start end)
+  "Clear region of syntax coloring from START to END."
+  (with-silent-modifications (set-text-properties start end nil)))
+
+(defun phps-mode-lexer-get-token-syntax-color (token)
+  "Return syntax color for TOKEN."
   ;; Syntax coloring
   ;; see https://www.gnu.org/software/emacs/manual/html_node/elisp/Faces-for-Font-Lock.html#Faces-for-Font-Lock
   ;; (message "Color token %s %s %s" token start end)
@@ -207,28 +215,28 @@
    ((or
      (string= token 'T_VARIABLE)
      (string= token 'T_STRING_VARNAME))
-    (set-text-properties start end (list 'font-lock-face 'font-lock-variable-name-face)))
+    (list 'font-lock-face 'font-lock-variable-name-face))
 
    ((string= token 'T_INLINE_HTML)
 
-    (set-text-properties start end (list 'font-lock-face 'font-lock-comment-delimiter-face))
-
     ;; Optional support for mmm-mode below
-    (if (and (boundp 'phps-mode-inline-mmm-submode)
-             phps-mode-inline-mmm-submode
-             (fboundp 'mmm-make-region))
-        (progn
-          ;; (message "Added mmm-submode '%s' from %s - %s" phps-mode-inline-mmm-submode start end)
+    ;; (if (and (boundp 'phps-mode-inline-mmm-submode)
+    ;;          phps-mode-inline-mmm-submode
+    ;;          (fboundp 'mmm-make-region))
+    ;;     (progn
+    ;;       ;; (message "Added mmm-submode '%s' from %s - %s" phps-mode-inline-mmm-submode start end)
           
-          ;; (mmm-make-region phps-mode-inline-mmm-submode start end)
-          )
-      ))
+    ;;       ;; (mmm-make-region phps-mode-inline-mmm-submode start end)
+    ;;       )
+    ;;   )
+
+    (list 'font-lock-face 'font-lock-comment-delimiter-face))
 
    ((string= token 'T_COMMENT)
-    (set-text-properties start end (list 'font-lock-face 'font-lock-comment-face)))
+    (list 'font-lock-face 'font-lock-comment-face))
 
    ((string= token 'T_DOC_COMMENT)
-    (set-text-properties start end (list 'font-lock-face 'font-lock-doc-face)))
+    (list 'font-lock-face 'font-lock-doc-face))
 
    ((or
      (string= token 'T_STRING)
@@ -237,7 +245,7 @@
      (string= token 'T_NUM_STRING)
      (string= token 'T_DNUMBER)
      (string= token 'T_LNUMBER))
-    (set-text-properties start end (list 'font-lock-face 'font-lock-string-face)))
+    (list 'font-lock-face 'font-lock-string-face))
 
    ((or
      (string= token 'T_DOLLAR_OPEN_CURLY_BRACES)
@@ -311,7 +319,7 @@
      (string= token 'T_ARRAY)
      (string= token 'T_CALLABLE)
      )
-    (set-text-properties start end (list 'font-lock-face 'font-lock-keyword-face)))
+    (list 'font-lock-face 'font-lock-keyword-face))
 
    ((or
      (string= token 'T_OPEN_TAG)
@@ -369,31 +377,32 @@
      (string= token 'T_BOOL_CAST)
      (string= token 'T_UNSET_CAST)
      )
-    (set-text-properties start end (list 'font-lock-face 'font-lock-constant-face)))
+    (list 'font-lock-face 'font-lock-constant-face))
 
    ((string= token 'T_ERROR)
-    (set-text-properties start end (list 'font-lock-face 'font-lock-warning-face)))
+    (list 'font-lock-face 'font-lock-warning-face))
 
-   (t (set-text-properties start end (list 'font-lock-face 'font-lock-constant-face))))
-  )
+   (t (list 'font-lock-face 'font-lock-constant-face))
+   ))
 
 (defun phps-mode-lexer-RETURN_TOKEN (token start end)
-  "Push TOKEN to list with START and END."
-  (phps-mode-lexer-COLOR_SYNTAX token start end)
+"Push TOKEN to list with START and END."
+(phps-mode-lexer-set-region-syntax-color
+ start end  (phps-mode-lexer-get-token-syntax-color token))
 
-  ;; (when (and
-  ;;        phps-mode-lexer-prepend_trailing_brace
-  ;;        (> end (- (point-max) 2)))
-  ;;   ;; (message "Adding trailing brace")
-  ;;   (setq phps-mode-lexer-prepend_trailing_brace nil)
-  ;;   (phps-mode-lexer-RETURN_TOKEN "}" (- end 1) end))
+;; (when (and
+;;        phps-mode-lexer-prepend_trailing_brace
+;;        (> end (- (point-max) 2)))
+;;   ;; (message "Adding trailing brace")
+;;   (setq phps-mode-lexer-prepend_trailing_brace nil)
+;;   (phps-mode-lexer-RETURN_TOKEN "}" (- end 1) end))
 
-  ;; (message "Added token %s (%s-%s)" token start end)
+;; (message "Added token %s (%s-%s)" token start end)
 
-  ;; Push token start, end, lexer state and state stack to variable
-  (push (list start end phps-mode-lexer-STATE phps-mode-lexer-state_stack) phps-mode-lexer-states)
+;; Push token start, end, lexer state and state stack to variable
+(push (list start end phps-mode-lexer-STATE phps-mode-lexer-state_stack) phps-mode-lexer-states)
 
-  (semantic-lex-push-token (semantic-lex-token token start end)))
+(semantic-lex-push-token (semantic-lex-token token start end)))
 
 ;; TODO Figure out what this does
 (defun phps-mode-lexer-SKIP_TOKEN (_token _start _end)
@@ -1605,7 +1614,7 @@
   ;; Does lexer start from the beginning of buffer?
   (when (and (eq start 1)
              end)
-    (set-text-properties (point-min) (point-max) nil)
+    (phps-mode-lexer-clear-region-syntax-color (point-min) (point-max))
 
     (setq phps-mode-lexer-states nil)
     (phps-mode-lexer-BEGIN phps-mode-lexer-ST_INITIAL)))
@@ -1718,7 +1727,7 @@
                 (setq old-tokens (nreverse old-tokens))
 
                 ;; Delete all syntax coloring from point of change to end of buffer
-                (set-text-properties previous-token-end (point-max) nil)
+                (phps-mode-lexer-clear-region-syntax-color previous-token-end (point-max))
                 
                 (let* ((new-tokens (semantic-lex previous-token-start (point-max)))
                        (appended-tokens (append old-tokens new-tokens)))
