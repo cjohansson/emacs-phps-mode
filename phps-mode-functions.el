@@ -147,8 +147,18 @@
       (setq lines-in-string (1+ lines-in-string)))
     lines-in-string))
 
+(defun phps-mode-functions--get-inline-html-indentation (inline-html tag-level curly-bracket-level square-bracket-level round-bracket-level)
+  "Generate a list of indentation for each line in INLINE-HTML, working incrementally on TAG-LEVEL, CURLY-BRACKET-LEVEL, SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
+  (let ((lines-in-string 0)
+        (start 0))
+    (while (string-match "\\([\n\C-m]\\)\\|\\(<[a-zA-Z]+\\)\\|\\(</[a-zA-Z]+\\)\\|\\(\\[\\)\\|\\()\\)\\|\\((\\)" string start)
+      (setq start (match-end 0))
+      (setq lines-in-string (1+ lines-in-string)))
+    lines-in-string))
+
+;; TODO Make this function support incremental process
 (defun phps-mode-functions--process-current-buffer ()
-  "Process current buffer and generation indentation and Imenu in one iteration.  Complexity: O(n)."
+  "Generate indexes for indentation and imenu for current buffer in one pass.  Complexity: O(n)."
   (if (boundp 'phps-mode-lexer-tokens)
       (save-excursion
         ;; (message "Processing current buffer")
@@ -159,6 +169,10 @@
               (in-heredoc-started-this-line nil)
               (in-heredoc-ended-this-line nil)
               (in-inline-control-structure nil)
+              (inline-html-tag-level 0)
+              (inline-html-curly-bracket-level 0)
+              (inline-html-square-bracket-level 0)
+              (inline-html-round-bracket-level 0)
               (first-token-is-inline-html nil)
               (after-special-control-structure nil)
               (after-special-control-structure-token nil)
@@ -882,6 +896,7 @@
 
                           ;; Inline HTML should have no indent
                           (when (equal token 'T_INLINE_HTML)
+                            ;; TODO Add inline-html indentation here
                             (setq column-level-end 0))
 
                           ;; (message "Token %s starts at %s and ends at %s indent %s %s" next-token token-start-line-number token-end-line-number column-level-end tuning-level)
