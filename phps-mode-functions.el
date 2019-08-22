@@ -1024,7 +1024,7 @@
 
               )))))))
 
-;; TODO Consider how imenu-index should be affected by this
+;; TODO Consider how indentation and imenu-index should be affected by this
 (defun phps-mode-functions-after-change (start _stop _length)
   "Track buffer change from START to STOP with length LENGTH."
   (when (and (string= major-mode "phps-mode")

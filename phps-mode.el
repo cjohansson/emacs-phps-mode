@@ -48,6 +48,15 @@
 (require 'phps-mode-tags)
 (require 'semantic)
 
+(defvar phps-mode-require-final-newline t
+  "Whether or not we want to require a final newline.")
+
+(defvar phps-mode-use-electric-pair-mode t
+  "Whether or not we want to use electric pair mode.")
+
+(defvar phps-mode-use-transient-mark-mode t
+  "Whether or not we want to use transient mark mode.")
+
 (defvar phps-mode-use-psr-2 t
   "Whether to use PSR-2 guidelines for white-space or not.")
 
@@ -63,15 +72,15 @@
 (define-derived-mode phps-mode prog-mode "PHPs"
   "Major mode for PHP with Semantic integration."
 
-  ;; TODO Check whether PSR-2 requires final newlines or not
-  (setq-local require-final-newline t)
+  (when phps-mode-require-final-newline
+    (setq-local require-final-newline t))
 
   ;; Skip comments when navigating via syntax-table
   (setq-local parse-sexp-ignore-comments t)
 
   ;; Key-map
   ;; prog-mode will create the key-map and we just modify it here.
-  ;; should break this out to stand-alone variable
+  ;; TODO should break this out to stand-alone variable
   (when (and phps-mode-map
              (not phps-mode-map-applied))
     (define-key phps-mode-map (kbd "C-c /") #'comment-region)
@@ -82,11 +91,13 @@
   ;; Syntax table
   (set-syntax-table phps-mode-syntax-table)
 
-  ;; NOTE: These are required for wrapping region functionality
-  (transient-mark-mode)
+  (when phps-mode-use-transient-mark-mode
+    ;; NOTE: These are required for wrapping region functionality
+    (transient-mark-mode))
 
-  ;; TODO Add this as a setting similar to php-mode
-  (electric-pair-local-mode)
+  ;; TODO Add this as a menu setting similar to php-mode
+  (when phps-mode-use-electric-pair-mode
+    (electric-pair-local-mode))
 
   ;; Font lock
   ;; This makes it possible to have full control over syntax coloring from the lexer
@@ -143,15 +154,10 @@
   (add-hook 'after-change-functions #'phps-mode-functions-after-change)
 
   ;; Lexer
-  (if (and (boundp 'semantic-lex-syntax-table)
-           (boundp 'phps-mode-syntax-table))
-      (setq-local semantic-lex-syntax-table phps-mode-syntax-table)
-    (signal 'error "Semantic or regular syntax-table for PHPs-mode missing!"))
+  (setq-local semantic-lex-syntax-table phps-mode-syntax-table)
 
   ;; Semantic
-  (if (boundp 'semantic-lex-analyzer)
-      (setq-local semantic-lex-analyzer #'phps-mode-lexer-lex)
-    (signal 'error "Semantic semantic-lex-analyzer missing!"))
+  (setq-local semantic-lex-analyzer #'phps-mode-lexer-lex)
 
   ;; Set semantic-lex initializer function
   (add-hook 'semantic-lex-reset-functions #'phps-mode-lexer-setup)
