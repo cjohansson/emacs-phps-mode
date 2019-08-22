@@ -153,22 +153,39 @@
         (start 0)
         (indent-start 0)
         (indent-end 0)
-        (line-indents nil))
+        (line-indents nil)
+        (first-object-on-line t)
+        (first-object-is-nesting-increase nil))
     (while (string-match "\\([\n\C-m]\\)\\|\\(<[a-zA-Z]+\\)\\|\\(</[a-zA-Z]+\\)\\|\\(\\[\\)\\|\\()\\)\\|\\((\\)" inline-html start)
       (let* ((end (match-end 0))
              (string (substring inline-html (match-beginning 0) end)))
+
         (cond
 
          ((string= string "\n")
+
+          (setq lines-in-string (1+ lines-in-string))
+
+          (let ((temp-indent indent))
+            (when first-object-is-nesting-increase
+              ;;(message "Decreasing indent with one since first object was a nesting decrease")
+              (setq temp-indent (1- indent)))
+            ;;(message "Line %s has indent %s" lines-in-string temp-indent)
+            (push temp-indent line-indents))
+
           (setq indent-end (+ tag-level curly-bracket-level square-bracket-level round-bracket-level))
+          ;; (message "Encountered a new-line")
           (if (> indent-end indent-start)
-              (setq indent (1+ indent))
+              (progn
+                ;; (message "Increasing indent since %s is above %s" indent-end indent-start)
+                (setq indent (1+ indent)))
             (when (< indent-end indent-start)
+              ;; (message "Decreasing indent since %s is below %s" indent-end indent-start)
               (setq indent (1- indent))))
 
-          (push indent line-indents)
           (setq indent-start indent-end)
-          (setq lines-in-string (1+ lines-in-string)))
+          (setq first-object-on-line t)
+          (setq first-object-is-nesting-increase nil))
 
          ((string= string "(")
           (setq round-bracket-level (1+ round-bracket-level)))
@@ -192,6 +209,15 @@
           (setq tag-level (1- tag-level)))
 
          )
+
+        (when first-object-on-line
+          (unless (string= string "\n")
+            (setq first-object-on-line nil)
+            (setq indent-end (+ tag-level curly-bracket-level square-bracket-level round-bracket-level))
+            (when (< indent-end indent-start)
+              (message "First object was nesting decrease")
+              (setq first-object-is-nesting-increase t))))
+
         (setq start end)))
     (list line-indents indent tag-level curly-bracket-level square-bracket-level round-bracket-level)))
 
@@ -208,6 +234,7 @@
               (in-heredoc-started-this-line nil)
               (in-heredoc-ended-this-line nil)
               (in-inline-control-structure nil)
+              (inline-html-indent nil)
               (inline-html-tag-level 0)
               (inline-html-curly-bracket-level 0)
               (inline-html-square-bracket-level 0)
@@ -934,24 +961,37 @@
                             (setq column-level-end 0))
 
                           ;; Inline HTML should have no indent
-                          (when (equal token 'T_INLINE_HTML)
-                            ;; TODO Add inline-html indentation here
-                            (setq column-level-end 0))
+                          (if (equal token 'T_INLINE_HTML)
+                              (progn
+                                (let ((token-line-number-diff token-start-line-number)
+                                      (inline-html-indents (phps-mode-functions--get-inline-html-indentation (buffer-substring-no-properties token-start token-end) inline-html-indent inline-html-tag-level inline-html-curly-bracket-level inline-html-square-bracket-level inline-html-round-bracket-level)))
 
-                          ;; (message "Token %s starts at %s and ends at %s indent %s %s" next-token token-start-line-number token-end-line-number column-level-end tuning-level)
+                                  ;; Update indexes
+                                  (setq inline-html-indent (nth 1 inline-html-indents))
+                                  (setq inline-html-tag-level (nth 2 inline-html-indents))
+                                  (setq inline-html-curly-bracket-level (nth 3 inline-html-indents))
+                                  (setq inline-html-square-bracket-level (nth 4 inline-html-indents))
+                                  (setq inline-html-round-bracket-level (nth 5 inline-html-indents))
 
-                          ;; Indent doc-comment lines with 1 tuning
-                          (when (equal token 'T_DOC_COMMENT)
-                            (setq tuning-level 1))
+                                  ;; Iterate lines here and add indents
+                                  (dolist (item (nth 0 inline-html-indents))
+                                    (puthash token-line-number-diff (list item 0) line-indents)
+                                    (setq token-line-number-diff (1+ token-line-number-diff)))))
 
-                          (let ((token-line-number-diff (1- (- token-end-line-number token-start-line-number))))
-                            (while (>= token-line-number-diff 0)
-                              (puthash (- token-end-line-number token-line-number-diff) `(,column-level-end ,tuning-level) line-indents)
-                              ;; (message "Saved line %s indent %s %s" (- token-end-line-number token-line-number-diff) column-level tuning-level)
-                              (setq token-line-number-diff (1- token-line-number-diff))))
+                            ;; (message "Token %s starts at %s and ends at %s indent %s %s" next-token token-start-line-number token-end-line-number column-level-end tuning-level)
 
-                          ;; Rest tuning-level used for comments
-                          (setq tuning-level 0)))
+                            ;; Indent doc-comment lines with 1 tuning
+                            (when (equal token 'T_DOC_COMMENT)
+                              (setq tuning-level 1))
+
+                            (let ((token-line-number-diff (1- (- token-end-line-number token-start-line-number))))
+                              (while (>= token-line-number-diff 0)
+                                (puthash (- token-end-line-number token-line-number-diff) `(,column-level-end ,tuning-level) line-indents)
+                                ;; (message "Saved line %s indent %s %s" (- token-end-line-number token-line-number-diff) column-level tuning-level)
+                                (setq token-line-number-diff (1- token-line-number-diff))))
+
+                            ;; Rest tuning-level used for comments
+                            (setq tuning-level 0))))
 
 
                       ;; Indent token-less lines here in between last tokens if distance is more than 1 line

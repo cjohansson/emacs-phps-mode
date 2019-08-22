@@ -1037,6 +1037,22 @@
 
   )
 
+(defun phps-mode-test-functions-get-inline-html-indentation ()
+  "Test function."
+
+  (should (equal
+           '(0 1 2 1 1 2 1 0)
+           (nth 0 (phps-mode-functions--get-inline-html-indentation
+                   "<html>\n<head>\n<title>MyTitle</title>\n</head>\n<body>\n<p>My paragraph</p>\n</body>\n</html>\n"
+                   0
+                   0
+                   0
+                   0
+                   0
+                   ))))
+  
+  )
+
 (defun phps-mode-test-functions ()
   "Run test for functions."
   ;; (setq debug-on-error t)
@@ -1054,7 +1070,8 @@
   (phps-mode-test-functions-get-moved-imenu)
   (phps-mode-test-functions-comment-uncomment-region)
   (phps-mode-test-functions-move-lines-indent)
-  (phps-mode-test-functions-whitespace-modifications))
+  (phps-mode-test-functions-whitespace-modifications)
+  (phps-mode-test-functions-get-inline-html-indentation))
 
 (phps-mode-test-functions)
 
