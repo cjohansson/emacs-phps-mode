@@ -147,14 +147,53 @@
       (setq lines-in-string (1+ lines-in-string)))
     lines-in-string))
 
-(defun phps-mode-functions--get-inline-html-indentation (inline-html tag-level curly-bracket-level square-bracket-level round-bracket-level)
-  "Generate a list of indentation for each line in INLINE-HTML, working incrementally on TAG-LEVEL, CURLY-BRACKET-LEVEL, SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
+(defun phps-mode-functions--get-inline-html-indentation (inline-html indent tag-level curly-bracket-level square-bracket-level round-bracket-level)
+  "Generate a list of indentation for each line in INLINE-HTML, working incrementally on INDENT, TAG-LEVEL, CURLY-BRACKET-LEVEL, SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
   (let ((lines-in-string 0)
-        (start 0))
-    (while (string-match "\\([\n\C-m]\\)\\|\\(<[a-zA-Z]+\\)\\|\\(</[a-zA-Z]+\\)\\|\\(\\[\\)\\|\\()\\)\\|\\((\\)" string start)
-      (setq start (match-end 0))
-      (setq lines-in-string (1+ lines-in-string)))
-    lines-in-string))
+        (start 0)
+        (indent-start 0)
+        (indent-end 0)
+        (line-indents nil))
+    (while (string-match "\\([\n\C-m]\\)\\|\\(<[a-zA-Z]+\\)\\|\\(</[a-zA-Z]+\\)\\|\\(\\[\\)\\|\\()\\)\\|\\((\\)" inline-html start)
+      (let* ((end (match-end 0))
+             (string (substring inline-html (match-beginning 0) end)))
+        (cond
+
+         ((string= string "\n")
+          (setq indent-end (+ tag-level curly-bracket-level square-bracket-level round-bracket-level))
+          (if (> indent-end indent-start)
+              (setq indent (1+ indent))
+            (when (< indent-end indent-start)
+              (setq indent (1- indent))))
+
+          (push indent line-indents)
+          (setq indent-start indent-end)
+          (setq lines-in-string (1+ lines-in-string)))
+
+         ((string= string "(")
+          (setq round-bracket-level (1+ round-bracket-level)))
+         ((string= string ")")
+          (setq round-bracket-level (1- round-bracket-level)))
+
+         ((string= string "[")
+          (setq square-bracket-level (1+ square-bracket-level)))
+         ((string= string "]")
+          (setq square-bracket-level (1- square-bracket-level)))
+
+         ((string= string "{")
+          (setq curly-bracket-level (1+ curly-bracket-level)))
+         ((string= string "}")
+          (setq curly-bracket-level (1- curly-bracket-level)))
+
+         ((string-match "<[a-zA-Z]+" string)
+          (setq tag-level (1+ tag-level)))
+
+         ((string-match "</[a-zA-Z]+" string)
+          (setq tag-level (1- tag-level)))
+
+         )
+        (setq start end)))
+    (list line-indents indent tag-level curly-bracket-level square-bracket-level round-bracket-level)))
 
 ;; TODO Make this function support incremental process
 (defun phps-mode-functions--process-current-buffer ()
