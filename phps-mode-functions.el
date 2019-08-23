@@ -23,6 +23,7 @@
 
 ;;; Code:
 
+(require 'subr-x)
 (require 'phps-mode-lexer)
 
 (defvar phps-mode-functions-allow-after-change t
@@ -149,6 +150,10 @@
 
 (defun phps-mode-functions--get-inline-html-indentation (inline-html indent tag-level curly-bracket-level square-bracket-level round-bracket-level)
   "Generate a list of indentation for each line in INLINE-HTML, working incrementally on INDENT, TAG-LEVEL, CURLY-BRACKET-LEVEL, SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
+  ;; Add trailing newline if missing
+  (unless (string-match "\n$" inline-html)
+    (setq inline-html (concat inline-html "\n")))
+
   (let ((lines-in-string 0)
         (start 0)
         (indent-start 0)
@@ -215,7 +220,7 @@
             (setq first-object-on-line nil)
             (setq indent-end (+ tag-level curly-bracket-level square-bracket-level round-bracket-level))
             (when (< indent-end indent-start)
-              (message "First object was nesting decrease")
+              ;; (message "First object was nesting decrease")
               (setq first-object-is-nesting-increase t))))
 
         (setq start end)))
@@ -234,7 +239,7 @@
               (in-heredoc-started-this-line nil)
               (in-heredoc-ended-this-line nil)
               (in-inline-control-structure nil)
-              (inline-html-indent nil)
+              (inline-html-indent 0)
               (inline-html-tag-level 0)
               (inline-html-curly-bracket-level 0)
               (inline-html-square-bracket-level 0)
@@ -910,8 +915,7 @@
 
                       ;; Inline HTML should have zero indent
                       (when first-token-is-inline-html
-                        (setq column-level-start 0))
-
+                        (setq column-level-start inline-html-indent))
 
                       ;; Save line indent
                       (when phps-mode-functions-verbose
@@ -919,7 +923,6 @@
 
                       (when (> token-start-line-number 0)
                         (puthash token-start-line-number `(,column-level-start ,tuning-level) line-indents))
-
 
                       ;; Support trailing indent decrements
                       (when temp-post-indent
@@ -961,10 +964,15 @@
                             (setq column-level-end 0))
 
                           ;; Inline HTML should have no indent
-                          (if (equal token 'T_INLINE_HTML)
+                          (if (and (equal token 'T_INLINE_HTML)
+                                   (not (string= (string-trim (buffer-substring-no-properties token-start token-end)) "")))
+                              
                               (progn
                                 (let ((token-line-number-diff token-start-line-number)
                                       (inline-html-indents (phps-mode-functions--get-inline-html-indentation (buffer-substring-no-properties token-start token-end) inline-html-indent inline-html-tag-level inline-html-curly-bracket-level inline-html-square-bracket-level inline-html-round-bracket-level)))
+
+                                  (when phps-mode-functions-verbose
+                                    (message "Received inline html indent: %s" inline-html-indents))
 
                                   ;; Update indexes
                                   (setq inline-html-indent (nth 1 inline-html-indents))
@@ -978,6 +986,9 @@
                                     (puthash token-line-number-diff (list item 0) line-indents)
                                     (setq token-line-number-diff (1+ token-line-number-diff)))))
 
+                            (when (equal token 'T_INLINE_HTML)
+                              (setq column-level-end inline-html-indent))
+                            
                             ;; (message "Token %s starts at %s and ends at %s indent %s %s" next-token token-start-line-number token-end-line-number column-level-end tuning-level)
 
                             ;; Indent doc-comment lines with 1 tuning
