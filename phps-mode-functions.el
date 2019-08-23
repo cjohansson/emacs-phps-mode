@@ -972,7 +972,7 @@
                                       (inline-html-indents (phps-mode-functions--get-inline-html-indentation (buffer-substring-no-properties token-start token-end) inline-html-indent inline-html-tag-level inline-html-curly-bracket-level inline-html-square-bracket-level inline-html-round-bracket-level)))
 
                                   (when phps-mode-functions-verbose
-                                    (message "Received inline html indent: %s" inline-html-indents))
+                                    (message "Received inline html indent: %s from html: %s" inline-html-indents (buffer-substring-no-properties token-start token-end)))
 
                                   ;; Update indexes
                                   (setq inline-html-indent (nth 1 inline-html-indents))
@@ -982,7 +982,7 @@
                                   (setq inline-html-round-bracket-level (nth 5 inline-html-indents))
 
                                   ;; Iterate lines here and add indents
-                                  (dolist (item (nth 0 inline-html-indents))
+                                  (dolist (item (nreverse (nth 0 inline-html-indents)))
                                     (puthash token-line-number-diff (list item 0) line-indents)
                                     (setq token-line-number-diff (1+ token-line-number-diff)))))
 
