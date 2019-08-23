@@ -224,7 +224,7 @@
               (setq first-object-is-nesting-increase t))))
 
         (setq start end)))
-    (list line-indents indent tag-level curly-bracket-level square-bracket-level round-bracket-level)))
+    (list (nreverse line-indents) indent tag-level curly-bracket-level square-bracket-level round-bracket-level)))
 
 ;; TODO Make this function support incremental process
 (defun phps-mode-functions--process-current-buffer ()
@@ -955,7 +955,9 @@
 
                       ;; Does token span over several lines?
                       (when (> token-end-line-number token-start-line-number)
-                        (let ((column-level-end column-level))
+                        (let ((column-level-end column-level)
+                              (non-empty-inline-html nil)
+                              (inline-html-contents ""))
 
                           ;; HEREDOC lines should have zero indent
                           (when (or (and in-heredoc
@@ -963,16 +965,26 @@
                                     in-heredoc-ended-this-line)
                             (setq column-level-end 0))
 
+                          (when (and (equal token 'T_INLINE_HTML)
+                                     (not (string= (string-trim (buffer-substring-no-properties token-start token-end)) "")))
+                            (setq non-empty-inline-html t)
+                            (setq inline-html-contents (string-trim (buffer-substring-no-properties token-start token-end))))
+
                           ;; Inline HTML should have no indent
                           (if (and (equal token 'T_INLINE_HTML)
-                                   (not (string= (string-trim (buffer-substring-no-properties token-start token-end)) "")))
+                                   non-empty-inline-html)
+
+                              ;; TODO Solve cases where inline-html starts with newline
+                              ;; Inline-html first line should only affect if token starts the line
+                              ;; If token is not first on line, use regular indentation for first line
+                              ;; and special indentation for following lines
                               
                               (progn
                                 (let ((token-line-number-diff token-start-line-number)
-                                      (inline-html-indents (phps-mode-functions--get-inline-html-indentation (buffer-substring-no-properties token-start token-end) inline-html-indent inline-html-tag-level inline-html-curly-bracket-level inline-html-square-bracket-level inline-html-round-bracket-level)))
+                                      (inline-html-indents (phps-mode-functions--get-inline-html-indentation inline-html-contents inline-html-indent inline-html-tag-level inline-html-curly-bracket-level inline-html-square-bracket-level inline-html-round-bracket-level)))
 
                                   (when phps-mode-functions-verbose
-                                    (message "Received inline html indent: %s from html: %s" inline-html-indents (buffer-substring-no-properties token-start token-end)))
+                                    (message "Received inline html indent: %s from html: %s" inline-html-indents inline-html-contents))
 
                                   ;; Update indexes
                                   (setq inline-html-indent (nth 1 inline-html-indents))
@@ -982,7 +994,7 @@
                                   (setq inline-html-round-bracket-level (nth 5 inline-html-indents))
 
                                   ;; Iterate lines here and add indents
-                                  (dolist (item (nreverse (nth 0 inline-html-indents)))
+                                  (dolist (item (nth 0 inline-html-indents))
                                     (puthash token-line-number-diff (list item 0) line-indents)
                                     (setq token-line-number-diff (1+ token-line-number-diff)))))
 

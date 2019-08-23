@@ -1049,7 +1049,7 @@
   (should (equal
            '(0 1 2 1 1 2 1 0)
            (nth 0 (phps-mode-functions--get-inline-html-indentation
-                   "<html>\n<head>\n<title>MyTitle</title>\n</head>\n<body>\n<p>My paragraph</p>\n</body>\n</html>\n"
+                   "<html>\n<head>\n<title>MyTitle</title>\n</head>\n<body>\n<p>My paragraph</p>\n</body>\n</html>"
                    0
                    0
                    0
