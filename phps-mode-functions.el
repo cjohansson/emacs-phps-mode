@@ -23,6 +23,7 @@
 
 ;;; Code:
 
+(require 'subr-x)
 (require 'phps-mode-lexer)
 
 (defvar phps-mode-functions-allow-after-change t
@@ -147,8 +148,97 @@
       (setq lines-in-string (1+ lines-in-string)))
     lines-in-string))
 
+(defun phps-mode-functions--get-inline-html-indentation (inline-html indent tag-level curly-bracket-level square-bracket-level round-bracket-level)
+  "Generate a list of indentation for each line in INLINE-HTML, working incrementally on INDENT, TAG-LEVEL, CURLY-BRACKET-LEVEL, SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
+
+
+  (when phps-mode-functions-verbose
+    (message "Calculating HTML indent for: '%s'" inline-html))
+
+  ;; Add trailing newline if missing
+  (unless (string-match "\n$" inline-html)
+    (setq inline-html (concat inline-html "\n")))
+
+  (let ((start 0)
+        (indent-start indent)
+        (indent-end indent)
+        (line-indents nil)
+        (first-object-on-line t)
+        (first-object-is-nesting-decrease nil))
+    (while (string-match "\\([\n\C-m]\\)\\|\\(<[a-zA-Z]+\\)\\|\\(</[a-zA-Z]+\\)\\|\\(/>\\)\\|\\(\\[\\)\\|\\()\\)\\|\\((\\)" inline-html start)
+      (let* ((end (match-end 0))
+             (string (substring inline-html (match-beginning 0) end)))
+
+        (cond
+
+         ((string= string "\n")
+
+          (let ((temp-indent indent))
+            (when first-object-is-nesting-decrease
+              (when phps-mode-functions-verbose
+                (message "Decreasing indent with one since first object was a nesting decrease"))
+              (setq temp-indent (1- indent))
+              (when (< temp-indent 0)
+                (setq temp-indent 0)))
+            (push temp-indent line-indents))
+
+          (setq indent-end (+ tag-level curly-bracket-level square-bracket-level round-bracket-level))
+          (when phps-mode-functions-verbose
+            (message "Encountered a new-line"))
+          (if (> indent-end indent-start)
+              (progn
+                (when phps-mode-functions-verbose
+                  (message "Increasing indent since %s is above %s" indent-end indent-start))
+                (setq indent (1+ indent)))
+            (when (< indent-end indent-start)
+              (when phps-mode-functions-verbose
+                (message "Decreasing indent since %s is below %s" indent-end indent-start))
+              (setq indent (1- indent))
+              (when (< indent 0)
+                (setq indent 0))))
+
+          (setq indent-start indent-end)
+          (setq first-object-on-line t)
+          (setq first-object-is-nesting-decrease nil))
+
+         ((string= string "(")
+          (setq round-bracket-level (1+ round-bracket-level)))
+         ((string= string ")")
+          (setq round-bracket-level (1- round-bracket-level)))
+
+         ((string= string "[")
+          (setq square-bracket-level (1+ square-bracket-level)))
+         ((string= string "]")
+          (setq square-bracket-level (1- square-bracket-level)))
+
+         ((string= string "{")
+          (setq curly-bracket-level (1+ curly-bracket-level)))
+         ((string= string "}")
+          (setq curly-bracket-level (1- curly-bracket-level)))
+
+         ((string-match "<[a-zA-Z]+" string)
+          (setq tag-level (1+ tag-level)))
+
+         ((string-match "\\(</[a-zA-Z]+\\)\\|\\(/>\\)" string)
+          (setq tag-level (1- tag-level)))
+
+         )
+
+        (when first-object-on-line
+          (unless (string= string "\n")
+            (setq first-object-on-line nil)
+            (setq indent-end (+ tag-level curly-bracket-level square-bracket-level round-bracket-level))
+            (when (< indent-end indent-start)
+              (when phps-mode-functions-verbose
+                (message "First object was nesting decrease"))
+              (setq first-object-is-nesting-decrease t))))
+
+        (setq start end)))
+    (list (nreverse line-indents) indent tag-level curly-bracket-level square-bracket-level round-bracket-level)))
+
+;; TODO Make this function support incremental process
 (defun phps-mode-functions--process-current-buffer ()
-  "Process current buffer and generation indentation and Imenu in one iteration.  Complexity: O(n)."
+  "Generate indexes for indentation and imenu for current buffer in one pass.  Complexity: O(n)."
   (if (boundp 'phps-mode-lexer-tokens)
       (save-excursion
         ;; (message "Processing current buffer")
@@ -159,6 +249,11 @@
               (in-heredoc-started-this-line nil)
               (in-heredoc-ended-this-line nil)
               (in-inline-control-structure nil)
+              (inline-html-indent 0)
+              (inline-html-tag-level 0)
+              (inline-html-curly-bracket-level 0)
+              (inline-html-square-bracket-level 0)
+              (inline-html-round-bracket-level 0)
               (first-token-is-inline-html nil)
               (after-special-control-structure nil)
               (after-special-control-structure-token nil)
@@ -383,10 +478,37 @@
                   (when first-token-on-line
                     (setq first-token-is-nesting-decrease t)))
 
-                ;; Detect in inline-html
-                (when (and (equal token 'T_INLINE_HTML)
-                           first-token-on-line)
-                  (setq first-token-is-inline-html t))
+                ;; Handle INLINE_HTML blocks
+                (when (equal token 'T_INLINE_HTML)
+
+                  (when first-token-on-line
+                    (setq first-token-is-inline-html t))
+
+                  (let ((inline-html-indents (phps-mode-functions--get-inline-html-indentation (buffer-substring-no-properties token-start token-end) inline-html-indent inline-html-tag-level inline-html-curly-bracket-level inline-html-square-bracket-level inline-html-round-bracket-level)))
+
+                    (when phps-mode-functions-verbose
+                      (message "Received inline html indent: %s from inline HTML: '%s'" inline-html-indents (buffer-substring-no-properties token-start token-end)))
+
+                    ;; Update indexes
+                    (setq inline-html-indent (nth 1 inline-html-indents))
+                    (setq inline-html-tag-level (nth 2 inline-html-indents))
+                    (setq inline-html-curly-bracket-level (nth 3 inline-html-indents))
+                    (setq inline-html-square-bracket-level (nth 4 inline-html-indents))
+                    (setq inline-html-round-bracket-level (nth 5 inline-html-indents))
+
+                    ;; Does token span several lines and is it not only white-space?
+                    (when (> token-end-line-number token-start-line-number)
+                      (unless (string= (string-trim (buffer-substring-no-properties token-start token-end)) "")
+                        (let ((token-line-number-diff token-start-line-number))
+                          ;; Iterate lines here and add indents
+                          (dolist (item (nth 0 inline-html-indents))
+                            ;; Skip first line unless first token on line was inline-html
+                            (when (or (not (= token-line-number-diff token-start-line-number))
+                                      first-token-is-inline-html)
+                              (puthash token-line-number-diff (list item 0) line-indents)
+                              (when phps-mode-functions-verbose
+                                (message "Putting indent at line %s to %s from inline HTML" token-line-number-diff item)))
+                            (setq token-line-number-diff (1+ token-line-number-diff))))))))
 
                 ;; Keep track of when we are inside a class definition
                 (if in-class-declaration
@@ -830,8 +952,7 @@
 
                       ;; Inline HTML should have zero indent
                       (when first-token-is-inline-html
-                        (setq column-level-start 0))
-
+                        (setq column-level-start inline-html-indent))
 
                       ;; Save line indent
                       (when phps-mode-functions-verbose
@@ -839,7 +960,6 @@
 
                       (when (> token-start-line-number 0)
                         (puthash token-start-line-number `(,column-level-start ,tuning-level) line-indents))
-
 
                       ;; Support trailing indent decrements
                       (when temp-post-indent
@@ -870,18 +990,15 @@
                             )))
 
 
-                      ;; Does token span over several lines?
-                      (when (> token-end-line-number token-start-line-number)
+                      ;; Does token span over several lines and is it not a INLINE_HTML token?
+                      (when (and (> token-end-line-number token-start-line-number)
+                                 (not (equal token 'T_INLINE_HTML)))
                         (let ((column-level-end column-level))
 
                           ;; HEREDOC lines should have zero indent
                           (when (or (and in-heredoc
                                          (not in-heredoc-started-this-line))
                                     in-heredoc-ended-this-line)
-                            (setq column-level-end 0))
-
-                          ;; Inline HTML should have no indent
-                          (when (equal token 'T_INLINE_HTML)
                             (setq column-level-end 0))
 
                           ;; (message "Token %s starts at %s and ends at %s indent %s %s" next-token token-start-line-number token-end-line-number column-level-end tuning-level)
@@ -898,7 +1015,6 @@
 
                           ;; Rest tuning-level used for comments
                           (setq tuning-level 0)))
-
 
                       ;; Indent token-less lines here in between last tokens if distance is more than 1 line
                       (when (and (> next-token-start-line-number (1+ token-end-line-number))
@@ -1024,11 +1140,10 @@
 
               )))))))
 
-;; TODO Consider how imenu-index should be affected by this
+;; TODO Consider how indentation and imenu-index should be affected by this
 (defun phps-mode-functions-after-change (start _stop _length)
   "Track buffer change from START to STOP with length LENGTH."
-  (when (and (string= major-mode "phps-mode")
-             phps-mode-functions-allow-after-change)
+  (when phps-mode-functions-allow-after-change
 
     ;; If we haven't scheduled incremental lexer before - do it
     (when (and (not phps-mode-functions-buffer-changes-start)
@@ -1043,8 +1158,8 @@
       (setq phps-mode-functions-buffer-changes-start start)
       ;; (message "Setting start of changes to: %s-%s" phps-mode-functions-buffer-changes-start stop))
 
-    ;; (message "phps-mode-functions-after-change %s %s %s" start stop length)
-    )))
+      ;; (message "phps-mode-functions-after-change %s %s %s" start stop length)
+      )))
 
 (defun phps-mode-functions-imenu-create-index ()
   "Get Imenu for current buffer."

@@ -5,8 +5,8 @@
 ;; Author: Christian Johansson <christian@cvj.se>
 ;; Maintainer: Christian Johansson <christian@cvj.se>
 ;; Created: 3 Mar 2018
-;; Modified: 21 Aug 2019
-;; Version: 0.2.6
+;; Modified: 26 Aug 2019
+;; Version: 0.2.8
 ;; Keywords: tools, convenience
 ;; URL: https://github.com/cjohansson/emacs-phps-mode
 
@@ -48,6 +48,12 @@
 (require 'phps-mode-tags)
 (require 'semantic)
 
+(defvar phps-mode-use-electric-pair-mode t
+  "Whether or not we want to use electric pair mode.")
+
+(defvar phps-mode-use-transient-mark-mode t
+  "Whether or not we want to use transient mark mode.")
+
 (defvar phps-mode-use-psr-2 t
   "Whether to use PSR-2 guidelines for white-space or not.")
 
@@ -56,37 +62,34 @@
 
 (defvar phps-mode-flycheck-applied nil "Boolean flag whether flycheck configuration has been applied or not.")
 
-(defvar phps-mode-map-applied nil "Boolean flag whether mode-map has been initialized or not.")
-
 (defvar phps-mode-inline-mmm-submode nil "Symbol declaring what mmm-mode to use as submode in inline areas.")
+
+(defvar phps-mode-map
+  (let ((map (make-sparse-keymap)))
+    (define-key map (kbd "C-c /") #'comment-region)
+    (define-key map (kbd "C-c DEL") #'uncomment-region)
+    map)
+  "Keymap for `phps-mode'.")
 
 (define-derived-mode phps-mode prog-mode "PHPs"
   "Major mode for PHP with Semantic integration."
-
-  ;; TODO Check whether PSR-2 requires final newlines or not
-  (setq-local require-final-newline t)
 
   ;; Skip comments when navigating via syntax-table
   (setq-local parse-sexp-ignore-comments t)
 
   ;; Key-map
-  ;; prog-mode will create the key-map and we just modify it here.
-  ;; should break this out to stand-alone variable
-  (when (and phps-mode-map
-             (not phps-mode-map-applied))
-    (define-key phps-mode-map (kbd "C-c /") #'comment-region)
-    (define-key phps-mode-map (kbd "C-c DEL") #'uncomment-region)
-    (setq phps-mode-map-applied t))
   (use-local-map phps-mode-map)
 
   ;; Syntax table
   (set-syntax-table phps-mode-syntax-table)
 
-  ;; NOTE: These are required for wrapping region functionality
-  (transient-mark-mode)
+  (when phps-mode-use-transient-mark-mode
+    ;; NOTE: These are required for wrapping region functionality
+    (transient-mark-mode))
 
-  ;; TODO Add this as a setting similar to php-mode
-  (electric-pair-local-mode)
+  ;; TODO Add this as a menu setting similar to php-mode
+  (when phps-mode-use-electric-pair-mode
+    (electric-pair-local-mode))
 
   ;; Font lock
   ;; This makes it possible to have full control over syntax coloring from the lexer
@@ -114,8 +117,7 @@
   (setq-local imenu-create-index-function #'phps-mode-functions-imenu-create-index)
 
   ;; Should we follow PSR-2?
-  (when (and (boundp 'phps-mode-use-psr-2)
-             phps-mode-use-psr-2)
+  (when phps-mode-use-psr-2
 
     ;; Code MUST use an indent of 4 spaces
     (setq-local tab-width 4)
@@ -127,11 +129,11 @@
   (advice-add #'newline :around #'phps-mode-functions-around-newline)
 
   ;; Reset flags
-  (set (make-local-variable 'phps-mode-functions-allow-after-change) t)
-  (set (make-local-variable 'phps-mode-functions-buffer-changes-start) nil)
-  (set (make-local-variable 'phps-mode-functions-lines-indent) nil)
-  (set (make-local-variable 'phps-mode-functions-imenu) nil)
-  (set (make-local-variable 'phps-mode-functions-processed-buffer) nil)
+  (setq-local phps-mode-functions-allow-after-change t)
+  (setq-local phps-mode-functions-buffer-changes-start nil)
+  (setq-local phps-mode-functions-lines-indent nil)
+  (setq-local phps-mode-functions-imenu nil)
+  (setq-local phps-mode-functions-processed-buffer nil)
 
   ;; Make (comment-region) and (uncomment-region) work
   (setq-local comment-region-function #'phps-mode-functions-comment-region)
@@ -140,21 +142,16 @@
   (setq-local comment-end "")
 
   ;; Support for change detection
-  (add-hook 'after-change-functions #'phps-mode-functions-after-change)
+  (add-hook 'after-change-functions #'phps-mode-functions-after-change 0 t)
 
   ;; Lexer
-  (if (and (boundp 'semantic-lex-syntax-table)
-           (boundp 'phps-mode-syntax-table))
-      (setq-local semantic-lex-syntax-table phps-mode-syntax-table)
-    (signal 'error "Semantic or regular syntax-table for PHPs-mode missing!"))
+  (setq-local semantic-lex-syntax-table phps-mode-syntax-table)
 
   ;; Semantic
-  (if (boundp 'semantic-lex-analyzer)
-      (setq-local semantic-lex-analyzer #'phps-mode-lexer-lex)
-    (signal 'error "Semantic semantic-lex-analyzer missing!"))
+  (setq-local semantic-lex-analyzer #'phps-mode-lexer-lex)
 
   ;; Set semantic-lex initializer function
-  (add-hook 'semantic-lex-reset-functions #'phps-mode-lexer-setup)
+  (add-hook 'semantic-lex-reset-functions #'phps-mode-lexer-setup 0 t)
 
   ;; Reset tokens
   (setq-local phps-mode-lexer-tokens nil)

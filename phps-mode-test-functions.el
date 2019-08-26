@@ -268,6 +268,12 @@
    "Indent multi-dimensional arrays without trailing commas"
    ;; (message "Tokens: %s" (phps-mode-lexer-get-tokens))
    (should (equal '((1 (0 0)) (2 (0 0)) (3 (1 0)) (4 (2 0)) (5 (1 0)) (6 (0 0)) (7 (0 0)) (8 (0 0)) (9 (1 0)) (10 (2 0)) (11 (1 0)) (12 (0 0))) (phps-mode-test-hash-to-list (phps-mode-functions-get-lines-indent))))
+
+   (phps-mode-test-with-buffer
+    "<html>\n    <head>\n        <?php echo $title; ?>\n    </head>\n    <body>\n    <?php\n\n    if ($myTest) {\n        doSomething();\n    }\n\n    ?>\n    </body>\n</html>"
+    "A mixed HTML and PHP file."
+    ;; (message "Indent: %s" (phps-mode-test-hash-to-list (phps-mode-functions-get-lines-indent)))
+    (should (equal '((1 (0 0)) (2 (1 0)) (3 (0 0)) (4 (1 0)) (5 (1 0)) (6 (0 0)) (7 (0 0)) (8 (0 0)) (9 (1 0)) (10 (0 0)) (11 (0 0)) (12 (0 0)) (13 (1 0)) (14 (0 0))) (phps-mode-test-hash-to-list (phps-mode-functions-get-lines-indent)))))
    )
 
   )
@@ -637,7 +643,7 @@
    (goto-char 110)
    (phps-mode-functions-indent-line)
    (let ((buffer-contents (buffer-substring-no-properties (point-min) (point-max))))
-     (should (equal buffer-contents "<html><head><title><?php if ($myCondition) {\nif ($mySeconCondition) {\necho $title3;\n\n}\n?>\n</title><body>Bla bla</body></html>"))))
+     (should (equal buffer-contents "<html><head><title><?php if ($myCondition) {\nif ($mySeconCondition) {\necho $title3;\n\n}\n?>\n    </title><body>Bla bla</body></html>"))))
 
   (phps-mode-test-with-buffer
    "<?php\n$variable = array(\n'random3'\n);\n$variable = true;\n"
@@ -1037,10 +1043,49 @@
 
   )
 
+(defun phps-mode-test-functions-get-inline-html-indentation ()
+  "Test function."
+
+  (should (equal
+           '(0 1 2 1 1 2 1 0)
+           (nth 0 (phps-mode-functions--get-inline-html-indentation
+                   "<html>\n<head>\n<title>MyTitle</title>\n</head>\n<body>\n<p>My paragraph</p>\n</body>\n</html>"
+                   0
+                   0
+                   0
+                   0
+                   0
+                   ))))
+
+  (should (equal
+           '(2 2 1 0)
+           (nth 0 (phps-mode-functions--get-inline-html-indentation
+                   "\n<p>My paragraph</p>\n</body>\n</html>"
+                   2
+                   2
+                   0
+                   0
+                   0
+                   ))))
+
+  (should (equal
+           '(0)
+           (nth 0 (phps-mode-functions--get-inline-html-indentation
+                   "<html>"
+                   0
+                   0
+                   0
+                   0
+                   0
+                   ))))
+  
+  )
+
 (defun phps-mode-test-functions ()
   "Run test for functions."
   ;; (setq debug-on-error t)
   ;; (setq phps-mode-functions-verbose t)
+  (phps-mode-test-functions-get-inline-html-indentation)
   (phps-mode-test-functions-get-lines-indent-if)
   (phps-mode-test-functions-get-lines-indent-classes)
   (phps-mode-test-functions-get-lines-indent-inline-if)

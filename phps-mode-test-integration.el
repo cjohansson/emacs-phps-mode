@@ -37,7 +37,7 @@
    "<?php\nnamespace myNamespace\n{\n    class myClass\n    {\n        public function myFunction()\n        {\n            echo 'my statement';\n        }\n    }\n}\n"
    "Integration-test 1 for regular PHP with namespaces, classes and functions"
 
-   ;; Make changes
+   ;; Make changes - insert a new function
    (goto-char 144)
    (insert "\n\n        public function myFunctionB()\n        {\n            echo 'my second statement';\n        }\n")
    (should (equal (phps-mode-functions-get-buffer-changes-start) 144)))
@@ -46,17 +46,21 @@
    "<?php\nnamespace myNamespace\n{\n    class myClass\n    {\n        public function myFunction()\n        {\n            echo 'my statement';\n        }\n    }\n}\n"
    "Integration-test 2 for regular PHP with namespaces, classes and functions"
 
-   ;; Make changes
+   ;; Make changes - insert a new function
    (goto-char 144)
    (insert "\n\n        public function myFunctionB()\n        {\n            echo 'my second statement';\n        }\n")
    (should (equal (phps-mode-functions-get-buffer-changes-start) 144))
+
+   ;; Run incremental lexer
    (phps-mode-lexer-run-incremental)
 
-   ;; Remove first function
+   ;; Make changes - remove first function
    (goto-char 55)
    (push-mark nil t t)
    (goto-char 145)
    (execute-kbd-macro (kbd "<backspace>"))
+
+   ;; Test
    (should (equal (phps-mode-functions-get-buffer-changes-start) 55)))
 
   (phps-mode-test-incremental-vs-intial-buffer
@@ -66,22 +70,18 @@
    ;; Make changes
    (goto-char 1)
    (insert "<?php\nfunction myFunctionA()\n{\n    echo 'my second statement';\n}\n")
+
+   ;; Test
    (should (equal (phps-mode-functions-get-buffer-changes-start) 1)))
 
   (phps-mode-test-incremental-vs-intial-buffer
    "<?php\n/**\n *\n */\nnamespace myNamespace\n{\n    class myClass\n    {\n        public function myFunction()\n        {\n            echo 'my statement';\n        }\n    }\n}\n"
    "Integration-test 4 for regular PHP with namespaces, classes and functions, white-space change inside token"
 
-   ;; (message "Before tokens: %s" (phps-mode-lexer-get-tokens))
-   ;; (message "Before indent: %s" (phps-mode-test-hash-to-list phps-mode-functions-lines-indent))
-
    ;; Make changes
    (goto-char 13)
    (newline-and-indent)
 
-   ;; (message "After tokens: %s" (phps-mode-lexer-get-tokens))
-   ;; (message "After indent: %s" (phps-mode-test-hash-to-list phps-mode-functions-lines-indent))
-   
    (should (equal (phps-mode-functions-get-buffer-changes-start) nil)))
 
   )
