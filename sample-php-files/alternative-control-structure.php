@@ -24,5 +24,8 @@ endswitch;
 ?>
 <html>
     <body>
+        <p>
+        <?php echo $my; ?>
+        </p>
     </body>
 </html>

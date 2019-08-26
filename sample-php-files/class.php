@@ -26,14 +26,14 @@ class MyClass
             $this->var = '';
         }
         if (empty(
-                $this->var
+            $this->var
         )) {
             $this->var = 'abc';
         }
         if (empty(
-                $this->var
-                ) && !empty($this->var)
-            ) {
+            $this->var
+            ) && !empty($this->var)
+        ) {
             $this->var = 'abc123';
         }
 
