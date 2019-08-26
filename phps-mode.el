@@ -117,8 +117,7 @@
   (setq-local imenu-create-index-function #'phps-mode-functions-imenu-create-index)
 
   ;; Should we follow PSR-2?
-  (when (and (boundp 'phps-mode-use-psr-2)
-             phps-mode-use-psr-2)
+  (when phps-mode-use-psr-2
 
     ;; Code MUST use an indent of 4 spaces
     (setq-local tab-width 4)
