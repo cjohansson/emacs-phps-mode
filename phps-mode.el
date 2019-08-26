@@ -6,7 +6,7 @@
 ;; Maintainer: Christian Johansson <christian@cvj.se>
 ;; Created: 3 Mar 2018
 ;; Modified: 26 Aug 2019
-;; Version: 0.2.7
+;; Version: 0.2.8
 ;; Keywords: tools, convenience
 ;; URL: https://github.com/cjohansson/emacs-phps-mode
 
@@ -48,9 +48,6 @@
 (require 'phps-mode-tags)
 (require 'semantic)
 
-(defvar phps-mode-require-final-newline t
-  "Whether or not we want to require a final newline.")
-
 (defvar phps-mode-use-electric-pair-mode t
   "Whether or not we want to use electric pair mode.")
 
@@ -65,27 +62,22 @@
 
 (defvar phps-mode-flycheck-applied nil "Boolean flag whether flycheck configuration has been applied or not.")
 
-(defvar phps-mode-map-applied nil "Boolean flag whether mode-map has been initialized or not.")
-
 (defvar phps-mode-inline-mmm-submode nil "Symbol declaring what mmm-mode to use as submode in inline areas.")
+
+(defvar phps-mode-map
+  (let ((map (make-sparse-keymap)))
+    (define-key map (kbd "C-c /") #'comment-region)
+    (define-key map (kbd "C-c DEL") #'uncomment-region)
+    map)
+  "Keymap for `phps-mode'.")
 
 (define-derived-mode phps-mode prog-mode "PHPs"
   "Major mode for PHP with Semantic integration."
-
-  (when phps-mode-require-final-newline
-    (setq-local require-final-newline t))
 
   ;; Skip comments when navigating via syntax-table
   (setq-local parse-sexp-ignore-comments t)
 
   ;; Key-map
-  ;; prog-mode will create the key-map and we just modify it here.
-  ;; TODO should break this out to stand-alone variable
-  (when (and phps-mode-map
-             (not phps-mode-map-applied))
-    (define-key phps-mode-map (kbd "C-c /") #'comment-region)
-    (define-key phps-mode-map (kbd "C-c DEL") #'uncomment-region)
-    (setq phps-mode-map-applied t))
   (use-local-map phps-mode-map)
 
   ;; Syntax table
@@ -151,7 +143,7 @@
   (setq-local comment-end "")
 
   ;; Support for change detection
-  (add-hook 'after-change-functions #'phps-mode-functions-after-change)
+  (add-hook 'after-change-functions #'phps-mode-functions-after-change 0 t)
 
   ;; Lexer
   (setq-local semantic-lex-syntax-table phps-mode-syntax-table)
@@ -160,7 +152,7 @@
   (setq-local semantic-lex-analyzer #'phps-mode-lexer-lex)
 
   ;; Set semantic-lex initializer function
-  (add-hook 'semantic-lex-reset-functions #'phps-mode-lexer-setup)
+  (add-hook 'semantic-lex-reset-functions #'phps-mode-lexer-setup 0 t)
 
   ;; Reset tokens
   (setq-local phps-mode-lexer-tokens nil)
