@@ -18,6 +18,7 @@ This mode does not require PHP installed on your computer because it has a built
 * Incremental lexer and syntax coloring after buffer changes
 * Incremental indentation and imenu generation after buffer changes
 * Supports `(comment-region)` and `(uncomment-region)`
+* Support indentation for inline-html areas
 * Imenu support
 * Minimal mode map
 * Tested using unit tests and integration tests
