@@ -148,8 +148,6 @@
       (setq lines-in-string (1+ lines-in-string)))
     lines-in-string))
 
-;; TODO Need to handle negative indents
-;; TODO Process buffer should also parse inline-html that is not more than one line
 (defun phps-mode-functions--get-inline-html-indentation (inline-html indent tag-level curly-bracket-level square-bracket-level round-bracket-level)
   "Generate a list of indentation for each line in INLINE-HTML, working incrementally on INDENT, TAG-LEVEL, CURLY-BRACKET-LEVEL, SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
 
@@ -179,7 +177,9 @@
             (when first-object-is-nesting-decrease
               (when phps-mode-functions-verbose
                 (message "Decreasing indent with one since first object was a nesting decrease"))
-              (setq temp-indent (1- indent)))
+              (setq temp-indent (1- indent))
+              (when (< temp-indent 0)
+                (setq temp-indent 0)))
             (push temp-indent line-indents))
 
           (setq indent-end (+ tag-level curly-bracket-level square-bracket-level round-bracket-level))
@@ -193,7 +193,9 @@
             (when (< indent-end indent-start)
               (when phps-mode-functions-verbose
                 (message "Decreasing indent since %s is below %s" indent-end indent-start))
-              (setq indent (1- indent))))
+              (setq indent (1- indent))
+              (when (< indent 0)
+                (setq indent 0))))
 
           (setq indent-start indent-end)
           (setq first-object-on-line t)
@@ -496,18 +498,17 @@
 
                     ;; Does token span several lines and is it not only white-space?
                     (when (> token-end-line-number token-start-line-number)
-                      (if (not (string= (string-trim (buffer-substring-no-properties token-start token-end)) ""))
-                          (let ((token-line-number-diff token-start-line-number))
-                            ;; Iterate lines here and add indents
-                            (dolist (item (nth 0 inline-html-indents))
-                              ;; Skip first line unless first token on line was inline-html
-                              (when (or (not (= token-line-number-diff token-start-line-number))
-                                        first-token-is-inline-html)
-                                (puthash token-line-number-diff (list item 0) line-indents)
-                                (when phps-mode-functions-verbose
-                                  (message "Putting indent at line %s to %s from inline HTML" token-line-number-diff item)))
-                              (setq token-line-number-diff (1+ token-line-number-diff))))
-                        (setq column-level-end inline-html-indent)))))
+                      (unless (string= (string-trim (buffer-substring-no-properties token-start token-end)) "")
+                        (let ((token-line-number-diff token-start-line-number))
+                          ;; Iterate lines here and add indents
+                          (dolist (item (nth 0 inline-html-indents))
+                            ;; Skip first line unless first token on line was inline-html
+                            (when (or (not (= token-line-number-diff token-start-line-number))
+                                      first-token-is-inline-html)
+                              (puthash token-line-number-diff (list item 0) line-indents)
+                              (when phps-mode-functions-verbose
+                                (message "Putting indent at line %s to %s from inline HTML" token-line-number-diff item)))
+                            (setq token-line-number-diff (1+ token-line-number-diff))))))))
 
                 ;; Keep track of when we are inside a class definition
                 (if in-class-declaration
@@ -992,8 +993,7 @@
                       ;; Does token span over several lines and is it not a INLINE_HTML token?
                       (when (and (> token-end-line-number token-start-line-number)
                                  (not (equal token 'T_INLINE_HTML)))
-                        (let ((column-level-end column-level)
-                              (non-empty-inline-html nil))
+                        (let ((column-level-end column-level))
 
                           ;; HEREDOC lines should have zero indent
                           (when (or (and in-heredoc
