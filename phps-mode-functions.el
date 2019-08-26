@@ -150,18 +150,22 @@
 
 (defun phps-mode-functions--get-inline-html-indentation (inline-html indent tag-level curly-bracket-level square-bracket-level round-bracket-level)
   "Generate a list of indentation for each line in INLINE-HTML, working incrementally on INDENT, TAG-LEVEL, CURLY-BRACKET-LEVEL, SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
+
+
+  (when phps-mode-functions-verbose
+    (message "Calculating HTML indent for: '%s'" inline-html))
+
   ;; Add trailing newline if missing
   (unless (string-match "\n$" inline-html)
     (setq inline-html (concat inline-html "\n")))
 
-  (let ((lines-in-string 0)
-        (start 0)
-        (indent-start 0)
-        (indent-end 0)
+  (let ((start 0)
+        (indent-start indent)
+        (indent-end indent)
         (line-indents nil)
         (first-object-on-line t)
-        (first-object-is-nesting-increase nil))
-    (while (string-match "\\([\n\C-m]\\)\\|\\(<[a-zA-Z]+\\)\\|\\(</[a-zA-Z]+\\)\\|\\(\\[\\)\\|\\()\\)\\|\\((\\)" inline-html start)
+        (first-object-is-nesting-decrease nil))
+    (while (string-match "\\([\n\C-m]\\)\\|\\(<[a-zA-Z]+\\)\\|\\(</[a-zA-Z]+\\)\\|\\(/>\\)\\|\\(\\[\\)\\|\\()\\)\\|\\((\\)" inline-html start)
       (let* ((end (match-end 0))
              (string (substring inline-html (match-beginning 0) end)))
 
@@ -169,28 +173,29 @@
 
          ((string= string "\n")
 
-          (setq lines-in-string (1+ lines-in-string))
-
           (let ((temp-indent indent))
-            (when first-object-is-nesting-increase
-              ;;(message "Decreasing indent with one since first object was a nesting decrease")
+            (when first-object-is-nesting-decrease
+              (when phps-mode-functions-verbose
+                (message "Decreasing indent with one since first object was a nesting decrease"))
               (setq temp-indent (1- indent)))
-            ;;(message "Line %s has indent %s" lines-in-string temp-indent)
             (push temp-indent line-indents))
 
           (setq indent-end (+ tag-level curly-bracket-level square-bracket-level round-bracket-level))
-          ;; (message "Encountered a new-line")
+          (when phps-mode-functions-verbose
+            (message "Encountered a new-line"))
           (if (> indent-end indent-start)
               (progn
-                ;; (message "Increasing indent since %s is above %s" indent-end indent-start)
+                (when phps-mode-functions-verbose
+                  (message "Increasing indent since %s is above %s" indent-end indent-start))
                 (setq indent (1+ indent)))
             (when (< indent-end indent-start)
-              ;; (message "Decreasing indent since %s is below %s" indent-end indent-start)
+              (when phps-mode-functions-verbose
+                (message "Decreasing indent since %s is below %s" indent-end indent-start))
               (setq indent (1- indent))))
 
           (setq indent-start indent-end)
           (setq first-object-on-line t)
-          (setq first-object-is-nesting-increase nil))
+          (setq first-object-is-nesting-decrease nil))
 
          ((string= string "(")
           (setq round-bracket-level (1+ round-bracket-level)))
@@ -210,7 +215,7 @@
          ((string-match "<[a-zA-Z]+" string)
           (setq tag-level (1+ tag-level)))
 
-         ((string-match "</[a-zA-Z]+" string)
+         ((string-match "\\(</[a-zA-Z]+\\)\\|\\(/>\\)" string)
           (setq tag-level (1- tag-level)))
 
          )
@@ -220,8 +225,9 @@
             (setq first-object-on-line nil)
             (setq indent-end (+ tag-level curly-bracket-level square-bracket-level round-bracket-level))
             (when (< indent-end indent-start)
-              ;; (message "First object was nesting decrease")
-              (setq first-object-is-nesting-increase t))))
+              (when phps-mode-functions-verbose
+                (message "First object was nesting decrease"))
+              (setq first-object-is-nesting-decrease t))))
 
         (setq start end)))
     (list (nreverse line-indents) indent tag-level curly-bracket-level square-bracket-level round-bracket-level)))
@@ -967,8 +973,7 @@
 
                           (when (and (equal token 'T_INLINE_HTML)
                                      (not (string= (string-trim (buffer-substring-no-properties token-start token-end)) "")))
-                            (setq non-empty-inline-html t)
-                            (setq inline-html-contents (string-trim (buffer-substring-no-properties token-start token-end))))
+                            (setq non-empty-inline-html t))
 
                           ;; Inline HTML should have no indent
                           (if (and (equal token 'T_INLINE_HTML)
@@ -981,10 +986,10 @@
                               
                               (progn
                                 (let ((token-line-number-diff token-start-line-number)
-                                      (inline-html-indents (phps-mode-functions--get-inline-html-indentation inline-html-contents inline-html-indent inline-html-tag-level inline-html-curly-bracket-level inline-html-square-bracket-level inline-html-round-bracket-level)))
+                                      (inline-html-indents (phps-mode-functions--get-inline-html-indentation (buffer-substring-no-properties token-start token-end) inline-html-indent inline-html-tag-level inline-html-curly-bracket-level inline-html-square-bracket-level inline-html-round-bracket-level)))
 
                                   (when phps-mode-functions-verbose
-                                    (message "Received inline html indent: %s from html: %s" inline-html-indents inline-html-contents))
+                                    (message "Received inline html indent: %s from inline HTML: '%s'" inline-html-indents (buffer-substring-no-properties token-start token-end)))
 
                                   ;; Update indexes
                                   (setq inline-html-indent (nth 1 inline-html-indents))
@@ -995,7 +1000,12 @@
 
                                   ;; Iterate lines here and add indents
                                   (dolist (item (nth 0 inline-html-indents))
-                                    (puthash token-line-number-diff (list item 0) line-indents)
+                                    ;; Skip first line unless first token on line was inline-html
+                                    (when (or (not (= token-line-number-diff token-start-line-number))
+                                              first-token-is-inline-html)
+                                      (puthash token-line-number-diff (list item 0) line-indents)
+                                      (when phps-mode-functions-verbose
+                                        (message "Putting indent at line %s to %s from inline HTML" token-line-number-diff item)))
                                     (setq token-line-number-diff (1+ token-line-number-diff)))))
 
                             (when (equal token 'T_INLINE_HTML)

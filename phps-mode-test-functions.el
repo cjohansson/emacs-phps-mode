@@ -273,7 +273,7 @@
     "<html>\n    <head>\n        <?php echo $title; ?>\n    </head>\n    <body>\n    <?php\n\n    if ($myTest) {\n        doSomething();\n    }\n\n    ?>\n    </body>\n</html>"
     "A mixed HTML and PHP file."
     (message "Indent: %s" (phps-mode-test-hash-to-list (phps-mode-functions-get-lines-indent)))
-    (should (equal '((1 (0 0)) (2 (1 0)) (3 (2 0)) (4 (1 0)) (5 (1 0)) (6 (3 0)) (7 (0 0)) (8 (0 0)) (9 (1 0)) (10 (0 0)) (11 (0 0)) (12 (3 0)) (13 (1 0)) (14 (0 0))) (phps-mode-test-hash-to-list (phps-mode-functions-get-lines-indent)))))
+    (should (equal '((1 (0 0)) (2 (1 0)) (3 (0 0)) (4 (1 0)) (5 (1 0)) (6 (0 0)) (7 (0 0)) (8 (0 0)) (9 (1 0)) (10 (0 0)) (11 (0 0)) (12 (0 0)) (13 (1 0)) (14 (0 0))) (phps-mode-test-hash-to-list (phps-mode-functions-get-lines-indent)))))
    )
 
   )
@@ -1052,6 +1052,17 @@
                    "<html>\n<head>\n<title>MyTitle</title>\n</head>\n<body>\n<p>My paragraph</p>\n</body>\n</html>"
                    0
                    0
+                   0
+                   0
+                   0
+                   ))))
+
+  (should (equal
+           '(2 2 1 0)
+           (nth 0 (phps-mode-functions--get-inline-html-indentation
+                   "\n<p>My paragraph</p>\n</body>\n</html>"
+                   2
+                   2
                    0
                    0
                    0
