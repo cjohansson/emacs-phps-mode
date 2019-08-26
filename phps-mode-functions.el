@@ -1143,8 +1143,7 @@
 ;; TODO Consider how indentation and imenu-index should be affected by this
 (defun phps-mode-functions-after-change (start _stop _length)
   "Track buffer change from START to STOP with length LENGTH."
-  (when (and (string= major-mode "phps-mode")
-             phps-mode-functions-allow-after-change)
+  (when phps-mode-functions-allow-after-change
 
     ;; If we haven't scheduled incremental lexer before - do it
     (when (and (not phps-mode-functions-buffer-changes-start)
@@ -1159,8 +1158,8 @@
       (setq phps-mode-functions-buffer-changes-start start)
       ;; (message "Setting start of changes to: %s-%s" phps-mode-functions-buffer-changes-start stop))
 
-    ;; (message "phps-mode-functions-after-change %s %s %s" start stop length)
-    )))
+      ;; (message "phps-mode-functions-after-change %s %s %s" start stop length)
+      )))
 
 (defun phps-mode-functions-imenu-create-index ()
   "Get Imenu for current buffer."
