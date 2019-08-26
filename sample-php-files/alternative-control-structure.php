@@ -11,6 +11,15 @@ else:
     echo 'was false 2';
 endif;
 
+function myFunction() {
+    echo 'was here';
+    ?>
+<html><body>
+    <div>My random stuff</div>
+</body></html>
+    <?php
+}
+
 
 switch (true):
     case true:
@@ -25,7 +34,7 @@ endswitch;
 <html>
     <body>
         <p>
-        <?php echo $my; ?>
+<?php echo $my; ?>
         </p>
     </body>
 </html>

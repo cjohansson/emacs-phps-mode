@@ -130,11 +130,11 @@
   (advice-add #'newline :around #'phps-mode-functions-around-newline)
 
   ;; Reset flags
-  (set (make-local-variable 'phps-mode-functions-allow-after-change) t)
-  (set (make-local-variable 'phps-mode-functions-buffer-changes-start) nil)
-  (set (make-local-variable 'phps-mode-functions-lines-indent) nil)
-  (set (make-local-variable 'phps-mode-functions-imenu) nil)
-  (set (make-local-variable 'phps-mode-functions-processed-buffer) nil)
+  (setq-local phps-mode-functions-allow-after-change t)
+  (setq-local phps-mode-functions-buffer-changes-start nil)
+  (setq-local phps-mode-functions-lines-indent nil)
+  (setq-local phps-mode-functions-imenu nil)
+  (setq-local phps-mode-functions-processed-buffer nil)
 
   ;; Make (comment-region) and (uncomment-region) work
   (setq-local comment-region-function #'phps-mode-functions-comment-region)
