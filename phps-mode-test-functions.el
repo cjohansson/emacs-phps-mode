@@ -902,7 +902,7 @@
 (defun phps-mode-test-functions-get-moved-imenu ()
   "Test for moving imenu index."
 
-  (message "Moved imenu %s" (phps-mode-functions-get-moved-imenu '(("myNamespace" ("myClass" ("myFunctionA" . 108) ("myFunctionB" . 161)))) 0 2))
+  ;; (message "Moved imenu %s" (phps-mode-functions-get-moved-imenu '(("myNamespace" ("myClass" ("myFunctionA" . 108) ("myFunctionB" . 161)))) 0 2))
 
   (should (equal
            '(("myNamespace" ("myClass" ("myFunctionA" . 110) ("myFunctionB" . 163))))
@@ -967,9 +967,12 @@
    ;; (message "States: %s" (phps-mode-lexer-get-states))
 
    ;; Initial state
+
+   ;; Tokens
    (should (equal (phps-mode-lexer-get-tokens)
                   '((T_OPEN_TAG 1 . 7) (T_VARIABLE 7 . 11) ("=" 12 . 13) (T_CONSTANT_ENCAPSED_STRING 14 . 19) (";" 19 . 20) (T_VARIABLE 22 . 27) ("=" 28 . 29) (T_CONSTANT_ENCAPSED_STRING 30 . 35) (";" 35 . 36))))
 
+   ;; States
    (should (equal (phps-mode-lexer-get-states)
                   '((35 36 1 (1 1 1 1 1)) (30 35 1 (1 1 1 1 1)) (28 29 1 (1 1 1 1 1)) (22 27 1 (1 1 1 1 1)) (19 20 1 (1 1 1 1 1)) (14 19 1 (1 1 1 1 1)) (12 13 1 (1 1 1 1 1)) (7 11 1 (1 1 1 1 1)) (1 7 1 (1 1 1 1 1)))))
 
@@ -980,13 +983,14 @@
    ;; Final state
    ;; (message "Tokens %s" (phps-mode-lexer-get-tokens))
    ;; (message "States: %s" (phps-mode-lexer-get-states))
+
+   ;; Tokens
    (should (equal (phps-mode-lexer-get-tokens)
                   '((T_OPEN_TAG 1 . 7) (T_VARIABLE 7 . 11) ("=" 12 . 13) (T_CONSTANT_ENCAPSED_STRING 14 . 19) (";" 19 . 20) (T_VARIABLE 23 . 28) ("=" 29 . 30) (T_CONSTANT_ENCAPSED_STRING 31 . 36) (";" 36 . 37))))
 
+   ;; States
    (should (equal (phps-mode-lexer-get-states)
-               '((36 37 1 (1 1 1 1 1)) (31 36 1 (1 1 1 1 1)) (29 30 1 (1 1 1 1 1)) (23 28 1 (1 1 1 1 1)) (19 20 1 (1 1 1 1 1)) (14 19 1 (1 1 1 1 1)) (12 13 1 (1 1 1 1 1)) (7 11 1 (1 1 1 1 1)) (1 7 1 (1 1 1 1 1)))))
-   
-   )
+                  '((36 37 1 (1 1 1 1 1)) (31 36 1 (1 1 1 1 1)) (29 30 1 (1 1 1 1 1)) (23 28 1 (1 1 1 1 1)) (19 20 1 (1 1 1 1 1)) (14 19 1 (1 1 1 1 1)) (12 13 1 (1 1 1 1 1)) (7 11 1 (1 1 1 1 1)) (1 7 1 (1 1 1 1 1))))))
 
   (phps-mode-test-with-buffer
    "<?php\nif (true):\n    $var = 'abc';\n    $var2 = '123';\nendif;\n"
@@ -1012,9 +1016,7 @@
                   '((T_OPEN_TAG 1 . 7) (T_IF 7 . 9) ("(" 10 . 11) (T_STRING 11 . 15) (")" 15 . 16) (":" 16 . 17) (T_VARIABLE 22 . 26) ("=" 27 . 28) (T_CONSTANT_ENCAPSED_STRING 29 . 34) (";" 34 . 35) (T_VARIABLE 40 . 45) ("=" 46 . 47) (T_CONSTANT_ENCAPSED_STRING 48 . 53) (";" 53 . 54) (T_ENDIF 60 . 65) (";" 65 . 66))))
 
    (should (equal (phps-mode-lexer-get-states)
-                  '((65 66 1 (1 1 1 1 1)) (60 65 1 (1 1 1 1 1)) (53 54 1 (1 1 1 1 1)) (48 53 1 (1 1 1 1 1)) (46 47 1 (1 1 1 1 1)) (40 45 1 (1 1 1 1 1)) (34 35 1 (1 1 1 1 1)) (29 34 1 (1 1 1 1 1)) (27 28 1 (1 1 1 1 1)) (22 26 1 (1 1 1 1 1)) (16 17 1 (1 1 1 1 1)) (15 16 1 (1 1 1 1 1)) (11 15 1 (1 1 1 1 1)) (10 11 1 (1 1 1 1 1)) (7 9 1 (1 1 1 1 1)) (1 7 1 (1 1 1 1 1)))))
-
-   )
+                  '((65 66 1 (1 1 1 1 1)) (60 65 1 (1 1 1 1 1)) (53 54 1 (1 1 1 1 1)) (48 53 1 (1 1 1 1 1)) (46 47 1 (1 1 1 1 1)) (40 45 1 (1 1 1 1 1)) (34 35 1 (1 1 1 1 1)) (29 34 1 (1 1 1 1 1)) (27 28 1 (1 1 1 1 1)) (22 26 1 (1 1 1 1 1)) (16 17 1 (1 1 1 1 1)) (15 16 1 (1 1 1 1 1)) (11 15 1 (1 1 1 1 1)) (10 11 1 (1 1 1 1 1)) (7 9 1 (1 1 1 1 1)) (1 7 1 (1 1 1 1 1))))))
 
   (phps-mode-test-with-buffer
    "<?php\nif (true):\n    $var = \"abc\nanother line here\nmore text here\";\n    $var2 = '123';\nendif;"
@@ -1037,9 +1039,18 @@
    (should (equal (phps-mode-lexer-get-tokens)
                   '((T_OPEN_TAG 1 . 7) (T_IF 7 . 9) ("(" 10 . 11) (T_STRING 11 . 15) (")" 15 . 16) (":" 16 . 17) (T_VARIABLE 22 . 26) ("=" 27 . 28) (T_CONSTANT_ENCAPSED_STRING 29 . 76) (";" 76 . 77) (T_VARIABLE 82 . 87) ("=" 88 . 89) (T_CONSTANT_ENCAPSED_STRING 90 . 95) (";" 95 . 96) (T_ENDIF 97 . 102) (";" 102 . 103))))
    (should (equal (phps-mode-lexer-get-states)
-                  '((102 103 1 (1 1 1 1 1)) (97 102 1 (1 1 1 1 1)) (95 96 1 (1 1 1 1 1)) (90 95 1 (1 1 1 1 1)) (88 89 1 (1 1 1 1 1)) (82 87 1 (1 1 1 1 1)) (76 77 1 (1 1 1 1 1)) (29 76 1 (1 1 1 1 1)) (27 28 1 (1 1 1 1 1)) (22 26 1 (1 1 1 1 1)) (16 17 1 (1 1 1 1 1)) (15 16 1 (1 1 1 1 1)) (11 15 1 (1 1 1 1 1)) (10 11 1 (1 1 1 1 1)) (7 9 1 (1 1 1 1 1)) (1 7 1 (1 1 1 1 1)))))
+                  '((102 103 1 (1 1 1 1 1)) (97 102 1 (1 1 1 1 1)) (95 96 1 (1 1 1 1 1)) (90 95 1 (1 1 1 1 1)) (88 89 1 (1 1 1 1 1)) (82 87 1 (1 1 1 1 1)) (76 77 1 (1 1 1 1 1)) (29 76 1 (1 1 1 1 1)) (27 28 1 (1 1 1 1 1)) (22 26 1 (1 1 1 1 1)) (16 17 1 (1 1 1 1 1)) (15 16 1 (1 1 1 1 1)) (11 15 1 (1 1 1 1 1)) (10 11 1 (1 1 1 1 1)) (7 9 1 (1 1 1 1 1)) (1 7 1 (1 1 1 1 1))))))
 
-   )
+  (phps-mode-test-with-buffer
+   "<?php\nfunction myFunctionA() {}\nfunction myFunctionB() {}\n"
+   "White-space changes in imenu function-oriented file"
+
+   (should (equal (phps-mode-functions-get-imenu) '(("myFunctionA" . 16) ("myFunctionB" . 42))))
+
+   (goto-char 32)
+   (newline-and-indent)
+
+   (should (equal (phps-mode-functions-get-imenu) '(("myFunctionA" . 16) ("myFunctionB" . 43)))))
 
   )
 

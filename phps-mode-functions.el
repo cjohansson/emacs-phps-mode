@@ -126,14 +126,13 @@
           (let ((item-label (car item)))
             (if (listp (cdr item))
                 (let ((sub-item (phps-mode-functions-get-moved-imenu (cdr item) start diff)))
-                  (push `(,item-label . ,(nreverse sub-item)) new-index))
+                  (push `(,item-label . ,sub-item) new-index))
               (let ((item-start (cdr item)))
                 (when (>= item-start start)
                   (setq item-start (+ item-start diff)))
-                (push `(,item-label . ,item-start) new-index))))
-          )))
+                (push `(,item-label . ,item-start) new-index)))))))
 
-    new-index))
+    (nreverse new-index)))
 
 (defun phps-mode-functions--get-lines-in-buffer (beg end)
   "Return the number of lines in buffer between BEG and END."
