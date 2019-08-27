@@ -125,8 +125,11 @@
     ;; MUST NOT use tabs for indenting
     (setq-local indent-tabs-mode nil))
 
-  ;; Add support for moving indexes quickly when making newlines
+  ;; Add support for moving indexes quickly forward when making new-lines
   (advice-add #'newline :around #'phps-mode-functions-around-newline)
+
+  ;; Add support for moving indexes quickly backward when deleting backwards
+  (advice-add #'delete-backward-char :around #'phps-mode-functions-around-delete-backward-char)
 
   ;; Reset flags
   (setq-local phps-mode-functions-allow-after-change t)
