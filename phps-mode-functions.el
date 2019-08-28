@@ -240,9 +240,7 @@
 (defun phps-mode-functions--process-tokens-in-string (tokens string)
   "Generate indexes for imenu and indentation for TOKENS and STRING one pass.  Complexity: O(n)."
   (if tokens
-      (save-excursion
-        ;; (message "Processing current buffer")
-        (goto-char (point-min))
+      (progn
         (when phps-mode-functions-verbose
           (message "\nCalculation indentation for all lines in buffer:\n\n%s" string))
         (let ((in-heredoc nil)
@@ -325,7 +323,7 @@
               (imenu-nesting-level 0)
               (incremental-line-number 1))
 
-          (push `(END_PARSE ,(point-max) . ,(point-max)) tokens)
+          (push `(END_PARSE ,(length string) . ,(length string)) tokens)
 
           ;; Iterate through all buffer tokens from beginning to end
           (dolist (item (nreverse tokens))
@@ -336,9 +334,10 @@
                   (next-token-start-line-number nil)
                   (next-token-end-line-number nil))
 
-              (when token
+              (when (and token
+                         (< token-end next-token-start))
                 ;; NOTE We use a incremental-line-number calculation because `line-at-pos' takes a lot of time
-                (setq incremental-line-number (+ incremental-line-number (phps-mode-functions--get-lines-in-buffer token-end next-token-start))))
+                (setq incremental-line-number (+ incremental-line-number (phps-mode-functions--get-lines-in-string (substring string (1- token-end) (1- next-token-start))))))
 
               ;; Handle the pseudo-token for last-line
               (if (equal next-token 'END_PARSE)
@@ -348,7 +347,8 @@
                 (setq next-token-start-line-number incremental-line-number)
 
                 ;; NOTE We use a incremental-line-number calculation because `line-at-pos' takes a lot of time
-                (setq incremental-line-number (+ incremental-line-number (phps-mode-functions--get-lines-in-buffer next-token-start next-token-end)))
+                ;; (message "Lines for %s '%s'" next-token (substring string (1- next-token-start) (1- next-token-end)))
+                (setq incremental-line-number (+ incremental-line-number (phps-mode-functions--get-lines-in-string (substring string (1- next-token-start) (1- next-token-end)))))
                 (setq next-token-end-line-number incremental-line-number)
                 (when phps-mode-functions-verbose
                   (message "Token '%s' pos: %s-%s lines: %s-%s" next-token next-token-start next-token-end next-token-start-line-number next-token-end-line-number)))
