@@ -1072,7 +1072,9 @@
 
 (defun phps-mode-functions-indent-line ()
   "Indent line."
-  (phps-mode-functions-process-current-buffer)
+  (when (and (boundp 'phps-mode-indent-triggers-process)
+             phps-mode-indent-triggers-process)
+    (phps-mode-functions-process-current-buffer))
   (when phps-mode-functions-lines-indent
     (let ((indent (gethash (line-number-at-pos (point)) phps-mode-functions-lines-indent)))
       (when indent

@@ -60,6 +60,9 @@
 (defvar phps-mode-idle-interval 1.0
   "Idle seconds before running the incremental lexer.")
 
+(defvar phps-mode-indent-triggers-process t
+  "Whether indenting should trigger process of buffer.")
+
 (defvar phps-mode-flycheck-applied nil "Boolean flag whether flycheck configuration has been applied or not.")
 
 (defvar phps-mode-inline-mmm-submode nil "Symbol declaring what mmm-mode to use as submode in inline areas.")
