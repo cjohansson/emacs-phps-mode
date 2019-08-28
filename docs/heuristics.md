@@ -1,13 +1,6 @@
 ## Heuristics
 
-These should solve the problem of freezing editor for too long when making white-space changes to code in large files. Otherwise a full incremental re-parse would be triggered more often than necessary.
-
-### Return
-When pressing return when the rest of the current line after cursor is only white-space, move indexes of tokens, lexer states, indentation and imenu forward one point
-
-
-### Backspace
-When pressing backspace when the rest of the current line before cursor is only white-space, move indexes of tokens, lexer states, indentation and imenu backward one pint
+These should solve the problem of freezing editor for too long when making small changes to large files. Otherwise a full incremental re-parse would be triggered more often than necessary.
 
 ### Indenting
 When indenting a line, calculate difference in white-space and change indexes of buffer after point correspondingly

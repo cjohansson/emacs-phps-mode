@@ -56,7 +56,9 @@
 (defun phps-mode-functions-process-current-buffer ()
   "Process current buffer, generate indentations and Imenu."
   ;; (message "(phps-mode-functions-process-current-buffer)")
-  (when (phps-mode-functions-get-buffer-changes-start)
+  (when (and (boundp 'phps-mode-lazy-process-buffer)
+             phps-mode-lazy-process-buffer
+             (phps-mode-functions-get-buffer-changes-start))
     (phps-mode-lexer-run-incremental)
     (setq phps-mode-functions-processed-buffer nil))
   (unless phps-mode-functions-processed-buffer
@@ -1072,9 +1074,7 @@
 
 (defun phps-mode-functions-indent-line ()
   "Indent line."
-  (when (and (boundp 'phps-mode-indent-triggers-process)
-             phps-mode-indent-triggers-process)
-    (phps-mode-functions-process-current-buffer))
+  (phps-mode-functions-process-current-buffer)
   (when phps-mode-functions-lines-indent
     (let ((indent (gethash (line-number-at-pos (point)) phps-mode-functions-lines-indent)))
       (when indent
@@ -1107,7 +1107,6 @@
 
               )))))))
 
-;; TODO Consider how indentation and imenu-index should be affected by this
 (defun phps-mode-functions-after-change (start _stop _length)
   "Track buffer change from START to STOP with length LENGTH."
   (when phps-mode-functions-allow-after-change

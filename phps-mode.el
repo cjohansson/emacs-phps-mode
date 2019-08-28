@@ -60,17 +60,20 @@
 (defvar phps-mode-idle-interval 1.0
   "Idle seconds before running the incremental lexer.")
 
-(defvar phps-mode-indent-triggers-process t
+(defvar phps-mode-lazy-process-buffer nil
   "Whether indenting should trigger process of buffer.")
 
-(defvar phps-mode-flycheck-applied nil "Boolean flag whether flycheck configuration has been applied or not.")
+(defvar phps-mode-flycheck-applied nil
+  "Boolean flag whether flycheck configuration has been applied or not.")
 
-(defvar phps-mode-inline-mmm-submode nil "Symbol declaring what mmm-mode to use as submode in inline areas.")
+(defvar phps-mode-inline-mmm-submode nil
+  "Symbol declaring what mmm-mode to use as submode in inline areas.")
 
 (defvar phps-mode-map
   (let ((map (make-sparse-keymap)))
     (define-key map (kbd "C-c /") #'comment-region)
     (define-key map (kbd "C-c DEL") #'uncomment-region)
+    (define-key map (kbd "C-c C-r") #'phps-mode-lexer-run)
     map)
   "Keymap for `phps-mode'.")
 
