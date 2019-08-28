@@ -60,7 +60,9 @@
     (phps-mode-lexer-run-incremental)
     (setq phps-mode-functions-processed-buffer nil))
   (unless phps-mode-functions-processed-buffer
-    (phps-mode-functions--process-current-buffer)
+    (let ((processed (phps-mode-functions--process-tokens-in-string phps-mode-lexer-tokens (buffer-substring-no-properties (point-min) (point-max)))))
+      (setq phps-mode-functions-imenu (nth 0 processed))
+      (setq phps-mode-functions-lines-indent (nth 1 processed)))
     (setq phps-mode-functions-processed-buffer t)))
 
 (defun phps-mode-functions-get-moved-lines-indent (old-lines-indents start-line-number diff)
@@ -235,15 +237,14 @@
         (setq start end)))
     (list (nreverse line-indents) indent tag-level curly-bracket-level square-bracket-level round-bracket-level)))
 
-;; TODO Make this function support incremental process
-(defun phps-mode-functions--process-current-buffer ()
-  "Generate indexes for indentation and imenu for current buffer in one pass.  Complexity: O(n)."
-  (if (boundp 'phps-mode-lexer-tokens)
+(defun phps-mode-functions--process-tokens-in-string (tokens string)
+  "Generate indexes for imenu and indentation for TOKENS and STRING one pass.  Complexity: O(n)."
+  (if tokens
       (save-excursion
         ;; (message "Processing current buffer")
         (goto-char (point-min))
         (when phps-mode-functions-verbose
-          (message "\nCalculation indentation for all lines in buffer:\n\n%s" (buffer-substring-no-properties (point-min) (point-max))))
+          (message "\nCalculation indentation for all lines in buffer:\n\n%s" string))
         (let ((in-heredoc nil)
               (in-heredoc-started-this-line nil)
               (in-heredoc-ended-this-line nil)
@@ -301,7 +302,7 @@
               (token-end nil)
               (token-start-line-number 0)
               (token-end-line-number 0)
-              (tokens (nreverse (copy-sequence phps-mode-lexer-tokens)))
+              (tokens (nreverse (copy-sequence tokens)))
               (nesting-stack nil)
               (nesting-key nil)
               (class-declaration-started-this-line nil)
@@ -409,7 +410,7 @@
 
                     ((and (or (equal token 'T_STRING)
                               (equal token 'T_NS_SEPARATOR))
-                          (setq imenu-in-namespace-name (concat imenu-in-namespace-name (buffer-substring-no-properties token-start token-end)))))))
+                          (setq imenu-in-namespace-name (concat imenu-in-namespace-name (substring string (1- token-start) (1- token-end))))))))
 
                  (imenu-in-class-declaration
                   (cond
@@ -421,7 +422,7 @@
 
                    ((and (equal token 'T_STRING)
                          (not imenu-in-class-name))
-                    (setq imenu-in-class-name (buffer-substring-no-properties token-start token-end)))))
+                    (setq imenu-in-class-name (substring string (1- token-start) (1- token-end))))))
 
                  (imenu-in-function-declaration
                   (cond
@@ -438,7 +439,7 @@
 
                    ((and (equal token 'T_STRING)
                          (not imenu-in-function-name))
-                    (setq imenu-in-function-name (buffer-substring-no-properties token-start token-end))
+                    (setq imenu-in-function-name (substring string (1- token-start) (1- token-end)))
                     (setq imenu-in-function-index token-start))))
 
                  (t (cond
@@ -483,10 +484,10 @@
                   (when first-token-on-line
                     (setq first-token-is-inline-html t))
 
-                  (let ((inline-html-indents (phps-mode-functions--get-inline-html-indentation (buffer-substring-no-properties token-start token-end) inline-html-indent inline-html-tag-level inline-html-curly-bracket-level inline-html-square-bracket-level inline-html-round-bracket-level)))
+                  (let ((inline-html-indents (phps-mode-functions--get-inline-html-indentation (substring string (1- token-start) (1- token-end)) inline-html-indent inline-html-tag-level inline-html-curly-bracket-level inline-html-square-bracket-level inline-html-round-bracket-level)))
 
                     (when phps-mode-functions-verbose
-                      (message "Received inline html indent: %s from inline HTML: '%s'" inline-html-indents (buffer-substring-no-properties token-start token-end)))
+                      (message "Received inline html indent: %s from inline HTML: '%s'" inline-html-indents (substring string (1- token-start) (1- token-end))))
 
                     ;; Update indexes
                     (setq inline-html-indent (nth 1 inline-html-indents))
@@ -497,7 +498,7 @@
 
                     ;; Does token span several lines and is it not only white-space?
                     (when (> token-end-line-number token-start-line-number)
-                      (unless (string= (string-trim (buffer-substring-no-properties token-start token-end)) "")
+                      (unless (string= (string-trim (substring string (1- token-start) (1- token-end))) "")
                         (let ((token-line-number-diff token-start-line-number))
                           ;; Iterate lines here and add indents
                           (dolist (item (nth 0 inline-html-indents))
@@ -1066,10 +1067,8 @@
               (setq token-start-line-number next-token-start-line-number)
               (setq token-end-line-number next-token-end-line-number)
               (setq token-number (1+ token-number))))
-          (setq phps-mode-functions-imenu (nreverse imenu-index))
-          (setq phps-mode-functions-lines-indent line-indents)))
-    (setq phps-mode-functions-imenu nil)
-    (setq phps-mode-functions-lines-indent nil)))
+          (list (nreverse imenu-index) line-indents)))
+    (list nil nil)))
 
 (defun phps-mode-functions-indent-line ()
   "Indent line."
