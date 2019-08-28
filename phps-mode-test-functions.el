@@ -956,7 +956,6 @@
   )
 
 ;; TODO Add functionality for (delete-backward-char) as well
-;; TODO Test imenu movement here as well
 (defun phps-mode-test-functions-whitespace-modifications ()
   "Test white-space modifications functions."
 
@@ -983,6 +982,7 @@
    ;; Final state
    ;; (message "Tokens %s" (phps-mode-lexer-get-tokens))
    ;; (message "States: %s" (phps-mode-lexer-get-states))
+   (phps-mode-lexer-run-incremental)
 
    ;; Tokens
    (should (equal (phps-mode-lexer-get-tokens)
@@ -1010,7 +1010,9 @@
 
    ;; Insert newline
    (goto-char 21)
-   (delete-backward-char 1)
+   (delete-char 1)
+
+   (phps-mode-lexer-run-incremental)
 
    ;; Final state
    ;; (message "Modified buffer: '%s'" (buffer-substring-no-properties (point-min) (point-max)))
@@ -1042,6 +1044,8 @@
    (goto-char 54)
    (newline-and-indent)
 
+   (phps-mode-lexer-run-incremental)
+
    ;; Final state
    ;; (message "Tokens %s" (phps-mode-lexer-get-tokens))
    ;; (message "States: %s" (phps-mode-lexer-get-states))
@@ -1067,6 +1071,8 @@
    (goto-char 51)
    (newline-and-indent)
 
+   (phps-mode-lexer-run-incremental)
+
    ;; (message "After Tokens %s" (phps-mode-lexer-get-tokens))
    ;; (message "After States: %s" (phps-mode-lexer-get-states))
    (should (equal (phps-mode-lexer-get-tokens)
@@ -1082,6 +1088,8 @@
 
    (goto-char 32)
    (newline-and-indent)
+
+   (phps-mode-lexer-run-incremental)
 
    (should (equal (phps-mode-functions-get-imenu) '(("myFunctionA" . 16) ("myFunctionB" . 43)))))
 
