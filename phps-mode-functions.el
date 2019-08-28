@@ -1117,6 +1117,12 @@
                (boundp 'phps-mode-idle-interval)
                phps-mode-idle-interval)
       ;; (message "Enqueued incremental lexer")
+
+      ;; Reset imenu
+      (when (and (boundp 'imenu--index-alist)
+                 imenu--index-alist)
+        (setq-local imenu--index-alist nil))
+
       (run-with-idle-timer phps-mode-idle-interval nil #'phps-mode-lexer-run-incremental))
 
     ;; When point of change is not set or when start of new changes precedes old change - update the point
