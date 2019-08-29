@@ -62,6 +62,12 @@
     (phps-mode-lexer-run-incremental)
     (setq phps-mode-functions-processed-buffer nil))
   (unless phps-mode-functions-processed-buffer
+
+    ;; Reset imenu
+    (when (and (boundp 'imenu--index-alist)
+               imenu--index-alist)
+      (setq-local imenu--index-alist nil))
+
     (let ((processed (phps-mode-functions--process-tokens-in-string phps-mode-lexer-tokens (buffer-substring-no-properties (point-min) (point-max)))))
       (setq phps-mode-functions-imenu (nth 0 processed))
       (setq phps-mode-functions-lines-indent (nth 1 processed)))
@@ -1116,11 +1122,6 @@
                (boundp 'phps-mode-idle-interval)
                phps-mode-idle-interval)
       ;; (message "Enqueued incremental lexer")
-
-      ;; Reset imenu
-      (when (and (boundp 'imenu--index-alist)
-                 imenu--index-alist)
-        (setq-local imenu--index-alist nil))
 
       (run-with-idle-timer phps-mode-idle-interval nil #'phps-mode-lexer-run-incremental))
 
