@@ -32,6 +32,9 @@
 (defvar phps-mode-functions-buffer-changes-start nil
   "Start point of buffer changes, nil if none.")
 
+(defvar phps-mode-functions-buffer-changes-stop nil
+  "Stop point of buffer changes, nil if none.")
+
 (defvar phps-mode-functions-lines-indent nil
   "The indentation of each line in buffer, nil if none.")
 
@@ -48,10 +51,19 @@
   "Get buffer change start."
   phps-mode-functions-buffer-changes-start)
 
+(defun phps-mode-functions-get-buffer-changes-stop ()
+  "Get buffer change stop."
+  phps-mode-functions-buffer-changes-stop)
+
 (defun phps-mode-functions-reset-buffer-changes-start ()
   "Reset buffer change start."
   ;; (message "Reset flag for buffer changes")
   (setq phps-mode-functions-buffer-changes-start nil))
+
+(defun phps-mode-functions-reset-buffer-changes-stop ()
+  "Reset buffer change stop."
+  ;; (message "Reset flag for buffer changes")
+  (setq phps-mode-functions-buffer-changes-stop nil))
 
 (defun phps-mode-functions-process-current-buffer ()
   "Process current buffer, generate indentations and Imenu."
@@ -1113,7 +1125,7 @@
 
               )))))))
 
-(defun phps-mode-functions-after-change (start _stop _length)
+(defun phps-mode-functions-after-change (start stop _length)
   "Track buffer change from START to STOP with length LENGTH."
   (when phps-mode-functions-allow-after-change
 
@@ -1121,18 +1133,21 @@
     (when (and (not phps-mode-functions-buffer-changes-start)
                (boundp 'phps-mode-idle-interval)
                phps-mode-idle-interval)
-      ;; (message "Enqueued incremental lexer")
 
+      ;; (message "Enqueued incremental lexer")
       (run-with-idle-timer phps-mode-idle-interval nil #'phps-mode-lexer-run-incremental))
 
-    ;; When point of change is not set or when start of new changes precedes old change - update the point
+    ;; When point of change is not set or when start of new changes precedes old change - update index
     (when (or (not phps-mode-functions-buffer-changes-start)
               (< start phps-mode-functions-buffer-changes-start))
-      (setq phps-mode-functions-buffer-changes-start start)
-      ;; (message "Setting start of changes to: %s-%s" phps-mode-functions-buffer-changes-start stop))
+      (setq phps-mode-functions-buffer-changes-start start))
 
-      ;; (message "phps-mode-functions-after-change %s %s %s" start stop length)
-      )))
+    ;; When point of change is not set or when point of new changes is above old change - update index
+    (when (or (not phps-mode-functions-buffer-changes-stop)
+              (> stop phps-mode-functions-buffer-changes-stop))
+      (setq phps-mode-functions-buffer-changes-stop stop))
+
+    ))
 
 (defun phps-mode-functions-imenu-create-index ()
   "Get Imenu for current buffer."

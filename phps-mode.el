@@ -134,6 +134,7 @@
   ;; Reset flags
   (setq-local phps-mode-functions-allow-after-change t)
   (setq-local phps-mode-functions-buffer-changes-start nil)
+  (setq-local phps-mode-functions-buffer-changes-stop nil)
   (setq-local phps-mode-functions-lines-indent nil)
   (setq-local phps-mode-functions-imenu nil)
   (setq-local phps-mode-functions-processed-buffer nil)
