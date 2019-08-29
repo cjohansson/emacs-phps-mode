@@ -1678,7 +1678,6 @@
               (push token new-tokens))))))
     new-tokens))
 
-;; TODO Consider how imenu-index should be affected by this
 (defun phps-mode-lexer-run-incremental ()
   "Run incremental lexer based on `(phps-mode-functions-get-buffer-changes-start)'."
   ;; (message "Running incremental lexer")

@@ -426,7 +426,7 @@
   "Run test for lexer."
   ;; (message "-- Running all tests for lexer... --\n")
   ;; (setq debug-on-error t)
-  ;; (setq phps-mode-functions-verbose t)
+  ;; (setq phps-mode-debug t)
   (phps-mode-test-lexer-script-boundaries)
   (phps-mode-test-lexer-simple-tokens)
   (phps-mode-test-lexer-complex-tokens)
