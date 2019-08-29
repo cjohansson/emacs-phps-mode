@@ -1681,8 +1681,10 @@
 (defun phps-mode-lexer-run-incremental ()
   "Run incremental lexer based on `(phps-mode-functions-get-buffer-changes-start)'."
   ;; (message "Running incremental lexer")
-  (let ((change-start (phps-mode-functions-get-buffer-changes-start)))
-    (when change-start
+  (let ((change-start (phps-mode-functions-get-buffer-changes-start))
+        (change-stop (phps-mode-functions-get-buffer-changes-stop)))
+    (when (and change-start
+               change-stop)
       (when (and (> change-start 1)
                  phps-mode-lexer-states)
         (let ((state nil)
@@ -1712,6 +1714,11 @@
                    state-stack)
               (let ((old-tokens '()))
 
+                ;; Rewind state here
+                (setq phps-mode-lexer-states new-states)
+                (setq phps-mode-lexer-STATE states)
+                (setq phps-mode-lexer-state_stack state-stack)
+
                 ;; Build new list of tokens before point of change
                 (catch 'stop-iteration
                   (dolist (token tokens)
@@ -1725,11 +1732,18 @@
                         (throw 'stop-iteration nil)))))
                 (setq old-tokens (nreverse old-tokens))
 
-                ;; Delete all syntax coloring from point of change to end of buffer
-                (phps-mode-lexer-clear-region-syntax-color previous-token-end (point-max))
-                
-                (let* ((new-tokens (semantic-lex previous-token-start (point-max)))
+                ;; Delete all syntax coloring from point of change to stop of change
+                (phps-mode-lexer-clear-region-syntax-color previous-token-end change-stop)
+
+                ;; Do partial lex from previous-token-end to change-stop
+                (let* ((new-tokens (semantic-lex previous-token-start change-stop))
                        (appended-tokens (append old-tokens new-tokens)))
+
+                  ;; TODO
+                  ;; * If states at change-stop is identical to old states, re-use rest of tokens, states, indexes
+                  ;; * Otherwise clear syntax coloring of rest of buffer and lex rest of buffer
+
+                  ;; TODO Should append states as well
                   ;; (message "old-tokens: %s, new-tokens: %s" old-tokens new-tokens)
                   (setq phps-mode-lexer-tokens appended-tokens)
                   (setq phps-mode-lexer-STATE state)
