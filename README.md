@@ -3,9 +3,9 @@
 [![License GPL 3](https://img.shields.io/badge/license-GPL_3-green.svg)](https://www.gnu.org/licenses/gpl-3.0.txt)
 [![Build Status](https://travis-ci.org/cjohansson/emacs-phps-mode.svg?branch=master)](https://travis-ci.org/cjohansson/emacs-phps-mode)
 
-An Emacs major mode for PHP scripting language which aims at making a full semantic integration. Currently at *usable* stage.
+**Goal**: An Emacs major mode for PHP scripting language which aims at making a full semantic integration. Currently at *usable* stage.
 
-This mode does not require PHP installed on your computer because it has a built-in elisp based semantic lexer and semantic parser. It supports all PHP versions and Emacs >= 26.
+This mode does not require PHP installed on your computer because it has a built-in elisp based semantic lexer. It supports all PHP versions and Emacs >= 26.
 
 ## Features
 
@@ -22,77 +22,14 @@ This mode does not require PHP installed on your computer because it has a built
 * Imenu support
 * Minimal mode map
 * Tested using unit tests and integration tests
-* Travis support
+* Continuous integration tests using Travis
 * Included in GNU ELPA package archive
 
+## Keymap
 
-## Develop
-
-Make pull requests to develop branch or branches from develop branch. Tested changes are merged to master.
-
-## Tests
-
-If you have emacs at a customized location prefix the commands with your path, i.e.
-
-`export emacs="~/Documents/emacs/src/emacs" && make tests`
-
-Run all tests with `make tests`.
-
-### Functions
-
-Indentations, incremental processes, Imenu-support.
-
-``` bash
-make test-functions
-```
-
-### Integration
-
-This should test all other parts in collaboration.
-
-``` bash
-make test-integration
-```
-
-### Lexer
-
-Lexer token generation.
-
-``` bash
-make test-lexer
-```
-
-### Parser
-
-Semantic grammar. Not ready yet.
-
-``` bash
-make test-parser
-```
-
-### Syntax-table
-
-Basic point and region behaviour.
-
-``` bash
-make test-syntax-table
-```
-
-## Byte-compilation
-
-Plug-in should support byte-compilation and it is recommended.
-
-### Compile
-
-``` bash
-make compile
-```
-
-### Clean
-
-``` bash
-make clean
-```
+* `C-c /` Comment region
+* `C-c DEL` Uncomment region
+* `C-c C-r` Rescan buffer
 
 ## Installation
 
@@ -131,13 +68,10 @@ You can install via ELPA (`M-x package-install` + `RET` + `phps-mode` + `RET`), 
 (add-to-list 'auto-mode-alist '("\\.\\(php\\|phtml\\)\\'" . phps-mode))
 ```
 
-## Contribute
+## Read more
 
-This project is licensed to Free Software Foundation so sign the needed papers. Then create a branch based on a updated `develop`. Make pull request.
-
-## Docs
-
-* [TODO](docs/todo.md)
+* [Development](docs/development.md)
 * [Heuristics](docs/heuristics.md)
-* [Imenu algorithm](docs/imenu.md)
 * [Indentation algorithm](docs/indentation.md)
+* [Imenu algorithm](docs/imenu.md)
+* [TODO](docs/todo.md)
