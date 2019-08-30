@@ -1678,6 +1678,7 @@
               (push token new-tokens))))))
     new-tokens))
 
+;; TODO Maybe states doesn't need to store a stack for each state change
 (defun phps-mode-lexer-run-incremental ()
   "Run incremental lexer based on `(phps-mode-functions-get-buffer-changes-start)'."
   ;; (message "Running incremental lexer")
@@ -1690,25 +1691,30 @@
         (let ((state nil)
               (state-stack nil)
               (new-states '())
+              (remaining-states '())
               (states (nreverse phps-mode-lexer-states))
               (previous-token-start nil)
               (previous-token-end nil)
-              (tokens phps-mode-lexer-tokens))
+              (tokens phps-mode-lexer-tokens)
+              (remaining-tokens '())
+              (old-state-at-stop nil))
 
-          ;; Find state and state stack before point of change
-          ;; also determine were previous token to change starts
-          (catch 'stop-iteration
-            (dolist (state-object states)
-              (let ((start (nth 0 state-object))
-                    (end (nth 1 state-object)))
-                (when (< end change-start)
-                  (setq state (nth 2 state-object))
-                  (setq state-stack (nth 3 state-object))
-                  (setq previous-token-start start)
-                  (setq previous-token-end end)
-                  (push state-object new-states))
-                (when (> start change-start)
-                  (throw 'stop-iteration nil)))))
+          ;; Find state and state stack before change start
+          ;; Find state at change stop
+          ;; Find state stack after change stop
+          ;; Determine were previous token to change starts
+          (dolist (state-object states)
+            (let ((start (nth 0 state-object))
+                  (end (nth 1 state-object)))
+              (when (< end change-start)
+                (setq state (nth 2 state-object))
+                (setq state-stack (nth 3 state-object))
+                (setq previous-token-start start)
+                (setq previous-token-end end)
+                (push state-object new-states))
+              (if (< end change-stop)
+                  (setq old-state-at-stop (nth 2 state-object))
+                (push state-object remaining-states))))
 
           (if (and state
                    state-stack)
@@ -1720,17 +1726,18 @@
                 (setq phps-mode-lexer-state_stack state-stack)
 
                 ;; Build new list of tokens before point of change
-                (catch 'stop-iteration
-                  (dolist (token tokens)
-                    (let ((_start (car (cdr token)))
-                          (end (cdr (cdr token))))
-                      (if (< end previous-token-end)
-                          (progn
-                            ;; NOTE Does following line make any difference?
-                            ;; (semantic-lex-push-token (semantic-lex-token token _start end))
-                            (push token old-tokens))
-                        (throw 'stop-iteration nil)))))
+                (dolist (token tokens)
+                  (let ((_start (car (cdr token)))
+                        (end (cdr (cdr token))))
+                    (if (< end previous-token-end)
+                        (progn
+                          ;; NOTE Does following line make any difference?
+                          ;; (semantic-lex-push-token (semantic-lex-token token _start end))
+                          (push token old-tokens))
+                      (unless (< end change-stop)
+                        (push token remaining-tokens)))))
                 (setq old-tokens (nreverse old-tokens))
+                (setq remaining-tokens (nreverse remaining-tokens))
 
                 ;; Delete all syntax coloring from point of change to stop of change
                 (phps-mode-lexer-clear-region-syntax-color previous-token-end change-stop)
@@ -1739,9 +1746,21 @@
                 (let* ((new-tokens (semantic-lex previous-token-start change-stop))
                        (appended-tokens (append old-tokens new-tokens)))
 
-                  ;; TODO
-                  ;; * If states at change-stop is identical to old states, re-use rest of tokens, states, indexes
-                  ;; * Otherwise clear syntax coloring of rest of buffer and lex rest of buffer
+                  ;; * states at change-stop is identical to old state at change-stop
+                  (if (= phps-mode-lexer-STATE old-state-at-stop)
+                      (progn
+                        ;; TODO re-use rest of tokens, states and indexes here
+                        )
+
+                    ;; Clear syntax colouring of rest of buffer
+                    (phps-mode-lexer-clear-region-syntax-color change-stop (point-max))
+
+                    ;; Lex rest of buffer
+                    (setq old-tokens appended-tokens)
+                    (let* ((new-tokens (semantic-lex change-stop (point-max)))
+                           (appended-tokens (append old-tokens new-tokens)))
+                      ))
+
 
                   ;; TODO Should append states as well
                   ;; (message "old-tokens: %s, new-tokens: %s" old-tokens new-tokens)
