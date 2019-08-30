@@ -1116,7 +1116,8 @@
   "Track buffer change from START to STOP with length LENGTH."
   (when phps-mode-functions-allow-after-change
 
-    (message "After change %s - %s" start stop)
+    (phps-mode-debug-message
+     (message "After change %s - %s" start stop))
 
     ;; If we haven't scheduled incremental lexer before - do it
     (when (and (not phps-mode-functions-buffer-changes-start)

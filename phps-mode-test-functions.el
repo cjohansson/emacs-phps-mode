@@ -981,11 +981,11 @@
    (newline nil nil)
 
    ;; Final state
-   (message "Tokens %s" (phps-mode-lexer-get-tokens))
-   (message "States: %s" (phps-mode-lexer-get-states))
+   ;; (message "Tokens %s" (phps-mode-lexer-get-tokens))
+   ;; (message "States: %s" (phps-mode-lexer-get-states))
    (phps-mode-lexer-run-incremental)
-   (message "Tokens %s" (phps-mode-lexer-get-tokens))
-   (message "States: %s" (phps-mode-lexer-get-states))
+   ;; (message "Tokens %s" (phps-mode-lexer-get-tokens))
+   ;; (message "States: %s" (phps-mode-lexer-get-states))
 
    ;; Tokens
    (should (equal (phps-mode-lexer-get-tokens)
