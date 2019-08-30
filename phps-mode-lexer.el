@@ -31,6 +31,7 @@
 
 ;; NOTE We use autoload here to circumvent recursive require
 (autoload 'phps-mode-functions-get-buffer-changes-start "phps-mode-functions")
+(autoload 'phps-mode-functions-get-buffer-changes-stop "phps-mode-functions")
 (autoload 'phps-mode-functions-reset-buffer-changes-start "phps-mode-functions")
 
 (require 'semantic)
@@ -1750,6 +1751,8 @@
                   (if (= phps-mode-lexer-STATE old-state-at-stop)
                       (progn
                         ;; TODO re-use rest of tokens, states and indexes here
+                        (setq appended-tokens (append appended-tokens remaining-tokens))
+                        ;; (phps-mode-debug-message (format "New tokens are: %s" new-tokens))
                         )
 
                     ;; Clear syntax colouring of rest of buffer
@@ -1757,10 +1760,8 @@
 
                     ;; Lex rest of buffer
                     (setq old-tokens appended-tokens)
-                    (let* ((new-tokens (semantic-lex change-stop (point-max)))
-                           (appended-tokens (append old-tokens new-tokens)))
-                      ))
-
+                    (setq new-tokens (semantic-lex change-stop (point-max)))
+                    (setq appended-tokens (append old-tokens new-tokens)))
 
                   ;; TODO Should append states as well
                   ;; (message "old-tokens: %s, new-tokens: %s" old-tokens new-tokens)
@@ -1771,10 +1772,10 @@
                   
                   ;; (message "Rewinding lex to state: %s and stack: %s and states: %s and start: %s old tokens: %s" state state-stack new-states previous-token-start old-tokens)
 
-                  ))
-            ;; (display-warning "phps-mode" (format "Found no state to rewind to for %s in stack %s, buffer point max: %s" change-start states (point-max)))
-            )))
-      (phps-mode-lexer-run)))
+                  )))
+          ;; (display-warning "phps-mode" (format "Found no state to rewind to for %s in stack %s, buffer point max: %s" change-start states (point-max)))
+          )))
+    (phps-mode-lexer-run))
   (phps-mode-functions-reset-buffer-changes-start))
 
 (define-lex phps-mode-lexer-lex

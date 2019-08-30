@@ -173,7 +173,7 @@
 
 
   (phps-mode-debug-message
-   (format "Calculating HTML indent for: '%s'" inline-html))
+   (message "Calculating HTML indent for: '%s'" inline-html))
 
   ;; Add trailing newline if missing
   (unless (string-match "\n$" inline-html)
@@ -196,7 +196,7 @@
           (let ((temp-indent indent))
             (when first-object-is-nesting-decrease
               (phps-mode-debug-message
-               (format "Decreasing indent with one since first object was a nesting decrease"))
+               (message "Decreasing indent with one since first object was a nesting decrease"))
               (setq temp-indent (1- indent))
               (when (< temp-indent 0)
                 (setq temp-indent 0)))
@@ -207,11 +207,11 @@
           (if (> indent-end indent-start)
               (progn
                 (phps-mode-debug-message
-                  (format "Increasing indent since %s is above %s" indent-end indent-start))
+                  (message "Increasing indent since %s is above %s" indent-end indent-start))
                 (setq indent (1+ indent)))
             (when (< indent-end indent-start)
               (phps-mode-debug-message
-                (format "Decreasing indent since %s is below %s" indent-end indent-start))
+                (message "Decreasing indent since %s is below %s" indent-end indent-start))
               (setq indent (1- indent))
               (when (< indent 0)
                 (setq indent 0))))
@@ -258,8 +258,7 @@
   "Generate indexes for imenu and indentation for TOKENS and STRING one pass.  Complexity: O(n)."
   (if tokens
       (progn
-        (phps-mode-debug-message
-          (format "\nCalculation indentation for all lines in buffer:\n\n%s" string))
+        (phps-mode-debug-message (message "\nCalculation indentation for all lines in buffer:\n\n%s" string))
         (let ((in-heredoc nil)
               (in-heredoc-started-this-line nil)
               (in-heredoc-ended-this-line nil)
@@ -368,7 +367,7 @@
                 (setq incremental-line-number (+ incremental-line-number (phps-mode-functions--get-lines-in-string (substring string (1- next-token-start) (1- next-token-end)))))
                 (setq next-token-end-line-number incremental-line-number)
                 (phps-mode-debug-message
-                  (format "Token '%s' pos: %s-%s lines: %s-%s" next-token next-token-start next-token-end next-token-start-line-number next-token-end-line-number)))
+                  (message "Token '%s' pos: %s-%s lines: %s-%s" next-token next-token-start next-token-end next-token-start-line-number next-token-end-line-number)))
 
               ;; Token logic - we have one-two token look-ahead at this point
               ;; `token' is previous token
@@ -504,7 +503,7 @@
                   (let ((inline-html-indents (phps-mode-functions--get-inline-html-indentation (substring string (1- token-start) (1- token-end)) inline-html-indent inline-html-tag-level inline-html-curly-bracket-level inline-html-square-bracket-level inline-html-round-bracket-level)))
 
                     (phps-mode-debug-message
-                      (format "Received inline html indent: %s from inline HTML: '%s'" inline-html-indents (substring string (1- token-start) (1- token-end))))
+                      (message "Received inline html indent: %s from inline HTML: '%s'" inline-html-indents (substring string (1- token-start) (1- token-end))))
 
                     ;; Update indexes
                     (setq inline-html-indent (nth 1 inline-html-indents))
@@ -524,7 +523,7 @@
                                       first-token-is-inline-html)
                               (puthash token-line-number-diff (list item 0) line-indents)
                               (phps-mode-debug-message
-                                (format "Putting indent at line %s to %s from inline HTML" token-line-number-diff item)))
+                                (message "Putting indent at line %s to %s from inline HTML" token-line-number-diff item)))
                             (setq token-line-number-diff (1+ token-line-number-diff))))))))
 
                 ;; Keep track of when we are inside a class definition
@@ -565,7 +564,7 @@
                              (= (1+ curly-bracket-level) (car switch-curly-stack)))
 
                     (phps-mode-debug-message
-                      (format "Ended switch curly stack at %s" curly-bracket-level))
+                      (message "Ended switch curly stack at %s" curly-bracket-level))
 
                     (setq allow-custom-column-decrement t)
                     (pop nesting-stack)
@@ -588,7 +587,7 @@
                              switch-case-alternative-stack)
 
                     (phps-mode-debug-message
-                      (format "Ended alternative switch stack at %s" alternative-control-structure-level))
+                      (message "Ended alternative switch stack at %s" alternative-control-structure-level))
                     
                     (pop switch-alternative-stack)
                     (pop switch-case-alternative-stack)
@@ -616,7 +615,7 @@
                         (when (equal after-special-control-structure-token 'T_SWITCH)
 
                           (phps-mode-debug-message
-                            (format "Started switch curly stack at %s" curly-bracket-level))
+                            (message "Started switch curly stack at %s" curly-bracket-level))
 
                           (push curly-bracket-level switch-curly-stack))
 
@@ -629,20 +628,20 @@
                             (when (equal after-special-control-structure-token 'T_SWITCH)
 
                               (phps-mode-debug-message
-                                (format "Started switch alternative stack at %s" alternative-control-structure-level))
+                                (message "Started switch alternative stack at %s" alternative-control-structure-level))
 
                               (push alternative-control-structure-level switch-alternative-stack))
 
                             (setq alternative-control-structure-level (1+ alternative-control-structure-level))
 
                             (phps-mode-debug-message
-                              (format "\nIncreasing alternative-control-structure after %s %s to %s\n" after-special-control-structure-token token alternative-control-structure-level))
+                              (message "\nIncreasing alternative-control-structure after %s %s to %s\n" after-special-control-structure-token token alternative-control-structure-level))
                             )
 
                         ;; Don't start inline control structures after a while ($condition); expression
                         (unless (string= token ";")
                           (phps-mode-debug-message
-                            (format "\nStarted inline control-structure after %s at %s\n" after-special-control-structure-token token))
+                            (message "\nStarted inline control-structure after %s at %s\n" after-special-control-structure-token token))
 
                           (setq in-inline-control-structure t)
                           (setq temp-pre-indent (1+ column-level)))))
@@ -722,7 +721,7 @@
                       (setq first-token-is-nesting-decrease t))
 
                     (phps-mode-debug-message
-                      (format "\nDecreasing alternative control structure nesting at %s to %s\n" token alternative-control-structure-level)))
+                      (message "\nDecreasing alternative control structure nesting at %s to %s\n" token alternative-control-structure-level)))
 
                   )
 
@@ -752,7 +751,7 @@
                     ;; NOTE Ending an assignment because of a T_FUNCTION token is to support PSR-2 Closures
                     
                     (phps-mode-debug-message
-                      (format "Ended assignment %s at %s %s" in-assignment-level token next-token))
+                      (message "Ended assignment %s at %s %s" in-assignment-level token next-token))
                     (pop in-assignment-square-bracket-level)
                     (pop in-assignment-round-bracket-level)
                     (unless in-assignment-round-bracket-level
@@ -768,7 +767,7 @@
                            (or (string= next-token ")")
                                (string= next-token "]")))
                       (phps-mode-debug-message
-                        (format "Ended another assignment %s at %s %s" in-assignment-level token next-token))
+                        (message "Ended another assignment %s at %s %s" in-assignment-level token next-token))
                       (pop in-assignment-square-bracket-level)
                       (pop in-assignment-round-bracket-level)
                       (unless in-assignment-round-bracket-level
@@ -810,7 +809,7 @@
                              (equal next-token 'T_OBJECT_OPERATOR)
                              (equal next-token 'T_PAAMAYIM_NEKUDOTAYIM))))
                   (phps-mode-debug-message
-                    (format "Ended object-operator at %s %s at level %s" token next-token in-object-operator-level))
+                    (message "Ended object-operator at %s %s at level %s" token next-token in-object-operator-level))
                   (pop in-object-operator-round-bracket-level)
                   (pop in-object-operator-square-bracket-level)
                   (setq in-object-operator-level (1- in-object-operator-level))
@@ -823,7 +822,7 @@
                             (string= next-token "("))
                     (progn
                       (phps-mode-debug-message
-                        (format "Started object-operator at %s %s on level %s"  token next-token in-object-operator-level))
+                        (message "Started object-operator at %s %s on level %s"  token next-token in-object-operator-level))
                       (push round-bracket-level in-object-operator-round-bracket-level)
                       (push square-bracket-level in-object-operator-square-bracket-level)
                       (setq in-object-operator t)
@@ -835,7 +834,7 @@
                                (equal token 'T_PAAMAYIM_NEKUDOTAYIM))
                            (equal next-token 'T_STRING))
                   (phps-mode-debug-message
-                    (format "After object-operator at %s level %s"  token in-object-operator-level))
+                    (message "After object-operator at %s level %s"  token in-object-operator-level))
                   (setq after-object-operator t))
 
                 ;; Keep track of return expressions
@@ -843,8 +842,7 @@
                   (when (and (string= token ";")
                              (= curly-bracket-level (car in-return-curly-bracket-level)))
 
-                    (phps-mode-debug-message
-                      (format "Ended return at %s" token))
+                    (phps-mode-debug-message (message "Ended return at %s" token))
                     (pop in-return-curly-bracket-level)
                     (unless in-return-curly-bracket-level
                       (setq in-return nil))
@@ -865,7 +863,7 @@
                              (= (1- alternative-control-structure-level) (car switch-case-alternative-stack)))
 
                     (phps-mode-debug-message
-                      (format "Found CASE %s vs %s" (1- alternative-control-structure-level) (car switch-case-alternative-stack)))
+                      (message "Found CASE %s vs %s" (1- alternative-control-structure-level) (car switch-case-alternative-stack)))
 
                     (setq alternative-control-structure-level (1- alternative-control-structure-level))
                     (when first-token-on-line
@@ -876,8 +874,7 @@
 
               (when token
 
-                (phps-mode-debug-message
-                  (format "Processing token: %s" token))
+                (phps-mode-debug-message (message "Processing token: %s" token))
                 
                 ;; Calculate nesting
                 (setq nesting-end (+ round-bracket-level square-bracket-level curly-bracket-level alternative-control-structure-level in-assignment-level in-class-declaration-level in-concatenation-level in-return-level in-object-operator-level))
@@ -899,7 +896,7 @@
                     (while (and nesting-stack
                                 (<= nesting-end (car (car nesting-stack))))
                       (phps-mode-debug-message
-                        (format "\nPopping %s from nesting-stack since %s is lesser or equal to %s, next value is: %s\n" (car nesting-stack) nesting-end (car (car nesting-stack)) (nth 1 nesting-stack)))
+                        (message "\nPopping %s from nesting-stack since %s is lesser or equal to %s, next value is: %s\n" (car nesting-stack) nesting-end (car (car nesting-stack)) (nth 1 nesting-stack)))
                       (pop nesting-stack)
                       (setq nesting-decrement (1+ nesting-decrement)))
 
@@ -910,11 +907,11 @@
                           (if allow-custom-column-decrement
                               (progn
                                 (phps-mode-debug-message
-                                  (format "Doing custom decrement 1 from %s to %s" column-level (- column-level (- nesting-start nesting-end))))
+                                  (message "Doing custom decrement 1 from %s to %s" column-level (- column-level (- nesting-start nesting-end))))
                                 (setq column-level (- column-level (- nesting-start nesting-end)))
                                 (setq allow-custom-column-decrement nil))
                             (phps-mode-debug-message
-                              (format "Doing regular decrement 1 from %s to %s" column-level (1- column-level)))
+                              (message "Doing regular decrement 1 from %s to %s" column-level (1- column-level)))
                             (setq column-level (- column-level nesting-decrement)))
 
                           ;; Prevent negative column-values
@@ -923,14 +920,14 @@
 
                       (unless temp-post-indent
                         (phps-mode-debug-message
-                          (format "Temporary setting post indent %s" column-level))
+                          (message "Temporary setting post indent %s" column-level))
                         (setq temp-post-indent column-level))
 
                       ;; Decrement column
                       (if allow-custom-column-decrement
                           (progn
                             (phps-mode-debug-message
-                              (format "Doing custom decrement 2 from %s to %s" column-level (- column-level (- nesting-start nesting-end))))
+                              (message "Doing custom decrement 2 from %s to %s" column-level (- column-level (- nesting-start nesting-end))))
                             (setq temp-post-indent (- temp-post-indent (- nesting-start nesting-end)))
                             (setq allow-custom-column-decrement nil))
                         (setq temp-post-indent (- temp-post-indent nesting-decrement)))
@@ -969,7 +966,7 @@
 
                       ;; Save line indent
                       (phps-mode-debug-message
-                        (format "Process line ending.	nesting: %s-%s,	line-number: %s-%s,	indent: %s.%s,	token: %s" nesting-start nesting-end token-start-line-number token-end-line-number column-level-start tuning-level token))
+                        (message "Process line ending.	nesting: %s-%s,	line-number: %s-%s,	indent: %s.%s,	token: %s" nesting-start nesting-end token-start-line-number token-end-line-number column-level-start tuning-level token))
 
                       (when (> token-start-line-number 0)
                         (puthash token-start-line-number `(,column-level-start ,tuning-level) line-indents))
@@ -995,7 +992,7 @@
                             (setq column-level (1+ column-level)))
 
                           (phps-mode-debug-message
-                            (format "\nPushing (%s %s %s %s) to nesting-stack since %s is greater than %s or stack is empty\n" nesting-start nesting-end nesting-key token nesting-end (car (cdr (car nesting-stack))))
+                            (message "\nPushing (%s %s %s %s) to nesting-stack since %s is greater than %s or stack is empty\n" nesting-start nesting-end nesting-key token nesting-end (car (cdr (car nesting-stack))))
                             )
                           (push `(,nesting-stack-end ,nesting-end ,nesting-key ,token) nesting-stack)))
 
@@ -1031,7 +1028,7 @@
                                  (not (equal token 'T_CLOSE_TAG)))
 
                         (phps-mode-debug-message
-                          (format "\nDetected token-less lines between %s and %s, should have indent: %s\n" token-end-line-number next-token-start-line-number column-level))
+                          (message "\nDetected token-less lines between %s and %s, should have indent: %s\n" token-end-line-number next-token-start-line-number column-level))
 
                         (let ((token-line-number-diff (1- (- next-token-start-line-number token-end-line-number))))
                           (while (>= token-line-number-diff 0)

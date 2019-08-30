@@ -72,10 +72,10 @@
 (defvar phps-mode-debug nil
   "Debug messages, default nil.")
 
-(defun phps-mode-debug-message (message)
+(defmacro phps-mode-debug-message (message)
   "Display debug MESSAGE when debug flag is on."
-  (when phps-mode-debug
-    (message message)))
+  `(when phps-mode-debug
+    ,message))
 
 (defvar phps-mode-map
   (let ((map (make-sparse-keymap)))
