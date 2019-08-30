@@ -48,7 +48,7 @@
      (insert ,source)
      (goto-char 0)
      (phps-mode-debug-message
-       (format "\nTesting incremental buffer '%s':\n'%s'\n" ,title ,source))
+       (message "\nTesting incremental buffer '%s':\n'%s'\n" ,title ,source))
      (phps-mode)
      ,@change
      (phps-mode-lexer-run-incremental)
@@ -63,7 +63,7 @@
      (insert incremental-buffer)
      (goto-char 0)
      (phps-mode-debug-message
-       (format "\nTesting initial buffer '%s':\n'%s'\n" ,title incremental-buffer))
+       (message "\nTesting initial buffer '%s':\n'%s'\n" ,title incremental-buffer))
      (phps-mode)
      (setq initial-states (phps-mode-lexer-get-states))
      (setq initial-tokens (phps-mode-lexer-get-tokens))
@@ -73,7 +73,7 @@
 
      ;; Run tests
      (phps-mode-debug-message
-       (format "\nComparing tokens, lines indent and imenu  between buffer:\n\n'%s'\n\nand:\n\n'%s'\n" initial-buffer incremental-buffer))
+       (message "\nComparing tokens, lines indent and imenu  between buffer:\n\n'%s'\n\nand:\n\n'%s'\n" initial-buffer incremental-buffer))
      (should (equal initial-buffer incremental-buffer))
      ;; (message "Initial tokens: %s\n" initial-tokens)
      ;; (message "Incremental tokens: %s\n" incremental-tokens)
@@ -98,7 +98,7 @@
      (insert ,source)
      (goto-char 0)
      (phps-mode-debug-message
-       (format "\nTesting buffer '%s':\n'%s'\n" ,title ,source))
+       (message "\nTesting buffer '%s':\n'%s'\n" ,title ,source))
      (phps-mode)
      ,@body
      (kill-buffer test-buffer)

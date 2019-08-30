@@ -1116,13 +1116,18 @@
   "Track buffer change from START to STOP with length LENGTH."
   (when phps-mode-functions-allow-after-change
 
+    (message "After change %s - %s" start stop)
+
     ;; If we haven't scheduled incremental lexer before - do it
     (when (and (not phps-mode-functions-buffer-changes-start)
                (boundp 'phps-mode-idle-interval)
                phps-mode-idle-interval)
 
       ;; (message "Enqueued incremental lexer")
-      (run-with-idle-timer phps-mode-idle-interval nil #'phps-mode-lexer-run-incremental))
+      (run-with-idle-timer phps-mode-idle-interval nil #'phps-mode-lexer-run-incremental)
+      ;; TODO Rest flags here
+      (phps-mode-functions-reset-buffer-changes-start)
+      (phps-mode-functions-reset-buffer-changes-stop))
 
     ;; When point of change is not set or when start of new changes precedes old change - update index
     (when (or (not phps-mode-functions-buffer-changes-start)
