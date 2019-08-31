@@ -52,9 +52,9 @@
      (phps-mode)
      ,@change
      (phps-mode-lexer-run-incremental)
-     (setq incremental-states (phps-mode-lexer-get-states))
-     (setq incremental-tokens (phps-mode-lexer-get-tokens))
-     (setq incremental-imenu (phps-mode-functions-get-imenu))
+     (setq incremental-states (copy-sequence (phps-mode-lexer-get-states)))
+     (setq incremental-tokens (copy-sequence (phps-mode-lexer-get-tokens)))
+     (setq incremental-imenu (copy-sequence (phps-mode-functions-get-imenu)))
      (setq incremental-indent (phps-mode-test-hash-to-list (phps-mode-functions-get-lines-indent)))
      (setq incremental-buffer (buffer-substring-no-properties (point-min) (point-max)))
 
@@ -65,9 +65,9 @@
      (phps-mode-debug-message
        (message "\nTesting initial buffer '%s':\n'%s'\n" ,title incremental-buffer))
      (phps-mode)
-     (setq initial-states (phps-mode-lexer-get-states))
-     (setq initial-tokens (phps-mode-lexer-get-tokens))
-     (setq initial-imenu (phps-mode-functions-get-imenu))
+     (setq initial-states (copy-sequence (phps-mode-lexer-get-states)))
+     (setq initial-tokens (copy-sequence (phps-mode-lexer-get-tokens)))
+     (setq initial-imenu (copy-sequence (phps-mode-functions-get-imenu)))
      (setq initial-indent (phps-mode-test-hash-to-list (phps-mode-functions-get-lines-indent)))
      (setq initial-buffer (buffer-substring-no-properties (point-min) (point-max)))
 
@@ -84,7 +84,6 @@
      (should (equal initial-indent incremental-indent))
      (should (equal initial-imenu incremental-imenu))
 
-
      (kill-buffer test-buffer-incremental)
      (kill-buffer test-buffer-initial)
 
@@ -93,26 +92,29 @@
 
 (defmacro phps-mode-test-with-buffer (source &optional title &rest body)
   "Set up test buffer with SOURCE, TITLE and BODY."
-  `(let ((test-buffer (generate-new-buffer "test")))
+  (let ((test-buffer (generate-new-buffer "test")))
      (switch-to-buffer test-buffer)
-     (insert ,source)
+     (insert source)
      (goto-char 0)
      (phps-mode-debug-message
-       (message "\nTesting buffer '%s':\n'%s'\n" ,title ,source))
+       (message "\nTesting buffer '%s':\n'%s'\n" title source))
      (phps-mode)
-     ,@body
+     body
      (kill-buffer test-buffer)
-     (when ,title
-       (message "\nPassed tests for '%s'\n" ,title))))
+     (when title
+       (message "\nPassed tests for '%s'\n" title))))
 
 (defun phps-mode-test-hash-to-list (hash-table)
   "Return a list that represent the HASH-TABLE.  Each element is a list: (list key value)."
   (let (result)
-    (maphash
-     (lambda (k v)
-       (push (list k v) result))
-     hash-table)
-    (sort (nreverse result) (lambda (a b) (< (car a) (car b))))))
+    (if (hash-table-p hash-table)
+        (progn
+          (maphash
+           (lambda (k v)
+             (push (list k v) result))
+           hash-table)
+          (sort (nreverse result) (lambda (a b) (< (car a) (car b)))))
+      nil)))
 
 (provide 'phps-mode-test)
 
