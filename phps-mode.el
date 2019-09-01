@@ -60,7 +60,7 @@
 (defvar phps-mode-idle-interval 1.0
   "Idle seconds before running the incremental lexer.")
 
-(defvar phps-mode-lazy-process-buffer nil
+(defvar phps-mode-lazy-process-buffer t
   "Whether indenting should trigger process of buffer.")
 
 (defvar phps-mode-flycheck-applied nil
@@ -69,7 +69,7 @@
 (defvar phps-mode-inline-mmm-submode nil
   "Symbol declaring what mmm-mode to use as submode in inline areas.")
 
-(defvar phps-mode-debug t
+(defvar phps-mode-debug nil
   "Debug messages, default nil.")
 
 (defmacro phps-mode-debug-message (&rest message)
