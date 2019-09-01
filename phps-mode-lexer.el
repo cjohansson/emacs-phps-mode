@@ -1680,7 +1680,7 @@
               (push token new-tokens))))))
     new-tokens))
 
-;; TODO Maybe states doesn't need to store a stack for each state change
+;; TODO Maybe states doesn't need to store a stack for each state change?
 (defun phps-mode-lexer-run-incremental ()
   "Run incremental lexer based on `(phps-mode-functions-get-buffer-changes-start)'."
   (let ((change-start (phps-mode-functions-get-buffer-changes-start))
@@ -1701,7 +1701,8 @@
               (_next-token-start nil)
               (tokens phps-mode-lexer-tokens)
               (remaining-tokens '())
-              (old-state-at-stop nil))
+              (old-state-at-stop nil)
+              (old-state-stack-at-stop nil))
 
           ;; Find state and state stack before change start
           ;; Find state at change stop
@@ -1718,7 +1719,9 @@
                 (setq previous-token-end end)
                 (push state-object new-states))
               (if (< end change-stop)
-                  (setq old-state-at-stop (nth 2 state-object))
+                  (progn
+                    (setq old-state-at-stop (nth 2 state-object))
+                    (setq old-state-stack-at-stop (nth 3 state-object)))
                 (push state-object remaining-states))))
 
           (if (and state
@@ -1726,9 +1729,12 @@
               (let ((old-tokens '()))
 
                 (phps-mode-debug-message
-                 (message "Previous token is %s - %s" previous-token-start previous-token-end))
+                 (message "Previous token is %s - %s" previous-token-start previous-token-end)
+                 (message "Previous state is: %s" state)
+                 (message "Previous state stack is: %s" state-stack))
                 (phps-mode-debug-message
-                 (message "Old states is: %s" state))
+                 (message "Old state at stop is: %s" old-state-at-stop)
+                 (message "Old state stack at stop is: %s" old-state-stack-at-stop))
 
                 ;; Rewind state here
                 (setq phps-mode-lexer-states new-states)
@@ -1762,10 +1768,16 @@
                   ;; * states at change-stop is identical to old state at change-stop
                   (if (= phps-mode-lexer-STATE old-state-at-stop)
                       (progn
+                        (phps-mode-debug-message
+                         (message "State at stop equals state at stop: %s" phps-mode-lexer-STATE))
                         ;; TODO re-use rest of tokens, states and indexes here
+                        ;; TODO Move remainig tokens and states
                         (setq appended-tokens (append appended-tokens remaining-tokens))
                         ;; (phps-mode-debug-message (format "New tokens are: %s" new-tokens))
                         )
+
+                    (phps-mode-debug-message
+                     (message "State at stop %s does not equals state at stop: %s" phps-mode-lexer-STATE old-state-at-stop))
 
                     ;; Clear syntax colouring of rest of buffer
                     (phps-mode-lexer-clear-region-syntax-color change-stop (point-max))

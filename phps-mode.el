@@ -69,13 +69,13 @@
 (defvar phps-mode-inline-mmm-submode nil
   "Symbol declaring what mmm-mode to use as submode in inline areas.")
 
-(defvar phps-mode-debug nil
+(defvar phps-mode-debug t
   "Debug messages, default nil.")
 
-(defmacro phps-mode-debug-message (message)
+(defmacro phps-mode-debug-message (&rest message)
   "Display debug MESSAGE when debug flag is on."
-  (when phps-mode-debug
-    message))
+  `(when phps-mode-debug
+    ,@message))
 
 (defvar phps-mode-map
   (let ((map (make-sparse-keymap)))

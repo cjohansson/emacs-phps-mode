@@ -170,8 +170,6 @@
 
 (defun phps-mode-functions--get-inline-html-indentation (inline-html indent tag-level curly-bracket-level square-bracket-level round-bracket-level)
   "Generate a list of indentation for each line in INLINE-HTML, working incrementally on INDENT, TAG-LEVEL, CURLY-BRACKET-LEVEL, SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
-
-
   (phps-mode-debug-message
    (message "Calculating HTML indent for: '%s'" inline-html))
 
@@ -1124,11 +1122,11 @@
                (boundp 'phps-mode-idle-interval)
                phps-mode-idle-interval)
 
-      ;; (message "Enqueued incremental lexer")
-      (run-with-idle-timer phps-mode-idle-interval nil #'phps-mode-lexer-run-incremental)
-      ;; TODO Rest flags here
       (phps-mode-functions-reset-buffer-changes-start)
-      (phps-mode-functions-reset-buffer-changes-stop))
+      (phps-mode-functions-reset-buffer-changes-stop)
+
+      (phps-mode-debug-message (message "Enqueued incremental lexer"))
+      (run-with-idle-timer phps-mode-idle-interval nil #'phps-mode-lexer-run-incremental))
 
     ;; When point of change is not set or when start of new changes precedes old change - update index
     (when (or (not phps-mode-functions-buffer-changes-start)
