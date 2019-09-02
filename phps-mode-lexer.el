@@ -1702,125 +1702,132 @@
   (let ((change-start (phps-mode-functions-get-buffer-changes-start))
         (change-stop (phps-mode-functions-get-buffer-changes-stop)))
     (phps-mode-runtime-debug-message
-      (format "Running incremental lexer %s - %s" change-start change-stop))
+     (format "Running incremental lexer %s - %s (%s %s)" change-start change-stop phps-mode-functions-buffer-changes-start phps-mode-functions-buffer-changes-stop))
     (when (and change-start
                change-stop)
-      (when (and (> change-start 1)
-                 phps-mode-lexer-states)
-        (let ((state nil)
-              (state-stack nil)
-              (new-states '())
-              (remaining-states '())
-              (states (nreverse phps-mode-lexer-states))
-              (previous-token-start nil)
-              (previous-token-end nil)
-              (_next-token-start nil)
-              (tokens phps-mode-lexer-tokens)
-              (remaining-tokens '())
-              (old-state-at-stop nil)
-              (old-state-stack-at-stop nil))
+      (if (and (> change-start 1)
+               phps-mode-lexer-states)
+          (let ((state nil)
+                (state-stack nil)
+                (new-states '())
+                (remaining-states '())
+                (states (nreverse phps-mode-lexer-states))
+                (previous-token-start nil)
+                (previous-token-end nil)
+                (_next-token-start nil)
+                (tokens phps-mode-lexer-tokens)
+                (remaining-tokens '())
+                (old-state-at-stop nil)
+                (old-state-stack-at-stop nil)
+                (old-buffer-length nil)
+                (new-buffer-length (point-min))
+                (buffer-length-delta nil))
 
-          ;; Reset tokens
-          (setq phps-mode-lexer-tokens nil)
+            ;; Reset tokens
+            (setq phps-mode-lexer-tokens nil)
 
-          ;; Reset buffer changes index
-          (phps-mode-functions-reset-buffer-changes-start)
-          (phps-mode-functions-reset-buffer-changes-stop)
+            ;; Reset buffer changes index
+            (phps-mode-functions-reset-buffer-changes-start)
+            (phps-mode-functions-reset-buffer-changes-stop)
 
-          ;; Find state and state stack before change start
-          ;; Find state at change stop
-          ;; Find state stack after change stop
-          ;; Determine were previous token to change starts
-          ;; TODO Should determine were next token closest to change stop is
-          (dolist (state-object states)
-            (let ((start (nth 0 state-object))
-                  (end (nth 1 state-object)))
-              (when (< end change-start)
-                (setq state (nth 2 state-object))
-                (setq state-stack (nth 3 state-object))
-                (setq previous-token-start start)
-                (setq previous-token-end end)
-                (push state-object new-states))
-              (if (< end change-stop)
-                  (progn
-                    (setq old-state-at-stop (nth 2 state-object))
-                    (setq old-state-stack-at-stop (nth 3 state-object)))
-                (push state-object remaining-states))))
+            ;; Find state and state stack before change start
+            ;; Find state at change stop
+            ;; Find state stack after change stop
+            ;; Determine were previous token to change starts
+            ;; TODO Should determine were next token closest to change stop is
+            (dolist (state-object states)
+              (let ((start (nth 0 state-object))
+                    (end (nth 1 state-object)))
+                (when (< end change-start)
+                  (setq state (nth 2 state-object))
+                  (setq state-stack (nth 3 state-object))
+                  (setq previous-token-start start)
+                  (setq previous-token-end end)
+                  (push state-object new-states))
+                (if (< end change-stop)
+                    (progn
+                      (setq old-state-at-stop (nth 2 state-object))
+                      (setq old-state-stack-at-stop (nth 3 state-object)))
+                  (push state-object remaining-states))))
 
-          (if (and state
-                   state-stack)
-              (let ((old-tokens '()))
+            (if (and state
+                     state-stack)
+                (let ((old-tokens '()))
 
-                (phps-mode-debug-message
-                 (message "Previous token is %s - %s" previous-token-start previous-token-end)
-                 (message "Previous state is: %s" state)
-                 (message "Previous state stack is: %s" state-stack)
-                 (message "Old state at stop is: %s" old-state-at-stop)
-                 (message "Old state stack at stop is: %s" old-state-stack-at-stop))
+                  (phps-mode-debug-message
+                   (message "Previous token is %s - %s" previous-token-start previous-token-end)
+                   (message "Previous state is: %s" state)
+                   (message "Previous state stack is: %s" state-stack)
+                   (message "Old state at stop is: %s" old-state-at-stop)
+                   (message "Old state stack at stop is: %s" old-state-stack-at-stop))
 
-                ;; Rewind state here
-                (setq phps-mode-lexer-states new-states)
-                (setq phps-mode-lexer-STATE state)
-                (setq phps-mode-lexer-state_stack state-stack)
+                  ;; Rewind state here
+                  (setq phps-mode-lexer-states new-states)
+                  (setq phps-mode-lexer-STATE state)
+                  (setq phps-mode-lexer-state_stack state-stack)
 
-                ;; Build new list of tokens before point of change
-                (dolist (token tokens)
-                  (let ((end (cdr (cdr token))))
-                    (if (< end previous-token-end)
-                        (push token old-tokens)
-                      (unless (< end change-stop)
-                        (push token remaining-tokens)))))
-                (setq old-tokens (nreverse old-tokens))
-                (setq remaining-tokens (nreverse remaining-tokens))
+                  ;; Build new list of tokens before point of change
+                  (dolist (token tokens)
+                    (let ((end (cdr (cdr token))))
+                      (setq old-buffer-length end)
+                      (if (< end previous-token-end)
+                          (push token old-tokens)
+                        (unless (< end change-stop)
+                          (push token remaining-tokens)))))
+                  (setq old-tokens (nreverse old-tokens))
+                  (setq remaining-tokens (nreverse remaining-tokens))
 
-                (phps-mode-debug-message (message "Old tokens: %s" old-tokens))
-                (phps-mode-debug-message (message "Remaining tokens: %s" remaining-tokens))
+                  (phps-mode-debug-message (message "Old tokens: %s" old-tokens))
+                  (phps-mode-debug-message (message "Remaining tokens: %s" remaining-tokens))
 
-                ;; Delete all syntax coloring from point of change to stop of change
-                (phps-mode-lexer-clear-region-syntax-color previous-token-end change-stop)
+                  (setq buffer-length-delta (- new-buffer-length old-buffer-length))
+                  (phps-mode-runtime-debug-message (format "Old buffer-length: %s, new buffer-length: %s, delta: %s" old-buffer-length new-buffer-length buffer-length-delta))
 
-                ;; Do partial lex from previous-token-end to change-stop
-                (let* ((new-tokens (semantic-lex previous-token-start change-stop))
-                       (appended-tokens (append old-tokens new-tokens)))
+                  ;; Delete all syntax coloring from point of change to stop of change
+                  (phps-mode-lexer-clear-region-syntax-color previous-token-end change-stop)
 
-                  ;; * states at change-stop is identical to old state at change-stop
-                  (if (and (= phps-mode-lexer-STATE old-state-at-stop)
-                           (equal phps-mode-lexer-state_stack old-state-stack-at-stop))
-                      (progn
-                        (phps-mode-runtime-debug-message
-                         "Found matching state and state-stack, forwarding old indexes")
-                        (phps-mode-debug-message
-                         (message "State and state stack at stop equals state at stop: %s %s" phps-mode-lexer-STATE phps-mode-lexer-state_stack))
-                        ;; TODO re-use rest of tokens, states and indexes here
-                        ;; TODO Move remaining tokens and states
+                  ;; Do partial lex from previous-token-end to change-stop
+                  (let* ((new-tokens (semantic-lex previous-token-start change-stop))
+                         (appended-tokens (append old-tokens new-tokens)))
 
-                        (setq appended-tokens (append appended-tokens remaining-tokens))
-                        ;; (phps-mode-debug-message (format "New tokens are: %s" new-tokens))
-                        )
+                    ;; * states at change-stop is identical to old state at change-stop
+                    (if (and (= phps-mode-lexer-STATE old-state-at-stop)
+                             (equal phps-mode-lexer-state_stack old-state-stack-at-stop))
+                        (progn
+                          (phps-mode-runtime-debug-message
+                           "Found matching state and state-stack, forwarding old indexes")
+                          (phps-mode-debug-message
+                           (message "State and state stack at stop equals state at stop: %s %s" phps-mode-lexer-STATE phps-mode-lexer-state_stack))
+                          ;; TODO re-use rest of tokens, states and indexes here
+                          ;; TODO Move remaining tokens and states
 
-                    (phps-mode-runtime-debug-message
-                         "Did not find matching state and state-stack, forwarding old indexes")
-                    (phps-mode-debug-message
-                     (message "State at stop %s or state stack %s does not equals state at stop: %s %s" phps-mode-lexer-STATE phps-mode-lexer-state_stack old-state-at-stop old-state-stack-at-stop))
+                          (setq appended-tokens (append appended-tokens remaining-tokens))
+                          ;; (phps-mode-debug-message (format "New tokens are: %s" new-tokens))
+                          )
 
-                    ;; Clear syntax colouring of rest of buffer
-                    (phps-mode-lexer-clear-region-syntax-color change-stop (point-max))
+                      (phps-mode-runtime-debug-message
+                       "Did not find matching state and state-stack, forwarding old indexes")
+                      (phps-mode-debug-message
+                       (message "State at stop %s or state stack %s does not equals state at stop: %s %s" phps-mode-lexer-STATE phps-mode-lexer-state_stack old-state-at-stop old-state-stack-at-stop))
 
-                    ;; Lex rest of buffer
-                    (setq old-tokens appended-tokens)
-                    (setq new-tokens (semantic-lex change-stop (point-max)))
-                    (setq appended-tokens (append old-tokens new-tokens)))
+                      ;; Clear syntax colouring of rest of buffer
+                      (phps-mode-lexer-clear-region-syntax-color change-stop (point-max))
 
-                  ;; TODO Should append states as well
-                  ;; (message "old-tokens: %s, new-tokens: %s" old-tokens new-tokens)
-                  (setq phps-mode-lexer-tokens appended-tokens)
-                  
-                  ;; (message "Rewinding lex to state: %s and stack: %s and states: %s and start: %s old tokens: %s" state state-stack new-states previous-token-start old-tokens)
+                      ;; Lex rest of buffer
+                      (setq old-tokens appended-tokens)
+                      (setq new-tokens (semantic-lex change-stop (point-max)))
+                      (setq appended-tokens (append old-tokens new-tokens)))
 
-                  )))
-          ;; (display-warning "phps-mode" (format "Found no state to rewind to for %s in stack %s, buffer point max: %s" change-start states (point-max)))
-          )))
-    (phps-mode-lexer-run)))
+                    ;; TODO Should append states as well
+                    ;; (message "old-tokens: %s, new-tokens: %s" old-tokens new-tokens)
+                    (setq phps-mode-lexer-tokens appended-tokens)
+                    
+                    ;; (message "Rewinding lex to state: %s and stack: %s and states: %s and start: %s old tokens: %s" state state-stack new-states previous-token-start old-tokens)
+
+                    )))
+            ;; (display-warning "phps-mode" (format "Found no state to rewind to for %s in stack %s, buffer point max: %s" change-start states (point-max)))
+            )
+        (phps-mode-lexer-run)))))
 
 (define-lex phps-mode-lexer-lex
   "Call lexer analyzer action."

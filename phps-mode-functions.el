@@ -58,13 +58,13 @@
 
 (defun phps-mode-functions-reset-buffer-changes-start ()
   "Reset buffer change start."
-  ;; (message "Reset flag for buffer changes")
-  (setq phps-mode-functions-buffer-changes-start nil))
+  (phps-mode-runtime-debug-message "Reset flag for buffer changes start")
+  (setq-local phps-mode-functions-buffer-changes-start nil))
 
 (defun phps-mode-functions-reset-buffer-changes-stop ()
   "Reset buffer change stop."
-  ;; (message "Reset flag for buffer changes")
-  (setq phps-mode-functions-buffer-changes-stop nil))
+  (phps-mode-runtime-debug-message "Reset flag for buffer changes stop")
+  (setq-local phps-mode-functions-buffer-changes-stop nil))
 
 (defun phps-mode-functions-process-current-buffer (force-lazy)
   "Process current buffer, generate indentations and Imenu.  FORCE-LAZY will trigger incremental lexer if we have change."
@@ -1105,6 +1105,7 @@
 
               ;; Reset change flag
               (phps-mode-functions-reset-buffer-changes-start)
+              (phps-mode-functions-reset-buffer-changes-stop)
 
               )))))))
 
@@ -1120,9 +1121,6 @@
                (boundp 'phps-mode-idle-interval)
                phps-mode-idle-interval)
 
-      (phps-mode-functions-reset-buffer-changes-start)
-      (phps-mode-functions-reset-buffer-changes-stop)
-
       ;; Reset imenu
       (when (and (boundp 'imenu--index-alist)
                  imenu--index-alist)
@@ -1137,14 +1135,14 @@
               (< start phps-mode-functions-buffer-changes-start))
       (phps-mode-runtime-debug-message
        (format "Set new change start to %s" start))
-      (setq phps-mode-functions-buffer-changes-start start))
+      (setq-local phps-mode-functions-buffer-changes-start start))
 
     ;; When point of change is not set or when point of new changes is above old change - update index
     (when (or (not phps-mode-functions-buffer-changes-stop)
               (> stop phps-mode-functions-buffer-changes-stop))
       (phps-mode-runtime-debug-message
        (format "Set new change stop to %s" stop))
-      (setq phps-mode-functions-buffer-changes-stop stop))))
+      (setq-local phps-mode-functions-buffer-changes-stop stop))))
 
 (defun phps-mode-functions-imenu-create-index ()
   "Get Imenu for current buffer."
