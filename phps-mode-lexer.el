@@ -33,13 +33,15 @@
 (autoload 'phps-mode-functions-get-buffer-changes-start "phps-mode-functions")
 (autoload 'phps-mode-functions-get-buffer-changes-stop "phps-mode-functions")
 (autoload 'phps-mode-functions-reset-buffer-changes-start "phps-mode-functions")
-(autoload 'phps-mode-debug-message "phps-mode")
 
 (require 'semantic)
 (require 'semantic/lex)
 
 ;; NOTE This line is required to pass byte-compilation
 (require 'semantic/wisent)
+
+(eval-when-compile
+  (require 'phps-mode-macros))
 
 
 ;; Fix for byte-compilation warnings
@@ -83,11 +85,11 @@
 (defvar phps-mode-lexer-STATE nil
   "Current state.")
 
-(defvar phps-mode-lexer-EXPECTED nil
-  "Flag whether something is expected or not.")
-
 (defvar phps-mode-lexer-state_stack nil
   "Stack of states.")
+
+(defvar phps-mode-lexer-EXPECTED nil
+  "Flag whether something is expected or not.")
 
 (defvar phps-mode-lexer-heredoc_label_stack (list)
   "The current heredoc_label.")

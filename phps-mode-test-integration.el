@@ -30,6 +30,9 @@
 (require 'phps-mode-lexer)
 (require 'phps-mode-test)
 
+(eval-when-compile
+  (require 'phps-mode-macros))
+
 (defun phps-mode-test-integration-incremental ()
   "Test for object-oriented PHP file."
 

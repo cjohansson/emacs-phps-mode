@@ -26,7 +26,8 @@
 (require 'subr-x)
 (require 'phps-mode-lexer)
 
-(autoload 'phps-mode-debug-message "phps-mode")
+(eval-when-compile
+  (require 'phps-mode-macros))
 
 (defvar phps-mode-functions-allow-after-change t
   "Flag to tell us whether after change detection is enabled or not.")
