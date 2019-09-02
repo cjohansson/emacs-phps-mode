@@ -68,7 +68,7 @@
 
 (defun phps-mode-functions-process-current-buffer (force-lazy)
   "Process current buffer, generate indentations and Imenu.  FORCE-LAZY will trigger incremental lexer if we have change."
-  ;; (message "(phps-mode-functions-process-current-buffer)")
+  (phps-mode-runtime-debug-message "Process current buffer")
   (when (and (boundp 'phps-mode-lazy-process-buffer)
              (phps-mode-functions-get-buffer-changes-start)
              (or phps-mode-lazy-process-buffer
@@ -1143,7 +1143,7 @@
     (when (or (not phps-mode-functions-buffer-changes-stop)
               (> stop phps-mode-functions-buffer-changes-stop))
       (phps-mode-runtime-debug-message
-       (format "Set new change stop to %s" start))
+       (format "Set new change stop to %s" stop))
       (setq phps-mode-functions-buffer-changes-stop stop))))
 
 (defun phps-mode-functions-imenu-create-index ()

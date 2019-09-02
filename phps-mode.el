@@ -174,6 +174,9 @@
   ;; Run semantic functions for new buffer
   (semantic-new-buffer-fcn)
 
+  ;; Disable idle scheduler since we have customized this feature
+  (setq semantic-idle-scheduler-mode nil)
+
   ;; Wisent LALR parser TODO
   ;; (phps-mode-tags-init)
 
