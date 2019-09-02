@@ -65,22 +65,16 @@
   ;; (message "Reset flag for buffer changes")
   (setq phps-mode-functions-buffer-changes-stop nil))
 
-(defun phps-mode-functions-process-current-buffer (lazy-lexer)
-  "Process current buffer, generate indentations and Imenu.  Do LAZY-LEXER if t."
+(defun phps-mode-functions-process-current-buffer (force-lazy)
+  "Process current buffer, generate indentations and Imenu.  FORCE-LAZY will trigger incremental lexer if we have change."
   ;; (message "(phps-mode-functions-process-current-buffer)")
   (when (and (boundp 'phps-mode-lazy-process-buffer)
              (phps-mode-functions-get-buffer-changes-start)
-             (or
-              phps-mode-lazy-process-buffer
-              (not lazy-lexer)))
+             (or phps-mode-lazy-process-buffer
+                 force-lazy))
     (phps-mode-lexer-run-incremental)
     (setq phps-mode-functions-processed-buffer nil))
   (unless phps-mode-functions-processed-buffer
-
-    ;; Reset imenu
-    (when (and (boundp 'imenu--index-alist)
-               imenu--index-alist)
-      (setq-local imenu--index-alist nil))
 
     (let ((processed (phps-mode-functions--process-tokens-in-string phps-mode-lexer-tokens (buffer-substring-no-properties (point-min) (point-max)))))
       (setq phps-mode-functions-imenu (nth 0 processed))
@@ -128,12 +122,12 @@
   
 (defun phps-mode-functions-get-lines-indent ()
   "Return lines indent, process buffer if not done already."
-  (phps-mode-functions-process-current-buffer t)
+  (phps-mode-functions-process-current-buffer nil)
   phps-mode-functions-lines-indent)
 
 (defun phps-mode-functions-get-imenu ()
   "Return Imenu, process buffer if not done already."
-  (phps-mode-functions-process-current-buffer nil)
+  (phps-mode-functions-process-current-buffer t)
   phps-mode-functions-imenu)
 
 (defun phps-mode-functions-get-moved-imenu (old-index start diff)
@@ -1080,7 +1074,7 @@
 
 (defun phps-mode-functions-indent-line ()
   "Indent line."
-  (phps-mode-functions-process-current-buffer t)
+  (phps-mode-functions-process-current-buffer nil)
   (when phps-mode-functions-lines-indent
     (let ((indent (gethash (line-number-at-pos (point)) phps-mode-functions-lines-indent)))
       (when indent
@@ -1128,6 +1122,11 @@
       (phps-mode-functions-reset-buffer-changes-start)
       (phps-mode-functions-reset-buffer-changes-stop)
 
+      ;; Reset imenu
+      (when (and (boundp 'imenu--index-alist)
+                 imenu--index-alist)
+        (setq-local imenu--index-alist nil))
+
       (phps-mode-debug-message (message "Enqueued incremental lexer"))
       (run-with-idle-timer phps-mode-idle-interval nil #'phps-mode-lexer-run-incremental))
 
@@ -1143,7 +1142,7 @@
 
 (defun phps-mode-functions-imenu-create-index ()
   "Get Imenu for current buffer."
-  (phps-mode-functions-process-current-buffer nil)
+  (phps-mode-functions-process-current-buffer t)
   phps-mode-functions-imenu)
 
 (defun phps-mode-functions-comment-region (beg end &optional _arg)
