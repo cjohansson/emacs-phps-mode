@@ -7,12 +7,12 @@
 
 ;;; Code:
 
-(defconst phps-mode-debug nil
-  "Debug messages, default nil.")
+(defconst phps-mode-macrotime-debug nil
+  "Debug messages during macro expansion time, default nil.")
 
 (defmacro phps-mode-debug-message (&rest message)
   "Display debug MESSAGE when debug flag is on."
-  `(when ,phps-mode-debug
+  `(when ,phps-mode-macrotime-debug
     ,@message))
 
 (provide 'phps-mode-macros)

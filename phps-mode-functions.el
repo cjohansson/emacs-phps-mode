@@ -26,8 +26,9 @@
 (require 'subr-x)
 (require 'phps-mode-lexer)
 
-(eval-when-compile
-  (require 'phps-mode-macros))
+(autoload 'phps-mode-runtime-debug-message "phps-mode")
+
+(require 'phps-mode-macros)
 
 (defvar phps-mode-functions-allow-after-change t
   "Flag to tell us whether after change detection is enabled or not.")
@@ -1111,8 +1112,8 @@
   "Track buffer change from START to STOP with length LENGTH."
   (when phps-mode-functions-allow-after-change
 
-    (phps-mode-debug-message
-     (message "After change %s - %s" start stop))
+    (phps-mode-runtime-debug-message
+     (format "After change %s to %s" start stop))
 
     ;; If we haven't scheduled incremental lexer before - do it
     (when (and (not phps-mode-functions-buffer-changes-start)
@@ -1125,19 +1126,24 @@
       ;; Reset imenu
       (when (and (boundp 'imenu--index-alist)
                  imenu--index-alist)
-        (setq-local imenu--index-alist nil))
+        (setq-local imenu--index-alist nil)
+        (phps-mode-runtime-debug-message "Cleared Imenu index"))
 
-      (phps-mode-debug-message (message "Enqueued incremental lexer"))
+      (phps-mode-runtime-debug-message "Enqueued incremental lexer")
       (run-with-idle-timer phps-mode-idle-interval nil #'phps-mode-lexer-run-incremental))
 
     ;; When point of change is not set or when start of new changes precedes old change - update index
     (when (or (not phps-mode-functions-buffer-changes-start)
               (< start phps-mode-functions-buffer-changes-start))
+      (phps-mode-runtime-debug-message
+       (format "Set new change start to %s" start))
       (setq phps-mode-functions-buffer-changes-start start))
 
     ;; When point of change is not set or when point of new changes is above old change - update index
     (when (or (not phps-mode-functions-buffer-changes-stop)
               (> stop phps-mode-functions-buffer-changes-stop))
+      (phps-mode-runtime-debug-message
+       (format "Set new change stop to %s" start))
       (setq phps-mode-functions-buffer-changes-stop stop))))
 
 (defun phps-mode-functions-imenu-create-index ()

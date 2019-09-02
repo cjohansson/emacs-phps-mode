@@ -69,6 +69,13 @@
 (defvar phps-mode-inline-mmm-submode nil
   "Symbol declaring what mmm-mode to use as submode in inline areas.")
 
+(defvar phps-mode-runtime-debug nil
+  "Whether or not to use runtime debugging.")
+
+(defun phps-mode-runtime-debug-message (message)
+  "Output MESSAGE if flag is on."
+  (message message))
+
 (defvar phps-mode-map
   (let ((map (make-sparse-keymap)))
     (define-key map (kbd "C-c /") #'comment-region)

@@ -33,6 +33,7 @@
 (autoload 'phps-mode-functions-get-buffer-changes-start "phps-mode-functions")
 (autoload 'phps-mode-functions-get-buffer-changes-stop "phps-mode-functions")
 (autoload 'phps-mode-functions-reset-buffer-changes-start "phps-mode-functions")
+(autoload 'phps-mode-runtime-debug-message "phps-mode")
 
 (require 'semantic)
 (require 'semantic/lex)
@@ -40,8 +41,7 @@
 ;; NOTE This line is required to pass byte-compilation
 (require 'semantic/wisent)
 
-(eval-when-compile
-  (require 'phps-mode-macros))
+(require 'phps-mode-macros)
 
 
 ;; Fix for byte-compilation warnings
@@ -1687,8 +1687,8 @@
   "Run incremental lexer based on `(phps-mode-functions-get-buffer-changes-start)'."
   (let ((change-start (phps-mode-functions-get-buffer-changes-start))
         (change-stop (phps-mode-functions-get-buffer-changes-stop)))
-    (phps-mode-debug-message
-      (message "Running incremental lexer %s - %s" change-start change-stop))
+    (phps-mode-runtime-debug-message
+      (format "Running incremental lexer %s - %s" change-start change-stop))
     (when (and change-start
                change-stop)
       (when (and (> change-start 1)
@@ -1770,6 +1770,8 @@
                   (if (and (= phps-mode-lexer-STATE old-state-at-stop)
                            (equal phps-mode-lexer-state_stack old-state-stack-at-stop))
                       (progn
+                        (phps-mode-runtime-debug-message
+                         "Found matching state and state-stack, forwarding old indexes")
                         (phps-mode-debug-message
                          (message "State and state stack at stop equals state at stop: %s %s" phps-mode-lexer-STATE phps-mode-lexer-state_stack))
                         ;; TODO re-use rest of tokens, states and indexes here
@@ -1778,6 +1780,8 @@
                         ;; (phps-mode-debug-message (format "New tokens are: %s" new-tokens))
                         )
 
+                    (phps-mode-runtime-debug-message
+                         "Did not find matching state and state-stack, forwarding old indexes")
                     (phps-mode-debug-message
                      (message "State at stop %s or state stack %s does not equals state at stop: %s %s" phps-mode-lexer-STATE phps-mode-lexer-state_stack old-state-at-stop old-state-stack-at-stop))
 
