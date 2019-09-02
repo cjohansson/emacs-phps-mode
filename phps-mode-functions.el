@@ -69,9 +69,10 @@
   "Process current buffer, generate indentations and Imenu.  Do LAZY-LEXER if t."
   ;; (message "(phps-mode-functions-process-current-buffer)")
   (when (and (boundp 'phps-mode-lazy-process-buffer)
-             phps-mode-lazy-process-buffer
              (phps-mode-functions-get-buffer-changes-start)
-             lazy-lexer)
+             (or
+              phps-mode-lazy-process-buffer
+              (not lazy-lexer)))
     (phps-mode-lexer-run-incremental)
     (setq phps-mode-functions-processed-buffer nil))
   (unless phps-mode-functions-processed-buffer
