@@ -60,7 +60,7 @@
 (defvar phps-mode-idle-interval 1.0
   "Idle seconds before running the incremental lexer.")
 
-(defvar phps-mode-lazy-process-buffer t
+(defvar phps-mode-lazy-process-buffer nil
   "Whether indenting should trigger process of buffer.")
 
 (defvar phps-mode-flycheck-applied nil
