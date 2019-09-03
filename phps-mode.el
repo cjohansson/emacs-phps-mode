@@ -75,7 +75,10 @@
 (defun phps-mode-runtime-debug-message (message)
   "Output MESSAGE if flag is on."
   (when phps-mode-runtime-debug
-    (message message)))
+    (let ((buffer (get-buffer-create "PHPs Debug Messages")))
+      (with-current-buffer buffer
+        (insert message)
+        (insert "\n")))))
 
 (defvar phps-mode-map
   (let ((map (make-sparse-keymap)))
