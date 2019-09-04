@@ -1722,7 +1722,8 @@
                 (old-state-stack-at-stop nil)
                 (old-buffer-length 0)
                 (new-buffer-length (point-max))
-                (buffer-length-delta nil))
+                (buffer-length-delta nil)
+                (incremental-start 0))
 
             ;; Reset tokens
             (setq phps-mode-lexer-tokens nil)
@@ -1753,8 +1754,13 @@
                       (setq old-state-at-stop (nth 2 state-object))
                       (setq old-state-stack-at-stop (nth 3 state-object)))
                   (push state-object remaining-states))))
-            (setq new-states (nreverse new-states))
-            (setq remaining-states (nreverse remaining-states))
+            (setq new-states new-states)
+            (setq remaining-states remaining-states)
+            (setq incremental-start (1+ previous-token-end))
+
+            (phps-mode-debug-message
+             (message "Incremental start is %s" incremental-start)
+             (message "Remaining states from %s after %s is %s" states change-stop remaining-states))
 
             (if (and state
                      state-stack)
@@ -1776,7 +1782,7 @@
                   (dolist (token tokens)
                     (let ((end (cdr (cdr token))))
                       (setq old-buffer-length end)
-                      (if (< end previous-token-end)
+                      (if (< end incremental-start)
                           (push token old-tokens)
                         (unless (< end change-stop)
                           (push token remaining-tokens)))))
@@ -1796,7 +1802,7 @@
                   (phps-mode-lexer-clear-region-syntax-color previous-token-end change-stop)
 
                   ;; Do partial lex from previous-token-end to change-stop
-                  (let* ((new-tokens (semantic-lex previous-token-start change-stop))
+                  (let* ((new-tokens (semantic-lex incremental-start change-stop))
                         (appended-tokens (append old-tokens new-tokens)))
 
                     ;; * states at change-stop is identical to old state at change-stop
