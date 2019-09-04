@@ -468,7 +468,6 @@
              start end  (phps-mode-lexer-get-token-syntax-color token-name))
             (semantic-lex-push-token (semantic-lex-token token-name start end)))))
     
-    (phps-mode-runtime-debug-message "Running lexer.")
     (let ((old-start (point))
           (heredoc_label (car phps-mode-lexer-heredoc_label_stack))
           (ST_IN_SCRIPTING (= phps-mode-lexer-STATE phps-mode-lexer-ST_IN_SCRIPTING))
@@ -481,6 +480,8 @@
           (ST_LOOKING_FOR_VARNAME (= phps-mode-lexer-STATE phps-mode-lexer-ST_LOOKING_FOR_VARNAME))
           (ST_END_HEREDOC (= phps-mode-lexer-STATE phps-mode-lexer-ST_END_HEREDOC))
           (ST_VAR_OFFSET (= phps-mode-lexer-STATE phps-mode-lexer-ST_VAR_OFFSET)))
+
+      (phps-mode-runtime-debug-message (format "Running lexer from %s" old-start))
 
       ;; Reset re2c flags
       (setq phps-mode-lexer-re2c-matching-body nil)
@@ -1697,13 +1698,12 @@
               (push token new-tokens))))))
     new-tokens))
 
-;; TODO Maybe states does not need to store a stack for each state change?
 (defun phps-mode-lexer-run-incremental ()
   "Run incremental lexer based on `(phps-mode-functions-get-buffer-changes-start)'."
   (let ((change-start (phps-mode-functions-get-buffer-changes-start))
         (change-stop (phps-mode-functions-get-buffer-changes-stop)))
     (phps-mode-runtime-debug-message
-     (format "Running incremental lexer %s - %s (%s %s)" change-start change-stop phps-mode-functions-buffer-changes-start phps-mode-functions-buffer-changes-stop))
+     (format "Running incremental lexer %s - %s" change-start change-stop))
     (when (and change-start
                change-stop)
       (if (and (> change-start 1)
@@ -1753,6 +1753,8 @@
                       (setq old-state-at-stop (nth 2 state-object))
                       (setq old-state-stack-at-stop (nth 3 state-object)))
                   (push state-object remaining-states))))
+            (setq new-states (nreverse new-states))
+            (setq remaining-states (nreverse remaining-states))
 
             (if (and state
                      state-stack)
@@ -1781,8 +1783,11 @@
                   (setq old-tokens (nreverse old-tokens))
                   (setq remaining-tokens (nreverse remaining-tokens))
 
-                  (phps-mode-debug-message (message "Old tokens: %s" old-tokens))
-                  (phps-mode-debug-message (message "Remaining tokens: %s" remaining-tokens))
+                  (phps-mode-debug-message (message "Head tokens: %s" old-tokens))
+                  (phps-mode-debug-message (message "Tail tokens: %s" remaining-tokens))
+                  (phps-mode-debug-message (message "Head states: %s" new-states))
+                  (phps-mode-debug-message (message "Tail states: %s" remaining-states))
+                  (phps-mode-debug-message (message "Old states: %s" states))
 
                   (setq buffer-length-delta (- new-buffer-length old-buffer-length))
                   (phps-mode-runtime-debug-message (format "Old buffer-length: %s, new buffer-length: %s, delta: %s" old-buffer-length new-buffer-length buffer-length-delta))

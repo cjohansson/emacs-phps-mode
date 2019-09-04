@@ -92,7 +92,7 @@
 (defun phps-mode-test-integration ()
   "Run test for integration."
   (setq debug-on-error t)
-  ;; (setq phps-mode-debug t)
+  (setq phps-mode-runtime-debug t)
   (setq phps-mode-lazy-process-buffer t)
   (phps-mode-test-integration-incremental))
 

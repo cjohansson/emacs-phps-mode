@@ -1145,6 +1145,7 @@
 (defun phps-mode-test-functions ()
   "Run test for functions."
   ;; (setq debug-on-error t)
+  (setq phps-mode-runtime-debug t)
   (phps-mode-test-functions-get-inline-html-indentation)
   (phps-mode-test-functions-get-lines-indent-if)
   (phps-mode-test-functions-get-lines-indent-classes)
