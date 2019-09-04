@@ -850,6 +850,11 @@
   "Test for imenu."
 
   (phps-mode-test-with-buffer
+   "<?php\nfunction myFunctionA() {}\nfunction myFunctionB() {}\n$var = function () {\n    echo 'here';\n};"
+   "Imenu function-oriented file with anonymous function"
+   (should (equal (phps-mode-functions-get-imenu) '(("myFunctionA" . 16) ("myFunctionB" . 42)))))
+
+  (phps-mode-test-with-buffer
    "<?php\nfunction myFunctionA() {}\nfunction myFunctionB() {}\n"
    "Imenu function-oriented file"
    (should (equal (phps-mode-functions-get-imenu) '(("myFunctionA" . 16) ("myFunctionB" . 42)))))
