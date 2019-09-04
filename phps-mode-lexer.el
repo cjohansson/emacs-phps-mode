@@ -1800,8 +1800,13 @@
                         (progn
                           (phps-mode-runtime-debug-message
                            "Found matching state and state-stack, forwarding old indexes")
-                          (when remaining-tokens
-                            (setq remaining-tokens (phps-mode-lexer-get-moved-tokens remaining-tokens 0 buffer-length-delta)))
+
+                          (when (> buffer-length-delta 0)
+                            (when remaining-tokens
+                              (setq remaining-tokens (phps-mode-lexer-get-moved-tokens remaining-tokens 0 buffer-length-delta)))
+
+                            (when remaining-states
+                              (setq remaining-states (phps-mode-lexer-get-moved-states remaining-states 0 buffer-length-delta))))
 
                           (phps-mode-debug-message
                            (message "State and state stack at stop equals state at stop: %s %s" phps-mode-lexer-STATE phps-mode-lexer-state_stack))
