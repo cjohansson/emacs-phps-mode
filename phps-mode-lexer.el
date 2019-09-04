@@ -33,6 +33,7 @@
 (autoload 'phps-mode-functions-get-buffer-changes-start "phps-mode-functions")
 (autoload 'phps-mode-functions-get-buffer-changes-stop "phps-mode-functions")
 (autoload 'phps-mode-functions-reset-buffer-changes-start "phps-mode-functions")
+(autoload 'phps-mode-functions-reset-buffer-changes-stop "phps-mode-functions")
 (autoload 'phps-mode-runtime-debug-message "phps-mode")
 
 (require 'semantic)
@@ -1719,8 +1720,8 @@
                 (remaining-tokens '())
                 (old-state-at-stop nil)
                 (old-state-stack-at-stop nil)
-                (old-buffer-length nil)
-                (new-buffer-length (point-min))
+                (old-buffer-length 0)
+                (new-buffer-length (point-max))
                 (buffer-length-delta nil))
 
             ;; Reset tokens
@@ -1729,6 +1730,9 @@
             ;; Reset buffer changes index
             (phps-mode-functions-reset-buffer-changes-start)
             (phps-mode-functions-reset-buffer-changes-stop)
+
+            ;; Reset idle timer
+            (phps-mode-functions--cancel-idle-timer)
 
             ;; Find state and state stack before change start
             ;; Find state at change stop
@@ -1788,7 +1792,7 @@
 
                   ;; Do partial lex from previous-token-end to change-stop
                   (let* ((new-tokens (semantic-lex previous-token-start change-stop))
-                         (appended-tokens (append old-tokens new-tokens)))
+                        (appended-tokens (append old-tokens new-tokens)))
 
                     ;; * states at change-stop is identical to old state at change-stop
                     (if (and (= phps-mode-lexer-STATE old-state-at-stop)
@@ -1796,6 +1800,9 @@
                         (progn
                           (phps-mode-runtime-debug-message
                            "Found matching state and state-stack, forwarding old indexes")
+                          (when remaining-tokens
+                            (setq remaining-tokens (phps-mode-lexer-get-moved-tokens remaining-tokens 0 buffer-length-delta)))
+
                           (phps-mode-debug-message
                            (message "State and state stack at stop equals state at stop: %s %s" phps-mode-lexer-STATE phps-mode-lexer-state_stack))
                           ;; TODO re-use rest of tokens, states and indexes here

@@ -48,6 +48,9 @@
 (defvar phps-mode-functions-processed-buffer nil
   "Flag whether current buffer is processed or not.")
 
+(defvar phps-mode-functions-idle-timer nil
+  "Timer object of idle timer.")
+
 (defun phps-mode-functions-get-buffer-changes-start ()
   "Get buffer change start."
   phps-mode-functions-buffer-changes-start)
@@ -1076,6 +1079,7 @@
 (defun phps-mode-functions-indent-line ()
   "Indent line."
   (phps-mode-functions-process-current-buffer nil)
+  (phps-mode-runtime-debug-message "Running indent-lin")
   (when phps-mode-functions-lines-indent
     (let ((indent (gethash (line-number-at-pos (point)) phps-mode-functions-lines-indent)))
       (when indent
@@ -1109,6 +1113,16 @@
 
               )))))))
 
+(defun phps-mode-functions--cancel-idle-timer ()
+  "Cancel idle timer."
+  (phps-mode-runtime-debug-message "Cancelled idle timer")
+  (cancel-timer phps-mode-functions-idle-timer))
+
+(defun phps-mode-functions--start-idle-timer ()
+  "Start idle timer."
+  (phps-mode-runtime-debug-message "Enqueued idle timer")
+  (setq-local phps-mode-functions-idle-timer (run-with-idle-timer phps-mode-idle-interval nil #'phps-mode-lexer-run-incremental)))
+
 (defun phps-mode-functions-after-change (start stop _length)
   "Track buffer change from START to STOP with length LENGTH."
   (when phps-mode-functions-allow-after-change
@@ -1127,8 +1141,7 @@
         (setq-local imenu--index-alist nil)
         (phps-mode-runtime-debug-message "Cleared Imenu index"))
 
-      (phps-mode-runtime-debug-message "Enqueued incremental lexer")
-      (run-with-idle-timer phps-mode-idle-interval nil #'phps-mode-lexer-run-incremental))
+      (phps-mode-functions--start-idle-timer))
 
     ;; When point of change is not set or when start of new changes precedes old change - update index
     (when (or (not phps-mode-functions-buffer-changes-start)
