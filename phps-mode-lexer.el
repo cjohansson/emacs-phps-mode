@@ -1745,9 +1745,10 @@
             (dolist (token old-tokens)
               (let ((end (cdr (cdr token))))
                 (setq buffer-length-old end)
-                (if (< end change-start)
-                    (setq incremental-start end)
-                  (push token head-tokens)
+                (if (<= end change-start)
+                    (progn
+                      (setq incremental-start end)
+                      (push token head-tokens))
                   (when (>= end change-stop)
                     (push token tail-tokens)))))
             (setq incremental-start (1+ incremental-start))
@@ -1755,8 +1756,12 @@
             (setq tail-tokens (nreverse tail-tokens))
 
             (phps-mode-debug-message
-             (message "Incremental start: %s, buffer length old: %s" incremental-start buffer-length-old)
-             (message "Head tokens: %s, tail tokens: %s from region: %s - %s in old tokens: %s" head-tokens tail-tokens incremental-start change-stop old-tokens))
+             (message "Incremental start: %s" incremental-start)
+             (message "Buffer length old: %s" buffer-length-old)
+             (message "Head tokens: %s" head-tokens)
+             (message "Tail tokens: %s" tail-tokens)
+             (message "From region: %s - %s" incremental-start change-stop)
+             (message "Old tokens: %s" old-tokens))
 
             ;; Did we find a start for the incremental process?
             (if (and
@@ -1780,8 +1785,11 @@
                         (push state-object tail-states))))
 
                   (phps-mode-debug-message
-                   (message "Incremental-state: %s, incremental-state-stack: %s" incremental-state incremental-state-stack)
-                   (message "Head states: %s, tail states: %s from region %s - %s in old states: %s" head-states tail-states incremental-start change-stop old-states))
+                   (message "Incremental-state: %s" incremental-state)
+                   (message "Incremental-state-stack: %s" incremental-state-stack)
+                   (message "Head states: %s" head-states)
+                   (message "Tail states: %s" tail-states)
+                   (message "Old states: %s" old-states))
 
                   (if head-states
                       (progn
@@ -1804,7 +1812,7 @@
 
                         ;; Do partial lex from previous-token-end to change-stop
                         (let* ((incremental-tokens (semantic-lex incremental-start change-stop))
-                               (appended-tokens (append old-tokens incremental-tokens)))
+                               (appended-tokens (append head-tokens incremental-tokens)))
 
                           ;; * states at change-stop is identical to old state at change-stop
                           (if (and (= phps-mode-lexer-STATE incremental-state)
@@ -1812,6 +1820,7 @@
                               (progn
 
                                 (phps-mode-runtime-debug-message "Found matching state and state-stack, copying old state and tokens")
+                                (phps-mode-debug-message (message "Incremental tokens: %s" incremental-tokens))
 
                                 (unless (= buffer-length-delta 0)
                                   (when tail-tokens
@@ -1832,6 +1841,8 @@
                                 (phps-mode-debug-message (message "New tokens from incremental lex are: %s" appended-tokens)))
 
                             (phps-mode-runtime-debug-message "Did not find matching state and state-stack, lexing rest of buffer")
+
+                            (phps-mode-debug-message (message "Incremental tokens: %s" incremental-tokens))
 
                             (phps-mode-debug-message
                              (message "State at stop %s or state stack %s does not equals state at stop: %s %s" phps-mode-lexer-STATE phps-mode-lexer-state_stack incremental-state incremental-state-stack))
