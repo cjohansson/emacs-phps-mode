@@ -1727,8 +1727,6 @@
                 (old-tokens phps-mode-lexer-tokens)
                 (head-tokens '())
                 (tail-tokens '())
-                (old-state-at-stop nil)
-                (old-state-stack-at-stop nil)
                 (buffer-length-old 0)
                 (buffer-length-new (point-max))
                 (buffer-length-delta nil)
@@ -1771,23 +1769,18 @@
                   ;; 1. Determine state (incremental-state) and state-stack (incremental-state-stack) at incremental start
                   ;; 2. Build list of states before incremental start (head-states)
                   ;; 3. Build list of states after incremental start (tail-states)
-                  ;; 4. Determine state (old-state-at-stop) and state stack (old-state-stack-at-stop) at the end of incremental region
                   (dolist (state-object old-states)
                     (let ((start (nth 0 state-object))
                           (end (nth 1 state-object)))
-                      (when (< end incremental-start)
+                      (when (<= end incremental-start)
                         (setq incremental-state (nth 2 state-object))
                         (setq incremental-state-stack (nth 3 state-object))
                         (push state-object head-states))
-                      (if (<= end change-stop)
-                          (progn
-                            (setq old-state-at-stop (nth 2 state-object))
-                            (setq old-state-stack-at-stop (nth 3 state-object)))
+                      (when (> end change-stop)
                         (push state-object tail-states))))
 
                   (phps-mode-debug-message
                    (message "Incremental-state: %s, incremental-state-stack: %s" incremental-state incremental-state-stack)
-                   (message "State and state-stack at end of incremental-region is: %s, %s" old-state-at-stop old-state-stack-at-stop)
                    (message "Head states: %s, tail states: %s from region %s - %s in old states: %s" head-states tail-states incremental-start change-stop old-states))
 
                   (if head-states
@@ -1814,8 +1807,8 @@
                                (appended-tokens (append old-tokens incremental-tokens)))
 
                           ;; * states at change-stop is identical to old state at change-stop
-                          (if (and (= phps-mode-lexer-STATE old-state-at-stop)
-                                   (equal phps-mode-lexer-state_stack old-state-stack-at-stop))
+                          (if (and (= phps-mode-lexer-STATE incremental-state)
+                                   (equal phps-mode-lexer-state_stack incremental-state-stack))
                               (progn
 
                                 (phps-mode-runtime-debug-message "Found matching state and state-stack, copying old state and tokens")
@@ -1829,17 +1822,19 @@
 
                                 (phps-mode-debug-message
                                  (message "State and state stack at stop equals state at stop: %s %s" phps-mode-lexer-STATE phps-mode-lexer-state_stack))
-                                ;; TODO re-use rest of tokens, states and indexes here
-                                ;; TODO Move remaining tokens and states
 
+                                ;; TODO re-use rest of indexes here (indentation and imenu)
+
+                                (setq phps-mode-lexer-states (append phps-mode-lexer-states tail-states))
+                                (phps-mode-debug-message (message "New states from incremental lex are: %s" phps-mode-lexer-states))
+                                
                                 (setq appended-tokens (append appended-tokens tail-tokens))
-                                ;; (phps-mode-debug-message (format "New tokens are: %s" new-tokens))
-                                )
+                                (phps-mode-debug-message (message "New tokens from incremental lex are: %s" appended-tokens)))
 
-                            (phps-mode-runtime-debug-message
-                             "Did not find matching state and state-stack, forwarding old indexes")
+                            (phps-mode-runtime-debug-message "Did not find matching state and state-stack, lexing rest of buffer")
+
                             (phps-mode-debug-message
-                             (message "State at stop %s or state stack %s does not equals state at stop: %s %s" phps-mode-lexer-STATE phps-mode-lexer-state_stack old-state-at-stop old-state-stack-at-stop))
+                             (message "State at stop %s or state stack %s does not equals state at stop: %s %s" phps-mode-lexer-STATE phps-mode-lexer-state_stack incremental-state incremental-state-stack))
 
                             ;; Clear syntax colouring of rest of buffer
                             (phps-mode-lexer-clear-region-syntax-color incremental-start (point-max))
@@ -1847,10 +1842,10 @@
                             ;; Lex rest of buffer
                             (setq head-tokens appended-tokens)
                             (setq incremental-tokens (semantic-lex change-stop (point-max)))
-                            (setq appended-tokens (append head-tokens incremental-tokens)))
+                            (setq appended-tokens (append head-tokens incremental-tokens))
+                            (phps-mode-debug-message (message "New states from full lex are: %s" phps-mode-lexer-states))
+                            (phps-mode-debug-message (message "New tokens from full lex are: %s" appended-tokens)))
 
-                          ;; TODO Should append states as well
-                          ;; (message "old-tokens: %s, new-tokens: %s" old-tokens new-tokens)
                           (setq phps-mode-lexer-tokens appended-tokens)))
                     (phps-mode-debug-message (message "Did not find head states")))
                   (phps-mode-debug-message (message "Did not find positive incremental-start")))))
