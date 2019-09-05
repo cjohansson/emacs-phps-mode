@@ -1701,7 +1701,8 @@
 (defun phps-mode-lexer-run-incremental ()
   "Run incremental lexer based on `(phps-mode-functions-get-buffer-changes-start)'."
   (let ((change-start (phps-mode-functions-get-buffer-changes-start))
-        (change-stop (phps-mode-functions-get-buffer-changes-stop)))
+        (change-stop (phps-mode-functions-get-buffer-changes-stop))
+        (run-full-lexer t))
 
     ;; Reset idle timer
     (phps-mode-functions--cancel-idle-timer)
@@ -1731,8 +1732,7 @@
                 (buffer-length-old 0)
                 (buffer-length-new (point-max))
                 (buffer-length-delta nil)
-                (incremental-start 0)
-                (run-full-lexer t))
+                (incremental-start 0))
 
             ;; Reset tokens and states here
             (setq phps-mode-lexer-tokens nil)
@@ -1787,7 +1787,7 @@
 
                   (phps-mode-debug-message
                    (message "Incremental-state: %s, incremental-state-stack: %s" incremental-state incremental-state-stack)
-                   (message "State and state-stack at end of incremental-region is: %s, %s" old-state-at-stop old-tate-stack-at-stop)
+                   (message "State and state-stack at end of incremental-region is: %s, %s" old-state-at-stop old-state-stack-at-stop)
                    (message "Head states: %s, tail states: %s from region %s - %s in old states: %s" head-states tail-states incremental-start change-stop old-states))
 
                   (if head-states
@@ -1798,9 +1798,9 @@
                         (setq run-full-lexer nil)
 
                         ;; Rewind lexer state here
-                        (setq phps-mode-lexer-states new-states)
-                        (setq phps-mode-lexer-STATE state)
-                        (setq phps-mode-lexer-state_stack state-stack)
+                        (setq phps-mode-lexer-states head-states)
+                        (setq phps-mode-lexer-STATE incremental-state)
+                        (setq phps-mode-lexer-state_stack incremental-state-stack)
 
                         ;; Calculate change of buffer length
                         (setq buffer-length-delta (- buffer-length-new buffer-length-old))
