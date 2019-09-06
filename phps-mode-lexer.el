@@ -177,9 +177,8 @@
 
 (defun phps-mode-lexer-BEGIN (state)
   "Begin STATE."
-  (setq phps-mode-lexer-STATE state)
   ;; (message "Begun state %s" state)
-  )
+  (setq-local phps-mode-lexer-STATE state))
 
 ;; _yy_push_state
 (defun phps-mode-lexer-yy_push_state (new-state)
@@ -1629,14 +1628,14 @@
   ;; Flag that buffer has not been processed
   (when (and (boundp 'phps-mode-functions-processed-buffer)
              phps-mode-functions-processed-buffer)
-    (setq phps-mode-functions-processed-buffer nil))
+    (setq-local phps-mode-functions-processed-buffer nil))
 
   ;; Does lexer start from the beginning of buffer?
   (when (and (eq start 1)
              end)
     (phps-mode-lexer-clear-region-syntax-color (point-min) (point-max))
 
-    (setq phps-mode-lexer-states nil)
+    (setq-local phps-mode-lexer-states nil)
     (phps-mode-lexer-BEGIN phps-mode-lexer-ST_INITIAL)))
 
 (defun phps-mode-lexer-run ()
@@ -1651,7 +1650,7 @@
 (defun phps-mode-lexer-move-states (start diff)
   "Move lexer states after (or equal to) START with modification DIFF."
   (when phps-mode-lexer-states
-    (setq phps-mode-lexer-states (phps-mode-lexer-get-moved-states phps-mode-lexer-states start diff))))
+    (setq-local phps-mode-lexer-states (phps-mode-lexer-get-moved-states phps-mode-lexer-states start diff))))
 
 (defun phps-mode-lexer-get-moved-states (states start diff)
   "Return moved lexer STATES after (or equal to) START with modification DIFF."
@@ -1679,7 +1678,7 @@
 (defun phps-mode-lexer-move-tokens (start diff)
   "Update tokens with moved lexer tokens after or equal to START with modification DIFF."
   (when phps-mode-lexer-tokens
-    (setq phps-mode-lexer-tokens (phps-mode-lexer-get-moved-tokens phps-mode-lexer-tokens start diff))))
+    (setq-local phps-mode-lexer-tokens (phps-mode-lexer-get-moved-tokens phps-mode-lexer-tokens start diff))))
 
 (defun phps-mode-lexer-get-moved-tokens (old-tokens start diff)
   "Return moved lexer OLD-TOKENS positions after (or equal to) START with DIFF points."
@@ -1744,10 +1743,10 @@
              (message "Old states: %s" old-states))
 
             ;; Reset tokens and states here
-            (setq phps-mode-lexer-tokens nil)
-            (setq phps-mode-lexer-states nil)
-            (setq phps-mode-lexer-STATE nil)
-            (setq phps-mode-lexer-state_stack nil)
+            (setq-local phps-mode-lexer-tokens nil)
+            (setq-local phps-mode-lexer-states nil)
+            (setq-local phps-mode-lexer-STATE nil)
+            (setq-local phps-mode-lexer-state_stack nil)
 
             ;; (phps-mode-debug-message
             ;;  (message "Buffer length old: %s" buffer-length-old))
@@ -1829,9 +1828,9 @@
                         (setq run-full-lexer nil)
 
                         ;; Rewind lexer state here
-                        (setq phps-mode-lexer-states head-states)
-                        (setq phps-mode-lexer-STATE incremental-state)
-                        (setq phps-mode-lexer-state_stack incremental-state-stack)
+                        (setq-local phps-mode-lexer-states head-states)
+                        (setq-local phps-mode-lexer-STATE incremental-state)
+                        (setq-local phps-mode-lexer-state_stack incremental-state-stack)
 
                         ;; Delete all syntax coloring from incremental-start to end of incremental-region
                         (phps-mode-lexer-clear-region-syntax-color incremental-start change-stop)
@@ -1860,7 +1859,7 @@
 
                                 ;; TODO re-use rest of indexes here (indentation and imenu)
 
-                                (setq phps-mode-lexer-states (append tail-states phps-mode-lexer-states))
+                                (setq-local phps-mode-lexer-states (append tail-states phps-mode-lexer-states))
                                 (phps-mode-debug-message (message "New states from incremental lex are: %s" phps-mode-lexer-states))
                                 
                                 (setq appended-tokens (append appended-tokens tail-tokens))
@@ -1883,7 +1882,7 @@
                             (phps-mode-debug-message (message "New states from full lex are: %s" phps-mode-lexer-states))
                             (phps-mode-debug-message (message "New tokens from full lex are: %s" appended-tokens)))
 
-                          (setq phps-mode-lexer-tokens appended-tokens)))
+                          (setq-local phps-mode-lexer-tokens appended-tokens)))
                     (phps-mode-debug-message (message "Did not find head states")))
                   (phps-mode-debug-message (message "Did not find positive incremental-start")))))
         (phps-mode-debug-message (message "Change start not above one or lacking tokens or states")))
