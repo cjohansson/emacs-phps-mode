@@ -64,7 +64,10 @@
    (execute-kbd-macro (kbd "<backspace>"))
 
    ;; Test
-   (should (equal (phps-mode-functions-get-buffer-changes-start) 55)))
+   (should (equal (phps-mode-functions-get-buffer-changes-start) 55))
+
+   ;; Run incremental lexer
+   (phps-mode-lexer-run-incremental))
 
   (phps-mode-test-incremental-vs-intial-buffer
    ""
@@ -96,7 +99,7 @@
    (insert "\n            echo 'here';")
    (should (equal (phps-mode-functions-get-buffer-changes-start) 134)))
 
-  ;; TODO Should test edits and deletions as well
+  ;; TODO Should test edits
 
   )
 

@@ -1735,6 +1735,7 @@
                 (incremental-start 0)
                 (change-length (- change-stop change-start))
                 (is-insert nil)
+                (is-deletion nil)
                 (tail-boundary change-stop))
 
             (phps-mode-debug-message
@@ -1770,12 +1771,18 @@
             ;; Calculate change of buffer length
             (setq buffer-length-delta (- buffer-length-new buffer-length-old))
 
-            (if (= change-length buffer-length-delta)
-                (progn
-                  (phps-mode-debug-message (message "Flag change as insert"))
-                  (setq is-insert t)
-                  (setq tail-boundary incremental-start))
-              (phps-mode-debug-message (message "Do not flag change as insert")))
+            (cond
+             ((= change-length buffer-length-delta)
+              (phps-mode-debug-message (message "Flag change as insert"))
+              (setq is-insert t)
+              (setq tail-boundary incremental-start))
+             ((and (= change-length 0)
+                   (< buffer-length-delta 0))
+              (phps-mode-debug-message (message "Flag change as deletion"))
+              (setq is-deletion t)
+              (setq tail-boundary (+ tail-boundary (abs buffer-length-delta))))
+             (t
+              (phps-mode-debug-message (message "Do not flag change as insert or deletion"))))
 
             (dolist (token old-tokens)
               (let ((start (cdr (cdr token))))
