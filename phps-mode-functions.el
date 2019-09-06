@@ -1109,19 +1109,19 @@
 
               ;; Reset change flag
               (phps-mode-functions-reset-buffer-changes-start)
-              (phps-mode-functions-reset-buffer-changes-stop)
-
-              )))))))
+              (phps-mode-functions-reset-buffer-changes-stop))))))))
 
 (defun phps-mode-functions--cancel-idle-timer ()
   "Cancel idle timer."
   (phps-mode-runtime-debug-message "Cancelled idle timer")
-  (cancel-timer phps-mode-functions-idle-timer))
+  (when phps-mode-functions-idle-timer
+    (cancel-timer phps-mode-functions-idle-timer)))
 
 (defun phps-mode-functions--start-idle-timer ()
   "Start idle timer."
   (phps-mode-runtime-debug-message "Enqueued idle timer")
-  (setq-local phps-mode-functions-idle-timer (run-with-idle-timer phps-mode-idle-interval nil #'phps-mode-lexer-run-incremental)))
+  (when (boundp 'phps-mode-idle-interval)
+    (setq-local phps-mode-functions-idle-timer (run-with-idle-timer phps-mode-idle-interval nil #'phps-mode-lexer-run-incremental))))
 
 (defun phps-mode-functions-after-change (start stop length)
   "Track buffer change from START to STOP with length LENGTH."

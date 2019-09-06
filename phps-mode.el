@@ -57,7 +57,7 @@
 (defvar phps-mode-use-psr-2 t
   "Whether to use PSR-2 guidelines for white-space or not.")
 
-(defvar phps-mode-idle-interval 1.0
+(defvar phps-mode-idle-interval 0.5
   "Idle seconds before running the incremental lexer.")
 
 (defvar phps-mode-lazy-process-buffer nil
@@ -75,7 +75,6 @@
 (defun phps-mode-runtime-debug-message (message)
   "Output MESSAGE if flag is on."
   (when phps-mode-runtime-debug
-    (message message)
     (let ((buffer (get-buffer-create "*PHPs Debug Messages*")))
       (with-current-buffer buffer
         (insert message)
@@ -105,7 +104,7 @@
     ;; NOTE: These are required for wrapping region functionality
     (transient-mark-mode))
 
-  ;; TODO Add this as a menu setting similar to php-mode
+  ;; TODO Add this as a menu setting similar to php-mode?
   (when phps-mode-use-electric-pair-mode
     (electric-pair-local-mode))
 
