@@ -444,11 +444,12 @@
 
                    ((or (string= token "{")
                         (string= token ";"))
-                    (if imenu-in-class-name
-                        (push `(,imenu-in-function-name . ,imenu-in-function-index) imenu-class-index)
-                      (if imenu-in-namespace-name
-                          (push `(,imenu-in-function-name . ,imenu-in-function-index) imenu-namespace-index)
-                        (push `(,imenu-in-function-name . ,imenu-in-function-index) imenu-index)))
+                    (when imenu-in-function-name
+                      (if imenu-in-class-name
+                          (push `(,imenu-in-function-name . ,imenu-in-function-index) imenu-class-index)
+                        (if imenu-in-namespace-name
+                            (push `(,imenu-in-function-name . ,imenu-in-function-index) imenu-namespace-index)
+                          (push `(,imenu-in-function-name . ,imenu-in-function-index) imenu-index))))
                     (setq imenu-in-function-name nil)
                     (setq imenu-in-function-declaration nil))
 
