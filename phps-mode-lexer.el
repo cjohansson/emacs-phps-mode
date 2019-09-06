@@ -1817,7 +1817,7 @@
                         (setq incremental-state (nth 2 state-object))
                         (setq incremental-state-stack (nth 3 state-object))
                         (push state-object head-states))
-                      (when (>= start tail-boundary)
+                      (when (> start tail-boundary)
                         (push state-object tail-states))))
 
                   (phps-mode-debug-message
