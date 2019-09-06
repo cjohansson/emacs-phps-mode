@@ -88,6 +88,25 @@
     map)
   "Keymap for `phps-mode'.")
 
+;;;###autoload
+(defun phps-mode-format-buffer ()
+  "Format current buffer according to PHPs mode."
+  (interactive)
+  (let ((old-buffer-contents (buffer-substring-no-properties (point-min) (point-max)))
+        (old-buffer (current-buffer))
+        (temp-buffer (generate-new-buffer "*PHPs Formatting*"))
+        (new-buffer-contents ""))
+    (save-excursion
+      (switch-to-buffer temp-buffer)
+      (insert old-buffer-contents)
+      (phps-mode)
+      (indent-region (point-min) (point-max))
+      (setq new-buffer-contents (buffer-substring-no-properties (point-min) (point-max)))
+      (kill-buffer)
+      (switch-to-buffer old-buffer)
+      (delete-region (point-min) (point-max))
+      (insert new-buffer-contents))))
+
 (define-derived-mode phps-mode prog-mode "PHPs"
   "Major mode for PHP with Semantic integration."
 

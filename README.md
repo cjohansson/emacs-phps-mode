@@ -24,6 +24,7 @@ This mode does not require PHP installed on your computer because it has a built
 * Tested using unit tests and integration tests
 * Continuous integration tests using Travis
 * Included in GNU ELPA package archive
+* A interactive function that can be used interactively to format buffers `(phps-mode-format-buffer)`
 
 ## Keymap
 
