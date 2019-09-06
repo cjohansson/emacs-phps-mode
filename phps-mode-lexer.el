@@ -1643,7 +1643,10 @@
   "Run lexer."
   (interactive)
   ;; (message "Running lexer")
-  (setq phps-mode-lexer-tokens (semantic-lex-buffer)))
+  (setq-local phps-mode-lexer-STATE nil)
+  (setq-local phps-mode-lexer-state_stack nil)
+  (setq-local phps-mode-lexer-states nil)
+  (setq-local phps-mode-lexer-tokens (semantic-lex-buffer)))
 
 (defun phps-mode-lexer-move-states (start diff)
   "Move lexer states after (or equal to) START with modification DIFF."
@@ -1723,7 +1726,7 @@
                 (incremental-state-stack nil)
                 (head-states '())
                 (tail-states '())
-                (old-states (nreverse phps-mode-lexer-states))
+                (old-states phps-mode-lexer-states)
                 (old-tokens phps-mode-lexer-tokens)
                 (head-tokens '())
                 (tail-tokens '())
@@ -1768,10 +1771,12 @@
             ;; Calculate change of buffer length
             (setq buffer-length-delta (- buffer-length-new buffer-length-old))
 
-            (when (= change-length buffer-length-delta)
-              (phps-mode-debug-message
-               (message "Flag change as insert"))
-              (setq tail-boundary incremental-start))
+            (if (= change-length buffer-length-delta)
+                (progn
+                  (phps-mode-debug-message (message "Flag change as insert"))
+                  (setq is-insert t)
+                  (setq tail-boundary incremental-start))
+              (phps-mode-debug-message (message "Do not flag change as insert")))
 
             (dolist (token old-tokens)
               (let ((start (cdr (cdr token))))
@@ -1800,10 +1805,10 @@
                   ;; 1. Determine state (incremental-state) and state-stack (incremental-state-stack) at incremental start
                   ;; 2. Build list of states before incremental start (head-states)
                   ;; 3. Build list of states after incremental start (tail-states)
-                  (dolist (state-object old-states)
+                  (dolist (state-object (nreverse old-states))
                     (let ((start (nth 0 state-object))
                           (end (nth 1 state-object)))
-                      (when (<= end incremental-start)
+                      (when (<= end change-start)
                         (setq incremental-state (nth 2 state-object))
                         (setq incremental-state-stack (nth 3 state-object))
                         (push state-object head-states))
@@ -1855,7 +1860,7 @@
 
                                 ;; TODO re-use rest of indexes here (indentation and imenu)
 
-                                (setq phps-mode-lexer-states (append phps-mode-lexer-states tail-states))
+                                (setq phps-mode-lexer-states (append tail-states phps-mode-lexer-states))
                                 (phps-mode-debug-message (message "New states from incremental lex are: %s" phps-mode-lexer-states))
                                 
                                 (setq appended-tokens (append appended-tokens tail-tokens))

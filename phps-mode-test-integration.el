@@ -87,6 +87,17 @@
 
    (should (equal (phps-mode-functions-get-buffer-changes-start) nil)))
 
+  (phps-mode-test-incremental-vs-intial-buffer
+   "<?php\nnamespace myNamespace\n{\n    class myClass\n    {\n        public function myFunction()\n        {\n            echo 'my statement';\n        }\n    }\n}\n"
+   "Integration-test 5 for regular PHP with namespaces, classes and functions, minor insert"
+
+   ;; Make changes - insert a echo
+   (goto-char 134)
+   (insert "\n            echo 'here';")
+   (should (equal (phps-mode-functions-get-buffer-changes-start) 134)))
+
+  ;; TODO Should test edits and deletions as well
+
   )
 
 (defun phps-mode-test-integration ()
