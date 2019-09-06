@@ -1728,15 +1728,26 @@
                 (head-tokens '())
                 (tail-tokens '())
                 (buffer-length-old 0)
-                (buffer-length-new (point-max))
+                (buffer-length-new (1- (point-max)))
                 (buffer-length-delta nil)
-                (incremental-start 0))
+                (incremental-start 0)
+                (change-length (- change-stop change-start))
+                (is-insert nil)
+                (tail-boundary change-stop))
+
+            (phps-mode-debug-message
+             (message "Change length: %s" change-length)
+             (message "Old tokens: %s" old-tokens)
+             (message "Old states: %s" old-states))
 
             ;; Reset tokens and states here
             (setq phps-mode-lexer-tokens nil)
             (setq phps-mode-lexer-states nil)
             (setq phps-mode-lexer-STATE nil)
             (setq phps-mode-lexer-state_stack nil)
+
+            ;; (phps-mode-debug-message
+            ;;  (message "Buffer length old: %s" buffer-length-old))
 
             ;; 1. Determine incremental start (incremental-start), that is one point after previous token ends
             ;; 2. Build list of tokens before incremental start (head-tokens)
@@ -1745,23 +1756,38 @@
             (dolist (token old-tokens)
               (let ((end (cdr (cdr token))))
                 (setq buffer-length-old end)
-                (if (<= end change-start)
-                    (progn
-                      (setq incremental-start end)
-                      (push token head-tokens))
-                  (when (>= end change-stop)
-                    (push token tail-tokens)))))
+                (when (<= end change-start)
+                  (setq incremental-start (1+ end))
+                  (push token head-tokens))))
             (setq incremental-start (1+ incremental-start))
+            (phps-mode-debug-message
+             (message "Head tokens: %s" head-tokens)
+             (message "Incremental start: %s" incremental-start)
+             (message "Buffer length old: %s" buffer-length-old))
+
+            ;; Calculate change of buffer length
+            (setq buffer-length-delta (- buffer-length-new buffer-length-old))
+
+            (when (= change-length buffer-length-delta)
+              (phps-mode-debug-message
+               (message "Flag change as insert"))
+              (setq tail-boundary incremental-start))
+
+            (dolist (token old-tokens)
+              (let ((start (cdr (cdr token))))
+                (when (>= start tail-boundary)
+                  (push token tail-tokens))))
             (setq head-tokens (nreverse head-tokens))
             (setq tail-tokens (nreverse tail-tokens))
 
             (phps-mode-debug-message
              (message "Incremental start: %s" incremental-start)
+             (message "Buffer length new: %s" buffer-length-new)
              (message "Buffer length old: %s" buffer-length-old)
-             (message "Head tokens: %s" head-tokens)
+             (message "Buffer length delta: %s" buffer-length-delta)
+             (message "Tail boundary: %s" tail-boundary)
              (message "Tail tokens: %s" tail-tokens)
-             (message "From region: %s - %s" incremental-start change-stop)
-             (message "Old tokens: %s" old-tokens))
+             (message "From region: %s - %s" incremental-start change-stop))
 
             ;; Did we find a start for the incremental process?
             (if (and
@@ -1781,15 +1807,14 @@
                         (setq incremental-state (nth 2 state-object))
                         (setq incremental-state-stack (nth 3 state-object))
                         (push state-object head-states))
-                      (when (> end change-stop)
+                      (when (>= start tail-boundary)
                         (push state-object tail-states))))
 
                   (phps-mode-debug-message
                    (message "Incremental-state: %s" incremental-state)
                    (message "Incremental-state-stack: %s" incremental-state-stack)
                    (message "Head states: %s" head-states)
-                   (message "Tail states: %s" tail-states)
-                   (message "Old states: %s" old-states))
+                   (message "Tail states: %s" tail-states))
 
                   (if head-states
                       (progn
@@ -1802,10 +1827,6 @@
                         (setq phps-mode-lexer-states head-states)
                         (setq phps-mode-lexer-STATE incremental-state)
                         (setq phps-mode-lexer-state_stack incremental-state-stack)
-
-                        ;; Calculate change of buffer length
-                        (setq buffer-length-delta (- buffer-length-new buffer-length-old))
-                        (phps-mode-runtime-debug-message (format "buffer-length-old: %s, buffer-length-new: %s, delta: %s" buffer-length-old buffer-length-new buffer-length-delta))
 
                         ;; Delete all syntax coloring from incremental-start to end of incremental-region
                         (phps-mode-lexer-clear-region-syntax-color incremental-start change-stop)

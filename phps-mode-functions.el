@@ -1123,12 +1123,11 @@
   (phps-mode-runtime-debug-message "Enqueued idle timer")
   (setq-local phps-mode-functions-idle-timer (run-with-idle-timer phps-mode-idle-interval nil #'phps-mode-lexer-run-incremental)))
 
-(defun phps-mode-functions-after-change (start stop _length)
+(defun phps-mode-functions-after-change (start stop length)
   "Track buffer change from START to STOP with length LENGTH."
+  (phps-mode-runtime-debug-message
+     (format "After change %s - %s, length: %s" start stop length))
   (when phps-mode-functions-allow-after-change
-
-    (phps-mode-runtime-debug-message
-     (format "After change %s to %s" start stop))
 
     ;; If we haven't scheduled incremental lexer before - do it
     (when (and (not phps-mode-functions-buffer-changes-start)
