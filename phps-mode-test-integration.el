@@ -64,10 +64,7 @@
    (execute-kbd-macro (kbd "<backspace>"))
 
    ;; Test
-   (should (equal (phps-mode-functions-get-buffer-changes-start) 55))
-
-   ;; Run incremental lexer
-   (phps-mode-lexer-run-incremental))
+   (should (equal (phps-mode-functions-get-buffer-changes-start) 55)))
 
   (phps-mode-test-incremental-vs-intial-buffer
    ""
@@ -81,25 +78,16 @@
    (should (equal (phps-mode-functions-get-buffer-changes-start) 1)))
 
   (phps-mode-test-incremental-vs-intial-buffer
-   "<?php\n/**\n *\n */\nnamespace myNamespace\n{\n    class myClass\n    {\n        public function myFunction()\n        {\n            echo 'my statement';\n        }\n    }\n}\n"
-   "Integration-test 4 for regular PHP with namespaces, classes and functions, white-space change inside token"
-
-   ;; Make changes
-   (goto-char 13)
-   (newline-and-indent)
-
-   (should (equal (phps-mode-functions-get-buffer-changes-start) nil)))
-
-  (phps-mode-test-incremental-vs-intial-buffer
    "<?php\nnamespace myNamespace\n{\n    class myClass\n    {\n        public function myFunction()\n        {\n            echo 'my statement';\n        }\n    }\n}\n"
-   "Integration-test 5 for regular PHP with namespaces, classes and functions, minor insert"
+   "Integration-test 4 for regular PHP with namespaces, classes and functions, minor insert"
 
    ;; Make changes - insert a echo
-   (goto-char 134)
-   (insert "\n            echo 'here';")
-   (should (equal (phps-mode-functions-get-buffer-changes-start) 134)))
+   (goto-char 132)
+   (insert " is a complex one")
+   (should (equal (phps-mode-functions-get-buffer-changes-start) 132)))
 
-  ;; TODO Should test edits
+  ;; TODO Test single deletion
+  ;; TODO Test indent
 
   )
 

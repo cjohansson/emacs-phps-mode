@@ -1762,7 +1762,6 @@
                 (when (<= end change-start)
                   (setq incremental-start (1+ end))
                   (push token head-tokens))))
-            (setq incremental-start (1+ incremental-start))
             (phps-mode-debug-message
              (message "Head tokens: %s" head-tokens)
              (message "Incremental start: %s" incremental-start)
@@ -1785,8 +1784,8 @@
               (phps-mode-debug-message (message "Do not flag change as insert or deletion"))))
 
             (dolist (token old-tokens)
-              (let ((start (cdr (cdr token))))
-                (when (>= start tail-boundary)
+              (let ((start (car (cdr token))))
+                (when (> start tail-boundary)
                   (push token tail-tokens))))
             (setq head-tokens (nreverse head-tokens))
             (setq tail-tokens (nreverse tail-tokens))
