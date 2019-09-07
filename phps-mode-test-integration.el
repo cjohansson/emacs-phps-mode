@@ -109,6 +109,21 @@
    ;; Test
    (should (equal (phps-mode-functions-get-buffer-changes-start) nil)))
 
+  (phps-mode-test-incremental-vs-intial-buffer
+   "<?php\nnamespace myNamespace\n{\n    class myClass\n    {\n        public function myFunction()\n        {\n            echo 'my statement';\n        }\n    }\n}\n"
+   "Integration-test 7 for regular PHP with namespaces, classes and functions, with multiple, isolated edits"
+
+   ;; Make changes
+   (goto-char 110)
+   (indent-according-to-mode)
+
+   ;; Make changes
+   (goto-char 28)
+   (insert "One")
+
+   ;; Test
+   (should (equal (phps-mode-functions-get-buffer-changes-start) 28)))
+
   )
 
 (defun phps-mode-test-integration ()
