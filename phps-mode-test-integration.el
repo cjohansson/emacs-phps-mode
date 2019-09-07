@@ -81,13 +81,33 @@
    "<?php\nnamespace myNamespace\n{\n    class myClass\n    {\n        public function myFunction()\n        {\n            echo 'my statement';\n        }\n    }\n}\n"
    "Integration-test 4 for regular PHP with namespaces, classes and functions, minor insert"
 
-   ;; Make changes - insert a echo
+   ;; Make changes
    (goto-char 132)
    (insert " is a complex one")
+
+   ;; Test
    (should (equal (phps-mode-functions-get-buffer-changes-start) 132)))
 
-  ;; TODO Test single deletion
-  ;; TODO Test indent
+  
+  (phps-mode-test-incremental-vs-intial-buffer
+   "<?php\nnamespace myNamespace\n{\n    class myClass\n    {\n        public function myFunction()\n        {\n            echo 'my statement';\n        }\n    }\n}\n"
+   "Integration-test 5 for regular PHP with namespaces, classes and functions, single deletion"
+
+   ;; Make changes - insert a echo
+   (goto-char 132)
+   (backward-delete-char-untabify 1)
+   (should (equal (phps-mode-functions-get-buffer-changes-start) 131)))
+
+  (phps-mode-test-incremental-vs-intial-buffer
+   "<?php\nnamespace myNamespace\n{\n    class myClass\n    {\n        public function myFunction()\n        {\n        echo 'my statement';\n        }\n    }\n}\n"
+   "Integration-test 6 for regular PHP with namespaces, classes and functions, single indent line"
+
+   ;; Make changes
+   (goto-char 110)
+   (indent-according-to-mode)
+
+   ;; Test
+   (should (equal (phps-mode-functions-get-buffer-changes-start) nil)))
 
   )
 
