@@ -44,6 +44,8 @@
    (goto-char 144)
    (insert "\n\n        public function myFunctionB()\n        {\n            echo 'my second statement';\n        }\n"))
 
+  ;; TODO Can't lex something that doesn't exist
+
   (phps-mode-test-incremental-vs-intial-buffer
    "<?php\nnamespace myNamespace\n{\n    class myClass\n    {\n        public function myFunction()\n        {\n            echo 'my statement';\n        }\n    }\n}\n"
    "Integration-test 2 for regular PHP with namespaces, classes and functions"
@@ -51,9 +53,6 @@
    ;; Make changes - insert a new function
    (goto-char 144)
    (insert "\n\n        public function myFunctionB()\n        {\n            echo 'my second statement';\n        }\n")
-
-   ;; Run incremental lexer
-   (phps-mode-lexer-run-incremental)
 
    ;; Make changes - remove first function
    (goto-char 55)

@@ -50,7 +50,7 @@
 
 (defun phps-mode-functions-process-current-buffer (force-lazy)
   "Process current buffer, generate indentations and Imenu.  FORCE-LAZY will trigger incremental lexer if we have change."
-  (phps-mode-runtime-debug-message "Process current buffer")
+  (phps-mode-debug-message (message "Process current buffer"))
   (when (and (boundp 'phps-mode-lazy-process-buffer)
              phps-mode-functions-idle-timer
              (or phps-mode-lazy-process-buffer

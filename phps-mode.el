@@ -85,6 +85,7 @@
     (define-key map (kbd "C-c /") #'comment-region)
     (define-key map (kbd "C-c DEL") #'uncomment-region)
     (define-key map (kbd "C-c C-r") #'phps-mode-lexer-run)
+    (define-key map (kbd "C-c C-f") #'phps-mode-format-buffer)
     map)
   "Keymap for `phps-mode'.")
 

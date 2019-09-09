@@ -1642,7 +1642,7 @@
 (defun phps-mode-lexer-run ()
   "Run lexer."
   (interactive)
-  (phps-mode-runtime-debug-message "(phps-mode-lexer-run)")
+  (phps-mode-debug-message (message "Lexer run"))
   (setq-local phps-mode-lexer-buffer-length (1- (point-max)))
   (setq-local phps-mode-lexer-STATE nil)
   (setq-local phps-mode-lexer-state_stack nil)
