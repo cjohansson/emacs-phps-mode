@@ -163,11 +163,12 @@
 
   ;; Reset flags
   (setq-local phps-mode-functions-allow-after-change t)
-  (setq-local phps-mode-functions-buffer-changes-start nil)
-  (setq-local phps-mode-functions-buffer-changes-stop nil)
+  (setq-local phps-mode-functions-buffer-changes nil)
+  (setq-local phps-mode-functions-idle-timer nil)
   (setq-local phps-mode-functions-lines-indent nil)
   (setq-local phps-mode-functions-imenu nil)
   (setq-local phps-mode-functions-processed-buffer nil)
+  (setq-local phps-mode-lexer-buffer-length nil)
 
   ;; Make (comment-region) and (uncomment-region) work
   (setq-local comment-region-function #'phps-mode-functions-comment-region)

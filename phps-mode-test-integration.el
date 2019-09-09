@@ -42,8 +42,7 @@
 
    ;; Make changes - insert a new function
    (goto-char 144)
-   (insert "\n\n        public function myFunctionB()\n        {\n            echo 'my second statement';\n        }\n")
-   (should (equal (phps-mode-functions-get-buffer-changes-start) 144)))
+   (insert "\n\n        public function myFunctionB()\n        {\n            echo 'my second statement';\n        }\n"))
 
   (phps-mode-test-incremental-vs-intial-buffer
    "<?php\nnamespace myNamespace\n{\n    class myClass\n    {\n        public function myFunction()\n        {\n            echo 'my statement';\n        }\n    }\n}\n"
@@ -52,7 +51,6 @@
    ;; Make changes - insert a new function
    (goto-char 144)
    (insert "\n\n        public function myFunctionB()\n        {\n            echo 'my second statement';\n        }\n")
-   (should (equal (phps-mode-functions-get-buffer-changes-start) 144))
 
    ;; Run incremental lexer
    (phps-mode-lexer-run-incremental)
@@ -61,10 +59,7 @@
    (goto-char 55)
    (push-mark nil t t)
    (goto-char 145)
-   (execute-kbd-macro (kbd "<backspace>"))
-
-   ;; Test
-   (should (equal (phps-mode-functions-get-buffer-changes-start) 55)))
+   (execute-kbd-macro (kbd "<backspace>")))
 
   (phps-mode-test-incremental-vs-intial-buffer
    ""
@@ -72,10 +67,7 @@
 
    ;; Make changes
    (goto-char 1)
-   (insert "<?php\nfunction myFunctionA()\n{\n    echo 'my second statement';\n}\n")
-
-   ;; Test
-   (should (equal (phps-mode-functions-get-buffer-changes-start) 1)))
+   (insert "<?php\nfunction myFunctionA()\n{\n    echo 'my second statement';\n}\n"))
 
   (phps-mode-test-incremental-vs-intial-buffer
    "<?php\nnamespace myNamespace\n{\n    class myClass\n    {\n        public function myFunction()\n        {\n            echo 'my statement';\n        }\n    }\n}\n"
@@ -83,10 +75,7 @@
 
    ;; Make changes
    (goto-char 132)
-   (insert " is a complex one")
-
-   ;; Test
-   (should (equal (phps-mode-functions-get-buffer-changes-start) 132)))
+   (insert " is a complex one"))
 
   
   (phps-mode-test-incremental-vs-intial-buffer
@@ -95,8 +84,7 @@
 
    ;; Make changes - insert a echo
    (goto-char 132)
-   (backward-delete-char-untabify 1)
-   (should (equal (phps-mode-functions-get-buffer-changes-start) 131)))
+   (backward-delete-char-untabify 1))
 
   (phps-mode-test-incremental-vs-intial-buffer
    "<?php\nnamespace myNamespace\n{\n    class myClass\n    {\n        public function myFunction()\n        {\n        echo 'my statement';\n        }\n    }\n}\n"
@@ -104,10 +92,7 @@
 
    ;; Make changes
    (goto-char 110)
-   (indent-according-to-mode)
-
-   ;; Test
-   (should (equal (phps-mode-functions-get-buffer-changes-start) nil)))
+   (indent-according-to-mode))
 
   (phps-mode-test-incremental-vs-intial-buffer
    "<?php\nnamespace myNamespace\n{\n    class myClass\n    {\n        public function myFunction()\n        {\n            echo 'my statement';\n        }\n    }\n}\n"
@@ -119,10 +104,7 @@
 
    ;; Make changes
    (goto-char 28)
-   (insert "One")
-
-   ;; Test
-   (should (equal (phps-mode-functions-get-buffer-changes-start) 28)))
+   (insert "One"))
 
   )
 

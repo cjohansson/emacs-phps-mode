@@ -33,11 +33,8 @@
 (defvar phps-mode-functions-allow-after-change t
   "Flag to tell us whether after change detection is enabled or not.")
 
-(defvar phps-mode-functions-buffer-changes-start nil
-  "Start point of buffer changes, nil if none.")
-
-(defvar phps-mode-functions-buffer-changes-stop nil
-  "Stop point of buffer changes, nil if none.")
+(defvar phps-mode-functions-buffer-changes nil
+  "A stack of buffer changes.")
 
 (defvar phps-mode-functions-lines-indent nil
   "The indentation of each line in buffer, nil if none.")
@@ -51,29 +48,11 @@
 (defvar phps-mode-functions-idle-timer nil
   "Timer object of idle timer.")
 
-(defun phps-mode-functions-get-buffer-changes-start ()
-  "Get buffer change start."
-  phps-mode-functions-buffer-changes-start)
-
-(defun phps-mode-functions-get-buffer-changes-stop ()
-  "Get buffer change stop."
-  phps-mode-functions-buffer-changes-stop)
-
-(defun phps-mode-functions-reset-buffer-changes-start ()
-  "Reset buffer change start."
-  (phps-mode-runtime-debug-message "Reset flag for buffer changes start")
-  (setq-local phps-mode-functions-buffer-changes-start nil))
-
-(defun phps-mode-functions-reset-buffer-changes-stop ()
-  "Reset buffer change stop."
-  (phps-mode-runtime-debug-message "Reset flag for buffer changes stop")
-  (setq-local phps-mode-functions-buffer-changes-stop nil))
-
 (defun phps-mode-functions-process-current-buffer (force-lazy)
   "Process current buffer, generate indentations and Imenu.  FORCE-LAZY will trigger incremental lexer if we have change."
   (phps-mode-runtime-debug-message "Process current buffer")
   (when (and (boundp 'phps-mode-lazy-process-buffer)
-             (phps-mode-functions-get-buffer-changes-start)
+             phps-mode-functions-idle-timer
              (or phps-mode-lazy-process-buffer
                  force-lazy))
     (phps-mode-lexer-run-incremental)
@@ -1112,6 +1091,10 @@
               (phps-mode-functions-reset-buffer-changes-start)
               (phps-mode-functions-reset-buffer-changes-stop))))))))
 
+(defun phps-mode-functions--reset-changes ()
+  "Reset change stack."
+  (setq-local phps-mode-functions-buffer-changes nil))
+
 (defun phps-mode-functions--cancel-idle-timer ()
   "Cancel idle timer."
   (phps-mode-runtime-debug-message "Cancelled idle timer")
@@ -1125,15 +1108,16 @@
     (setq-local phps-mode-functions-idle-timer (run-with-idle-timer phps-mode-idle-interval nil #'phps-mode-lexer-run-incremental))))
 
 (defun phps-mode-functions-after-change (start stop length)
-  "Track buffer change from START to STOP with length LENGTH."
+  "Track buffer change from START to STOP with LENGTH."
   (phps-mode-runtime-debug-message
-     (format "After change %s - %s, length: %s" start stop length))
-  (when phps-mode-functions-allow-after-change
+   (format "After change %s - %s, length: %s" start stop length))
 
+  (when phps-mode-functions-allow-after-change
+    
     ;; If we haven't scheduled incremental lexer before - do it
-    (when (and (not phps-mode-functions-buffer-changes-start)
-               (boundp 'phps-mode-idle-interval)
-               phps-mode-idle-interval)
+    (when (and (boundp 'phps-mode-idle-interval)
+               phps-mode-idle-interval
+               (not phps-mode-functions-idle-timer))
 
       ;; Reset imenu
       (when (and (boundp 'imenu--index-alist)
@@ -1143,19 +1127,8 @@
 
       (phps-mode-functions--start-idle-timer))
 
-    ;; When point of change is not set or when start of new changes precedes old change - update index
-    (when (or (not phps-mode-functions-buffer-changes-start)
-              (< start phps-mode-functions-buffer-changes-start))
-      (phps-mode-runtime-debug-message
-       (format "Set new change start to %s" start))
-      (setq-local phps-mode-functions-buffer-changes-start start))
-
-    ;; When point of change is not set or when point of new changes is above old change - update index
-    (when (or (not phps-mode-functions-buffer-changes-stop)
-              (> stop phps-mode-functions-buffer-changes-stop))
-      (phps-mode-runtime-debug-message
-       (format "Set new change stop to %s" stop))
-      (setq-local phps-mode-functions-buffer-changes-stop stop))))
+    ;; Save change in changes stack
+    (push `(,start ,stop ,length ,(point-max)) phps-mode-functions-buffer-changes)))
 
 (defun phps-mode-functions-imenu-create-index ()
   "Get Imenu for current buffer."
