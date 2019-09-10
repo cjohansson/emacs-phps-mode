@@ -168,6 +168,8 @@
   (setq-local phps-mode-functions-processed-buffer nil)
   (setq-local phps-mode-lexer-buffer-length nil)
   (setq-local phps-mode-lexer-buffer-contents nil)
+  (setq-local phps-mode-lexer-tokens nil)
+  (setq-local phps-mode-lexer-states nil)
 
   ;; Make (comment-region) and (uncomment-region) work
   (setq-local comment-region-function #'phps-mode-functions-comment-region)

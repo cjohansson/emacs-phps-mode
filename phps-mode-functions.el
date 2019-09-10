@@ -54,14 +54,14 @@
   (when phps-mode-functions-idle-timer
     (phps-mode-debug-message (message "Trigger incremental lexer"))
     (phps-mode-lexer-run-incremental)
-    (setq phps-mode-functions-processed-buffer nil))
-  (if phps-mode-functions-processed-buffer
+    (setq-local phps-mode-functions-processed-buffer nil))
+  (if (not phps-mode-functions-processed-buffer)
       (progn
         (phps-mode-debug-message (message "Buffer is not processed"))
         (let ((processed (phps-mode-functions--process-tokens-in-string phps-mode-lexer-tokens (buffer-substring-no-properties (point-min) (point-max)))))
-          (setq phps-mode-functions-imenu (nth 0 processed))
-          (setq phps-mode-functions-lines-indent (nth 1 processed)))
-        (setq phps-mode-functions-processed-buffer t))
+          (setq-local phps-mode-functions-imenu (nth 0 processed))
+          (setq-local phps-mode-functions-lines-indent (nth 1 processed)))
+        (setq-local phps-mode-functions-processed-buffer t))
     (phps-mode-debug-message (message "Buffer is already processed"))))
 
 (defun phps-mode-functions-get-moved-lines-indent (old-lines-indents start-line-number diff)
@@ -95,13 +95,13 @@
 (defun phps-mode-functions-move-imenu-index (start diff)
   "Moved imenu from START by DIFF points."
   (when phps-mode-functions-imenu
-    (setq phps-mode-functions-imenu (phps-mode-functions-get-moved-imenu phps-mode-functions-imenu start diff))))
+    (setq-local phps-mode-functions-imenu (phps-mode-functions-get-moved-imenu phps-mode-functions-imenu start diff))))
 
 (defun phps-mode-functions-move-lines-indent (start-line-number diff)
   "Move lines indent from START-LINE-NUMBER with DIFF points."
   (when phps-mode-functions-lines-indent
     ;; (message "Moving line-indent index from %s with %s" start-line-number diff)
-    (setq phps-mode-functions-lines-indent (phps-mode-functions-get-moved-lines-indent phps-mode-functions-lines-indent start-line-number diff))))
+    (setq-local phps-mode-functions-lines-indent (phps-mode-functions-get-moved-lines-indent phps-mode-functions-lines-indent start-line-number diff))))
   
 (defun phps-mode-functions-get-lines-indent ()
   "Return lines indent, process buffer if not done already."
@@ -1060,36 +1060,38 @@
   "Indent line."
   (phps-mode-debug-message (message "Indent line"))
   (phps-mode-functions-process-current-buffer)
-  (when phps-mode-functions-lines-indent
-    (let ((indent (gethash (line-number-at-pos (point)) phps-mode-functions-lines-indent)))
-      (when indent
-        ;; (message "indent: %s %s %s" indent (car indent) (car (cdr indent)))
-        (let ((indent-sum (+ (* (car indent) tab-width) (car (cdr indent))))
-              (current-indentation (current-indentation))
-              (line-start (line-beginning-position)))
+  (if phps-mode-functions-lines-indent
+      (progn
+        (phps-mode-debug-message
+         (message "Found lines indent index, indenting.."))
+        (let ((indent (gethash (line-number-at-pos (point)) phps-mode-functions-lines-indent)))
+          (when indent
+            (let ((indent-sum (+ (* (car indent) tab-width) (car (cdr indent))))
+                  (current-indentation (current-indentation))
+                  (line-start (line-beginning-position)))
 
-          (unless current-indentation
-            (setq current-indentation 0))
+              (unless current-indentation
+                (setq current-indentation 0))
 
-          ;; Only continue if current indentation is wrong
-          (unless (equal indent-sum current-indentation)
-            (let ((indent-diff (- indent-sum current-indentation)))
-              ;; (message "Indenting to %s current column %s" indent-sum (current-indentation))
-              ;; (message "inside scripting, start: %s, end: %s, indenting to column %s " start end indent-level)
+              ;; Only continue if current indentation is wrong
+              (unless (equal indent-sum current-indentation)
+                (let ((indent-diff (- indent-sum current-indentation)))
 
-              (indent-line-to indent-sum)
+                  (indent-line-to indent-sum)
 
+                  ;; When indent is changed the trailing tokens and states just need to adjust their positions, this will improve speed of indent-region a lot
+                  (phps-mode-lexer-move-tokens line-start indent-diff)
+                  (phps-mode-lexer-move-states line-start indent-diff)
+                  (phps-mode-functions-move-imenu-index line-start indent-diff)
 
-              ;; When indent is changed the trailing tokens and states just need to adjust their positions, this will improve speed of indent-region a lot
-              (phps-mode-lexer-move-tokens line-start indent-diff)
-              (phps-mode-lexer-move-states line-start indent-diff)
-              (phps-mode-functions-move-imenu-index line-start indent-diff)
+                  (phps-mode-debug-message
+                   (message "Lexer tokens after move: %s" phps-mode-lexer-tokens))
 
-              ;; (message "Diff after indent at %s is %s" line-start indent-diff)
-
-              ;; Reset change flag
-              (phps-mode-functions-reset-buffer-changes-start)
-              (phps-mode-functions-reset-buffer-changes-stop))))))))
+                  ;; Reset change flag
+                  (phps-mode-functions--reset-changes)
+                  (phps-mode-functions--cancel-idle-timer)))))))
+    (phps-mode-debug-message
+     (message "Did not find lines indent index, skipping indenting.."))))
 
 (defun phps-mode-functions--reset-changes ()
   "Reset change stack."
