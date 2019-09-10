@@ -60,9 +60,6 @@
 (defvar phps-mode-idle-interval 0.5
   "Idle seconds before running the incremental lexer.")
 
-(defvar phps-mode-lazy-process-buffer nil
-  "Whether indenting should trigger process of buffer.")
-
 (defvar phps-mode-flycheck-applied nil
   "Boolean flag whether flycheck configuration has been applied or not.")
 
@@ -189,9 +186,6 @@
 
   ;; Set semantic-lex initializer function
   (add-hook 'semantic-lex-reset-functions #'phps-mode-lexer-setup 0 t)
-
-  ;; Reset tokens
-  (setq-local phps-mode-lexer-tokens nil)
 
   ;; Initial run of lexer
   (phps-mode-lexer-run)

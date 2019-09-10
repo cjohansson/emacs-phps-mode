@@ -48,21 +48,21 @@
 (defvar phps-mode-functions-idle-timer nil
   "Timer object of idle timer.")
 
-(defun phps-mode-functions-process-current-buffer (force-lazy)
-  "Process current buffer, generate indentations and Imenu.  FORCE-LAZY will trigger incremental lexer if we have change."
+(defun phps-mode-functions-process-current-buffer ()
+  "Process current buffer, generate indentations and Imenu, trigger incremental lexer if we have change."
   (phps-mode-debug-message (message "Process current buffer"))
-  (when (and (boundp 'phps-mode-lazy-process-buffer)
-             phps-mode-functions-idle-timer
-             (or phps-mode-lazy-process-buffer
-                 force-lazy))
+  (when phps-mode-functions-idle-timer
+    (phps-mode-debug-message (message "Trigger incremental lexer"))
     (phps-mode-lexer-run-incremental)
     (setq phps-mode-functions-processed-buffer nil))
-  (unless phps-mode-functions-processed-buffer
-
-    (let ((processed (phps-mode-functions--process-tokens-in-string phps-mode-lexer-tokens (buffer-substring-no-properties (point-min) (point-max)))))
-      (setq phps-mode-functions-imenu (nth 0 processed))
-      (setq phps-mode-functions-lines-indent (nth 1 processed)))
-    (setq phps-mode-functions-processed-buffer t)))
+  (if phps-mode-functions-processed-buffer
+      (progn
+        (phps-mode-debug-message (message "Buffer is not processed"))
+        (let ((processed (phps-mode-functions--process-tokens-in-string phps-mode-lexer-tokens (buffer-substring-no-properties (point-min) (point-max)))))
+          (setq phps-mode-functions-imenu (nth 0 processed))
+          (setq phps-mode-functions-lines-indent (nth 1 processed)))
+        (setq phps-mode-functions-processed-buffer t))
+    (phps-mode-debug-message (message "Buffer is already processed"))))
 
 (defun phps-mode-functions-get-moved-lines-indent (old-lines-indents start-line-number diff)
   "Move OLD-LINES-INDENTS from START-LINE-NUMBER with DIFF points."
@@ -105,12 +105,12 @@
   
 (defun phps-mode-functions-get-lines-indent ()
   "Return lines indent, process buffer if not done already."
-  (phps-mode-functions-process-current-buffer nil)
+  (phps-mode-functions-process-current-buffer)
   phps-mode-functions-lines-indent)
 
 (defun phps-mode-functions-get-imenu ()
   "Return Imenu, process buffer if not done already."
-  (phps-mode-functions-process-current-buffer t)
+  (phps-mode-functions-process-current-buffer)
   phps-mode-functions-imenu)
 
 (defun phps-mode-functions-get-moved-imenu (old-index start diff)
@@ -1058,8 +1058,8 @@
 
 (defun phps-mode-functions-indent-line ()
   "Indent line."
-  (phps-mode-functions-process-current-buffer nil)
-  (phps-mode-runtime-debug-message "Running indent-lin")
+  (phps-mode-debug-message (message "Indent line"))
+  (phps-mode-functions-process-current-buffer)
   (when phps-mode-functions-lines-indent
     (let ((indent (gethash (line-number-at-pos (point)) phps-mode-functions-lines-indent)))
       (when indent
@@ -1099,7 +1099,8 @@
   "Cancel idle timer."
   (phps-mode-runtime-debug-message "Cancelled idle timer")
   (when phps-mode-functions-idle-timer
-    (cancel-timer phps-mode-functions-idle-timer)))
+    (cancel-timer phps-mode-functions-idle-timer)
+    (setq-local phps-mode-functions-idle-timer nil)))
 
 (defun phps-mode-functions--start-idle-timer ()
   "Start idle timer."
@@ -1132,7 +1133,7 @@
 
 (defun phps-mode-functions-imenu-create-index ()
   "Get Imenu for current buffer."
-  (phps-mode-functions-process-current-buffer t)
+  (phps-mode-functions-process-current-buffer)
   phps-mode-functions-imenu)
 
 (defun phps-mode-functions-comment-region (beg end &optional _arg)

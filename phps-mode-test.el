@@ -52,9 +52,9 @@
      (phps-mode)
      ,@change
      (phps-mode-lexer-run-incremental)
-     (setq incremental-states (copy-sequence (phps-mode-lexer-get-states)))
-     (setq incremental-tokens (copy-sequence (phps-mode-lexer-get-tokens)))
-     (setq incremental-imenu (copy-sequence (phps-mode-functions-get-imenu)))
+     (setq incremental-states phps-mode-lexer-states)
+     (setq incremental-tokens phps-mode-lexer-tokens)
+     (setq incremental-imenu (phps-mode-functions-get-imenu))
      (setq incremental-indent (phps-mode-test-hash-to-list (phps-mode-functions-get-lines-indent)))
      (setq incremental-buffer (buffer-substring-no-properties (point-min) (point-max)))
 
@@ -65,9 +65,9 @@
      (phps-mode-debug-message
        (message "\nTesting initial buffer '%s':\n'%s'\n" ,title incremental-buffer))
      (phps-mode)
-     (setq initial-states (copy-sequence (phps-mode-lexer-get-states)))
-     (setq initial-tokens (copy-sequence (phps-mode-lexer-get-tokens)))
-     (setq initial-imenu (copy-sequence (phps-mode-functions-get-imenu)))
+     (setq initial-states (phps-mode-lexer-get-states))
+     (setq initial-tokens (phps-mode-lexer-get-tokens))
+     (setq initial-imenu (phps-mode-functions-get-imenu))
      (setq initial-indent (phps-mode-test-hash-to-list (phps-mode-functions-get-lines-indent)))
      (setq initial-buffer (buffer-substring-no-properties (point-min) (point-max)))
 
