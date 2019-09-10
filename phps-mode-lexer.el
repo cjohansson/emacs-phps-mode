@@ -1741,6 +1741,7 @@
                      phps-mode-lexer-tokens)
                 (let ((incremental-state nil)
                       (incremental-state-stack nil)
+                      (incremental-states nil)
                       (head-states '())
                       (tail-states '())
                       (old-states phps-mode-lexer-states)
@@ -1852,7 +1853,7 @@
                               (setq run-full-lexer nil)
 
                               ;; Delete all syntax coloring from incremental-start to end of incremental-region
-                              (phps-mode-lexer-clear-region-syntax-color incremental-start change-stop)
+                              ;; (phps-mode-lexer-clear-region-syntax-color incremental-start change-stop)
 
                               ;; Do partial lex from previous-token-end to change-stop
                               (let ((incremental-buffer (generate-new-buffer "*PHPs Incremental Buffer*")))
@@ -1861,9 +1862,9 @@
                                   (switch-to-buffer incremental-buffer)
                                   (delete-region (point-min) (point-max))
                                   (goto-char (point-max))
-                                  (insert-char 10 incremental-start)
+                                  (insert-char 10 (- incremental-start 2))
                                   (goto-char (point-max))
-                                  (insert (substring buffer-contents-new incremental-start change-stop))
+                                  (insert (substring buffer-contents-new (- incremental-start 2) change-stop))
 
                                   ;; Rewind lexer state here
                                   (setq-local phps-mode-lexer-states head-states)
@@ -1879,6 +1880,7 @@
 
                                   (setq incremental-tokens (semantic-lex incremental-start change-stop))
                                   (setq appended-tokens (append head-tokens incremental-tokens))
+                                  (setq incremental-states phps-mode-lexer-states)
 
                                   (kill-buffer)))
 
@@ -1901,7 +1903,7 @@
 
                                     ;; TODO re-use rest of indexes here (indentation and imenu)
 
-                                    (setq-local phps-mode-lexer-states (append tail-states phps-mode-lexer-states))
+                                    (setq-local phps-mode-lexer-states (append tail-states incremental-states))
                                     (phps-mode-debug-message (message "New states from incremental lex are: %s" phps-mode-lexer-states))
                                     
                                     (setq appended-tokens (append appended-tokens tail-tokens))
@@ -1914,7 +1916,7 @@
                                  (message "State at stop %s or state stack %s does not equals state at stop: %s %s" phps-mode-lexer-STATE phps-mode-lexer-state_stack incremental-state incremental-state-stack))
 
                                 ;; Clear syntax colouring of rest of buffer
-                                (phps-mode-lexer-clear-region-syntax-color incremental-start (point-max))
+                                ;; (phps-mode-lexer-clear-region-syntax-color incremental-start (point-max))
 
                                 ;; Lex rest of buffer
                                 (setq head-tokens appended-tokens)
