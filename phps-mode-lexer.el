@@ -60,6 +60,9 @@
 (defvar phps-mode-lexer-buffer-length nil
   "Length of lexed buffer.")
 
+(defvar phps-mode-lexer-buffer-contents nil
+  "Contents of lexed buffer.")
+
 
 ;; SETTINGS
 
@@ -1644,6 +1647,7 @@
   (interactive)
   (phps-mode-debug-message (message "Lexer run"))
   (setq-local phps-mode-lexer-buffer-length (1- (point-max)))
+  (setq-local phps-mode-lexer-buffer-contents (buffer-substring-no-properties (point-min) (point-max)))
   (setq-local phps-mode-lexer-STATE nil)
   (setq-local phps-mode-lexer-state_stack nil)
   (setq-local phps-mode-lexer-states nil)
@@ -1706,7 +1710,10 @@
   "Run incremental lexer based on `(phps-mode-functions-get-buffer-changes-start)'."
   (let ((changes phps-mode-functions-buffer-changes)
         (run-full-lexer t)
-        (buffer-length-old phps-mode-lexer-buffer-length))
+        (buffer-length-old phps-mode-lexer-buffer-length)
+        (buffer-contents-old phps-mode-lexer-buffer-contents)
+        (buffer-length-new nil)
+        (buffer-contents-new nil))
 
     ;; Reset idle timer
     (phps-mode-functions--cancel-idle-timer)
@@ -1722,7 +1729,8 @@
       (dolist (change (nreverse changes))
         (let ((change-start (nth 0 change))
               (change-stop (nth 1 change))
-              (buffer-length-new (1- (nth 3 change))))
+              (buffer-length-new (1- (nth 3 change)))
+              (buffer-contents-new (nth 4 change)))
           (phps-mode-debug-message
            (message "Running incremental lexer %s - %s" change-start change-stop))
 
@@ -1769,7 +1777,8 @@
                   (phps-mode-debug-message
                    (message "Head tokens: %s" head-tokens)
                    (message "Incremental start: %s" incremental-start)
-                   (message "Buffer length old: %s" buffer-length-old))
+                   (message "Buffer length old: %s" buffer-length-old)
+                   (message "Buffer contents old: %s" buffer-contents-old))
 
                   ;; Calculate change of buffer length
                   (setq buffer-length-delta (- buffer-length-new buffer-length-old))
@@ -1797,6 +1806,7 @@
                    (message "Buffer length new: %s" buffer-length-new)
                    (message "Buffer length old: %s" buffer-length-old)
                    (message "Buffer length delta: %s" buffer-length-delta)
+                   (message "Buffer contents new: %s" buffer-contents-new)
                    (message "Tail boundary: %s" tail-boundary)
                    (message "Tail tokens: %s" tail-tokens)
                    (message "From region: %s - %s" incremental-start change-stop))
@@ -1828,6 +1838,11 @@
                          (message "Head states: %s" head-states)
                          (message "Tail states: %s" tail-states))
 
+                        ;; Rewind lexer state here
+                        (setq-local phps-mode-lexer-states head-states)
+                        (setq-local phps-mode-lexer-STATE incremental-state)
+                        (setq-local phps-mode-lexer-state_stack incremental-state-stack)
+
                         (if head-states
                             (progn
                               (phps-mode-debug-message (message "Found head states"))
@@ -1835,70 +1850,93 @@
                               ;; Flag that we should not run ful lexer
                               (setq run-full-lexer nil)
 
-                              ;; Rewind lexer state here
-                              (setq-local phps-mode-lexer-states head-states)
-                              (setq-local phps-mode-lexer-STATE incremental-state)
-                              (setq-local phps-mode-lexer-state_stack incremental-state-stack)
-
                               ;; Delete all syntax coloring from incremental-start to end of incremental-region
                               (phps-mode-lexer-clear-region-syntax-color incremental-start change-stop)
 
-                              ;; Do partial lex from previous-token-end to change-stop
-                              (let* ((incremental-tokens (semantic-lex incremental-start change-stop))
-                                     (appended-tokens (append head-tokens incremental-tokens)))
+                              (let ((incremental-buffer (generate-new-buffer "*PHPs Incremental Buffer*")))
+                                (save-excursion
 
-                                ;; * states at change-stop is identical to old state at change-stop
-                                (if (and (= phps-mode-lexer-STATE incremental-state)
-                                         (equal phps-mode-lexer-state_stack incremental-state-stack))
-                                    (progn
+                                  (switch-to-buffer incremental-buffer)
+                                  (delete-region (point-min) (point-max))
+                                  (goto-char (point-max))
+                                  (insert-char 10 incremental-start)
+                                  (goto-char (point-max))
+                                  (insert (substring buffer-contents-new incremental-start change-stop))
 
-                                      (phps-mode-runtime-debug-message "Found matching state and state-stack, copying old state and tokens")
-                                      (phps-mode-debug-message (message "Incremental tokens: %s" incremental-tokens))
+                                  ;; Rewind lexer state here
+                                  (setq-local phps-mode-lexer-states head-states)
+                                  (setq-local phps-mode-lexer-STATE incremental-state)
+                                  (setq-local phps-mode-lexer-state_stack incremental-state-stack)
 
-                                      (unless (= buffer-length-delta 0)
-                                        (when tail-tokens
-                                          (setq tail-tokens (phps-mode-lexer-get-moved-tokens tail-tokens 0 buffer-length-delta)))
-
-                                        (when tail-states
-                                          (setq tail-states (phps-mode-lexer-get-moved-states tail-states 0 buffer-length-delta))))
-
-                                      (phps-mode-debug-message
-                                       (message "State and state stack at stop equals state at stop: %s %s" phps-mode-lexer-STATE phps-mode-lexer-state_stack))
-
-                                      ;; TODO re-use rest of indexes here (indentation and imenu)
-
-                                      (setq-local phps-mode-lexer-states (append tail-states phps-mode-lexer-states))
-                                      (phps-mode-debug-message (message "New states from incremental lex are: %s" phps-mode-lexer-states))
-                                      
-                                      (setq appended-tokens (append appended-tokens tail-tokens))
-                                      (phps-mode-debug-message (message "New tokens from incremental lex are: %s" appended-tokens)))
-
-                                  (phps-mode-runtime-debug-message "Did not find matching state and state-stack, lexing rest of buffer")
-
-                                  (phps-mode-debug-message (message "Incremental tokens: %s" incremental-tokens))
+                                  ;; Setup lexer
+                                  (setq-local semantic-lex-analyzer #'phps-mode-lexer-lex)
+                                  (setq-local semantic-lex-syntax-table phps-mode-syntax-table)
 
                                   (phps-mode-debug-message
-                                   (message "State at stop %s or state stack %s does not equals state at stop: %s %s" phps-mode-lexer-STATE phps-mode-lexer-state_stack incremental-state incremental-state-stack))
+                                   (message "Incremental buffer contents: \n%s" (buffer-substring-no-properties (point-min) (point-max))))
 
-                                  ;; Clear syntax colouring of rest of buffer
-                                  (phps-mode-lexer-clear-region-syntax-color incremental-start (point-max))
+                                  ;; Do partial lex from previous-token-end to change-stop
+                                  (let* ((incremental-tokens (semantic-lex incremental-start change-stop))
+                                         (appended-tokens (append head-tokens incremental-tokens)))
 
-                                  ;; Lex rest of buffer
-                                  (setq head-tokens appended-tokens)
-                                  (setq incremental-tokens (semantic-lex change-stop (point-max)))
-                                  (setq appended-tokens (append head-tokens incremental-tokens))
-                                  (phps-mode-debug-message (message "New states from full lex are: %s" phps-mode-lexer-states))
-                                  (phps-mode-debug-message (message "New tokens from full lex are: %s" appended-tokens)))
+                                    ;; * states at change-stop is identical to old state at change-stop
+                                    (if (and (= phps-mode-lexer-STATE incremental-state)
+                                             (equal phps-mode-lexer-state_stack incremental-state-stack))
+                                        (progn
 
-                                (setq-local phps-mode-lexer-tokens appended-tokens)))
+                                          (phps-mode-runtime-debug-message "Found matching state and state-stack, copying old state and tokens")
+                                          (phps-mode-debug-message (message "Incremental tokens: %s" incremental-tokens))
+
+                                          (unless (= buffer-length-delta 0)
+                                            (when tail-tokens
+                                              (setq tail-tokens (phps-mode-lexer-get-moved-tokens tail-tokens 0 buffer-length-delta)))
+
+                                            (when tail-states
+                                              (setq tail-states (phps-mode-lexer-get-moved-states tail-states 0 buffer-length-delta))))
+
+                                          (phps-mode-debug-message
+                                           (message "State and state stack at stop equals state at stop: %s %s" phps-mode-lexer-STATE phps-mode-lexer-state_stack))
+
+                                          ;; TODO re-use rest of indexes here (indentation and imenu)
+
+                                          (setq-local phps-mode-lexer-states (append tail-states phps-mode-lexer-states))
+                                          (phps-mode-debug-message (message "New states from incremental lex are: %s" phps-mode-lexer-states))
+                                          
+                                          (setq appended-tokens (append appended-tokens tail-tokens))
+                                          (phps-mode-debug-message (message "New tokens from incremental lex are: %s" appended-tokens)))
+
+                                      (phps-mode-runtime-debug-message "Did not find matching state and state-stack, lexing rest of buffer")
+
+                                      (phps-mode-debug-message (message "Incremental tokens: %s" incremental-tokens))
+
+                                      (phps-mode-debug-message
+                                       (message "State at stop %s or state stack %s does not equals state at stop: %s %s" phps-mode-lexer-STATE phps-mode-lexer-state_stack incremental-state incremental-state-stack))
+
+                                      ;; Clear syntax colouring of rest of buffer
+                                      (phps-mode-lexer-clear-region-syntax-color incremental-start (point-max))
+
+                                      ;; Lex rest of buffer
+                                      (setq head-tokens appended-tokens)
+                                      (setq incremental-tokens (semantic-lex change-stop (point-max)))
+                                      (setq appended-tokens (append head-tokens incremental-tokens))
+                                      (phps-mode-debug-message (message "New states from full lex are: %s" phps-mode-lexer-states))
+                                      (phps-mode-debug-message (message "New tokens from full lex are: %s" appended-tokens)))
+
+                                    (setq-local phps-mode-lexer-tokens appended-tokens))
+
+                                  (kill-buffer))))
                           (phps-mode-debug-message (message "Did not find head states"))))
                     (phps-mode-debug-message (message "Did not find positive incremental-start or head-tokens"))))
               (phps-mode-debug-message (message "Change start not above one or lacking tokens or states"))))
-          (setq buffer-length-old buffer-length-new)))
+          (setq buffer-length-old buffer-length-new)
+          (setq buffer-contents-old buffer-contents-new)))
 
-      (when run-full-lexer
-        (phps-mode-debug-message (message "Running full lexer"))
-        (phps-mode-lexer-run)))))
+      (setq-local phps-mode-lexer-buffer-length buffer-length-new)
+      (setq-local phps-mode-lexer-buffer-contents buffer-contents-new))
+
+    (when run-full-lexer
+      (phps-mode-debug-message (message "Running full lexer"))
+      (phps-mode-lexer-run))))
 
 (define-lex phps-mode-lexer-lex
   "Call lexer analyzer action."

@@ -1128,7 +1128,7 @@
       (phps-mode-functions--start-idle-timer))
 
     ;; Save change in changes stack
-    (push `(,start ,stop ,length ,(point-max)) phps-mode-functions-buffer-changes)))
+    (push `(,start ,stop ,length ,(point-max) ,(buffer-substring-no-properties (point-min) (point-max))) phps-mode-functions-buffer-changes)))
 
 (defun phps-mode-functions-imenu-create-index ()
   "Get Imenu for current buffer."

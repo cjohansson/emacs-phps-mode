@@ -170,6 +170,7 @@
   (setq-local phps-mode-functions-imenu nil)
   (setq-local phps-mode-functions-processed-buffer nil)
   (setq-local phps-mode-lexer-buffer-length nil)
+  (setq-local phps-mode-lexer-buffer-contents nil)
 
   ;; Make (comment-region) and (uncomment-region) work
   (setq-local comment-region-function #'phps-mode-functions-comment-region)
