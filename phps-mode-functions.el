@@ -1077,7 +1077,9 @@
               (unless (equal indent-sum current-indentation)
                 (let ((indent-diff (- indent-sum current-indentation)))
 
+                  (setq-local phps-mode-functions-allow-after-change nil)
                   (indent-line-to indent-sum)
+                  (setq-local phps-mode-functions-allow-after-change t)
 
                   ;; When indent is changed the trailing tokens and states just need to adjust their positions, this will improve speed of indent-region a lot
                   (phps-mode-lexer-move-tokens line-start indent-diff)
@@ -1085,7 +1087,8 @@
                   (phps-mode-functions-move-imenu-index line-start indent-diff)
 
                   (phps-mode-debug-message
-                   (message "Lexer tokens after move: %s" phps-mode-lexer-tokens))
+                   (message "Lexer tokens after move: %s" phps-mode-lexer-tokens)
+                   (message "Lexer states after move: %s" phps-mode-lexer-states))
 
                   ;; Reset change flag
                   (phps-mode-functions--reset-changes)
@@ -1099,39 +1102,42 @@
 
 (defun phps-mode-functions--cancel-idle-timer ()
   "Cancel idle timer."
-  (phps-mode-runtime-debug-message "Cancelled idle timer")
+  (phps-mode-debug-message (message "Cancelled idle timer"))
   (when phps-mode-functions-idle-timer
     (cancel-timer phps-mode-functions-idle-timer)
     (setq-local phps-mode-functions-idle-timer nil)))
 
 (defun phps-mode-functions--start-idle-timer ()
   "Start idle timer."
-  (phps-mode-runtime-debug-message "Enqueued idle timer")
+  (phps-mode-debug-message (message "Enqueued idle timer"))
   (when (boundp 'phps-mode-idle-interval)
     (setq-local phps-mode-functions-idle-timer (run-with-idle-timer phps-mode-idle-interval nil #'phps-mode-lexer-run-incremental))))
 
 (defun phps-mode-functions-after-change (start stop length)
   "Track buffer change from START to STOP with LENGTH."
-  (phps-mode-runtime-debug-message
-   (format "After change %s - %s, length: %s" start stop length))
+  (phps-mode-debug-message
+   (message "After change %s - %s, length: %s" start stop length))
 
-  (when phps-mode-functions-allow-after-change
-    
-    ;; If we haven't scheduled incremental lexer before - do it
-    (when (and (boundp 'phps-mode-idle-interval)
-               phps-mode-idle-interval
-               (not phps-mode-functions-idle-timer))
+  (if phps-mode-functions-allow-after-change
+      (progn
+        (phps-mode-debug-message (message "After change registration is enabled"))
+        
+        ;; If we haven't scheduled incremental lexer before - do it
+        (when (and (boundp 'phps-mode-idle-interval)
+                   phps-mode-idle-interval
+                   (not phps-mode-functions-idle-timer))
 
-      ;; Reset imenu
-      (when (and (boundp 'imenu--index-alist)
-                 imenu--index-alist)
-        (setq-local imenu--index-alist nil)
-        (phps-mode-runtime-debug-message "Cleared Imenu index"))
+          ;; Reset imenu
+          (when (and (boundp 'imenu--index-alist)
+                     imenu--index-alist)
+            (setq-local imenu--index-alist nil)
+            (phps-mode-debug-message (message "Cleared Imenu index")))
 
-      (phps-mode-functions--start-idle-timer))
+          (phps-mode-functions--start-idle-timer))
 
-    ;; Save change in changes stack
-    (push `(,start ,stop ,length ,(point-max) ,(buffer-substring-no-properties (point-min) (point-max))) phps-mode-functions-buffer-changes)))
+        ;; Save change in changes stack
+        (push `(,start ,stop ,length ,(point-max) ,(buffer-substring-no-properties (point-min) (point-max))) phps-mode-functions-buffer-changes))
+    (phps-mode-debug-message (message "After change registration is disabled"))))
 
 (defun phps-mode-functions-imenu-create-index ()
   "Get Imenu for current buffer."
