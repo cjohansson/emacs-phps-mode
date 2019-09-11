@@ -36,12 +36,16 @@
          (incremental-imenu nil)
          (incremental-indent nil)
          (incremental-buffer nil)
+         (incremental-text-properties nil)
          (test-buffer-initial (generate-new-buffer "test-initial"))
          (initial-states nil)
          (initial-tokens nil)
          (initial-imenu nil)
          (initial-indent nil)
-         (initial-buffer nil))
+         (initial-buffer nil)
+         (initial-text-properties nil))
+
+     ;; TODO Test text-properties as well
 
      ;; Setup incremental buffer
      (switch-to-buffer test-buffer-incremental)
@@ -52,10 +56,11 @@
      (phps-mode)
      ,@change
      (phps-mode-lexer-run-incremental)
+     (phps-mode-functions-process-current-buffer)
      (setq incremental-states phps-mode-lexer-states)
      (setq incremental-tokens phps-mode-lexer-tokens)
-     (setq incremental-imenu (phps-mode-functions-get-imenu))
-     (setq incremental-indent (phps-mode-test-hash-to-list (phps-mode-functions-get-lines-indent)))
+     (setq incremental-imenu phps-mode-functions-imenu)
+     (setq incremental-indent (phps-mode-test-hash-to-list phps-mode-functions-lines-indent))
      (setq incremental-buffer (buffer-substring-no-properties (point-min) (point-max)))
 
      ;; Setup incremental buffer
@@ -65,10 +70,11 @@
      (phps-mode-debug-message
        (message "\nTesting initial buffer '%s':\n'%s'\n" ,title incremental-buffer))
      (phps-mode)
-     (setq initial-states (phps-mode-lexer-get-states))
-     (setq initial-tokens (phps-mode-lexer-get-tokens))
-     (setq initial-imenu (phps-mode-functions-get-imenu))
-     (setq initial-indent (phps-mode-test-hash-to-list (phps-mode-functions-get-lines-indent)))
+     (phps-mode-functions-process-current-buffer)
+     (setq initial-states phps-mode-lexer-states)
+     (setq initial-tokens phps-mode-lexer-tokens)
+     (setq initial-imenu phps-mode-functions-imenu)
+     (setq initial-indent (phps-mode-test-hash-to-list phps-mode-functions-lines-indent))
      (setq initial-buffer (buffer-substring-no-properties (point-min) (point-max)))
 
      ;; Run tests

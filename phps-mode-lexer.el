@@ -1715,6 +1715,7 @@
     (if changes
         (progn
           (phps-mode-debug-message (message "Processing incremental changes: %s" changes))
+          (setq-local phps-mode-functions-processed-buffer nil)
           (setq run-full-lexer t)
 
           (dolist (change (nreverse changes))
@@ -1733,6 +1734,7 @@
                     (let ((incremental-state nil)
                           (incremental-state-stack nil)
                           (incremental-states nil)
+                          (incremental-tokens nil)
                           (head-states '())
                           (tail-states '())
                           (old-states phps-mode-lexer-states)
@@ -1763,10 +1765,13 @@
                       ;; 2. Build list of tokens before incremental start (head-tokens)
                       ;; 3. Build list of tokens after incremental region (tail-tokens)
                       (dolist (token old-tokens)
-                        (let ((end (cdr (cdr token))))
+                        (let ((start (car (cdr token)))
+                              (end (cdr (cdr token))))
                           (when (<= end change-start)
-                            (setq incremental-start (1+ end))
-                            (push token head-tokens))))
+                            (if (= end change-start)
+                                (setq incremental-start start)
+                              (push token head-tokens)
+                              (setq incremental-start (1+ end))))))
                       (phps-mode-debug-message
                        (message "Head tokens: %s" head-tokens)
                        (message "Incremental start: %s" incremental-start)
@@ -1818,7 +1823,7 @@
                             (dolist (state-object (nreverse old-states))
                               (let ((start (nth 0 state-object))
                                     (end (nth 1 state-object)))
-                                (when (<= end change-start)
+                                (when (< end change-start)
                                   (setq incremental-state (nth 2 state-object))
                                   (setq incremental-state-stack (nth 3 state-object))
                                   (push state-object head-states))

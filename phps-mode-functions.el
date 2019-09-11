@@ -59,6 +59,7 @@
       (progn
         (phps-mode-debug-message (message "Buffer is not processed"))
         (let ((processed (phps-mode-functions--process-tokens-in-string phps-mode-lexer-tokens (buffer-substring-no-properties (point-min) (point-max)))))
+          (phps-mode-debug-message (message "Processed result: %s" processed))
           (setq-local phps-mode-functions-imenu (nth 0 processed))
           (setq-local phps-mode-functions-lines-indent (nth 1 processed)))
         (setq-local phps-mode-functions-processed-buffer t))
@@ -236,7 +237,7 @@
   "Generate indexes for imenu and indentation for TOKENS and STRING one pass.  Complexity: O(n)."
   (if tokens
       (progn
-        (phps-mode-debug-message (message "\nCalculation indentation for all lines in buffer:\n\n%s" string))
+        (phps-mode-debug-message (message "\nCalculation indentation and imenu for all lines in buffer:\n\n%s" string))
         (let ((in-heredoc nil)
               (in-heredoc-started-this-line nil)
               (in-heredoc-ended-this-line nil)
