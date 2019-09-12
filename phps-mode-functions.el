@@ -1135,7 +1135,7 @@
   (phps-mode-runtime-debug-message "Enqueued idle timer")
   (phps-mode-debug-message (message "Enqueued idle timer"))
   (when (boundp 'phps-mode-idle-interval)
-    (setq-local phps-mode-functions-idle-timer (run-with-idle-timer phps-mode-idle-interval nil #'phps-mode-lexer-run-incremental))))
+    (setq-local phps-mode-functions-idle-timer (run-with-idle-timer phps-mode-idle-interval nil #'phps-mode-lexer-run-incremental (current-buffer)))))
 
 (defun phps-mode-functions-after-change (start stop length)
   "Track buffer change from START to STOP with LENGTH."
