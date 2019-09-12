@@ -48,6 +48,14 @@
 (defvar phps-mode-functions-idle-timer nil
   "Timer object of idle timer.")
 
+(defun phps-mode-functions-get-processed-buffer ()
+  "Get flag for whether buffer is processed or not."
+  phps-mode-functions-processed-buffer)
+
+(defun phps-mode-functions-reset-processed-buffer ()
+  "Reset flag for whether buffer is processed or not."
+  (setq-local phps-mode-functions-processed-buffer nil))
+
 (defun phps-mode-functions-process-current-buffer ()
   "Process current buffer, generate indentations and Imenu, trigger incremental lexer if we have change."
   (phps-mode-debug-message (message "Process current buffer"))
@@ -1100,6 +1108,10 @@
 (defun phps-mode-functions--reset-changes ()
   "Reset change stack."
   (setq-local phps-mode-functions-buffer-changes nil))
+
+(defun phps-mode-functions--get-changes ()
+  "Get change stack."
+  phps-mode-functions-buffer-changes)
 
 (defun phps-mode-functions--cancel-idle-timer ()
   "Cancel idle timer."

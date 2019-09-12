@@ -5,8 +5,8 @@
 ;; Author: Christian Johansson <christian@cvj.se>
 ;; Maintainer: Christian Johansson <christian@cvj.se>
 ;; Created: 3 Mar 2018
-;; Modified: 6 Sep 2019
-;; Version: 0.2.9
+;; Modified: 12 Sep 2019
+;; Version: 0.3.0
 ;; Keywords: tools, convenience
 ;; URL: https://github.com/cjohansson/emacs-phps-mode
 
@@ -76,6 +76,10 @@
       (with-current-buffer buffer
         (insert message)
         (insert "\n")))))
+
+(defun phps-mode-get-syntax-table ()
+  "Get syntax table."
+  phps-mode-syntax-table)
 
 (defvar phps-mode-map
   (let ((map (make-sparse-keymap)))

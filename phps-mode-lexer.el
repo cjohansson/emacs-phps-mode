@@ -32,6 +32,10 @@
 ;; NOTE We use autoload here to circumvent recursive require
 (autoload 'phps-mode-functions--reset-changes "phps-mode-functions")
 (autoload 'phps-mode-functions--cancel-idle-timer "phps-mode-functions")
+(autoload 'phps-mode-functions--get-changes "phps-mode-functions")
+(autoload 'phps-mode-get-syntax-table "phps-mode")
+(autoload 'phps-mode-functions-processed-buffer "phps-mode-functions")
+(autoload 'phps-mode-functions-reset-processed-buffer "phps-mode-functions")
 (autoload 'phps-mode-runtime-debug-message "phps-mode")
 
 (require 'semantic)
@@ -1699,7 +1703,7 @@
 (defun phps-mode-lexer-run-incremental ()
   "Run incremental lexer based on `(phps-mode-functions-get-buffer-changes-start)'."
   (phps-mode-debug-message (message "Run incremental lexer"))
-  (let ((changes phps-mode-functions-buffer-changes)
+  (let ((changes (phps-mode-functions--get-changes))
         (run-full-lexer nil)
         (buffer-length-old phps-mode-lexer-buffer-length)
         (buffer-contents-old phps-mode-lexer-buffer-contents)
@@ -1715,7 +1719,7 @@
     (if changes
         (progn
           (phps-mode-debug-message (message "Processing incremental changes: %s" changes))
-          (setq-local phps-mode-functions-processed-buffer nil)
+          (phps-mode-functions-reset-processed-buffer)
           (setq run-full-lexer t)
 
           (dolist (change (nreverse changes))
@@ -1869,7 +1873,7 @@
 
                                       ;; Setup lexer
                                       (setq-local semantic-lex-analyzer #'phps-mode-lexer-lex)
-                                      (setq-local semantic-lex-syntax-table phps-mode-syntax-table)
+                                      (setq-local semantic-lex-syntax-table (phps-mode-get-syntax-table))
 
                                       (phps-mode-debug-message
                                        (message "Incremental buffer contents: \n%s" (buffer-substring-no-properties (point-min) (point-max))))

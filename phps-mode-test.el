@@ -36,16 +36,12 @@
          (incremental-imenu nil)
          (incremental-indent nil)
          (incremental-buffer nil)
-         (incremental-text-properties nil)
          (test-buffer-initial (generate-new-buffer "test-initial"))
          (initial-states nil)
          (initial-tokens nil)
          (initial-imenu nil)
          (initial-indent nil)
-         (initial-buffer nil)
-         (initial-text-properties nil))
-
-     ;; TODO Test text-properties as well
+         (initial-buffer nil))
 
      ;; Setup incremental buffer
      (switch-to-buffer test-buffer-incremental)
@@ -61,7 +57,7 @@
      (setq incremental-tokens phps-mode-lexer-tokens)
      (setq incremental-imenu phps-mode-functions-imenu)
      (setq incremental-indent (phps-mode-test-hash-to-list phps-mode-functions-lines-indent))
-     (setq incremental-buffer (buffer-substring-no-properties (point-min) (point-max)))
+     (setq incremental-buffer (buffer-substring (point-min) (point-max)))
 
      ;; Setup incremental buffer
      (switch-to-buffer test-buffer-initial)
@@ -75,7 +71,7 @@
      (setq initial-tokens phps-mode-lexer-tokens)
      (setq initial-imenu phps-mode-functions-imenu)
      (setq initial-indent (phps-mode-test-hash-to-list phps-mode-functions-lines-indent))
-     (setq initial-buffer (buffer-substring-no-properties (point-min) (point-max)))
+     (setq initial-buffer (buffer-substring (point-min) (point-max)))
 
      ;; Run tests
      (phps-mode-debug-message
