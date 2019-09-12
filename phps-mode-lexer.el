@@ -1703,6 +1703,7 @@
 (defun phps-mode-lexer-run-incremental ()
   "Run incremental lexer based on `(phps-mode-functions-get-buffer-changes-start)'."
   (phps-mode-debug-message (message "Run incremental lexer"))
+  (phps-mode-runtime-debug-message "Run incremental lexer")
   (let ((changes (phps-mode-functions--get-changes))
         (run-full-lexer nil)
         (buffer-length-old phps-mode-lexer-buffer-length)
@@ -1716,17 +1717,26 @@
     ;; Reset buffer changes index
     (phps-mode-functions--reset-changes)
 
-    (if changes
+    (unless (or buffer-length-old
+                buffer-contents-old)
+      (phps-mode-runtime-debug-message "Missing old buffer length or old buffer contents"))
+
+    (if (and changes
+             buffer-length-old
+             buffer-contents-old)
         (progn
+          (phps-mode-runtime-debug-message "Processing incremental changes")
           (phps-mode-debug-message (message "Processing incremental changes: %s" changes))
           (phps-mode-functions-reset-processed-buffer)
           (setq run-full-lexer t)
 
           (dolist (change (nreverse changes))
             (let ((change-start (nth 0 change))
-                  (change-stop (nth 1 change))
-                  (buffer-length-new (1- (nth 3 change)))
-                  (buffer-contents-new (nth 4 change)))
+                  (change-stop (nth 1 change)))
+              (setq buffer-length-new (1- (nth 3 change)))
+              (setq buffer-contents-new (nth 4 change))
+              (phps-mode-runtime-debug-message
+               (format "Running incremental lexer %s - %s on buffer: \n%s" change-start change-stop buffer-contents-new))
               (phps-mode-debug-message
                (message "Running incremental lexer %s - %s" change-start change-stop))
 
@@ -1933,11 +1943,15 @@
               (setq buffer-length-old buffer-length-new)
               (setq buffer-contents-old buffer-contents-new)))
 
+          (phps-mode-runtime-debug-message
+           (format "Setting new old buffer length: %s, contents: \n%s" buffer-length-new buffer-contents-new))
           (setq-local phps-mode-lexer-buffer-length buffer-length-new)
           (setq-local phps-mode-lexer-buffer-contents buffer-contents-new))
+      (phps-mode-runtime-debug-message "Found no changes")
       (phps-mode-debug-message (message "Found no changes")))
 
     (when run-full-lexer
+      (phps-mode-runtime-debug-message "Running full lexer")
       (phps-mode-debug-message (message "Running full lexer"))
       (phps-mode-lexer-run))))
 

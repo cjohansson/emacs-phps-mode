@@ -36,17 +36,17 @@
 (defvar phps-mode-functions-buffer-changes nil
   "A stack of buffer changes.")
 
-(defvar phps-mode-functions-lines-indent nil
-  "The indentation of each line in buffer, nil if none.")
+(defvar phps-mode-functions-idle-timer nil
+  "Timer object of idle timer.")
 
 (defvar phps-mode-functions-imenu nil
   "The Imenu alist for current buffer, nil if none.")
 
+(defvar phps-mode-functions-lines-indent nil
+  "The indentation of each line in buffer, nil if none.")
+
 (defvar phps-mode-functions-processed-buffer nil
   "Flag whether current buffer is processed or not.")
-
-(defvar phps-mode-functions-idle-timer nil
-  "Timer object of idle timer.")
 
 (defun phps-mode-functions-get-processed-buffer ()
   "Get flag for whether buffer is processed or not."
@@ -1115,6 +1115,7 @@
 
 (defun phps-mode-functions--cancel-idle-timer ()
   "Cancel idle timer."
+  (phps-mode-runtime-debug-message "Cancelled idle timer")
   (phps-mode-debug-message (message "Cancelled idle timer"))
   (when phps-mode-functions-idle-timer
     (cancel-timer phps-mode-functions-idle-timer)
@@ -1122,18 +1123,22 @@
 
 (defun phps-mode-functions--start-idle-timer ()
   "Start idle timer."
+  (phps-mode-runtime-debug-message "Enqueued idle timer")
   (phps-mode-debug-message (message "Enqueued idle timer"))
   (when (boundp 'phps-mode-idle-interval)
     (setq-local phps-mode-functions-idle-timer (run-with-idle-timer phps-mode-idle-interval nil #'phps-mode-lexer-run-incremental))))
 
 (defun phps-mode-functions-after-change (start stop length)
   "Track buffer change from START to STOP with LENGTH."
+  (phps-mode-runtime-debug-message
+   (format "After change %s - %s, length: %s" start stop length))
   (phps-mode-debug-message
    (message "After change %s - %s, length: %s" start stop length))
 
   (if phps-mode-functions-allow-after-change
       (progn
         (phps-mode-debug-message (message "After change registration is enabled"))
+        (phps-mode-runtime-debug-message "After change registration is enabled")
         
         ;; If we haven't scheduled incremental lexer before - do it
         (when (and (boundp 'phps-mode-idle-interval)
@@ -1150,7 +1155,8 @@
 
         ;; Save change in changes stack
         (push `(,start ,stop ,length ,(point-max) ,(buffer-substring-no-properties (point-min) (point-max))) phps-mode-functions-buffer-changes))
-    (phps-mode-debug-message (message "After change registration is disabled"))))
+    (phps-mode-debug-message (message "After change registration is disabled"))
+    (phps-mode-runtime-debug-message "After change registration is disabled")))
 
 (defun phps-mode-functions-imenu-create-index ()
   "Get Imenu for current buffer."
