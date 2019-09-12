@@ -1899,6 +1899,7 @@
                                            (equal phps-mode-lexer-state_stack incremental-state-stack))
                                       (progn
 
+                                        (phps-mode-runtime-debug-message "Found matching state and state-stack, copying old state and tokens")
                                         (phps-mode-debug-message (message "Found matching state and state-stack, copying old state and tokens"))
                                         (phps-mode-debug-message (message "Incremental tokens: %s" incremental-tokens))
 
@@ -1916,7 +1917,7 @@
 
                                         ;; Apply syntax coloring
                                         (dolist (token-object incremental-tokens)
-                                          (let ((token (car (car token-object)))
+                                          (let ((token (car token-object))
                                                 (start (car (cdr token-object)))
                                                 (end (cdr (cdr token-object))))
                                             (phps-mode-lexer-set-region-syntax-color
@@ -1928,7 +1929,8 @@
                                         (setq appended-tokens (append appended-tokens tail-tokens))
                                         (phps-mode-debug-message (message "New tokens from incremental lex are: %s" appended-tokens)))
 
-                                    (phps-mode-debug-message (message e"Did not find matching state and state-stack, lexing rest of buffer"))
+                                    (phps-mode-runtime-debug-message "Did not find matching state and state-stack, lexing rest of buffer")
+                                    (phps-mode-debug-message (message "Did not find matching state and state-stack, lexing rest of buffer"))
                                     (phps-mode-debug-message (message "Incremental tokens: %s" incremental-tokens))
 
                                     (phps-mode-debug-message
@@ -1944,6 +1946,7 @@
                                     (phps-mode-debug-message (message "New states from full lex are: %s" phps-mode-lexer-states))
                                     (phps-mode-debug-message (message "New tokens from full lex are: %s" appended-tokens)))
 
+                                  (phps-mode-runtime-debug-message (format "Final tokens: %s" appended-tokens))
                                   (phps-mode-debug-message (message "Final tokens: %s" appended-tokens))
                                   (setq-local phps-mode-lexer-tokens appended-tokens))
                               (phps-mode-runtime-debug-message "Did not find head states")
