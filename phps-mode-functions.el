@@ -61,7 +61,7 @@
   (phps-mode-debug-message (message "Process current buffer"))
   (when phps-mode-functions-idle-timer
     (phps-mode-debug-message (message "Trigger incremental lexer"))
-    (phps-mode-lexer-run-incremental)
+    (phps-mode-lexer-run-incremental (current-buffer))
     (setq-local phps-mode-functions-processed-buffer nil))
   (if (not phps-mode-functions-processed-buffer)
       (progn
@@ -1079,21 +1079,24 @@
               (progn
                 (phps-mode-runtime-debug-message (format "Found indent for line number %s = %s" line-number indent))
                 (let ((indent-sum (+ (* (car indent) tab-width) (car (cdr indent))))
-                      (current-indentation (current-indentation))
+                      (old-indentation (current-indentation))
                       (line-start (line-beginning-position)))
 
-                  (unless current-indentation
-                    (setq current-indentation 0))
+                  (unless old-indentation
+                    (setq old-indentation 0))
 
                   ;; Only continue if current indentation is wrong
-                  (if (not (equal indent-sum current-indentation))
+                  (if (not (equal indent-sum old-indentation))
                       (progn
-                        (phps-mode-runtime-debug-message "Indenting line since it's not already indented correctly")
-                        (let ((indent-diff (- indent-sum current-indentation)))
+                        (phps-mode-runtime-debug-message (format "Indenting line since it's not already indented correctly %s vs %s" old-indentation indent-sum))
 
-                          (setq-local phps-mode-functions-allow-after-change nil)
-                          (indent-line-to indent-sum)
-                          (setq-local phps-mode-functions-allow-after-change t)
+                        (setq-local phps-mode-functions-allow-after-change nil)
+                        (indent-line-to indent-sum)
+                        (setq-local phps-mode-functions-allow-after-change t)
+
+                        (let ((indent-diff (- (current-indentation) old-indentation)))
+
+                          (phps-mode-runtime-debug-message (format "Moving indexes by %s points" indent-diff))
 
                           ;; When indent is changed the trailing tokens and states just need to adjust their positions, this will improve speed of indent-region a lot
                           (phps-mode-lexer-move-tokens line-start indent-diff)

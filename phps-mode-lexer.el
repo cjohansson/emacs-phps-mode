@@ -1702,8 +1702,8 @@
 
 (defun phps-mode-lexer-run-incremental (buffer)
   "Run incremental lexer on BUFFER."
-  (phps-mode-debug-message (message "Run incremental lexer on buffer %s" buffer))
-  (phps-mode-runtime-debug-message (format "Run incremental lexer on buffer %s" buffer))
+  (phps-mode-debug-message (message "Run incremental lexer on buffer '%s'" buffer))
+  (phps-mode-runtime-debug-message (format "Run incremental lexer on buffer '%s'" buffer))
   (with-current-buffer buffer
     (let ((changes (phps-mode-functions--get-changes))
           (run-full-lexer nil)
