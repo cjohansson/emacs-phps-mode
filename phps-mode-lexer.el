@@ -1732,11 +1732,11 @@
 
           (dolist (change (nreverse changes))
             (let ((change-start (nth 0 change))
-                  (change-stop (nth 1 change)))
-              (setq buffer-length-new (1- (nth 3 change)))
-              (setq buffer-contents-new (nth 4 change))
+                  (change-stop (nth 1 change))
+                  (buffer-length-new (1- (nth 3 change)))
+                  (buffer-contents-new (nth 4 change)))
               (phps-mode-runtime-debug-message
-               (format "Running incremental lexer %s - %s on buffer: \n%s" change-start change-stop buffer-contents-new))
+               (format "Running incremental lexer %s - %s" change-start change-stop))
               (phps-mode-debug-message
                (message "Running incremental lexer %s - %s" change-start change-stop))
 
@@ -1857,6 +1857,7 @@
 
                             (if head-states
                                 (progn
+                                  (phps-mode-runtime-debug-message "Found head states")
                                   (phps-mode-debug-message (message "Found head states"))
 
                                   ;; Flag that we should not run ful lexer
@@ -1911,7 +1912,15 @@
                                         (phps-mode-debug-message
                                          (message "State and state stack at stop equals state at stop: %s %s" phps-mode-lexer-STATE phps-mode-lexer-state_stack))
 
-                                        ;; TODO re-use rest of indexes here (indentation and imenu)
+                                        ;; TODO re-use rest of indexes here? (indentation and imenu)
+
+                                        ;; Apply syntax coloring
+                                        (dolist (token-object incremental-tokens)
+                                          (let ((token (car (car token-object)))
+                                                (start (car (cdr token-object)))
+                                                (end (cdr (cdr token-object))))
+                                            (phps-mode-lexer-set-region-syntax-color
+                                             start end (phps-mode-lexer-get-token-syntax-color token))))
 
                                         (setq-local phps-mode-lexer-states (append tail-states incremental-states))
                                         (phps-mode-debug-message (message "New states from incremental lex are: %s" phps-mode-lexer-states))
@@ -1937,6 +1946,7 @@
 
                                   (phps-mode-debug-message (message "Final tokens: %s" appended-tokens))
                                   (setq-local phps-mode-lexer-tokens appended-tokens))
+                              (phps-mode-runtime-debug-message "Did not find head states")
                               (phps-mode-debug-message (message "Did not find head states"))))
                         (phps-mode-debug-message (message "Did not find positive incremental-start or head-tokens"))))
                   (phps-mode-debug-message (message "Change start not above one or lacking tokens or states"))))
@@ -1944,9 +1954,9 @@
               (setq buffer-contents-old buffer-contents-new)))
 
           (phps-mode-runtime-debug-message
-           (format "Setting new old buffer length: %s, contents: \n%s" buffer-length-new buffer-contents-new))
-          (setq-local phps-mode-lexer-buffer-length buffer-length-new)
-          (setq-local phps-mode-lexer-buffer-contents buffer-contents-new))
+           (format "New tokens: %s" phps-mode-lexer-tokens))
+          (setq-local phps-mode-lexer-buffer-length (1- (point-max)))
+          (setq-local phps-mode-lexer-buffer-contents (buffer-substring-no-properties (point-min) (point-max))))
       (phps-mode-runtime-debug-message "Found no changes")
       (phps-mode-debug-message (message "Found no changes")))
 

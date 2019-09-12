@@ -57,7 +57,7 @@
 (defvar phps-mode-use-psr-2 t
   "Whether to use PSR-2 guidelines for white-space or not.")
 
-(defvar phps-mode-idle-interval 0.5
+(defvar phps-mode-idle-interval 1
   "Idle seconds before running the incremental lexer.")
 
 (defvar phps-mode-flycheck-applied nil
