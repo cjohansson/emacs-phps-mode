@@ -1067,43 +1067,49 @@
 
 (defun phps-mode-functions-indent-line ()
   "Indent line."
+  (phps-mode-runtime-debug-message "Indent line")
   (phps-mode-debug-message (message "Indent line"))
   (phps-mode-functions-process-current-buffer)
   (if phps-mode-functions-lines-indent
-      (progn
-        (phps-mode-debug-message
-         (message "Found lines indent index, indenting.."))
-        (let ((indent (gethash (line-number-at-pos (point)) phps-mode-functions-lines-indent)))
-          (when indent
-            (let ((indent-sum (+ (* (car indent) tab-width) (car (cdr indent))))
-                  (current-indentation (current-indentation))
-                  (line-start (line-beginning-position)))
+      (let ((line-number (line-number-at-pos (point))))
+        (phps-mode-runtime-debug-message "Found lines indent index, indenting..")
+        (phps-mode-debug-message (message "Found lines indent index, indenting.."))
+        (let ((indent (gethash line-number phps-mode-functions-lines-indent)))
+          (if indent
+              (progn
+                (phps-mode-runtime-debug-message (format "Found indent for line number %s = %s" line-number indent))
+                (let ((indent-sum (+ (* (car indent) tab-width) (car (cdr indent))))
+                      (current-indentation (current-indentation))
+                      (line-start (line-beginning-position)))
 
-              (unless current-indentation
-                (setq current-indentation 0))
+                  (unless current-indentation
+                    (setq current-indentation 0))
 
-              ;; Only continue if current indentation is wrong
-              (unless (equal indent-sum current-indentation)
-                (let ((indent-diff (- indent-sum current-indentation)))
+                  ;; Only continue if current indentation is wrong
+                  (unless (equal indent-sum current-indentation)
+                    (let ((indent-diff (- indent-sum current-indentation)))
 
-                  (setq-local phps-mode-functions-allow-after-change nil)
-                  (indent-line-to indent-sum)
-                  (setq-local phps-mode-functions-allow-after-change t)
+                      (setq-local phps-mode-functions-allow-after-change nil)
+                      (indent-line-to indent-sum)
+                      (setq-local phps-mode-functions-allow-after-change t)
 
-                  ;; When indent is changed the trailing tokens and states just need to adjust their positions, this will improve speed of indent-region a lot
-                  (phps-mode-lexer-move-tokens line-start indent-diff)
-                  (phps-mode-lexer-move-states line-start indent-diff)
-                  (phps-mode-functions-move-imenu-index line-start indent-diff)
+                      ;; When indent is changed the trailing tokens and states just need to adjust their positions, this will improve speed of indent-region a lot
+                      (phps-mode-lexer-move-tokens line-start indent-diff)
+                      (phps-mode-lexer-move-states line-start indent-diff)
+                      (phps-mode-functions-move-imenu-index line-start indent-diff)
 
-                  (phps-mode-debug-message
-                   (message "Lexer tokens after move: %s" phps-mode-lexer-tokens)
-                   (message "Lexer states after move: %s" phps-mode-lexer-states))
+                      (phps-mode-runtime-debug-message (format "Lexer tokens after move: %s" phps-mode-lexer-tokens))
+                      (phps-mode-debug-message
+                       (message "Lexer tokens after move: %s" phps-mode-lexer-tokens)
+                       (message "Lexer states after move: %s" phps-mode-lexer-states))
 
-                  ;; Reset change flag
-                  (phps-mode-functions--reset-changes)
-                  (phps-mode-functions--cancel-idle-timer)))))))
-    (phps-mode-debug-message
-     (message "Did not find lines indent index, skipping indenting.."))))
+                      ;; Reset change flag
+                      (phps-mode-functions--reset-changes)
+                      (phps-mode-functions--cancel-idle-timer)))))
+            (phps-mode-runtime-debug-message (format "Found no indent for line number %s" line-number)))))
+    (phps-mode-runtime-debug-message "Did not find lines indent index, skipping indenting..")
+    (phps-mode-debug-message "Did not find lines indent index, skipping indenting..")
+    (message "Did not find lines indent index, skipping indenting..")))
 
 (defun phps-mode-functions--reset-changes ()
   "Reset change stack."
