@@ -1086,26 +1086,29 @@
                     (setq current-indentation 0))
 
                   ;; Only continue if current indentation is wrong
-                  (unless (equal indent-sum current-indentation)
-                    (let ((indent-diff (- indent-sum current-indentation)))
+                  (if (not (equal indent-sum current-indentation))
+                      (progn
+                        (phps-mode-runtime-debug-message "Indenting line since it's not already indented correctly")
+                        (let ((indent-diff (- indent-sum current-indentation)))
 
-                      (setq-local phps-mode-functions-allow-after-change nil)
-                      (indent-line-to indent-sum)
-                      (setq-local phps-mode-functions-allow-after-change t)
+                          (setq-local phps-mode-functions-allow-after-change nil)
+                          (indent-line-to indent-sum)
+                          (setq-local phps-mode-functions-allow-after-change t)
 
-                      ;; When indent is changed the trailing tokens and states just need to adjust their positions, this will improve speed of indent-region a lot
-                      (phps-mode-lexer-move-tokens line-start indent-diff)
-                      (phps-mode-lexer-move-states line-start indent-diff)
-                      (phps-mode-functions-move-imenu-index line-start indent-diff)
+                          ;; When indent is changed the trailing tokens and states just need to adjust their positions, this will improve speed of indent-region a lot
+                          (phps-mode-lexer-move-tokens line-start indent-diff)
+                          (phps-mode-lexer-move-states line-start indent-diff)
+                          (phps-mode-functions-move-imenu-index line-start indent-diff)
 
-                      (phps-mode-runtime-debug-message (format "Lexer tokens after move: %s" phps-mode-lexer-tokens))
-                      (phps-mode-debug-message
-                       (message "Lexer tokens after move: %s" phps-mode-lexer-tokens)
-                       (message "Lexer states after move: %s" phps-mode-lexer-states))
+                          (phps-mode-runtime-debug-message (format "Lexer tokens after move: %s" phps-mode-lexer-tokens))
+                          (phps-mode-debug-message
+                           (message "Lexer tokens after move: %s" phps-mode-lexer-tokens)
+                           (message "Lexer states after move: %s" phps-mode-lexer-states))
 
-                      ;; Reset change flag
-                      (phps-mode-functions--reset-changes)
-                      (phps-mode-functions--cancel-idle-timer)))))
+                          ;; Reset change flag
+                          (phps-mode-functions--reset-changes)
+                          (phps-mode-functions--cancel-idle-timer)))
+                    (phps-mode-runtime-debug-message "Skipping indentation of line since it's already indented correctly"))))
             (phps-mode-runtime-debug-message (format "Found no indent for line number %s" line-number)))))
     (phps-mode-runtime-debug-message "Did not find lines indent index, skipping indenting..")
     (phps-mode-debug-message "Did not find lines indent index, skipping indenting..")
