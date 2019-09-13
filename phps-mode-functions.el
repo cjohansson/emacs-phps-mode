@@ -1065,6 +1065,7 @@
           (list (nreverse imenu-index) line-indents)))
     (list nil nil)))
 
+;; TODO newline with electric mode not working
 (defun phps-mode-functions-indent-line ()
   "Indent line."
   (phps-mode-runtime-debug-message "Indent line")
@@ -1110,7 +1111,14 @@
 
                           ;; Reset change flag
                           (phps-mode-functions--reset-changes)
-                          (phps-mode-functions--cancel-idle-timer)))
+                          (phps-mode-functions--cancel-idle-timer)
+
+                          ;; Update last buffer states
+                          (setq-local phps-mode-lexer-buffer-length (1- (point-max)))
+                          (setq-local phps-mode-lexer-buffer-contents (buffer-substring-no-properties (point-min) (point-max)))
+
+                          (phps-mode-runtime-debug-message (format "buffer contents:\n%s" (buffer-substring-no-properties (point-min) (point-max))))
+                          ))
                     (phps-mode-runtime-debug-message "Skipping indentation of line since it's already indented correctly"))))
             (phps-mode-runtime-debug-message (format "Found no indent for line number %s" line-number)))))
     (phps-mode-runtime-debug-message "Did not find lines indent index, skipping indenting..")
