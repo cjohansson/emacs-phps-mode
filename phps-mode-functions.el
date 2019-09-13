@@ -1097,7 +1097,8 @@
 
                         (let ((indent-diff (- (current-indentation) old-indentation)))
 
-                          (phps-mode-runtime-debug-message (format "Moving indexes by %s points" indent-diff))
+                          (phps-mode-runtime-debug-message (format "Moving indexes by %s points from %s" indent-diff line-start))
+                          (phps-mode-runtime-debug-message (format "Lexer tokens before move: %s" phps-mode-lexer-tokens))
 
                           ;; When indent is changed the trailing tokens and states just need to adjust their positions, this will improve speed of indent-region a lot
                           (phps-mode-lexer-move-tokens line-start indent-diff)
