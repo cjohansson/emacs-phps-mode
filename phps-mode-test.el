@@ -51,7 +51,7 @@
        (message "\nTesting incremental buffer '%s':\n'%s'\n" ,title ,source))
      (phps-mode)
      ,@change
-     (phps-mode-lexer-run-incremental)
+     (phps-mode-lexer-run-incremental test-buffer-incremental)
      (phps-mode-functions-process-current-buffer)
      (setq incremental-states phps-mode-lexer-states)
      (setq incremental-tokens phps-mode-lexer-tokens)

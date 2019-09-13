@@ -103,6 +103,14 @@
    (goto-char 28)
    (insert "One"))
 
+  (phps-mode-test-incremental-vs-intial-buffer
+   "<?php\nif ($myCondition) {}\n"
+   "Integration-test 8 for regular PHP with newline between curly brackets"
+
+   ;; Make changes
+   (goto-char 26)
+   (execute-kbd-macro (kbd "RET")))
+
   )
 
 (defun phps-mode-test-integration ()

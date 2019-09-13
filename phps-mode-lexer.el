@@ -1870,7 +1870,6 @@
                                     ;; Do partial lex from previous-token-end to change-stop
                                     (let ((incremental-buffer (generate-new-buffer "*PHPs Incremental Buffer*")))
                                       (save-excursion
-
                                         (switch-to-buffer incremental-buffer)
                                         (delete-region (point-min) (point-max))
                                         (goto-char (point-max))
@@ -1921,8 +1920,9 @@
                                             (let ((token (car token-object))
                                                   (start (car (cdr token-object)))
                                                   (end (cdr (cdr token-object))))
-                                              (phps-mode-lexer-set-region-syntax-color
-                                               start end (phps-mode-lexer-get-token-syntax-color token))))
+                                              (when (<= end (point-max))
+                                                (phps-mode-lexer-set-region-syntax-color
+                                                 start end (phps-mode-lexer-get-token-syntax-color token)))))
 
                                           (setq-local phps-mode-lexer-states (append tail-states incremental-states))
                                           (phps-mode-debug-message (message "New states from incremental lex are: %s" phps-mode-lexer-states))
