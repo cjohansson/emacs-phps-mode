@@ -58,6 +58,7 @@
 
 (defun phps-mode-functions-process-current-buffer ()
   "Process current buffer, generate indentations and Imenu, trigger incremental lexer if we have change."
+  (interactive)
   (phps-mode-debug-message (message "Process current buffer"))
   (when phps-mode-functions-idle-timer
     (phps-mode-debug-message (message "Trigger incremental lexer"))
@@ -454,7 +455,8 @@
                       (setq imenu-in-namespace-declaration t))
 
                      ((and (not imenu-in-class-name)
-                           (equal token 'T_CLASS))
+                           (or (equal token 'T_CLASS)
+                               (equal token 'T_INTERFACE)))
                       (setq imenu-in-class-name nil)
                       (setq imenu-in-class-declaration t))
 

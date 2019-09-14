@@ -94,17 +94,17 @@
 
 (defmacro phps-mode-test-with-buffer (source &optional title &rest body)
   "Set up test buffer with SOURCE, TITLE and BODY."
-  (let ((test-buffer (generate-new-buffer "test")))
+  `(let ((test-buffer (generate-new-buffer "test")))
      (switch-to-buffer test-buffer)
-     (insert source)
+     (insert ,source)
      (goto-char 0)
      (phps-mode-debug-message
-       (message "\nTesting buffer '%s':\n'%s'\n" title source))
+       (message "\nTesting buffer '%s':\n'%s'\n" ,title ,source))
      (phps-mode)
-     body
+     ,@body
      (kill-buffer test-buffer)
-     (when title
-       (message "\nPassed tests for '%s'\n" title))))
+     (when ,title
+       (message "\nPassed tests for '%s'\n" ,title))))
 
 (defun phps-mode-test-hash-to-list (hash-table)
   "Return a list that represent the HASH-TABLE.  Each element is a list: (list key value)."

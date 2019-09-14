@@ -865,6 +865,11 @@
    (should (equal (phps-mode-functions-get-imenu) '(("myClass" . (("myFunctionA" . 43) ("myFunctionB" . 83)))))))
 
   (phps-mode-test-with-buffer
+   "<?php\ninterface myInterface {\n    public function myFunctionA() {}\n    protected function myFunctionB() {}\n}\n"
+   "Imenu object-oriented file with interface"
+   (should (equal (phps-mode-functions-get-imenu) '(("myInterface" . (("myFunctionA" . 51) ("myFunctionB" . 91)))))))
+
+  (phps-mode-test-with-buffer
    "<?php\nnamespace myNamespace {\n    class myClass {\n        public function myFunctionA() {}\n        protected function myFunctionB() {}\n    }\n}\n"
    "Imenu object-oriented file with namespace, class and function"
    (should (equal (phps-mode-functions-get-imenu) '(("myNamespace" ("myClass" ("myFunctionA" . 75) ("myFunctionB" . 119)))))))
