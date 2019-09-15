@@ -111,6 +111,14 @@
    (goto-char 26)
    (execute-kbd-macro (kbd "RET")))
 
+  (phps-mode-test-incremental-vs-intial-buffer
+   "<?php\n/**\n * @see Something\n * @see here\n *\n */\n"
+   "Integration-test 9 for regular PHP with newline in doc comment block"
+
+   ;; Make changes
+   (goto-char 41)
+   (execute-kbd-macro (kbd "RET")))
+
   )
 
 (defun phps-mode-test-integration ()
