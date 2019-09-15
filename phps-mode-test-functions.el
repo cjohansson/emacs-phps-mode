@@ -985,16 +985,16 @@
 
    ;; States
    (should (equal (phps-mode-lexer-get-states)
-                  '((35 36 1 (1 1 1 1 1)) (30 35 1 (1 1 1 1 1)) (28 29 1 (1 1 1 1 1)) (22 27 1 (1 1 1 1 1)) (19 20 1 (1 1 1 1 1)) (14 19 1 (1 1 1 1 1)) (12 13 1 (1 1 1 1 1)) (7 11 1 (1 1 1 1 1)) (1 7 1 (1 1 1 1 1)))))
-
+                  '((35 36 1 nil) (30 35 1 nil) (28 29 1 nil) (22 27 1 nil) (19 20 1 nil) (14 19 1 nil) (12 13 1 nil) (7 11 1 nil) (1 7 1 nil))))
+   
    ;; Insert newline
    (goto-char 21)
-   (newline nil nil)
+   (newline)
 
    ;; Final state
    ;; (message "Tokens %s" (phps-mode-lexer-get-tokens))
    ;; (message "States: %s" (phps-mode-lexer-get-states))
-   (phps-mode-lexer-run-incremental)
+   (phps-mode-lexer-run-incremental (current-buffer))
    ;; (message "Tokens %s" (phps-mode-lexer-get-tokens))
    ;; (message "States: %s" (phps-mode-lexer-get-states))
 
@@ -1004,7 +1004,7 @@
 
    ;; States
    (should (equal (phps-mode-lexer-get-states)
-                  '((36 37 1 (1 1 1 1 1)) (31 36 1 (1 1 1 1 1)) (29 30 1 (1 1 1 1 1)) (23 28 1 (1 1 1 1 1)) (19 20 1 (1 1 1 1 1)) (14 19 1 (1 1 1 1 1)) (12 13 1 (1 1 1 1 1)) (7 11 1 (1 1 1 1 1)) (1 7 1 (1 1 1 1 1))))))
+                  '((36 37 1 nil) (31 36 1 nil) (29 30 1 nil) (23 28 1 nil) (19 20 1 nil) (14 19 1 nil) (12 13 1 nil) (7 11 1 nil) (1 7 1 nil)))))
 
   (phps-mode-test-with-buffer
    "<?php\n$var = 'abc';\n\n$var2 = '123';\n"
@@ -1020,13 +1020,13 @@
 
    ;; States
    (should (equal (phps-mode-lexer-get-states)
-                  '((35 36 1 (1 1 1 1 1)) (30 35 1 (1 1 1 1 1)) (28 29 1 (1 1 1 1 1)) (22 27 1 (1 1 1 1 1)) (19 20 1 (1 1 1 1 1)) (14 19 1 (1 1 1 1 1)) (12 13 1 (1 1 1 1 1)) (7 11 1 (1 1 1 1 1)) (1 7 1 (1 1 1 1 1)))))
+                  '((35 36 1 nil) (30 35 1 nil) (28 29 1 nil) (22 27 1 nil) (19 20 1 nil) (14 19 1 nil) (12 13 1 nil) (7 11 1 nil) (1 7 1 nil))))
 
    ;; Insert newline
    (goto-char 21)
    (delete-char 1)
 
-   (phps-mode-lexer-run-incremental)
+   (phps-mode-lexer-run-incremental (current-buffer))
 
    ;; Final state
    ;; (message "Modified buffer: '%s'" (buffer-substring-no-properties (point-min) (point-max)))
@@ -1039,7 +1039,7 @@
 
    ;; States
    (should (equal (phps-mode-lexer-get-states)
-                  '((34 35 1 (1 1 1 1 1)) (29 34 1 (1 1 1 1 1)) (27 28 1 (1 1 1 1 1)) (21 26 1 (1 1 1 1 1)) (19 20 1 (1 1 1 1 1)) (14 19 1 (1 1 1 1 1)) (12 13 1 (1 1 1 1 1)) (7 11 1 (1 1 1 1 1)) (1 7 1 (1 1 1 1 1))))))
+                  '((34 35 1 nil) (29 34 1 nil) (27 28 1 nil) (21 26 1 nil) (19 20 1 nil) (14 19 1 nil) (12 13 1 nil) (7 11 1 nil) (1 7 1 nil)))))
 
   (phps-mode-test-with-buffer
    "<?php\nif (true):\n    $var = 'abc';\n    $var2 = '123';\nendif;\n"
@@ -1052,13 +1052,13 @@
                   '((T_OPEN_TAG 1 . 7) (T_IF 7 . 9) ("(" 10 . 11) (T_STRING 11 . 15) (")" 15 . 16) (":" 16 . 17) (T_VARIABLE 22 . 26) ("=" 27 . 28) (T_CONSTANT_ENCAPSED_STRING 29 . 34) (";" 34 . 35) (T_VARIABLE 40 . 45) ("=" 46 . 47) (T_CONSTANT_ENCAPSED_STRING 48 . 53) (";" 53 . 54) (T_ENDIF 55 . 60) (";" 60 . 61))))
 
    (should (equal (phps-mode-lexer-get-states)
-                  '((60 61 1 (1 1 1 1 1)) (55 60 1 (1 1 1 1 1)) (53 54 1 (1 1 1 1 1)) (48 53 1 (1 1 1 1 1)) (46 47 1 (1 1 1 1 1)) (40 45 1 (1 1 1 1 1)) (34 35 1 (1 1 1 1 1)) (29 34 1 (1 1 1 1 1)) (27 28 1 (1 1 1 1 1)) (22 26 1 (1 1 1 1 1)) (16 17 1 (1 1 1 1 1)) (15 16 1 (1 1 1 1 1)) (11 15 1 (1 1 1 1 1)) (10 11 1 (1 1 1 1 1)) (7 9 1 (1 1 1 1 1)) (1 7 1 (1 1 1 1 1)))))
+                  '((35 36 1 nil) (30 35 1 nil) (28 29 1 nil) (22 27 1 nil) (19 20 1 nil) (14 19 1 nil) (12 13 1 nil) (7 11 1 nil) (1 7 1 nil))))
 
    ;; Insert newline and then indent
    (goto-char 54)
    (newline-and-indent)
 
-   (phps-mode-lexer-run-incremental)
+   (phps-mode-lexer-run-incremental (current-buffer))
 
    ;; Final state
    ;; (message "Tokens %s" (phps-mode-lexer-get-tokens))
@@ -1085,7 +1085,7 @@
    (goto-char 51)
    (newline-and-indent)
 
-   (phps-mode-lexer-run-incremental)
+   (phps-mode-lexer-run-incremental (current-buffer))
 
    ;; (message "After Tokens %s" (phps-mode-lexer-get-tokens))
    ;; (message "After States: %s" (phps-mode-lexer-get-states))
@@ -1103,7 +1103,7 @@
    (goto-char 32)
    (newline-and-indent)
 
-   (phps-mode-lexer-run-incremental)
+   (phps-mode-lexer-run-incremental (current-buffer))
 
    (should (equal (phps-mode-functions-get-imenu) '(("myFunctionA" . 16) ("myFunctionB" . 43)))))
 
