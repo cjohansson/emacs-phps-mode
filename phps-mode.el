@@ -150,7 +150,7 @@
     (flycheck-add-mode 'php-phpcs 'phps-mode)
     (setq phps-mode-flycheck-applied t))
 
-    ;; Custom indentation
+  ;; Custom indentation
   ;; Indent-region will call this on each line of selected region
   (setq-local indent-line-function #'phps-mode-functions-indent-line)
 
@@ -205,13 +205,12 @@
   (semantic-new-buffer-fcn)
 
   ;; Disable idle scheduler since we have customized this feature
-  (setq semantic-idle-scheduler-mode nil)
+  (when (boundp 'semantic-idle-scheduler-mode)
+    (setq semantic-idle-scheduler-mode nil))
 
   ;; Wisent LALR parser TODO
   ;; (phps-mode-tags-init)
-
-  ;; Add compatibility for plug-ins here
-  (run-hooks 'phps-mode-hook))
+  )
 
 (provide 'phps-mode)
 ;;; phps-mode.el ends here
