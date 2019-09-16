@@ -206,7 +206,7 @@
                   '((T_OPEN_TAG 1 . 7) (T_IF 7 . 9) ("(" 10 . 11) (T_STRING 11 . 15) (")" 15 . 16) (":" 16 . 17) (T_VARIABLE 22 . 26) ("=" 27 . 28) (T_CONSTANT_ENCAPSED_STRING 29 . 34) (";" 34 . 35) (T_VARIABLE 40 . 45) ("=" 46 . 47) (T_CONSTANT_ENCAPSED_STRING 48 . 53) (";" 53 . 54) (T_ENDIF 55 . 60) (";" 60 . 61))))
 
    (should (equal (phps-mode-lexer-get-states)
-                  '((35 36 1 nil) (30 35 1 nil) (28 29 1 nil) (22 27 1 nil) (19 20 1 nil) (14 19 1 nil) (12 13 1 nil) (7 11 1 nil) (1 7 1 nil))))
+                  '((60 61 1 nil) (55 60 1 nil) (53 54 1 nil) (48 53 1 nil) (46 47 1 nil) (40 45 1 nil) (34 35 1 nil) (29 34 1 nil) (27 28 1 nil) (22 26 1 nil) (16 17 1 nil) (15 16 1 nil) (11 15 1 nil) (10 11 1 nil) (7 9 1 nil) (1 7 1 nil))))
 
    ;; Insert newline and then indent
    (goto-char 54)
@@ -221,7 +221,7 @@
                   '((T_OPEN_TAG 1 . 7) (T_IF 7 . 9) ("(" 10 . 11) (T_STRING 11 . 15) (")" 15 . 16) (":" 16 . 17) (T_VARIABLE 22 . 26) ("=" 27 . 28) (T_CONSTANT_ENCAPSED_STRING 29 . 34) (";" 34 . 35) (T_VARIABLE 40 . 45) ("=" 46 . 47) (T_CONSTANT_ENCAPSED_STRING 48 . 53) (";" 53 . 54) (T_ENDIF 60 . 65) (";" 65 . 66))))
 
    (should (equal (phps-mode-lexer-get-states)
-                  '((65 66 1 (1 1 1 1 1)) (60 65 1 (1 1 1 1 1)) (53 54 1 (1 1 1 1 1)) (48 53 1 (1 1 1 1 1)) (46 47 1 (1 1 1 1 1)) (40 45 1 (1 1 1 1 1)) (34 35 1 (1 1 1 1 1)) (29 34 1 (1 1 1 1 1)) (27 28 1 (1 1 1 1 1)) (22 26 1 (1 1 1 1 1)) (16 17 1 (1 1 1 1 1)) (15 16 1 (1 1 1 1 1)) (11 15 1 (1 1 1 1 1)) (10 11 1 (1 1 1 1 1)) (7 9 1 (1 1 1 1 1)) (1 7 1 (1 1 1 1 1))))))
+                  '((65 66 1 nil) (60 65 1 nil) (53 54 1 nil) (48 53 1 nil) (46 47 1 nil) (40 45 1 nil) (34 35 1 nil) (29 34 1 nil) (27 28 1 nil) (22 26 1 nil) (16 17 1 nil) (15 16 1 nil) (11 15 1 nil) (10 11 1 nil) (7 9 1 nil) (1 7 1 nil)))))
 
   (phps-mode-test-with-buffer
    "<?php\nif (true):\n    $var = \"abc\nanother line here\nmore text here\";\n    $var2 = '123';\nendif;"
@@ -233,7 +233,7 @@
    (should (equal (phps-mode-lexer-get-tokens)
                   '((T_OPEN_TAG 1 . 7) (T_IF 7 . 9) ("(" 10 . 11) (T_STRING 11 . 15) (")" 15 . 16) (":" 16 . 17) (T_VARIABLE 22 . 26) ("=" 27 . 28) (T_CONSTANT_ENCAPSED_STRING 29 . 67) (";" 67 . 68) (T_VARIABLE 73 . 78) ("=" 79 . 80) (T_CONSTANT_ENCAPSED_STRING 81 . 86) (";" 86 . 87) (T_ENDIF 88 . 93) (";" 93 . 94))))
    (should (equal (phps-mode-lexer-get-states)
-                  '((93 94 1 (1 1 1 1 1)) (88 93 1 (1 1 1 1 1)) (86 87 1 (1 1 1 1 1)) (81 86 1 (1 1 1 1 1)) (79 80 1 (1 1 1 1 1)) (73 78 1 (1 1 1 1 1)) (67 68 1 (1 1 1 1 1)) (29 67 1 (1 1 1 1 1)) (27 28 1 (1 1 1 1 1)) (22 26 1 (1 1 1 1 1)) (16 17 1 (1 1 1 1 1)) (15 16 1 (1 1 1 1 1)) (11 15 1 (1 1 1 1 1)) (10 11 1 (1 1 1 1 1)) (7 9 1 (1 1 1 1 1)) (1 7 1 (1 1 1 1 1)))))
+                  '((93 94 1 nil) (88 93 1 nil) (86 87 1 nil) (81 86 1 nil) (79 80 1 nil) (73 78 1 nil) (67 68 1 nil) (29 67 1 nil) (27 28 1 nil) (22 26 1 nil) (16 17 1 nil) (15 16 1 nil) (11 15 1 nil) (10 11 1 nil) (7 9 1 nil) (1 7 1 nil))))
 
    ;; Insert newline and then indent
    (goto-char 51)
@@ -246,7 +246,7 @@
    (should (equal (phps-mode-lexer-get-tokens)
                   '((T_OPEN_TAG 1 . 7) (T_IF 7 . 9) ("(" 10 . 11) (T_STRING 11 . 15) (")" 15 . 16) (":" 16 . 17) (T_VARIABLE 22 . 26) ("=" 27 . 28) (T_CONSTANT_ENCAPSED_STRING 29 . 76) (";" 76 . 77) (T_VARIABLE 82 . 87) ("=" 88 . 89) (T_CONSTANT_ENCAPSED_STRING 90 . 95) (";" 95 . 96) (T_ENDIF 97 . 102) (";" 102 . 103))))
    (should (equal (phps-mode-lexer-get-states)
-                  '((102 103 1 (1 1 1 1 1)) (97 102 1 (1 1 1 1 1)) (95 96 1 (1 1 1 1 1)) (90 95 1 (1 1 1 1 1)) (88 89 1 (1 1 1 1 1)) (82 87 1 (1 1 1 1 1)) (76 77 1 (1 1 1 1 1)) (29 76 1 (1 1 1 1 1)) (27 28 1 (1 1 1 1 1)) (22 26 1 (1 1 1 1 1)) (16 17 1 (1 1 1 1 1)) (15 16 1 (1 1 1 1 1)) (11 15 1 (1 1 1 1 1)) (10 11 1 (1 1 1 1 1)) (7 9 1 (1 1 1 1 1)) (1 7 1 (1 1 1 1 1))))))
+                  '((102 103 1 nil) (97 102 1 nil) (95 96 1 nil) (90 95 1 nil) (88 89 1 nil) (82 87 1 nil) (76 77 1 nil) (29 76 1 nil) (27 28 1 nil) (22 26 1 nil) (16 17 1 nil) (15 16 1 nil) (11 15 1 nil) (10 11 1 nil) (7 9 1 nil) (1 7 1 nil)))))
 
   (phps-mode-test-with-buffer
    "<?php\nfunction myFunctionA() {}\nfunction myFunctionB() {}\n"
