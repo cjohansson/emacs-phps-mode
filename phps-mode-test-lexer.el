@@ -312,13 +312,13 @@
 
   (phps-mode-test-with-buffer
    "<?php\nnamespace MyNameSpace{\n\tclass MyClass {\n\t\tpublic function __construct() {\n\t\t\texit;\n\t\t}\n\t}\n}\n"
-   nil
+   "Object-oriented namespace file"
    (should (equal (phps-mode-lexer-get-tokens)
                   '((T_OPEN_TAG 1 . 7) (T_NAMESPACE 7 . 16) (T_STRING 17 . 28) ("{" 28 . 29) (T_CLASS 31 . 36) (T_STRING 37 . 44) ("{" 45 . 46) (T_PUBLIC 49 . 55) (T_FUNCTION 56 . 64) (T_STRING 65 . 76) ("(" 76 . 77) (")" 77 . 78) ("{" 79 . 80) (T_EXIT 84 . 88) (";" 88 . 89) ("}" 92 . 93) ("}" 95 . 96) ("}" 97 . 98)))))
 
   (phps-mode-test-with-buffer
    "<?php\nNAMESPACE MyNameSpace;\nCLASS MyClass {\n\tpublic function __construct() {\n\t\texit;\n\t}\n}\n"
-   nil
+   "Capitalized object-oriented namespace file"
    (should (equal (phps-mode-lexer-get-tokens)
                   '((T_OPEN_TAG 1 . 7) (T_NAMESPACE 7 . 16) (T_STRING 17 . 28) (";" 28 . 29) (T_CLASS 30 . 35) (T_STRING 36 . 43) ("{" 44 . 45) (T_PUBLIC 47 . 53) (T_FUNCTION 54 . 62) (T_STRING 63 . 74) ("(" 74 . 75) (")" 75 . 76) ("{" 77 . 78) (T_EXIT 81 . 85) (";" 85 . 86) ("}" 88 . 89) ("}" 90 . 91)))))
   )
@@ -328,21 +328,21 @@
 
   (phps-mode-test-with-buffer
    "<?php\necho \"My neverending double quotation\n"
-   nil
+   "Neverending double quotation"
    (should (equal (phps-mode-lexer-get-tokens)
-                  '((T_OPEN_TAG 1 . 7) (T_ECHO 7 . 11) (T_ERROR 12 . 45)))))
+                  '((T_OPEN_TAG 1 . 7) (T_ECHO 7 . 11)))))
 
   (phps-mode-test-with-buffer
    "<?php\n`My neverending backquotes\n"
-   nil
+   "Neverending backquotes"
    (should (equal (phps-mode-lexer-get-tokens)
-                  '((T_OPEN_TAG 1 . 7) ("`" 7 . 8) (T_ERROR 8 . 34)))))
+                  '((T_OPEN_TAG 1 . 7) ("`" 7 . 8)))))
 
   (phps-mode-test-with-buffer
    "<?php\n<<<LABEL\nMy neverending heredoc\ngoes on forever\n"
-   nil
+   "Neverending heredoc"
    (should (equal (phps-mode-lexer-get-tokens)
-                  '((T_OPEN_TAG 1 . 7) (T_START_HEREDOC 7 . 16) (T_ERROR 16 . 55)))))
+                  '((T_OPEN_TAG 1 . 7) (T_START_HEREDOC 7 . 16)))))
 
   )
 
