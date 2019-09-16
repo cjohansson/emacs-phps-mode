@@ -47,46 +47,44 @@
      (switch-to-buffer test-buffer-incremental)
      (insert ,source)
      (goto-char 0)
-     (when (and (boundp 'phps-mode-functions-verbose)
-                phps-mode-functions-verbose)
+     (phps-mode-debug-message
        (message "\nTesting incremental buffer '%s':\n'%s'\n" ,title ,source))
      (phps-mode)
      ,@change
-     (phps-mode-lexer-run-incremental)
-     (setq incremental-states (phps-mode-lexer-get-states))
-     (setq incremental-tokens (phps-mode-lexer-get-tokens))
-     (setq incremental-imenu (phps-mode-functions-get-imenu))
-     (setq incremental-indent (phps-mode-test-hash-to-list (phps-mode-functions-get-lines-indent)))
-     (setq incremental-buffer (buffer-substring-no-properties (point-min) (point-max)))
+     (phps-mode-lexer-run-incremental test-buffer-incremental)
+     (phps-mode-functions-process-current-buffer)
+     (setq incremental-states phps-mode-lexer-states)
+     (setq incremental-tokens phps-mode-lexer-tokens)
+     (setq incremental-imenu phps-mode-functions-imenu)
+     (setq incremental-indent (phps-mode-test-hash-to-list phps-mode-functions-lines-indent))
+     (setq incremental-buffer (buffer-substring (point-min) (point-max)))
 
      ;; Setup incremental buffer
      (switch-to-buffer test-buffer-initial)
      (insert incremental-buffer)
      (goto-char 0)
-     (when (and (boundp 'phps-mode-functions-verbose)
-                phps-mode-functions-verbose)
+     (phps-mode-debug-message
        (message "\nTesting initial buffer '%s':\n'%s'\n" ,title incremental-buffer))
      (phps-mode)
-     (setq initial-states (phps-mode-lexer-get-states))
-     (setq initial-tokens (phps-mode-lexer-get-tokens))
-     (setq initial-imenu (phps-mode-functions-get-imenu))
-     (setq initial-indent (phps-mode-test-hash-to-list (phps-mode-functions-get-lines-indent)))
-     (setq initial-buffer (buffer-substring-no-properties (point-min) (point-max)))
+     (phps-mode-functions-process-current-buffer)
+     (setq initial-states phps-mode-lexer-states)
+     (setq initial-tokens phps-mode-lexer-tokens)
+     (setq initial-imenu phps-mode-functions-imenu)
+     (setq initial-indent (phps-mode-test-hash-to-list phps-mode-functions-lines-indent))
+     (setq initial-buffer (buffer-substring (point-min) (point-max)))
 
      ;; Run tests
-     (when (and (boundp 'phps-mode-functions-verbose)
-                phps-mode-functions-verbose)
+     (phps-mode-debug-message
        (message "\nComparing tokens, lines indent and imenu  between buffer:\n\n'%s'\n\nand:\n\n'%s'\n" initial-buffer incremental-buffer))
      (should (equal initial-buffer incremental-buffer))
      ;; (message "Initial tokens: %s\n" initial-tokens)
      ;; (message "Incremental tokens: %s\n" incremental-tokens)
-     (should (equal initial-states incremental-states))
      (should (equal initial-tokens incremental-tokens))
+     (should (equal initial-states incremental-states))
      ;; (message "Initial indent: %s\n" initial-indent)
      ;; (message "Incremental indent: %s\n" incremental-indent)
      (should (equal initial-indent incremental-indent))
      (should (equal initial-imenu incremental-imenu))
-
 
      (kill-buffer test-buffer-incremental)
      (kill-buffer test-buffer-initial)
@@ -100,8 +98,7 @@
      (switch-to-buffer test-buffer)
      (insert ,source)
      (goto-char 0)
-     (when (and (boundp 'phps-mode-functions-verbose)
-                phps-mode-functions-verbose)
+     (phps-mode-debug-message
        (message "\nTesting buffer '%s':\n'%s'\n" ,title ,source))
      (phps-mode)
      ,@body
@@ -112,11 +109,14 @@
 (defun phps-mode-test-hash-to-list (hash-table)
   "Return a list that represent the HASH-TABLE.  Each element is a list: (list key value)."
   (let (result)
-    (maphash
-     (lambda (k v)
-       (push (list k v) result))
-     hash-table)
-    (sort (nreverse result) (lambda (a b) (< (car a) (car b))))))
+    (if (hash-table-p hash-table)
+        (progn
+          (maphash
+           (lambda (k v)
+             (push (list k v) result))
+           hash-table)
+          (sort (nreverse result) (lambda (a b) (< (car a) (car b)))))
+      nil)))
 
 (provide 'phps-mode-test)
 

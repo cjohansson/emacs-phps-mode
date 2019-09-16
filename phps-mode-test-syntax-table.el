@@ -29,7 +29,7 @@
 (require 'phps-mode-functions)
 (require 'phps-mode-test)
 
-;; TODO Should test `forward-sexp', `forward-word', `forward-list' as well
+;; TODO Should test `backward-sexp', `forward-sexp', `backward-word', `forward-word', `backward-list', `forward-list' as well
 
 (defun phps-mode-test-syntax-table-quote-region ()
   "Test double quotes, single quotes, curly bracket, square bracket, round bracket, back-quotes on regions."
@@ -93,7 +93,6 @@
    (execute-kbd-macro (kbd "`"))
    (let ((buffer-contents (buffer-substring-no-properties (point-min) (point-max))))
      (should (equal buffer-contents "<?php\n$var = `abc`;"))))
-  
 
   )
 

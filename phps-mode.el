@@ -5,8 +5,8 @@
 ;; Author: Christian Johansson <christian@cvj.se>
 ;; Maintainer: Christian Johansson <christian@cvj.se>
 ;; Created: 3 Mar 2018
-;; Modified: 26 Aug 2019
-;; Version: 0.2.8
+;; Modified: 16 Sep 2019
+;; Version: 0.3.1
 ;; Keywords: tools, convenience
 ;; URL: https://github.com/cjohansson/emacs-phps-mode
 
@@ -57,19 +57,60 @@
 (defvar phps-mode-use-psr-2 t
   "Whether to use PSR-2 guidelines for white-space or not.")
 
-(defvar phps-mode-idle-interval 1.0
+(defvar phps-mode-idle-interval 1
   "Idle seconds before running the incremental lexer.")
 
-(defvar phps-mode-flycheck-applied nil "Boolean flag whether flycheck configuration has been applied or not.")
+(defvar phps-mode-flycheck-applied nil
+  "Boolean flag whether flycheck configuration has been applied or not.")
 
-(defvar phps-mode-inline-mmm-submode nil "Symbol declaring what mmm-mode to use as submode in inline areas.")
+(defvar phps-mode-inline-mmm-submode nil
+  "Symbol declaring what mmm-mode to use as submode in inline areas.")
+
+(defvar phps-mode-runtime-debug nil
+  "Whether or not to use runtime debugging.")
+
+(defun phps-mode-runtime-debug-message (message)
+  "Output MESSAGE if flag is on."
+  (when phps-mode-runtime-debug
+    (let ((buffer (get-buffer-create "*PHPs Debug Messages*")))
+      (with-current-buffer buffer
+        (save-excursion
+          (goto-char (point-max))
+          (insert message)
+          (insert "\n"))))))
+
+(defun phps-mode-get-syntax-table ()
+  "Get syntax table."
+  phps-mode-syntax-table)
 
 (defvar phps-mode-map
   (let ((map (make-sparse-keymap)))
     (define-key map (kbd "C-c /") #'comment-region)
     (define-key map (kbd "C-c DEL") #'uncomment-region)
+    (define-key map (kbd "C-c C-r") #'phps-mode-lexer-run)
+    (define-key map (kbd "C-c C-f") #'phps-mode-format-buffer)
+    (define-key map (kbd "C-c C-p") #'phps-mode-functions-process-current-buffer)
     map)
   "Keymap for `phps-mode'.")
+
+;;;###autoload
+(defun phps-mode-format-buffer ()
+  "Format current buffer according to PHPs mode."
+  (interactive)
+  (let ((old-buffer-contents (buffer-substring-no-properties (point-min) (point-max)))
+        (old-buffer (current-buffer))
+        (temp-buffer (generate-new-buffer "*PHPs Formatting*"))
+        (new-buffer-contents ""))
+    (save-excursion
+      (switch-to-buffer temp-buffer)
+      (insert old-buffer-contents)
+      (phps-mode)
+      (indent-region (point-min) (point-max))
+      (setq new-buffer-contents (buffer-substring-no-properties (point-min) (point-max)))
+      (kill-buffer)
+      (switch-to-buffer old-buffer)
+      (delete-region (point-min) (point-max))
+      (insert new-buffer-contents))))
 
 (define-derived-mode phps-mode prog-mode "PHPs"
   "Major mode for PHP with Semantic integration."
@@ -87,7 +128,7 @@
     ;; NOTE: These are required for wrapping region functionality
     (transient-mark-mode))
 
-  ;; TODO Add this as a menu setting similar to php-mode
+  ;; TODO Add this as a menu setting similar to php-mode?
   (when phps-mode-use-electric-pair-mode
     (electric-pair-local-mode))
 
@@ -109,7 +150,7 @@
     (flycheck-add-mode 'php-phpcs 'phps-mode)
     (setq phps-mode-flycheck-applied t))
 
-    ;; Custom indentation
+  ;; Custom indentation
   ;; Indent-region will call this on each line of selected region
   (setq-local indent-line-function #'phps-mode-functions-indent-line)
 
@@ -125,15 +166,19 @@
     ;; MUST NOT use tabs for indenting
     (setq-local indent-tabs-mode nil))
 
-  ;; Add support for moving indexes quickly when making newlines
-  (advice-add #'newline :around #'phps-mode-functions-around-newline)
-
   ;; Reset flags
   (setq-local phps-mode-functions-allow-after-change t)
-  (setq-local phps-mode-functions-buffer-changes-start nil)
+  (setq-local phps-mode-functions-buffer-changes nil)
+  (setq-local phps-mode-functions-buffer-changes nil)
+  (setq-local phps-mode-functions-idle-timer nil)
   (setq-local phps-mode-functions-lines-indent nil)
   (setq-local phps-mode-functions-imenu nil)
   (setq-local phps-mode-functions-processed-buffer nil)
+  (setq-local phps-mode-lexer-buffer-length nil)
+  (setq-local phps-mode-lexer-buffer-contents nil)
+  (setq-local phps-mode-lexer-tokens nil)
+  (setq-local phps-mode-lexer-states nil)
+  (setq-local phps-mode-functions-allow-after-change t)
 
   ;; Make (comment-region) and (uncomment-region) work
   (setq-local comment-region-function #'phps-mode-functions-comment-region)
@@ -153,20 +198,19 @@
   ;; Set semantic-lex initializer function
   (add-hook 'semantic-lex-reset-functions #'phps-mode-lexer-setup 0 t)
 
-  ;; Reset tokens
-  (setq-local phps-mode-lexer-tokens nil)
-
   ;; Initial run of lexer
   (phps-mode-lexer-run)
 
   ;; Run semantic functions for new buffer
   (semantic-new-buffer-fcn)
 
+  ;; Disable idle scheduler since we have customized this feature
+  (when (boundp 'semantic-idle-scheduler-mode)
+    (setq semantic-idle-scheduler-mode nil))
+
   ;; Wisent LALR parser TODO
   ;; (phps-mode-tags-init)
-
-  ;; Add compatibility for plug-ins here
-  (run-hooks 'phps-mode-hook))
+  )
 
 (provide 'phps-mode)
 ;;; phps-mode.el ends here

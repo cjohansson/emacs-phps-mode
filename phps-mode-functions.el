@@ -26,42 +26,53 @@
 (require 'subr-x)
 (require 'phps-mode-lexer)
 
+(autoload 'phps-mode-runtime-debug-message "phps-mode")
+
+(require 'phps-mode-macros)
+
 (defvar phps-mode-functions-allow-after-change t
   "Flag to tell us whether after change detection is enabled or not.")
 
-(defvar phps-mode-functions-buffer-changes-start nil
-  "Start point of buffer changes, nil if none.")
+(defvar phps-mode-functions-buffer-changes nil
+  "A stack of buffer changes.")
 
-(defvar phps-mode-functions-lines-indent nil
-  "The indentation of each line in buffer, nil if none.")
+(defvar phps-mode-functions-idle-timer nil
+  "Timer object of idle timer.")
 
 (defvar phps-mode-functions-imenu nil
   "The Imenu alist for current buffer, nil if none.")
 
+(defvar phps-mode-functions-lines-indent nil
+  "The indentation of each line in buffer, nil if none.")
+
 (defvar phps-mode-functions-processed-buffer nil
   "Flag whether current buffer is processed or not.")
 
-(defvar phps-mode-functions-verbose nil
-  "Verbose messaging, default nil.")
+(defun phps-mode-functions-get-processed-buffer ()
+  "Get flag for whether buffer is processed or not."
+  phps-mode-functions-processed-buffer)
 
-(defun phps-mode-functions-get-buffer-changes-start ()
-  "Get buffer change start."
-  phps-mode-functions-buffer-changes-start)
-
-(defun phps-mode-functions-reset-buffer-changes-start ()
-  "Reset buffer change start."
-  ;; (message "Reset flag for buffer changes")
-  (setq phps-mode-functions-buffer-changes-start nil))
+(defun phps-mode-functions-reset-processed-buffer ()
+  "Reset flag for whether buffer is processed or not."
+  (setq-local phps-mode-functions-processed-buffer nil))
 
 (defun phps-mode-functions-process-current-buffer ()
-  "Process current buffer, generate indentations and Imenu."
-  ;; (message "(phps-mode-functions-process-current-buffer)")
-  (when (phps-mode-functions-get-buffer-changes-start)
-    (phps-mode-lexer-run-incremental)
-    (setq phps-mode-functions-processed-buffer nil))
-  (unless phps-mode-functions-processed-buffer
-    (phps-mode-functions--process-current-buffer)
-    (setq phps-mode-functions-processed-buffer t)))
+  "Process current buffer, generate indentations and Imenu, trigger incremental lexer if we have change."
+  (interactive)
+  (phps-mode-debug-message (message "Process current buffer"))
+  (when phps-mode-functions-idle-timer
+    (phps-mode-debug-message (message "Trigger incremental lexer"))
+    (phps-mode-lexer-run-incremental (current-buffer))
+    (setq-local phps-mode-functions-processed-buffer nil))
+  (if (not phps-mode-functions-processed-buffer)
+      (progn
+        (phps-mode-debug-message (message "Buffer is not processed"))
+        (let ((processed (phps-mode-functions--process-tokens-in-string phps-mode-lexer-tokens (buffer-substring-no-properties (point-min) (point-max)))))
+          (phps-mode-debug-message (message "Processed result: %s" processed))
+          (setq-local phps-mode-functions-imenu (nth 0 processed))
+          (setq-local phps-mode-functions-lines-indent (nth 1 processed)))
+        (setq-local phps-mode-functions-processed-buffer t))
+    (phps-mode-debug-message (message "Buffer is already processed"))))
 
 (defun phps-mode-functions-get-moved-lines-indent (old-lines-indents start-line-number diff)
   "Move OLD-LINES-INDENTS from START-LINE-NUMBER with DIFF points."
@@ -94,13 +105,13 @@
 (defun phps-mode-functions-move-imenu-index (start diff)
   "Moved imenu from START by DIFF points."
   (when phps-mode-functions-imenu
-    (setq phps-mode-functions-imenu (phps-mode-functions-get-moved-imenu phps-mode-functions-imenu start diff))))
+    (setq-local phps-mode-functions-imenu (phps-mode-functions-get-moved-imenu phps-mode-functions-imenu start diff))))
 
 (defun phps-mode-functions-move-lines-indent (start-line-number diff)
   "Move lines indent from START-LINE-NUMBER with DIFF points."
   (when phps-mode-functions-lines-indent
     ;; (message "Moving line-indent index from %s with %s" start-line-number diff)
-    (setq phps-mode-functions-lines-indent (phps-mode-functions-get-moved-lines-indent phps-mode-functions-lines-indent start-line-number diff))))
+    (setq-local phps-mode-functions-lines-indent (phps-mode-functions-get-moved-lines-indent phps-mode-functions-lines-indent start-line-number diff))))
   
 (defun phps-mode-functions-get-lines-indent ()
   "Return lines indent, process buffer if not done already."
@@ -126,14 +137,13 @@
           (let ((item-label (car item)))
             (if (listp (cdr item))
                 (let ((sub-item (phps-mode-functions-get-moved-imenu (cdr item) start diff)))
-                  (push `(,item-label . ,(nreverse sub-item)) new-index))
+                  (push `(,item-label . ,sub-item) new-index))
               (let ((item-start (cdr item)))
                 (when (>= item-start start)
                   (setq item-start (+ item-start diff)))
-                (push `(,item-label . ,item-start) new-index))))
-          )))
+                (push `(,item-label . ,item-start) new-index)))))))
 
-    new-index))
+    (nreverse new-index)))
 
 (defun phps-mode-functions--get-lines-in-buffer (beg end)
   "Return the number of lines in buffer between BEG and END."
@@ -150,10 +160,8 @@
 
 (defun phps-mode-functions--get-inline-html-indentation (inline-html indent tag-level curly-bracket-level square-bracket-level round-bracket-level)
   "Generate a list of indentation for each line in INLINE-HTML, working incrementally on INDENT, TAG-LEVEL, CURLY-BRACKET-LEVEL, SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
-
-
-  (when phps-mode-functions-verbose
-    (message "Calculating HTML indent for: '%s'" inline-html))
+  (phps-mode-debug-message
+   (message "Calculating HTML indent for: '%s'" inline-html))
 
   ;; Add trailing newline if missing
   (unless (string-match "\n$" inline-html)
@@ -175,23 +183,22 @@
 
           (let ((temp-indent indent))
             (when first-object-is-nesting-decrease
-              (when phps-mode-functions-verbose
-                (message "Decreasing indent with one since first object was a nesting decrease"))
+              (phps-mode-debug-message
+               (message "Decreasing indent with one since first object was a nesting decrease"))
               (setq temp-indent (1- indent))
               (when (< temp-indent 0)
                 (setq temp-indent 0)))
             (push temp-indent line-indents))
 
           (setq indent-end (+ tag-level curly-bracket-level square-bracket-level round-bracket-level))
-          (when phps-mode-functions-verbose
-            (message "Encountered a new-line"))
+          (phps-mode-debug-message "Encountered a new-line")
           (if (> indent-end indent-start)
               (progn
-                (when phps-mode-functions-verbose
+                (phps-mode-debug-message
                   (message "Increasing indent since %s is above %s" indent-end indent-start))
                 (setq indent (1+ indent)))
             (when (< indent-end indent-start)
-              (when phps-mode-functions-verbose
+              (phps-mode-debug-message
                 (message "Decreasing indent since %s is below %s" indent-end indent-start))
               (setq indent (1- indent))
               (when (< indent 0)
@@ -229,22 +236,17 @@
             (setq first-object-on-line nil)
             (setq indent-end (+ tag-level curly-bracket-level square-bracket-level round-bracket-level))
             (when (< indent-end indent-start)
-              (when phps-mode-functions-verbose
-                (message "First object was nesting decrease"))
+              (phps-mode-debug-message "First object was nesting decrease")
               (setq first-object-is-nesting-decrease t))))
 
         (setq start end)))
     (list (nreverse line-indents) indent tag-level curly-bracket-level square-bracket-level round-bracket-level)))
 
-;; TODO Make this function support incremental process
-(defun phps-mode-functions--process-current-buffer ()
-  "Generate indexes for indentation and imenu for current buffer in one pass.  Complexity: O(n)."
-  (if (boundp 'phps-mode-lexer-tokens)
-      (save-excursion
-        ;; (message "Processing current buffer")
-        (goto-char (point-min))
-        (when phps-mode-functions-verbose
-          (message "\nCalculation indentation for all lines in buffer:\n\n%s" (buffer-substring-no-properties (point-min) (point-max))))
+(defun phps-mode-functions--process-tokens-in-string (tokens string)
+  "Generate indexes for imenu and indentation for TOKENS and STRING one pass.  Complexity: O(n)."
+  (if tokens
+      (progn
+        (phps-mode-debug-message (message "\nCalculation indentation and imenu for all lines in buffer:\n\n%s" string))
         (let ((in-heredoc nil)
               (in-heredoc-started-this-line nil)
               (in-heredoc-ended-this-line nil)
@@ -302,7 +304,7 @@
               (token-end nil)
               (token-start-line-number 0)
               (token-end-line-number 0)
-              (tokens (nreverse (copy-sequence phps-mode-lexer-tokens)))
+              (tokens (nreverse (copy-sequence tokens)))
               (nesting-stack nil)
               (nesting-key nil)
               (class-declaration-started-this-line nil)
@@ -325,7 +327,7 @@
               (imenu-nesting-level 0)
               (incremental-line-number 1))
 
-          (push `(END_PARSE ,(point-max) . ,(point-max)) tokens)
+          (push `(END_PARSE ,(length string) . ,(length string)) tokens)
 
           ;; Iterate through all buffer tokens from beginning to end
           (dolist (item (nreverse tokens))
@@ -336,9 +338,10 @@
                   (next-token-start-line-number nil)
                   (next-token-end-line-number nil))
 
-              (when token
+              (when (and token
+                         (< token-end next-token-start))
                 ;; NOTE We use a incremental-line-number calculation because `line-at-pos' takes a lot of time
-                (setq incremental-line-number (+ incremental-line-number (phps-mode-functions--get-lines-in-buffer token-end next-token-start))))
+                (setq incremental-line-number (+ incremental-line-number (phps-mode-functions--get-lines-in-string (substring string (1- token-end) (1- next-token-start))))))
 
               ;; Handle the pseudo-token for last-line
               (if (equal next-token 'END_PARSE)
@@ -348,9 +351,10 @@
                 (setq next-token-start-line-number incremental-line-number)
 
                 ;; NOTE We use a incremental-line-number calculation because `line-at-pos' takes a lot of time
-                (setq incremental-line-number (+ incremental-line-number (phps-mode-functions--get-lines-in-buffer next-token-start next-token-end)))
+                ;; (message "Lines for %s '%s'" next-token (substring string (1- next-token-start) (1- next-token-end)))
+                (setq incremental-line-number (+ incremental-line-number (phps-mode-functions--get-lines-in-string (substring string (1- next-token-start) (1- next-token-end)))))
                 (setq next-token-end-line-number incremental-line-number)
-                (when phps-mode-functions-verbose
+                (phps-mode-debug-message
                   (message "Token '%s' pos: %s-%s lines: %s-%s" next-token next-token-start next-token-end next-token-start-line-number next-token-end-line-number)))
 
               ;; Token logic - we have one-two token look-ahead at this point
@@ -410,7 +414,7 @@
 
                     ((and (or (equal token 'T_STRING)
                               (equal token 'T_NS_SEPARATOR))
-                          (setq imenu-in-namespace-name (concat imenu-in-namespace-name (buffer-substring-no-properties token-start token-end)))))))
+                          (setq imenu-in-namespace-name (concat imenu-in-namespace-name (substring string (1- token-start) (1- token-end))))))))
 
                  (imenu-in-class-declaration
                   (cond
@@ -422,24 +426,25 @@
 
                    ((and (equal token 'T_STRING)
                          (not imenu-in-class-name))
-                    (setq imenu-in-class-name (buffer-substring-no-properties token-start token-end)))))
+                    (setq imenu-in-class-name (substring string (1- token-start) (1- token-end))))))
 
                  (imenu-in-function-declaration
                   (cond
 
                    ((or (string= token "{")
                         (string= token ";"))
-                    (if imenu-in-class-name
-                        (push `(,imenu-in-function-name . ,imenu-in-function-index) imenu-class-index)
-                      (if imenu-in-namespace-name
-                          (push `(,imenu-in-function-name . ,imenu-in-function-index) imenu-namespace-index)
-                        (push `(,imenu-in-function-name . ,imenu-in-function-index) imenu-index)))
+                    (when imenu-in-function-name
+                      (if imenu-in-class-name
+                          (push `(,imenu-in-function-name . ,imenu-in-function-index) imenu-class-index)
+                        (if imenu-in-namespace-name
+                            (push `(,imenu-in-function-name . ,imenu-in-function-index) imenu-namespace-index)
+                          (push `(,imenu-in-function-name . ,imenu-in-function-index) imenu-index))))
                     (setq imenu-in-function-name nil)
                     (setq imenu-in-function-declaration nil))
 
                    ((and (equal token 'T_STRING)
                          (not imenu-in-function-name))
-                    (setq imenu-in-function-name (buffer-substring-no-properties token-start token-end))
+                    (setq imenu-in-function-name (substring string (1- token-start) (1- token-end)))
                     (setq imenu-in-function-index token-start))))
 
                  (t (cond
@@ -450,7 +455,8 @@
                       (setq imenu-in-namespace-declaration t))
 
                      ((and (not imenu-in-class-name)
-                           (equal token 'T_CLASS))
+                           (or (equal token 'T_CLASS)
+                               (equal token 'T_INTERFACE)))
                       (setq imenu-in-class-name nil)
                       (setq imenu-in-class-declaration t))
 
@@ -484,10 +490,10 @@
                   (when first-token-on-line
                     (setq first-token-is-inline-html t))
 
-                  (let ((inline-html-indents (phps-mode-functions--get-inline-html-indentation (buffer-substring-no-properties token-start token-end) inline-html-indent inline-html-tag-level inline-html-curly-bracket-level inline-html-square-bracket-level inline-html-round-bracket-level)))
+                  (let ((inline-html-indents (phps-mode-functions--get-inline-html-indentation (substring string (1- token-start) (1- token-end)) inline-html-indent inline-html-tag-level inline-html-curly-bracket-level inline-html-square-bracket-level inline-html-round-bracket-level)))
 
-                    (when phps-mode-functions-verbose
-                      (message "Received inline html indent: %s from inline HTML: '%s'" inline-html-indents (buffer-substring-no-properties token-start token-end)))
+                    (phps-mode-debug-message
+                      (message "Received inline html indent: %s from inline HTML: '%s'" inline-html-indents (substring string (1- token-start) (1- token-end))))
 
                     ;; Update indexes
                     (setq inline-html-indent (nth 1 inline-html-indents))
@@ -498,7 +504,7 @@
 
                     ;; Does token span several lines and is it not only white-space?
                     (when (> token-end-line-number token-start-line-number)
-                      (unless (string= (string-trim (buffer-substring-no-properties token-start token-end)) "")
+                      (unless (string= (string-trim (substring string (1- token-start) (1- token-end))) "")
                         (let ((token-line-number-diff token-start-line-number))
                           ;; Iterate lines here and add indents
                           (dolist (item (nth 0 inline-html-indents))
@@ -506,7 +512,7 @@
                             (when (or (not (= token-line-number-diff token-start-line-number))
                                       first-token-is-inline-html)
                               (puthash token-line-number-diff (list item 0) line-indents)
-                              (when phps-mode-functions-verbose
+                              (phps-mode-debug-message
                                 (message "Putting indent at line %s to %s from inline HTML" token-line-number-diff item)))
                             (setq token-line-number-diff (1+ token-line-number-diff))))))))
 
@@ -547,7 +553,7 @@
                   (when (and switch-curly-stack
                              (= (1+ curly-bracket-level) (car switch-curly-stack)))
 
-                    (when phps-mode-functions-verbose
+                    (phps-mode-debug-message
                       (message "Ended switch curly stack at %s" curly-bracket-level))
 
                     (setq allow-custom-column-decrement t)
@@ -570,7 +576,7 @@
                   (when (and (equal token 'T_ENDSWITCH)
                              switch-case-alternative-stack)
 
-                    (when phps-mode-functions-verbose
+                    (phps-mode-debug-message
                       (message "Ended alternative switch stack at %s" alternative-control-structure-level))
                     
                     (pop switch-alternative-stack)
@@ -598,7 +604,7 @@
                         ;; Save curly bracket level when switch starts
                         (when (equal after-special-control-structure-token 'T_SWITCH)
 
-                          (when phps-mode-functions-verbose
+                          (phps-mode-debug-message
                             (message "Started switch curly stack at %s" curly-bracket-level))
 
                           (push curly-bracket-level switch-curly-stack))
@@ -611,20 +617,20 @@
                             ;; Save alternative nesting level for switch
                             (when (equal after-special-control-structure-token 'T_SWITCH)
 
-                              (when phps-mode-functions-verbose
+                              (phps-mode-debug-message
                                 (message "Started switch alternative stack at %s" alternative-control-structure-level))
 
                               (push alternative-control-structure-level switch-alternative-stack))
 
                             (setq alternative-control-structure-level (1+ alternative-control-structure-level))
 
-                            (when phps-mode-functions-verbose
+                            (phps-mode-debug-message
                               (message "\nIncreasing alternative-control-structure after %s %s to %s\n" after-special-control-structure-token token alternative-control-structure-level))
                             )
 
                         ;; Don't start inline control structures after a while ($condition); expression
                         (unless (string= token ";")
-                          (when phps-mode-functions-verbose
+                          (phps-mode-debug-message
                             (message "\nStarted inline control-structure after %s at %s\n" after-special-control-structure-token token))
 
                           (setq in-inline-control-structure t)
@@ -651,8 +657,7 @@
                                    (= square-bracket-level (car in-concatenation-square-bracket-level)))
                               (and (string= token"]")
                                    (< square-bracket-level (car in-concatenation-square-bracket-level))))
-                      (when phps-mode-functions-verbose
-                        (message "Ended concatenation"))
+                      (phps-mode-debug-message "Ended concatenation")
                       (pop in-concatenation-round-bracket-level)
                       (pop in-concatenation-square-bracket-level)
                       (unless in-concatenation-round-bracket-level
@@ -661,8 +666,7 @@
                   (when (and (> next-token-start-line-number token-end-line-number)
                              (or (string= token ".")
                                  (string= next-token ".")))
-                    (when phps-mode-functions-verbose
-                      (message "Started concatenation"))
+                    (phps-mode-debug-message "Started concatenation")
                     (setq in-concatenation t)
                     (push round-bracket-level in-concatenation-round-bracket-level)
                     (push square-bracket-level in-concatenation-square-bracket-level)
@@ -706,7 +710,7 @@
                     (when first-token-on-line
                       (setq first-token-is-nesting-decrease t))
 
-                    (when phps-mode-functions-verbose
+                    (phps-mode-debug-message
                       (message "\nDecreasing alternative control structure nesting at %s to %s\n" token alternative-control-structure-level)))
 
                   )
@@ -736,7 +740,7 @@
 
                     ;; NOTE Ending an assignment because of a T_FUNCTION token is to support PSR-2 Closures
                     
-                    (when phps-mode-functions-verbose
+                    (phps-mode-debug-message
                       (message "Ended assignment %s at %s %s" in-assignment-level token next-token))
                     (pop in-assignment-square-bracket-level)
                     (pop in-assignment-round-bracket-level)
@@ -752,7 +756,7 @@
                            (= square-bracket-level (car in-assignment-square-bracket-level))
                            (or (string= next-token ")")
                                (string= next-token "]")))
-                      (when phps-mode-functions-verbose
+                      (phps-mode-debug-message
                         (message "Ended another assignment %s at %s %s" in-assignment-level token next-token))
                       (pop in-assignment-square-bracket-level)
                       (pop in-assignment-round-bracket-level)
@@ -778,8 +782,7 @@
                                (equal token 'T_OR_EQUAL)
                                (equal token 'T_XOR_EQUAL)
                                (equal token 'T_COALESCE_EQUAL)))
-                  (when phps-mode-functions-verbose
-                    (message "Started assignment"))
+                  (phps-mode-debug-message "Started assignment")
                   (setq in-assignment t)
                   (push round-bracket-level in-assignment-round-bracket-level)
                   (push square-bracket-level in-assignment-square-bracket-level)
@@ -795,7 +798,7 @@
                        (not (or
                              (equal next-token 'T_OBJECT_OPERATOR)
                              (equal next-token 'T_PAAMAYIM_NEKUDOTAYIM))))
-                  (when phps-mode-functions-verbose
+                  (phps-mode-debug-message
                     (message "Ended object-operator at %s %s at level %s" token next-token in-object-operator-level))
                   (pop in-object-operator-round-bracket-level)
                   (pop in-object-operator-square-bracket-level)
@@ -808,7 +811,7 @@
                   (when (or (equal next-token 'T_STRING)
                             (string= next-token "("))
                     (progn
-                      (when phps-mode-functions-verbose
+                      (phps-mode-debug-message
                         (message "Started object-operator at %s %s on level %s"  token next-token in-object-operator-level))
                       (push round-bracket-level in-object-operator-round-bracket-level)
                       (push square-bracket-level in-object-operator-square-bracket-level)
@@ -820,7 +823,7 @@
                 (when (and (or (equal token 'T_OBJECT_OPERATOR)
                                (equal token 'T_PAAMAYIM_NEKUDOTAYIM))
                            (equal next-token 'T_STRING))
-                  (when phps-mode-functions-verbose
+                  (phps-mode-debug-message
                     (message "After object-operator at %s level %s"  token in-object-operator-level))
                   (setq after-object-operator t))
 
@@ -829,15 +832,13 @@
                   (when (and (string= token ";")
                              (= curly-bracket-level (car in-return-curly-bracket-level)))
 
-                    (when phps-mode-functions-verbose
-                      (message "Ended return at %s" token))
+                    (phps-mode-debug-message (message "Ended return at %s" token))
                     (pop in-return-curly-bracket-level)
                     (unless in-return-curly-bracket-level
                       (setq in-return nil))
                     (setq in-return-level (1- in-return-level))))
                 (when (equal token 'T_RETURN)
-                  (when phps-mode-functions-verbose
-                    (message "Started return"))
+                  (phps-mode-debug-message "Started return")
                   (setq in-return t)
                   (push curly-bracket-level in-return-curly-bracket-level)
                   (setq in-return-level (1+ in-return-level)))
@@ -851,7 +852,7 @@
                   (when (and switch-case-alternative-stack
                              (= (1- alternative-control-structure-level) (car switch-case-alternative-stack)))
 
-                    (when phps-mode-functions-verbose
+                    (phps-mode-debug-message
                       (message "Found CASE %s vs %s" (1- alternative-control-structure-level) (car switch-case-alternative-stack)))
 
                     (setq alternative-control-structure-level (1- alternative-control-structure-level))
@@ -863,8 +864,7 @@
 
               (when token
 
-                (when phps-mode-functions-verbose
-                  (message "Processing token: %s" token))
+                (phps-mode-debug-message (message "Processing token: %s" token))
                 
                 ;; Calculate nesting
                 (setq nesting-end (+ round-bracket-level square-bracket-level curly-bracket-level alternative-control-structure-level in-assignment-level in-class-declaration-level in-concatenation-level in-return-level in-object-operator-level))
@@ -885,7 +885,7 @@
                     ;; Handle case were nesting has decreased less than next as well
                     (while (and nesting-stack
                                 (<= nesting-end (car (car nesting-stack))))
-                      (when phps-mode-functions-verbose
+                      (phps-mode-debug-message
                         (message "\nPopping %s from nesting-stack since %s is lesser or equal to %s, next value is: %s\n" (car nesting-stack) nesting-end (car (car nesting-stack)) (nth 1 nesting-stack)))
                       (pop nesting-stack)
                       (setq nesting-decrement (1+ nesting-decrement)))
@@ -896,11 +896,11 @@
                           ;; Decrement column
                           (if allow-custom-column-decrement
                               (progn
-                                (when phps-mode-functions-verbose
+                                (phps-mode-debug-message
                                   (message "Doing custom decrement 1 from %s to %s" column-level (- column-level (- nesting-start nesting-end))))
                                 (setq column-level (- column-level (- nesting-start nesting-end)))
                                 (setq allow-custom-column-decrement nil))
-                            (when phps-mode-functions-verbose
+                            (phps-mode-debug-message
                               (message "Doing regular decrement 1 from %s to %s" column-level (1- column-level)))
                             (setq column-level (- column-level nesting-decrement)))
 
@@ -909,14 +909,14 @@
                             (setq column-level 0)))
 
                       (unless temp-post-indent
-                        (when phps-mode-functions-verbose
+                        (phps-mode-debug-message
                           (message "Temporary setting post indent %s" column-level))
                         (setq temp-post-indent column-level))
 
                       ;; Decrement column
                       (if allow-custom-column-decrement
                           (progn
-                            (when phps-mode-functions-verbose
+                            (phps-mode-debug-message
                               (message "Doing custom decrement 2 from %s to %s" column-level (- column-level (- nesting-start nesting-end))))
                             (setq temp-post-indent (- temp-post-indent (- nesting-start nesting-end)))
                             (setq allow-custom-column-decrement nil))
@@ -955,7 +955,7 @@
                         (setq column-level-start inline-html-indent))
 
                       ;; Save line indent
-                      (when phps-mode-functions-verbose
+                      (phps-mode-debug-message
                         (message "Process line ending.	nesting: %s-%s,	line-number: %s-%s,	indent: %s.%s,	token: %s" nesting-start nesting-end token-start-line-number token-end-line-number column-level-start tuning-level token))
 
                       (when (> token-start-line-number 0)
@@ -981,13 +981,10 @@
                                 (setq allow-custom-column-increment nil))
                             (setq column-level (1+ column-level)))
 
-                          (when phps-mode-functions-verbose
+                          (phps-mode-debug-message
                             (message "\nPushing (%s %s %s %s) to nesting-stack since %s is greater than %s or stack is empty\n" nesting-start nesting-end nesting-key token nesting-end (car (cdr (car nesting-stack))))
                             )
-                          (push `(,nesting-stack-end ,nesting-end ,nesting-key ,token) nesting-stack)
-                          (when phps-mode-functions-verbose
-                            ;; (message "New stack %s, start: %s end: %s\n" nesting-stack (car (car nesting-stack)) (car (cdr (car nesting-stack))))
-                            )))
+                          (push `(,nesting-stack-end ,nesting-end ,nesting-key ,token) nesting-stack)))
 
 
                       ;; Does token span over several lines and is it not a INLINE_HTML token?
@@ -1020,7 +1017,7 @@
                       (when (and (> next-token-start-line-number (1+ token-end-line-number))
                                  (not (equal token 'T_CLOSE_TAG)))
 
-                        (when phps-mode-functions-verbose
+                        (phps-mode-debug-message
                           (message "\nDetected token-less lines between %s and %s, should have indent: %s\n" token-end-line-number next-token-start-line-number column-level))
 
                         (let ((token-line-number-diff (1- (- next-token-start-line-number token-end-line-number))))
@@ -1067,99 +1064,122 @@
               (setq token-start-line-number next-token-start-line-number)
               (setq token-end-line-number next-token-end-line-number)
               (setq token-number (1+ token-number))))
-          (setq phps-mode-functions-imenu (nreverse imenu-index))
-          (setq phps-mode-functions-lines-indent line-indents)))
-    (setq phps-mode-functions-imenu nil)
-    (setq phps-mode-functions-lines-indent nil)))
+          (list (nreverse imenu-index) line-indents)))
+    (list nil nil)))
 
-(defun phps-mode-functions-around-newline (old-function &rest arguments)
-  "Call OLD-FUNCTION with ARGUMENTS and then shift indexes if the rest of the line is just white-space."
-  (if (string= major-mode "phps-mode")
-      (progn
-        ;; (message "Running advice")
-        (let ((old-pos (point))
-              (looking-at-whitespace (looking-at-p "[\ \n\t\r]*\n"))
-              (old-line-number (line-number-at-pos)))
-
-          (if looking-at-whitespace
-              (progn
-                ;; (message "Looking at white-space")
-
-                ;; Temporarily disable change detection to not trigger incremental lexer
-
-                ;; We move indexes before calling old-function
-                ;; because old-function could be `newline-and-indent'
-                ;; and this would trigger `indent-line'
-                ;; which will trigger processing buffer
-                (phps-mode-lexer-move-tokens old-pos 1)
-                (phps-mode-lexer-move-states old-pos 1)
-                (phps-mode-functions-move-imenu-index old-pos 1)
-                (phps-mode-functions-move-lines-indent old-line-number 1)
-
-                (setq phps-mode-functions-allow-after-change nil)
-                (apply old-function arguments)
-                (setq phps-mode-functions-allow-after-change t))
-
-            (apply old-function arguments)
-            ;; (message "Not looking at white-space")
-            )))
-    (apply old-function arguments)))
-
+;; TODO newline with electric mode not working
 (defun phps-mode-functions-indent-line ()
   "Indent line."
+  (phps-mode-runtime-debug-message "Indent line")
+  (phps-mode-debug-message (message "Indent line"))
   (phps-mode-functions-process-current-buffer)
-  (when phps-mode-functions-lines-indent
-    (let ((indent (gethash (line-number-at-pos (point)) phps-mode-functions-lines-indent)))
-      (when indent
-        ;; (message "indent: %s %s %s" indent (car indent) (car (cdr indent)))
-        (let ((indent-sum (+ (* (car indent) tab-width) (car (cdr indent))))
-              (current-indentation (current-indentation))
-              (line-start (line-beginning-position)))
+  (if phps-mode-functions-lines-indent
+      (let ((line-number (line-number-at-pos (point))))
+        (phps-mode-runtime-debug-message "Found lines indent index, indenting..")
+        (phps-mode-debug-message (message "Found lines indent index, indenting.."))
+        (let ((indent (gethash line-number phps-mode-functions-lines-indent)))
+          (if indent
+              (progn
+                (phps-mode-runtime-debug-message (format "Found indent for line number %s = %s" line-number indent))
+                (let ((indent-sum (+ (* (car indent) tab-width) (car (cdr indent))))
+                      (old-indentation (current-indentation))
+                      (line-start (line-beginning-position)))
 
-          (unless current-indentation
-            (setq current-indentation 0))
+                  (unless old-indentation
+                    (setq old-indentation 0))
 
-          ;; Only continue if current indentation is wrong
-          (unless (equal indent-sum current-indentation)
-            (let ((indent-diff (- indent-sum current-indentation)))
-              ;; (message "Indenting to %s current column %s" indent-sum (current-indentation))
-              ;; (message "inside scripting, start: %s, end: %s, indenting to column %s " start end indent-level)
+                  ;; Only continue if current indentation is wrong
+                  (if (not (equal indent-sum old-indentation))
+                      (progn
+                        (phps-mode-runtime-debug-message (format "Indenting line since it's not already indented correctly %s vs %s" old-indentation indent-sum))
 
-              (indent-line-to indent-sum)
+                        (setq-local phps-mode-functions-allow-after-change nil)
+                        (indent-line-to indent-sum)
+                        (setq-local phps-mode-functions-allow-after-change t)
 
+                        (let ((indent-diff (- (current-indentation) old-indentation)))
 
-              ;; When indent is changed the trailing tokens and states just need to adjust their positions, this will improve speed of indent-region a lot
-              (phps-mode-lexer-move-tokens line-start indent-diff)
-              (phps-mode-lexer-move-states line-start indent-diff)
-              (phps-mode-functions-move-imenu-index line-start indent-diff)
+                          (phps-mode-runtime-debug-message (format "Moving indexes by %s points from %s" indent-diff line-start))
+                          (phps-mode-runtime-debug-message (format "Lexer tokens before move: %s" phps-mode-lexer-tokens))
 
-              ;; (message "Diff after indent at %s is %s" line-start indent-diff)
+                          ;; When indent is changed the trailing tokens and states just need to adjust their positions, this will improve speed of indent-region a lot
+                          (phps-mode-lexer-move-tokens line-start indent-diff)
+                          (phps-mode-lexer-move-states line-start indent-diff)
+                          (phps-mode-functions-move-imenu-index line-start indent-diff)
 
-              ;; Reset change flag
-              (phps-mode-functions-reset-buffer-changes-start)
+                          (phps-mode-runtime-debug-message (format "Lexer tokens after move: %s" phps-mode-lexer-tokens))
+                          (phps-mode-debug-message
+                           (message "Lexer tokens after move: %s" phps-mode-lexer-tokens)
+                           (message "Lexer states after move: %s" phps-mode-lexer-states))
 
-              )))))))
+                          ;; Reset change flag
+                          (phps-mode-functions--reset-changes)
+                          (phps-mode-functions--cancel-idle-timer)
 
-;; TODO Consider how indentation and imenu-index should be affected by this
-(defun phps-mode-functions-after-change (start _stop _length)
-  "Track buffer change from START to STOP with length LENGTH."
-  (when phps-mode-functions-allow-after-change
+                          ;; Update last buffer states
+                          (setq-local phps-mode-lexer-buffer-length (1- (point-max)))
+                          (setq-local phps-mode-lexer-buffer-contents (buffer-substring-no-properties (point-min) (point-max)))
 
-    ;; If we haven't scheduled incremental lexer before - do it
-    (when (and (not phps-mode-functions-buffer-changes-start)
-               (boundp 'phps-mode-idle-interval)
-               phps-mode-idle-interval)
-      ;; (message "Enqueued incremental lexer")
-      (run-with-idle-timer phps-mode-idle-interval nil #'phps-mode-lexer-run-incremental))
+                          (phps-mode-runtime-debug-message (format "buffer contents:\n%s" (buffer-substring-no-properties (point-min) (point-max))))
+                          ))
+                    (phps-mode-runtime-debug-message "Skipping indentation of line since it's already indented correctly"))))
+            (phps-mode-runtime-debug-message (format "Found no indent for line number %s" line-number)))))
+    (phps-mode-runtime-debug-message "Did not find lines indent index, skipping indenting..")
+    (phps-mode-debug-message "Did not find lines indent index, skipping indenting..")
+    (message "Did not find lines indent index, skipping indenting..")))
 
-    ;; When point of change is not set or when start of new changes precedes old change - update the point
-    (when (or (not phps-mode-functions-buffer-changes-start)
-              (< start phps-mode-functions-buffer-changes-start))
-      (setq phps-mode-functions-buffer-changes-start start)
-      ;; (message "Setting start of changes to: %s-%s" phps-mode-functions-buffer-changes-start stop))
+(defun phps-mode-functions--reset-changes ()
+  "Reset change stack."
+  (setq-local phps-mode-functions-buffer-changes nil))
 
-      ;; (message "phps-mode-functions-after-change %s %s %s" start stop length)
-      )))
+(defun phps-mode-functions--get-changes ()
+  "Get change stack."
+  phps-mode-functions-buffer-changes)
+
+(defun phps-mode-functions--cancel-idle-timer ()
+  "Cancel idle timer."
+  (phps-mode-runtime-debug-message "Cancelled idle timer")
+  (phps-mode-debug-message (message "Cancelled idle timer"))
+  (when phps-mode-functions-idle-timer
+    (cancel-timer phps-mode-functions-idle-timer)
+    (setq-local phps-mode-functions-idle-timer nil)))
+
+(defun phps-mode-functions--start-idle-timer ()
+  "Start idle timer."
+  (phps-mode-runtime-debug-message "Enqueued idle timer")
+  (phps-mode-debug-message (message "Enqueued idle timer"))
+  (when (boundp 'phps-mode-idle-interval)
+    (setq-local phps-mode-functions-idle-timer (run-with-idle-timer phps-mode-idle-interval nil #'phps-mode-lexer-run-incremental (current-buffer)))))
+
+(defun phps-mode-functions-after-change (start stop length)
+  "Track buffer change from START to STOP with LENGTH."
+  (phps-mode-runtime-debug-message
+   (format "After change %s - %s, length: %s" start stop length))
+  (phps-mode-debug-message
+   (message "After change %s - %s, length: %s" start stop length))
+
+  (if phps-mode-functions-allow-after-change
+      (progn
+        (phps-mode-debug-message (message "After change registration is enabled"))
+        (phps-mode-runtime-debug-message "After change registration is enabled")
+        
+        ;; If we haven't scheduled incremental lexer before - do it
+        (when (and (boundp 'phps-mode-idle-interval)
+                   phps-mode-idle-interval
+                   (not phps-mode-functions-idle-timer))
+
+          ;; Reset imenu
+          (when (and (boundp 'imenu--index-alist)
+                     imenu--index-alist)
+            (setq-local imenu--index-alist nil)
+            (phps-mode-debug-message (message "Cleared Imenu index")))
+
+          (phps-mode-functions--start-idle-timer))
+
+        ;; Save change in changes stack
+        (push `(,start ,stop ,length ,(point-max) ,(buffer-substring-no-properties (point-min) (point-max))) phps-mode-functions-buffer-changes))
+    (phps-mode-debug-message (message "After change registration is disabled"))
+    (phps-mode-runtime-debug-message "After change registration is disabled")))
 
 (defun phps-mode-functions-imenu-create-index ()
   "Get Imenu for current buffer."
