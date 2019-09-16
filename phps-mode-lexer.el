@@ -201,8 +201,7 @@
     ;; (message "Going back to poppped state %s" old-state)
     (if old-state
         (phps-mode-lexer-BEGIN old-state)
-      (display-warning "phps-mode" "PHPs Lexer Error - Going back to nil?"))
-    ))
+      (display-warning 'phps-mode "PHPs Lexer Error - Going back to nil?"))))
 
 (defun phps-mode-lexer-MOVE_FORWARD (position)
   "Move forward to POSITION."
@@ -1354,7 +1353,7 @@
                        (phps-mode-lexer-RETURN_TOKEN 'T_DOC_COMMENT start (match-end 0))
                      (phps-mode-lexer-RETURN_TOKEN 'T_COMMENT start (match-end 0)))
                  (progn
-                   (signal 'warning (format "PHPs Lexer Error - Unterminated comment starting at %s" (point)))
+                   (display-warning 'phps-mode (format "PHPs Lexer Error - Unterminated comment starting at %s" (point)))
                    (phps-mode-lexer-MOVE_FORWARD (point-max))))))))
 
         (phps-mode-lexer-re2c-rule
@@ -1433,7 +1432,7 @@
                            (phps-mode-lexer-RETURN_TOKEN "\"" start (1+ start))
                            (phps-mode-lexer-RETURN_TOKEN 'T_ENCAPSED_AND_WHITESPACE (1+ start) string-start))))
                    (progn
-                     (signal 'warning (format "Found no ending of quote at %s" (point)))
+                     (display-warning 'phps-mode (format "Found no ending of quote at %s" (point)))
                      (phps-mode-lexer-MOVE_FORWARD (point-max))
                      (setq open-quote nil))))))))
 
@@ -1525,7 +1524,7 @@
                          ;; (message "Found end of quote at %s-%s, moving ahead after '%s'" start end (buffer-substring-no-properties start end))
                          )))
                  (progn
-                   (signal 'warning (format "Found no ending of double quoted region starting at %s" start))
+                   (display-warning 'phps-mode (format "Found no ending of double quoted region starting at %s" start))
                    (phps-mode-lexer-MOVE_FORWARD (point-max))))))))
 
         (phps-mode-lexer-re2c-rule
@@ -1538,7 +1537,7 @@
                    (phps-mode-lexer-RETURN_TOKEN 'T_CONSTANT_ENCAPSED_STRING old-start start)
                    )
                (progn
-                 (signal 'warning (format "Found no ending of backquoted string starting at %s" (point)))
+                 (display-warning 'phps-mode (format "Found no ending of backquoted string starting at %s" (point)))
                  (phps-mode-lexer-MOVE_FORWARD (point-max)))))))
 
         (phps-mode-lexer-re2c-rule
@@ -1567,7 +1566,7 @@
 
                     ))
                (progn
-                 (signal 'warning (format "Found no ending of heredoc at %s" (point)))
+                 (display-warning 'phps-mode (format "Found no ending of heredoc at %s" (point)))
                  (phps-mode-lexer-MOVE_FORWARD (point-max)))))))
 
         (phps-mode-lexer-re2c-rule
@@ -1584,13 +1583,13 @@
                    (phps-mode-lexer-RETURN_TOKEN 'T_ENCAPSED_AND_WHITESPACE old-start start)
                    )
                (progn
-                 (signal 'warning (format "Found no ending of newdoc starting at %s" (point)))
+                 (display-warning 'phps-mode (format "Found no ending of newdoc starting at %s" (point)))
                  (phps-mode-lexer-MOVE_FORWARD (point-max)))))))
 
         (phps-mode-lexer-re2c-rule
          (and (or ST_IN_SCRIPTING ST_VAR_OFFSET) (looking-at phps-mode-lexer-ANY_CHAR))
          (lambda()
-           (signal 'warning (format "Unexpected character at %s" (point)))
+           (display-warning 'phps-mode (format "Unexpected character at %s" (point)))
            (phps-mode-lexer-MOVE_FORWARD (point-max))))
 
         (phps-mode-lexer-re2c-execute)))))
