@@ -1354,8 +1354,7 @@
                        (phps-mode-lexer-RETURN_TOKEN 'T_DOC_COMMENT start (match-end 0))
                      (phps-mode-lexer-RETURN_TOKEN 'T_COMMENT start (match-end 0)))
                  (progn
-                   (display-warning "phps-mode" "PHPs Lexer Error - Unterminated comment starting at %s" start)
-                   (phps-mode-lexer-RETURN_TOKEN 'T_ERROR start (point-max))
+                   (signal 'warning (format "PHPs Lexer Error - Unterminated comment starting at %s" (point)))
                    (phps-mode-lexer-MOVE_FORWARD (point-max))))))))
 
         (phps-mode-lexer-re2c-rule
@@ -1434,8 +1433,7 @@
                            (phps-mode-lexer-RETURN_TOKEN "\"" start (1+ start))
                            (phps-mode-lexer-RETURN_TOKEN 'T_ENCAPSED_AND_WHITESPACE (1+ start) string-start))))
                    (progn
-                     ;; (message "Found no ending quote, skipping to end")
-                     (phps-mode-lexer-RETURN_TOKEN 'T_ERROR start (point-max))
+                     (signal 'warning (format "Found no ending of quote at %s" (point)))
                      (phps-mode-lexer-MOVE_FORWARD (point-max))
                      (setq open-quote nil))))))))
 
@@ -1527,8 +1525,7 @@
                          ;; (message "Found end of quote at %s-%s, moving ahead after '%s'" start end (buffer-substring-no-properties start end))
                          )))
                  (progn
-                   ;; "Found no end of double-quoted region
-                   (phps-mode-lexer-RETURN_TOKEN 'T_ERROR start (point-max))
+                   (signal 'warning (format "Found no ending of double quoted region starting at %s" start))
                    (phps-mode-lexer-MOVE_FORWARD (point-max))))))))
 
         (phps-mode-lexer-re2c-rule
@@ -1541,8 +1538,7 @@
                    (phps-mode-lexer-RETURN_TOKEN 'T_CONSTANT_ENCAPSED_STRING old-start start)
                    )
                (progn
-                 ;; (message "Found no end of backquote.. skipping to end from %s" (buffer-substring-no-properties (point) (point-max)))
-                 (phps-mode-lexer-RETURN_TOKEN 'T_ERROR old-start (point-max))
+                 (signal 'warning (format "Found no ending of backquoted string starting at %s" (point)))
                  (phps-mode-lexer-MOVE_FORWARD (point-max)))))))
 
         (phps-mode-lexer-re2c-rule
@@ -1571,10 +1567,8 @@
 
                     ))
                (progn
-                 ;; (message "Found no ending of heredoc at %s '%s'" heredoc_label (buffer-substring-no-properties (point) (point-max)))
-                 (phps-mode-lexer-RETURN_TOKEN 'T_ERROR old-start (point-max))
-                 (phps-mode-lexer-MOVE_FORWARD (point-max))
-                 )))))
+                 (signal 'warning (format "Found no ending of heredoc at %s" (point)))
+                 (phps-mode-lexer-MOVE_FORWARD (point-max)))))))
 
         (phps-mode-lexer-re2c-rule
          (and ST_NOWDOC (looking-at phps-mode-lexer-ANY_CHAR))
@@ -1590,17 +1584,13 @@
                    (phps-mode-lexer-RETURN_TOKEN 'T_ENCAPSED_AND_WHITESPACE old-start start)
                    )
                (progn
-                 ;; (message "Found no ending of nowdoc at %s '%s'" heredoc_label (buffer-substring-no-properties (point) (point-max)))
-                 (phps-mode-lexer-RETURN_TOKEN 'T_ERROR old-start (point-max))
-                 (phps-mode-lexer-MOVE_FORWARD (point-max))
-                 )))))
+                 (signal 'warning (format "Found no ending of newdoc starting at %s" (point)))
+                 (phps-mode-lexer-MOVE_FORWARD (point-max)))))))
 
         (phps-mode-lexer-re2c-rule
          (and (or ST_IN_SCRIPTING ST_VAR_OFFSET) (looking-at phps-mode-lexer-ANY_CHAR))
          (lambda()
-           ;; Unexpected character
-           ;; (message "Unexpected character '%s'" (buffer-substring-no-properties (match-beginning 0) (match-end 0)))
-           (phps-mode-lexer-RETURN_TOKEN 'T_ERROR (match-beginning 0) (point-max))
+           (signal 'warning (format "Unexpected character at %s" (point)))
            (phps-mode-lexer-MOVE_FORWARD (point-max))))
 
         (phps-mode-lexer-re2c-execute)))))
@@ -1756,9 +1746,11 @@
                             (tail-tokens '())
                             (buffer-length-delta nil)
                             (incremental-start 0)
+                            (incremental-stop change-stop)
                             (change-length (- change-stop change-start))
                             (tail-boundary change-stop)
-                            (appended-tokens nil))
+                            (appended-tokens nil)
+                            (error-occured nil))
 
                         (phps-mode-debug-message
                          (message "Change length: %s" change-length)
@@ -1780,15 +1772,19 @@
                         (dolist (token old-tokens)
                           (let ((start (car (cdr token)))
                                 (end (cdr (cdr token))))
-                            (when (<= end change-start)
-                              (if (= end change-start)
-                                  (setq incremental-start start)
-                                (push token head-tokens)
-                                (setq incremental-start (1+ end))))))
+                            (if (<= end change-start)
+                                (if (= end change-start)
+                                    (setq incremental-start start)
+                                  (push token head-tokens)
+                                  (setq incremental-start (1+ end)))
+                              (when (<= start change-start)
+                                (setq incremental-stop end)
+                                (setq incremental-start start)))))
                         (setq head-tokens (nreverse head-tokens))
                         (phps-mode-debug-message
                          (message "Head tokens: %s" head-tokens)
                          (message "Incremental start: %s" incremental-start)
+                         (message "Incremental stop: %s" incremental-stop)
                          (message "Buffer length old: %s" buffer-length-old)
                          (message "Buffer contents old: %s" buffer-contents-old))
 
@@ -1798,6 +1794,8 @@
                         (cond
                          ((= change-length buffer-length-delta)
                           (phps-mode-debug-message (message "Flag change as insert"))
+                          (unless (= change-stop incremental-stop)
+                            (setq incremental-stop (+ incremental-stop (1- buffer-length-delta))))
                           (setq tail-boundary incremental-start))
                          ((and (= change-length 0)
                                (< buffer-length-delta 0))
@@ -1814,13 +1812,14 @@
 
                         (phps-mode-debug-message
                          (message "Incremental start: %s" incremental-start)
+                         (message "Incremental stop: %s" incremental-stop)
                          (message "Buffer length new: %s" buffer-length-new)
                          (message "Buffer length old: %s" buffer-length-old)
                          (message "Buffer length delta: %s" buffer-length-delta)
                          (message "Buffer contents new: %s" buffer-contents-new)
                          (message "Tail boundary: %s" tail-boundary)
                          (message "Tail tokens: %s" tail-tokens)
-                         (message "From region: %s - %s" incremental-start change-stop))
+                         (message "From region: %s - %s" incremental-start incremental-stop))
 
                         ;; Did we find a start for the incremental process?
                         (if (and
@@ -1873,7 +1872,7 @@
                                         (goto-char (point-max))
                                         (insert-char 10 (- incremental-start 2))
                                         (goto-char (point-max))
-                                        (insert (substring buffer-contents-new (- incremental-start 2) change-stop))
+                                        (insert (substring buffer-contents-new (- incremental-start 2) incremental-stop))
 
                                         ;; Rewind lexer state here
                                         (setq-local phps-mode-lexer-states head-states)
@@ -1886,9 +1885,9 @@
 
                                         (phps-mode-debug-message
                                          (message "Incremental buffer contents: \n%s" (buffer-substring-no-properties (point-min) (point-max)))
-                                         (message "Incremental buffer lexer region (%s-%s): \n%s" (1- incremental-start) (1+ change-stop) (buffer-substring-no-properties (1- incremental-start) (1+ change-stop))))
+                                         (message "Incremental buffer lexer region (%s-%s): \n%s" (1- incremental-start) (1+ incremental-stop) (buffer-substring-no-properties (1- incremental-start) (1+ incremental-stop))))
 
-                                        (setq incremental-tokens (semantic-lex (1- incremental-start) (1+ change-stop)))
+                                        (setq incremental-tokens (semantic-lex (1- incremental-start) (1+ incremental-stop)))
                                         (setq appended-tokens (append head-tokens incremental-tokens))
                                         (setq incremental-states phps-mode-lexer-states)
 
@@ -1941,7 +1940,7 @@
 
                                       ;; Lex rest of buffer
                                       (setq head-tokens appended-tokens)
-                                      (setq incremental-tokens (semantic-lex change-stop (point-max)))
+                                      (setq incremental-tokens (semantic-lex incremental-stop (point-max)))
                                       (setq appended-tokens (append head-tokens incremental-tokens))
                                       (phps-mode-debug-message (message "New states from full lex are: %s" phps-mode-lexer-states))
                                       (phps-mode-debug-message (message "New tokens from full lex are: %s" appended-tokens)))
