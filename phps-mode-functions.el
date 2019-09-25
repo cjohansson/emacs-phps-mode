@@ -252,6 +252,7 @@
               (in-heredoc-ended-this-line nil)
               (in-inline-control-structure nil)
               (inline-html-indent 0)
+              (inline-html-indent-start 0)
               (inline-html-tag-level 0)
               (inline-html-curly-bracket-level 0)
               (inline-html-square-bracket-level 0)
@@ -278,7 +279,7 @@
               (nesting-start 0)
               (nesting-end 0)
               (last-line-number 0)
-              (first-token-on-line nil)
+              (first-token-on-line t)
               (line-indents (make-hash-table :test 'equal))
               (first-token-is-nesting-decrease nil)
               (token-number 1)
@@ -502,8 +503,13 @@
                     (setq inline-html-square-bracket-level (nth 4 inline-html-indents))
                     (setq inline-html-round-bracket-level (nth 5 inline-html-indents))
 
-                    ;; Does token span several lines and is it not only white-space?
-                    (when (> token-end-line-number token-start-line-number)
+                    (phps-mode-debug-message
+                     (message "First token is inline html: %s" first-token-is-inline-html))
+
+                    ;; Does inline html span several lines or starts a new line?
+                    (when (or (> token-end-line-number token-start-line-number)
+                              first-token-is-inline-html)
+                      ;; Token does not only contain white-space?
                       (unless (string= (string-trim (substring string (1- token-start) (1- token-end))) "")
                         (let ((token-line-number-diff token-start-line-number))
                           ;; Iterate lines here and add indents
@@ -511,9 +517,10 @@
                             ;; Skip first line unless first token on line was inline-html
                             (when (or (not (= token-line-number-diff token-start-line-number))
                                       first-token-is-inline-html)
-                              (puthash token-line-number-diff (list item 0) line-indents)
-                              (phps-mode-debug-message
-                                (message "Putting indent at line %s to %s from inline HTML" token-line-number-diff item)))
+                              (unless (gethash token-line-number-diff line-indents)
+                                (puthash token-line-number-diff (list item 0) line-indents)
+                                (phps-mode-debug-message
+                                 (message "Putting indent at line %s to %s from inline HTML" token-line-number-diff item))))
                             (setq token-line-number-diff (1+ token-line-number-diff))))))))
 
                 ;; Keep track of when we are inside a class definition
@@ -862,6 +869,7 @@
 
                   (push alternative-control-structure-level switch-case-alternative-stack)))
 
+              ;; Do we have one token look-ahead?
               (when token
 
                 (phps-mode-debug-message (message "Processing token: %s" token))
@@ -930,8 +938,6 @@
 
                 ;; Are we on a new line or is it the last token of the buffer?
                 (if (> next-token-start-line-number token-start-line-number)
-
-                    ;; Line logic
                     (progn
 
 
@@ -943,7 +949,6 @@
                         (setq column-level-start temp-pre-indent)
                         (setq temp-pre-indent nil))
 
-
                       ;; HEREDOC lines should have zero indent
                       (when (or (and in-heredoc
                                      (not in-heredoc-started-this-line))
@@ -952,20 +957,26 @@
 
                       ;; Inline HTML should have zero indent
                       (when first-token-is-inline-html
-                        (setq column-level-start inline-html-indent))
+                        (phps-mode-debug-message
+                         (message "Setting column-level to inline HTML indent: %s" inline-html-indent-start))
+                        (setq column-level-start inline-html-indent-start))
 
                       ;; Save line indent
                       (phps-mode-debug-message
                         (message "Process line ending.	nesting: %s-%s,	line-number: %s-%s,	indent: %s.%s,	token: %s" nesting-start nesting-end token-start-line-number token-end-line-number column-level-start tuning-level token))
 
-                      (when (> token-start-line-number 0)
+                      (when (and (> token-start-line-number 0)
+                                 (not first-token-is-inline-html)
+                                 (or (not (equal token 'T_INLINE_HTML))
+                                     (= token-start-line-number token-end-line-number)))
+                        (phps-mode-debug-message
+                         (message "Putting indent on line %s to %s at #C" token-start-line-number column-level-start))
                         (puthash token-start-line-number `(,column-level-start ,tuning-level) line-indents))
 
                       ;; Support trailing indent decrements
                       (when temp-post-indent
                         (setq column-level temp-post-indent)
                         (setq temp-post-indent nil))
-
 
                       ;; Increase indentation
                       (when (and (> nesting-end 0)
@@ -1006,6 +1017,8 @@
 
                           (let ((token-line-number-diff (1- (- token-end-line-number token-start-line-number))))
                             (while (>= token-line-number-diff 0)
+                              (phps-mode-debug-message
+                               (message "Putting indent on line %s to %s at #A" (- token-end-line-number token-line-number-diff) column-level-end))
                               (puthash (- token-end-line-number token-line-number-diff) `(,column-level-end ,tuning-level) line-indents)
                               ;; (message "Saved line %s indent %s %s" (- token-end-line-number token-line-number-diff) column-level tuning-level)
                               (setq token-line-number-diff (1- token-line-number-diff))))
@@ -1021,9 +1034,10 @@
                           (message "\nDetected token-less lines between %s and %s, should have indent: %s\n" token-end-line-number next-token-start-line-number column-level))
 
                         (let ((token-line-number-diff (1- (- next-token-start-line-number token-end-line-number))))
-                          (while (>= token-line-number-diff 0)
+                          (while (> token-line-number-diff 0)
+                            (phps-mode-debug-message
+                             (message "Putting indent at line %s indent %s at #B" (- next-token-start-line-number token-line-number-diff) column-level))
                             (puthash (- next-token-start-line-number token-line-number-diff) `(,column-level ,tuning-level) line-indents)
-                            ;; (message "Saved line %s indent %s %s" (- token-end-line-number token-line-number-diff) column-level tuning-level)
                             (setq token-line-number-diff (1- token-line-number-diff)))))
 
 
@@ -1032,6 +1046,7 @@
 
                       ;; Set initial values for tracking first token
                       (when (> token-start-line-number last-line-number)
+                        (setq inline-html-indent-start inline-html-indent)
                         (setq first-token-on-line t)
                         (setq first-token-is-nesting-decrease nil)
                         (setq first-token-is-inline-html nil)
@@ -1052,6 +1067,8 @@
 
                     (let ((token-line-number-diff (1- (- token-end-line-number token-start-line-number))))
                       (while (>= token-line-number-diff 0)
+                        (phps-mode-debug-message
+                         (message "Putting indent on line %s to %s at #E" (- token-end-line-number token-line-number-diff) column-level))
                         (puthash (- token-end-line-number token-line-number-diff) `(,column-level ,tuning-level) line-indents)
                         (setq token-line-number-diff (1- token-line-number-diff))))
                     (setq tuning-level 0))))

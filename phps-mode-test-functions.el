@@ -844,6 +844,13 @@
    (let ((buffer-contents (buffer-substring-no-properties (point-min) (point-max))))
      (should (equal buffer-contents "<?php\nif (empty($this->var)):\n    $this->var = 'abc123';\nendif;"))))
 
+  (phps-mode-test-with-buffer
+   "<html>\n<head>\n<title><?php echo $title; ?></title>\n</head>\n<body>\n<div class=\"contents\"><?php echo $body; ?></div>\n</body>\n</html>"
+   "A mixed HTML and PHP file, each PHP command is inside HTML markup"
+   (indent-region (point-min) (point-max))
+   (let ((buffer-contents (buffer-substring-no-properties (point-min) (point-max))))
+     (should (equal buffer-contents "<html>\n    <head>\n        <title><?php echo $title; ?></title>\n    </head>\n    <body>\n        <div class=\"contents\"><?php echo $body; ?></div>\n    </body>\n</html>"))))
+
   )
 
 (defun phps-mode-test-functions-imenu ()
@@ -1002,7 +1009,7 @@
                    0
                    0
                    ))))
-  
+
   )
 
 (defun phps-mode-test-functions ()
