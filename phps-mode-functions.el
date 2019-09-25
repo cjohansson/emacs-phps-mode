@@ -257,6 +257,7 @@
               (inline-html-curly-bracket-level 0)
               (inline-html-square-bracket-level 0)
               (inline-html-round-bracket-level 0)
+              (inline-html-is-whitespace nil)
               (first-token-is-inline-html nil)
               (after-special-control-structure nil)
               (after-special-control-structure-token nil)
@@ -488,6 +489,9 @@
                 ;; Handle INLINE_HTML blocks
                 (when (equal token 'T_INLINE_HTML)
 
+                  ;; Flag whether inline-html is whitespace or not
+                  (setq inline-html-is-whitespace (string= (string-trim (substring string (1- token-start) (1- token-end))) ""))
+
                   (when first-token-on-line
                     (setq first-token-is-inline-html t))
 
@@ -510,17 +514,16 @@
                     (when (or (> token-end-line-number token-start-line-number)
                               first-token-is-inline-html)
                       ;; Token does not only contain white-space?
-                      (unless (string= (string-trim (substring string (1- token-start) (1- token-end))) "")
+                      (unless inline-html-is-whitespace
                         (let ((token-line-number-diff token-start-line-number))
                           ;; Iterate lines here and add indents
                           (dolist (item (nth 0 inline-html-indents))
                             ;; Skip first line unless first token on line was inline-html
                             (when (or (not (= token-line-number-diff token-start-line-number))
                                       first-token-is-inline-html)
-                              (unless (gethash token-line-number-diff line-indents)
-                                (puthash token-line-number-diff (list item 0) line-indents)
-                                (phps-mode-debug-message
-                                 (message "Putting indent at line %s to %s from inline HTML" token-line-number-diff item))))
+                              (puthash token-line-number-diff (list item 0) line-indents)
+                              (phps-mode-debug-message
+                               (message "Putting indent at line %s to %s from inline HTML" token-line-number-diff item)))
                             (setq token-line-number-diff (1+ token-line-number-diff))))))))
 
                 ;; Keep track of when we are inside a class definition
@@ -968,6 +971,7 @@
                       (when (and (> token-start-line-number 0)
                                  (not first-token-is-inline-html)
                                  (or (not (equal token 'T_INLINE_HTML))
+                                     inline-html-is-whitespace
                                      (= token-start-line-number token-end-line-number)))
                         (phps-mode-debug-message
                          (message "Putting indent on line %s to %s at #C" token-start-line-number column-level-start))
