@@ -1062,7 +1062,8 @@
                         ;; When line ends with multi-line inline-html flag first token as inline-html
                         (when (and
                                (equal token 'T_INLINE_HTML)
-                               (> token-end-line-number token-start))
+                               (not inline-html-is-whitespace)
+                               (> token-end-line-number token-start-line-number))
                           (phps-mode-debug-message
                            (message "Setting first-token-is-inline-html to true since last token on line is inline-html and spans several lines"))
                           (setq first-token-is-inline-html t))))
