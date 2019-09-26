@@ -274,7 +274,7 @@
     "<html>\n    <head>\n        <?php echo $title; ?>\n    </head>\n    <body>\n    <?php\n\n    if ($myTest) {\n        doSomething();\n    }\n\n    ?>\n    </body>\n</html>"
     "A mixed HTML and PHP file."
     ;; (message "Indent: %s" (phps-mode-test-hash-to-list (phps-mode-functions-get-lines-indent)))
-    (should (equal '((1 (0 0)) (2 (1 0)) (3 (0 0)) (4 (1 0)) (5 (1 0)) (6 (0 0)) (7 (0 0)) (8 (0 0)) (9 (1 0)) (10 (0 0)) (11 (0 0)) (12 (0 0)) (13 (1 0)) (14 (0 0))) (phps-mode-test-hash-to-list (phps-mode-functions-get-lines-indent)))))
+    (should (equal '((1 (0 0)) (2 (1 0)) (3 (2 0)) (4 (1 0)) (5 (1 0)) (6 (2 0)) (7 (0 0)) (8 (0 0)) (9 (1 0)) (10 (0 0)) (11 (0 0)) (12 (0 0)) (13 (1 0)) (14 (0 0))) (phps-mode-test-hash-to-list (phps-mode-functions-get-lines-indent)))))
    )
 
   )
@@ -844,6 +844,13 @@
    (let ((buffer-contents (buffer-substring-no-properties (point-min) (point-max))))
      (should (equal buffer-contents "<?php\nif (empty($this->var)):\n    $this->var = 'abc123';\nendif;"))))
 
+  (phps-mode-test-with-buffer
+   "<html>\n<head>\n<title><?php echo $title; ?></title>\n</head>\n<body>\n<div class=\"contents\"><?php echo $body; ?></div>\n</body>\n</html>"
+   "A mixed HTML and PHP file, each PHP command is inside HTML markup"
+   (indent-region (point-min) (point-max))
+   (let ((buffer-contents (buffer-substring-no-properties (point-min) (point-max))))
+     (should (equal buffer-contents "<html>\n    <head>\n        <title><?php echo $title; ?></title>\n    </head>\n    <body>\n        <div class=\"contents\"><?php echo $body; ?></div>\n    </body>\n</html>"))))
+
   )
 
 (defun phps-mode-test-functions-imenu ()
@@ -1002,7 +1009,7 @@
                    0
                    0
                    ))))
-  
+
   )
 
 (defun phps-mode-test-functions ()
