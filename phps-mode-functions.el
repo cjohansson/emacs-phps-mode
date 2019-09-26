@@ -513,6 +513,7 @@
                     ;; Does inline html span several lines or starts a new line?
                     (when (or (> token-end-line-number token-start-line-number)
                               first-token-is-inline-html)
+
                       ;; Token does not only contain white-space?
                       (unless inline-html-is-whitespace
                         (let ((token-line-number-diff token-start-line-number))
@@ -969,10 +970,9 @@
                         (message "Process line ending.	nesting: %s-%s,	line-number: %s-%s,	indent: %s.%s,	token: %s" nesting-start nesting-end token-start-line-number token-end-line-number column-level-start tuning-level token))
 
                       (when (and (> token-start-line-number 0)
-                                 (not first-token-is-inline-html)
-                                 (or (not (equal token 'T_INLINE_HTML))
-                                     inline-html-is-whitespace
-                                     (= token-start-line-number token-end-line-number)))
+                                 (or
+                                  (not first-token-is-inline-html)
+                                  inline-html-is-whitespace))
                         (phps-mode-debug-message
                          (message "Putting indent on line %s to %s at #C" token-start-line-number column-level-start))
                         (puthash token-start-line-number `(,column-level-start ,tuning-level) line-indents))
@@ -1057,7 +1057,15 @@
                         (setq in-class-declaration-level 0)
                         (setq class-declaration-started-this-line nil)
                         (setq in-heredoc-started-this-line nil)
-                        (setq special-control-structure-started-this-line nil)))
+                        (setq special-control-structure-started-this-line nil)
+
+                        ;; When line ends with multi-line inline-html flag first token as inline-html
+                        (when (and
+                               (equal token 'T_INLINE_HTML)
+                               (> token-end-line-number token-start))
+                          (phps-mode-debug-message
+                           (message "Setting first-token-is-inline-html to true since last token on line is inline-html and spans several lines"))
+                          (setq first-token-is-inline-html t))))
 
                   ;; Current token is not first if it's not <?php or <?=
                   (unless (or (equal token 'T_OPEN_TAG)
