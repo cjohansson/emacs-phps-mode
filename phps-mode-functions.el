@@ -960,7 +960,8 @@
                         (setq column-level-start 0))
 
                       ;; Inline HTML should have zero indent
-                      (when first-token-is-inline-html
+                      (when (and first-token-is-inline-html
+                                 (not inline-html-is-whitespace))
                         (phps-mode-debug-message
                          (message "Setting column-level to inline HTML indent: %s" inline-html-indent-start))
                         (setq column-level-start inline-html-indent-start))
@@ -1064,6 +1065,12 @@
                                (equal token 'T_INLINE_HTML)
                                (not inline-html-is-whitespace)
                                (> token-end-line-number token-start-line-number))
+
+                          (setq inline-html-is-whitespace
+                                (not (null
+                                      (string-match "[\n\C-m][ \t]+$" (substring string (1- token-start) (1- token-end))))))
+                          (phps-mode-debug-message
+                           (message "Trailing inline html line is whitespace: %s" inline-html-is-whitespace))
                           (phps-mode-debug-message
                            (message "Setting first-token-is-inline-html to true since last token on line is inline-html and spans several lines"))
                           (setq first-token-is-inline-html t))))
