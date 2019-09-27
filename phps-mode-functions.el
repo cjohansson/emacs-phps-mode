@@ -1225,41 +1225,79 @@
 
 (defun phps-mode-functions-comment-region (beg end &optional _arg)
   "Comment region from BEG to END with optional ARG."
-  (save-excursion
-    ;; Go to start of region
-    (goto-char beg)
+  ;; Iterate tokens from beginning to end and comment out all PHP code
+  (when-let ((tokens phps-mode-lexer-tokens))
+    (let ((token-comment-start nil)
+          (token-comment-end nil)
+          (in-token-comment nil)
+          (offset 0))
+      (dolist (token tokens)
+        (let ((token-label (car token))
+              (token-start (car (cdr token)))
+              (token-end (cdr (cdr token))))
+          (when (and (>= token-start beg)
+                     (<= token-end end))
 
-    (let ((end-line-number (line-number-at-pos end t))
-          (current-line-number (line-number-at-pos))
-          (first-line t))
+            (if in-token-comment
+                (cond
+                 ((or
+                   (equal token-label 'T_COMMENT)
+                   (equal token-label 'T_DOC_COMMENT)
+                   (equal token-label 'T_CLOSE_TAG))
+                  (setq in-token-comment nil))
+                 (t (setq token-comment-end token-end)))
 
-      ;; Does region start at beginning of line?
-      (if (not (= beg (line-beginning-position)))
+              ;; When we have a start and end of comment, comment it out
+              (when (and
+                     token-comment-start
+                     token-comment-end)
+                (let ((offset-comment-start (+ token-comment-start offset))
+                      (offset-comment-end))
+                  (save-excursion
+                    (goto-char offset-comment-start)
+                    (insert "/* "))
+                  (setq offset (+ offset 3))
+                  (setq offset-comment-end (+ token-comment-end offset))
+                  (save-excursion
+                    (goto-char offset-comment-end)
+                    (insert " */"))
+                  (setq offset (+ offset 3))
+                  (phps-mode-debug-message
+                   (message "Commented out %s-%s" offset-comment-start offset-comment-end)))
+                (setq token-comment-start nil)
+                (setq token-comment-end nil))
 
-          ;; Use doc comment
-          (progn
-            (goto-char end)
-            (insert " */")
-            (goto-char beg)
+              (cond
+               ((or
+                 (equal token-label 'T_INLINE_HTML)
+                 (equal token-label 'T_OPEN_TAG)
+                 (equal token-label 'T_OPEN_TAG_WITH_ECHO)))
+               (t
+                (phps-mode-debug-message
+                 (message "Comment should start at %s %s" token-label token-start))
+                (setq token-comment-start token-start)
+                (setq in-token-comment t)))))))
+
+      ;; When we have a start and end of comment, comment it out
+      (when (and
+             in-token-comment
+             token-comment-start
+             token-comment-end)
+        (let ((offset-comment-start (+ token-comment-start offset))
+              (offset-comment-end))
+          (save-excursion
+            (goto-char offset-comment-start)
             (insert "/* "))
-
-        ;; Do this for every line in region
-        (while (or first-line
-                   (< current-line-number end-line-number))
-          (move-beginning-of-line nil)
-
-          (when first-line
-            (setq first-line nil))
-
-          ;; Does this line contain something other than white-space?
-          (unless (eq (point) (line-end-position))
-            (insert "// ")
-            (move-end-of-line nil)
-            (insert ""))
-
-          (when (< current-line-number end-line-number)
-            (line-move 1))
-          (setq current-line-number (1+ current-line-number)))))))
+          (setq offset (+ offset 3))
+          (setq offset-comment-end (+ token-comment-end offset))
+          (save-excursion
+            (goto-char offset-comment-end)
+            (insert " */"))
+          (setq offset (+ offset 3))
+          (phps-mode-debug-message
+           (message "Commented out trailing %s-%s" offset-comment-start offset-comment-end)))
+        (setq token-comment-start nil)
+        (setq token-comment-end nil)))))
 
 (defun phps-mode-functions-uncomment-region (beg end &optional _arg)
   "Comment region from BEG to END with optional ARG."
