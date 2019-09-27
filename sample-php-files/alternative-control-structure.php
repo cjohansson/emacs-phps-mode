@@ -1,16 +1,21 @@
 <?php
 
+/* A comment */
 if (true):
     echo 'was true 1';
     echo 'was true 1 2';
 endif;
 
+// A line comment
 if (true):
     echo 'was true 2';
 else:
     echo 'was false 2';
 endif;
 
+/**
+ * A doc comment
+ */
 function myFunction() {
     echo 'was here';
     ?>
@@ -34,7 +39,7 @@ endswitch;
 <html>
     <body>
         <p>
-<?php echo $my; ?>
+            <?php echo $my; ?>
         </p>
     </body>
 </html>
