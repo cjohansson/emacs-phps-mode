@@ -228,26 +228,15 @@
      (string= token 'T_STRING_VARNAME))
     (list 'font-lock-face 'font-lock-variable-name-face))
 
-   ((string= token 'T_INLINE_HTML)
-
-    ;; Optional support for mmm-mode below
-    ;; (if (and (boundp 'phps-mode-inline-mmm-submode)
-    ;;          phps-mode-inline-mmm-submode
-    ;;          (fboundp 'mmm-make-region))
-    ;;     (progn
-    ;;       ;; (message "Added mmm-submode '%s' from %s - %s" phps-mode-inline-mmm-submode start end)
-          
-    ;;       ;; (mmm-make-region phps-mode-inline-mmm-submode start end)
-    ;;       )
-    ;;   )
-
-    (list 'font-lock-face 'font-lock-comment-delimiter-face))
-
    ((string= token 'T_COMMENT)
     (list 'font-lock-face 'font-lock-comment-face))
 
    ((string= token 'T_DOC_COMMENT)
     (list 'font-lock-face 'font-lock-doc-face))
+
+   ((string= token 'T_INLINE_HTML)
+    ;; NOTE T_INLINE_HTML is missing by purpose here to distinguish those areas from other entities
+    nil)
 
    ((or
      (string= token 'T_STRING)
@@ -390,35 +379,24 @@
      )
     (list 'font-lock-face 'font-lock-constant-face))
 
-   ((string= token 'T_ERROR)
-    (list 'font-lock-face 'font-lock-warning-face))
-
-   (t (list 'font-lock-face 'font-lock-constant-face))
-   ))
+   (t (list 'font-lock-face 'font-lock-constant-face))))
 
 (defun phps-mode-lexer-RETURN_TOKEN (token start end)
-"Push TOKEN to list with START and END."
-(phps-mode-lexer-set-region-syntax-color
- start end  (phps-mode-lexer-get-token-syntax-color token))
+  "Push TOKEN to list with START and END."
 
-;; (when (and
-;;        phps-mode-lexer-prepend_trailing_brace
-;;        (> end (- (point-max) 2)))
-;;   ;; (message "Adding trailing brace")
-;;   (setq phps-mode-lexer-prepend_trailing_brace nil)
-;;   (phps-mode-lexer-RETURN_TOKEN "}" (- end 1) end))
+  ;; Colourize token
+  (when-let (token-syntax-color (phps-mode-lexer-get-token-syntax-color token))
+    (phps-mode-lexer-set-region-syntax-color start end token-syntax-color))
 
-;; (message "Added token %s (%s-%s)" token start end)
+  ;; Push token start, end, lexer state and state stack to variable
+  (push
+   (list start end phps-mode-lexer-STATE phps-mode-lexer-state_stack) phps-mode-lexer-states)
 
-;; Push token start, end, lexer state and state stack to variable
-(push (list start end phps-mode-lexer-STATE phps-mode-lexer-state_stack) phps-mode-lexer-states)
-
-(semantic-lex-push-token (semantic-lex-token token start end)))
+  (semantic-lex-push-token (semantic-lex-token token start end)))
 
 ;; TODO Figure out what this does
 (defun phps-mode-lexer-SKIP_TOKEN (_token _start _end)
-  "Skip TOKEN to list with START and END."
-  )
+  "Skip TOKEN to list with START and END.")
 
 (defvar phps-mode-lexer-re2c-matching-body nil
   "Lambda-expression for longest matching condition.")
@@ -1337,8 +1315,7 @@
                (progn
                  ;; TODO Handle expecting values here
                  ;; (message "Found comment 2 from %s to %s" start (line-end-position))
-                 (phps-mode-lexer-RETURN_TOKEN 'T_COMMENT start (line-end-position))
-                 )))))
+                 (phps-mode-lexer-RETURN_TOKEN 'T_COMMENT start (line-end-position)))))))
 
         (phps-mode-lexer-re2c-rule
          (and ST_IN_SCRIPTING (looking-at (concat "\\(/\\*\\|/\\*\\*" phps-mode-lexer-WHITESPACE "\\)")))
