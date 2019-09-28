@@ -2,6 +2,9 @@
 
 *With current progress estimates:*
 
+* Clear syntax colouring on 'T_INLINE_HTML tokens
+* Got imenu items were there are only a namespace, namespace class, or class
+
 * Add to MELPA package archive (50%)
 * Wisent LALR parser based on official PHP yacc parser automatically converted grammar (50%)
 * mmm-mode support (50%)
