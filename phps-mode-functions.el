@@ -522,9 +522,10 @@
                             ;; Skip first line unless first token on line was inline-html
                             (when (or (not (= token-line-number-diff token-start-line-number))
                                       first-token-is-inline-html)
-                              (puthash token-line-number-diff (list item 0) line-indents)
-                              (phps-mode-debug-message
-                               (message "Putting indent at line %s to %s from inline HTML" token-line-number-diff item)))
+                              (unless (gethash token-line-number-diff line-indents)
+                                (puthash token-line-number-diff (list item 0) line-indents)
+                                (phps-mode-debug-message
+                                 (message "Putting indent at line %s to %s from inline HTML" token-line-number-diff item))))
                             (setq token-line-number-diff (1+ token-line-number-diff))))))))
 
                 ;; Keep track of when we are inside a class definition
