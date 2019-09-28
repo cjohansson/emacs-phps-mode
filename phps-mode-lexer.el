@@ -25,34 +25,19 @@
 ;;
 ;; NOTE Files of interest:
 ;; - zend_language_scanner.l
+;;
+;; Define the lexer for this grammar
+
+;; Make sure `semantic-lex-syntax-modifications' is correct since lexer is dependent on Emacs syntax-table
 
 
 ;;; Code:
 
-;; NOTE We use autoload here to circumvent recursive require
-(autoload 'phps-mode-functions--reset-changes "phps-mode-functions")
-(autoload 'phps-mode-functions--cancel-idle-timer "phps-mode-functions")
-(autoload 'phps-mode-functions--get-changes "phps-mode-functions")
-(autoload 'phps-mode-get-syntax-table "phps-mode")
-(autoload 'phps-mode-functions-processed-buffer "phps-mode-functions")
-(autoload 'phps-mode-functions-reset-processed-buffer "phps-mode-functions")
-(autoload 'phps-mode-runtime-debug-message "phps-mode")
 
+(require 'phps-mode-functions)
 (require 'semantic)
 (require 'semantic/lex)
-
-;; NOTE This line is required to pass byte-compilation
 (require 'semantic/wisent)
-
-(require 'phps-mode-macros)
-
-
-;; Fix for byte-compilation warnings
-
-
-;; Define the lexer for this grammar
-
-;; Make sure `semantic-lex-syntax-modifications' is correct since lexer is dependent on Emacs syntax-table
 
 
 (defvar phps-mode-lexer-tokens nil

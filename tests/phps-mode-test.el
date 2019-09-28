@@ -25,8 +25,7 @@
 
 (require 'ert)
 (require 'phps-mode)
-(require 'phps-mode-functions)
-(require 'phps-mode-lexer)
+(require 'phps-mode-macros)
 
 (defmacro phps-mode-test-incremental-vs-intial-buffer (source &optional title &rest change)
   "Set up test buffer with SOURCE, TITLE, apply CHANGE and compare incremental values with initial values."

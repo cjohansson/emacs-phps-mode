@@ -24,10 +24,6 @@
 ;;; Code:
 
 (require 'subr-x)
-(require 'phps-mode-lexer)
-
-(autoload 'phps-mode-runtime-debug-message "phps-mode")
-
 (require 'phps-mode-macros)
 
 (defvar phps-mode-functions-allow-after-change t
