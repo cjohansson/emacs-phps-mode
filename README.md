@@ -12,7 +12,7 @@ This mode does not require PHP installed on your computer because it has a built
 * GPLv3 license
 * Flycheck support
 * Semantic lexer based on official PHP re2c lexer
-* Syntax coloring based on lexer tokens, make it easier to spot invalid code
+* Syntax coloring based on lexer tokens, makes it easier to spot invalid code
 * PSR-1 and PSR-2 indentation based on lexer tokens
 * Integration with `(electric-pair)`
 * Incremental lexer and syntax coloring after buffer changes
