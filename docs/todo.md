@@ -2,7 +2,6 @@
 
 *With current progress estimates:*
 
-* Clear syntax colouring on 'T_INLINE_HTML tokens
 * Got imenu items were there are only a namespace, namespace class, or class
 
 * Add to MELPA package archive (50%)

@@ -370,8 +370,9 @@
   "Push TOKEN to list with START and END."
 
   ;; Colourize token
-  (when-let (token-syntax-color (phps-mode-lexer-get-token-syntax-color token))
-    (phps-mode-lexer-set-region-syntax-color start end token-syntax-color))
+  (if-let (token-syntax-color (phps-mode-lexer-get-token-syntax-color token))
+      (phps-mode-lexer-set-region-syntax-color start end token-syntax-color)
+    (phps-mode-lexer-clear-region-syntax-color start end))
 
   ;; Push token start, end, lexer state and state stack to variable
   (push
