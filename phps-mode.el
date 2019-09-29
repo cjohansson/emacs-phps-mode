@@ -47,12 +47,6 @@
 (require 'phps-mode-tags)
 (require 'semantic)
 
-(defvar phps-mode-use-electric-pair-mode t
-  "Whether or not we want to use electric pair mode.")
-
-(defvar phps-mode-use-transient-mark-mode t
-  "Whether or not we want to use transient mark mode.")
-
 (defvar phps-mode-use-psr-2 t
   "Whether to use PSR-2 guidelines for white-space or not.")
 
@@ -77,10 +71,6 @@
           (goto-char (point-max))
           (insert message)
           (insert "\n"))))))
-
-(defun phps-mode-get-syntax-table ()
-  "Get syntax table."
-  phps-mode-syntax-table)
 
 (defvar phps-mode-map
   (let ((map (make-sparse-keymap)))
@@ -116,20 +106,6 @@
 
   ;; Skip comments when navigating via syntax-table
   (setq-local parse-sexp-ignore-comments t)
-
-  ;; Key-map
-  (use-local-map phps-mode-map)
-
-  ;; Syntax table
-  (set-syntax-table phps-mode-syntax-table)
-
-  (when phps-mode-use-transient-mark-mode
-    ;; NOTE: These are required for wrapping region functionality
-    (transient-mark-mode))
-
-  ;; TODO Add this as a menu setting similar to php-mode?
-  (when phps-mode-use-electric-pair-mode
-    (electric-pair-local-mode))
 
   ;; Font lock
   ;; This makes it possible to have full control over syntax coloring from the lexer

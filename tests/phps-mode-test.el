@@ -117,6 +117,9 @@
           (sort (nreverse result) (lambda (a b) (< (car a) (car b)))))
       nil)))
 
+(transient-mark-mode t)
+(electric-pair-mode t)
+
 (provide 'phps-mode-test)
 
 ;;; phps-mode-test.el ends here

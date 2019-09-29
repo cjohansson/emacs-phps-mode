@@ -20,16 +20,9 @@
 
 ;;; Commentary:
 
-;; Based on the Zend PHP Lexer and Parser https://github.com/php/php-src/blob/master/Zend/zend_language_scanner.l
-;; which is using re2c.
-;;
-;; NOTE Files of interest:
-;; - zend_language_scanner.l
-;;
 ;; Define the lexer for this grammar
-
-;; Make sure `semantic-lex-syntax-modifications' is correct since lexer is dependent on Emacs syntax-table
-
+;;
+;; Based on the Zend PHP Lexer `https://github.com/php/php-src/blob/master/Zend/zend_language_scanner.l' which is using re2c.
 
 ;;; Code:
 
@@ -1837,7 +1830,7 @@
 
                                         ;; Setup lexer
                                         (setq-local semantic-lex-analyzer #'phps-mode-lexer-lex)
-                                        (setq-local semantic-lex-syntax-table (phps-mode-get-syntax-table))
+                                        (setq-local semantic-lex-syntax-table phps-mode-syntax-table)
 
                                         (phps-mode-debug-message
                                          (message "Incremental buffer contents: \n%s" (buffer-substring-no-properties (point-min) (point-max)))
