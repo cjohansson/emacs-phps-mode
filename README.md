@@ -28,12 +28,8 @@ This mode does not require PHP installed on your computer because it has a built
 
 ## Keymap
 
-* `C-c /` Comment region
-* `C-c DEL` Uncomment region
 * `C-c C-r` Rescan buffer
 * `C-c C-f` Format buffer
-* `C-c C-r` Lex buffer
-* `C-c C-p` Process buffer
 
 ## Installation
 
