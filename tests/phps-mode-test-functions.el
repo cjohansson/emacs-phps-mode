@@ -27,8 +27,6 @@
 
 (require 'ert)
 (require 'phps-mode)
-(require 'phps-mode-functions)
-(require 'phps-mode-lexer)
 (require 'phps-mode-test)
 
 (defun phps-mode-test-functions-move-lines-indent ()

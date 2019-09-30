@@ -40,8 +40,8 @@
 
 ;; NOTE use wisent-parse-toggle-verbose-flag and (semantic-debug) to debug parsing
 
+(require 'phps-mode-analyzer)
 (require 'phps-mode-flymake)
-(require 'phps-mode-lexer)
 (require 'phps-mode-semantic)
 (require 'phps-mode-syntax-table)
 (require 'phps-mode-tags)
