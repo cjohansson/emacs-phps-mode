@@ -928,7 +928,12 @@
 
   (phps-mode-test-with-buffer
    "<?php\nnamespace myNamespace {}"
-   "Imenu empty namespace"
+   "Imenu empty bracketed namespace"
+   (should (equal (phps-mode-functions-get-imenu) '(("myNamespace" ("*definition*" . 17))))))
+
+  (phps-mode-test-with-buffer
+   "<?php\nnamespace myNamespace;"
+   "Imenu empty namespace without brackets"
    (should (equal (phps-mode-functions-get-imenu) '(("myNamespace" ("*definition*" . 17))))))
 
   )
