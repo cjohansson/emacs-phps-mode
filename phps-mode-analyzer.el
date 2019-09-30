@@ -21,7 +21,9 @@
 ;;; Commentary:
 
 ;; *Define the lexer for this grammar
-;; based on the Zend PHP Lexer `https://github.com/php/php-src/blob/master/Zend/zend_language_scanner.l' which is using re2c.
+;; based on the Zend PHP Lexer at
+;; `https://github.com/php/php-src/blob/master/Zend/zend_language_scanner.l'
+;; which is using re2c.
 ;;
 ;; * Also supply logic for indentation and imenu-handling
 ;; Change detection and incremental lexer
@@ -429,7 +431,12 @@
     (if phps-mode-lexer-tokens
         (progn
           ;; Add all updated tokens to semantic
-          (phps-mode-debug-message (message "Updating semantic lexer tokens from point %s, tokens: %s, point-max: %s" old-start phps-mode-lexer-tokens (point-max)))
+          (phps-mode-debug-message
+           (message
+            "Updating semantic lexer tokens from point %s, tokens: %s, point-max: %s"
+            old-start
+            phps-mode-lexer-tokens
+            (point-max)))
           (dolist (token phps-mode-lexer-tokens)
             (let ((start (car (cdr token)))
                   (end (cdr (cdr token)))
