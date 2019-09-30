@@ -12,7 +12,7 @@ This mode does not require PHP installed on your computer because it has a built
 * GPLv3 license
 * Flycheck support
 * Semantic lexer based on official PHP re2c lexer
-* Syntax coloring based on lexer tokens, make it easier to spot invalid code
+* Syntax coloring based on lexer tokens, makes it easier to spot invalid code
 * PSR-1 and PSR-2 indentation based on lexer tokens
 * Integration with `(electric-pair)`
 * Incremental lexer and syntax coloring after buffer changes
@@ -28,12 +28,8 @@ This mode does not require PHP installed on your computer because it has a built
 
 ## Keymap
 
-* `C-c /` Comment region
-* `C-c DEL` Uncomment region
 * `C-c C-r` Rescan buffer
 * `C-c C-f` Format buffer
-* `C-c C-r` Lex buffer
-* `C-c C-p` Process buffer
 
 ## Installation
 

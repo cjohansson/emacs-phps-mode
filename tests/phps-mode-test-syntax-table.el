@@ -26,7 +26,7 @@
 ;;; Code:
 
 (require 'ert)
-(require 'phps-mode-functions)
+(require 'phps-mode)
 (require 'phps-mode-test)
 
 ;; TODO Should test `backward-sexp', `forward-sexp', `backward-word', `forward-word', `backward-list', `forward-list' as well
