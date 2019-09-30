@@ -83,7 +83,7 @@
 (defun phps-mode-format-buffer ()
   "Format current buffer according to PHPs mode."
   (interactive)
-  (if (string= major-mode "phps-mode")
+  (if (derived-mode-p 'phps-mode)
       (progn
         (when phps-mode-use-psr-2
           (untabify (point-min) (point-max)))
