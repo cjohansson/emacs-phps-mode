@@ -2,9 +2,9 @@ EMACS = emacs
 ifdef emacs
 	EMACS = $(emacs)
 endif
-EMACS_CMD := $(EMACS) -Q -batch -L . -L tests/
+EMACS_CMD := $(EMACS) -Q -batch -L . -L test/
 
-EL  := admin/phps-mode-automation.el phps-mode-analyzer.el phps-mode-flymake.el phps-mode-semantic.el phps-mode-syntax-table.el phps-mode-tags.el tests/phps-mode-test-functions.el tests/phps-mode-test-integration.el tests/phps-mode-test-lexer.el tests/phps-mode-test-parser.el tests/phps-mode-test-syntax-table.el tests/phps-mode-test.el phps-mode.el
+EL  := admin/phps-mode-automation.el phps-mode-analyzer.el phps-mode-flymake.el phps-mode-semantic.el phps-mode-syntax-table.el phps-mode-tags.el test/phps-mode-test-functions.el test/phps-mode-test-integration.el test/phps-mode-test-lexer.el test/phps-mode-test-parser.el test/phps-mode-test-syntax-table.el test/phps-mode-test.el phps-mode.el
 ELC := $(EL:.el=.elc)
 
 .PHONY: clean
@@ -20,20 +20,20 @@ tests: test-functions test-integration test-lexer test-parser test-syntax-table
 
 .PHONY: test-functions
 test-functions:
-	$(EMACS_CMD) -l tests/phps-mode-test-functions.el
+	$(EMACS_CMD) -l test/phps-mode-test-functions.el
 
 .PHONY: test-integration
 test-integration:
-	$(EMACS_CMD) -l tests/phps-mode-test-integration.el
+	$(EMACS_CMD) -l test/phps-mode-test-integration.el
 
 .PHONY: test-lexer
 test-lexer:
-	$(EMACS_CMD) -l tests/phps-mode-test-lexer.el
+	$(EMACS_CMD) -l test/phps-mode-test-lexer.el
 
 .PHONY: test-parser
 test-parser:
-	$(EMACS_CMD) -l tests/phps-mode-test-parser.el
+	$(EMACS_CMD) -l test/phps-mode-test-parser.el
 
 .PHONY: test-syntax-table
 test-syntax-table:
-	$(EMACS_CMD) -l tests/phps-mode-test-syntax-table.el
+	$(EMACS_CMD) -l test/phps-mode-test-syntax-table.el
