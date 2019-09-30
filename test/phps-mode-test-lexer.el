@@ -27,7 +27,6 @@
 
 (require 'ert)
 (require 'phps-mode)
-(require 'phps-mode-lexer)
 (require 'phps-mode-test)
 
 (defun phps-mode-test-lexer-script-boundaries ()

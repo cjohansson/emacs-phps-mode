@@ -5,8 +5,8 @@
 ;; Author: Christian Johansson <christian@cvj.se>
 ;; Maintainer: Christian Johansson <christian@cvj.se>
 ;; Created: 3 Mar 2018
-;; Modified: 26 Sep 2019
-;; Version: 0.3.2
+;; Modified: 30 Sep 2019
+;; Version: 0.3.4
 ;; Keywords: tools, convenience
 ;; URL: https://github.com/cjohansson/emacs-phps-mode
 
@@ -30,7 +30,13 @@
 
 ;;; Commentary:
 
-;; A major-mode that uses original PHP lexer tokens for syntax coloring and indentation making it easier to spot errors in syntax.  Also includes full support for PSR-1 and PSR-2 indentation, imenu.  Improved syntax table in comparison with old PHP major-mode.
+;; A major-mode that uses original PHP lexer tokens for syntax coloring and indentation
+;; making it easier to spot errors in syntax.
+;;
+;; Also includes full support for PSR-1 and PSR-2 indentation and imenu.
+;; Improved syntax table in comparison with old PHP major-mode.
+;;
+;; For flycheck support run `(phps-mode-flycheck-setup)'.
 
 ;; Please see README.md from the same repository for extended documentation.
 
@@ -40,28 +46,18 @@
 
 ;; NOTE use wisent-parse-toggle-verbose-flag and (semantic-debug) to debug parsing
 
+(require 'phps-mode-analyzer)
 (require 'phps-mode-flymake)
-(require 'phps-mode-functions)
-(require 'phps-mode-lexer)
 (require 'phps-mode-semantic)
 (require 'phps-mode-syntax-table)
 (require 'phps-mode-tags)
 (require 'semantic)
-
-(defvar phps-mode-use-electric-pair-mode t
-  "Whether or not we want to use electric pair mode.")
-
-(defvar phps-mode-use-transient-mark-mode t
-  "Whether or not we want to use transient mark mode.")
 
 (defvar phps-mode-use-psr-2 t
   "Whether to use PSR-2 guidelines for white-space or not.")
 
 (defvar phps-mode-idle-interval 1
   "Idle seconds before running the incremental lexer.")
-
-(defvar phps-mode-flycheck-applied nil
-  "Boolean flag whether flycheck configuration has been applied or not.")
 
 (defvar phps-mode-inline-mmm-submode nil
   "Symbol declaring what mmm-mode to use as submode in inline areas.")
@@ -79,58 +75,54 @@
           (insert message)
           (insert "\n"))))))
 
-(defun phps-mode-get-syntax-table ()
-  "Get syntax table."
-  phps-mode-syntax-table)
-
 (defvar phps-mode-map
   (let ((map (make-sparse-keymap)))
-    (define-key map (kbd "C-c /") #'comment-region)
-    (define-key map (kbd "C-c DEL") #'uncomment-region)
     (define-key map (kbd "C-c C-r") #'phps-mode-lexer-run)
     (define-key map (kbd "C-c C-f") #'phps-mode-format-buffer)
-    (define-key map (kbd "C-c C-p") #'phps-mode-functions-process-current-buffer)
     map)
   "Keymap for `phps-mode'.")
+
+;;;###autoload
+(defun phps-mode-flycheck-setup ()
+  "Setup `flycheck' for `phps-mode'."
+  ;; Add support for flycheck PHP checkers: PHP, PHPMD and PHPCS here
+  ;; Do it only if flycheck is available
+  (when (fboundp 'flycheck-add-mode)
+    (flycheck-add-mode 'php 'phps-mode)
+    (flycheck-add-mode 'php-phpmd 'phps-mode)
+    (flycheck-add-mode 'php-phpcs 'phps-mode)))
 
 ;;;###autoload
 (defun phps-mode-format-buffer ()
   "Format current buffer according to PHPs mode."
   (interactive)
-  (let ((old-buffer-contents (buffer-substring-no-properties (point-min) (point-max)))
-        (old-buffer (current-buffer))
-        (temp-buffer (generate-new-buffer "*PHPs Formatting*"))
-        (new-buffer-contents ""))
-    (save-excursion
-      (switch-to-buffer temp-buffer)
-      (insert old-buffer-contents)
-      (phps-mode)
-      (indent-region (point-min) (point-max))
-      (setq new-buffer-contents (buffer-substring-no-properties (point-min) (point-max)))
-      (kill-buffer)
-      (switch-to-buffer old-buffer)
-      (delete-region (point-min) (point-max))
-      (insert new-buffer-contents))))
+  (if (derived-mode-p 'phps-mode)
+      (progn
+        (when phps-mode-use-psr-2
+          (untabify (point-min) (point-max)))
+        (indent-region (point-min) (point-max)))
+    (let ((old-buffer-contents (buffer-substring-no-properties (point-min) (point-max)))
+          (old-buffer (current-buffer))
+          (temp-buffer (generate-new-buffer "*PHPs Formatting*"))
+          (new-buffer-contents ""))
+      (save-excursion
+        (switch-to-buffer temp-buffer)
+        (insert old-buffer-contents)
+        (phps-mode)
+        (when phps-mode-use-psr-2
+          (untabify (point-min) (point-max)))
+        (indent-region (point-min) (point-max))
+        (setq new-buffer-contents (buffer-substring-no-properties (point-min) (point-max)))
+        (kill-buffer)
+        (switch-to-buffer old-buffer)
+        (delete-region (point-min) (point-max))
+        (insert new-buffer-contents)))))
 
 (define-derived-mode phps-mode prog-mode "PHPs"
   "Major mode for PHP with Semantic integration."
 
   ;; Skip comments when navigating via syntax-table
   (setq-local parse-sexp-ignore-comments t)
-
-  ;; Key-map
-  (use-local-map phps-mode-map)
-
-  ;; Syntax table
-  (set-syntax-table phps-mode-syntax-table)
-
-  (when phps-mode-use-transient-mark-mode
-    ;; NOTE: These are required for wrapping region functionality
-    (transient-mark-mode))
-
-  ;; TODO Add this as a menu setting similar to php-mode?
-  (when phps-mode-use-electric-pair-mode
-    (electric-pair-local-mode))
 
   ;; Font lock
   ;; This makes it possible to have full control over syntax coloring from the lexer
@@ -139,16 +131,6 @@
 
   ;; Flymake TODO
   ;; (phps-mode-flymake-init)
-
-  ;; Flycheck
-  ;; Add support for flycheck PHP checkers: PHP, PHPMD and PHPCS here
-  ;; Do it once but only if flycheck is available
-  (when (and (fboundp 'flycheck-add-mode)
-             (not phps-mode-flycheck-applied))
-    (flycheck-add-mode 'php 'phps-mode)
-    (flycheck-add-mode 'php-phpmd 'phps-mode)
-    (flycheck-add-mode 'php-phpcs 'phps-mode)
-    (setq phps-mode-flycheck-applied t))
 
   ;; Custom indentation
   ;; Indent-region will call this on each line of selected region

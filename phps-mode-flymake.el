@@ -27,8 +27,6 @@
 
 (require 'flymake)
 
-;; TODO Implement this
-
 (defun phps-mode-flymake-init ()
   "PHP specific init-cleanup routines.
 

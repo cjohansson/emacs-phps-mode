@@ -26,8 +26,7 @@
 ;;; Code:
 
 (require 'ert)
-(require 'phps-mode-functions)
-(require 'phps-mode-lexer)
+(require 'phps-mode)
 (require 'phps-mode-test)
 
 (eval-when-compile
