@@ -32,8 +32,11 @@
 
 ;; A major-mode that uses original PHP lexer tokens for syntax coloring and indentation
 ;; making it easier to spot errors in syntax.
+;;
 ;; Also includes full support for PSR-1 and PSR-2 indentation and imenu.
 ;; Improved syntax table in comparison with old PHP major-mode.
+;;
+;; For flycheck support run `(phps-mode-flycheck-setup)'.
 
 ;; Please see README.md from the same repository for extended documentation.
 
@@ -55,9 +58,6 @@
 
 (defvar phps-mode-idle-interval 1
   "Idle seconds before running the incremental lexer.")
-
-(defvar phps-mode-flycheck-applied nil
-  "Boolean flag whether flycheck configuration has been applied or not.")
 
 (defvar phps-mode-inline-mmm-submode nil
   "Symbol declaring what mmm-mode to use as submode in inline areas.")
@@ -81,6 +81,16 @@
     (define-key map (kbd "C-c C-f") #'phps-mode-format-buffer)
     map)
   "Keymap for `phps-mode'.")
+
+;;;###autoload
+(defun phps-mode-flycheck-setup ()
+  "Setup `flycheck' for `phps-mode'."
+  ;; Add support for flycheck PHP checkers: PHP, PHPMD and PHPCS here
+  ;; Do it only if flycheck is available
+  (when (fboundp 'flycheck-add-mode)
+    (flycheck-add-mode 'php 'phps-mode)
+    (flycheck-add-mode 'php-phpmd 'phps-mode)
+    (flycheck-add-mode 'php-phpcs 'phps-mode)))
 
 ;;;###autoload
 (defun phps-mode-format-buffer ()
@@ -121,16 +131,6 @@
 
   ;; Flymake TODO
   ;; (phps-mode-flymake-init)
-
-  ;; Flycheck
-  ;; Add support for flycheck PHP checkers: PHP, PHPMD and PHPCS here
-  ;; Do it once but only if flycheck is available
-  (when (and (fboundp 'flycheck-add-mode)
-             (not phps-mode-flycheck-applied))
-    (flycheck-add-mode 'php 'phps-mode)
-    (flycheck-add-mode 'php-phpmd 'phps-mode)
-    (flycheck-add-mode 'php-phpcs 'phps-mode)
-    (setq phps-mode-flycheck-applied t))
 
   ;; Custom indentation
   ;; Indent-region will call this on each line of selected region

@@ -10,7 +10,7 @@ This mode does not require PHP installed on your computer because it has a built
 ## Features
 
 * GPLv3 license
-* Flycheck support
+* Flycheck support with `(phps-mode-flycheck-setup)`
 * Semantic lexer based on official PHP re2c lexer
 * Syntax coloring based on lexer tokens, makes it easier to spot invalid code
 * PSR-1 and PSR-2 indentation based on lexer tokens
@@ -51,7 +51,9 @@ You can install via ELPA (`M-x package-install` + `RET` + `phps-mode` + `RET`), 
 (use-package phps-mode
     :after flycheck
     :ensure t
-    :mode ("\\.php\\'" "\\.phtml\\'"))
+    :mode ("\\.php\\'" "\\.phtml\\'")
+    :config
+    (phps-mode-flycheck-setup))
 ```
 
 ### Load and configure using use-package
@@ -59,13 +61,16 @@ You can install via ELPA (`M-x package-install` + `RET` + `phps-mode` + `RET`), 
 ``` emacs-lisp
 (use-package phps-mode
     :after flycheck
-    :mode ("\\.php\\'" "\\.phtml\\'"))
+    :mode ("\\.php\\'" "\\.phtml\\'")
+    :config
+    (phps-mode-flycheck-setup))
 ```
 
 ### Load and configure using regular emacs-lisp
 ``` emacs-lisp
 (require 'phps-mode)
 (add-to-list 'auto-mode-alist '("\\.\\(php\\|phtml\\)\\'" . phps-mode))
+(phps-mode-flycheck-setup)
 ```
 
 ## Read more
