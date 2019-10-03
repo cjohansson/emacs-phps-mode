@@ -24,29 +24,26 @@
 
 ;;; AST should be like this: (root (block (rule (logic))))
 
-;;; This entire file is WIP / TODO
-
 
 ;;; Code:
 
-;; (require 'emacs-wisent-grammar-converter)
+(let ((php-yacc-url "https://raw.githubusercontent.com/php/php-src/master/Zend/zend_language_parser.y")
+      (php-yacc-file (expand-file-name "zend_language_parser.y"))
+      (wisent-destination (expand-file-name "../zend_language_parser.wy"))
+      (header (expand-file-name "phps-mode-automation-header.wy")))
 
-;; (add-to-list 'load-path (expand-file-name (concat user-emacs-directory "emacs-wisent-grammar-converter/")))
+  ;; Download Yacc if not available
+  (unless (file-exists-p php-yacc-file)
+    (message "Downloading PHP Yacc grammar..")
+    (url-copy-file php-yacc-url php-yacc-file t t)
+    (message "Download completed"))
 
-;; (let ((php-yacc-url "https://raw.githubusercontent.com/php/php-src/master/Zend/zend_language_parser.y")
-;;       (php-yacc-file (expand-file-name "zend_language_parser.y"))
-;;       (wisent-destination (expand-file-name "zend_language_parser.wy")))
-
-;;   ;; Download Yacc if not available
-;;   (unless (file-exists-p php-yacc-file)
-;;     (message "Downloading PHP Yacc grammar..")
-;;     (url-copy-file php-yacc-url php-yacc-file t t)
-;;     (message "Download completed"))
-
-;;   ;; Generate grammar
-;;   (message "Generating Wisent grammar..")
-;;   (emacs-wisent-grammar-converter/generate-grammar-from-filename php-yacc-file wisent-destination)
-;;   (message "Automation completed"))
+  ;; Generate grammar
+  (message "Generating Wisent grammar..")
+  (if (fboundp 'emacs-wisent-grammar-converter-generate-grammar-from-filename)
+      (emacs-wisent-grammar-converter-generate-grammar-from-filename php-yacc-file wisent-destination header)
+    (display-warning 'warning "Missing emacs-wisent-grammar-converter!"))
+  (message "Automation completed"))
 
 (provide 'phps-mode-automation)
 ;;; phps-mode-automation.el ends here

@@ -20,7 +20,7 @@
 
 ;;; Commentary:
 
-;; Run `wisent-make-parsers' or "C-c C-c" to generate grammar-file in Emacs Lisp.
+;; Run `(wisent-make-parsers)' or "C-c C-c" to generate grammar-file in Emacs Lisp.
 ;;
 ;; Based on the Zend PHP Parser YACC https://github.com/php/php-src/blob/master/Zend/zend_language_parser.y
 
@@ -31,8 +31,8 @@
 
 ;;; Code:
 
-%package phps-mode-tags
-%provide phps-mode-phps-wy
+%package phps-mode
+%provide phps-mode-wy
 
 %languagemode phps-mode
 

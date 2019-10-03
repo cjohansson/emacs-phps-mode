@@ -1,1 +1,2 @@
 *.elc
+admin/zend_language_parser.y
