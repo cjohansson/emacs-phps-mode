@@ -3106,7 +3106,7 @@
   phps-mode-functions-imenu)
 
 (defun phps-mode-functions-comment-region (beg end &optional _arg)
-  "Comment region from BEG to END with optional ARG."
+  "Comment region from BEG to END with optional _ARG."
   ;; Iterate tokens from beginning to end and comment out all PHP code
   (when-let ((tokens phps-mode-lexer-tokens))
     (let ((token-comment-start nil)
@@ -3126,6 +3126,8 @@
                    (equal token-label 'T_COMMENT)
                    (equal token-label 'T_DOC_COMMENT)
                    (equal token-label 'T_CLOSE_TAG))
+                  (phps-mode-debug-message
+                   (message "Comment should end at previous token %s %s" token-label token-comment-end))
                   (setq in-token-comment nil))
                  (t (setq token-comment-end token-end)))
 
@@ -3156,8 +3158,9 @@
                  (equal token-label 'T_OPEN_TAG_WITH_ECHO)))
                (t
                 (phps-mode-debug-message
-                 (message "Comment should start at %s %s" token-label token-start))
+                 (message "Comment should start at %s %s-%s" token-label token-start token-end))
                 (setq token-comment-start token-start)
+                (setq token-comment-end token-end)
                 (setq in-token-comment t)))))))
 
       ;; When we have a start and end of comment, comment it out
