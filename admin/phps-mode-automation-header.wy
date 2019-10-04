@@ -36,7 +36,7 @@
 
 %languagemode phps-mode
 
-%use-macros phps-mode-wy-macro {
+%use-macros phps-mode-wy-macros {
              zend_add_class_modifier
              zend_add_member_modifier
              zend_append_str
