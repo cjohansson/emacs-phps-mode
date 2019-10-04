@@ -39,7 +39,6 @@
 %use-macros phps-mode-wy-macros {
              zend_add_class_modifier
              zend_add_member_modifier
-             zend_append_str
              zend_ast_create
              zend_ast_create_assign_op
              zend_ast_create_binary_op
@@ -60,7 +59,7 @@
 
 
 start:
-    top_statement_list ((CG ast) = $1)
+    top_statement_list ((CG ast $1))
     ;
 
 reserved_non_modifiers:

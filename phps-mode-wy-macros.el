@@ -28,6 +28,11 @@
 
 (require 'semantic/wisent/grammar)
 
+(defun CG (subject &optional value)
+  "Return and optionally set VALUE of SUBJECT."
+  ;; TODO Implement this
+  )
+
 (defun zend_add_class_modifier (class modifier)
   "Add CLASS MODIFIER."
   )
