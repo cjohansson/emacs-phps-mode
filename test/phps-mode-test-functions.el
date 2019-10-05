@@ -874,67 +874,67 @@
   (phps-mode-test-with-buffer
    "<?php\nclass myClass {\n    public function myFunctionA() {}\n    protected function myFunctionB() {}\n}\n"
    "Imenu object-oriented file"
-   (should (equal (phps-mode-functions-get-imenu) '(("myClass" . (("*definition*" . 13) ("myFunctionA" . 43) ("myFunctionB" . 83)))))))
+   (should (equal (phps-mode-functions-get-imenu) '(("myClass" . (("myFunctionA" . 43) ("myFunctionB" . 83)))))))
 
   (phps-mode-test-with-buffer
    "<?php\ninterface myInterface {\n    public function myFunctionA() {}\n    protected function myFunctionB() {}\n}\n"
    "Imenu object-oriented file with interface"
-   (should (equal (phps-mode-functions-get-imenu) '(("myInterface" . (("*definition*" . 17) ("myFunctionA" . 51) ("myFunctionB" . 91)))))))
+   (should (equal (phps-mode-functions-get-imenu) '(("myInterface" . (("myFunctionA" . 51) ("myFunctionB" . 91)))))))
 
   (phps-mode-test-with-buffer
    "<?php\nnamespace myNamespace {\n    class myClass {\n        public function myFunctionA() {}\n        protected function myFunctionB() {}\n    }\n}\n"
    "Imenu object-oriented file with namespace, class and function"
-   (should (equal (phps-mode-functions-get-imenu) '(("myNamespace" ("*definition*" . 17) ("myClass" ("*definition*" . 41) ("myFunctionA" . 75) ("myFunctionB" . 119)))))))
+   (should (equal (phps-mode-functions-get-imenu) '(("myNamespace" ("myClass" ("myFunctionA" . 75) ("myFunctionB" . 119)))))))
 
   (phps-mode-test-with-buffer
    "<?php\nnamespace myNamespace;\nclass myClass {\n    public function myFunctionA() {}\n    protected function myFunctionB() {}\n}\n"
    "Imenu object-oriented file with bracket-less namespace, class and function"
-   (should (equal (phps-mode-functions-get-imenu) '(("myNamespace" ("*definition*" . 17) ("myClass" ("*definition*" . 36) ("myFunctionA" . 66) ("myFunctionB" . 106)))))))
+   (should (equal (phps-mode-functions-get-imenu) '(("myNamespace" ("myClass" ("myFunctionA" . 66) ("myFunctionB" . 106)))))))
 
   (phps-mode-test-with-buffer
    "<?php\nnamespace myNamespace {\n    class myClass extends myAbstract {\n        public function myFunctionA() {}\n        protected function myFunctionB() {}\n    }\n}\n"
    "Imenu object-oriented file with namespace, class that extends and functions"
-   (should (equal (phps-mode-functions-get-imenu) '(("myNamespace" ("*definition*" . 17) ("myClass" ("*definition*" . 41) ("myFunctionA" . 94) ("myFunctionB" . 138)))))))
+   (should (equal (phps-mode-functions-get-imenu) '(("myNamespace" ("myClass" ("myFunctionA" . 94) ("myFunctionB" . 138)))))))
 
   (phps-mode-test-with-buffer
    "<?php\nnamespace myNamespace;\nclass myClass extends myAbstract implements myInterface {\n    public function myFunctionA() {}\n    protected function myFunctionB() {}\n}\n"
    "Imenu object-oriented file with bracket-less namespace, class that extends and implements and functions"
-   (should (equal (phps-mode-functions-get-imenu) '(("myNamespace" ("*definition*" . 17) ("myClass" ("*definition*" . 36) ("myFunctionA" . 108) ("myFunctionB" . 148)))))))
+   (should (equal (phps-mode-functions-get-imenu) '(("myNamespace" ("myClass" ("myFunctionA" . 108) ("myFunctionB" . 148)))))))
 
   (phps-mode-test-with-buffer
    "<?php\nnamespace myNamespace;\nclass myClass extends myAbstract implements myInterface {\n    public function myFunctionA($myArg = null) {}\n    protected function myFunctionB($myArg = 'abc') {}\n}\n"
    "Imenu object-oriented file with bracket-less namespace, class that extends and implements and functions with optional arguments"
-   (should (equal (phps-mode-functions-get-imenu) '(("myNamespace" ("*definition*" . 17) ("myClass" ("*definition*" . 36) ("myFunctionA" . 108) ("myFunctionB" . 161)))))))
+   (should (equal (phps-mode-functions-get-imenu) '(("myNamespace" ("myClass" ("myFunctionA" . 108) ("myFunctionB" . 161)))))))
 
   (phps-mode-test-with-buffer
    "<?php\nnamespace myNamespace\\myNamespace2;\nclass myClass extends myAbstract implements myInterface {\n    public function myFunctionA($myArg = null) {}\n    protected function myFunctionB($myArg = 'abc') {}\n}\n"
    "Imenu object-oriented file with bracket-less namespace with multiple levels, class that extends and implements and functions with optional arguments"
-   (should (equal (phps-mode-functions-get-imenu) '(("myNamespace\\myNamespace2" ("*definition*" . 29) ("myClass" ("*definition*" . 49) ("myFunctionA" . 121) ("myFunctionB" . 174)))))))
+   (should (equal (phps-mode-functions-get-imenu) '(("myNamespace\\myNamespace2" ("myClass" ("myFunctionA" . 121) ("myFunctionB" . 174)))))))
 
   (phps-mode-test-with-buffer
    "<?php\nclass myClass\n{\n\n    public function myFunction1()\n    {\n        echo \"my string with variable {$variable} inside it\";\n    }\n\n    public function myFunction2()\n    {\n    }\n\n}"
    "Imenu with double quoted string with variable inside it"
-   (should (equal (phps-mode-functions-get-imenu) '(("myClass" ("*definition*" . 13) ("myFunction1" . 44) ("myFunction2" . 153))))))
+   (should (equal (phps-mode-functions-get-imenu) '(("myClass" ("myFunction1" . 44) ("myFunction2" . 153))))))
 
   (phps-mode-test-with-buffer
    "<?php\n\nnamespace MyNamespace;\n\nclass MyClass\n{\n\n    /**\n     *\n     */\n    public function __construct()\n    {\n        if ($test) {\n        }\n    }\n\n    /**\n     *\n     */\n    public function myFunction1()\n    {\n        $this->addMessage(\"My random {$message} here\" . ($random > 1 ? \"A\" : \"\") . \" was here.\");\n    }\n    \n    /**\n     *\n     */\n    public function myFunction2()\n    {\n    }\n\n    /**\n     * It's good\n     */\n    public function myFunction3()\n    {\n    }\n\n    /**\n     *\n     */\n    public function myFunction4()\n    {\n    }\n}\n"
    "Imenu with double quoted string with variable inside it and concatenated string"
-   (should (equal (phps-mode-functions-get-imenu) '(("MyNamespace" ("*definition*" . 18) ("MyClass" ("*definition*" . 38) ("__construct" . 92) ("myFunction1" . 193) ("myFunction2" . 365) ("myFunction3" . 445) ("myFunction4" . 515)))))))
+   (should (equal (phps-mode-functions-get-imenu) '(("MyNamespace" ("MyClass" ("__construct" . 92) ("myFunction1" . 193) ("myFunction2" . 365) ("myFunction3" . 445) ("myFunction4" . 515)))))))
 
   (phps-mode-test-with-buffer
    "<?php\nclass myClass {}"
    "Imenu empty class"
-   (should (equal (phps-mode-functions-get-imenu) '(("myClass" ("*definition*" . 13))))))
+   (should (equal (phps-mode-functions-get-imenu) nil)))
 
   (phps-mode-test-with-buffer
    "<?php\nnamespace myNamespace {}"
    "Imenu empty bracketed namespace"
-   (should (equal (phps-mode-functions-get-imenu) '(("myNamespace" ("*definition*" . 17))))))
+   (should (equal (phps-mode-functions-get-imenu) nil)))
 
   (phps-mode-test-with-buffer
    "<?php\nnamespace myNamespace;"
    "Imenu empty namespace without brackets"
-   (should (equal (phps-mode-functions-get-imenu) '(("myNamespace" ("*definition*" . 17))))))
+   (should (equal (phps-mode-functions-get-imenu) nil)))
 
   )
 
@@ -991,6 +991,22 @@
    (uncomment-region 62 92)
    (let ((buffer-contents (buffer-substring-no-properties (point-min) (point-max))))
      (should (equal buffer-contents "<?php\nnamespace myNamespace;\nclass myClass extends myAbstract implements myInterface {\n    public function myFunctionA($myArg = null) {}\n    protected function myFunctionB($myArg = 'abc') {}\n}\n"))))
+
+  (phps-mode-test-with-buffer
+   "<?php\nnamespace myNamespace;\nclass myClass extends myAbstract/*  implements myInterface  */{\n    // public function myFunctionA($myArg = null) {}\n    protected function myFunctionB($myArg = 'abc') {}\n}"
+   "Comment region were some of the region is already commented-out"
+   ;; (message "Tokens %s" phps-mode-lexer-tokens)
+   (comment-region (point-min) (point-max))
+   (let ((buffer-contents (buffer-substring-no-properties (point-min) (point-max))))
+     (should (equal buffer-contents "<?php\n/* namespace myNamespace;\nclass myClass extends myAbstract *//*  implements myInterface  *//* { */\n    // public function myFunctionA($myArg = null) {}\n    /* protected function myFunctionB($myArg = 'abc') {}\n} */"))))
+
+  (phps-mode-test-with-buffer
+   "<?php\nnamespace myNamespace;\nclass myClass extends myAbstract/*  implements myInterface  */{\n    public function myFunctionA($myArg = null) {}\n    /* protected function myFunctionB($myArg = 'abc') {} */\n}"
+   "Un-comment region were some of the region is already un-commented"
+   ;; (message "Tokens %s" phps-mode-lexer-tokens)
+   (uncomment-region (point-min) (point-max))
+   (let ((buffer-contents (buffer-substring-no-properties (point-min) (point-max))))
+     (should (equal buffer-contents "<?php\nnamespace myNamespace;\nclass myClass extends myAbstract implements myInterface {\n    public function myFunctionA($myArg = null) {}\n    protected function myFunctionB($myArg = 'abc') {}\n}"))))
 
   )
 

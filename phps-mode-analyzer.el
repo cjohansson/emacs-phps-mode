@@ -2208,9 +2208,7 @@
               (temp-post-indent nil)
               (imenu-index '())
               (imenu-namespace-index '())
-              (imenu-namespace-definition nil)
               (imenu-class-index '())
-              (imenu-class-definition nil)
               (imenu-in-namespace-declaration nil)
               (imenu-in-namespace-name nil)
               (imenu-in-namespace-with-brackets nil)
@@ -2274,14 +2272,16 @@
 
                   (when (and imenu-open-namespace-level
                              (= imenu-open-namespace-level imenu-nesting-level)
-                             imenu-in-namespace-name)
+                             imenu-in-namespace-name
+                             imenu-namespace-index)
                     (let ((imenu-add-list (nreverse imenu-namespace-index)))
                       (push `(,imenu-in-namespace-name . ,imenu-add-list) imenu-index))
                     (setq imenu-in-namespace-name nil))
 
                   (when (and imenu-open-class-level
                              (= imenu-open-class-level imenu-nesting-level)
-                             imenu-in-class-name)
+                             imenu-in-class-name
+                             imenu-class-index)
                     (let ((imenu-add-list (nreverse imenu-class-index)))
                       (if imenu-in-namespace-name
                           (push `(,imenu-in-class-name . ,imenu-add-list) imenu-namespace-index)
@@ -2300,12 +2300,10 @@
                     (setq imenu-in-namespace-with-brackets (string= token "{"))
                     (setq imenu-open-namespace-level imenu-nesting-level)
                     (setq imenu-namespace-index '())
-                    (push `("*definition*" . ,imenu-namespace-definition) imenu-namespace-index)
                     (setq imenu-in-namespace-declaration nil))
 
                    ((and (or (equal token 'T_STRING)
                              (equal token 'T_NS_SEPARATOR))
-                         (setq imenu-namespace-definition token-start)
                          (setq imenu-in-namespace-name (concat imenu-in-namespace-name (substring string (1- token-start) (1- token-end))))))))
 
                  (imenu-in-class-declaration
@@ -2314,12 +2312,10 @@
                    ((string= token "{")
                     (setq imenu-open-class-level imenu-nesting-level)
                     (setq imenu-in-class-declaration nil)
-                    (setq imenu-class-index '())
-                    (push `("*definition*" . ,imenu-class-definition) imenu-class-index))
+                    (setq imenu-class-index '()))
 
                    ((and (equal token 'T_STRING)
                          (not imenu-in-class-name))
-                    (setq imenu-class-definition token-start)
                     (setq imenu-in-class-name (substring string (1- token-start) (1- token-end))))))
 
                  (imenu-in-function-declaration
@@ -2361,7 +2357,8 @@
 
                 (when (and (equal next-token 'END_PARSE)
                            imenu-in-namespace-name
-                           (not imenu-in-namespace-with-brackets))
+                           (not imenu-in-namespace-with-brackets)
+                           imenu-namespace-index)
                   (let ((imenu-add-list (nreverse imenu-namespace-index)))
                     (push `(,imenu-in-namespace-name . ,imenu-add-list) imenu-index))
                   (setq imenu-in-namespace-name nil))
@@ -3106,7 +3103,7 @@
   phps-mode-functions-imenu)
 
 (defun phps-mode-functions-comment-region (beg end &optional _arg)
-  "Comment region from BEG to END with optional ARG."
+  "Comment region from BEG to END with optional _ARG."
   ;; Iterate tokens from beginning to end and comment out all PHP code
   (when-let ((tokens phps-mode-lexer-tokens))
     (let ((token-comment-start nil)
@@ -3126,6 +3123,8 @@
                    (equal token-label 'T_COMMENT)
                    (equal token-label 'T_DOC_COMMENT)
                    (equal token-label 'T_CLOSE_TAG))
+                  (phps-mode-debug-message
+                   (message "Comment should end at previous token %s %s" token-label token-comment-end))
                   (setq in-token-comment nil))
                  (t (setq token-comment-end token-end)))
 
@@ -3156,8 +3155,9 @@
                  (equal token-label 'T_OPEN_TAG_WITH_ECHO)))
                (t
                 (phps-mode-debug-message
-                 (message "Comment should start at %s %s" token-label token-start))
+                 (message "Comment should start at %s %s-%s" token-label token-start token-end))
                 (setq token-comment-start token-start)
+                (setq token-comment-end token-end)
                 (setq in-token-comment t)))))))
 
       ;; When we have a start and end of comment, comment it out
