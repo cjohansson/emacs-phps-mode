@@ -2208,9 +2208,7 @@
               (temp-post-indent nil)
               (imenu-index '())
               (imenu-namespace-index '())
-              (imenu-namespace-definition nil)
               (imenu-class-index '())
-              (imenu-class-definition nil)
               (imenu-in-namespace-declaration nil)
               (imenu-in-namespace-name nil)
               (imenu-in-namespace-with-brackets nil)
@@ -2274,14 +2272,16 @@
 
                   (when (and imenu-open-namespace-level
                              (= imenu-open-namespace-level imenu-nesting-level)
-                             imenu-in-namespace-name)
+                             imenu-in-namespace-name
+                             imenu-namespace-index)
                     (let ((imenu-add-list (nreverse imenu-namespace-index)))
                       (push `(,imenu-in-namespace-name . ,imenu-add-list) imenu-index))
                     (setq imenu-in-namespace-name nil))
 
                   (when (and imenu-open-class-level
                              (= imenu-open-class-level imenu-nesting-level)
-                             imenu-in-class-name)
+                             imenu-in-class-name
+                             imenu-class-index)
                     (let ((imenu-add-list (nreverse imenu-class-index)))
                       (if imenu-in-namespace-name
                           (push `(,imenu-in-class-name . ,imenu-add-list) imenu-namespace-index)
@@ -2300,12 +2300,10 @@
                     (setq imenu-in-namespace-with-brackets (string= token "{"))
                     (setq imenu-open-namespace-level imenu-nesting-level)
                     (setq imenu-namespace-index '())
-                    (push `("*definition*" . ,imenu-namespace-definition) imenu-namespace-index)
                     (setq imenu-in-namespace-declaration nil))
 
                    ((and (or (equal token 'T_STRING)
                              (equal token 'T_NS_SEPARATOR))
-                         (setq imenu-namespace-definition token-start)
                          (setq imenu-in-namespace-name (concat imenu-in-namespace-name (substring string (1- token-start) (1- token-end))))))))
 
                  (imenu-in-class-declaration
@@ -2314,12 +2312,10 @@
                    ((string= token "{")
                     (setq imenu-open-class-level imenu-nesting-level)
                     (setq imenu-in-class-declaration nil)
-                    (setq imenu-class-index '())
-                    (push `("*definition*" . ,imenu-class-definition) imenu-class-index))
+                    (setq imenu-class-index '()))
 
                    ((and (equal token 'T_STRING)
                          (not imenu-in-class-name))
-                    (setq imenu-class-definition token-start)
                     (setq imenu-in-class-name (substring string (1- token-start) (1- token-end))))))
 
                  (imenu-in-function-declaration
@@ -2361,7 +2357,8 @@
 
                 (when (and (equal next-token 'END_PARSE)
                            imenu-in-namespace-name
-                           (not imenu-in-namespace-with-brackets))
+                           (not imenu-in-namespace-with-brackets)
+                           imenu-namespace-index)
                   (let ((imenu-add-list (nreverse imenu-namespace-index)))
                     (push `(,imenu-in-namespace-name . ,imenu-add-list) imenu-index))
                   (setq imenu-in-namespace-name nil))
