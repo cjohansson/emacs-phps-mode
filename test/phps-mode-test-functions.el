@@ -861,7 +861,7 @@
    "Indent mixed HTML and one-line PHP lines."
    (indent-region (point-min) (point-max))
    (let ((buffer-contents (buffer-substring-no-properties (point-min) (point-max))))
-     (should (equal buffer-contents "<html>\n    <head>\n        <title><?php $myTitle; ?></title>\n    </head>\n    <body>\n<?php echo 'test'; ?>\n        <h1>My title</h1>\n<?php if ($myTest): ?>\n        <div>\n            A lot of other stuff.\n        </div>\n<?php endif; ?>\n    </body>\n</html>"))))
+     (should (equal buffer-contents "<html>\n    <head>\n        <title><?php $myTitle; ?></title>\n    </head>\n    <body>\n        <?php echo 'test'; ?>\n        <h1>My title</h1>\n        <?php if ($myTest): ?>\n        <div>\n            A lot of other stuff.\n        </div>\n        <?php endif; ?>\n    </body>\n</html>"))))
 
   )
 

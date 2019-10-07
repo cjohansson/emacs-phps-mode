@@ -2151,6 +2151,7 @@
               (inline-html-square-bracket-level 0)
               (inline-html-round-bracket-level 0)
               (inline-html-is-whitespace nil)
+              (inline-html-rest-is-whitespace nil)
               (first-token-is-inline-html nil)
               (after-special-control-structure nil)
               (after-special-control-structure-token nil)
@@ -2387,6 +2388,7 @@
 
                   ;; Flag whether inline-html is whitespace or not
                   (setq inline-html-is-whitespace (string= (string-trim (substring string (1- token-start) (1- token-end))) ""))
+                  (setq inline-html-rest-is-whitespace (string-match "^[\ \t]\n" (substring string (1- token-start) (1- token-end))))
 
                   (when first-token-on-line
                     (setq first-token-is-inline-html t))
@@ -2867,11 +2869,11 @@
                       (phps-mode-debug-message
                        (message "Process line ending.	nesting: %s-%s,	line-number: %s-%s,	indent: %s.%s,	token: %s" nesting-start nesting-end token-start-line-number token-end-line-number column-level-start tuning-level token))
 
-                      ;; TODO Should flag inline-html-is-whitespace of inline-html ends current line with only white-space but have non-whitespace content after current line
                       (when (and (> token-start-line-number 0)
                                  (or
                                   (not first-token-is-inline-html)
-                                  inline-html-is-whitespace))
+                                  inline-html-is-whitespace
+                                  inline-html-rest-is-whitespace))
                         (phps-mode-debug-message
                          (message "Putting indent on line %s to %s at #C" token-start-line-number column-level-start))
                         (puthash token-start-line-number `(,column-level-start ,tuning-level) line-indents))
