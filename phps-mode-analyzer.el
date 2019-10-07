@@ -2867,6 +2867,7 @@
                       (phps-mode-debug-message
                        (message "Process line ending.	nesting: %s-%s,	line-number: %s-%s,	indent: %s.%s,	token: %s" nesting-start nesting-end token-start-line-number token-end-line-number column-level-start tuning-level token))
 
+                      ;; TODO Should flag inline-html-is-whitespace of inline-html ends current line with only white-space but have non-whitespace content after current line
                       (when (and (> token-start-line-number 0)
                                  (or
                                   (not first-token-is-inline-html)
