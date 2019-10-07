@@ -1046,6 +1046,17 @@
                    0
                    ))))
 
+  (should (equal
+           '(0 1 2 1 0)
+           (nth 0 (phps-mode-functions--get-inline-html-indentation
+                   "<script type=\"text/javascript\">\n    if (something()) {\n        alert('Something here');\n    }\n</script>\n"
+                   0
+                   0
+                   0
+                   0
+                   0
+                   ))))
+
   )
 
 (defun phps-mode-test-functions ()

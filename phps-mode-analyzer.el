@@ -2066,7 +2066,7 @@
         (line-indents nil)
         (first-object-on-line t)
         (first-object-is-nesting-decrease nil))
-    (while (string-match "\\([\n\C-m]\\)\\|\\(<[a-zA-Z]+\\)\\|\\(</[a-zA-Z]+\\)\\|\\(/>\\)\\|\\(\\[\\)\\|\\()\\)\\|\\((\\)" inline-html start)
+    (while (string-match "\\([\n\C-m]\\)\\|\\(<[a-zA-Z]+\\)\\|\\(</[a-zA-Z]+\\)\\|\\(/>\\)\\|\\(\\[\\)\\|\\()\\)\\|\\((\\)\\|\\({\\|}\\)" inline-html start)
       (let* ((end (match-end 0))
              (string (substring inline-html (match-beginning 0) end)))
 
