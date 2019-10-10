@@ -266,7 +266,7 @@
   "Run test for integration."
   (setq debug-on-error t)
   (setq phps-mode-runtime-debug t)
-  (setq phps-mode-analyzer-process-on-indent-and-imenu t)
+  ;; (setq phps-mode-analyzer-process-on-indent-and-imenu t)
   (phps-mode-test-integration-incremental)
   (phps-mode-test-integration-whitespace-modifications))
 
