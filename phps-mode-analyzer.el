@@ -39,6 +39,8 @@
 (require 'semantic/lex)
 (require 'semantic/wisent)
 
+(defvar phps-mode-analyzer-process-on-indent-and-imenu nil
+  "Whether to automatically process buffer when using indent or imenu.")
 
 (defvar phps-mode-lexer-tokens nil
   "Last lexer tokens.")
@@ -1563,14 +1565,6 @@
 
         (phps-mode-lexer-re2c-execute)))))
 
-(defun phps-mode-lexer-get-tokens ()
-  "Get lexer tokens."
-  phps-mode-lexer-tokens)
-
-(defun phps-mode-lexer-get-states ()
-  "Get lexer states."
-  phps-mode-lexer-states)
-
 (defun phps-mode-lexer--get-next-unescaped (character)
   "Find where next un-escaped CHARACTER comes, if none is found return nil."
   ;; (message "phps-mode-lexer--get-next-unescaped(%s)" character)
@@ -1658,8 +1652,10 @@
               (push token new-tokens))))))
     new-tokens))
 
-(defun phps-mode-lexer-run-incremental (buffer)
+(defun phps-mode-lexer-run-incremental (&optional buffer)
   "Run incremental lexer on BUFFER."
+  (unless buffer
+    (setq buffer (current-buffer)))
   (phps-mode-debug-message (message "Run incremental lexer on buffer '%s'" buffer))
   (with-current-buffer buffer
     (let ((changes (phps-mode-functions--get-changes))
@@ -1953,9 +1949,10 @@
   "Process current buffer, generate indentations and Imenu, trigger incremental lexer if we have change."
   (interactive)
   (phps-mode-debug-message (message "Process current buffer"))
-  (when phps-mode-functions-idle-timer
+  (when (and phps-mode-functions-idle-timer
+             phps-mode-analyzer-process-on-indent-and-imenu)
     (phps-mode-debug-message (message "Trigger incremental lexer"))
-    (phps-mode-lexer-run-incremental (current-buffer))
+    (phps-mode-lexer-run-incremental)
     (setq-local phps-mode-functions-processed-buffer nil))
   (if (not phps-mode-functions-processed-buffer)
       (progn
@@ -3072,7 +3069,7 @@
   "Start idle timer."
   (phps-mode-debug-message (message "Enqueued idle timer"))
   (when (boundp 'phps-mode-idle-interval)
-    (setq-local phps-mode-functions-idle-timer (run-with-idle-timer phps-mode-idle-interval nil #'phps-mode-lexer-run-incremental (current-buffer)))))
+    (setq-local phps-mode-functions-idle-timer (run-with-idle-timer phps-mode-idle-interval nil #'phps-mode-lexer-run-incremental))))
 
 (defun phps-mode-functions-after-change (start stop length)
   "Track buffer change from START to STOP with LENGTH."

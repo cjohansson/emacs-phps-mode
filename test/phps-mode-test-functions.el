@@ -248,7 +248,7 @@
   (phps-mode-test-with-buffer
    "<?php\n$myObj->myFunction()\n    ->mySecondaryFunction();"
    "Indentation of chained class method calls outside of assignments and conditionals"
-   ;; (message "Tokens: %s" (phps-mode-lexer-get-tokens))
+   ;; (message "Tokens: %s" phps-mode-lexer-tokens)
    (should (equal '((1 (0 0)) (2 (0 0)) (3 (1 0))) (phps-mode-test-hash-to-list (phps-mode-functions-get-lines-indent)))))
 
   (phps-mode-test-with-buffer
@@ -259,13 +259,13 @@
   (phps-mode-test-with-buffer
    "<?php\n\n$myResult = !empty($myVar->myMethod3)\n    && $myVar->myMethod\n        && $myVar->myMethod2;\n"
    "Indentation for chained object operators in assignment"
-   ;; (message "Tokens: %s" (phps-mode-lexer-get-tokens))
+   ;; (message "Tokens: %s" phps-mode-lexer-tokens)
    (should (equal '((1 (0 0)) (2 (0 0)) (3 (0 0)) (4 (1 0)) (5 (1 0))) (phps-mode-test-hash-to-list (phps-mode-functions-get-lines-indent)))))
 
   (phps-mode-test-with-buffer
    "<?php\n$array = [\n    'second' => [\n        'hello' => true\n        ]\n];\n\n$array = array(\n    'second' => array(\n        'third' => true\n        )\n);"
    "Indent multi-dimensional arrays without trailing commas"
-   ;; (message "Tokens: %s" (phps-mode-lexer-get-tokens))
+   ;; (message "Tokens: %s" phps-mode-lexer-tokens)
    (should (equal '((1 (0 0)) (2 (0 0)) (3 (1 0)) (4 (2 0)) (5 (1 0)) (6 (0 0)) (7 (0 0)) (8 (0 0)) (9 (1 0)) (10 (2 0)) (11 (1 0)) (12 (0 0))) (phps-mode-test-hash-to-list (phps-mode-functions-get-lines-indent))))
 
    (phps-mode-test-with-buffer
@@ -639,7 +639,7 @@
   (phps-mode-test-with-buffer
    "<html><head><title><?php if ($myCondition) {\nif ($mySeconCondition) {\necho $title3;\n\n}\n?>\n</title><body>Bla bla</body></html>"
    "Curly bracket test 4"
-   ;; (message "Tokens: %s" (phps-mode-lexer-get-tokens))
+   ;; (message "Tokens: %s" phps-mode-lexer-tokens)
    (goto-char 110)
    (phps-mode-functions-indent-line)
    (let ((buffer-contents (buffer-substring-no-properties (point-min) (point-max))))
