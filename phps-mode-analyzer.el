@@ -3151,6 +3151,8 @@
               (cond
                ((or
                  (equal token-label 'T_INLINE_HTML)
+                 (equal token-label 'T_COMMENT)
+                 (equal token-label 'T_DOC_COMMENT)
                  (equal token-label 'T_OPEN_TAG)
                  (equal token-label 'T_OPEN_TAG_WITH_ECHO)))
                (t

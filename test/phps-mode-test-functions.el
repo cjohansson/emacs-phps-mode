@@ -1015,6 +1015,14 @@
    (let ((buffer-contents (buffer-substring-no-properties (point-min) (point-max))))
      (should (equal buffer-contents "<?php\nnamespace myNamespace;\nclass myClass extends myAbstract implements myInterface {\n    public function myFunctionA($myArg = null) {}\n    protected function myFunctionB($myArg = 'abc') {}\n}"))))
 
+  (phps-mode-test-with-buffer
+   "<?php\n/**\n * My doc comment\n */\n$var = 'abc';\n"
+   "Comment region were some of the region is in doc comment"
+   (message "Tokens %s" phps-mode-lexer-tokens)
+   (comment-region (point-min) (point-max))
+   (let ((buffer-contents (buffer-substring-no-properties (point-min) (point-max))))
+     (should (equal buffer-contents "<?php\n/**\n * My doc comment\n */\n/* $var = 'abc'; */\n"))))
+
   )
 
 (defun phps-mode-test-functions-get-inline-html-indentation ()
