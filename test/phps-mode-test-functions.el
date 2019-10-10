@@ -1018,10 +1018,18 @@
   (phps-mode-test-with-buffer
    "<?php\n/**\n * My doc comment\n */\n$var = 'abc';\n"
    "Comment region were some of the region is in doc comment"
-   (message "Tokens %s" phps-mode-lexer-tokens)
+   ;; (message "Tokens %s" phps-mode-lexer-tokens)
    (comment-region (point-min) (point-max))
    (let ((buffer-contents (buffer-substring-no-properties (point-min) (point-max))))
      (should (equal buffer-contents "<?php\n/**\n * My doc comment\n */\n/* $var = 'abc'; */\n"))))
+
+  (phps-mode-test-with-buffer
+   "<?php\n/** $var = '123'; */\n$var = 'abc';\n"
+   "Un-comment region were some of the region is already un-commented"
+   ;; (message "Tokens %s" phps-mode-lexer-tokens)
+   (uncomment-region (point-min) (point-max))
+   (let ((buffer-contents (buffer-substring-no-properties (point-min) (point-max))))
+     (should (equal buffer-contents "<?php\n$var = '123';\n$var = 'abc';\n"))))
 
   )
 
