@@ -3215,8 +3215,8 @@
                       (setq offset-comment-end (+ token-end offset))
                       (save-excursion
                         (goto-char offset-comment-end)
-                        (delete-char -4))
-                      (setq offset (- offset 4)))
+                        (delete-char -3))
+                      (setq offset (- offset 3)))
 
                   (phps-mode-debug-message
                    (message "Un-comment comment starting at %s" token-start))
