@@ -1685,7 +1685,8 @@
             (setq-local phps-mode-lexer-STATE nil)
             (setq-local phps-mode-lexer-state_stack nil)
 
-            (phps-mode-debug-message (message "Processing incremental changes: %s" changes))
+            (phps-mode-debug-message
+             (message "Processing incremental changes: %s" changes))
             (setq run-full-lexer t)
 
             (dolist (change (nreverse changes))
@@ -1710,6 +1711,7 @@
                               (buffer-length-delta nil)
                               (incremental-start 0)
                               (incremental-stop change-stop)
+                              (tail-boundary change-stop)
                               (change-length (- change-stop change-start))
                               (appended-tokens nil))
 
@@ -1736,6 +1738,7 @@
                                ((> start change-stop)
                                 (setq incremental-stop end)))))
                           (setq head-tokens (nreverse head-tokens))
+                          (setq tail-bondary incremental-stop)
                           (phps-mode-debug-message
                            (message "Head tokens: %s" head-tokens)
                            (message "Incremental start: %s" incremental-start)
@@ -1749,17 +1752,24 @@
                           (cond
                            ((= change-length buffer-length-delta)
                             (phps-mode-debug-message (message "Flag change as insert"))
-                            (setq incremental-stop (+ incremental-stop (1- buffer-length-delta))))
+                            (setq tail-boundary (- incremental-stop buffer-length-delta))
+                            ;; (setq incremental-stop (+ incremental-stop (1- buffer-length-delta)))
+                            )
                            ((and (= change-length 0)
                                  (< buffer-length-delta 0))
                             (phps-mode-debug-message (message "Flag change as deletion"))
+                            (setq tail-boundary (+ incremental-stop (abs buffer-length-delta)))
                             (setq incremental-stop (+ incremental-stop (abs buffer-length-delta))))
                            (t
                             (phps-mode-debug-message (message "Do not flag change as insert or deletion"))))
 
+                          (phps-mode-debug-message
+                           (message "Tail boundary: %s" tail-boundary))
+
+                          ;; Generate tail tokens
                           (dolist (token old-tokens)
                             (let ((start (car (cdr token))))
-                              (when (>= start incremental-stop)
+                              (when (>= start tail-boundary)
                                 (push token tail-tokens))))
                           (setq tail-tokens (nreverse tail-tokens))
 
@@ -1791,7 +1801,7 @@
                                       (setq incremental-state (nth 2 state-object))
                                       (setq incremental-state-stack (nth 3 state-object))
                                       (push state-object head-states))
-                                    (when (>= start incremental-stop)
+                                    (when (>= start tail-boundary)
                                       (push state-object tail-states))))
 
                                 (phps-mode-debug-message
@@ -1807,7 +1817,8 @@
 
                                 (if head-states
                                     (progn
-                                      (phps-mode-debug-message (message "Found head states"))
+                                      (phps-mode-debug-message
+                                       (message "Found head states, flag that we should not do a full lexing of buffer"))
 
                                       ;; Flag that we should not run ful lexer
                                       (setq run-full-lexer nil)
@@ -1837,8 +1848,12 @@
                                             (setq-local semantic-lex-syntax-table phps-mode-syntax-table))
 
                                           (phps-mode-debug-message
-                                           (message "Incremental buffer contents: \n%s" (buffer-substring-no-properties (point-min) (point-max)))
-                                           (message "Incremental buffer lexer region (%s-%s): \n%s" (1- incremental-start) (1+ incremental-stop) (buffer-substring-no-properties (1- incremental-start) (1+ incremental-stop))))
+                                           (message
+                                            "Incremental buffer contents: \n%s"
+                                            (buffer-substring-no-properties (point-min) (point-max)))
+                                           (message
+                                            "Incremental buffer lexer region (%s-%s): \n%s"
+                                            (1- incremental-start) (1+ incremental-stop) (buffer-substring-no-properties (1- incremental-start) (1+ incremental-stop))))
 
                                           (setq incremental-tokens (semantic-lex (1- incremental-start) (1+ incremental-stop)))
                                           (setq appended-tokens (append head-tokens incremental-tokens))
@@ -1897,6 +1912,8 @@
                                         (phps-mode-debug-message (message "New tokens from full lex are: %s" appended-tokens)))
 
                                       (phps-mode-debug-message (message "Final tokens: %s" appended-tokens))
+                                      (setq old-tokens appended-tokens)
+                                      (setq old-states phps-mode-lexer-states)
                                       (setq-local phps-mode-lexer-tokens appended-tokens))
                                   (phps-mode-debug-message (message "Did not find head states"))))
                             (phps-mode-debug-message
@@ -1926,7 +1943,8 @@
 
       (when run-full-lexer
         (phps-mode-debug-message (message "Running full lexer"))
-        (phps-mode-lexer-run)))))
+        ;; (phps-mode-lexer-run)
+        ))))
 
 (define-lex phps-mode-lexer-lex
   "Call lexer analyzer action."
