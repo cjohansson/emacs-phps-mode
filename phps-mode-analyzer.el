@@ -1719,7 +1719,8 @@
                               (change-length (- change-stop change-start))
                               (appended-tokens nil)
                               (change-is-insertion nil)
-                              (change-is-deletion nil))
+                              (change-is-deletion nil)
+                              (change-is-mixed nil))
 
                           (phps-mode-debug-message
                            (message "Change length: %s" change-length)
@@ -1755,10 +1756,18 @@
                           ;; Calculate change of buffer length
                           (setq buffer-length-delta (- buffer-length-new buffer-length-old))
 
+                          ;; Flag change as insertion or deletion or none of them
                           (cond
                            ((= change-length buffer-length-delta)
                             (phps-mode-debug-message (message "Flag change as insert"))
                             (setq change-is-insertion t)
+
+                            ;; When we have an insertion, the length of the insert will be
+                            ;; the difference in buffer length, by substracting the length
+                            ;; of the insert from the insert end we should arrive at the point
+                            ;; in the old buffer that should be appended as tail for tokens
+                            ;; and states
+                            
                             (setq tail-boundary (- incremental-stop buffer-length-delta))
                             ;; (setq incremental-stop (+ incremental-stop (1- buffer-length-delta)))
                             )
@@ -1766,10 +1775,15 @@
                                  (< buffer-length-delta 0))
                             (phps-mode-debug-message (message "Flag change as deletion"))
                             (setq change-is-deletion t)
+
+                            ;; When we have an deletion, the trailing are should be
+                            
                             (setq tail-boundary (+ incremental-start (abs buffer-length-delta)))
                             (setq incremental-stop (+ incremental-stop (abs buffer-length-delta))))
+
                            (t
-                            (phps-mode-debug-message (message "Do not flag change as insert or deletion"))))
+                            (setq change-is-mixed t)
+                            (phps-mode-debug-message (message "Flag change as mixed"))))
 
                           (phps-mode-debug-message
                            (message "Tail boundary: %s" tail-boundary))
