@@ -90,6 +90,8 @@
 (defvar phps-mode-lexer-heredoc_label_stack (list)
   "The current heredoc_label.")
 
+;; TODO Should replace following integers as symbols instead
+
 (defconst phps-mode-lexer-ST_INITIAL 0
   "Flag for initial state.")
 
@@ -1656,7 +1658,8 @@
   "Run incremental lexer on BUFFER."
   (unless buffer
     (setq buffer (current-buffer)))
-  (phps-mode-debug-message (message "Run incremental lexer on buffer '%s'" buffer))
+  (phps-mode-debug-message
+   (message "Run incremental lexer on buffer '%s'" buffer))
   (with-current-buffer buffer
     (let ((changes (phps-mode-functions--get-changes))
           (run-full-lexer nil)
@@ -1725,10 +1728,8 @@
                           (phps-mode-debug-message
                            (message "Change length: %s" change-length)
                            (message "Old tokens: %s" old-tokens)
-                           (message "Old states: %s" old-states))
-
-                          ;; (phps-mode-debug-message
-                          ;;  (message "Buffer length old: %s" buffer-length-old))
+                           (message "Old states: %s" old-states)
+                           (message "Buffer length old: %s" buffer-length-old))
 
                           ;; 1. Determine incremental start (incremental-start), that is at the start of previous token
                           ;; 2. Build list of tokens before incremental start (head-tokens)
@@ -1746,10 +1747,12 @@
                                 (setq incremental-stop end)))))
                           (setq head-tokens (nreverse head-tokens))
                           (setq tail-bondary incremental-stop)
+                          (setq tail-boundary incremental-stop)
                           (phps-mode-debug-message
                            (message "Head tokens: %s" head-tokens)
                            (message "Incremental start: %s" incremental-start)
                            (message "Incremental stop: %s" incremental-stop)
+                           (message "Tail boundary: %s" tail-boundary)
                            (message "Buffer length old: %s" buffer-length-old)
                            (message "Buffer contents old: %s" buffer-contents-old))
 
@@ -1759,7 +1762,8 @@
                           ;; Flag change as insertion or deletion or none of them
                           (cond
                            ((= change-length buffer-length-delta)
-                            (phps-mode-debug-message (message "Flag change as insert"))
+                            (phps-mode-debug-message
+                             (message "Flag change as insert"))
                             (setq change-is-insertion t)
 
                             ;; When we have an insertion, the length of the insert will be
@@ -1767,26 +1771,27 @@
                             ;; of the insert from the insert end we should arrive at the point
                             ;; in the old buffer that should be appended as tail for tokens
                             ;; and states
-                            
-                            (setq tail-boundary (- incremental-stop buffer-length-delta))
+
+                            (setq tail-boundary incremental-start)
+                            ;; (setq incremental-stop incremental-start)
                             ;; (setq incremental-stop (+ incremental-stop (1- buffer-length-delta)))
                             )
                            ((and (= change-length 0)
                                  (< buffer-length-delta 0))
-                            (phps-mode-debug-message (message "Flag change as deletion"))
+                            (phps-mode-debug-message
+                             (message "Flag change as deletion"))
                             (setq change-is-deletion t)
 
-                            ;; When we have an deletion, the trailing are should be
-                            
-                            (setq tail-boundary (+ incremental-start (abs buffer-length-delta)))
+                            ;; When we have an deletion, the trailing region should be
                             (setq incremental-stop (+ incremental-stop (abs buffer-length-delta))))
 
                            (t
                             (setq change-is-mixed t)
-                            (phps-mode-debug-message (message "Flag change as mixed"))))
+                            (phps-mode-debug-message
+                             (message "Flag change as mixed"))))
 
                           (phps-mode-debug-message
-                           (message "Tail boundary: %s" tail-boundary))
+                           (message "New tail boundary: %s" tail-boundary))
 
                           ;; Generate tail tokens
                           (dolist (token old-tokens)
@@ -1811,12 +1816,12 @@
                                head-tokens)
                               (progn
 
-                                (phps-mode-debug-message (message "Found positive incremental-start and head tokens"))
+                                (phps-mode-debug-message
+                                 (message "Found positive incremental-start and head tokens"))
 
                                 ;; 1. Determine state (incremental-state) and state-stack (incremental-state-stack) before incremental start
                                 ;; 2. Build list of states before incremental start (head-states)
                                 ;; 3. Build list of states after incremental start (tail-states)
-                                ;; 4. Determine state (incremental-old-end-state) and state-stack (incremental-old-end-state-stack) before tail-boundary
                                 (dolist (state-object (nreverse old-states))
                                   (let ((start (nth 0 state-object))
                                         (end (nth 1 state-object)))
@@ -1944,10 +1949,10 @@
                                         (setq head-tokens appended-tokens)
                                         (setq incremental-tokens (semantic-lex incremental-stop (point-max)))
                                         (setq appended-tokens (append head-tokens incremental-tokens))
-                                        (phps-mode-debug-message (message "New states from full lex are: %s" phps-mode-lexer-states))
-                                        (phps-mode-debug-message (message "New tokens from full lex are: %s" appended-tokens))
-
-                                        (phps-mode-debug-message (message "Final tokens: %s" appended-tokens))
+                                        (phps-mode-debug-message
+                                         (message "New states from full lex are: %s" phps-mode-lexer-states)
+                                         (message "New tokens from full lex are: %s" appended-tokens)
+                                         (message "Final tokens: %s" appended-tokens))
                                         (setq old-tokens appended-tokens)
                                         (setq old-states phps-mode-lexer-states)
                                         (setq-local phps-mode-lexer-tokens appended-tokens)))
@@ -1956,7 +1961,8 @@
                                   (setq-local phps-mode-lexer-states head-states)
                                   (setq-local phps-mode-lexer-STATE incremental-state)
                                   (setq-local phps-mode-lexer-state_stack incremental-state-stack)
-                                  (phps-mode-debug-message (message "Did not find head states"))
+                                  (phps-mode-debug-message
+                                   (message "Did not find head states"))
 
                                   ;; TODO Should abort loop here
 
@@ -1991,10 +1997,12 @@
             (setq-local phps-mode-lexer-buffer-length (1- (point-max)))
             (setq-local phps-mode-lexer-buffer-contents (buffer-substring-no-properties (point-min) (point-max))))
 
-        (phps-mode-debug-message (message "Found no changes")))
+        (phps-mode-debug-message
+         (message "Found no changes")))
 
       (when run-full-lexer
-        (phps-mode-debug-message (message "Running full lexer"))
+        (phps-mode-debug-message
+         (message "Running full lexer"))
         ;; (phps-mode-lexer-run)
         ))))
 
