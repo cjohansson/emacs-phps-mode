@@ -1788,7 +1788,7 @@
                                 (dolist (state-object (nreverse old-states))
                                   (let ((start (nth 0 state-object))
                                         (end (nth 1 state-object)))
-                                    (when (<= end head-boundary)
+                                    (when (<= end change-start)
                                       (setq incremental-state (nth 2 state-object))
                                       (setq incremental-state-stack (nth 3 state-object))
                                       (push state-object head-states))
