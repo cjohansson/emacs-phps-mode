@@ -1740,10 +1740,8 @@
                             (let ((start (car (cdr token)))
                                   (end (cdr (cdr token))))
                               (cond
-                               ((< end change-start)
+                               ((<= end change-start)
                                 (push token head-tokens)
-                                (setq head-boundary start))
-                               ((= end change-start)
                                 (setq head-boundary start))
                                ((and (> start change-stop)
                                      (not tail-boundary))
@@ -1863,7 +1861,7 @@
                                             (switch-to-buffer incremental-buffer)
                                             (delete-region (point-min) (point-max))
                                             (goto-char (point-max))
-                                            (insert-char 32 (- incremental-start-new-buffer 2))
+                                            (insert-char 32 (1- incremental-start-new-buffer))
                                             (insert-char 10)
                                             (goto-char (point-max))
                                             (insert (substring
@@ -1894,9 +1892,9 @@
                                               incremental-stop-new-buffer
                                               (buffer-substring-no-properties
                                                incremental-start-new-buffer
-                                               incremental-stop-new-buffer)))
+                                               (1- incremental-stop-new-buffer))))
 
-                                            (setq incremental-tokens (semantic-lex incremental-start-new-buffer incremental-stop-new-buffer))
+                                            (setq incremental-tokens (semantic-lex incremental-start-new-buffer (1- incremental-stop-new-buffer)))
                                             (setq appended-tokens (append head-tokens incremental-tokens))
                                             (setq incremental-states phps-mode-lexer-states)
                                             (setq incremental-new-end-state phps-mode-lexer-STATE)
@@ -1941,7 +1939,8 @@
                                             (phps-mode-debug-message (message "New states from incremental lex are: %s" phps-mode-lexer-states))
                                             
                                             (setq appended-tokens (append appended-tokens tail-tokens))
-                                            (phps-mode-debug-message (message "New tokens from incremental lex are: %s" appended-tokens)))
+                                            (phps-mode-debug-message (message "New tokens from incremental lex are: %s" appended-tokens))
+                                            (setq-local phps-mode-lexer-tokens appended-tokens))
 
                                         (phps-mode-debug-message
                                          (message "Did not find matching state and state-stack, should quit loop and lex rest of buffer"))
@@ -1968,6 +1967,7 @@
                                   (setq-local phps-mode-lexer-states head-states)
                                   (setq-local phps-mode-lexer-STATE incremental-state)
                                   (setq-local phps-mode-lexer-state_stack incremental-state-stack)
+
                                   (phps-mode-debug-message
                                    (message "Did not find head states"))
 
@@ -1982,19 +1982,19 @@
                              (unless head-tokens
                                (message "Did not find head tokens"))
                              (unless (> head-boundary 0)
-                               (message "Did not find positive head-boundary"))))
+                               (message "Did not find positive head-boundary")))))
 
-                          ;; TODO Should abort loop here
-                          (phps-mode-debug-message
-                           (message "Not running incremental lexer due to:")
-                           (unless (> change-start 1)
-                             (message "* Change start not above one: %s" change-start))
-                           (unless old-states
-                             (message "* Lacking lexer states"))
-                           (unless old-tokens
-                             (message "* Lacking lexer tokens")))))
+                      ;; TODO Should abort loop here
+                      (phps-mode-debug-message
+                       (message "Not running incremental lexer due to:")
+                       (unless (> change-start 1)
+                         (message "* Change start not above one: %s" change-start))
+                       (unless old-states
+                         (message "* Lacking lexer states"))
+                       (unless old-tokens
+                         (message "* Lacking lexer tokens"))))
 
-                  ;; TODO Should anort loop here
+                  ;; TODO Should abort loop here
                   (phps-mode-debug-message
                    (message "Lacking change-start or change-end")))
 
