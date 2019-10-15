@@ -1696,7 +1696,7 @@
                               (change-is-mixed nil))
 
                           (phps-mode-debug-message
-                           (message "Change length: %s" change-length)
+                           (message "Change %s-%s = %s" change-start change-stop change-length)
                            (message "Old tokens: %s" old-tokens)
                            (message "Old states: %s" old-states)
                            (message "Buffer length old: %s" buffer-length-old))
@@ -1747,8 +1747,9 @@
                              (message "Flag change as deletion"))
                             (setq change-is-deletion t)
 
-                            ;; When we have an deletion, the trailing region should be
-                            (setq tail-boundary (+ tail-boundary buffer-length-delta)))
+                            ;; When we have an deletion, the trailing region should moved forward
+                            ;; the distance of the difference in buffer lengths
+                            (setq tail-boundary (+ tail-boundary (abs buffer-length-delta))))
 
                            (t
                             (setq change-is-mixed t)
@@ -1820,8 +1821,17 @@
                                       ;; Should only run incremental lexer if change is not a deletion
                                       (if change-is-deletion
                                           (progn
+
+                                            ;; Copy tokens and states before deletion region to after it
+                                            (setq appended-tokens head-tokens)
+                                            (setq incremental-tokens head-tokens)
+                                            (setq incremental-states head-states)
+
+                                            ;; Copy state and state stack from before deletion region to after it
                                             (setq incremental-new-end-state incremental-old-end-state)
-                                            (setq incremental-new-end-state-stack incremental-old-end-state-stack))
+                                            (setq incremental-new-end-state-stack incremental-old-end-state-stack)
+
+                                            )
 
                                         ;; Do partial lex from previous-token-end to change-stop
                                         (let ((incremental-buffer (generate-new-buffer "*PHPs Incremental Buffer*")))
@@ -1909,10 +1919,12 @@
 
                                             (setq-local phps-mode-lexer-states (append tail-states incremental-states))
                                             (phps-mode-debug-message (message "New states from incremental lex are: %s" phps-mode-lexer-states))
+                                            (setq old-states phps-mode-lexer-states)
                                             
                                             (setq appended-tokens (append appended-tokens tail-tokens))
                                             (phps-mode-debug-message (message "New tokens from incremental lex are: %s" appended-tokens))
-                                            (setq-local phps-mode-lexer-tokens appended-tokens))
+                                            (setq-local phps-mode-lexer-tokens appended-tokens)
+                                            (setq old-tokens phps-mode-lexer-tokens))
 
                                         (phps-mode-debug-message
                                          (message "Did not find matching state and state-stack, should quit loop and lex rest of buffer"))
@@ -1922,6 +1934,8 @@
 
                                         ;; Clear syntax colouring of rest of buffer
                                         ;; (phps-mode-lexer-clear-region-syntax-color head-boundary (point-max))
+
+                                        ;; TODO Should fix region below
 
                                         ;; Lex rest of buffer
                                         (setq head-tokens appended-tokens)
