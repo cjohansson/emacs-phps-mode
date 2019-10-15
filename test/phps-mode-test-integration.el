@@ -73,7 +73,6 @@
    (goto-char 132)
    (insert " is a complex one"))
 
-  
   (phps-mode-test-incremental-vs-intial-buffer
    "<?php\nnamespace myNamespace\n{\n    class myClass\n    {\n        public function myFunction()\n        {\n            echo 'my statement';\n        }\n    }\n}\n"
    "Integration-test 5 for regular PHP with namespaces, classes and functions, single deletion"
@@ -120,7 +119,7 @@
 
   )
 
-;; TODO Add functionality for (delete-backward-char) as well
+;; TODO Add tests for (delete-backward-char) as well
 (defun phps-mode-test-integration-whitespace-modifications ()
   "Test white-space modifications functions."
 
