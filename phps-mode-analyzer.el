@@ -1712,9 +1712,11 @@
                                  ((<= end change-start)
                                   (push token head-tokens)
                                   (setq head-boundary start))
-                                 ((and (> start change-stop)
-                                       (not tail-boundary))
-                                  (setq tail-boundary start)))))
+                                 ((> start change-start)
+                                  (unless tail-boundary
+                                    (setq tail-boundary start)))
+                                 (t
+                                  (setq incremental-start-new-buffer (1- start))))))
                             (setq head-tokens (nreverse head-tokens))
                             (phps-mode-debug-message
                              (message "Head tokens: %s" head-tokens)
@@ -1738,7 +1740,7 @@
                               (setq change-is-insertion t)
 
                               ;; When we have an insertion, move point of start of tail by length of insertion
-                              (setq tail-boundary head-boundary)
+                              ;; (setq tail-boundary head-boundary)
                               )
 
                              ;; When we have an deletion, the change-length will be zero but difference in buffer-size will be lesser than zero
@@ -1761,11 +1763,12 @@
                              (message "Tail-boundary: %s" tail-boundary))
 
                             ;; Generate tail tokens from old buffer
-                            (dolist (token old-tokens)
-                              (let ((start (car (cdr token))))
-                                (when (> start tail-boundary)
-                                  (push token tail-tokens))))
-                            (setq tail-tokens (nreverse tail-tokens))
+                            (when tail-boundary
+                              (dolist (token old-tokens)
+                                (let ((start (car (cdr token))))
+                                  (when (>= start tail-boundary)
+                                    (push token tail-tokens))))
+                              (setq tail-tokens (nreverse tail-tokens)))
 
                             (phps-mode-debug-message
                              (message "Buffer length new: %s" buffer-length-new)
@@ -1794,10 +1797,14 @@
                                         (setq incremental-state (nth 2 state-object))
                                         (setq incremental-state-stack (nth 3 state-object))
                                         (push state-object head-states))
-                                      (when (<= start tail-boundary)
+                                      (when (and
+                                             tail-boundary
+                                             (< start tail-boundary))
                                         (setq incremental-old-end-state (nth 2 state-object))
                                         (setq incremental-old-end-state-stack (nth 3 state-object)))
-                                      (when (> start tail-boundary)
+                                      (when (and
+                                             tail-boundary
+                                             (>= start tail-boundary))
                                         (push state-object tail-states))))
 
                                   (phps-mode-debug-message
