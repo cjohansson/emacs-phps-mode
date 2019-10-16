@@ -1684,7 +1684,9 @@
                                 (head-states '())
                                 (tail-states '())
                                 (head-tokens '())
+                                (on-tokens '())
                                 (tail-tokens '())
+                                (on-states '())
                                 (buffer-length-delta nil)
                                 (incremental-start-new-buffer change-start)
                                 (incremental-stop-new-buffer change-stop)
@@ -1716,10 +1718,12 @@
                                   (unless tail-boundary
                                     (setq tail-boundary start)))
                                  (t
+                                  (push token on-tokens)
                                   (setq incremental-start-new-buffer (1- start))))))
                             (setq head-tokens (nreverse head-tokens))
                             (phps-mode-debug-message
                              (message "Head tokens: %s" head-tokens)
+                             (message "On tokens: %s" on-tokens)
                              (message "Head boundary: %s" head-boundary)
                              (message "Tail boundary: %s" tail-boundary)
                              (message "Incremental start new buffer: %s" incremental-start-new-buffer)
@@ -1803,6 +1807,10 @@
                                         (setq incremental-old-end-state (nth 2 state-object))
                                         (setq incremental-old-end-state-stack (nth 3 state-object)))
                                       (when (and
+                                             (> end change-start)
+                                             (<= start change-start))
+                                        (push state-object on-states))
+                                      (when (and
                                              tail-boundary
                                              (>= start tail-boundary))
                                         (push state-object tail-states))))
@@ -1813,6 +1821,7 @@
                                    (message "Incremental-old-end-state: %s" incremental-old-end-state)
                                    (message "Incremental-old-end-state-stack: %s" incremental-old-end-state-stack)
                                    (message "Head states: %s" head-states)
+                                   (message "On states: %s" on-states)
                                    (message "Tail states: %s" tail-states))
 
                                   (if head-states
@@ -1830,10 +1839,29 @@
                                         (if change-is-deletion
                                             (progn
 
+                                              (when on-tokens
+                                                ;; TODO Should move on-tokens here
+                                                (setq head-tokens (nreverse head-tokens))
+                                                (dolist (item on-tokens) (push item head-tokens))
+                                                (setq head-tokens (nreverse head-tokens))
+                                                (phps-mode-debug-message
+                                                 (message
+                                                  "Added on-tokens to head-tokens: %s"
+                                                  head-tokens)))
+                                              (when on-states
+                                                ;; TODO Should move on-states here
+                                                (setq head-states (nreverse head-states))
+                                                (dolist (item on-states) (push item head-states))
+                                                (setq head-states (nreverse head-states))
+                                                (phps-mode-debug-message
+                                                 (message
+                                                  "Added on-states to head-states: %s"
+                                                  head-states)))
+
                                               ;; Copy tokens and states before deletion region to after it
-                                              (setq appended-tokens head-tokens)
                                               (setq incremental-tokens head-tokens)
                                               (setq incremental-states head-states)
+                                              (setq appended-tokens head-tokens)
 
                                               ;; Copy state and state stack from before deletion region to after it
                                               (setq incremental-new-end-state incremental-old-end-state)
@@ -1912,7 +1940,10 @@
                                                   (setq tail-states (phps-mode-lexer-get-moved-states tail-states 0 buffer-length-delta))))
 
                                               (phps-mode-debug-message
-                                               (message "State and state stack at stop equals state at stop: %s %s" phps-mode-lexer-STATE phps-mode-lexer-state_stack))
+                                               (message
+                                                "State and state stack at stop equals state at stop: %s %s"
+                                                phps-mode-lexer-STATE
+                                                phps-mode-lexer-state_stack))
 
                                               ;; TODO re-use rest of indexes here? (indentation and imenu)
 
