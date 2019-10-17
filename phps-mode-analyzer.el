@@ -1704,14 +1704,19 @@
                              (message "Old states: %s" old-states)
                              (message "Buffer length old: %s" buffer-length-old))
 
+                            ;; NOTE Starts are inclusive while ends are exclusive buffer locations
+                            ;;
+                            ;; Some tokens have dynamic length and if a change occurs at token-end
+                            ;; we must start the incremental process at previous token start
+
                             ;; 1. Determine head boundary, that is at the start of previous token
                             ;; 2. Build list of tokens from old buffer before start of changes (head-tokens)
-                            ;; 3. Determine tail boundary, point after changes end
+                            ;; 3. Determine tail boundary, start of next token after change-region
                             (dolist (token old-tokens)
                               (let ((start (car (cdr token)))
                                     (end (cdr (cdr token))))
                                 (cond
-                                 ((<= end change-start)
+                                 ((< end change-start)
                                   (push token head-tokens)
                                   (setq head-boundary start))
                                  ((> start change-start)
@@ -1800,7 +1805,7 @@
                                   (dolist (state-object (nreverse old-states))
                                     (let ((start (nth 0 state-object))
                                           (end (nth 1 state-object)))
-                                      (when (<= end change-start)
+                                      (when (< end change-start)
                                         (setq incremental-state (nth 2 state-object))
                                         (setq incremental-state-stack (nth 3 state-object))
                                         (push state-object head-states))
@@ -1925,15 +1930,20 @@
                                               (phps-mode-debug-message
                                                (message "Incremental tokens: %s" incremental-tokens)
                                                (message "Incremental states: %s" incremental-states)
-                                               (message "Incremental state: %s" incremental-new-end-state)
-                                               (message "Incremental state stack: %s" incremental-new-end-state-stack)))))
+                                               (message "Incremental new end state: %s" incremental-new-end-state)
+                                               (message "Incremental new end state stack: %s" incremental-new-end-state-stack)))))
 
                                         (if (and (equal incremental-new-end-state incremental-state)
                                                  (equal incremental-new-end-state-stack incremental-state-stack))
                                             (progn
 
                                               (phps-mode-debug-message
-                                               (message "Found matching state and state-stack, copying old state and tokens"))
+                                               (message
+                                                "New state and new state stack at stop equals state at stop: %s vs %s, %s vs %s"
+                                                incremental-new-end-state
+                                                incremental-state
+                                                incremental-new-end-state-stack
+                                                incremental-state-stack))
 
                                               (unless (= buffer-length-delta 0)
                                                 (when tail-tokens
@@ -1941,12 +1951,6 @@
 
                                                 (when tail-states
                                                   (setq tail-states (phps-mode-lexer-get-moved-states tail-states 0 buffer-length-delta))))
-
-                                              (phps-mode-debug-message
-                                               (message
-                                                "State and state stack at stop equals state at stop: %s %s"
-                                                phps-mode-lexer-STATE
-                                                phps-mode-lexer-state_stack))
 
                                               ;; TODO re-use rest of indexes here? (indentation and imenu)
 
@@ -1968,17 +1972,15 @@
                                               (setq-local phps-mode-lexer-tokens appended-tokens)
                                               (setq old-tokens phps-mode-lexer-tokens))
 
-                                          (phps-mode-debug-message
-                                           (message "Did not find matching state and state-stack, should quit loop and lex rest of buffer"))
+                                          (signal 'warning "was here 1")
 
                                           (phps-mode-debug-message
-                                           (message "State at stop %s or state stack %s does not equals state at stop: %s %s" phps-mode-lexer-STATE phps-mode-lexer-state_stack incremental-state incremental-state-stack))
-
-                                          ;; Clear syntax colouring of rest of buffer
-                                          ;; (phps-mode-lexer-clear-region-syntax-color head-boundary (point-max))
-
-                                          ;; TODO Should lex from incremental-start to end of buffer here
-                                          (signal 'warning "was here")
+                                           (message
+                                            "New state %s vs %s or new state stack %s vs %s does not equal"
+                                            incremental-new-end-state
+                                            incremental-state
+                                            incremental-new-end-state-stack
+                                            incremental-state-stack))
 
                                           ;; Lex rest of buffer
                                           (setq head-tokens appended-tokens)
