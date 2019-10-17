@@ -1754,9 +1754,12 @@
                                (message "Flag change as deletion"))
                               (setq change-is-deletion t)
 
-                              ;; When we have an deletion, the trailing region should moved forward
+                              ;; When we have an deletion, the trailing region of the old buffer should moved forward
                               ;; the distance of the difference in buffer lengths
-                              (setq tail-boundary (+ tail-boundary (abs buffer-length-delta))))
+                              (let ((new-tail-boundary (+ change-start (abs buffer-length-delta))))
+                                (unless (>= tail-boundary new-tail-boundary)
+                                  (setq tail-boundary new-tail-boundary)))
+                              )
 
                              (t
                               (setq change-is-mixed t)
@@ -1840,7 +1843,8 @@
                                             (progn
 
                                               (when on-tokens
-                                                ;; TODO Should move on-tokens here
+                                                ;; Resize on-tokens since we have a partial delete
+                                                (setq on-tokens (phps-mode-lexer-get-moved-tokens on-tokens change-start buffer-length-delta))
                                                 (setq head-tokens (nreverse head-tokens))
                                                 (dolist (item on-tokens) (push item head-tokens))
                                                 (setq head-tokens (nreverse head-tokens))
@@ -1849,10 +1853,9 @@
                                                   "Added on-tokens to head-tokens: %s"
                                                   head-tokens)))
                                               (when on-states
-                                                ;; TODO Should move on-states here
-                                                (setq head-states (nreverse head-states))
+                                                ;; Resize on-states since we have a partial delete
+                                                (setq on-states (phps-mode-lexer-get-moved-states on-states change-start buffer-length-delta))
                                                 (dolist (item on-states) (push item head-states))
-                                                (setq head-states (nreverse head-states))
                                                 (phps-mode-debug-message
                                                  (message
                                                   "Added on-states to head-states: %s"
