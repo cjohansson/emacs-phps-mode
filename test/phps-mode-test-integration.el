@@ -48,7 +48,7 @@
    "Integration-test 2 for regular PHP with namespaces, classes and functions"
 
    ;; Make changes - insert a new function
-   (goto-char 144)
+   (goto-char 145)
    (insert "\n\n        public function myFunctionB()\n        {\n            echo 'my second statement';\n        }\n")
 
    ;; Make changes - remove first function
