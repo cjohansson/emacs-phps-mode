@@ -32,7 +32,32 @@
 (eval-when-compile
   (require 'phps-mode-macros))
 
-(defun phps-mode-test-integration-incremental ()
+(defun phps-mode-test-integration-incremental-lexer ()
+  "Test the incremental lexer."
+
+  (phps-mode-test-with-buffer
+   "<?php\nnamespace myNamespace\n{\n    class myClass\n    {\n        public function myFunction()\n        {\n            echo 'my statement';\n        }\n    }\n}\n"
+   "Regular OO-file, inspect state-preserving change."
+
+   ;; Make changes - insert a new function
+   (goto-char 145)
+   (insert "\n\n        public function myFunctionB()\n        {\n            echo 'my second statement';\n        }\n")
+
+   (should (equal (phps-mode-lexer-run-incremental) `(('MERGE-INCREMENTAL-LEX 145 245) ('INCREMENTAL-LEX 145 245)))))
+
+  (phps-mode-test-with-buffer
+   "<?php\nnamespace myNamespace\n{\n    class myClass\n    {\n        public function myFunction()\n        {\n            echo 'my statement';\n        }\n    }\n}\n"
+   "Regular OO-file, inspect state-disrupting change."
+
+   ;; Make changes - insert a new function
+   (goto-char 144)
+   (insert "\n\n        public function myFunctionB()\n        {\n            echo 'my second statement';\n        }\n")
+
+   (should (equal (phps-mode-lexer-run-incremental) '(('MERGE-INCREMENTAL-LEX change-start change-stop) ('INCREMENTAL change-start change-stop)))))
+
+  )
+
+(defun phps-mode-test-integration-incremental-vs-initial-buffers ()
   "Test for object-oriented PHP file."
 
   (phps-mode-test-incremental-vs-intial-buffer
@@ -266,8 +291,10 @@
   (setq debug-on-error t)
   (setq phps-mode-runtime-debug t)
   ;; (setq phps-mode-analyzer-process-on-indent-and-imenu t)
-  (phps-mode-test-integration-incremental)
-  (phps-mode-test-integration-whitespace-modifications))
+  (phps-mode-test-integration-incremental-lexer)
+  ;; (phps-mode-test-integration-incremental-vs-initial-buffers)
+  ;; (phps-mode-test-integration-whitespace-modifications)
+  )
 
 (phps-mode-test-integration)
 
