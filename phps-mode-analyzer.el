@@ -1623,7 +1623,7 @@
     new-tokens))
 
 (defun phps-mode-lexer-run-incremental (&optional buffer)
-  "Run incremental lexer on BUFFER."
+  "Run incremental lexer on BUFFER.  Return list of performed operations."
   (unless buffer
     (setq buffer (current-buffer)))
   (phps-mode-debug-message
@@ -1636,7 +1636,8 @@
           (old-tokens phps-mode-lexer-tokens)
           (old-states phps-mode-lexer-states)
           (buffer-length-old phps-mode-lexer-buffer-length)
-          (buffer-contents-old phps-mode-lexer-buffer-contents))
+          (buffer-contents-old phps-mode-lexer-buffer-contents)
+          (lexer-history '()))
 
       (if (and changes
                buffer-length-old
@@ -1875,7 +1876,7 @@
                                               (setq incremental-new-end-state incremental-old-end-state)
                                               (setq incremental-new-end-state-stack incremental-old-end-state-stack)
 
-                                              )
+                                              (push `('MOVE change-start change-stop) lexer-history))
 
                                           ;; Do partial lex from previous-token-end to change-stop
                                           (let ((incremental-buffer (generate-new-buffer "*PHPs Incremental Buffer*")))
@@ -1927,6 +1928,8 @@
 
                                               (kill-buffer)
 
+                                              (push `('INCREMENTAL change-start change-stop) lexer-history)
+
                                               (phps-mode-debug-message
                                                (message "Incremental tokens: %s" incremental-tokens)
                                                (message "Incremental states: %s" incremental-states)
@@ -1972,6 +1975,7 @@
                                               (setq-local phps-mode-lexer-tokens appended-tokens)
                                               (setq old-tokens phps-mode-lexer-tokens))
 
+                                          (push `('LEXER-REST-OF-BUFFER change-start change-stop) lexer-history)
                                           (signal 'warning "was here 1")
 
                                           (phps-mode-debug-message
@@ -1994,20 +1998,15 @@
                                           (setq old-states phps-mode-lexer-states)
                                           (setq-local phps-mode-lexer-tokens appended-tokens)))
 
+                                    (push `('LEX-FULL-BUFFER-NO-STATES change-start change-stop) lexer-history)
                                     (setq run-full-lexer t)
                                     (phps-mode-debug-message
                                      (message "Did not find head states"))
                                     (signal 'warning "was here 2")
 
-                                    ;; Rewind lexer state here (in preparation for full lexer)
-                                    (setq-local phps-mode-lexer-states head-states)
-                                    (setq-local phps-mode-lexer-STATE incremental-state)
-                                    (setq-local phps-mode-lexer-state_stack incremental-state-stack)
-
-                                    ;; TODO Should abort loop here
-
                                     ))
 
+                              (push `('LEX-FULL-BUFFER-NO-HEAD-BOUNDARY change-start change-stop) lexer-history)
                               (signal 'warning "was here 3")
                               (setq run-full-lexer t)
                               (phps-mode-debug-message
@@ -2016,6 +2015,7 @@
                                (unless (> head-boundary 0)
                                  (message "Did not find positive head-boundary")))))
 
+                        (push `('LEX-FULL-BUFFER-NO-CHANGE-STATES-OR-START change-start change-stop) lexer-history)
                         (setq run-full-lexer t)
                         (phps-mode-debug-message
                          (message "Not running incremental lexer due to:")
@@ -2026,6 +2026,7 @@
                          (unless old-tokens
                            (message "* Lacking lexer tokens"))))
 
+                    (push `('LEX-FULL-BUFFER-NO-CHANGE-START-END change-start change-stop) lexer-history)
                     (setq run-full-lexer t)
                     (phps-mode-debug-message
                      (message "Lacking change-start or change-end")))
@@ -2043,7 +2044,9 @@
             (phps-mode-lexer-run)
             )
         (setq-local phps-mode-lexer-buffer-length (1- (point-max)))
-        (setq-local phps-mode-lexer-buffer-contents (buffer-substring-no-properties (point-min) (point-max)))))))
+        (setq-local phps-mode-lexer-buffer-contents (buffer-substring-no-properties (point-min) (point-max))))
+
+      lexer-history)))
 
 (define-lex phps-mode-lexer-lex
   "Call lexer analyzer action."
