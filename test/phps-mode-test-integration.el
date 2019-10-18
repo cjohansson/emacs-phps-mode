@@ -53,7 +53,7 @@
    (goto-char 144)
    (insert "\n\n        public function myFunctionB()\n        {\n            echo 'my second statement';\n        }\n")
 
-   (should (equal (phps-mode-lexer-run-incremental) '(('MERGE-INCREMENTAL-LEX change-start change-stop) ('INCREMENTAL change-start change-stop)))))
+   (should (equal (phps-mode-lexer-run-incremental) '(('INCREMENTAL-LEX-REST-OF-BUFFER 144 244) ('INCREMENTAL-LEX 144 244)))))
 
   )
 
@@ -292,7 +292,7 @@
   (setq phps-mode-runtime-debug t)
   ;; (setq phps-mode-analyzer-process-on-indent-and-imenu t)
   (phps-mode-test-integration-incremental-lexer)
-  ;; (phps-mode-test-integration-incremental-vs-initial-buffers)
+  (phps-mode-test-integration-incremental-vs-initial-buffers)
   ;; (phps-mode-test-integration-whitespace-modifications)
   )
 
