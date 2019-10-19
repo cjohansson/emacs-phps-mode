@@ -2094,7 +2094,8 @@
                   (setq buffer-contents-old buffer-contents-new)))))
 
         (phps-mode-debug-message
-         (message "Found no changes")))
+         (message "Found no changes"))
+        (push `('LEX-FULL-NO-CHANGES) lexer-history))
 
       (if run-full-lexer
           (progn
