@@ -1735,7 +1735,7 @@
                              (message "Incremental start new buffer: %s" incremental-start-new-buffer)
                              (message "Incremental stop new buffer: %s" incremental-stop-new-buffer)
                              (message "Buffer length old: %s" buffer-length-old)
-                             (message "Buffer contents old: %s" buffer-contents-old))
+                             (message "Buffer contents old: '%s'" buffer-contents-old))
 
                             ;; Calculate change of buffer length
                             (setq buffer-length-delta (- buffer-length-new buffer-length-old))
@@ -1787,7 +1787,7 @@
                              (message "Buffer length new: %s" buffer-length-new)
                              (message "Buffer length old: %s" buffer-length-old)
                              (message "Buffer length delta: %s" buffer-length-delta)
-                             (message "Buffer contents new: %s" buffer-contents-new)
+                             (message "Buffer contents new: '%s'" buffer-contents-new)
                              (message "Tail tokens: %s" tail-tokens))
 
                             ;; Did we find a start for the incremental process?
@@ -1884,12 +1884,14 @@
                                               (switch-to-buffer incremental-buffer)
                                               (delete-region (point-min) (point-max))
                                               (goto-char (point-max))
-                                              (insert-char 32 (1- incremental-start-new-buffer))
+                                              (insert-char 32 (- incremental-start-new-buffer 2))
                                               (insert-char 10)
                                               (goto-char (point-max))
+
+                                              ;; NOTE (substring) uses different indexes than (buffer-substring-no-properties)
                                               (insert (substring
                                                        buffer-contents-new
-                                                       incremental-start-new-buffer
+                                                       (1- incremental-start-new-buffer)
                                                        incremental-stop-new-buffer))
 
                                               ;; Rewind lexer state here
@@ -1910,7 +1912,7 @@
                                                  (point-min)
                                                  (point-max)))
                                                (message
-                                                "Incremental buffer lexer region (%s-%s): \n%s"
+                                                "Incremental buffer lexer region (%s-%s): \n'%s'"
                                                 incremental-start-new-buffer
                                                 incremental-stop-new-buffer
                                                 (buffer-substring-no-properties
@@ -1918,7 +1920,7 @@
                                                  incremental-stop-new-buffer)))
 
                                               ;; Generate new tokens
-                                              (setq incremental-tokens (semantic-lex incremental-start-new-buffer (1- incremental-stop-new-buffer)))
+                                              (setq incremental-tokens (semantic-lex incremental-start-new-buffer incremental-stop-new-buffer))
                                               (setq appended-tokens (append head-tokens incremental-tokens))
 
                                               ;; Save state, states and state-stack
@@ -1996,12 +1998,12 @@
                                               (switch-to-buffer incremental-buffer)
                                               (delete-region (point-min) (point-max))
                                               (goto-char (point-max))
-                                              (insert-char 32 (1- incremental-start-new-buffer))
+                                              (insert-char 32 (- incremental-start-new-buffer 2))
                                               (insert-char 10)
                                               (goto-char (point-max))
                                               (insert (substring
                                                        buffer-contents-new
-                                                       incremental-start-new-buffer
+                                                       (1- incremental-start-new-buffer)
                                                        incremental-stop-new-buffer))
 
                                               ;; Rewind lexer state here
@@ -2030,7 +2032,7 @@
                                                  incremental-stop-new-buffer)))
 
                                               ;; Generate new tokens
-                                              (setq incremental-tokens (semantic-lex incremental-start-new-buffer (1- incremental-stop-new-buffer)))
+                                              (setq incremental-tokens (semantic-lex incremental-start-new-buffer incremental-stop-new-buffer))
                                               (setq appended-tokens (append head-tokens incremental-tokens))
 
                                               ;; Save state, states and state-stack
