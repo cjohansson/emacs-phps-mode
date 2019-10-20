@@ -2048,7 +2048,8 @@
                                                (message "Incremental rest of buffer tokens: %s" incremental-tokens)
                                                (message "Incremental rest of buffer states: %s" incremental-states)
                                                (message "Incremental rest of buffer new end state: %s" incremental-new-end-state)
-                                               (message "Incremental rest of buffer new end state stack: %s" incremental-new-end-state-stack))))
+                                               (message "Incremental rest of buffer new end state stack: %s" incremental-new-end-state-stack))
+                                              (setq-local phps-mode-lexer-states incremental-states)))
 
                                           (setq appended-tokens (append head-tokens incremental-tokens))
                                           (phps-mode-debug-message
