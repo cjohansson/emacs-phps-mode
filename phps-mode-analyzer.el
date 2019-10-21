@@ -1816,7 +1816,7 @@
                                         (setq incremental-old-end-state (nth 2 state-object))
                                         (setq incremental-old-end-state-stack (nth 3 state-object)))
                                       (when (and
-                                             (> end change-start)
+                                             (>= end change-start)
                                              (<= start change-start))
                                         (push state-object on-states))
                                       (when (and
@@ -1951,8 +1951,25 @@
                                                 incremental-state-stack))
 
                                               (unless (= buffer-length-delta 0)
+
+                                                (when (and change-is-insertion
+                                                           on-tokens)
+                                                  (if tail-tokens
+                                                      (dolist (item on-tokens) (push tail-tokens item))
+                                                    (setq tail-tokens on-tokens))
+                                                  (phps-mode-debug-message
+                                                   (message "Tail tokens with on-tokens appended: %s" tail-tokens)))
+                                                
                                                 (when tail-tokens
                                                   (setq tail-tokens (phps-mode-lexer-get-moved-tokens tail-tokens 0 buffer-length-delta)))
+
+                                                (when (and change-is-insertion
+                                                           on-states)
+                                                  (if tail-states
+                                                      (dolist (item on-states) (push tail-states item))
+                                                    (setq tail-states on-states))
+                                                  (phps-mode-debug-message
+                                                   (message "Tail states with on-states appended: %s" tail-states)))
 
                                                 (when tail-states
                                                   (setq tail-states (phps-mode-lexer-get-moved-states tail-states 0 buffer-length-delta))))
