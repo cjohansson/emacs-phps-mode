@@ -1622,6 +1622,67 @@
               (push token new-tokens))))))
     new-tokens))
 
+(defun phps-mode-lexer-incremental (start end contents tokens state states state-stack)
+  "Run incremental lexer from START to END on CONTENTS.
+Initialize with TOKENS, STATE, STATES and STATE-STACK and return tokens, state and states."
+  (let ((incremental-buffer (generate-new-buffer "*PHPs Incremental Buffer*"))
+        (incremental-tokens '())
+        (appended-tokens '())
+        (incremental-states '())
+        (incremental-state nil)
+        (incremental-state-stack '()))
+    (save-excursion
+      (switch-to-buffer incremental-buffer)
+      (delete-region (point-min) (point-max))
+      (goto-char (point-max))
+      (insert-char 32 (- start 2))
+      (insert-char 10)
+      (goto-char (point-max))
+
+      ;; NOTE (substring) uses different indexes than (buffer-substring-no-properties)
+      (insert (substring contents (1- start) end))
+
+      ;; Rewind lexer state here
+      (setq-local phps-mode-lexer-states states)
+      (setq-local phps-mode-lexer-STATE state)
+      (setq-local phps-mode-lexer-state_stack state-stack)
+
+      ;; Setup lexer
+      (when (fboundp 'phps-mode-lexer-lex)
+        (setq-local semantic-lex-analyzer #'phps-mode-lexer-lex))
+      (when (boundp 'phps-mode-syntax-table)
+        (setq-local semantic-lex-syntax-table phps-mode-syntax-table))
+
+      (phps-mode-debug-message
+       (message
+        "Incremental buffer contents: \n'%s'"
+        (buffer-substring-no-properties
+         (point-min)
+         (point-max)))
+       (message
+        "Incremental buffer lexer region (%s-%s): \n'%s'"
+        start
+        end
+        (buffer-substring-no-properties start end)))
+
+      ;; Generate new tokens
+      (setq incremental-tokens (semantic-lex start end))
+
+      ;; Save state, states and state-stack
+      (setq incremental-states phps-mode-lexer-states)
+      (setq incremental-tate phps-mode-lexer-STATE)
+      (setq incremental-state-stack phps-mode-lexer-state_stack)
+
+      (kill-buffer)
+
+      (phps-mode-debug-message
+       (message "Incremental tokens: %s" incremental-tokens)
+       (message "Incremental states: %s" incremental-states)
+       (message "Incremental new end state: %s" incremental-state)
+       (message "Incremental new end state stack: %s" incremental-state-stack)))
+
+    (list `(incremental-tokens incremental-state incremental-states incremental-state-stack))))
+
 (defun phps-mode-lexer-run-incremental (&optional buffer)
   "Run incremental lexer on BUFFER.  Return list of performed operations."
   (unless buffer
@@ -1704,6 +1765,8 @@
                              (message "Old tokens: %s" old-tokens)
                              (message "Old states: %s" old-states)
                              (message "Buffer length old: %s" buffer-length-old))
+
+                            ;; TODO SHOULD NOT WORK WITH ON-TOKENS AND ON-STATES, it's not a secure option
 
                             ;; NOTE Starts are inclusive while ends are exclusive buffer locations
                             ;;
@@ -1879,64 +1942,21 @@
                                               (push `('MOVE ,change-start ,change-stop) lexer-history))
 
                                           ;; Do partial lex from previous-token-end to change-stop
-                                          (let ((incremental-buffer (generate-new-buffer "*PHPs Incremental Buffer*")))
-                                            (save-excursion
-                                              (switch-to-buffer incremental-buffer)
-                                              (delete-region (point-min) (point-max))
-                                              (goto-char (point-max))
-                                              (insert-char 32 (- incremental-start-new-buffer 2))
-                                              (insert-char 10)
-                                              (goto-char (point-max))
-
-                                              ;; NOTE (substring) uses different indexes than (buffer-substring-no-properties)
-                                              (insert (substring
-                                                       buffer-contents-new
-                                                       (1- incremental-start-new-buffer)
-                                                       incremental-stop-new-buffer))
-
-                                              ;; Rewind lexer state here
-                                              (setq-local phps-mode-lexer-states head-states)
-                                              (setq-local phps-mode-lexer-STATE incremental-state)
-                                              (setq-local phps-mode-lexer-state_stack incremental-state-stack)
-
-                                              ;; Setup lexer
-                                              (when (fboundp 'phps-mode-lexer-lex)
-                                                (setq-local semantic-lex-analyzer #'phps-mode-lexer-lex))
-                                              (when (boundp 'phps-mode-syntax-table)
-                                                (setq-local semantic-lex-syntax-table phps-mode-syntax-table))
-
-                                              (phps-mode-debug-message
-                                               (message
-                                                "Incremental buffer contents: \n'%s'"
-                                                (buffer-substring-no-properties
-                                                 (point-min)
-                                                 (point-max)))
-                                               (message
-                                                "Incremental buffer lexer region (%s-%s): \n'%s'"
-                                                incremental-start-new-buffer
-                                                incremental-stop-new-buffer
-                                                (buffer-substring-no-properties
-                                                 incremental-start-new-buffer
-                                                 incremental-stop-new-buffer)))
-
-                                              ;; Generate new tokens
-                                              (setq incremental-tokens (semantic-lex incremental-start-new-buffer incremental-stop-new-buffer))
-                                              (setq appended-tokens (append head-tokens incremental-tokens))
-
-                                              ;; Save state, states and state-stack
-                                              (setq incremental-states phps-mode-lexer-states)
-                                              (setq incremental-new-end-state phps-mode-lexer-STATE)
-                                              (setq incremental-new-end-state-stack phps-mode-lexer-state_stack)
-
-                                              (kill-buffer)
-
-                                              (push `('INCREMENTAL-LEX ,change-start ,change-stop) lexer-history)
-
-                                              (phps-mode-debug-message
-                                               (message "Incremental tokens: %s" incremental-tokens)
-                                               (message "Incremental states: %s" incremental-states)
-                                               (message "Incremental new end state: %s" incremental-new-end-state)
-                                               (message "Incremental new end state stack: %s" incremental-new-end-state-stack)))))
+                                          (let ((incremental-result
+                                                 (phps-mode-lexer-incremental
+                                                  incremental-start-new-buffer
+                                                  incremental-stop-new-buffer
+                                                  buffer-contents-new
+                                                  head-tokens
+                                                  incremental-state
+                                                  head-states
+                                                  incremental-state-stack)))
+                                            (setq incremental-tokens (nth 0 incremental-result))
+                                            (setq appended-tokens (append head-tokens incremental-tokens))
+                                            (setq incremental-new-end-state (nth 1 incremental-result))
+                                            (setq incremental-states (nth 2 incremental-result))
+                                            (setq incremental-new-end-state-stack (nth 3 incremental-result))
+                                            (push `('INCREMENTAL-LEX ,change-start ,change-stop) lexer-history)))
 
                                         (if (and (equal incremental-new-end-state incremental-state)
                                                  (equal incremental-new-end-state-stack incremental-state-stack))
@@ -2004,77 +2024,33 @@
                                             incremental-new-end-state-stack
                                             incremental-state-stack))
 
+                                          ;; TODO Should not gather new tail-objects here because we are lexing rest of buffer
+
                                           ;; Lex rest of buffer
                                           (setq head-tokens appended-tokens)
                                           (setq incremental-start-new-buffer incremental-stop-new-buffer)
                                           (setq incremental-stop-new-buffer buffer-length-new)
 
                                           ;; Lex rest of buffer-contents-new here
-                                          (let ((incremental-buffer (generate-new-buffer "*PHPs Incremental Buffer*")))
-                                            (save-excursion
-                                              (switch-to-buffer incremental-buffer)
-                                              (delete-region (point-min) (point-max))
-                                              (goto-char (point-max))
-                                              (insert-char 32 (- incremental-start-new-buffer 2))
-                                              (insert-char 10)
-                                              (goto-char (point-max))
-                                              (insert (substring
-                                                       buffer-contents-new
-                                                       (1- incremental-start-new-buffer)
-                                                       incremental-stop-new-buffer))
+                                          (let ((incremental-result
+                                                 (phps-mode-lexer-incremental
+                                                  incremental-start-new-buffer
+                                                  incremental-stop-new-buffer
+                                                  buffer-contents-new
+                                                  head-tokens
+                                                  incremental-state
+                                                  head-states
+                                                  incremental-state-stack)))
+                                            (setq incremental-tokens (nth 0 incremental-result))
+                                            (setq appended-tokens (append head-tokens incremental-tokens))
+                                            (setq incremental-new-end-state (nth 1 incremental-result))
+                                            (setq incremental-states (nth 2 incremental-result))
+                                            (setq incremental-new-end-state-stack (nth 3 incremental-result))
+                                            (push `('INCREMENTAL-LEX ,change-start ,change-stop) lexer-history))
 
-                                              ;; Rewind lexer state here
-                                              (setq-local phps-mode-lexer-states head-states)
-                                              (setq-local phps-mode-lexer-STATE incremental-state)
-                                              (setq-local phps-mode-lexer-state_stack incremental-state-stack)
-
-                                              ;; Setup lexer
-                                              (when (fboundp 'phps-mode-lexer-lex)
-                                                (setq-local semantic-lex-analyzer #'phps-mode-lexer-lex))
-                                              (when (boundp 'phps-mode-syntax-table)
-                                                (setq-local semantic-lex-syntax-table phps-mode-syntax-table))
-
-                                              (phps-mode-debug-message
-                                               (message
-                                                "Incremental rest of buffer contents: \n'%s'"
-                                                (buffer-substring-no-properties
-                                                 (point-min)
-                                                 (point-max)))
-                                               (message
-                                                "Incremental rest of buffer lexer region (%s-%s): \n%s"
-                                                incremental-start-new-buffer
-                                                incremental-stop-new-buffer
-                                                (buffer-substring-no-properties
-                                                 incremental-start-new-buffer
-                                                 incremental-stop-new-buffer)))
-
-                                              ;; Generate new tokens
-                                              (setq incremental-tokens (semantic-lex incremental-start-new-buffer incremental-stop-new-buffer))
-                                              (setq appended-tokens (append head-tokens incremental-tokens))
-
-                                              ;; Save state, states and state-stack
-                                              (setq incremental-states phps-mode-lexer-states)
-                                              (setq incremental-new-end-state phps-mode-lexer-STATE)
-                                              (setq incremental-new-end-state-stack phps-mode-lexer-state_stack)
-
-                                              (kill-buffer)
-
-                                              (push `('INCREMENTAL-LEX-REST-OF-BUFFER ,change-start ,change-stop) lexer-history)
-
-                                              (phps-mode-debug-message
-                                               (message "Incremental rest of buffer tokens: %s" incremental-tokens)
-                                               (message "Incremental rest of buffer states: %s" incremental-states)
-                                               (message "Incremental rest of buffer new end state: %s" incremental-new-end-state)
-                                               (message "Incremental rest of buffer new end state stack: %s" incremental-new-end-state-stack))
-                                              (setq-local phps-mode-lexer-states incremental-states)))
-
-                                          (setq appended-tokens (append head-tokens incremental-tokens))
-                                          (phps-mode-debug-message
-                                           (message "New states from full lex are: %s" phps-mode-lexer-states)
-                                           (message "New tokens from full lex are: %s" appended-tokens)
-                                           (message "Final tokens: %s" appended-tokens))
                                           (setq old-tokens appended-tokens)
                                           (setq old-states phps-mode-lexer-states)
+                                          (setq-local phps-mode-lexer-states incremental-states)
                                           (setq-local phps-mode-lexer-tokens appended-tokens)))
 
                                     (push `('LEX-FULL-BUFFER-NO-HEAD-STATES ,change-start ,change-stop) lexer-history)
