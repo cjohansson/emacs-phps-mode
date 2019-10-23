@@ -1767,6 +1767,7 @@ Initialize with TOKENS, STATE, STATES and STATE-STACK and return tokens, state a
                              (message "Buffer length old: %s" buffer-length-old))
 
                             ;; TODO SHOULD NOT WORK WITH ON-TOKENS AND ON-STATES, it's not a secure option
+                            ;; TODO Deletion could use a list of tokens from start to end of change
 
                             ;; NOTE Starts are inclusive while ends are exclusive buffer locations
                             ;;
@@ -1781,15 +1782,28 @@ Initialize with TOKENS, STATE, STATES and STATE-STACK and return tokens, state a
                                     (end (cdr (cdr token))))
                                 (cond
                                  ((< end change-start)
+
+                                  ;; Some PHP tokens can be extended, like strings and names therefore we don't
+                                  ;; include tokens that end at the point of start of change
                                   (push token head-tokens)
                                   (setq head-boundary start))
+
                                  ((> start change-start)
+
+                                  ;; First token start after change region is saved as start of tail
                                   (unless tail-boundary
                                     (setq tail-boundary start)))
+
                                  (t
+
+                                  ;; Token ends at or after start of change and starts before or at start of change
+                                  ;; Token touches start of change, so we rewind the point of were to start lexing in
+                                  ;; new buffer.
                                   (push token on-tokens)
                                   (setq incremental-start-new-buffer (1- start))))))
+
                             (setq head-tokens (nreverse head-tokens))
+                            (setq on-tokens (nreverse on-tokens))
                             (phps-mode-debug-message
                              (message "Head tokens: %s" head-tokens)
                              (message "On tokens: %s" on-tokens)
@@ -1978,24 +1992,8 @@ Initialize with TOKENS, STATE, STATES and STATE-STACK and return tokens, state a
 
                                               (unless (= buffer-length-delta 0)
 
-                                                (when (and change-is-insertion
-                                                           on-tokens)
-                                                  (if tail-tokens
-                                                      (dolist (item on-tokens) (push tail-tokens item))
-                                                    (setq tail-tokens on-tokens))
-                                                  (phps-mode-debug-message
-                                                   (message "Tail tokens with on-tokens appended: %s" tail-tokens)))
-                                                
                                                 (when tail-tokens
                                                   (setq tail-tokens (phps-mode-lexer-get-moved-tokens tail-tokens 0 buffer-length-delta)))
-
-                                                (when (and change-is-insertion
-                                                           on-states)
-                                                  (if tail-states
-                                                      (dolist (item on-states) (push tail-states item))
-                                                    (setq tail-states on-states))
-                                                  (phps-mode-debug-message
-                                                   (message "Tail states with on-states appended: %s" tail-states)))
 
                                                 (when tail-states
                                                   (setq tail-states (phps-mode-lexer-get-moved-states tail-states 0 buffer-length-delta))))
