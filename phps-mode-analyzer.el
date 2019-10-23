@@ -1800,6 +1800,11 @@ Initialize with TOKENS, STATE, STATES and STATE-STACK and return tokens, state a
                                   ;; Token touches start of change, so we rewind the point of were to start lexing in
                                   ;; new buffer.
                                   (push token on-tokens)
+
+                                  ;; TODO We should include incremental-stop-new-buffer in the lexing
+                                  (when (= end change-start)
+                                    (setq incremental-stop-new-buffer (1+ end)))
+
                                   (setq incremental-start-new-buffer (1- start))))))
 
                             (setq head-tokens (nreverse head-tokens))
