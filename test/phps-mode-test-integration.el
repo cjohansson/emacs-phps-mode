@@ -43,7 +43,7 @@
    (goto-char 145)
    (insert "\n\n        public function myFunctionB()\n        {\n            echo 'my second statement';\n        }\n")
 
-   (should (equal (phps-mode-lexer-run-incremental) '(('MERGE-INCREMENTAL-LEX 145 245) ('INCREMENTAL-LEX 145 245)))))
+   (should (equal (phps-mode-lexer-run-incremental) '(('MERGE-INCREMENTAL-LEX-REGION 145 245) ('INCREMENTAL-LEX-REGION 145 245)))))
 
   (phps-mode-test-with-buffer
    "<?php\nnamespace myNamespace\n{\n    class myClass\n    {\n        public function myFunction()\n        {\n            echo 'my statement';\n        }\n    }\n}\n"
@@ -53,7 +53,7 @@
    (goto-char 144)
    (insert "\n\n        public function myFunctionB()\n        {\n            echo 'my second statement';\n        }\n")
 
-   (should (equal (phps-mode-lexer-run-incremental) '(('INCREMENTAL-LEX-REST-OF-BUFFER 144 244) ('INCREMENTAL-LEX 144 244)))))
+   (should (equal (phps-mode-lexer-run-incremental) '(('MERGE-INCREMENTAL-LEX-REST-OF-BUFFER 144 244) ('INCREMENTAL-LEX-REST-OF-BUFFER 144 244) ('INCREMENTAL-LEX-REGION 144 244)))))
 
   (phps-mode-test-with-buffer
    ""

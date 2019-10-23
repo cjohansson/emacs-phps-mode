@@ -1670,7 +1670,7 @@ Initialize with TOKENS, STATE, STATES and STATE-STACK and return tokens, state a
 
       ;; Save state, states and state-stack
       (setq incremental-states phps-mode-lexer-states)
-      (setq incremental-tate phps-mode-lexer-STATE)
+      (setq incremental-state phps-mode-lexer-STATE)
       (setq incremental-state-stack phps-mode-lexer-state_stack)
 
       (kill-buffer)
@@ -1681,7 +1681,7 @@ Initialize with TOKENS, STATE, STATES and STATE-STACK and return tokens, state a
        (message "Incremental new end state: %s" incremental-state)
        (message "Incremental new end state stack: %s" incremental-state-stack)))
 
-    (list `(incremental-tokens incremental-state incremental-states incremental-state-stack))))
+    (list incremental-tokens incremental-state incremental-states incremental-state-stack)))
 
 (defun phps-mode-lexer-run-incremental (&optional buffer)
   "Run incremental lexer on BUFFER.  Return list of performed operations."
@@ -1956,7 +1956,13 @@ Initialize with TOKENS, STATE, STATES and STATE-STACK and return tokens, state a
                                             (setq incremental-new-end-state (nth 1 incremental-result))
                                             (setq incremental-states (nth 2 incremental-result))
                                             (setq incremental-new-end-state-stack (nth 3 incremental-result))
-                                            (push `('INCREMENTAL-LEX ,change-start ,change-stop) lexer-history)))
+                                            (phps-mode-debug-message
+                                             (message
+                                              "(phps-mode-lexer-incremental) returned: %s" incremental-result)
+                                             (message "incremental-tokens: %s" incremental-tokens)
+                                             (message "incremental-new-end-state: %s" incremental-new-end-state)
+                                             (message "incremental-new-end-state-stack: %s" incremental-new-end-state-stack))
+                                            (push `('INCREMENTAL-LEX-REGION ,change-start ,change-stop) lexer-history)))
 
                                         (if (and (equal incremental-new-end-state incremental-state)
                                                  (equal incremental-new-end-state-stack incremental-state-stack))
@@ -2014,7 +2020,7 @@ Initialize with TOKENS, STATE, STATES and STATE-STACK and return tokens, state a
                                               (setq-local phps-mode-lexer-tokens appended-tokens)
                                               (setq old-tokens phps-mode-lexer-tokens)
 
-                                              (push `('MERGE-INCREMENTAL-LEX ,change-start ,change-stop) lexer-history))
+                                              (push `('MERGE-INCREMENTAL-LEX-REGION ,change-start ,change-stop) lexer-history))
 
                                           (phps-mode-debug-message
                                            (message
@@ -2046,12 +2052,14 @@ Initialize with TOKENS, STATE, STATES and STATE-STACK and return tokens, state a
                                             (setq incremental-new-end-state (nth 1 incremental-result))
                                             (setq incremental-states (nth 2 incremental-result))
                                             (setq incremental-new-end-state-stack (nth 3 incremental-result))
-                                            (push `('INCREMENTAL-LEX ,change-start ,change-stop) lexer-history))
+                                            (push `('INCREMENTAL-LEX-REST-OF-BUFFER ,change-start ,change-stop) lexer-history))
 
                                           (setq old-tokens appended-tokens)
                                           (setq old-states phps-mode-lexer-states)
                                           (setq-local phps-mode-lexer-states incremental-states)
-                                          (setq-local phps-mode-lexer-tokens appended-tokens)))
+                                          (setq-local phps-mode-lexer-tokens appended-tokens)
+
+                                          (push `('MERGE-INCREMENTAL-LEX-REST-OF-BUFFER ,change-start ,change-stop) lexer-history)))
 
                                     (push `('LEX-FULL-BUFFER-NO-HEAD-STATES ,change-start ,change-stop) lexer-history)
                                     (setq run-full-lexer t)
