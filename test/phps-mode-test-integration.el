@@ -141,15 +141,15 @@
 
    ;; Make changes
    (goto-char 110)
-   (indent-according-to-mode))
+   (insert "    "))
 
   (phps-mode-test-incremental-vs-intial-buffer
-   "<?php\nnamespace myNamespace\n{\n    class myClass\n    {\n        public function myFunction()\n        {\n            echo 'my statement';\n        }\n    }\n}\n"
+   "<?php\nnamespace myNamespace\n{\n    class myClass\n    {\n        public function myFunction()\n        {\n        echo 'my statement';\n        }\n    }\n}\n"
    "Integration-test 7 for regular PHP with namespaces, classes and functions, with multiple, isolated edits"
 
    ;; Make changes
    (goto-char 110)
-   (indent-according-to-mode)
+   (insert "    ")
 
    ;; Make changes
    (goto-char 28)
