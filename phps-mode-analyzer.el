@@ -1796,28 +1796,31 @@ Initialize with TOKENS, STATE, STATES and STATE-STACK and return tokens, state a
 
                                  (t
 
+                                  (when (= start change-start)
+                                    (setq incremental-start-new-buffer start))
+                                  (when (= end change-start)
+                                    (setq incremental-start-new-buffer start))
+
                                   ;; Token ends at or after start of change and starts before or at start of change
                                   ;; Token touches start of change, so we rewind the point of were to start lexing in
                                   ;; new buffer.
                                   (push token on-tokens)
 
-                                  ;; TODO We should include incremental-stop-new-buffer in the lexing
-                                  (when (= end change-start)
-                                    (setq incremental-stop-new-buffer (1+ end)))
+                                  ;; (setq incremental-start-new-buffer (1- start))
 
-                                  (setq incremental-start-new-buffer (1- start))))))
+                                  ))))
 
                             (setq head-tokens (nreverse head-tokens))
                             (setq on-tokens (nreverse on-tokens))
                             (phps-mode-debug-message
+                             (message "Buffer length old: %s" buffer-length-old)
+                             (message "Buffer contents old: '%s'" buffer-contents-old)
                              (message "Head tokens: %s" head-tokens)
                              (message "On tokens: %s" on-tokens)
                              (message "Head boundary: %s" head-boundary)
                              (message "Tail boundary: %s" tail-boundary)
                              (message "Incremental start new buffer: %s" incremental-start-new-buffer)
-                             (message "Incremental stop new buffer: %s" incremental-stop-new-buffer)
-                             (message "Buffer length old: %s" buffer-length-old)
-                             (message "Buffer contents old: '%s'" buffer-contents-old))
+                             (message "Incremental stop new buffer: %s" incremental-stop-new-buffer))
 
                             ;; Calculate change of buffer length
                             (setq buffer-length-delta (- buffer-length-new buffer-length-old))
