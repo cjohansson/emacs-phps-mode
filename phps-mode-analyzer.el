@@ -1796,14 +1796,14 @@ Initialize with TOKENS, STATE, STATES and STATE-STACK and return tokens, state a
 
                                  (t
 
-                                  (if (= start change-start)
-                                      (progn
-                                        (setq incremental-start-new-buffer start)
-                                        (phps-mode-debug-message
-                                         (message "Moved incremental start to %s since start is on previous token start" start)))
+                                  (when (< start change-start)
                                     (setq incremental-start-new-buffer start)
                                     (phps-mode-debug-message
-                                     (message "Moved incremental start to %s since start is on middle of a preexisting token" start)))
+                                     (message "Moved incremental start to %s since a previous token start were change start" start)))
+                                  (when (>= end change-start)
+                                    (setq incremental-start-new-buffer start)
+                                    (phps-mode-debug-message
+                                     (message "Moved incremental start to %s since a previous token end were change start" start)))
 
                                   ;; Token ends at or after start of change and starts before or at start of change
                                   ;; Token touches start of change, so we rewind the point of were to start lexing in
@@ -1857,6 +1857,7 @@ Initialize with TOKENS, STATE, STATES and STATE-STACK and return tokens, state a
                               )
 
                              (t
+                              ;; TODO Test if this is even possible?
                               (setq change-is-mixed t)
                               (phps-mode-debug-message
                                (message "Flag change as mixed"))))
