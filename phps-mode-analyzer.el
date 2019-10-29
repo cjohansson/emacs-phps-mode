@@ -2007,7 +2007,7 @@ Initialize with TOKENS, STATE, STATES and STATE-STACK and return tokens, state a
 
                                               ;; TODO re-use rest of indexes here? (indentation and imenu)
 
-                                              ;; Apply syntax coloring
+                                              ;; Apply syntax coloring on new tokens only
                                               (dolist (token-object incremental-tokens)
                                                 (let ((token (car token-object))
                                                       (start (car (cdr token-object)))
@@ -2035,7 +2035,7 @@ Initialize with TOKENS, STATE, STATES and STATE-STACK and return tokens, state a
                                             incremental-new-end-state-stack
                                             incremental-state-stack))
 
-                                          ;; TODO Should not gather new tail-objects here because we are lexing rest of buffer
+                                          ;; NOTE Should not gather new tail-objects here because we are lexing rest of buffer
 
                                           ;; Lex rest of buffer
                                           (setq head-tokens appended-tokens)
@@ -2059,10 +2059,21 @@ Initialize with TOKENS, STATE, STATES and STATE-STACK and return tokens, state a
                                             (setq incremental-new-end-state-stack (nth 3 incremental-result))
                                             (push `('INCREMENTAL-LEX-REST-OF-BUFFER ,change-start ,change-stop) lexer-history))
 
+                                          ;; Apply syntax coloring on new tokens only
+                                          (dolist (token-object incremental-tokens)
+                                                (let ((token (car token-object))
+                                                      (start (car (cdr token-object)))
+                                                      (end (cdr (cdr token-object))))
+                                                  (when (<= end (point-max))
+                                                    (phps-mode-lexer-set-region-syntax-color
+                                                     start end (phps-mode-lexer-get-token-syntax-color token)))))
+
                                           (setq old-tokens appended-tokens)
-                                          (setq old-states phps-mode-lexer-states)
+                                          (setq old-states incremental-states)
                                           (setq-local phps-mode-lexer-states incremental-states)
+                                          (phps-mode-debug-message (message "New states from rest incremental lex are: %s" phps-mode-lexer-states))
                                           (setq-local phps-mode-lexer-tokens appended-tokens)
+                                          (phps-mode-debug-message (message "New tokens from rest incremental lex are: %s" appended-tokens))
 
                                           (push `('MERGE-INCREMENTAL-LEX-REST-OF-BUFFER ,change-start ,change-stop) lexer-history)))
 
