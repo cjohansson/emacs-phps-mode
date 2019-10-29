@@ -1800,10 +1800,10 @@ Initialize with TOKENS, STATE, STATES and STATE-STACK and return tokens, state a
                                     (setq incremental-start-new-buffer start)
                                     (phps-mode-debug-message
                                      (message "Moved incremental start to %s since a previous token start were change start" start)))
-                                  (when (>= end change-start)
-                                    (setq incremental-start-new-buffer start)
-                                    (phps-mode-debug-message
-                                     (message "Moved incremental start to %s since a previous token end were change start" start)))
+                                  ;; (when (>= end change-start)
+                                  ;;   (setq incremental-start-new-buffer start)
+                                  ;;   (phps-mode-debug-message
+                                  ;;    (message "Moved incremental start to %s since a previous token end were change start" start)))
 
                                   ;; Token ends at or after start of change and starts before or at start of change
                                   ;; Token touches start of change, so we rewind the point of were to start lexing in
@@ -1838,8 +1838,8 @@ Initialize with TOKENS, STATE, STATES and STATE-STACK and return tokens, state a
                                (message "Flag change as insert"))
                               (setq change-is-insertion t)
 
-                              ;; When we have an insertion, move point of start of tail by length of insertion
-                              ;; (setq tail-boundary head-boundary)
+                              ;; When we have an insertion, tail should starts directly after start of change-region
+                              (setq tail-boundary change-start)
                               )
 
                              ;; When we have an deletion, the change-length will be zero but difference in buffer-size will be lesser than zero
@@ -1854,13 +1854,7 @@ Initialize with TOKENS, STATE, STATES and STATE-STACK and return tokens, state a
                               (let ((new-tail-boundary (+ change-start (abs buffer-length-delta))))
                                 (unless (>= tail-boundary new-tail-boundary)
                                   (setq tail-boundary new-tail-boundary)))
-                              )
-
-                             (t
-                              ;; TODO Test if this is even possible?
-                              (setq change-is-mixed t)
-                              (phps-mode-debug-message
-                               (message "Flag change as mixed"))))
+                              ))
 
                             (phps-mode-debug-message
                              (message "Tail-boundary: %s" tail-boundary))
