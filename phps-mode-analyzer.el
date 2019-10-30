@@ -1667,7 +1667,7 @@ Initialize with STATE, STATES and STATE-STACK and return tokens, state and state
       (goto-char (point-max))
 
       ;; NOTE (substring) uses different indexes than (buffer-substring-no-properties)
-      (insert (substring contents (1- start) end))
+      (insert (substring contents (1- start) (1- end)))
 
       ;; Rewind lexer state here
       (setq-local phps-mode-lexer-states states)
