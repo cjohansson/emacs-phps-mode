@@ -1766,11 +1766,10 @@ Initialize with TOKENS, STATE, STATES and STATE-STACK and return tokens, state a
                              (message "Old states: %s" old-states)
                              (message "Buffer length old: %s" buffer-length-old))
 
-                            ;; TODO SHOULD NOT WORK WITH ON-TOKENS AND ON-STATES, it's not a secure option
-                            ;; TODO Deletion could use a list of tokens from start to end of change
+                            ;; NOTE Deletion could use a list of tokens and states from start to end of change
 
                             ;; NOTE Starts are inclusive while ends are exclusive buffer locations
-                            ;;
+
                             ;; Some tokens have dynamic length and if a change occurs at token-end
                             ;; we must start the incremental process at previous token start
 
@@ -1920,10 +1919,7 @@ Initialize with TOKENS, STATE, STATES and STATE-STACK and return tokens, state a
                                   (if head-states
                                       (progn
                                         (phps-mode-debug-message
-                                         (message "Found head states, flag that we should not do a full lexing of buffer"))
-
-                                        ;; Flag that we should not run ful lexer
-                                        (setq run-full-lexer nil)
+                                         (message "Found head states"))
 
                                         ;; Delete all syntax coloring from head.boundary to end of incremental-region
                                         ;; (phps-mode-lexer-clear-region-syntax-color head-boundary change-stop)
@@ -2037,10 +2033,15 @@ Initialize with TOKENS, STATE, STATES and STATE-STACK and return tokens, state a
 
                                           ;; NOTE Should not gather new tail-objects here because we are lexing rest of buffer
 
-                                          ;; Lex rest of buffer
+                                          ;; Update lexer head (tokens and states)
                                           (setq head-tokens appended-tokens)
+                                          (setq head-states incremental-states)
+                                          (setq incremental-state incremental-new-end-state)
+                                          (setq incremental-state-stack incremental-new-end-state-stack)
                                           (setq incremental-start-new-buffer incremental-stop-new-buffer)
                                           (setq incremental-stop-new-buffer buffer-length-new)
+
+                                          ;; Lex rest of buffer
 
                                           ;; Lex rest of buffer-contents-new here
                                           (let ((incremental-result
