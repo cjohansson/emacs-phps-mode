@@ -1837,8 +1837,17 @@ Initialize with TOKENS, STATE, STATES and STATE-STACK and return tokens, state a
                                (message "Flag change as insert"))
                               (setq change-is-insertion t)
 
-                              ;; When we have an insertion, tail should starts directly after start of change-region
-                              (setq tail-boundary change-start)
+                              (when on-tokens
+                                (let ((on-tokens-end nil))
+                                  (dolist (token on-tokens)
+                                    (let ((end (cdr (cdr token))))
+                                      (when (or
+                                             (not on-tokens-end)
+                                             (> end on-tokens-end))
+                                        (setq on-tokens-end end))))
+                                  (setq incremental-stop-new-buffer (+ on-tokens-end buffer-length-delta))
+                                  (phps-mode-debug-message
+                                   (message "Since we have a insert on a previous token we move lexer end to %s in new buffer" incremental-stop-new-buffer))))
                               )
 
                              ;; When we have an deletion, the change-length will be zero but difference in buffer-size will be lesser than zero
@@ -2031,7 +2040,7 @@ Initialize with TOKENS, STATE, STATES and STATE-STACK and return tokens, state a
                                             incremental-new-end-state-stack
                                             incremental-state-stack))
 
-                                          ;; NOTE Should not gather new tail-objects here because we are lexing rest of buffer
+                                          ;; Should not gather new tail-objects here because we are lexing rest of buffer
 
                                           ;; Update lexer head (tokens and states)
                                           (setq head-tokens appended-tokens)
