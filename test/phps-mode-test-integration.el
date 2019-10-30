@@ -43,7 +43,7 @@
    (goto-char 145)
    (insert "\n\n        public function myFunctionB()\n        {\n            echo 'my second statement';\n        }\n")
 
-   (should (equal (phps-mode-lexer-run-incremental) '(('MERGE-INCREMENTAL-LEX-REGION 145 245) ('INCREMENTAL-LEX-REGION 145 245)))))
+   (should (equal (phps-mode-analyzer-process-changes) '(('MERGE-INCREMENTAL-LEX-REGION 145 245) ('INCREMENTAL-LEX-REGION 145 245)))))
 
   (phps-mode-test-with-buffer
    "<?php\nnamespace myNamespace\n{\n    class myClass\n    {\n        public function myFunction()\n        {\n            echo 'my statement';\n        }\n    }\n}\n"
@@ -53,7 +53,7 @@
    (goto-char 144)
    (insert "\n\n        public function myFunctionB()\n        {\n            echo 'my second statement';\n        }\n")
 
-   (should (equal (phps-mode-lexer-run-incremental) '(('MERGE-INCREMENTAL-LEX-REST-OF-BUFFER 144 244) ('INCREMENTAL-LEX-REST-OF-BUFFER 144 244) ('INCREMENTAL-LEX-REGION 144 244)))))
+   (should (equal (phps-mode-analyzer-process-changes) '(('MERGE-INCREMENTAL-LEX-REST-OF-BUFFER 144 244) ('INCREMENTAL-LEX-REST-OF-BUFFER 144 244) ('INCREMENTAL-LEX-REGION 144 244)))))
 
   (phps-mode-test-with-buffer
    ""
@@ -63,7 +63,7 @@
    (goto-char 0)
    (insert "<?php\nnamespace myNamespace\n{\n    class myClass\n    {\n        public function myFunction()\n        {\n            echo 'my statement';\n        }\n    }\n}\n")
 
-   (should (equal (phps-mode-lexer-run-incremental) '(('LEX-FULL-BUFFER-NO-CHANGE-STATES-TOKENS-OR-START 1 153)))))
+   (should (equal (phps-mode-analyzer-process-changes) '(('LEX-FULL-BUFFER-NO-CHANGE-STATES-TOKENS-OR-START 1 153)))))
 
   (phps-mode-test-with-buffer
    ""
@@ -72,7 +72,7 @@
    ;; Make no changes
    (goto-char 0)
 
-   (should (equal (phps-mode-lexer-run-incremental) '(('LEX-FULL-NO-CHANGES)))))
+   (should (equal (phps-mode-analyzer-process-changes) '(('LEX-FULL-NO-CHANGES)))))
 
   (phps-mode-test-with-buffer
    "\n\n\n\n<?php echo 'was here';"
@@ -82,7 +82,7 @@
    (goto-char 0)
    (insert "<?php echo 'was here 2'; ?>\n")
 
-   (should (equal (phps-mode-lexer-run-incremental) '(('LEX-FULL-BUFFER-NO-CHANGE-STATES-TOKENS-OR-START 1 29)))))
+   (should (equal (phps-mode-analyzer-process-changes) '(('LEX-FULL-BUFFER-NO-CHANGE-STATES-TOKENS-OR-START 1 29)))))
 
   )
 
@@ -200,7 +200,7 @@
    ;; Final state
    ;; (message "Tokens %s" phps-mode-lexer-tokens)
    ;; (message "States: %s" phps-mode-lexer-states)
-   (phps-mode-lexer-run-incremental)
+   (phps-mode-analyzer-process-changes)
    ;; (message "Tokens %s" phps-mode-lexer-tokens)
    ;; (message "States: %s" phps-mode-lexer-states)
 
@@ -232,7 +232,7 @@
    (goto-char 21)
    (delete-char 1)
 
-   (phps-mode-lexer-run-incremental)
+   (phps-mode-analyzer-process-changes)
 
    ;; Final state
    ;; (message "Modified buffer: '%s'" (buffer-substring-no-properties (point-min) (point-max)))
@@ -264,7 +264,7 @@
    (goto-char 54)
    (newline-and-indent)
 
-   (phps-mode-lexer-run-incremental)
+   (phps-mode-analyzer-process-changes)
 
    ;; Final state
    ;; (message "Tokens %s" phps-mode-lexer-tokens)
@@ -291,7 +291,7 @@
    (goto-char 51)
    (newline-and-indent)
 
-   (phps-mode-lexer-run-incremental)
+   (phps-mode-analyzer-process-changes)
 
    ;; (message "After Tokens %s" phps-mode-lexer-tokens)
    ;; (message "After States: %s" phps-mode-lexer-states)
@@ -309,7 +309,7 @@
    (goto-char 32)
    (newline-and-indent)
 
-   (phps-mode-lexer-run-incremental)
+   (phps-mode-analyzer-process-changes)
 
    (should (equal (phps-mode-functions-get-imenu) '(("myFunctionA" . 16) ("myFunctionB" . 43)))))
 

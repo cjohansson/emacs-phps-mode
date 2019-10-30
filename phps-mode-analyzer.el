@@ -1622,7 +1622,7 @@
               (push token new-tokens))))))
     new-tokens))
 
-(defun phps-mode-lexer-incremental (start end contents tokens state states state-stack)
+(defun phps-mode-analyzer-incremental-lexer (start end contents tokens state states state-stack)
   "Run incremental lexer from START to END on CONTENTS.
 Initialize with TOKENS, STATE, STATES and STATE-STACK and return tokens, state and states."
   (let ((incremental-buffer (generate-new-buffer "*PHPs Incremental Buffer*"))
@@ -1683,7 +1683,7 @@ Initialize with TOKENS, STATE, STATES and STATE-STACK and return tokens, state a
 
     (list incremental-tokens incremental-state incremental-states incremental-state-stack)))
 
-(defun phps-mode-lexer-run-incremental (&optional buffer)
+(defun phps-mode-analyzer-process-changes (&optional buffer)
   "Run incremental lexer on BUFFER.  Return list of performed operations."
   (unless buffer
     (setq buffer (current-buffer)))
@@ -1969,7 +1969,7 @@ Initialize with TOKENS, STATE, STATES and STATE-STACK and return tokens, state a
 
                                           ;; Do partial lex from previous-token-end to change-stop
                                           (let ((incremental-result
-                                                 (phps-mode-lexer-incremental
+                                                 (phps-mode-analyzer-incremental-lexer
                                                   incremental-start-new-buffer
                                                   incremental-stop-new-buffer
                                                   buffer-contents-new
@@ -1984,7 +1984,7 @@ Initialize with TOKENS, STATE, STATES and STATE-STACK and return tokens, state a
                                             (setq incremental-new-end-state-stack (nth 3 incremental-result))
                                             (phps-mode-debug-message
                                              (message
-                                              "(phps-mode-lexer-incremental) returned: %s" incremental-result)
+                                              "(phps-mode-analyzer-incremental-lexer) returned: %s" incremental-result)
                                              (message "incremental-tokens: %s" incremental-tokens)
                                              (message "incremental-new-end-state: %s" incremental-new-end-state)
                                              (message "incremental-new-end-state-stack: %s" incremental-new-end-state-stack))
@@ -2054,7 +2054,7 @@ Initialize with TOKENS, STATE, STATES and STATE-STACK and return tokens, state a
 
                                           ;; Lex rest of buffer-contents-new here
                                           (let ((incremental-result
-                                                 (phps-mode-lexer-incremental
+                                                 (phps-mode-analyzer-incremental-lexer
                                                   incremental-start-new-buffer
                                                   incremental-stop-new-buffer
                                                   buffer-contents-new
@@ -2180,7 +2180,7 @@ Initialize with TOKENS, STATE, STATES and STATE-STACK and return tokens, state a
     (setq-local phps-mode-functions-processed-buffer nil)
     (when phps-mode-analyzer-process-on-indent-and-imenu
       (phps-mode-debug-message (message "Trigger incremental lexer"))
-      (phps-mode-lexer-run-incremental)))
+      (phps-mode-analyzer-process-changes)))
   (if (and
        (not phps-mode-functions-processed-buffer)
        (not phps-mode-functions-idle-timer))
@@ -3299,7 +3299,7 @@ Initialize with TOKENS, STATE, STATES and STATE-STACK and return tokens, state a
   "Start idle timer."
   (phps-mode-debug-message (message "Enqueued idle timer"))
   (when (boundp 'phps-mode-idle-interval)
-    (setq-local phps-mode-functions-idle-timer (run-with-idle-timer phps-mode-idle-interval nil #'phps-mode-lexer-run-incremental))))
+    (setq-local phps-mode-functions-idle-timer (run-with-idle-timer phps-mode-idle-interval nil #'phps-mode-analyzer-process-changes))))
 
 (defun phps-mode-functions-after-change (start stop length)
   "Track buffer change from START to STOP with LENGTH."
