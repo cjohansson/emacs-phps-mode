@@ -1747,6 +1747,7 @@ Initialize with TOKENS, STATE, STATES and STATE-STACK and return tokens, state a
                                 (tail-states '())
                                 (head-tokens '())
                                 (on-tokens '())
+                                (on-tokens-end nil)
                                 (tail-tokens '())
                                 (on-states '())
                                 (buffer-length-delta nil)
@@ -1804,6 +1805,12 @@ Initialize with TOKENS, STATE, STATES and STATE-STACK and return tokens, state a
                                   ;;   (phps-mode-debug-message
                                   ;;    (message "Moved incremental start to %s since a previous token end were change start" start)))
 
+                                  ;; Track end of on-tokens (for insertions)
+                                  (when (or
+                                         (not on-tokens-end)
+                                         (> end on-tokens-end))
+                                    (setq on-tokens-end end))
+
                                   ;; Token ends at or after start of change and starts before or at start of change
                                   ;; Token touches start of change, so we rewind the point of were to start lexing in
                                   ;; new buffer.
@@ -1837,17 +1844,10 @@ Initialize with TOKENS, STATE, STATES and STATE-STACK and return tokens, state a
                                (message "Flag change as insert"))
                               (setq change-is-insertion t)
 
-                              (when on-tokens
-                                (let ((on-tokens-end nil))
-                                  (dolist (token on-tokens)
-                                    (let ((end (cdr (cdr token))))
-                                      (when (or
-                                             (not on-tokens-end)
-                                             (> end on-tokens-end))
-                                        (setq on-tokens-end end))))
-                                  (setq incremental-stop-new-buffer (+ on-tokens-end buffer-length-delta))
-                                  (phps-mode-debug-message
-                                   (message "Since we have a insert on a previous token we move lexer end to %s in new buffer" incremental-stop-new-buffer))))
+                              (when on-tokens-end
+                                (setq incremental-stop-new-buffer (+ on-tokens-end buffer-length-delta))
+                                (phps-mode-debug-message
+                                 (message "Since we have a insert on a previous token we move lexer end to %s in new buffer" incremental-stop-new-buffer)))
                               )
 
                              ;; When we have an deletion, the change-length will be zero but difference in buffer-size will be lesser than zero
