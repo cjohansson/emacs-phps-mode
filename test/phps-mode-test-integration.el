@@ -180,6 +180,18 @@
 
    (insert "\necho 'my comments';\n"))
 
+  ;; TODO Should insert stuff and remove stuff here
+  (phps-mode-test-incremental-vs-intial-buffer
+   "\n\n"
+   "Integration-test 11 insert code at end of token-less buffer"
+
+   ;; Make changes
+   (goto-char (point-max))
+
+   (insert "\n\n")
+
+   (insert "\necho 'my comments';\n"))
+
   )
 
 ;; TODO Add tests for (delete-backward-char) as well
