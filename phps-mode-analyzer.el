@@ -41,6 +41,9 @@
 
 (require 'subr-x)
 
+(defvar phps-mode-idle-interval 1
+  "Idle seconds before running the incremental lexer.")
+
 (defvar phps-mode-functions-allow-after-change t
   "Flag to tell us whether after change detection is enabled or not.")
 
