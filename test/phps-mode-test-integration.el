@@ -171,6 +171,15 @@
    (goto-char 41)
    (execute-kbd-macro (kbd "RET")))
 
+  (phps-mode-test-incremental-vs-intial-buffer
+   "<?php\necho 'my comment';\n"
+   "Integration-test 10 insert code at end of buffer"
+
+   ;; Make changes
+   (goto-char (point-max))
+
+   (insert "\necho 'my comments';\n"))
+
   )
 
 ;; TODO Add tests for (delete-backward-char) as well
