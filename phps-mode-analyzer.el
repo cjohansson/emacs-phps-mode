@@ -1647,12 +1647,11 @@
               (push token new-tokens))))))
     new-tokens))
 
-(defun phps-mode-analyzer-incremental-lexer (start end contents tokens state states state-stack)
+(defun phps-mode-analyzer-incremental-lexer (start end contents state states state-stack)
   "Run incremental lexer from START to END on CONTENTS.
-Initialize with TOKENS, STATE, STATES and STATE-STACK and return tokens, state and states."
+Initialize with STATE, STATES and STATE-STACK and return tokens, state and states."
   (let ((incremental-buffer (generate-new-buffer "*PHPs Incremental Buffer*"))
         (incremental-tokens '())
-        (appended-tokens '())
         (incremental-states '())
         (incremental-state nil)
         (incremental-state-stack '()))
@@ -1995,7 +1994,6 @@ Initialize with TOKENS, STATE, STATES and STATE-STACK and return tokens, state a
                                                   incremental-start-new-buffer
                                                   incremental-stop-new-buffer
                                                   buffer-contents-new
-                                                  head-tokens
                                                   incremental-state
                                                   head-states
                                                   incremental-state-stack)))
@@ -2080,7 +2078,6 @@ Initialize with TOKENS, STATE, STATES and STATE-STACK and return tokens, state a
                                                   incremental-start-new-buffer
                                                   incremental-stop-new-buffer
                                                   buffer-contents-new
-                                                  head-tokens
                                                   incremental-state
                                                   head-states
                                                   incremental-state-stack)))
