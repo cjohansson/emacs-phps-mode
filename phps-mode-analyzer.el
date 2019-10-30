@@ -39,6 +39,26 @@
 (require 'semantic/lex)
 (require 'semantic/wisent)
 
+(require 'subr-x)
+
+(defvar phps-mode-functions-allow-after-change t
+  "Flag to tell us whether after change detection is enabled or not.")
+
+(defvar phps-mode-functions-buffer-changes nil
+  "A stack of buffer changes.")
+
+(defvar phps-mode-functions-idle-timer nil
+  "Timer object of idle timer.")
+
+(defvar phps-mode-functions-imenu nil
+  "The Imenu alist for current buffer, nil if none.")
+
+(defvar phps-mode-functions-lines-indent nil
+  "The indentation of each line in buffer, nil if none.")
+
+(defvar phps-mode-functions-processed-buffer nil
+  "Flag whether current buffer is processed or not.")
+
 (defvar phps-mode-analyzer-process-on-indent-and-imenu nil
   "Whether to automatically process buffer when using indent or imenu.")
 
@@ -1535,6 +1555,11 @@
 
         (phps-mode-lexer-re2c-execute)))))
 
+(define-lex phps-mode-lexer-lex
+  "Call lexer analyzer action."
+  phps-mode-lexer-lex-analyzer
+  semantic-lex-default-action)
+
 (defun phps-mode-lexer--get-next-unescaped (character)
   "Find where next un-escaped CHARACTER comes, if none is found return nil."
   ;; (message "phps-mode-lexer--get-next-unescaped(%s)" character)
@@ -1757,9 +1782,7 @@ Initialize with TOKENS, STATE, STATES and STATE-STACK and return tokens, state a
                                 (tail-boundary nil)
                                 (change-length (- change-stop change-start))
                                 (appended-tokens nil)
-                                (change-is-insertion nil)
-                                (change-is-deletion nil)
-                                (change-is-mixed nil))
+                                (change-is-deletion nil))
 
                             (phps-mode-debug-message
                              (message "Change %s-%s = %s" change-start change-stop change-length)
@@ -1841,8 +1864,7 @@ Initialize with TOKENS, STATE, STATES and STATE-STACK and return tokens, state a
                              ;; When we have an insertion, the length of the insert will be the difference in buffer length
                              ((= change-length buffer-length-delta)
                               (phps-mode-debug-message
-                               (message "Flag change as insert"))
-                              (setq change-is-insertion t)
+                               (message "Change is insert"))
 
                               (when on-tokens-end
                                 (setq incremental-stop-new-buffer (+ on-tokens-end buffer-length-delta))
@@ -2091,12 +2113,10 @@ Initialize with TOKENS, STATE, STATES and STATE-STACK and return tokens, state a
                                     (setq run-full-lexer t)
                                     (phps-mode-debug-message
                                      (message "Did not find head states"))
-                                    (signal 'warning "was here 2")
 
                                     ))
 
                               (push `('LEX-FULL-BUFFER-NO-HEAD-TOKENS ,change-start ,change-stop) lexer-history)
-                              (signal 'warning "was here 3")
                               (setq run-full-lexer t)
                               (phps-mode-debug-message
                                (unless head-tokens
@@ -2136,31 +2156,6 @@ Initialize with TOKENS, STATE, STATES and STATE-STACK and return tokens, state a
         (setq-local phps-mode-lexer-buffer-contents (buffer-substring-no-properties (point-min) (point-max))))
 
       lexer-history)))
-
-(define-lex phps-mode-lexer-lex
-  "Call lexer analyzer action."
-  phps-mode-lexer-lex-analyzer
-  semantic-lex-default-action)
-
-(require 'subr-x)
-
-(defvar phps-mode-functions-allow-after-change t
-  "Flag to tell us whether after change detection is enabled or not.")
-
-(defvar phps-mode-functions-buffer-changes nil
-  "A stack of buffer changes.")
-
-(defvar phps-mode-functions-idle-timer nil
-  "Timer object of idle timer.")
-
-(defvar phps-mode-functions-imenu nil
-  "The Imenu alist for current buffer, nil if none.")
-
-(defvar phps-mode-functions-lines-indent nil
-  "The indentation of each line in buffer, nil if none.")
-
-(defvar phps-mode-functions-processed-buffer nil
-  "Flag whether current buffer is processed or not.")
 
 (defun phps-mode-functions-get-processed-buffer ()
   "Get flag for whether buffer is processed or not."
