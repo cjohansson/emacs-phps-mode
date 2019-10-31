@@ -350,7 +350,7 @@
 (defun phps-mode-test-integration ()
   "Run test for integration."
   (setq debug-on-error t)
-  (setq phps-mode-runtime-debug t)
+  ;; (setq phps-mode-runtime-debug t)
   ;; (setq phps-mode-analyzer-process-on-indent-and-imenu t)
   (phps-mode-test-integration-incremental-lexer)
   (phps-mode-test-integration-incremental-vs-initial-buffers)

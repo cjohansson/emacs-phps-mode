@@ -1886,11 +1886,10 @@ Initialize with STATE, STATES and STATE-STACK and return tokens, state and state
                               (when tail-boundary
                                 (let ((new-tail-boundary (+ change-start (abs buffer-length-delta))))
                                   (unless (>= tail-boundary new-tail-boundary)
-                                    (setq tail-boundary new-tail-boundary)))
+                                    (setq tail-boundary new-tail-boundary)
+                                    (phps-mode-debug-message
+                                     (message "Since we have a deletion we move tail-boundary to: %s" tail-boundary))))
                                 )))
-
-                            (phps-mode-debug-message
-                             (message "Tail-boundary: %s" tail-boundary))
 
                             ;; Generate tail tokens from old buffer
                             (when tail-boundary
@@ -2072,7 +2071,7 @@ Initialize with STATE, STATES and STATE-STACK and return tokens, state and state
                                           (setq incremental-state incremental-new-end-state)
                                           (setq incremental-state-stack incremental-new-end-state-stack)
                                           (setq incremental-start-new-buffer incremental-stop-new-buffer)
-                                          (setq incremental-stop-new-buffer buffer-length-new)
+                                          (setq incremental-stop-new-buffer (1+ buffer-length-new))
 
                                           ;; Lex rest of buffer
 
