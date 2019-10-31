@@ -1961,6 +1961,8 @@ Initialize with STATE, STATES and STATE-STACK and return tokens, state and state
                                         (if change-is-deletion
                                             (progn
 
+                                              ;; TODO Sometimes the last on-data should not be added
+
                                               (when on-tokens
                                                 ;; Resize on-tokens since we have a partial delete
                                                 (setq on-tokens (phps-mode-lexer-get-moved-tokens on-tokens change-start buffer-length-delta))
