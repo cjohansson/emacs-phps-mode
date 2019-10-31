@@ -1983,7 +1983,8 @@ Initialize with STATE, STATES and STATE-STACK and return tokens, state and state
                                                 (setq head-tokens (nreverse head-tokens))
                                                 (phps-mode-debug-message
                                                  (message
-                                                  "Added on-tokens to head-tokens: %s"
+                                                  "Added moved on-tokens %s to head-tokens: %s"
+                                                  on-tokens
                                                   head-tokens)))
                                               (when on-states
                                                 ;; Resize on-states since we have a partial delete
@@ -1991,7 +1992,8 @@ Initialize with STATE, STATES and STATE-STACK and return tokens, state and state
                                                 (dolist (item on-states) (push item head-states))
                                                 (phps-mode-debug-message
                                                  (message
-                                                  "Added on-states to head-states: %s"
+                                                  "Added moved on-states %s to head-states: %s"
+                                                  on-states
                                                   head-states)))
 
                                               ;; Copy tokens and states before deletion region to after it
