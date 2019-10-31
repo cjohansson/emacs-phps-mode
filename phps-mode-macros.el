@@ -7,7 +7,7 @@
 
 ;;; Code:
 
-(defconst phps-mode-macrotime-debug nil
+(defconst phps-mode-macrotime-debug t
   "Debug messages during macro expansion time, default nil.")
 
 (defmacro phps-mode-debug-message (&rest message)

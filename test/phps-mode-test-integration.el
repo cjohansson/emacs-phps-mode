@@ -184,23 +184,24 @@
    ""
    "Integration-test 11 insert code in empty buffer using macro, use several passes"
 
-   ;; Make changes
+   ;; Make changes - Pass 1
    (goto-char (point-max))
    (execute-kbd-macro "<?php")
    (execute-kbd-macro (kbd "RET"))
    (execute-kbd-macro "echo 'was here';")
    (execute-kbd-macro (kbd "RET"))
    (execute-kbd-macro (kbd "RET"))
-
    (phps-mode-analyzer-process-changes)
 
+   ;; Pass 2
    (execute-kbd-macro "if ($myCondition) {")
    (execute-kbd-macro (kbd "RET"))
    (execute-kbd-macro "echo 'my special condition';")
    (phps-mode-analyzer-process-changes)
+
+   ;; Pass 3
    (execute-kbd-macro (kbd "TAB"))
-   (execute-kbd-macro (kbd "RET"))
-   (execute-kbd-macro "}"))
+   (execute-kbd-macro (kbd "RET")))
 
   )
 
