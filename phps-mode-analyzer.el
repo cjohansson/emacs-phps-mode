@@ -1883,10 +1883,11 @@ Initialize with STATE, STATES and STATE-STACK and return tokens, state and state
 
                               ;; When we have an deletion, the trailing region of the old buffer should moved forward
                               ;; the distance of the difference in buffer lengths
-                              (let ((new-tail-boundary (+ change-start (abs buffer-length-delta))))
-                                (unless (>= tail-boundary new-tail-boundary)
-                                  (setq tail-boundary new-tail-boundary)))
-                              ))
+                              (when tail-boundary
+                                (let ((new-tail-boundary (+ change-start (abs buffer-length-delta))))
+                                  (unless (>= tail-boundary new-tail-boundary)
+                                    (setq tail-boundary new-tail-boundary)))
+                                )))
 
                             (phps-mode-debug-message
                              (message "Tail-boundary: %s" tail-boundary))

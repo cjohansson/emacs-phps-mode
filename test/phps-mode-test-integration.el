@@ -180,17 +180,27 @@
 
    (insert "\necho 'my comments';\n"))
 
-  ;; TODO Should insert stuff and remove stuff here
   (phps-mode-test-incremental-vs-intial-buffer
-   "\n\n"
-   "Integration-test 11 insert code at end of token-less buffer"
+   ""
+   "Integration-test 11 insert code in empty buffer using macro, use several passes"
 
    ;; Make changes
    (goto-char (point-max))
+   (execute-kbd-macro "<?php")
+   (execute-kbd-macro (kbd "RET"))
+   (execute-kbd-macro "echo 'was here';")
+   (execute-kbd-macro (kbd "RET"))
+   (execute-kbd-macro (kbd "RET"))
 
-   (insert "\n\n")
+   (phps-mode-analyzer-process-changes)
 
-   (insert "\necho 'my comments';\n"))
+   (execute-kbd-macro "if ($myCondition) {")
+   (execute-kbd-macro (kbd "RET"))
+   (execute-kbd-macro "echo 'my special condition';")
+   (phps-mode-analyzer-process-changes)
+   (execute-kbd-macro (kbd "TAB"))
+   (execute-kbd-macro (kbd "RET"))
+   (execute-kbd-macro "}"))
 
   )
 
