@@ -1785,13 +1785,29 @@ Initialize with STATE, STATES and STATE-STACK and return tokens, state and state
                                 (tail-boundary nil)
                                 (change-length (- change-stop change-start))
                                 (appended-tokens nil)
-                                (change-is-deletion nil))
+                                (change-is-deletion nil)
+                                (change-is-insertion nil))
 
                             (phps-mode-debug-message
                              (message "Change %s-%s = %s" change-start change-stop change-length)
                              (message "Old tokens: %s" old-tokens)
                              (message "Old states: %s" old-states)
                              (message "Buffer length old: %s" buffer-length-old))
+
+                            ;; Calculate change of buffer length
+                            (setq buffer-length-delta (- buffer-length-new buffer-length-old))
+
+                            (cond
+                             ((= change-length buffer-length-delta)
+                              (setq change-is-insertion t)
+                              (phps-mode-debug-message
+                               (message "Flag change as insertion")))
+
+                             ((and (= change-length 0)
+                                   (< buffer-length-delta 0))
+                              (setq change-is-deletion t)
+                              (phps-mode-debug-message
+                               (message "Flag change as deletion"))))
 
                             ;; NOTE Deletion could use a list of tokens and states from start to end of change
 
@@ -1831,20 +1847,24 @@ Initialize with STATE, STATES and STATE-STACK and return tokens, state and state
                                   ;;   (phps-mode-debug-message
                                   ;;    (message "Moved incremental start to %s since a previous token end were change start" start)))
 
-                                  ;; Track start and end of on-tokens (for insertions)
+                                  ;; Only include tokens starting on change region start when we have insertions
+                                  ;; deletions will remove characters from beginning of start of change
                                   (when (or
-                                         (not on-tokens-end)
-                                         (> end on-tokens-end))
-                                    (setq on-tokens-end end))
-                                  (when (or
-                                         (not on-tokens-start)
-                                         (< start on-tokens-start))
-                                    (setq on-tokens-start start))
+                                         change-is-insertion
+                                         (not (= start change-start)))
 
-                                  ;; Token ends at or after start of change and starts before or at start of change
-                                  ;; Token touches start of change, so we rewind the point of were to start lexing in
-                                  ;; new buffer.
-                                  (push token on-tokens)
+                                    ;; Track start and end of on-tokens (for insertions)
+                                    (when (or
+                                           (not on-tokens-end)
+                                           (> end on-tokens-end))
+                                      (setq on-tokens-end end))
+                                    (when (or
+                                           (not on-tokens-start)
+                                           (< start on-tokens-start))
+                                      (setq on-tokens-start start))
+
+                                    ;; Token ends at or after start of change and starts before or at start of change
+                                    (push token on-tokens))
 
                                   ;; (setq incremental-start-new-buffer (1- start))
 
@@ -1862,16 +1882,11 @@ Initialize with STATE, STATES and STATE-STACK and return tokens, state and state
                              (message "Incremental start new buffer: %s" incremental-start-new-buffer)
                              (message "Incremental stop new buffer: %s" incremental-stop-new-buffer))
 
-                            ;; Calculate change of buffer length
-                            (setq buffer-length-delta (- buffer-length-new buffer-length-old))
-
                             ;; Flag change as insertion or deletion or none of them
                             (cond
 
                              ;; When we have an insertion, the length of the insert will be the difference in buffer length
-                             ((= change-length buffer-length-delta)
-                              (phps-mode-debug-message
-                               (message "Change is insert"))
+                             (change-is-insertion
 
                               (when on-tokens-end
                                 (setq incremental-stop-new-buffer (+ on-tokens-end buffer-length-delta))
@@ -1887,11 +1902,7 @@ Initialize with STATE, STATES and STATE-STACK and return tokens, state and state
                               )
 
                              ;; When we have an deletion, the change-length will be zero but difference in buffer-size will be lesser than zero
-                             ((and (= change-length 0)
-                                   (< buffer-length-delta 0))
-                              (phps-mode-debug-message
-                               (message "Flag change as deletion"))
-                              (setq change-is-deletion t)
+                             (change-is-deletion
 
                               ;; When we have an deletion, the trailing region of the old buffer should moved forward
                               ;; the distance of the difference in buffer lengths
@@ -1901,7 +1912,9 @@ Initialize with STATE, STATES and STATE-STACK and return tokens, state and state
                                     (setq tail-boundary new-tail-boundary)
                                     (phps-mode-debug-message
                                      (message "Since we have a deletion we move tail-boundary to: %s" tail-boundary))))
-                                )))
+                                ))
+
+                             )
 
                             ;; Generate tail tokens from old buffer
                             (when tail-boundary
