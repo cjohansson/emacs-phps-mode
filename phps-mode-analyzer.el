@@ -1912,7 +1912,9 @@ Initialize with STATE, STATES and STATE-STACK and return tokens, state and state
                                     (setq tail-boundary new-tail-boundary)
                                     (phps-mode-debug-message
                                      (message "Since we have a deletion we move tail-boundary to: %s" tail-boundary))))
-                                ))
+                                )
+
+                              )
 
                              )
 
@@ -1958,7 +1960,10 @@ Initialize with STATE, STATES and STATE-STACK and return tokens, state and state
                                         (setq incremental-old-end-state-stack (nth 3 state-object)))
                                       (when (and
                                              (>= end change-start)
-                                             (<= start change-start))
+                                             (<= start change-start)
+                                             (or
+                                              change-is-insertion
+                                              (not (= start change-start))))
                                         (push state-object on-states))
                                       (when (and
                                              tail-boundary
