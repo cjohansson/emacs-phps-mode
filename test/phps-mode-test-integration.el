@@ -180,6 +180,7 @@
 
    (insert "\necho 'my comments';\n"))
 
+  ;; TODO T_ENCAPSED_AND_WHITESPACE 72 should be removed by deletion (that is implicitly triggered by electric-pair-mode)
   (phps-mode-test-incremental-vs-intial-buffer
    ""
    "Integration-test 11 insert code in empty buffer using macro, use several passes"

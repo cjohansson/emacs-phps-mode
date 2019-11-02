@@ -1847,24 +1847,19 @@ Initialize with STATE, STATES and STATE-STACK and return tokens, state and state
                                   ;;   (phps-mode-debug-message
                                   ;;    (message "Moved incremental start to %s since a previous token end were change start" start)))
 
-                                  ;; Only include tokens starting on change region start when we have insertions
-                                  ;; deletions will remove characters from beginning of start of change
+
+                                  ;; Track start and end of on-tokens (for insertions)
                                   (when (or
-                                         change-is-insertion
-                                         (not (= start change-start)))
+                                         (not on-tokens-end)
+                                         (> end on-tokens-end))
+                                    (setq on-tokens-end end))
+                                  (when (or
+                                         (not on-tokens-start)
+                                         (< start on-tokens-start))
+                                    (setq on-tokens-start start))
 
-                                    ;; Track start and end of on-tokens (for insertions)
-                                    (when (or
-                                           (not on-tokens-end)
-                                           (> end on-tokens-end))
-                                      (setq on-tokens-end end))
-                                    (when (or
-                                           (not on-tokens-start)
-                                           (< start on-tokens-start))
-                                      (setq on-tokens-start start))
-
-                                    ;; Token ends at or after start of change and starts before or at start of change
-                                    (push token on-tokens))
+                                  ;; Token ends at or after start of change and starts before or at start of change
+                                  (push token on-tokens)
 
                                   ;; (setq incremental-start-new-buffer (1- start))
 
