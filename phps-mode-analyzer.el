@@ -1667,7 +1667,7 @@ Initialize with STATE, STATES and STATE-STACK and return tokens, state and state
       (goto-char (point-max))
 
       ;; NOTE (substring) uses different indexes than (buffer-substring-no-properties)
-      (insert (substring contents (1- start) (1- end)))
+      (insert (substring contents (1- start) (length contents)))
 
       ;; Rewind lexer state here
       (setq-local phps-mode-lexer-states states)
@@ -1769,7 +1769,9 @@ Initialize with STATE, STATES and STATE-STACK and return tokens, state and state
                                 (incremental-new-end-state nil)
                                 (incremental-new-end-state-stack nil)
                                 (incremental-states nil)
+                                (incremental-states-end nil)
                                 (incremental-tokens nil)
+                                (incremental-tokens-end nil)
                                 (head-states '())
                                 (tail-states '())
                                 (head-tokens '())
@@ -2030,10 +2032,33 @@ Initialize with STATE, STATES and STATE-STACK and return tokens, state and state
                                                   head-states
                                                   incremental-state-stack)))
                                             (setq incremental-tokens (nth 0 incremental-result))
+
+                                            ;; Store end of incremental-tokens
+                                            (dolist (token-object incremental-tokens)
+                                              (let ((end (cdr (cdr token-object))))
+                                                (when (or
+                                                       (not incremental-tokens-end)
+                                                       (> end incremental-tokens-end))
+                                                  (setq incremental-tokens-end end))))
+                                            (phps-mode-debug-message
+                                             (message "incremental-tokens-end: %s" incremental-tokens-end))
+
                                             (setq appended-tokens (append head-tokens incremental-tokens))
                                             (setq incremental-new-end-state (nth 1 incremental-result))
                                             (setq incremental-states (nth 2 incremental-result))
+
+                                            ;; Save point were incremental states end
+                                            (dolist (state-object incremental-states)
+                                              (let ((end (nth 1 state-object)))
+                                                (when (or
+                                                       (not incremental-states-end)
+                                                       (> end incremental-states-end))
+                                                  (setq incremental-states-end end))))
+                                            (phps-mode-debug-message
+                                             (message "incremental-states-end: %s" incremental-states-end))
+
                                             (setq incremental-new-end-state-stack (nth 3 incremental-result))
+
                                             (phps-mode-debug-message
                                              (message
                                               "(phps-mode-analyzer-incremental-lexer) returned: %s" incremental-result)
@@ -2057,10 +2082,14 @@ Initialize with STATE, STATES and STATE-STACK and return tokens, state and state
                                               (unless (= buffer-length-delta 0)
 
                                                 (when tail-tokens
-                                                  (setq tail-tokens (phps-mode-lexer-get-moved-tokens tail-tokens 0 buffer-length-delta)))
+                                                  (setq tail-tokens (phps-mode-lexer-get-moved-tokens tail-tokens 0 buffer-length-delta))
+                                                  (phps-mode-debug-message
+                                                   (message "Moved tail-tokens: %s" tail-tokens)))
 
                                                 (when tail-states
-                                                  (setq tail-states (phps-mode-lexer-get-moved-states tail-states 0 buffer-length-delta))))
+                                                  (setq tail-states (phps-mode-lexer-get-moved-states tail-states 0 buffer-length-delta))
+                                                  (phps-mode-debug-message
+                                                   (message "Moved tail-states: %s" tail-states))))
 
                                               ;; TODO re-use rest of indexes here? (indentation and imenu)
 
@@ -2073,10 +2102,37 @@ Initialize with STATE, STATES and STATE-STACK and return tokens, state and state
                                                     (phps-mode-lexer-set-region-syntax-color
                                                      start end (phps-mode-lexer-get-token-syntax-color token)))))
 
+                                              ;; Only add states that are after incremental-states
+                                              (when (and
+                                                     tail-states
+                                                     incremental-states-end)
+                                                (let ((new-tail-states nil))
+                                                  (dolist (state-object tail-states)
+                                                    (let ((start (nth 0 state-object)))
+                                                      (when (>= start incremental-states-end)
+                                                        (push state-object new-tail-states))
+                                                      ))
+                                                  (phps-mode-debug-message
+                                                   (message "New tail states: %s" new-tail-states))
+                                                  (setq tail-states (nreverse new-tail-states))))
+
                                               (setq-local phps-mode-lexer-states (append tail-states incremental-states))
                                               (phps-mode-debug-message (message "New states from incremental lex are: %s" phps-mode-lexer-states))
                                               (setq old-states phps-mode-lexer-states)
-                                              
+
+                                              ;; Only add tail-tokens that are after the incremental-tokens
+                                              (when (and
+                                                     tail-tokens
+                                                     incremental-tokens-end)
+                                                (let ((new-tail-tokens nil))
+                                                  (dolist (token-object tail-tokens)
+                                                    (let ((start (car (cdr token-object))))
+                                                      (when (>= start incremental-tokens-end)
+                                                        (push token-object new-tail-tokens))))
+                                                  (phps-mode-debug-message
+                                                   (message "New tail tokens: %s" new-tail-tokens))
+                                                  (setq tail-tokens (nreverse new-tail-tokens))))
+
                                               (setq appended-tokens (append appended-tokens tail-tokens))
                                               (phps-mode-debug-message (message "New tokens from incremental lex are: %s" appended-tokens))
                                               (setq-local phps-mode-lexer-tokens appended-tokens)
