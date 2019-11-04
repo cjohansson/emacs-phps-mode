@@ -41,9 +41,7 @@
 
    ;; Make changes - insert a new function
    (goto-char 145)
-   (insert "\n\n        public function myFunctionB()\n        {\n            echo 'my second statement';\n        }\n")
-
-   (should (equal (phps-mode-analyzer-process-changes) '(('MERGE-INCREMENTAL-LEX-REGION 145 245) ('INCREMENTAL-LEX-REGION 145 245)))))
+   (insert "\n\n        public function myFunctionB()\n        {\n            echo 'my second statement';\n        }\n"))
 
   (phps-mode-test-with-buffer
    "<?php\nnamespace myNamespace\n{\n    class myClass\n    {\n        public function myFunction()\n        {\n            echo 'my statement';\n        }\n    }\n}\n"
@@ -51,9 +49,7 @@
 
    ;; Make changes - insert a new function
    (goto-char 144)
-   (insert "\n\n        public function myFunctionB()\n        {\n            echo 'my second statement';\n        }\n")
-
-   (should (equal (phps-mode-analyzer-process-changes) '(('MERGE-INCREMENTAL-LEX-REST-OF-BUFFER 144 244) ('INCREMENTAL-LEX-REST-OF-BUFFER 144 244) ('INCREMENTAL-LEX-REGION 144 244)))))
+   (insert "\n\n        public function myFunctionB()\n        {\n            echo 'my second statement';\n        }\n"))
 
   (phps-mode-test-with-buffer
    ""
@@ -61,18 +57,14 @@
 
    ;; Make changes - insert a new function
    (goto-char 0)
-   (insert "<?php\nnamespace myNamespace\n{\n    class myClass\n    {\n        public function myFunction()\n        {\n            echo 'my statement';\n        }\n    }\n}\n")
-
-   (should (equal (phps-mode-analyzer-process-changes) '(('LEX-FULL-BUFFER-NO-CHANGE-STATES-TOKENS-OR-START 1 153)))))
+   (insert "<?php\nnamespace myNamespace\n{\n    class myClass\n    {\n        public function myFunction()\n        {\n            echo 'my statement';\n        }\n    }\n}\n"))
 
   (phps-mode-test-with-buffer
    ""
    "Empty file, no changes."
 
    ;; Make no changes
-   (goto-char 0)
-
-   (should (equal (phps-mode-analyzer-process-changes) '(('LEX-FULL-NO-CHANGES)))))
+   (goto-char 0))
 
   (phps-mode-test-with-buffer
    "\n\n\n\n<?php echo 'was here';"
@@ -80,9 +72,7 @@
 
    ;; Make changes - insert a new function
    (goto-char 0)
-   (insert "<?php echo 'was here 2'; ?>\n")
-
-   (should (equal (phps-mode-analyzer-process-changes) '(('LEX-FULL-BUFFER-NO-CHANGE-STATES-TOKENS-OR-START 1 29)))))
+   (insert "<?php echo 'was here 2'; ?>\n"))
 
   )
 
