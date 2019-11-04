@@ -1939,6 +1939,9 @@ Initialize with STATE, STATES and STATE-STACK and return tokens, state and state
                                   (phps-mode-debug-message
                                    (message "Found positive head boundary and head tokens"))
 
+                                  ;; TODO Need to change strategy, lexer state and stack is not an indication of when to re-lex rest of buffer.
+                                  ;; Shold instead only use head data and always lex from start of change to end of buffer.
+
                                   ;; In old buffer:
                                   ;; 1. Determine state (incremental-state) and state-stack (incremental-state-stack) before incremental start
                                   ;; 2. Build list of states before incremental start (head-states)
@@ -1950,9 +1953,11 @@ Initialize with STATE, STATES and STATE-STACK and return tokens, state and state
                                         (setq incremental-state (nth 2 state-object))
                                         (setq incremental-state-stack (nth 3 state-object))
                                         (push state-object head-states))
-                                      (when (and
-                                             tail-boundary
-                                             (< start tail-boundary))
+                                      (when (or
+                                             (not tail-boundary)
+                                             (and
+                                              tail-boundary
+                                              (< start tail-boundary)))
                                         (setq incremental-old-end-state (nth 2 state-object))
                                         (setq incremental-old-end-state-stack (nth 3 state-object)))
                                       (when (and
