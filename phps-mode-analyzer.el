@@ -1682,7 +1682,7 @@
     new-tokens))
 
 (defun phps-mode-functions--reset-changes ()
-  "Rest changes."
+  "Reset change."
   (setq phps-mode-analyzer-change-min nil))
 
 (defun phps-mode-analyzer-process-changes (&optional buffer)
@@ -1702,7 +1702,6 @@
              (message "Processing change point minimum: %s" phps-mode-analyzer-change-min))
             (let ((incremental-state nil)
                   (incremental-state-stack nil)
-                  (incremental-states nil)
                   (incremental-tokens nil)
                   (head-states '())
                   (head-tokens '())
@@ -3076,7 +3075,7 @@
                    (equal token-label 'T_DOC_COMMENT))
 
               (phps-mode-debug-message
-               (message "Un-comment comment at %s %s" token-label token-start token-end))
+               (message "Un-comment %s comment at %s %s" token-label token-start token-end))
 
               (let ((offset-comment-start (+ token-start offset))
                     (offset-comment-end))
