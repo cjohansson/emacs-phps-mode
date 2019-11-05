@@ -32,50 +32,6 @@
 (eval-when-compile
   (require 'phps-mode-macros))
 
-(defun phps-mode-test-integration-incremental-lexer ()
-  "Test the incremental lexer."
-
-  (phps-mode-test-with-buffer
-   "<?php\nnamespace myNamespace\n{\n    class myClass\n    {\n        public function myFunction()\n        {\n            echo 'my statement';\n        }\n    }\n}\n"
-   "Regular OO-file, inspect state-preserving change."
-
-   ;; Make changes - insert a new function
-   (goto-char 145)
-   (insert "\n\n        public function myFunctionB()\n        {\n            echo 'my second statement';\n        }\n"))
-
-  (phps-mode-test-with-buffer
-   "<?php\nnamespace myNamespace\n{\n    class myClass\n    {\n        public function myFunction()\n        {\n            echo 'my statement';\n        }\n    }\n}\n"
-   "Regular OO-file, inspect state-disrupting change."
-
-   ;; Make changes - insert a new function
-   (goto-char 144)
-   (insert "\n\n        public function myFunctionB()\n        {\n            echo 'my second statement';\n        }\n"))
-
-  (phps-mode-test-with-buffer
-   ""
-   "Empty file, insert entire PHP file."
-
-   ;; Make changes - insert a new function
-   (goto-char 0)
-   (insert "<?php\nnamespace myNamespace\n{\n    class myClass\n    {\n        public function myFunction()\n        {\n            echo 'my statement';\n        }\n    }\n}\n"))
-
-  (phps-mode-test-with-buffer
-   ""
-   "Empty file, no changes."
-
-   ;; Make no changes
-   (goto-char 0))
-
-  (phps-mode-test-with-buffer
-   "\n\n\n\n<?php echo 'was here';"
-   "Make changes before any previous tokens."
-
-   ;; Make changes - insert a new function
-   (goto-char 0)
-   (insert "<?php echo 'was here 2'; ?>\n"))
-
-  )
-
 (defun phps-mode-test-integration-incremental-vs-initial-buffers ()
   "Test for object-oriented PHP file."
 
@@ -343,7 +299,6 @@
   (setq debug-on-error t)
   ;; (setq phps-mode-runtime-debug t)
   ;; (setq phps-mode-analyzer-process-on-indent-and-imenu t)
-  (phps-mode-test-integration-incremental-lexer)
   (phps-mode-test-integration-incremental-vs-initial-buffers)
   ;; (phps-mode-test-integration-whitespace-modifications)
   )

@@ -1703,6 +1703,10 @@ Initialize with STATE, STATES and STATE-STACK and return tokens, state and state
 
     (list incremental-tokens incremental-state incremental-states incremental-state-stack)))
 
+(defun phps-mode-functions--reset-changes ()
+  "Rest changes."
+  (setq phps-mode-analyzer-change-min nil))
+
 (defun phps-mode-analyzer-process-changes (&optional buffer)
   "Run incremental lexer on BUFFER.  Return list of performed operations."
   (unless buffer
@@ -1734,7 +1738,7 @@ Initialize with STATE, STATES and STATE-STACK and return tokens, state and state
               (phps-mode-functions--cancel-idle-timer)
 
               ;; Reset buffer changes minimum index
-              (setq phps-mode-analyzer-change-min nil)
+              (phps-mode-functions--reset-changes)
 
               ;; Reset tokens and states here
               (setq-local phps-mode-lexer-tokens nil)
@@ -1753,10 +1757,12 @@ Initialize with STATE, STATES and STATE-STACK and return tokens, state and state
                 (dolist (token old-tokens)
                   (let ((start (car (cdr token)))
                         (end (cdr (cdr token))))
-                    (if (< start change-start)
-                        (progn
-                          (setq incremental-start-new-buffer start)
-                          (push token head-tokens))
+                    (if (< end change-start)
+                        (push token head-tokens)
+                      (when (< start change-start)
+                        (phps-mode-debug-message
+                         (message "New incremental-start-new-buffer: %s" start))
+                        (setq incremental-start-new-buffer start))
                       (throw 'quit "break")))))
 
               (setq head-tokens (nreverse head-tokens))
@@ -1770,16 +1776,14 @@ Initialize with STATE, STATES and STATE-STACK and return tokens, state and state
                     (phps-mode-debug-message
                      (message "Found head tokens"))
 
-                    ;; TODO Must determine incremental-state and state-stack as well
-
                     ;; In old buffer:
                     ;; 1. Determine state (incremental-state) and state-stack (incremental-state-stack) before incremental start
                     ;; 2. Build list of states before incremental start (head-states)
                     ;; 3. Build list of states after incremental start (tail-states)
                     (catch 'quit
                       (dolist (state-object (nreverse old-states))
-                        (let ((start (nth 0 state-object)))
-                          (if (< start change-start)
+                        (let ((end (nth 1 state-object)))
+                          (if (< end change-start)
                               (progn
                                 (setq incremental-state (nth 2 state-object))
                                 (setq incremental-state-stack (nth 3 state-object))
@@ -1808,9 +1812,7 @@ Initialize with STATE, STATES and STATE-STACK and return tokens, state and state
                                   head-states
                                   incremental-state-stack)))
                             (setq incremental-tokens (nth 0 incremental-result))
-                            (setq incremental-new-end-state (nth 1 incremental-result))
                             (setq incremental-states (nth 2 incremental-result))
-                            (setq incremental-new-end-state-stack (nth 3 incremental-result))
 
 
                             ;; TODO re-use rest of indexes here? (indentation and imenu)

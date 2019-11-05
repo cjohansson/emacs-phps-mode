@@ -147,8 +147,7 @@
 
   ;; Reset flags
   (setq-local phps-mode-functions-allow-after-change t)
-  (setq-local phps-mode-functions-buffer-changes nil)
-  (setq-local phps-mode-functions-buffer-changes nil)
+  (setq-local phps-mode-analyzer-change-min nil)
   (setq-local phps-mode-functions-idle-timer nil)
   (setq-local phps-mode-functions-lines-indent nil)
   (setq-local phps-mode-functions-imenu nil)
