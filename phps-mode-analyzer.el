@@ -250,6 +250,7 @@
      (string= token 'T_ENDWHILE)
      (string= token 'T_DO)
      (string= token 'T_FUNCTION)
+     (string= token 'T_FN)
      (string= token 'T_CONST)
      (string= token 'T_FOREACH)
      (string= token 'T_ENDFOREACH)
@@ -436,8 +437,6 @@
             (let ((start (car (cdr token)))
                   (end (cdr (cdr token)))
                   (token-name (car token)))
-              (phps-mode-lexer-set-region-syntax-color
-               start end  (phps-mode-lexer-get-token-syntax-color token-name))
               (semantic-lex-push-token (semantic-lex-token token-name start end))))
 
           (phps-mode-lexer-MOVE_FORWARD (point-max)))
@@ -445,6 +444,7 @@
       (phps-mode-debug-message (message "Running lexer from %s" old-start))
       
       (let ((heredoc_label (car phps-mode-lexer-heredoc_label_stack))
+            (SHEBANG (equal phps-mode-lexer-STATE 'SHEBANG))
             (ST_IN_SCRIPTING (equal phps-mode-lexer-STATE 'ST_IN_SCRIPTING))
             (ST_INITIAL (equal phps-mode-lexer-STATE 'ST_INITIAL))
             (ST_LOOKING_FOR_PROPERTY (equal phps-mode-lexer-STATE 'ST_LOOKING_FOR_PROPERTY))
@@ -466,9 +466,14 @@
            (phps-mode-lexer-RETURN_TOKEN 'T_EXIT (match-beginning 0) (match-end 0))))
 
         (phps-mode-lexer-re2c-rule
-         (and ST_IN_SCRIPTING (looking-at "die" ))
+         (and ST_IN_SCRIPTING (looking-at "die"))
          (lambda()
            (phps-mode-lexer-RETURN_TOKEN 'T_DIE (match-beginning 0) (match-end 0))))
+
+        (phps-mode-lexer-re2c-rule
+         (and ST_IN_SCRIPTING (looking-at "fn"))
+         (lambda()
+           (phps-mode-lexer-RETURN_TOKEN 'T_FN (match-beginning 0) (match-end 0))))
 
         (phps-mode-lexer-re2c-rule
          (and ST_IN_SCRIPTING (looking-at "function"))
@@ -741,8 +746,15 @@
            (phps-mode-lexer-RETURN_TOKEN 'T_INT_CAST (match-beginning 0) (match-end 0))))
 
         (phps-mode-lexer-re2c-rule
-         (and ST_IN_SCRIPTING (looking-at (concat "(" phps-mode-lexer-TABS_AND_SPACES "\\(real\\|double\\|float\\)" phps-mode-lexer-TABS_AND_SPACES ")")))
+         (and ST_IN_SCRIPTING (looking-at (concat "(" phps-mode-lexer-TABS_AND_SPACES "\\(double\\|float\\)" phps-mode-lexer-TABS_AND_SPACES ")")))
          (lambda()
+           (phps-mode-lexer-RETURN_TOKEN 'T_DOUBLE_CAST (match-beginning 0) (match-end 0))))
+
+        (phps-mode-lexer-re2c-rule
+         (and ST_IN_SCRIPTING (looking-at (concat "(" phps-mode-lexer-TABS_AND_SPACES "\\(real\\)" phps-mode-lexer-TABS_AND_SPACES ")")))
+         (lambda()
+           (when phps-mode-lexer-PARSER_MODE
+             (display-warning 'phps-mode "PHPs Lexer Error - The (real) cast is deprecated, use (float) instead"))
            (phps-mode-lexer-RETURN_TOKEN 'T_DOUBLE_CAST (match-beginning 0) (match-end 0))))
 
         (phps-mode-lexer-re2c-rule
@@ -1197,6 +1209,16 @@
            (phps-mode-lexer-RETURN_TOKEN 'T_NS_C (match-beginning 0) (match-end 0))))
 
         (phps-mode-lexer-re2c-rule
+         (and SHEBANG (looking-at (concat "#!.*" phps-mode-lexer-NEWLINE)))
+         (lambda()
+           (phps-mode-lexer-BEGIN 'ST_INITIAL)))
+
+        (phps-mode-lexer-re2c-rule
+         (and SHEBANG (looking-at phps-mode-lexer-ANY_CHAR))
+         (lambda()
+           (phps-mode-lexer-BEGIN 'ST_INITIAL)))
+
+        (phps-mode-lexer-re2c-rule
          (and ST_INITIAL (looking-at "<\\?="))
          (lambda()
            (let ((start (match-beginning 0))
@@ -1217,6 +1239,14 @@
              (when phps-mode-lexer-EXPECTED
                (phps-mode-lexer-SKIP_TOKEN 'T_OPEN_TAG start end))
              (phps-mode-lexer-RETURN_TOKEN 'T_OPEN_TAG start end))))
+
+        (phps-mode-lexer-re2c-rule
+         (and ST_INITIAL (looking-at "<\\?php"))
+         (lambda()
+           ;; Allow <?php followed by end of file.
+           (let ((start (match-beginning 0))
+                 (end (match-end 0)))
+             (phps-mode-lexer-BEGIN 'ST_IN_SCRIPTING))))
 
         (phps-mode-lexer-re2c-rule
          (and ST_INITIAL (looking-at "<\\?"))
