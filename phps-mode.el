@@ -5,8 +5,8 @@
 ;; Author: Christian Johansson <christian@cvj.se>
 ;; Maintainer: Christian Johansson <christian@cvj.se>
 ;; Created: 3 Mar 2018
-;; Modified: 10 Oct 2019
-;; Version: 0.3.5
+;; Modified: 5 Nov 2019
+;; Version: 0.3.7
 ;; Keywords: tools, convenience
 ;; URL: https://github.com/cjohansson/emacs-phps-mode
 
@@ -55,9 +55,6 @@
 
 (defvar phps-mode-use-psr-2 t
   "Whether to use PSR-2 guidelines for white-space or not.")
-
-(defvar phps-mode-idle-interval 1
-  "Idle seconds before running the incremental lexer.")
 
 (defvar phps-mode-inline-mmm-submode nil
   "Symbol declaring what mmm-mode to use as submode in inline areas.")
@@ -150,8 +147,7 @@
 
   ;; Reset flags
   (setq-local phps-mode-functions-allow-after-change t)
-  (setq-local phps-mode-functions-buffer-changes nil)
-  (setq-local phps-mode-functions-buffer-changes nil)
+  (setq-local phps-mode-analyzer-change-min nil)
   (setq-local phps-mode-functions-idle-timer nil)
   (setq-local phps-mode-functions-lines-indent nil)
   (setq-local phps-mode-functions-imenu nil)
