@@ -26,6 +26,10 @@ This mode does not require PHP installed on your computer because it has a built
 * Included in GNU ELPA package archive
 * A interactive function that can be used interactively to format buffers `(phps-mode-format-buffer)`
 
+## Roadmap
+
+* Wisent Parser support
+
 ## Keymap
 
 * `C-c C-r` Rescan buffer
