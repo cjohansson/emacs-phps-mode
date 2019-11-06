@@ -250,6 +250,7 @@
      (string= token 'T_ENDWHILE)
      (string= token 'T_DO)
      (string= token 'T_FUNCTION)
+     (string= token 'T_FN)
      (string= token 'T_CONST)
      (string= token 'T_FOREACH)
      (string= token 'T_ENDFOREACH)
@@ -436,8 +437,6 @@
             (let ((start (car (cdr token)))
                   (end (cdr (cdr token)))
                   (token-name (car token)))
-              (phps-mode-lexer-set-region-syntax-color
-               start end  (phps-mode-lexer-get-token-syntax-color token-name))
               (semantic-lex-push-token (semantic-lex-token token-name start end))))
 
           (phps-mode-lexer-MOVE_FORWARD (point-max)))
@@ -445,6 +444,7 @@
       (phps-mode-debug-message (message "Running lexer from %s" old-start))
       
       (let ((heredoc_label (car phps-mode-lexer-heredoc_label_stack))
+            (SHEBANG (equal phps-mode-lexer-STATE 'SHEBANG))
             (ST_IN_SCRIPTING (equal phps-mode-lexer-STATE 'ST_IN_SCRIPTING))
             (ST_INITIAL (equal phps-mode-lexer-STATE 'ST_INITIAL))
             (ST_LOOKING_FOR_PROPERTY (equal phps-mode-lexer-STATE 'ST_LOOKING_FOR_PROPERTY))
@@ -466,9 +466,14 @@
            (phps-mode-lexer-RETURN_TOKEN 'T_EXIT (match-beginning 0) (match-end 0))))
 
         (phps-mode-lexer-re2c-rule
-         (and ST_IN_SCRIPTING (looking-at "die" ))
+         (and ST_IN_SCRIPTING (looking-at "die"))
          (lambda()
            (phps-mode-lexer-RETURN_TOKEN 'T_DIE (match-beginning 0) (match-end 0))))
+
+        (phps-mode-lexer-re2c-rule
+         (and ST_IN_SCRIPTING (looking-at "fn"))
+         (lambda()
+           (phps-mode-lexer-RETURN_TOKEN 'T_FN (match-beginning 0) (match-end 0))))
 
         (phps-mode-lexer-re2c-rule
          (and ST_IN_SCRIPTING (looking-at "function"))
@@ -693,8 +698,7 @@
         (phps-mode-lexer-re2c-rule
          (and ST_LOOKING_FOR_PROPERTY (looking-at phps-mode-lexer-ANY_CHAR))
          (lambda()
-           (let ((_start (match-beginning 0))
-                 (end (match-end 0)))
+           (let ((end (match-end 0)))
              (phps-mode-lexer-yy_pop_state)
              ;; TODO goto restart here?
              ;; (message "Restart here")
@@ -741,8 +745,15 @@
            (phps-mode-lexer-RETURN_TOKEN 'T_INT_CAST (match-beginning 0) (match-end 0))))
 
         (phps-mode-lexer-re2c-rule
-         (and ST_IN_SCRIPTING (looking-at (concat "(" phps-mode-lexer-TABS_AND_SPACES "\\(real\\|double\\|float\\)" phps-mode-lexer-TABS_AND_SPACES ")")))
+         (and ST_IN_SCRIPTING (looking-at (concat "(" phps-mode-lexer-TABS_AND_SPACES "\\(double\\|float\\)" phps-mode-lexer-TABS_AND_SPACES ")")))
          (lambda()
+           (phps-mode-lexer-RETURN_TOKEN 'T_DOUBLE_CAST (match-beginning 0) (match-end 0))))
+
+        (phps-mode-lexer-re2c-rule
+         (and ST_IN_SCRIPTING (looking-at (concat "(" phps-mode-lexer-TABS_AND_SPACES "\\(real\\)" phps-mode-lexer-TABS_AND_SPACES ")")))
+         (lambda()
+           (when phps-mode-lexer-PARSER_MODE
+             (display-warning 'phps-mode "PHPs Lexer Error - The (real) cast is deprecated, use (float) instead"))
            (phps-mode-lexer-RETURN_TOKEN 'T_DOUBLE_CAST (match-beginning 0) (match-end 0))))
 
         (phps-mode-lexer-re2c-rule
@@ -1197,6 +1208,16 @@
            (phps-mode-lexer-RETURN_TOKEN 'T_NS_C (match-beginning 0) (match-end 0))))
 
         (phps-mode-lexer-re2c-rule
+         (and SHEBANG (looking-at (concat "#!.*" phps-mode-lexer-NEWLINE)))
+         (lambda()
+           (phps-mode-lexer-BEGIN 'ST_INITIAL)))
+
+        (phps-mode-lexer-re2c-rule
+         (and SHEBANG (looking-at phps-mode-lexer-ANY_CHAR))
+         (lambda()
+           (phps-mode-lexer-BEGIN 'ST_INITIAL)))
+
+        (phps-mode-lexer-re2c-rule
          (and ST_INITIAL (looking-at "<\\?="))
          (lambda()
            (let ((start (match-beginning 0))
@@ -1217,6 +1238,12 @@
              (when phps-mode-lexer-EXPECTED
                (phps-mode-lexer-SKIP_TOKEN 'T_OPEN_TAG start end))
              (phps-mode-lexer-RETURN_TOKEN 'T_OPEN_TAG start end))))
+
+        (phps-mode-lexer-re2c-rule
+         (and ST_INITIAL (looking-at "<\\?php"))
+         (lambda()
+           ;; Allow <?php followed by end of file.
+           (phps-mode-lexer-BEGIN 'ST_IN_SCRIPTING)))
 
         (phps-mode-lexer-re2c-rule
          (and ST_INITIAL (looking-at "<\\?"))
@@ -1584,7 +1611,8 @@
 (defun phps-mode-lexer-setup (start end)
   "Just prepare other lexers for lexing region START to END."
   (phps-mode-debug-message (message "Lexer setup %s - %s" start end))
-  (phps-mode-lexer-BEGIN 'ST_INITIAL))
+  (unless phps-mode-lexer-STATE
+    (phps-mode-lexer-BEGIN 'ST_INITIAL)))
 
 (defun phps-mode-lexer-run ()
   "Run lexer."
@@ -1650,61 +1678,8 @@
               (push token new-tokens))))))
     new-tokens))
 
-(defun phps-mode-analyzer-incremental-lexer (start end contents state states state-stack)
-  "Run incremental lexer from START to END on CONTENTS.
-Initialize with STATE, STATES and STATE-STACK and return tokens, state and states."
-  (let ((incremental-buffer (generate-new-buffer "*PHPs Incremental Buffer*"))
-        (incremental-tokens '())
-        (incremental-states '())
-        (incremental-state nil)
-        (incremental-state-stack '()))
-    (save-excursion
-      (switch-to-buffer incremental-buffer)
-      (insert contents)
-
-      ;; Rewind lexer state here
-      (setq-local phps-mode-lexer-states states)
-      (setq-local phps-mode-lexer-STATE state)
-      (setq-local phps-mode-lexer-state_stack state-stack)
-
-      ;; Setup lexer
-      (when (fboundp 'phps-mode-lexer-lex)
-        (setq-local semantic-lex-analyzer #'phps-mode-lexer-lex))
-      (when (boundp 'phps-mode-syntax-table)
-        (setq-local semantic-lex-syntax-table phps-mode-syntax-table))
-
-      (phps-mode-debug-message
-       (message
-        "Incremental buffer contents: \n'%s'"
-        (buffer-substring-no-properties
-         (point-min)
-         (point-max)))
-       (message
-        "Incremental buffer lexer region (%s-%s): \n'%s'"
-        start
-        end
-        (buffer-substring-no-properties start end)))
-
-      ;; Generate new tokens
-      (setq incremental-tokens (semantic-lex start end))
-
-      ;; Save state, states and state-stack
-      (setq incremental-states phps-mode-lexer-states)
-      (setq incremental-state phps-mode-lexer-STATE)
-      (setq incremental-state-stack phps-mode-lexer-state_stack)
-
-      (kill-buffer)
-
-      (phps-mode-debug-message
-       (message "Incremental tokens: %s" incremental-tokens)
-       (message "Incremental states: %s" incremental-states)
-       (message "Incremental new end state: %s" incremental-state)
-       (message "Incremental new end state stack: %s" incremental-state-stack)))
-
-    (list incremental-tokens incremental-state incremental-states incremental-state-stack)))
-
 (defun phps-mode-functions--reset-changes ()
-  "Rest changes."
+  "Reset change."
   (setq phps-mode-analyzer-change-min nil))
 
 (defun phps-mode-analyzer-process-changes (&optional buffer)
@@ -1724,7 +1699,6 @@ Initialize with STATE, STATES and STATE-STACK and return tokens, state and state
              (message "Processing change point minimum: %s" phps-mode-analyzer-change-min))
             (let ((incremental-state nil)
                   (incremental-state-stack nil)
-                  (incremental-states nil)
                   (incremental-tokens nil)
                   (head-states '())
                   (head-tokens '())
@@ -1779,7 +1753,6 @@ Initialize with STATE, STATES and STATE-STACK and return tokens, state and state
                     ;; In old buffer:
                     ;; 1. Determine state (incremental-state) and state-stack (incremental-state-stack) before incremental start
                     ;; 2. Build list of states before incremental start (head-states)
-                    ;; 3. Build list of states after incremental start (tail-states)
                     (catch 'quit
                       (dolist (state-object (nreverse old-states))
                         (let ((end (nth 1 state-object)))
@@ -1791,49 +1764,33 @@ Initialize with STATE, STATES and STATE-STACK and return tokens, state and state
                             (throw 'quit "break")))))
 
                     (phps-mode-debug-message
-                     (message "Head states: %s" head-states))
+                     (message "Head states: %s" head-states)
+                     (message "Incremental state: %s" incremental-state)
+                     (message "State stack: %s" incremental-state-stack))
 
-                    (if head-states
+                    (if (and
+                         head-states
+                         incremental-state)
                         (progn
                           (phps-mode-debug-message
                            (message "Found head states"))
 
-                          ;; Delete all syntax coloring from head.boundary to end of incremental-region
-                          ;; (phps-mode-lexer-clear-region-syntax-color head-boundary change-stop)
-
-
                           ;; Do partial lex from previous-token-end to change-stop
-                          (let ((incremental-result
-                                 (phps-mode-analyzer-incremental-lexer
-                                  incremental-start-new-buffer
-                                  (point-max)
-                                  (buffer-substring-no-properties (point-min) (point-max))
-                                  incremental-state
-                                  head-states
-                                  incremental-state-stack)))
-                            (setq incremental-tokens (nth 0 incremental-result))
-                            (setq incremental-states (nth 2 incremental-result))
 
+                          ;; Rewind lexer state here
+                          (setq-local phps-mode-lexer-states head-states)
+                          (setq-local phps-mode-lexer-STATE incremental-state)
+                          (setq-local phps-mode-lexer-state_stack incremental-state-stack)
 
-                            ;; TODO re-use rest of indexes here? (indentation and imenu)
+                          ;; Generate new tokens
+                          (setq incremental-tokens (semantic-lex incremental-start-new-buffer (point-max)))
 
-                            ;; Apply syntax coloring on new tokens only
-                            (dolist (token-object incremental-tokens)
-                              (let ((token (car token-object))
-                                    (start (car (cdr token-object)))
-                                    (end (cdr (cdr token-object))))
-                                (when (<= end (point-max))
-                                  (phps-mode-lexer-set-region-syntax-color
-                                   start end (phps-mode-lexer-get-token-syntax-color token)))))
+                          (setq-local phps-mode-lexer-tokens (append head-tokens incremental-tokens))
 
+                          (phps-mode-debug-message
+                           (message "Incremental tokens: %s" incremental-tokens))
 
-                            (setq-local phps-mode-lexer-states incremental-states)
-                            (phps-mode-debug-message (message "New states from incremental lex are: %s" phps-mode-lexer-states))
-
-                            (setq-local phps-mode-lexer-tokens (append head-tokens incremental-tokens))
-                            (phps-mode-debug-message (message "New tokens from incremental lex are: %s" phps-mode-lexer-tokens))
-
-                            ))
+                          )
                       (phps-mode-debug-message
                        (message "Found no head states"))
                       (setq run-full-lexer t)))
@@ -1916,7 +1873,9 @@ Initialize with STATE, STATES and STATE-STACK and return tokens, state and state
 (defun phps-mode-functions-move-imenu-index (start diff)
   "Moved imenu from START by DIFF points."
   (when phps-mode-functions-imenu
-    (setq-local phps-mode-functions-imenu (phps-mode-functions-get-moved-imenu phps-mode-functions-imenu start diff))))
+    (setq-local phps-mode-functions-imenu
+                (phps-mode-functions-get-moved-imenu phps-mode-functions-imenu start diff))
+    (phps-mode-analyzer--reset-imenu)))
 
 (defun phps-mode-functions-move-lines-indent (start-line-number diff)
   "Move lines indent from START-LINE-NUMBER with DIFF points."
@@ -2985,6 +2944,13 @@ Initialize with STATE, STATES and STATE-STACK and return tokens, state and state
   (when (boundp 'phps-mode-idle-interval)
     (setq-local phps-mode-functions-idle-timer (run-with-idle-timer phps-mode-idle-interval nil #'phps-mode-analyzer-process-changes))))
 
+(defun phps-mode-analyzer--reset-imenu ()
+  "Reset imenu index."
+  (when (and (boundp 'imenu--index-alist)
+             imenu--index-alist)
+    (setq-local imenu--index-alist nil)
+    (phps-mode-debug-message (message "Cleared Imenu index"))))
+
 (defun phps-mode-functions-after-change (start stop length)
   "Track buffer change from START to STOP with LENGTH."
   (phps-mode-debug-message
@@ -2999,12 +2965,7 @@ Initialize with STATE, STATES and STATE-STACK and return tokens, state and state
                    phps-mode-idle-interval
                    (not phps-mode-functions-idle-timer))
 
-          ;; Reset imenu
-          (when (and (boundp 'imenu--index-alist)
-                     imenu--index-alist)
-            (setq-local imenu--index-alist nil)
-            (phps-mode-debug-message (message "Cleared Imenu index")))
-
+          (phps-mode-analyzer--reset-imenu)
           (phps-mode-functions--start-idle-timer))
 
         (when (or
@@ -3115,7 +3076,7 @@ Initialize with STATE, STATES and STATE-STACK and return tokens, state and state
                    (equal token-label 'T_DOC_COMMENT))
 
               (phps-mode-debug-message
-               (message "Un-comment comment at %s %s" token-label token-start token-end))
+               (message "Un-comment %s comment at %s %s" token-label token-start token-end))
 
               (let ((offset-comment-start (+ token-start offset))
                     (offset-comment-end))
