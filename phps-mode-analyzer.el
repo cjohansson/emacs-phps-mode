@@ -1876,7 +1876,9 @@
 (defun phps-mode-functions-move-imenu-index (start diff)
   "Moved imenu from START by DIFF points."
   (when phps-mode-functions-imenu
-    (setq-local phps-mode-functions-imenu (phps-mode-functions-get-moved-imenu phps-mode-functions-imenu start diff))))
+    (setq-local phps-mode-functions-imenu
+                (phps-mode-functions-get-moved-imenu phps-mode-functions-imenu start diff))
+    (phps-mode-analyzer--reset-imenu)))
 
 (defun phps-mode-functions-move-lines-indent (start-line-number diff)
   "Move lines indent from START-LINE-NUMBER with DIFF points."
@@ -2945,6 +2947,13 @@
   (when (boundp 'phps-mode-idle-interval)
     (setq-local phps-mode-functions-idle-timer (run-with-idle-timer phps-mode-idle-interval nil #'phps-mode-analyzer-process-changes))))
 
+(defun phps-mode-analyzer--reset-imenu ()
+  "Reset imenu index."
+  (when (and (boundp 'imenu--index-alist)
+             imenu--index-alist)
+    (setq-local imenu--index-alist nil)
+    (phps-mode-debug-message (message "Cleared Imenu index"))))
+
 (defun phps-mode-functions-after-change (start stop length)
   "Track buffer change from START to STOP with LENGTH."
   (phps-mode-debug-message
@@ -2959,12 +2968,7 @@
                    phps-mode-idle-interval
                    (not phps-mode-functions-idle-timer))
 
-          ;; Reset imenu
-          (when (and (boundp 'imenu--index-alist)
-                     imenu--index-alist)
-            (setq-local imenu--index-alist nil)
-            (phps-mode-debug-message (message "Cleared Imenu index")))
-
+          (phps-mode-analyzer--reset-imenu)
           (phps-mode-functions--start-idle-timer))
 
         (when (or
