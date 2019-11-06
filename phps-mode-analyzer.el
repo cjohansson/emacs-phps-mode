@@ -2942,7 +2942,13 @@
   "Start idle timer."
   (phps-mode-debug-message (message "Enqueued idle timer"))
   (when (boundp 'phps-mode-idle-interval)
-    (setq-local phps-mode-functions-idle-timer (run-with-idle-timer phps-mode-idle-interval nil #'phps-mode-analyzer-process-changes))))
+    (let ((buffer (current-buffer)))
+      (setq-local
+       phps-mode-functions-idle-timer
+       (run-with-idle-timer
+        phps-mode-idle-interval
+        nil
+        `(lambda() (phps-mode-analyzer-process-changes ,buffer)))))))
 
 (defun phps-mode-analyzer--reset-imenu ()
   "Reset imenu index."
