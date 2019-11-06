@@ -28,79 +28,79 @@
 
 (require 'semantic/wisent/grammar)
 
-(defun CG (subject &optional value)
+(defun CG (_subject &optional _value)
   "Return and optionally set VALUE of SUBJECT."
   ;; TODO Implement this
   )
 
-(defun zend_add_class_modifier (class modifier)
+(defun zend_add_class_modifier (_class _modifier)
   "Add CLASS MODIFIER."
   )
 
-(defun zend_add_member_modifier (member modifier)
+(defun zend_add_member_modifier (_member _modifier)
   "Add MEMBER MODIFIER."
   )
 
-(defun zend_ast_create (a b c d)
+(defun zend_ast_create (_a _b _c _d)
   ;; TODO Understand this
   )
 
-(defun zend_ast_create_assign_op (operator a b)
+(defun zend_ast_create_assign_op (_operator _a _b)
   "Assign A value of B via OPERATOR."
   ;; TODO Understand this
   )
 
-(defun zend_ast_create_binary_op (operator a b)
+(defun zend_ast_create_binary_op (_operator _a _b)
   "Perform binary OPERATOR on A and B."
   ;; TODO Understand this
   )
 
-(defun zend_ast_create_cast (operator subject)
+(defun zend_ast_create_cast (_operator _subject)
   "Cast SUBJECT with OPERATOR."
   ;; TODO Understand this
   )
 
-(defun zend_ast_create_decl (a b c d e f g h)
+(defun zend_ast_create_decl (_a _b _c _d _e _f _g _h)
   ;; TODO Understand this
   )
 
-(defun zend_ast_create_ex (a b c d)
+(defun zend_ast_create_ex (_a _b _c _d)
   ;; TODO Understand this
   )
 
-(defun zend_ast_create_list (a b c)
+(defun zend_ast_create_list (_a _b _c)
   ;; TODO Understand this
   )
 
-(defun zend_ast_create_zval_from_str (subject)
+(defun zend_ast_create_zval_from_str (_subject)
   "Create zval from SUBJECT."
   ;; TODO Understand this
   )
 
-(defun zend_ast_get_str (subject)
+(defun zend_ast_get_str (_subject)
   "Get string from SUBJECT."
   ;; TODO Understand this
   )
 
-(defun zend_lex_tstring(subject)
+(defun zend_lex_tstring(_subject)
   ;; TODO Understand this
   )
 
-(defun zend_ast_list_add (list item)
+(defun zend_ast_list_add (_list _item)
   "Add ITEM to LIST."
   ;; TODO Understand this
   )
 
-(defun zend_ast_list_rtrim (subject)
+(defun zend_ast_list_rtrim (_subject)
   "Perform a right trim on SUBJECT."
   ;; TODO Understand this
   )
 
-(defun zend_handle_encoding_declaration (subject)
+(defun zend_handle_encoding_declaration (_subject)
   ;; TODO Understand this
   )
 
-(defun zend_negate_num_string (subject)
+(defun zend_negate_num_string (_subject)
   "Negate num string on SUBJECT."
   ;; TODO Understand this
   )

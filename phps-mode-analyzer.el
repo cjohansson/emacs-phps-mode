@@ -698,8 +698,7 @@
         (phps-mode-lexer-re2c-rule
          (and ST_LOOKING_FOR_PROPERTY (looking-at phps-mode-lexer-ANY_CHAR))
          (lambda()
-           (let ((_start (match-beginning 0))
-                 (end (match-end 0)))
+           (let ((end (match-end 0)))
              (phps-mode-lexer-yy_pop_state)
              ;; TODO goto restart here?
              ;; (message "Restart here")
@@ -1244,9 +1243,7 @@
          (and ST_INITIAL (looking-at "<\\?php"))
          (lambda()
            ;; Allow <?php followed by end of file.
-           (let ((start (match-beginning 0))
-                 (end (match-end 0)))
-             (phps-mode-lexer-BEGIN 'ST_IN_SCRIPTING))))
+           (phps-mode-lexer-BEGIN 'ST_IN_SCRIPTING)))
 
         (phps-mode-lexer-re2c-rule
          (and ST_INITIAL (looking-at "<\\?"))
