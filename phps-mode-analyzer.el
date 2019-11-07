@@ -41,6 +41,9 @@
 
 (require 'subr-x)
 
+(defvar phps-mode-inline-mmm-submode nil
+  "Symbol declaring what mmm-mode to use as submode in inline areas.")
+
 (defvar phps-mode-analyzer-change-min nil
   "The minium point of change.");
 
@@ -371,6 +374,12 @@
         (phps-mode-lexer-set-region-syntax-color start end token-syntax-color)
       (phps-mode-lexer-clear-region-syntax-color start end)))
 
+  ;; (when (and
+  ;;        (equal token 'T_INLINE_HTML)
+  ;;        phps-mode-inline-mmm-submode
+  ;;        (fboundp 'mmm-make-region))
+  ;;   (mmm-make-region phps-mode-inline-mmm-submode start end))
+
   ;; Push token start, end, lexer state and state stack to variable
   (push
    (list start end phps-mode-lexer-STATE phps-mode-lexer-state_stack) phps-mode-lexer-states)
@@ -437,7 +446,8 @@
             (let ((start (car (cdr token)))
                   (end (cdr (cdr token)))
                   (token-name (car token)))
-              (semantic-lex-push-token (semantic-lex-token token-name start end))))
+              (semantic-lex-push-token
+               (semantic-lex-token token-name start end))))
 
           (phps-mode-lexer-MOVE_FORWARD (point-max)))
 
@@ -491,7 +501,9 @@
            (phps-mode-lexer-RETURN_TOKEN 'T_RETURN (match-beginning 0) (match-end 0))))
 
         (phps-mode-lexer-re2c-rule
-         (and ST_IN_SCRIPTING (looking-at (concat "yield" phps-mode-lexer-WHITESPACE "from" "[^a-zA-Z0-9_\x80-\xff]")))
+         (and ST_IN_SCRIPTING
+              (looking-at
+               (concat "yield" phps-mode-lexer-WHITESPACE "from" "[^a-zA-Z0-9_\x80-\xff]")))
          (lambda()
            (phps-mode-lexer-RETURN_TOKEN 'T_YIELD_FROM (match-beginning 0) (match-end 0))))
 
@@ -740,34 +752,76 @@
            (phps-mode-lexer-RETURN_TOKEN 'T_VAR (match-beginning 0) (match-end 0))))
 
         (phps-mode-lexer-re2c-rule
-         (and ST_IN_SCRIPTING (looking-at (concat "(" phps-mode-lexer-TABS_AND_SPACES "\\(int\\|integer\\)" phps-mode-lexer-TABS_AND_SPACES ")")))
+         (and ST_IN_SCRIPTING
+              (looking-at
+               (concat
+                "("
+                phps-mode-lexer-TABS_AND_SPACES
+                "\\(int\\|integer\\)"
+                phps-mode-lexer-TABS_AND_SPACES
+                ")")))
          (lambda()
            (phps-mode-lexer-RETURN_TOKEN 'T_INT_CAST (match-beginning 0) (match-end 0))))
 
         (phps-mode-lexer-re2c-rule
-         (and ST_IN_SCRIPTING (looking-at (concat "(" phps-mode-lexer-TABS_AND_SPACES "\\(double\\|float\\)" phps-mode-lexer-TABS_AND_SPACES ")")))
+         (and ST_IN_SCRIPTING
+              (looking-at
+               (concat
+                "("
+                phps-mode-lexer-TABS_AND_SPACES
+                "\\(double\\|float\\)"
+                phps-mode-lexer-TABS_AND_SPACES
+                ")")))
          (lambda()
            (phps-mode-lexer-RETURN_TOKEN 'T_DOUBLE_CAST (match-beginning 0) (match-end 0))))
 
         (phps-mode-lexer-re2c-rule
-         (and ST_IN_SCRIPTING (looking-at (concat "(" phps-mode-lexer-TABS_AND_SPACES "\\(real\\)" phps-mode-lexer-TABS_AND_SPACES ")")))
+         (and ST_IN_SCRIPTING
+              (looking-at
+               (concat
+                "("
+                phps-mode-lexer-TABS_AND_SPACES
+                "\\(real\\)"
+                phps-mode-lexer-TABS_AND_SPACES
+                ")")))
          (lambda()
            (when phps-mode-lexer-PARSER_MODE
              (display-warning 'phps-mode "PHPs Lexer Error - The (real) cast is deprecated, use (float) instead"))
            (phps-mode-lexer-RETURN_TOKEN 'T_DOUBLE_CAST (match-beginning 0) (match-end 0))))
 
         (phps-mode-lexer-re2c-rule
-         (and ST_IN_SCRIPTING (looking-at (concat "(" phps-mode-lexer-TABS_AND_SPACES "\\(string\\|binary\\)" phps-mode-lexer-TABS_AND_SPACES ")")))
+         (and ST_IN_SCRIPTING
+              (looking-at
+               (concat
+                "("
+                phps-mode-lexer-TABS_AND_SPACES
+                "\\(string\\|binary\\)"
+                phps-mode-lexer-TABS_AND_SPACES
+                ")")))
          (lambda()
            (phps-mode-lexer-RETURN_TOKEN 'T_STRING_CAST (match-beginning 0) (match-end 0))))
 
         (phps-mode-lexer-re2c-rule
-         (and ST_IN_SCRIPTING (looking-at (concat "(" phps-mode-lexer-TABS_AND_SPACES "array" phps-mode-lexer-TABS_AND_SPACES ")")))
+         (and ST_IN_SCRIPTING
+              (looking-at
+               (concat
+                "("
+                phps-mode-lexer-TABS_AND_SPACES
+                "array"
+                phps-mode-lexer-TABS_AND_SPACES
+                ")")))
          (lambda()
            (phps-mode-lexer-RETURN_TOKEN 'T_ARRAY_CAST (match-beginning 0) (match-end 0))))
 
         (phps-mode-lexer-re2c-rule
-         (and ST_IN_SCRIPTING (looking-at (concat "(" phps-mode-lexer-TABS_AND_SPACES "object" phps-mode-lexer-TABS_AND_SPACES ")")))
+         (and ST_IN_SCRIPTING
+              (looking-at
+               (concat
+                "("
+                phps-mode-lexer-TABS_AND_SPACES
+                "object"
+                phps-mode-lexer-TABS_AND_SPACES
+                ")")))
          (lambda()
            (phps-mode-lexer-RETURN_TOKEN 'T_OBJECT_CAST (match-beginning 0) (match-end 0))))
 
@@ -777,7 +831,13 @@
            (phps-mode-lexer-RETURN_TOKEN 'T_BOOL_CAST (match-beginning 0) (match-end 0))))
 
         (phps-mode-lexer-re2c-rule
-         (and ST_IN_SCRIPTING (looking-at (concat "(" phps-mode-lexer-TABS_AND_SPACES "unset" phps-mode-lexer-TABS_AND_SPACES ")")))
+         (and ST_IN_SCRIPTING
+              (looking-at
+               (concat
+                "("
+                phps-mode-lexer-TABS_AND_SPACES
+                "unset"
+                phps-mode-lexer-TABS_AND_SPACES ")")))
          (lambda()
            (phps-mode-lexer-RETURN_TOKEN 'T_UNSET_CAST (match-beginning 0) (match-end 0))))
 
@@ -1084,11 +1144,7 @@
          (and ST_IN_SCRIPTING (looking-at "}"))
          (lambda()
            (when phps-mode-lexer-state_stack
-             ;; (message "State stack %s" phps-mode-lexer-state_stack)
-             ;; (message "popping state from } %s at %s-%s" (length phps-mode-lexer-state_stack) (match-beginning 0) (match-end 0))
-             (phps-mode-lexer-yy_pop_state)
-             ;; (message "New state: %s" phps-mode-lexer-STATE)
-             )
+             (phps-mode-lexer-yy_pop_state))
            (phps-mode-lexer-RETURN_TOKEN "}" (match-beginning 0) (match-end 0))))
 
         (phps-mode-lexer-re2c-rule
@@ -1223,7 +1279,6 @@
            (let ((start (match-beginning 0))
                  (end (match-end 0)))
              (phps-mode-lexer-BEGIN 'ST_IN_SCRIPTING)
-             ;; (message "Starting scripting after <?=")
              (when phps-mode-lexer-PARSER_MODE
                (phps-mode-lexer-RETURN_TOKEN 'T_ECHO start end))
              (phps-mode-lexer-RETURN_TOKEN 'T_OPEN_TAG_WITH_ECHO start end))))
@@ -1268,20 +1323,35 @@
                  (phps-mode-lexer-RETURN_TOKEN 'T_INLINE_HTML start (point-max)))))))
 
         (phps-mode-lexer-re2c-rule
-         (and (or ST_DOUBLE_QUOTES ST_HEREDOC ST_BACKQUOTE) (looking-at (concat "\\$" phps-mode-lexer-LABEL "->" "[a-zA-Z_\x80-\xff]")))
+         (and (or ST_DOUBLE_QUOTES ST_HEREDOC ST_BACKQUOTE)
+              (looking-at
+               (concat
+                "\\$"
+                phps-mode-lexer-LABEL
+                "->"
+                "[a-zA-Z_\x80-\xff]")))
          (lambda()
            (phps-mode-lexer-yy_push_state 'ST_LOOKING_FOR_PROPERTY)
            (forward-char -3)
            (phps-mode-lexer-RETURN_TOKEN 'T_VARIABLE (match-beginning 0) (- (match-end 0) 3))))
 
         (phps-mode-lexer-re2c-rule
-         (and (or ST_DOUBLE_QUOTES ST_HEREDOC ST_BACKQUOTE) (looking-at (concat "\\$" phps-mode-lexer-LABEL "\\[")))
+         (and (or ST_DOUBLE_QUOTES ST_HEREDOC ST_BACKQUOTE)
+              (looking-at
+               (concat
+                "\\$"
+                phps-mode-lexer-LABEL
+                "\\[")))
          (lambda()
            (phps-mode-lexer-yy_push_state 'ST_VAR_OFFSET)
            (phps-mode-lexer-RETURN_TOKEN 'T_VARIABLE (match-beginning 0) (match-end 0))))
 
         (phps-mode-lexer-re2c-rule
-         (and (or ST_IN_SCRIPTING ST_DOUBLE_QUOTES ST_HEREDOC ST_BACKQUOTE ST_VAR_OFFSET) (looking-at (concat "\\$" phps-mode-lexer-LABEL)))
+         (and (or ST_IN_SCRIPTING ST_DOUBLE_QUOTES ST_HEREDOC ST_BACKQUOTE ST_VAR_OFFSET)
+              (looking-at
+               (concat
+                "\\$"
+                phps-mode-lexer-LABEL)))
          (lambda()
            (phps-mode-lexer-RETURN_TOKEN 'T_VARIABLE (match-beginning 0) (match-end 0))))
 
@@ -1323,16 +1393,19 @@
                   (line (buffer-substring-no-properties end (line-end-position))))
              (if (string-match "\\?>" line)
                  (progn
-                   ;; (message "Found comment 1 from %s to %s %s in %s" end (+ end (match-beginning 0)) (match-beginning 0) line)
-                   (phps-mode-lexer-RETURN_TOKEN 'T_COMMENT start (+ end (match-beginning 0)))
-                   )
+                   (phps-mode-lexer-RETURN_TOKEN 'T_COMMENT start (+ end (match-beginning 0))))
                (progn
                  ;; TODO Handle expecting values here
                  ;; (message "Found comment 2 from %s to %s" start (line-end-position))
                  (phps-mode-lexer-RETURN_TOKEN 'T_COMMENT start (line-end-position)))))))
 
         (phps-mode-lexer-re2c-rule
-         (and ST_IN_SCRIPTING (looking-at (concat "\\(/\\*\\|/\\*\\*" phps-mode-lexer-WHITESPACE "\\)")))
+         (and ST_IN_SCRIPTING
+              (looking-at
+               (concat
+                "\\(/\\*\\|/\\*\\*"
+                phps-mode-lexer-WHITESPACE
+                "\\)")))
          (lambda()
            (let* ((start (match-beginning 0))
                   (end (match-end 0))
@@ -1344,7 +1417,10 @@
                        (phps-mode-lexer-RETURN_TOKEN 'T_DOC_COMMENT start (match-end 0))
                      (phps-mode-lexer-RETURN_TOKEN 'T_COMMENT start (match-end 0)))
                  (progn
-                   (display-warning 'phps-mode (format "PHPs Lexer Error - Unterminated comment starting at %s" (point)))
+                   (display-warning 'phps-mode
+                                    (format
+                                     "PHPs Lexer Error - Unterminated comment starting at %s"
+                                     (point)))
                    (phps-mode-lexer-MOVE_FORWARD (point-max))))))))
 
         (phps-mode-lexer-re2c-rule
@@ -1368,11 +1444,9 @@
                   (un-escaped-end (phps-mode-lexer--get-next-unescaped "'")))
              (if un-escaped-end
                  (progn
-                   ;; (message "Single quoted string %s" (buffer-substring-no-properties start un-escaped-end))
                    (phps-mode-lexer-RETURN_TOKEN 'T_CONSTANT_ENCAPSED_STRING start un-escaped-end))
                (progn
                  ;; Unclosed single quotes
-                 ;; (message "Single quoted string never ends..")
                  (phps-mode-lexer-RETURN_TOKEN 'T_ENCAPSED_AND_WHITESPACE start (point-max))
                  (phps-mode-lexer-MOVE_FORWARD (point-max)))))))
 
@@ -1389,12 +1463,14 @@
              (forward-char)
 
              (while open-quote
-               (let ((string-start (search-forward-regexp (concat
-                                                           "\\(\""
-                                                           "\\|\\$" phps-mode-lexer-LABEL
-                                                           "\\|\\${" phps-mode-lexer-LABEL
-                                                           "\\|{\\$" phps-mode-lexer-LABEL "\\)")
-                                                          nil t)))
+               (let ((string-start
+                      (search-forward-regexp
+                       (concat
+                        "\\(\""
+                        "\\|\\$" phps-mode-lexer-LABEL
+                        "\\|\\${" phps-mode-lexer-LABEL
+                        "\\|{\\$" phps-mode-lexer-LABEL "\\)")
+                       nil t)))
 
                  ;; Do we find a ending double quote or starting variable?
                  (if string-start
@@ -1428,7 +1504,19 @@
                      (setq open-quote nil))))))))
 
         (phps-mode-lexer-re2c-rule
-         (and ST_IN_SCRIPTING (looking-at (concat "<<<" phps-mode-lexer-TABS_AND_SPACES "\\(" phps-mode-lexer-LABEL "\\|'" phps-mode-lexer-LABEL "'\\|\"" phps-mode-lexer-LABEL "\"\\)" phps-mode-lexer-NEWLINE)))
+         (and ST_IN_SCRIPTING
+              (looking-at
+               (concat
+                "<<<"
+                phps-mode-lexer-TABS_AND_SPACES
+                "\\("
+                phps-mode-lexer-LABEL
+                "\\|'"
+                phps-mode-lexer-LABEL
+                "'\\|\""
+                phps-mode-lexer-LABEL
+                "\"\\)"
+                phps-mode-lexer-NEWLINE)))
          (lambda()
            (let* ((start (match-beginning 0))
                   (end (match-end 0))
@@ -1534,9 +1622,19 @@
         (phps-mode-lexer-re2c-rule
          (and ST_HEREDOC (looking-at phps-mode-lexer-ANY_CHAR))
          (lambda()
-           ;; (message "Found nothing useful at '%s' looking at {$ %s" (buffer-substring-no-properties (point) (point-max)) (looking-at "{\\$"))
            ;; Check for $, ${ and {$ forward
-           (let ((string-start (search-forward-regexp (concat "\\(\n" heredoc_label ";?\n\\|\\$" phps-mode-lexer-LABEL "\\|{\\$" phps-mode-lexer-LABEL "\\|\\${" phps-mode-lexer-LABEL "\\)") nil t)))
+           (let ((string-start
+                  (search-forward-regexp
+                   (concat
+                    "\\(\n"
+                    heredoc_label
+                    ";?\n\\|\\$"
+                    phps-mode-lexer-LABEL
+                    "\\|{\\$"
+                    phps-mode-lexer-LABEL
+                    "\\|\\${"
+                    phps-mode-lexer-LABEL
+                    "\\)") nil t)))
              (if string-start
                  (let* ((start (match-beginning 0))
                         (end (match-end 0))
@@ -1831,7 +1929,12 @@
        (not phps-mode-functions-idle-timer))
       (progn
         (phps-mode-debug-message (message "Buffer is not processed"))
-        (let ((processed (phps-mode-functions--process-tokens-in-string phps-mode-lexer-tokens (buffer-substring-no-properties (point-min) (point-max)))))
+        (let ((processed
+               (phps-mode-functions--process-tokens-in-string
+                phps-mode-lexer-tokens
+                (buffer-substring-no-properties
+                 (point-min)
+                 (point-max)))))
           (phps-mode-debug-message (message "Processed result: %s" processed))
           (setq-local phps-mode-functions-imenu (nth 0 processed))
           (setq-local phps-mode-functions-lines-indent (nth 1 processed)))
@@ -1881,7 +1984,12 @@
   "Move lines indent from START-LINE-NUMBER with DIFF points."
   (when phps-mode-functions-lines-indent
     ;; (message "Moving line-indent index from %s with %s" start-line-number diff)
-    (setq-local phps-mode-functions-lines-indent (phps-mode-functions-get-moved-lines-indent phps-mode-functions-lines-indent start-line-number diff))))
+    (setq-local
+     phps-mode-functions-lines-indent
+     (phps-mode-functions-get-moved-lines-indent
+      phps-mode-functions-lines-indent
+      start-line-number
+      diff))))
 
 (defun phps-mode-functions-get-lines-indent ()
   "Return lines indent, process buffer if not done already."
@@ -1928,8 +2036,17 @@
       (setq lines-in-string (1+ lines-in-string)))
     lines-in-string))
 
-(defun phps-mode-functions--get-inline-html-indentation (inline-html indent tag-level curly-bracket-level square-bracket-level round-bracket-level)
-  "Generate a list of indentation for each line in INLINE-HTML, working incrementally on INDENT, TAG-LEVEL, CURLY-BRACKET-LEVEL, SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
+(defun phps-mode-functions--get-inline-html-indentation
+    (
+     inline-html
+     indent
+     tag-level
+     curly-bracket-level
+     square-bracket-level
+     round-bracket-level)
+  "Generate a list of indentation for each line in INLINE-HTML, 
+working incrementally on INDENT, TAG-LEVEL, CURLY-BRACKET-LEVEL, 
+SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
   (phps-mode-debug-message
    (message "Calculating HTML indent for: '%s'" inline-html))
 
@@ -1943,7 +2060,11 @@
         (line-indents nil)
         (first-object-on-line t)
         (first-object-is-nesting-decrease nil))
-    (while (string-match "\\([\n\C-m]\\)\\|\\(<[a-zA-Z]+\\)\\|\\(</[a-zA-Z]+\\)\\|\\(/>\\)\\|\\(\\[\\)\\|\\()\\)\\|\\((\\)\\|\\({\\|}\\)" inline-html start)
+    (while
+        (string-match
+         "\\([\n\C-m]\\)\\|\\(<[a-zA-Z]+\\)\\|\\(</[a-zA-Z]+\\)\\|\\(/>\\)\\|\\(\\[\\)\\|\\()\\)\\|\\((\\)\\|\\({\\|}\\)"
+         inline-html
+         start)
       (let* ((end (match-end 0))
              (string (substring inline-html (match-beginning 0) end)))
 
@@ -2016,7 +2137,10 @@
   "Generate indexes for imenu and indentation for TOKENS and STRING one pass.  Complexity: O(n)."
   (if tokens
       (progn
-        (phps-mode-debug-message (message "\nCalculation indentation and imenu for all lines in buffer:\n\n%s" string))
+        (phps-mode-debug-message
+         (message
+          "\nCalculation indentation and imenu for all lines in buffer:\n\n%s"
+          string))
         (let ((in-heredoc nil)
               (in-heredoc-started-this-line nil)
               (in-heredoc-ended-this-line nil)
@@ -2114,7 +2238,15 @@
               (when (and token
                          (< token-end next-token-start))
                 ;; NOTE We use a incremental-line-number calculation because `line-at-pos' takes a lot of time
-                (setq incremental-line-number (+ incremental-line-number (phps-mode-functions--get-lines-in-string (substring string (1- token-end) (1- next-token-start))))))
+                (setq
+                 incremental-line-number
+                 (+
+                  incremental-line-number
+                  (phps-mode-functions--get-lines-in-string
+                   (substring
+                    string
+                    (1- token-end)
+                    (1- next-token-start))))))
 
               ;; Handle the pseudo-token for last-line
               (if (equal next-token 'END_PARSE)
@@ -2125,10 +2257,24 @@
 
                 ;; NOTE We use a incremental-line-number calculation because `line-at-pos' takes a lot of time
                 ;; (message "Lines for %s '%s'" next-token (substring string (1- next-token-start) (1- next-token-end)))
-                (setq incremental-line-number (+ incremental-line-number (phps-mode-functions--get-lines-in-string (substring string (1- next-token-start) (1- next-token-end)))))
+                (setq
+                 incremental-line-number
+                 (+
+                  incremental-line-number
+                  (phps-mode-functions--get-lines-in-string
+                   (substring
+                    string
+                    (1- next-token-start)
+                    (1- next-token-end)))))
                 (setq next-token-end-line-number incremental-line-number)
                 (phps-mode-debug-message
-                 (message "Token '%s' pos: %s-%s lines: %s-%s" next-token next-token-start next-token-end next-token-start-line-number next-token-end-line-number)))
+                 (message
+                  "Token '%s' pos: %s-%s lines: %s-%s"
+                  next-token
+                  next-token-start
+                  next-token-end
+                  next-token-start-line-number
+                  next-token-end-line-number)))
 
               ;; Token logic - we have one-two token look-ahead at this point
               ;; `token' is previous token
@@ -2182,7 +2328,14 @@
 
                    ((and (or (equal token 'T_STRING)
                              (equal token 'T_NS_SEPARATOR))
-                         (setq imenu-in-namespace-name (concat imenu-in-namespace-name (substring string (1- token-start) (1- token-end))))))))
+                         (setq
+                          imenu-in-namespace-name
+                          (concat
+                           imenu-in-namespace-name
+                           (substring
+                            string
+                            (1- token-start)
+                            (1- token-end))))))))
 
                  (imenu-in-class-declaration
                   (cond
@@ -2264,16 +2417,46 @@
                 (when (equal token 'T_INLINE_HTML)
 
                   ;; Flag whether inline-html is whitespace or not
-                  (setq inline-html-is-whitespace (string= (string-trim (substring string (1- token-start) (1- token-end))) ""))
-                  (setq inline-html-rest-is-whitespace (string-match "^[\ \t]\n" (substring string (1- token-start) (1- token-end))))
+                  (setq
+                   inline-html-is-whitespace
+                   (string=
+                    (string-trim
+                     (substring
+                      string
+                      (1- token-start)
+                      (1- token-end))) ""))
+                  (setq
+                   inline-html-rest-is-whitespace
+                   (string-match
+                    "^[\ \t]\n"
+                    (substring
+                     string
+                     (1- token-start)
+                     (1- token-end))))
 
                   (when first-token-on-line
                     (setq first-token-is-inline-html t))
 
-                  (let ((inline-html-indents (phps-mode-functions--get-inline-html-indentation (substring string (1- token-start) (1- token-end)) inline-html-indent inline-html-tag-level inline-html-curly-bracket-level inline-html-square-bracket-level inline-html-round-bracket-level)))
+                  (let ((inline-html-indents
+                         (phps-mode-functions--get-inline-html-indentation
+                          (substring
+                           string
+                           (1- token-start)
+                           (1- token-end))
+                          inline-html-indent
+                          inline-html-tag-level
+                          inline-html-curly-bracket-level
+                          inline-html-square-bracket-level
+                          inline-html-round-bracket-level)))
 
                     (phps-mode-debug-message
-                     (message "Received inline html indent: %s from inline HTML: '%s'" inline-html-indents (substring string (1- token-start) (1- token-end))))
+                     (message
+                      "Received inline html indent: %s from inline HTML: '%s'"
+                      inline-html-indents
+                      (substring
+                       string
+                       (1- token-start)
+                       (1- token-end))))
 
                     ;; Update indexes
                     (setq inline-html-indent (nth 1 inline-html-indents))
@@ -2300,7 +2483,10 @@
                               (unless (gethash token-line-number-diff line-indents)
                                 (puthash token-line-number-diff (list item 0) line-indents)
                                 (phps-mode-debug-message
-                                 (message "Putting indent at line %s to %s from inline HTML" token-line-number-diff item))))
+                                 (message
+                                  "Putting indent at line %s to %s from inline HTML"
+                                  token-line-number-diff
+                                  item))))
                             (setq token-line-number-diff (1+ token-line-number-diff))))))))
 
                 ;; Keep track of when we are inside a class definition
@@ -2412,13 +2598,20 @@
                             (setq alternative-control-structure-level (1+ alternative-control-structure-level))
 
                             (phps-mode-debug-message
-                             (message "\nIncreasing alternative-control-structure after %s %s to %s\n" after-special-control-structure-token token alternative-control-structure-level))
+                             (message
+                              "\nIncreasing alternative-control-structure after %s %s to %s\n"
+                              after-special-control-structure-token
+                              token
+                              alternative-control-structure-level))
                             )
 
                         ;; Don't start inline control structures after a while ($condition); expression
                         (unless (string= token ";")
                           (phps-mode-debug-message
-                           (message "\nStarted inline control-structure after %s at %s\n" after-special-control-structure-token token))
+                           (message
+                            "\nStarted inline control-structure after %s at %s\n"
+                            after-special-control-structure-token
+                            token))
 
                           (setq in-inline-control-structure t)
                           (setq temp-pre-indent (1+ column-level)))))
@@ -2655,7 +2848,18 @@
                 (phps-mode-debug-message (message "Processing token: %s" token))
                 
                 ;; Calculate nesting
-                (setq nesting-end (+ round-bracket-level square-bracket-level curly-bracket-level alternative-control-structure-level in-assignment-level in-class-declaration-level in-concatenation-level in-return-level in-object-operator-level))
+                (setq
+                 nesting-end
+                 (+
+                  round-bracket-level
+                  square-bracket-level
+                  curly-bracket-level
+                  alternative-control-structure-level
+                  in-assignment-level
+                  in-class-declaration-level
+                  in-concatenation-level
+                  in-return-level
+                  in-object-operator-level))
 
                 ;; Keep track of whether we are inside a HEREDOC or NOWDOC
                 (when (equal token 'T_START_HEREDOC)

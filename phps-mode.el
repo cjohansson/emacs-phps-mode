@@ -56,9 +56,6 @@
 (defvar phps-mode-use-psr-2 t
   "Whether to use PSR-2 guidelines for white-space or not.")
 
-(defvar phps-mode-inline-mmm-submode nil
-  "Symbol declaring what mmm-mode to use as submode in inline areas.")
-
 (defvar phps-mode-runtime-debug nil
   "Whether or not to use runtime debugging.")
 
