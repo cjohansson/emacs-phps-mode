@@ -503,7 +503,7 @@
         (phps-mode-lexer-re2c-rule
          (and ST_IN_SCRIPTING (looking-at "try"))
          (lambda()
-           (phps-mode-lexer-RETURN_TOKEN 'T_TRY (match-beginning 0) (match-end 0))))0
+           (phps-mode-lexer-RETURN_TOKEN 'T_TRY (match-beginning 0) (match-end 0))))
 
         (phps-mode-lexer-re2c-rule
          (and ST_IN_SCRIPTING (looking-at "catch"))
@@ -2948,7 +2948,7 @@
        (run-with-idle-timer
         phps-mode-idle-interval
         nil
-        `(lambda() (phps-mode-analyzer-process-changes ,buffer)))))))
+        #'phps-mode-analyzer-process-changes buffer)))))
 
 (defun phps-mode-analyzer--reset-imenu ()
   "Reset imenu index."
