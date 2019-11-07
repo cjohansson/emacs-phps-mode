@@ -4,7 +4,7 @@ ifdef emacs
 endif
 EMACS_CMD := $(EMACS) -Q -batch -L .
 
-EL  := admin/phps-mode-automation.el phps-mode-analyzer.el phps-mode-flymake.el phps-mode-macros.el phps-mode-semantic.el phps-mode-syntax-table.el phps-mode-tags.el phps-mode-wy-macros.el phps-mode-wy-wy.el phps-mode.el test/phps-mode-test-functions.el test/phps-mode-test-integration.el test/phps-mode-test-lexer.el test/phps-mode-test-parser.el test/phps-mode-test-syntax-table.el test/phps-mode-test.el
+EL  := admin/phps-mode-automation.el phps-mode-analyzer.el phps-mode-flymake.el phps-mode-macros.el phps-mode-semantic.el phps-mode-syntax-table.el phps-mode-tags.el phps-mode-test.el phps-mode-wy-macros.el phps-mode-wy-wy.el phps-mode.el test/phps-mode-test-functions.el test/phps-mode-test-integration.el test/phps-mode-test-lexer.el test/phps-mode-test-parser.el test/phps-mode-test-syntax-table.el
 ELC := $(EL:.el=.elc)
 
 .PHONY: clean
