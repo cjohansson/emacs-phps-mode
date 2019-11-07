@@ -503,7 +503,7 @@
         (phps-mode-lexer-re2c-rule
          (and ST_IN_SCRIPTING (looking-at "try"))
          (lambda()
-           (phps-mode-lexer-RETURN_TOKEN 'T_TRY (match-beginning 0) (match-end 0))))0 ;FIXME: What is this `0'?
+           (phps-mode-lexer-RETURN_TOKEN 'T_TRY (match-beginning 0) (match-end 0))))
 
         (phps-mode-lexer-re2c-rule
          (and ST_IN_SCRIPTING (looking-at "catch"))
