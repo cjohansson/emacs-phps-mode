@@ -6,7 +6,7 @@
 ;; Maintainer: Christian Johansson <christian@cvj.se>
 ;; Created: 3 Mar 2018
 ;; Modified: 6 Nov 2019
-;; Version: 0.3.9
+;; Version: 0.3.10
 ;; Keywords: tools, convenience
 ;; URL: https://github.com/cjohansson/emacs-phps-mode
 
@@ -56,9 +56,6 @@
 (defvar phps-mode-use-psr-2 t
   "Whether to use PSR-2 guidelines for white-space or not.")
 
-(defvar phps-mode-inline-mmm-submode nil
-  "Symbol declaring what mmm-mode to use as submode in inline areas.")
-
 (defvar phps-mode-runtime-debug nil
   "Whether or not to use runtime debugging.")
 
@@ -98,7 +95,8 @@
         (when phps-mode-use-psr-2
           (untabify (point-min) (point-max)))
         (indent-region (point-min) (point-max)))
-    (let ((old-buffer-contents (buffer-substring-no-properties (point-min) (point-max)))
+    (let ((old-buffer-contents
+           (buffer-substring-no-properties (point-min) (point-max)))
           (old-buffer (current-buffer))
           (temp-buffer (generate-new-buffer "*PHPs Formatting*"))
           (new-buffer-contents ""))
@@ -109,7 +107,11 @@
         (when phps-mode-use-psr-2
           (untabify (point-min) (point-max)))
         (indent-region (point-min) (point-max))
-        (setq new-buffer-contents (buffer-substring-no-properties (point-min) (point-max)))
+        (setq
+         new-buffer-contents
+         (buffer-substring-no-properties
+          (point-min)
+          (point-max)))
         (kill-buffer)
         (switch-to-buffer old-buffer)
         (delete-region (point-min) (point-max))
