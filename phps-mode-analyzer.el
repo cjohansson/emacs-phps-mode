@@ -2878,7 +2878,12 @@ SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
                     (while (and nesting-stack
                                 (<= nesting-end (car (car nesting-stack))))
                       (phps-mode-debug-message
-                       (message "\nPopping %s from nesting-stack since %s is lesser or equal to %s, next value is: %s\n" (car nesting-stack) nesting-end (car (car nesting-stack)) (nth 1 nesting-stack)))
+                       (message
+                        "\nPopping %s from nesting-stack since %s is lesser or equal to %s, next value is: %s\n"
+                        (car nesting-stack)
+                        nesting-end
+                        (car (car nesting-stack))
+                        (nth 1 nesting-stack)))
                       (pop nesting-stack)
                       (setq nesting-decrement (1+ nesting-decrement)))
 
@@ -2889,11 +2894,18 @@ SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
                           (if allow-custom-column-decrement
                               (progn
                                 (phps-mode-debug-message
-                                 (message "Doing custom decrement 1 from %s to %s" column-level (- column-level (- nesting-start nesting-end))))
+                                 (message
+                                  "Doing custom decrement 1 from %s to %s"
+                                  column-level
+                                  (- column-level
+                                     (- nesting-start nesting-end))))
                                 (setq column-level (- column-level (- nesting-start nesting-end)))
                                 (setq allow-custom-column-decrement nil))
                             (phps-mode-debug-message
-                             (message "Doing regular decrement 1 from %s to %s" column-level (1- column-level)))
+                             (message
+                              "Doing regular decrement 1 from %s to %s"
+                              column-level
+                              (1- column-level)))
                             (setq column-level (- column-level nesting-decrement)))
 
                           ;; Prevent negative column-values
@@ -2909,8 +2921,15 @@ SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
                       (if allow-custom-column-decrement
                           (progn
                             (phps-mode-debug-message
-                             (message "Doing custom decrement 2 from %s to %s" column-level (- column-level (- nesting-start nesting-end))))
-                            (setq temp-post-indent (- temp-post-indent (- nesting-start nesting-end)))
+                             (message
+                              "Doing custom decrement 2 from %s to %s"
+                              column-level
+                              (- column-level
+                                 (- nesting-start nesting-end))))
+                            (setq
+                             temp-post-indent
+                             (- temp-post-indent
+                                (- nesting-start nesting-end)))
                             (setq allow-custom-column-decrement nil))
                         (setq temp-post-indent (- temp-post-indent nesting-decrement)))
 
@@ -2948,7 +2967,15 @@ SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
 
                       ;; Save line indent
                       (phps-mode-debug-message
-                       (message "Process line ending.	nesting: %s-%s,	line-number: %s-%s,	indent: %s.%s,	token: %s" nesting-start nesting-end token-start-line-number token-end-line-number column-level-start tuning-level token))
+                       (message
+                        "Process line ending.	nesting: %s-%s,	line-number: %s-%s,	indent: %s.%s,	token: %s"
+                        nesting-start
+                        nesting-end
+                        token-start-line-number
+                        token-end-line-number
+                        column-level-start
+                        tuning-level
+                        token))
 
                       (when (and (> token-start-line-number 0)
                                  (or
@@ -2956,8 +2983,14 @@ SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
                                   inline-html-is-whitespace
                                   inline-html-rest-is-whitespace))
                         (phps-mode-debug-message
-                         (message "Putting indent on line %s to %s at #C" token-start-line-number column-level-start))
-                        (puthash token-start-line-number `(,column-level-start ,tuning-level) line-indents))
+                         (message
+                          "Putting indent on line %s to %s at #C"
+                          token-start-line-number
+                          column-level-start))
+                        (puthash
+                         token-start-line-number
+                         `(,column-level-start ,tuning-level)
+                         line-indents))
 
                       ;; Support trailing indent decrements
                       (when temp-post-indent
@@ -2979,7 +3012,14 @@ SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
                             (setq column-level (1+ column-level)))
 
                           (phps-mode-debug-message
-                           (message "\nPushing (%s %s %s %s) to nesting-stack since %s is greater than %s or stack is empty\n" nesting-start nesting-end nesting-key token nesting-end (car (cdr (car nesting-stack))))
+                           (message
+                            "\nPushing (%s %s %s %s) to nesting-stack since %s is greater than %s or stack is empty\n"
+                            nesting-start
+                            nesting-end
+                            nesting-key
+                            token
+                            nesting-end
+                            (car (cdr (car nesting-stack))))
                            )
                           (push `(,nesting-stack-end ,nesting-end ,nesting-key ,token) nesting-stack)))
 
@@ -2995,8 +3035,6 @@ SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
                                     in-heredoc-ended-this-line)
                             (setq column-level-end 0))
 
-                          ;; (message "Token %s starts at %s and ends at %s indent %s %s" next-token token-start-line-number token-end-line-number column-level-end tuning-level)
-
                           ;; Indent doc-comment lines with 1 tuning
                           (when (equal token 'T_DOC_COMMENT)
                             (setq tuning-level 1))
@@ -3004,8 +3042,13 @@ SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
                           (let ((token-line-number-diff (1- (- token-end-line-number token-start-line-number))))
                             (while (>= token-line-number-diff 0)
                               (phps-mode-debug-message
-                               (message "Putting indent on line %s to %s at #A" (- token-end-line-number token-line-number-diff) column-level-end))
-                              (puthash (- token-end-line-number token-line-number-diff) `(,column-level-end ,tuning-level) line-indents)
+                               (message
+                                "Putting indent on line %s to %s at #A"
+                                (- token-end-line-number token-line-number-diff)
+                                column-level-end))
+                              (puthash
+                               (- token-end-line-number token-line-number-diff)
+                               `(,column-level-end ,tuning-level) line-indents)
                               ;; (message "Saved line %s indent %s %s" (- token-end-line-number token-line-number-diff) column-level tuning-level)
                               (setq token-line-number-diff (1- token-line-number-diff))))
 
@@ -3017,18 +3060,38 @@ SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
                                  (not (equal token 'T_CLOSE_TAG)))
 
                         (phps-mode-debug-message
-                         (message "\nDetected token-less lines between %s and %s, should have indent: %s\n" token-end-line-number next-token-start-line-number column-level))
+                         (message
+                          "\nDetected token-less lines between %s and %s, should have indent: %s\n"
+                          token-end-line-number
+                          next-token-start-line-number
+                          column-level))
 
                         (let ((token-line-number-diff (1- (- next-token-start-line-number token-end-line-number))))
                           (while (> token-line-number-diff 0)
                             (phps-mode-debug-message
-                             (message "Putting indent at line %s indent %s at #B" (- next-token-start-line-number token-line-number-diff) column-level))
-                            (puthash (- next-token-start-line-number token-line-number-diff) `(,column-level ,tuning-level) line-indents)
+                             (message
+                              "Putting indent at line %s indent %s at #B"
+                              (- next-token-start-line-number token-line-number-diff)
+                              column-level))
+                            (puthash
+                             (- next-token-start-line-number token-line-number-diff)
+                             `(,column-level ,tuning-level) line-indents)
                             (setq token-line-number-diff (1- token-line-number-diff)))))
 
 
                       ;; Calculate indentation level at start of line
-                      (setq nesting-start (+ round-bracket-level square-bracket-level curly-bracket-level alternative-control-structure-level in-assignment-level in-class-declaration-level in-concatenation-level in-return-level in-object-operator-level))
+                      (setq
+                       nesting-start
+                       (+
+                        round-bracket-level
+                        square-bracket-level
+                        curly-bracket-level
+                        alternative-control-structure-level
+                        in-assignment-level
+                        in-class-declaration-level
+                        in-concatenation-level
+                        in-return-level
+                        in-object-operator-level))
 
                       ;; Set initial values for tracking first token
                       (when (> token-start-line-number last-line-number)
@@ -3053,7 +3116,8 @@ SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
                           (phps-mode-debug-message
                            (message "Trailing inline html line is whitespace: %s" inline-html-is-whitespace))
                           (phps-mode-debug-message
-                           (message "Setting first-token-is-inline-html to true since last token on line is inline-html and spans several lines"))
+                           (message
+                            "Setting first-token-is-inline-html to true since last token on line is inline-html and spans several lines"))
                           (setq first-token-is-inline-html t))))
 
                   ;; Current token is not first if it's not <?php or <?=
@@ -3069,8 +3133,15 @@ SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
                     (let ((token-line-number-diff (1- (- token-end-line-number token-start-line-number))))
                       (while (>= token-line-number-diff 0)
                         (phps-mode-debug-message
-                         (message "Putting indent on line %s to %s at #E" (- token-end-line-number token-line-number-diff) column-level))
-                        (puthash (- token-end-line-number token-line-number-diff) `(,column-level ,tuning-level) line-indents)
+                         (message
+                          "Putting indent on line %s to %s at #E"
+                          (-
+                           token-end-line-number
+                           token-line-number-diff)
+                          column-level))
+                        (puthash
+                         (- token-end-line-number token-line-number-diff)
+                         `(,column-level ,tuning-level) line-indents)
                         (setq token-line-number-diff (1- token-line-number-diff))))
                     (setq tuning-level 0))))
 
@@ -3114,7 +3185,8 @@ SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
                             (let ((indent-diff (- (current-indentation) old-indentation)))
 
 
-                              ;; When indent is changed the trailing tokens and states just need to adjust their positions, this will improve speed of indent-region a lot
+                              ;; When indent is changed the trailing tokens and states just
+                              ;; need to adjust their positions, this will improve speed of indent-region a lot
                               (phps-mode-lexer-move-tokens line-start indent-diff)
                               (phps-mode-lexer-move-states line-start indent-diff)
                               (phps-mode-functions-move-imenu-index line-start indent-diff)
@@ -3129,7 +3201,9 @@ SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
 
                               ;; Update last buffer states
                               (setq-local phps-mode-lexer-buffer-length (1- (point-max)))
-                              (setq-local phps-mode-lexer-buffer-contents (buffer-substring-no-properties (point-min) (point-max)))))))))))
+                              (setq-local
+                               phps-mode-lexer-buffer-contents
+                               (buffer-substring-no-properties (point-min) (point-max)))))))))))
         (phps-mode-debug-message
          (message "Did not find lines indent index, skipping indenting..")))
     (phps-mode-debug-message
@@ -3211,7 +3285,10 @@ SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
                    (equal token-label 'T_DOC_COMMENT)
                    (equal token-label 'T_CLOSE_TAG))
                   (phps-mode-debug-message
-                   (message "Comment should end at previous token %s %s" token-label token-comment-end))
+                   (message
+                    "Comment should end at previous token %s %s"
+                    token-label
+                    token-comment-end))
                   (setq in-token-comment nil))
                  (t (setq token-comment-end token-end)))
 
@@ -3244,7 +3321,11 @@ SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
                  (equal token-label 'T_OPEN_TAG_WITH_ECHO)))
                (t
                 (phps-mode-debug-message
-                 (message "Comment should start at %s %s-%s" token-label token-start token-end))
+                 (message
+                  "Comment should start at %s %s-%s"
+                  token-label
+                  token-start
+                  token-end))
                 (setq token-comment-start token-start)
                 (setq token-comment-end token-end)
                 (setq in-token-comment t)))))))
@@ -3343,7 +3424,9 @@ SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
                           (delete-char -3))
                         (setq offset (- offset 3)))
                     (phps-mode-debug-message
-                     (message "Do not un-comment comment ending at %s" token-end))))))))))))
+                     (message
+                      "Do not un-comment comment ending at %s"
+                      token-end))))))))))))
 
 (provide 'phps-mode-analyzer)
 
