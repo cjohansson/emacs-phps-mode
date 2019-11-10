@@ -191,6 +191,11 @@
   (when (boundp 'semantic-lex-end-point)
     (setq semantic-lex-end-point position)))
 
+(defun phps-mode-lexer-yyless (points)
+  "Move lexer back POINTS."
+  (when (boundp 'semantic-lex-end-point)
+    (setq semantic-lex-end-point (- semantic-lex-end-point points))))
+
 (defun phps-mode-lexer-set-region-syntax-color (start end properties)
   "Do syntax coloring for region START to END with PROPERTIES."
   (with-silent-modifications (set-text-properties start end properties)))
@@ -198,6 +203,14 @@
 (defun phps-mode-lexer-clear-region-syntax-color (start end)
   "Clear region of syntax coloring from START to END."
   (with-silent-modifications (set-text-properties start end nil)))
+
+(defun phps-mode-anaylzer-inline-char-handler ()
+  "Mimic inline_char_handler."
+  (let ((start (match-beginning 0)))
+    (let ((string-start (search-forward "<?" nil t)))
+      (if string-start
+          (phps-mode-lexer-RETURN_TOKEN 'T_INLINE_HTML start (- string-start 2))
+        (phps-mode-lexer-RETURN_TOKEN 'T_INLINE_HTML start (point-max))))))
 
 (defun phps-mode-lexer-get-token-syntax-color (token)
   "Return syntax color for TOKEN."
@@ -365,8 +378,17 @@
 
    (t (list 'font-lock-face 'font-lock-constant-face))))
 
+(defun phps-mode-lexer-RETURN_OR_SKIP_TOKEN (token start end)
+  "Return TOKEN with START and END but only in parse-mode."
+  (when phps-mode-lexer-PARSER_MODE
+    (phps-mode-analyzer-emit-token token start end)))
+
 (defun phps-mode-lexer-RETURN_TOKEN (token start end)
   "Push TOKEN to list with START and END."
+(phps-mode-analyzer-emit-token token start end))
+
+(defun phps-mode-analyzer-emit-token (token start end)
+  "Emit TOKEN with START and END."
 
   ;; Colourize token
   (let ((token-syntax-color (phps-mode-lexer-get-token-syntax-color token)))
@@ -1297,8 +1319,27 @@
         (phps-mode-lexer-re2c-rule
          (and ST_INITIAL (looking-at "<\\?php"))
          (lambda()
-           ;; Allow <?php followed by end of file.
-           (phps-mode-lexer-BEGIN 'ST_IN_SCRIPTING)))
+           (let ((start (match-beginning 0))
+                 (end (match-end 0)))
+
+             ;; Allow <?php followed by end of file.
+             (when (equal end (point-max))
+               (phps-mode-lexer-BEGIN 'ST_IN_SCRIPTING)
+               (phps-mode-lexer-RETURN_OR_SKIP_TOKEN
+                'T_OPEN_TAG
+                start
+                end))
+
+             (when phps-mode-lexer-SHORT_TAGS
+               (phps-mode-lexer-yyless 2)
+               (setq end (- end 2))
+               (phps-mode-lexer-BEGIN 'ST_IN_SCRIPTING)
+               (phps-mode-lexer-RETURN_OR_SKIP_TOKEN
+                'T_OPEN_TAG
+                start
+                end))
+
+             (phps-mode-anaylzer-inline-char-handler))))
 
         (phps-mode-lexer-re2c-rule
          (and ST_INITIAL (looking-at "<\\?"))
@@ -1312,15 +1353,10 @@
                ;; (message "Starting scripting after <?")
                (phps-mode-lexer-RETURN_TOKEN 'T_OPEN_TAG start end)))))
 
-        ;; NOTE: mimics inline_char_handler
         (phps-mode-lexer-re2c-rule
          (and ST_INITIAL (looking-at phps-mode-lexer-ANY_CHAR))
          (lambda()
-           (let ((start (match-beginning 0)))
-             (let ((string-start (search-forward "<?" nil t)))
-               (if string-start
-                   (phps-mode-lexer-RETURN_TOKEN 'T_INLINE_HTML start (- string-start 2))
-                 (phps-mode-lexer-RETURN_TOKEN 'T_INLINE_HTML start (point-max)))))))
+           (phps-mode-anaylzer-inline-char-handler)))
 
         (phps-mode-lexer-re2c-rule
          (and (or ST_DOUBLE_QUOTES ST_HEREDOC ST_BACKQUOTE)
