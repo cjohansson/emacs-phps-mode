@@ -1323,23 +1323,26 @@
                  (end (match-end 0)))
 
              ;; Allow <?php followed by end of file.
-             (when (equal end (point-max))
+             (cond
+
+              ((equal end (point-max))
                (phps-mode-lexer-BEGIN 'ST_IN_SCRIPTING)
                (phps-mode-lexer-RETURN_OR_SKIP_TOKEN
                 'T_OPEN_TAG
                 start
                 end))
 
-             (when phps-mode-lexer-SHORT_TAGS
-               (phps-mode-lexer-yyless 2)
-               (setq end (- end 2))
+              (phps-mode-lexer-SHORT_TAGS
+               (phps-mode-lexer-yyless 3)
+               (setq end (- end 3))
                (phps-mode-lexer-BEGIN 'ST_IN_SCRIPTING)
                (phps-mode-lexer-RETURN_OR_SKIP_TOKEN
                 'T_OPEN_TAG
                 start
                 end))
 
-             (phps-mode-anaylzer-inline-char-handler))))
+              (t
+               (phps-mode-anaylzer-inline-char-handler))))))
 
         (phps-mode-lexer-re2c-rule
          (and ST_INITIAL (looking-at "<\\?"))
