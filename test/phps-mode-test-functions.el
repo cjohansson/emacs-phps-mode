@@ -275,6 +275,11 @@
     (should (equal '((1 (0 0)) (2 (1 0)) (3 (2 0)) (4 (1 0)) (5 (1 0)) (6 (0 0)) (7 (0 0)) (8 (0 0)) (9 (1 0)) (10 (0 0)) (11 (0 0)) (12 (0 0)) (13 (1 0)) (14 (0 0))) (phps-mode-test-hash-to-list (phps-mode-functions-get-lines-indent)))))
    )
 
+  (phps-mode-test-with-buffer
+   "<?php\n\n    if ($fullInfo) $fullInfo = unserialize ($fullInfo);\n    else array();\n\n"
+   "Indentation for single-line inline control structures."
+   (should (equal '((1 (0 0)) (2 (0 0)) (3 (0 0)) (4 (0 0))) (phps-mode-test-hash-to-list (phps-mode-functions-get-lines-indent)))))
+
   )
 
 (defun phps-mode-test-functions-get-lines-indent-psr-2 ()

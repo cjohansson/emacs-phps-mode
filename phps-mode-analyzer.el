@@ -2204,6 +2204,7 @@ SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
               (round-bracket-level 0)
               (square-bracket-level 0)
               (alternative-control-structure-level 0)
+              (alternative-control-structure-line 0)
               (in-concatenation nil)
               (in-concatenation-round-bracket-level nil)
               (in-concatenation-square-bracket-level nil)
@@ -2608,7 +2609,9 @@ SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
 
                   ;; Handle the else if case
                   (if (equal 'T_IF token)
-                      (setq after-special-control-structure-token token)
+                      (progn
+                        (setq after-special-control-structure-token token)
+                        (setq alternative-control-structure-line token-start-line-number))
 
                     ;; Is token not a curly bracket - because that is a ordinary control structure syntax
                     (if (string= token "{")
@@ -2653,10 +2656,12 @@ SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
                             token))
 
                           (setq in-inline-control-structure t)
-                          (setq temp-pre-indent (1+ column-level)))))
+                          (when (< alternative-control-structure-line token-start-line-number)
+                            (setq temp-pre-indent (1+ column-level))))))
 
                     (setq after-special-control-structure nil)
-                    (setq after-special-control-structure-token nil)))
+                    (setq after-special-control-structure-token nil)
+                    (setq alternative-control-structure-line nil)))
 
                 ;; Support extra special control structures (CASE)
                 (when (and after-extra-special-control-structure
@@ -2708,6 +2713,7 @@ SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
                           (equal token 'T_DEFAULT))
                   (setq after-special-control-structure round-bracket-level)
                   (setq after-special-control-structure-token token)
+                  (setq alternative-control-structure-line token-start-line-number)
                   (setq nesting-key token)
                   (setq special-control-structure-started-this-line t)
 
