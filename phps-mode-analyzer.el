@@ -145,7 +145,7 @@
 ;; NOTE original is [a-zA-Z_\x80-\xff][a-zA-Z0-9_\x80-\xff]*
 ;; NOTE Rebuilt for comparability with emacs-lisp
 
-(defvar phps-mode-lexer-WHITESPACE "[ \n\r\t]+"
+(defvar phps-mode-lexer-WHITESPACE "[ \n\r\t\C-m]+"
   "White-space.")
 
 (defvar phps-mode-lexer-TABS_AND_SPACES "[ \t]*"
@@ -156,10 +156,10 @@
 ;; NOTE Original is [;:,.\[\]()|^&+-/*=%!~$<>?@]
 ;; NOTE The hyphen moved last since it has special meaning and to avoid it being interpreted as a range.
 
-(defvar phps-mode-lexer-ANY_CHAR ".\\|\n"
+(defvar phps-mode-lexer-ANY_CHAR ".\\|\n\\|\C-m"
   "Any character.  The Zend equivalent is [^] but is not possible in Emacs Lisp.")
 
-(defvar phps-mode-lexer-NEWLINE "\\(\r\\|\n\\|\r\n\\)"
+(defvar phps-mode-lexer-NEWLINE "\\(\r\\|\n\\|\C-m\\|\r\n\\)"
   "Newline characters.")
 
 
@@ -191,6 +191,11 @@
   (when (boundp 'semantic-lex-end-point)
     (setq semantic-lex-end-point position)))
 
+(defun phps-mode-lexer-yyless (points)
+  "Move lexer back POINTS."
+  (when (boundp 'semantic-lex-end-point)
+    (setq semantic-lex-end-point (- semantic-lex-end-point points))))
+
 (defun phps-mode-lexer-set-region-syntax-color (start end properties)
   "Do syntax coloring for region START to END with PROPERTIES."
   (with-silent-modifications (set-text-properties start end properties)))
@@ -198,6 +203,14 @@
 (defun phps-mode-lexer-clear-region-syntax-color (start end)
   "Clear region of syntax coloring from START to END."
   (with-silent-modifications (set-text-properties start end nil)))
+
+(defun phps-mode-anaylzer-inline-char-handler ()
+  "Mimic inline_char_handler."
+  (let ((start (match-beginning 0)))
+    (let ((string-start (search-forward "<?" nil t)))
+      (if string-start
+          (phps-mode-lexer-RETURN_TOKEN 'T_INLINE_HTML start (- string-start 2))
+        (phps-mode-lexer-RETURN_TOKEN 'T_INLINE_HTML start (point-max))))))
 
 (defun phps-mode-lexer-get-token-syntax-color (token)
   "Return syntax color for TOKEN."
@@ -365,8 +378,17 @@
 
    (t (list 'font-lock-face 'font-lock-constant-face))))
 
+(defun phps-mode-lexer-RETURN_OR_SKIP_TOKEN (token start end)
+  "Return TOKEN with START and END but only in parse-mode."
+  (when phps-mode-lexer-PARSER_MODE
+    (phps-mode-analyzer-emit-token token start end)))
+
 (defun phps-mode-lexer-RETURN_TOKEN (token start end)
   "Push TOKEN to list with START and END."
+(phps-mode-analyzer-emit-token token start end))
+
+(defun phps-mode-analyzer-emit-token (token start end)
+  "Emit TOKEN with START and END."
 
   ;; Colourize token
   (let ((token-syntax-color (phps-mode-lexer-get-token-syntax-color token)))
@@ -1284,7 +1306,7 @@
              (phps-mode-lexer-RETURN_TOKEN 'T_OPEN_TAG_WITH_ECHO start end))))
 
         (phps-mode-lexer-re2c-rule
-         (and ST_INITIAL (looking-at "<\\?php\\([ \t]\\|\n\\)"))
+         (and ST_INITIAL (looking-at "<\\?php\\([ \t]\\|\n\\|\C-m\\)"))
          (lambda()
            (let ((start (match-beginning 0))
                  (end (match-end 0)))
@@ -1297,8 +1319,30 @@
         (phps-mode-lexer-re2c-rule
          (and ST_INITIAL (looking-at "<\\?php"))
          (lambda()
-           ;; Allow <?php followed by end of file.
-           (phps-mode-lexer-BEGIN 'ST_IN_SCRIPTING)))
+           (let ((start (match-beginning 0))
+                 (end (match-end 0)))
+
+             ;; Allow <?php followed by end of file.
+             (cond
+
+              ((equal end (point-max))
+               (phps-mode-lexer-BEGIN 'ST_IN_SCRIPTING)
+               (phps-mode-lexer-RETURN_OR_SKIP_TOKEN
+                'T_OPEN_TAG
+                start
+                end))
+
+              (phps-mode-lexer-SHORT_TAGS
+               (phps-mode-lexer-yyless 3)
+               (setq end (- end 3))
+               (phps-mode-lexer-BEGIN 'ST_IN_SCRIPTING)
+               (phps-mode-lexer-RETURN_OR_SKIP_TOKEN
+                'T_OPEN_TAG
+                start
+                end))
+
+              (t
+               (phps-mode-anaylzer-inline-char-handler))))))
 
         (phps-mode-lexer-re2c-rule
          (and ST_INITIAL (looking-at "<\\?"))
@@ -1312,15 +1356,10 @@
                ;; (message "Starting scripting after <?")
                (phps-mode-lexer-RETURN_TOKEN 'T_OPEN_TAG start end)))))
 
-        ;; NOTE: mimics inline_char_handler
         (phps-mode-lexer-re2c-rule
          (and ST_INITIAL (looking-at phps-mode-lexer-ANY_CHAR))
          (lambda()
-           (let ((start (match-beginning 0)))
-             (let ((string-start (search-forward "<?" nil t)))
-               (if string-start
-                   (phps-mode-lexer-RETURN_TOKEN 'T_INLINE_HTML start (- string-start 2))
-                 (phps-mode-lexer-RETURN_TOKEN 'T_INLINE_HTML start (point-max)))))))
+           (phps-mode-anaylzer-inline-char-handler)))
 
         (phps-mode-lexer-re2c-rule
          (and (or ST_DOUBLE_QUOTES ST_HEREDOC ST_BACKQUOTE)
@@ -1371,7 +1410,7 @@
              (phps-mode-lexer-RETURN_TOKEN data start end))))
 
         (phps-mode-lexer-re2c-rule
-         (and ST_VAR_OFFSET (looking-at (concat "[ \n\r\t'#]")))
+         (and ST_VAR_OFFSET (looking-at (concat "[ \n\C-m\r\t'#]")))
          (lambda()
            (let* ((start (match-beginning 0))
                   (end (- (match-end 0) 1)))
@@ -1424,7 +1463,7 @@
                    (phps-mode-lexer-MOVE_FORWARD (point-max))))))))
 
         (phps-mode-lexer-re2c-rule
-         (and ST_IN_SCRIPTING (looking-at "\\?>\n?"))
+         (and ST_IN_SCRIPTING (looking-at "\\?>\n?\C-m?"))
          (lambda()
            (let ((start (match-beginning 0))
                  (end (match-end 0)))
@@ -1626,9 +1665,9 @@
            (let ((string-start
                   (search-forward-regexp
                    (concat
-                    "\\(\n"
+                    "\\(\\(\n\\|\C-m\\)"
                     heredoc_label
-                    ";?\n\\|\\$"
+                    ";?\\(\n\\|\C-m\\)\\|\\$"
                     phps-mode-lexer-LABEL
                     "\\|{\\$"
                     phps-mode-lexer-LABEL
@@ -1643,7 +1682,7 @@
 
                    (cond
 
-                    ((string-match (concat "\n" heredoc_label ";?\n") data)
+                    ((string-match (concat "\\(\n\\|\C-m\\)" heredoc_label ";?\\(\n\\|\C-m\\)") data)
                                         ;, (message "Found heredoc end at %s-%s" start end)
                      (phps-mode-lexer-BEGIN 'ST_END_HEREDOC)
                      (phps-mode-lexer-RETURN_TOKEN 'T_ENCAPSED_AND_WHITESPACE old-start start))
@@ -1661,7 +1700,7 @@
         (phps-mode-lexer-re2c-rule
          (and ST_NOWDOC (looking-at phps-mode-lexer-ANY_CHAR))
          (lambda()
-           (let ((string-start (search-forward-regexp (concat "\n" heredoc_label ";?\n") nil t)))
+           (let ((string-start (search-forward-regexp (concat "\\(\n\\|\C-m\\)" heredoc_label ";?\\(\n\\|\C-m\\)") nil t)))
              (if string-start
                  (let* ((start (match-beginning 0))
                         (end (match-end 0))
@@ -2044,14 +2083,14 @@
      curly-bracket-level
      square-bracket-level
      round-bracket-level)
-  "Generate a list of indentation for each line in INLINE-HTML, 
-working incrementally on INDENT, TAG-LEVEL, CURLY-BRACKET-LEVEL, 
+  "Generate a list of indentation for each line in INLINE-HTML.
+Working incrementally on INDENT, TAG-LEVEL, CURLY-BRACKET-LEVEL,
 SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
   (phps-mode-debug-message
    (message "Calculating HTML indent for: '%s'" inline-html))
 
   ;; Add trailing newline if missing
-  (unless (string-match "\n$" inline-html)
+  (unless (string-match-p "\\(\n\\|\C-m\\)$" inline-html)
     (setq inline-html (concat inline-html "\n")))
 
   (let ((start 0)
@@ -2070,7 +2109,7 @@ SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
 
         (cond
 
-         ((string= string "\n")
+         ((string-match-p "\\(\n\\|\C-m\\)" string)
 
           (let ((temp-indent indent))
             (when first-object-is-nesting-decrease
@@ -2123,7 +2162,7 @@ SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
          )
 
         (when first-object-on-line
-          (unless (string= string "\n")
+          (unless (string-match-p "\\(\n\\|\C-m\\)" string)
             (setq first-object-on-line nil)
             (setq indent-end (+ tag-level curly-bracket-level square-bracket-level round-bracket-level))
             (when (< indent-end indent-start)
@@ -2428,7 +2467,7 @@ SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
                   (setq
                    inline-html-rest-is-whitespace
                    (string-match
-                    "^[\ \t]\n"
+                    "^[\ \t]\\(\n\\|\C-m\\)"
                     (substring
                      string
                      (1- token-start)
