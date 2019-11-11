@@ -145,7 +145,7 @@
 ;; NOTE original is [a-zA-Z_\x80-\xff][a-zA-Z0-9_\x80-\xff]*
 ;; NOTE Rebuilt for comparability with emacs-lisp
 
-(defvar phps-mode-lexer-WHITESPACE "[ \n\r\t]+"
+(defvar phps-mode-lexer-WHITESPACE "[ \n\r\t\C-m]+"
   "White-space.")
 
 (defvar phps-mode-lexer-TABS_AND_SPACES "[ \t]*"
@@ -156,10 +156,10 @@
 ;; NOTE Original is [;:,.\[\]()|^&+-/*=%!~$<>?@]
 ;; NOTE The hyphen moved last since it has special meaning and to avoid it being interpreted as a range.
 
-(defvar phps-mode-lexer-ANY_CHAR ".\\|\n"
+(defvar phps-mode-lexer-ANY_CHAR ".\\|\n\\|\C-m"
   "Any character.  The Zend equivalent is [^] but is not possible in Emacs Lisp.")
 
-(defvar phps-mode-lexer-NEWLINE "\\(\r\\|\n\\|\r\n\\)"
+(defvar phps-mode-lexer-NEWLINE "\\(\r\\|\n\\|\C-m\\|\r\n\\)"
   "Newline characters.")
 
 
@@ -1306,7 +1306,7 @@
              (phps-mode-lexer-RETURN_TOKEN 'T_OPEN_TAG_WITH_ECHO start end))))
 
         (phps-mode-lexer-re2c-rule
-         (and ST_INITIAL (looking-at "<\\?php\\([ \t]\\|\n\\)"))
+         (and ST_INITIAL (looking-at "<\\?php\\([ \t]\\|\n\\|\C-m\\)"))
          (lambda()
            (let ((start (match-beginning 0))
                  (end (match-end 0)))
@@ -1410,7 +1410,7 @@
              (phps-mode-lexer-RETURN_TOKEN data start end))))
 
         (phps-mode-lexer-re2c-rule
-         (and ST_VAR_OFFSET (looking-at (concat "[ \n\r\t'#]")))
+         (and ST_VAR_OFFSET (looking-at (concat "[ \n\C-m\r\t'#]")))
          (lambda()
            (let* ((start (match-beginning 0))
                   (end (- (match-end 0) 1)))
@@ -1463,7 +1463,7 @@
                    (phps-mode-lexer-MOVE_FORWARD (point-max))))))))
 
         (phps-mode-lexer-re2c-rule
-         (and ST_IN_SCRIPTING (looking-at "\\?>\n?"))
+         (and ST_IN_SCRIPTING (looking-at "\\?>\n?\C-m?"))
          (lambda()
            (let ((start (match-beginning 0))
                  (end (match-end 0)))
@@ -1665,9 +1665,9 @@
            (let ((string-start
                   (search-forward-regexp
                    (concat
-                    "\\(\n"
+                    "\\(\\(\n\\|\C-m\\)"
                     heredoc_label
-                    ";?\n\\|\\$"
+                    ";?\\(\n\\|\C-m\\)\\|\\$"
                     phps-mode-lexer-LABEL
                     "\\|{\\$"
                     phps-mode-lexer-LABEL
@@ -1682,7 +1682,7 @@
 
                    (cond
 
-                    ((string-match (concat "\n" heredoc_label ";?\n") data)
+                    ((string-match (concat "\\(\n\\|\C-m\\)" heredoc_label ";?\\(\n\\|\C-m\\)") data)
                                         ;, (message "Found heredoc end at %s-%s" start end)
                      (phps-mode-lexer-BEGIN 'ST_END_HEREDOC)
                      (phps-mode-lexer-RETURN_TOKEN 'T_ENCAPSED_AND_WHITESPACE old-start start))
@@ -1700,7 +1700,7 @@
         (phps-mode-lexer-re2c-rule
          (and ST_NOWDOC (looking-at phps-mode-lexer-ANY_CHAR))
          (lambda()
-           (let ((string-start (search-forward-regexp (concat "\n" heredoc_label ";?\n") nil t)))
+           (let ((string-start (search-forward-regexp (concat "\\(\n\\|\C-m\\)" heredoc_label ";?\\(\n\\|\C-m\\)") nil t)))
              (if string-start
                  (let* ((start (match-beginning 0))
                         (end (match-end 0))
@@ -2083,14 +2083,14 @@
      curly-bracket-level
      square-bracket-level
      round-bracket-level)
-  "Generate a list of indentation for each line in INLINE-HTML, 
-working incrementally on INDENT, TAG-LEVEL, CURLY-BRACKET-LEVEL, 
+  "Generate a list of indentation for each line in INLINE-HTML.
+Working incrementally on INDENT, TAG-LEVEL, CURLY-BRACKET-LEVEL,
 SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
   (phps-mode-debug-message
    (message "Calculating HTML indent for: '%s'" inline-html))
 
   ;; Add trailing newline if missing
-  (unless (string-match "\n$" inline-html)
+  (unless (string-match-p "\\(\n\\|\C-m\\)$" inline-html)
     (setq inline-html (concat inline-html "\n")))
 
   (let ((start 0)
@@ -2109,7 +2109,7 @@ SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
 
         (cond
 
-         ((string= string "\n")
+         ((string-match-p "\\(\n\\|\C-m\\)" string)
 
           (let ((temp-indent indent))
             (when first-object-is-nesting-decrease
@@ -2162,7 +2162,7 @@ SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
          )
 
         (when first-object-on-line
-          (unless (string= string "\n")
+          (unless (string-match-p "\\(\n\\|\C-m\\)" string)
             (setq first-object-on-line nil)
             (setq indent-end (+ tag-level curly-bracket-level square-bracket-level round-bracket-level))
             (when (< indent-end indent-start)
@@ -2467,7 +2467,7 @@ SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
                   (setq
                    inline-html-rest-is-whitespace
                    (string-match
-                    "^[\ \t]\n"
+                    "^[\ \t]\\(\n\\|\C-m\\)"
                     (substring
                      string
                      (1- token-start)
