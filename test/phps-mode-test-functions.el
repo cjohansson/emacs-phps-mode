@@ -280,6 +280,11 @@
    "Indentation for single-line inline control structures."
    (should (equal '((1 (0 0)) (2 (0 0)) (3 (0 0)) (4 (0 0))) (phps-mode-test-hash-to-list (phps-mode-functions-get-lines-indent)))))
 
+  (phps-mode-test-with-buffer
+   "<?php\n\nif (true) {\n    // Was here\n}"
+   "If condition after a mixed newline encoded file"
+   (should (equal '((1 (0 0)) (2 (0 0)) (3 (0 0)) (4 (1 0)) (5 (0 0))) (phps-mode-test-hash-to-list (phps-mode-functions-get-lines-indent)))))
+
   )
 
 (defun phps-mode-test-functions-get-lines-indent-psr-2 ()
@@ -1086,6 +1091,8 @@
                    ))))
 
   )
+
+
 
 (defun phps-mode-test-functions ()
   "Run test for functions."
