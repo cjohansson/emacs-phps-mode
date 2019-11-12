@@ -2071,7 +2071,7 @@
   "Return the number of lines in STRING."
   (let ((lines-in-string 0)
         (start 0))
-    (while (string-match "[\n\C-m]" string start)
+    (while (string-match "[\n]" string start)
       (setq start (match-end 0))
       (setq lines-in-string (1+ lines-in-string)))
     lines-in-string))
@@ -2469,7 +2469,7 @@ SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
                   (setq
                    inline-html-rest-is-whitespace
                    (string-match
-                    "^[\ \t]\n"
+                    "^[\ \t\r\f]+\n"
                     (substring
                      string
                      (1- token-start)
@@ -3158,7 +3158,7 @@ SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
 
                           (setq inline-html-is-whitespace
                                 (not (null
-                                      (string-match "[\n][ \t]+$" (substring string (1- token-start) (1- token-end))))))
+                                      (string-match "[\r\n][ \f\t]+$" (substring string (1- token-start) (1- token-end))))))
                           (phps-mode-debug-message
                            (message "Trailing inline html line is whitespace: %s" inline-html-is-whitespace))
                           (phps-mode-debug-message
