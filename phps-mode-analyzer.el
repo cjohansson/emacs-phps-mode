@@ -3251,7 +3251,7 @@ SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
                                (buffer-substring-no-properties (point-min) (point-max)))))))))))
         (phps-mode-debug-message
          (message "Did not find lines indent index, skipping indenting..")))
-    (phps-mode-analyzer--alternative-indentation)
+    (phps-mode-analyzer--alternative-indentation (point))
     (phps-mode-debug-message
      (message "Using alternative indentation since buffer is not processed yet"))))
 
@@ -3259,31 +3259,44 @@ SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
   "Apply alternative indentation at POINT here."
   (save-excursion
     (let ((line-number (line-number-at-pos point)))
-      (when (> line-number 1))
-      (forward-line -1)
-      (beginning-of-line)
-      (let* ((old-indentation (current-indentation))
-             (new-indentation old-indentation)
-             (line-string (buffer-substring-no-properties (beginning-of-line) (end-of-line)))
-             (bracket-level 0))
+      (goto-char point)
+      (when (> line-number 1)
+        (forward-line -1)
+        (beginning-of-line)
+        (let* ((old-indentation (current-indentation))
+               (new-indentation old-indentation)
+               (line-beginning-position (line-beginning-position))
+               (line-end-position (line-end-position))
+               (line-string (buffer-substring-no-properties line-beginning-position line-end-position))
+               (bracket-level 0)
+               (start 0)
+               (end (- line-end-position line-beginning-position)))
 
-        (while (string-match "[{}()]" line-string)
-          (let ((bracket (substring line-string (match-beginning 0) (match-end 0))))
-            (cond
-             ((or
-               (string= bracket "{")
-               (string= "("))
-              (setq bracket-level (1+ bracket-level)))
-             (t
-              (setq bracket-level (1- bracket-level))))))
+          (message "Line string: %s (%s-%s)" line-string start end)
+          (while (and (< start end)
+                      (string-match "[\]{}()<>[]" line-string start))
+            (setq start (match-end 0))
+            (let ((bracket (substring line-string (match-beginning 0) (match-end 0))))
+              (message "Bracket: %s" bracket)
+              (cond
+               ((or
+                 (string= bracket "{")
+                 (string= bracket "[")
+                 (string= bracket "(")
+                 (string= bracket "<"))
+                (setq bracket-level (1+ bracket-level)))
+               (t
+                (setq bracket-level (1- bracket-level))))))
 
-        (when (> bracket-level 0)
-          (setq new-indentation (1+ new-indentation)))
+          (forward-line 1)
 
-        (when (< bracket-level 0)
-          (setq new-indentation (1- new-indentation)))
+          (when (> bracket-level 0)
+            (setq new-indentation (1+ new-indentation)))
 
-        (indent-line-to new-indentation)))))
+          (when (< bracket-level 0)
+            (setq new-indentation (1- new-indentation)))
+
+          (indent-line-to (* new-indentation tab-width)))))))
 
 (defun phps-mode-functions--cancel-idle-timer ()
   "Cancel idle timer."
