@@ -3251,8 +3251,39 @@ SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
                                (buffer-substring-no-properties (point-min) (point-max)))))))))))
         (phps-mode-debug-message
          (message "Did not find lines indent index, skipping indenting..")))
+    (phps-mode-analyzer--alternative-indentation)
     (phps-mode-debug-message
-     (message "Skipping indentation since buffer is not processed yet"))))
+     (message "Using alternative indentation since buffer is not processed yet"))))
+
+(defun phps-mode-analyzer--alternative-indentation (point)
+  "Apply alternative indentation at POINT here."
+  (save-excursion
+    (let ((line-number (line-number-at-pos point)))
+      (when (> line-number 1))
+      (forward-line -1)
+      (beginning-of-line)
+      (let* ((old-indentation (current-indentation))
+             (new-indentation old-indentation)
+             (line-string (buffer-substring-no-properties (beginning-of-line) (end-of-line)))
+             (bracket-level 0))
+
+        (while (string-match "[{}()]" line-string)
+          (let ((bracket (substring line-string (match-beginning 0) (match-end 0))))
+            (cond
+             ((or
+               (string= bracket "{")
+               (string= "("))
+              (setq bracket-level (1+ bracket-level)))
+             (t
+              (setq bracket-level (1- bracket-level))))))
+
+        (when (> bracket-level 0)
+          (setq new-indentation (1+ new-indentation)))
+
+        (when (< bracket-level 0)
+          (setq new-indentation (1- new-indentation)))
+
+        (indent-line-to new-indentation)))))
 
 (defun phps-mode-functions--cancel-idle-timer ()
   "Cancel idle timer."
