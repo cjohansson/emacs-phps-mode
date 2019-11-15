@@ -3271,13 +3271,10 @@ SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
                (bracket-level 0)
                (start 0)
                (end (- line-end-position line-beginning-position)))
-
-          (message "Line string: %s (%s-%s)" line-string start end)
           (while (and (< start end)
                       (string-match "[\]{}()<>[]" line-string start))
             (setq start (match-end 0))
             (let ((bracket (substring line-string (match-beginning 0) (match-end 0))))
-              (message "Bracket: %s" bracket)
               (cond
                ((or
                  (string= bracket "{")
@@ -3291,12 +3288,12 @@ SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
           (forward-line 1)
 
           (when (> bracket-level 0)
-            (setq new-indentation (1+ new-indentation)))
+            (setq new-indentation (+ new-indentation tab-width)))
 
           (when (< bracket-level 0)
-            (setq new-indentation (1- new-indentation)))
+            (setq new-indentation (- new-indentation tab-width)))
 
-          (indent-line-to (* new-indentation tab-width)))))))
+          (indent-line-to new-indentation))))))
 
 (defun phps-mode-functions--cancel-idle-timer ()
   "Cancel idle timer."
