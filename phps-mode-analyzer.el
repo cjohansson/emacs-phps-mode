@@ -3250,7 +3250,8 @@ SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
                                phps-mode-lexer-buffer-contents
                                (buffer-substring-no-properties (point-min) (point-max)))))))))))
         (phps-mode-debug-message
-         (message "Did not find lines indent index, skipping indenting..")))
+         (message "Did not find lines indent index, skipping indenting.."))
+        (phps-mode-analyzer--alternative-indentation (point)))
     (phps-mode-analyzer--alternative-indentation (point))
     (phps-mode-debug-message
      (message "Using alternative indentation since buffer is not processed yet"))))
