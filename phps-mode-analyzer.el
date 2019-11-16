@@ -3248,10 +3248,13 @@ SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
                               (setq-local phps-mode-lexer-buffer-length (1- (point-max)))
                               (setq-local
                                phps-mode-lexer-buffer-contents
-                               (buffer-substring-no-properties (point-min) (point-max)))))))))))
+                               (buffer-substring-no-properties (point-min) (point-max))))))))
+                (phps-mode-analyzer--alternative-indentation (point))
+                (phps-mode-debug-message
+                 (message "Did not find indent for line, using alternative indentation..")))))
+        (phps-mode-analyzer--alternative-indentation (point))
         (phps-mode-debug-message
-         (message "Did not find lines indent index, skipping indenting.."))
-        (phps-mode-analyzer--alternative-indentation (point)))
+         (message "Did not find lines indent index, using alternative indentation..")))
     (phps-mode-analyzer--alternative-indentation (point))
     (phps-mode-debug-message
      (message "Using alternative indentation since buffer is not processed yet"))))
@@ -3259,42 +3262,59 @@ SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
 (defun phps-mode-analyzer--alternative-indentation (point)
   "Apply alternative indentation at POINT here."
   (save-excursion
-    (let ((line-number (line-number-at-pos point)))
+    (let ((line-number (line-number-at-pos point))
+          (move-length 1)
+          (line-is-empty t)
+          line-beginning-position
+          line-end-position
+          line-string
+          old-line-number)
       (goto-char point)
       (when (> line-number 1)
-        (forward-line -1)
-        (beginning-of-line)
-        (let* ((old-indentation (current-indentation))
-               (new-indentation old-indentation)
-               (line-beginning-position (line-beginning-position))
-               (line-end-position (line-end-position))
-               (line-string (buffer-substring-no-properties line-beginning-position line-end-position))
-               (bracket-level 0)
-               (start 0)
-               (end (- line-end-position line-beginning-position)))
-          (while (and (< start end)
-                      (string-match "[\]{}()<>[]" line-string start))
-            (setq start (match-end 0))
-            (let ((bracket (substring line-string (match-beginning 0) (match-end 0))))
-              (cond
-               ((or
-                 (string= bracket "{")
-                 (string= bracket "[")
-                 (string= bracket "(")
-                 (string= bracket "<"))
-                (setq bracket-level (1+ bracket-level)))
-               (t
-                (setq bracket-level (1- bracket-level))))))
+        (while (and
+                (> (- line-number move-length) 0)
+                line-is-empty)
+          (forward-line (* move-length -1))
+          (beginning-of-line)
+          (setq line-beginning-position (line-beginning-position))
+          (setq line-end-position (line-end-position))
+          (setq
+           line-string
+           (buffer-substring-no-properties line-beginning-position line-end-position)
+           )
+          (setq line-is-empty (string= line-string ""))
+          )
 
-          (forward-line 1)
+        (unless line-is-empty
+          (let* ((old-indentation (current-indentation))
+                 (new-indentation old-indentation)
+                 (bracket-level 0)
+                 (start 0)
+                 (end (- line-end-position line-beginning-position)))
+            (while (and (< start end)
+                        (string-match "[\]{}()<>[]" line-string start))
+              (setq start (match-end 0))
+              (let ((bracket (substring line-string (match-beginning 0) (match-end 0))))
+                (cond
+                 ((or
+                   (string= bracket "{")
+                   (string= bracket "[")
+                   (string= bracket "(")
+                   (string= bracket "<"))
+                  (setq bracket-level (1+ bracket-level)))
+                 (t
+                  (setq bracket-level (1- bracket-level))))))
 
-          (when (> bracket-level 0)
-            (setq new-indentation (+ new-indentation tab-width)))
+            (forward-line move-length)
+            (end-of-line)
 
-          (when (< bracket-level 0)
-            (setq new-indentation (- new-indentation tab-width)))
+            (when (> bracket-level 0)
+              (setq new-indentation (+ new-indentation tab-width)))
 
-          (indent-line-to new-indentation))))))
+            (when (< bracket-level 0)
+              (setq new-indentation (- new-indentation tab-width)))
+
+            (indent-line-to new-indentation)))))))
 
 (defun phps-mode-functions--cancel-idle-timer ()
   "Cancel idle timer."

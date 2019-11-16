@@ -94,6 +94,8 @@
       (progn
         (when phps-mode-use-psr-2
           (untabify (point-min) (point-max)))
+        (phps-mode-analyzer-process-changes)
+        (phps-mode-functions-process-current-buffer)
         (indent-region (point-min) (point-max)))
     (let ((old-buffer-contents
            (buffer-substring-no-properties (point-min) (point-max)))
