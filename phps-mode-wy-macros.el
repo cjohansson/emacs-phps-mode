@@ -26,12 +26,15 @@
 ;;; Code:
 
 
-(require 'semantic/wisent/grammar)
+(defvar phps-mode-wy-macros--CG
+  (make-hash-table :test 'equal)
+  "A hash-table with all settings.")
 
-(defun CG (_subject &optional _value)
+(defun phps-mode-wy-macros-CG (subject &optional value)
   "Return and optionally set VALUE of SUBJECT."
-  ;; TODO Implement this
-  )
+  (if value
+      (puthash subject value phps-mode-wy-macros--CG)
+    (gethash subject phps-mode-wy-macros--CG)))
 
 (defun zend_add_class_modifier (_class _modifier)
   "Add CLASS MODIFIER."

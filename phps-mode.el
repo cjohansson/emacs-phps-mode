@@ -5,8 +5,8 @@
 ;; Author: Christian Johansson <christian@cvj.se>
 ;; Maintainer: Christian Johansson <christian@cvj.se>
 ;; Created: 3 Mar 2018
-;; Modified: 12 Nov 2019
-;; Version: 0.3.13
+;; Modified: 18 Nov 2019
+;; Version: 0.3.15
 ;; Keywords: tools, convenience
 ;; URL: https://github.com/cjohansson/emacs-phps-mode
 
@@ -94,6 +94,8 @@
       (progn
         (when phps-mode-use-psr-2
           (untabify (point-min) (point-max)))
+        (phps-mode-analyzer-process-changes)
+        (phps-mode-functions-process-current-buffer)
         (indent-region (point-min) (point-max)))
     (let ((old-buffer-contents
            (buffer-substring-no-properties (point-min) (point-max)))

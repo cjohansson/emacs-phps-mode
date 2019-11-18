@@ -34,6 +34,7 @@
 
 
 (require 'phps-mode-macros)
+(require 'phps-mode-wy-macros)
 
 (require 'semantic)
 (require 'semantic/lex)
@@ -88,11 +89,9 @@
 (defvar phps-mode-lexer-long-limit 2147483648
   "Limit for 32-bit integer.")
 
-(defvar phps-mode-lexer-PARSER_MODE t
-  "Flag whether we is using parser-mode or not.")
 
-(defvar phps-mode-lexer-SHORT_TAGS t
-  "Flag whether we support short-tags or not.")
+(phps-mode-wy-macros-CG 'PARSER_MODE t)
+(phps-mode-wy-macros-CG 'SHORT_TAGS t)
 
 
 ;; FLAGS/SIGNALS
@@ -380,7 +379,7 @@
 
 (defun phps-mode-lexer-RETURN_OR_SKIP_TOKEN (token start end)
   "Return TOKEN with START and END but only in parse-mode."
-  (when phps-mode-lexer-PARSER_MODE
+  (when (phps-mode-wy-macros-CG 'PARSER_MODE)
     (phps-mode-analyzer-emit-token token start end)))
 
 (defun phps-mode-lexer-RETURN_TOKEN (token start end)
@@ -712,7 +711,7 @@
            (let* ((start (match-beginning 0))
                   (end (match-end 0))
                   (data (buffer-substring-no-properties start end)))
-             (if phps-mode-lexer-PARSER_MODE
+             (if (phps-mode-wy-macros-CG 'PARSER_MODE)
                  (phps-mode-lexer-MOVE_FORWARD end)
                (phps-mode-lexer-RETURN_TOKEN data start end)))))
 
@@ -807,7 +806,7 @@
                 phps-mode-lexer-TABS_AND_SPACES
                 ")")))
          (lambda()
-           (when phps-mode-lexer-PARSER_MODE
+           (when (phps-mode-wy-macros-CG 'PARSER_MODE)
              (display-warning 'phps-mode "PHPs Lexer Error - The (real) cast is deprecated, use (float) instead"))
            (phps-mode-lexer-RETURN_TOKEN 'T_DOUBLE_CAST (match-beginning 0) (match-end 0))))
 
@@ -1301,7 +1300,7 @@
            (let ((start (match-beginning 0))
                  (end (match-end 0)))
              (phps-mode-lexer-BEGIN 'ST_IN_SCRIPTING)
-             (when phps-mode-lexer-PARSER_MODE
+             (when (phps-mode-wy-macros-CG 'PARSER_MODE)
                (phps-mode-lexer-RETURN_TOKEN 'T_ECHO start end))
              (phps-mode-lexer-RETURN_TOKEN 'T_OPEN_TAG_WITH_ECHO start end))))
 
@@ -1332,7 +1331,7 @@
                 start
                 end))
 
-              (phps-mode-lexer-SHORT_TAGS
+              ((phps-mode-wy-macros-CG 'SHORT_TAGS)
                (phps-mode-lexer-yyless 3)
                (setq end (- end 3))
                (phps-mode-lexer-BEGIN 'ST_IN_SCRIPTING)
@@ -1347,7 +1346,7 @@
         (phps-mode-lexer-re2c-rule
          (and ST_INITIAL (looking-at "<\\?"))
          (lambda()
-           (when phps-mode-lexer-SHORT_TAGS
+           (when (phps-mode-wy-macros-CG 'SHORT_TAGS)
              (let ((start (match-beginning 0))
                    (end (match-end 0)))
                (phps-mode-lexer-BEGIN 'ST_IN_SCRIPTING)
@@ -1470,7 +1469,7 @@
              (when (= (- end start) 3)
                (setq end (1- end)))
              (phps-mode-lexer-BEGIN 'ST_INITIAL)
-             (when phps-mode-lexer-PARSER_MODE
+             (when (phps-mode-wy-macros-CG 'PARSER_MODE)
                (phps-mode-lexer-RETURN_TOKEN ";" start end))
              (phps-mode-lexer-RETURN_TOKEN 'T_CLOSE_TAG start end))))
 
@@ -3249,11 +3248,77 @@ SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
                               (setq-local phps-mode-lexer-buffer-length (1- (point-max)))
                               (setq-local
                                phps-mode-lexer-buffer-contents
-                               (buffer-substring-no-properties (point-min) (point-max)))))))))))
+                               (buffer-substring-no-properties (point-min) (point-max))))))))
+                (phps-mode-analyzer--alternative-indentation (point))
+                (phps-mode-debug-message
+                 (message "Did not find indent for line, using alternative indentation..")))))
+        (phps-mode-analyzer--alternative-indentation (point))
         (phps-mode-debug-message
-         (message "Did not find lines indent index, skipping indenting..")))
+         (message "Did not find lines indent index, using alternative indentation..")))
+    (phps-mode-analyzer--alternative-indentation (point))
     (phps-mode-debug-message
-     (message "Skipping indentation since buffer is not processed yet"))))
+     (message "Using alternative indentation since buffer is not processed yet"))))
+
+(defun phps-mode-analyzer--alternative-indentation (point)
+  "Apply alternative indentation at POINT here."
+  (save-excursion
+    (let ((line-number (line-number-at-pos point))
+          (move-length 1)
+          (line-is-empty t)
+          line-beginning-position
+          line-end-position
+          line-string
+          old-line-number)
+      (goto-char point)
+      (when (> line-number 1)
+        (while (and
+                (> (- line-number move-length) 0)
+                line-is-empty)
+          (forward-line (* move-length -1))
+          (beginning-of-line)
+          (setq line-beginning-position (line-beginning-position))
+          (setq line-end-position (line-end-position))
+          (setq
+           line-string
+           (buffer-substring-no-properties line-beginning-position line-end-position)
+           )
+          (setq line-is-empty (string= line-string ""))
+          )
+
+        (unless line-is-empty
+          (let* ((old-indentation (current-indentation))
+                 (new-indentation old-indentation)
+                 (bracket-level 0)
+                 (start 0)
+                 (end (- line-end-position line-beginning-position)))
+            (while (and (< start end)
+                        (string-match "\\([\]{}()[]\\|<[a-zA-Z]+\\|</[a-zA-Z]+\\|/>\\)" line-string start))
+              (setq start (match-end 0))
+              (let ((bracket (substring line-string (match-beginning 0) (match-end 0))))
+                (cond
+                 ((or
+                   (string= bracket "{")
+                   (string= bracket "[")
+                   (string= bracket "(")
+                   (string= bracket "<")
+                   (string-match "<[a-zA-Z]+" bracket))
+                  (setq bracket-level (1+ bracket-level)))
+                 (t
+                  (setq bracket-level (1- bracket-level))))))
+
+            (forward-line move-length)
+
+            (when (> bracket-level 0)
+              (setq new-indentation (+ new-indentation tab-width)))
+
+            (when (< bracket-level 0)
+              (setq new-indentation (- new-indentation tab-width)))
+
+            (when (< new-indentation 0)
+              (setq new-indentation 0))
+
+            (indent-line-to new-indentation))))))
+  (end-of-line))
 
 (defun phps-mode-functions--cancel-idle-timer ()
   "Cancel idle timer."
