@@ -29,8 +29,16 @@
 (require 'phps-mode)
 (require 'phps-mode-test)
 
-;; TODO Add tests for `phps-mode-analyzer--alternative-indentation'
+(defun phps-mode-test-functions-process-changes ()
+  "Test `phps-mode-analyzer-process-changes'."
 ;; TODO Add tests for `phps-mode-analyzer-process-changes'
+  )
+
+(defun phps-mode-test-functions-alternative-indentation ()
+  "Test `phps-mode-analyzer--alternative-indentation'."
+
+  ;; TODO Add tests for `phps-mode-analyzer--alternative-indentation'
+  )
 
 (defun phps-mode-test-functions-move-lines-indent ()
   "Test `phps-mode-functions-move-lines-indent'."
@@ -1100,7 +1108,8 @@
 (defun phps-mode-test-functions ()
   "Run test for functions."
   ;; (setq debug-on-error t)
-  (setq phps-mode-runtime-debug t)
+  (phps-mode-test-functions-process-changes)
+  (phps-mode-test-functions-move-lines-indent)
   (phps-mode-test-functions-get-inline-html-indentation)
   (phps-mode-test-functions-get-lines-indent-if)
   (phps-mode-test-functions-get-lines-indent-classes)
