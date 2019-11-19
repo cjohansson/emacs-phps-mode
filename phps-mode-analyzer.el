@@ -1828,7 +1828,8 @@
   (with-current-buffer buffer
     (let ((run-full-lexer nil)
           (old-tokens phps-mode-lexer-tokens)
-          (old-states phps-mode-lexer-states))
+          (old-states phps-mode-lexer-states)
+          (log '()))
 
       (if phps-mode-analyzer-change-min
           (progn
@@ -1924,25 +1925,29 @@
 
                           (setq-local phps-mode-lexer-tokens (append head-tokens incremental-tokens))
 
-                          (phps-mode-debug-message
-                           (message "Incremental tokens: %s" incremental-tokens))
+                          (push (list 'INCREMENTAL-LEX incremental-start-new-buffer) log)
 
-                          )
+                          (phps-mode-debug-message
+                           (message "Incremental tokens: %s" incremental-tokens)))
+                      (push (list 'FOUND-NO-HEAD-STATES incremental-start-new-buffer) log)
                       (phps-mode-debug-message
                        (message "Found no head states"))
                       (setq run-full-lexer t)))
+                (push (list 'FOUND-NO-HEAD-TOKENS incremental-start-new-buffer) log)
                 (phps-mode-debug-message
                  (message "Found no head tokens"))
                 (setq run-full-lexer t))))
+        (push (list 'FOUND-NO-CHANGE-POINT-MINIMUM) log)
         (phps-mode-debug-message
          (message "Found no change point minimum"))
         (setq run-full-lexer t))
 
-      (if run-full-lexer
-          (progn
-            (phps-mode-debug-message
-             (message "Running full lexer"))
-            (phps-mode-lexer-run))))))
+      (when run-full-lexer
+        (push (list 'RUN-FULL-LEXER) log)
+        (phps-mode-debug-message
+         (message "Running full lexer"))
+        (phps-mode-lexer-run))
+      log)))
 
 (defun phps-mode-functions-get-processed-buffer ()
   "Get flag for whether buffer is processed or not."
@@ -3259,6 +3264,7 @@ SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
     (phps-mode-debug-message
      (message "Using alternative indentation since buffer is not processed yet"))))
 
+;; TODO Add analysis for current line, check if it's closing brackets
 (defun phps-mode-analyzer--alternative-indentation (point)
   "Apply alternative indentation at POINT here."
   (save-excursion
@@ -3267,8 +3273,7 @@ SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
           (line-is-empty t)
           line-beginning-position
           line-end-position
-          line-string
-          old-line-number)
+          line-string)
       (goto-char point)
       (when (> line-number 1)
         (while (and

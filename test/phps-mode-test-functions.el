@@ -29,6 +29,9 @@
 (require 'phps-mode)
 (require 'phps-mode-test)
 
+;; TODO Add tests for `phps-mode-analyzer--alternative-indentation'
+;; TODO Add tests for `phps-mode-analyzer-process-changes'
+
 (defun phps-mode-test-functions-move-lines-indent ()
   "Test `phps-mode-functions-move-lines-indent'."
 
