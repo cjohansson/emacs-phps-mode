@@ -3265,6 +3265,7 @@ SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
      (message "Using alternative indentation since buffer is not processed yet"))))
 
 ;; TODO Add analysis for current line, check if it's closing brackets
+;; TODO Check 
 (defun phps-mode-analyzer--alternative-indentation (point)
   "Apply alternative indentation at POINT here."
   (save-excursion
@@ -3280,6 +3281,7 @@ SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
                 (> (- line-number move-length) 0)
                 line-is-empty)
           (forward-line (* move-length -1))
+          (setq line-number (1- line-number))
           (beginning-of-line)
           (setq line-beginning-position (line-beginning-position))
           (setq line-end-position (line-end-position))
@@ -3287,7 +3289,7 @@ SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
            line-string
            (buffer-substring-no-properties line-beginning-position line-end-position)
            )
-          (setq line-is-empty (string= line-string ""))
+          (setq line-is-empty (string-match-p "^[\ \t\f\r\n]*$" line-string))
           )
 
         (unless line-is-empty
