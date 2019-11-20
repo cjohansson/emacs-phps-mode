@@ -3264,67 +3264,75 @@ SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
     (phps-mode-debug-message
      (message "Using alternative indentation since buffer is not processed yet"))))
 
-;; TODO Add analysis for current line, check if it's closing brackets
-(defun phps-mode-analyzer--alternative-indentation (point)
+(defun phps-mode-analyzer--alternative-indentation (&optional point)
   "Apply alternative indentation at POINT here."
-  (save-excursion
-    (let ((line-number (line-number-at-pos point))
-          (move-length 1)
-          (line-is-empty t)
-          line-beginning-position
-          line-end-position
-          line-string)
-      (goto-char point)
-      (when (> line-number 1)
-        (while (and
-                (> (- line-number move-length) 0)
-                line-is-empty)
-          (forward-line (* move-length -1))
-          (setq line-number (1- line-number))
-          (beginning-of-line)
-          (setq line-beginning-position (line-beginning-position))
-          (setq line-end-position (line-end-position))
-          (setq
-           line-string
-           (buffer-substring-no-properties line-beginning-position line-end-position)
-           )
-          (setq line-is-empty (string-match-p "^[ \t\f\r\n]*$" line-string))
-          )
+  (unless point
+    (setq point (point)))
+  (let ((new-indentation))
+    (save-excursion
+      (let ((line-number (line-number-at-pos point))
+            (move-length 1)
+            (line-is-empty t)
+            line-beginning-position
+            line-end-position
+            line-string)
+        (goto-char point)
+        (when (> line-number 1)
+          (while (and
+                  (> (- line-number move-length) 0)
+                  line-is-empty)
+            (forward-line (* move-length -1))
+            (setq line-number (1- line-number))
+            (beginning-of-line)
+            (setq line-beginning-position (line-beginning-position))
+            (setq line-end-position (line-end-position))
+            (setq
+             line-string
+             (buffer-substring-no-properties line-beginning-position line-end-position)
+             )
+            (setq line-is-empty (string-match-p "^[ \t\f\r\n]*$" line-string))
+            )
 
-        (unless line-is-empty
-          (let* ((old-indentation (current-indentation))
-                 (new-indentation old-indentation)
-                 (bracket-level 0)
-                 (start 0)
-                 (end (- line-end-position line-beginning-position)))
-            (while (and (< start end)
-                        (string-match "\\([\]{}()[]\\|<[a-zA-Z]+\\|</[a-zA-Z]+\\|/>\\)" line-string start))
-              (setq start (match-end 0))
-              (let ((bracket (substring line-string (match-beginning 0) (match-end 0))))
-                (cond
-                 ((or
-                   (string= bracket "{")
-                   (string= bracket "[")
-                   (string= bracket "(")
-                   (string= bracket "<")
-                   (string-match "<[a-zA-Z]+" bracket))
-                  (setq bracket-level (1+ bracket-level)))
-                 (t
-                  (setq bracket-level (1- bracket-level))))))
+          (unless line-is-empty
+            (let* ((old-indentation (current-indentation))
+                   (bracket-level 0)
+                   (start 0)
+                   (end (- line-end-position line-beginning-position)))
+              (setq new-indentation old-indentation)
+              (while (and (< start end)
+                          (string-match "\\([\]{}()[]\\|<[a-zA-Z]+\\|</[a-zA-Z]+\\|/>\\)" line-string start))
+                (setq start (match-end 0))
+                (let ((bracket (substring line-string (match-beginning 0) (match-end 0))))
+                  (cond
+                   ((or
+                     (string= bracket "{")
+                     (string= bracket "[")
+                     (string= bracket "(")
+                     (string= bracket "<")
+                     (string-match "<[a-zA-Z]+" bracket))
+                    (setq bracket-level (1+ bracket-level)))
+                   (t
+                    (setq bracket-level (1- bracket-level))))))
 
-            (forward-line move-length)
+              (forward-line move-length)
 
-            (when (> bracket-level 0)
-              (setq new-indentation (+ new-indentation tab-width)))
+              ;; TODO Should analyze current line here
+              ;; TODO Add analysis for current line, check if it's closing brackets
 
-            (when (< bracket-level 0)
-              (setq new-indentation (- new-indentation tab-width)))
+              (when (> bracket-level 0)
+                (setq new-indentation (+ new-indentation tab-width)))
 
-            (when (< new-indentation 0)
-              (setq new-indentation 0))
+              (when (< bracket-level 0)
+                (setq new-indentation (- new-indentation tab-width)))
 
-            (indent-line-to new-indentation))))))
-  (end-of-line))
+              (when (< new-indentation 0)
+                (setq new-indentation 0))
+
+              (indent-line-to new-indentation))))))
+    ;; Only move to end of line if point is the current point
+    (when (equal point (point))
+      (end-of-line))
+    new-indentation))
 
 (defun phps-mode-functions--cancel-idle-timer ()
   "Cancel idle timer."
