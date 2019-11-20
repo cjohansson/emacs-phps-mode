@@ -31,8 +31,39 @@
 
 (defun phps-mode-test-functions-process-changes ()
   "Test `phps-mode-analyzer-process-changes'."
-;; TODO Add tests for `phps-mode-analyzer-process-changes'
-  )
+
+  (phps-mode-test-with-buffer
+   "\n<html>\n<?php\n/**\n * Bla\n */"
+   "Process changes before current tokens"
+   (goto-char (point-min))
+   (insert "<?php echo 'test';\n?>")
+   (should (equal
+            (phps-mode-analyzer-process-changes)
+            '((RUN-FULL-LEXER) (FOUND-NO-HEAD-TOKENS 1)))
+
+           ))
+
+  (phps-mode-test-with-buffer
+   "\n<html>\n<?php\n/**\n * Bla\n */"
+   "Process changes without changes"
+   (should (equal
+            (phps-mode-analyzer-process-changes)
+            '((RUN-FULL-LEXER) (FOUND-NO-CHANGE-POINT-MINIMUM)))
+
+           ))
+
+  (phps-mode-test-with-buffer
+   "\n<html>\n<?php\n/**\n * Bla\n */"
+   "Process changes after existing tokens"
+   (goto-char (point-max))
+   (insert "\necho 'I was here';\n")
+   (should (equal
+            (phps-mode-analyzer-process-changes)
+            '((INCREMENTAL-LEX 15)))
+
+           ))
+
+   )
 
 (defun phps-mode-test-functions-alternative-indentation ()
   "Test `phps-mode-analyzer--alternative-indentation'."
