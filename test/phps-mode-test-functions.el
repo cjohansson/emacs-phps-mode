@@ -65,22 +65,35 @@
   (phps-mode-test-with-buffer
    "<?php\nif ($myCondition) {\necho 'I was here';\n}"
    "Alternative indentation inside if block" 
-   (goto-char (point-max))
-   (insert "\necho 'I was here';\n")
    (goto-char 32)
    (should (equal
             (phps-mode-analyzer--alternative-indentation)
-            0))
+            4))
    (goto-char 15)
    (should (equal
             (phps-mode-analyzer--alternative-indentation)
             0))
-   (goto-char 51)
+   (goto-char (point-max))
    (should (equal
             (phps-mode-analyzer--alternative-indentation)
-            0))
-   )
-  
+            0)))
+
+  (phps-mode-test-with-buffer
+   "<?php\nif ($myCondition) {\necho 'I was here';\necho 'I was here again';\n}"
+   "Alternative indentation on closing if block" 
+   (goto-char 30)
+   (should (equal
+            (phps-mode-analyzer--alternative-indentation)
+            4))
+   (goto-char 57)
+   (should (equal
+            (phps-mode-analyzer--alternative-indentation)
+            4))
+   (goto-char (point-max))
+   (should (equal
+            (phps-mode-analyzer--alternative-indentation)
+            0)))
+
   )
 
 (defun phps-mode-test-functions-move-lines-indent ()

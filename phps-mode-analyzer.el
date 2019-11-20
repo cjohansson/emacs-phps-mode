@@ -3299,20 +3299,7 @@ SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
                    (start 0)
                    (end (- line-end-position line-beginning-position)))
               (setq new-indentation old-indentation)
-              (while (and (< start end)
-                          (string-match "\\([\]{}()[]\\|<[a-zA-Z]+\\|</[a-zA-Z]+\\|/>\\)" line-string start))
-                (setq start (match-end 0))
-                (let ((bracket (substring line-string (match-beginning 0) (match-end 0))))
-                  (cond
-                   ((or
-                     (string= bracket "{")
-                     (string= bracket "[")
-                     (string= bracket "(")
-                     (string= bracket "<")
-                     (string-match "<[a-zA-Z]+" bracket))
-                    (setq bracket-level (1+ bracket-level)))
-                   (t
-                    (setq bracket-level (1- bracket-level))))))
+              (setq new-indentation (phps-mode-analyzer--get-string-brackets-count line-string))
 
               (forward-line move-length)
 
@@ -3333,6 +3320,31 @@ SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
     (when (equal point (point))
       (end-of-line))
     new-indentation))
+
+(defun phps-mode-analyzer--get-string-brackets-count (string)
+  "Get bracket count for STRING."
+  (let ((bracket-level 0)
+        (start 0)
+        (line-is-empty
+         (string-match-p "^[ \t\f\r\n]*$" string)))
+    (unless line-is-empty
+      (while (string-match
+              "\\([\]{}()[]\\|<[a-zA-Z]+\\|</[a-zA-Z]+\\|/>\\)"
+              string
+              start)
+        (setq start (match-end 0))
+        (let ((bracket (substring string (match-beginning 0) (match-end 0))))
+          (cond
+           ((or
+             (string= bracket "{")
+             (string= bracket "[")
+             (string= bracket "(")
+             (string= bracket "<")
+             (string-match "<[a-zA-Z]+" bracket))
+            (setq bracket-level (1+ bracket-level)))
+           (t
+            (setq bracket-level (1- bracket-level)))))))
+    (* bracket-level tab-width)))
 
 (defun phps-mode-functions--cancel-idle-timer ()
   "Cancel idle timer."
