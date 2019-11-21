@@ -3299,7 +3299,6 @@ SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
              (buffer-substring-no-properties line-beginning-position line-end-position)
              )
             (setq line-is-empty (string-match-p "^[ \t\f\r\n]*$" line-string))
-            (message "Line %s is empty: %s" line-number line-is-empty)
             (setq move-length (1+ move-length))
             )
 
@@ -3324,7 +3323,6 @@ SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
               (when (< new-indentation 0)
                 (setq new-indentation 0))
 
-              (message "Indenting line to %s" new-indentation)
               (indent-line-to new-indentation))))))
     ;; Only move to end of line if point is the current point
     (when (equal point (point))

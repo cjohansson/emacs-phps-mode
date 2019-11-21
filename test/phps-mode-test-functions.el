@@ -62,8 +62,6 @@
 (defun phps-mode-test-functions-alternative-indentation ()
   "Test `phps-mode-analyzer--alternative-indentation'."
 
-  ;; TODO Should compare buffer contents as well
-
   (phps-mode-test-with-buffer
    "<?php\nif ($myCondition) {\necho 'I was here';\n}"
    "Alternative indentation inside if block" 
@@ -78,7 +76,11 @@
    (goto-char (point-max))
    (should (equal
             (phps-mode-analyzer--alternative-indentation)
-            0)))
+            0))
+   (let ((buffer-contents (buffer-substring-no-properties (point-min) (point-max))))
+     (should (equal
+              buffer-contents
+              "<?php\nif ($myCondition) {\n    echo 'I was here';\n}"))))
 
   (phps-mode-test-with-buffer
    "<?php\nif ($myCondition) {\necho 'I was here';\necho 'I was here again';\n}"
@@ -94,7 +96,11 @@
    (goto-char (point-max))
    (should (equal
             (phps-mode-analyzer--alternative-indentation)
-            0)))
+            0))
+   (let ((buffer-contents (buffer-substring-no-properties (point-min) (point-max))))
+     (should (equal
+              buffer-contents
+              "<?php\nif ($myCondition) {\n    echo 'I was here';\n    echo 'I was here again';\n}"))))
 
   (phps-mode-test-with-buffer
    "<?php\nif ($test) {\n    if ($test2) {\n\n}\n}"
@@ -106,7 +112,11 @@
    (goto-char (point-max))
    (should (equal
             (phps-mode-analyzer--alternative-indentation)
-            0)))
+            0))
+   (let ((buffer-contents (buffer-substring-no-properties (point-min) (point-max))))
+     (should (equal
+              buffer-contents
+              "<?php\nif ($test) {\n    if ($test2) {\n\n    }\n}"))))
 
   )
 
