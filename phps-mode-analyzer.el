@@ -3275,8 +3275,16 @@ SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
             (line-is-empty t)
             line-beginning-position
             line-end-position
-            line-string)
+            line-string
+            current-line-string)
         (goto-char point)
+        (setq
+         current-line-string
+         (buffer-substring-no-properties
+          (line-beginning-position)
+          (line-end-position)
+          )
+         )
         (when (> line-number 1)
           (while (and
                   (> (- line-number move-length) 0)
@@ -3295,16 +3303,11 @@ SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
 
           (unless line-is-empty
             (let* ((old-indentation (current-indentation))
-                   (bracket-level 0)
-                   (start 0)
-                   (end (- line-end-position line-beginning-position)))
+                   (new-bracket-level (phps-mode-analyzer--get-string-brackets-count current-line-string))
+                   (bracket-level (phps-mode-analyzer--get-string-brackets-count line-string)))
               (setq new-indentation old-indentation)
-              (setq new-indentation (phps-mode-analyzer--get-string-brackets-count line-string))
 
               (forward-line move-length)
-
-              ;; TODO Should analyze current line here
-              ;; TODO Add analysis for current line, check if it's closing brackets
 
               (when (> bracket-level 0)
                 (setq new-indentation (+ new-indentation tab-width)))
@@ -3312,6 +3315,10 @@ SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
               (when (< bracket-level 0)
                 (setq new-indentation (- new-indentation tab-width)))
 
+              (when (< new-bracket-level 0)
+                (setq new-indentation (- new-indentation tab-width)))
+
+              ;; Decrease indentation if current line decreases in bracket level
               (when (< new-indentation 0)
                 (setq new-indentation 0))
 
