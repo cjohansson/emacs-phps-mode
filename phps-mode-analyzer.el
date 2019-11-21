@@ -1828,7 +1828,8 @@
   (with-current-buffer buffer
     (let ((run-full-lexer nil)
           (old-tokens phps-mode-lexer-tokens)
-          (old-states phps-mode-lexer-states))
+          (old-states phps-mode-lexer-states)
+          (log '()))
 
       (if phps-mode-analyzer-change-min
           (progn
@@ -1924,25 +1925,29 @@
 
                           (setq-local phps-mode-lexer-tokens (append head-tokens incremental-tokens))
 
-                          (phps-mode-debug-message
-                           (message "Incremental tokens: %s" incremental-tokens))
+                          (push (list 'INCREMENTAL-LEX incremental-start-new-buffer) log)
 
-                          )
+                          (phps-mode-debug-message
+                           (message "Incremental tokens: %s" incremental-tokens)))
+                      (push (list 'FOUND-NO-HEAD-STATES incremental-start-new-buffer) log)
                       (phps-mode-debug-message
                        (message "Found no head states"))
                       (setq run-full-lexer t)))
+                (push (list 'FOUND-NO-HEAD-TOKENS incremental-start-new-buffer) log)
                 (phps-mode-debug-message
                  (message "Found no head tokens"))
                 (setq run-full-lexer t))))
+        (push (list 'FOUND-NO-CHANGE-POINT-MINIMUM) log)
         (phps-mode-debug-message
          (message "Found no change point minimum"))
         (setq run-full-lexer t))
 
-      (if run-full-lexer
-          (progn
-            (phps-mode-debug-message
-             (message "Running full lexer"))
-            (phps-mode-lexer-run))))))
+      (when run-full-lexer
+        (push (list 'RUN-FULL-LEXER) log)
+        (phps-mode-debug-message
+         (message "Running full lexer"))
+        (phps-mode-lexer-run))
+      log)))
 
 (defun phps-mode-functions-get-processed-buffer ()
   "Get flag for whether buffer is processed or not."
@@ -3259,66 +3264,94 @@ SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
     (phps-mode-debug-message
      (message "Using alternative indentation since buffer is not processed yet"))))
 
-(defun phps-mode-analyzer--alternative-indentation (point)
+(defun phps-mode-analyzer--alternative-indentation (&optional point)
   "Apply alternative indentation at POINT here."
-  (save-excursion
-    (let ((line-number (line-number-at-pos point))
-          (move-length 1)
-          (line-is-empty t)
-          line-beginning-position
-          line-end-position
-          line-string
-          old-line-number)
-      (goto-char point)
-      (when (> line-number 1)
-        (while (and
-                (> (- line-number move-length) 0)
-                line-is-empty)
-          (forward-line (* move-length -1))
-          (beginning-of-line)
-          (setq line-beginning-position (line-beginning-position))
-          (setq line-end-position (line-end-position))
-          (setq
-           line-string
-           (buffer-substring-no-properties line-beginning-position line-end-position)
-           )
-          (setq line-is-empty (string= line-string ""))
+  (unless point
+    (setq point (point)))
+  (let ((new-indentation))
+    (save-excursion
+      (let ((line-number (line-number-at-pos point))
+            (move-length 1)
+            (line-is-empty t)
+            line-beginning-position
+            line-end-position
+            line-string
+            current-line-string)
+        (goto-char point)
+        (setq
+         current-line-string
+         (buffer-substring-no-properties
+          (line-beginning-position)
+          (line-end-position)
           )
+         )
+        (when (> line-number 1)
+          (while (and
+                  (> (- line-number move-length) 0)
+                  line-is-empty)
+            (forward-line (* move-length -1))
+            (setq line-number (1- line-number))
+            (beginning-of-line)
+            (setq line-beginning-position (line-beginning-position))
+            (setq line-end-position (line-end-position))
+            (setq
+             line-string
+             (buffer-substring-no-properties line-beginning-position line-end-position)
+             )
+            (setq line-is-empty (string-match-p "^[ \t\f\r\n]*$" line-string))
+            )
 
-        (unless line-is-empty
-          (let* ((old-indentation (current-indentation))
-                 (new-indentation old-indentation)
-                 (bracket-level 0)
-                 (start 0)
-                 (end (- line-end-position line-beginning-position)))
-            (while (and (< start end)
-                        (string-match "\\([\]{}()[]\\|<[a-zA-Z]+\\|</[a-zA-Z]+\\|/>\\)" line-string start))
-              (setq start (match-end 0))
-              (let ((bracket (substring line-string (match-beginning 0) (match-end 0))))
-                (cond
-                 ((or
-                   (string= bracket "{")
-                   (string= bracket "[")
-                   (string= bracket "(")
-                   (string= bracket "<")
-                   (string-match "<[a-zA-Z]+" bracket))
-                  (setq bracket-level (1+ bracket-level)))
-                 (t
-                  (setq bracket-level (1- bracket-level))))))
+          (unless line-is-empty
+            (let* ((old-indentation (current-indentation))
+                   (new-bracket-level (phps-mode-analyzer--get-string-brackets-count current-line-string))
+                   (bracket-level (phps-mode-analyzer--get-string-brackets-count line-string)))
+              (setq new-indentation old-indentation)
 
-            (forward-line move-length)
+              (forward-line move-length)
 
-            (when (> bracket-level 0)
-              (setq new-indentation (+ new-indentation tab-width)))
+              (when (> bracket-level 0)
+                (setq new-indentation (+ new-indentation tab-width)))
 
-            (when (< bracket-level 0)
-              (setq new-indentation (- new-indentation tab-width)))
+              (when (< bracket-level 0)
+                (setq new-indentation (- new-indentation tab-width)))
 
-            (when (< new-indentation 0)
-              (setq new-indentation 0))
+              (when (< new-bracket-level 0)
+                (setq new-indentation (- new-indentation tab-width)))
 
-            (indent-line-to new-indentation))))))
-  (end-of-line))
+              ;; Decrease indentation if current line decreases in bracket level
+              (when (< new-indentation 0)
+                (setq new-indentation 0))
+
+              (indent-line-to new-indentation))))))
+    ;; Only move to end of line if point is the current point
+    (when (equal point (point))
+      (end-of-line))
+    new-indentation))
+
+(defun phps-mode-analyzer--get-string-brackets-count (string)
+  "Get bracket count for STRING."
+  (let ((bracket-level 0)
+        (start 0)
+        (line-is-empty
+         (string-match-p "^[ \t\f\r\n]*$" string)))
+    (unless line-is-empty
+      (while (string-match
+              "\\([\]{}()[]\\|<[a-zA-Z]+\\|</[a-zA-Z]+\\|/>\\)"
+              string
+              start)
+        (setq start (match-end 0))
+        (let ((bracket (substring string (match-beginning 0) (match-end 0))))
+          (cond
+           ((or
+             (string= bracket "{")
+             (string= bracket "[")
+             (string= bracket "(")
+             (string= bracket "<")
+             (string-match "<[a-zA-Z]+" bracket))
+            (setq bracket-level (1+ bracket-level)))
+           (t
+            (setq bracket-level (1- bracket-level)))))))
+    (* bracket-level tab-width)))
 
 (defun phps-mode-functions--cancel-idle-timer ()
   "Cancel idle timer."

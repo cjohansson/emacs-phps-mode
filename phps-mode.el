@@ -5,8 +5,8 @@
 ;; Author: Christian Johansson <christian@cvj.se>
 ;; Maintainer: Christian Johansson <christian@cvj.se>
 ;; Created: 3 Mar 2018
-;; Modified: 18 Nov 2019
-;; Version: 0.3.15
+;; Modified: 21 Nov 2019
+;; Version: 0.3.16
 ;; Keywords: tools, convenience
 ;; URL: https://github.com/cjohansson/emacs-phps-mode
 
@@ -55,19 +55,6 @@
 
 (defvar phps-mode-use-psr-2 t
   "Whether to use PSR-2 guidelines for white-space or not.")
-
-(defvar phps-mode-runtime-debug nil
-  "Whether or not to use runtime debugging.")
-
-(defun phps-mode-runtime-debug-message (message)
-  "Output MESSAGE if flag is on."
-  (when phps-mode-runtime-debug
-    (let ((buffer (get-buffer-create "*PHPs Debug Messages*")))
-      (with-current-buffer buffer
-        (save-excursion
-          (goto-char (point-max))
-          (insert message)
-          (insert "\n"))))))
 
 (defvar phps-mode-map
   (let ((map (make-sparse-keymap)))
