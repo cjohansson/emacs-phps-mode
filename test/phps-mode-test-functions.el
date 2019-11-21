@@ -62,6 +62,8 @@
 (defun phps-mode-test-functions-alternative-indentation ()
   "Test `phps-mode-analyzer--alternative-indentation'."
 
+  ;; TODO Should compare buffer contents as well
+
   (phps-mode-test-with-buffer
    "<?php\nif ($myCondition) {\necho 'I was here';\n}"
    "Alternative indentation inside if block" 
@@ -86,6 +88,18 @@
             (phps-mode-analyzer--alternative-indentation)
             4))
    (goto-char 57)
+   (should (equal
+            (phps-mode-analyzer--alternative-indentation)
+            4))
+   (goto-char (point-max))
+   (should (equal
+            (phps-mode-analyzer--alternative-indentation)
+            0)))
+
+  (phps-mode-test-with-buffer
+   "<?php\nif ($test) {\n    if ($test2) {\n\n}\n}"
+   "Alternative indentation on nested if block with empty contents" 
+   (goto-char 40)
    (should (equal
             (phps-mode-analyzer--alternative-indentation)
             4))
