@@ -3305,7 +3305,7 @@ SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
 
           (unless line-is-empty
             (let* ((old-indentation (current-indentation))
-                   (new-bracket-level (phps-mode-analyzer--get-string-brackets-count current-line-string))
+                   (current-line-starts-with-closing-bracket (phps-mode-analyzer--string-starts-with-closing-bracket-p current-line-string))
                    (bracket-level (phps-mode-analyzer--get-string-brackets-count line-string)))
               (setq new-indentation old-indentation)
 
@@ -3314,8 +3314,7 @@ SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
               (when (> bracket-level 0)
                 (setq new-indentation (+ new-indentation tab-width)))
 
-              ;; TODO Here check if current line opens with closing bracket only
-              (when (< new-bracket-level 0)
+              (when current-line-starts-with-closing-bracket
                 (setq new-indentation (- new-indentation tab-width)))
 
               ;; Decrease indentation if current line decreases in bracket level
@@ -3353,6 +3352,10 @@ SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
            (t
             (setq bracket-level (1- bracket-level)))))))
     (* bracket-level tab-width)))
+
+(defun phps-mode-analyzer--string-starts-with-closing-bracket-p (string)
+  "Get bracket count for STRING."
+  (string-match-p "^\\([\]{}()[]\\|<[a-zA-Z]+\\|</[a-zA-Z]+\\|/>\\)" string))
 
 (defun phps-mode-functions--cancel-idle-timer ()
   "Cancel idle timer."
