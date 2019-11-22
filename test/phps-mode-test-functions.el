@@ -142,6 +142,8 @@
               buffer-contents
               "<?php\nif ($test) {\n    \n} else if ($test) {\n    \n}\n"))))
 
+  ;; TODO Should support indentation line after } else ($test) {
+
   )
 
 (defun phps-mode-test-functions-move-lines-indent ()
