@@ -3314,9 +3314,7 @@ SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
               (when (> bracket-level 0)
                 (setq new-indentation (+ new-indentation tab-width)))
 
-              (when (< bracket-level 0)
-                (setq new-indentation (- new-indentation tab-width)))
-
+              ;; TODO Here check if current line opens with closing bracket only
               (when (< new-bracket-level 0)
                 (setq new-indentation (- new-indentation tab-width)))
 
