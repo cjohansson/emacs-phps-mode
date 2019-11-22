@@ -3268,7 +3268,8 @@ SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
   "Apply alternative indentation at POINT here."
   (unless point
     (setq point (point)))
-  (let ((new-indentation))
+  (let ((new-indentation)
+        (point-at-end-of-line (equal point (line-end-position))))
     (save-excursion
       (let ((line-number (line-number-at-pos point))
             (move-length 0)
@@ -3324,8 +3325,9 @@ SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
                 (setq new-indentation 0))
 
               (indent-line-to new-indentation))))))
-    ;; Only move to end of line if point is the current point
-    (when (equal point (point))
+    ;; Only move to end of line if point is the current point and is at end of line
+    (when (and (equal point (point))
+               point-at-end-of-line)
       (end-of-line))
     new-indentation))
 
