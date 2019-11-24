@@ -3268,7 +3268,8 @@ SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
   "Apply alternative indentation at POINT here."
   (unless point
     (setq point (point)))
-  (let ((new-indentation))
+  (let ((new-indentation)
+        (point-at-end-of-line (equal point (line-end-position))))
     (save-excursion
       (let ((line-number (line-number-at-pos point))
             (move-length 0)
@@ -3304,7 +3305,8 @@ SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
 
           (unless line-is-empty
             (let* ((old-indentation (current-indentation))
-                   (new-bracket-level (phps-mode-analyzer--get-string-brackets-count current-line-string))
+                   (current-line-starts-with-closing-bracket (phps-mode-analyzer--string-starts-with-closing-bracket-p current-line-string))
+                   (line-starts-with-closing-bracket (phps-mode-analyzer--string-starts-with-closing-bracket-p line-string))
                    (bracket-level (phps-mode-analyzer--get-string-brackets-count line-string)))
               (setq new-indentation old-indentation)
 
@@ -3313,10 +3315,11 @@ SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
               (when (> bracket-level 0)
                 (setq new-indentation (+ new-indentation tab-width)))
 
-              (when (< bracket-level 0)
-                (setq new-indentation (- new-indentation tab-width)))
+              (when (and (= bracket-level 0)
+                     line-starts-with-closing-bracket)
+                (setq new-indentation (+ new-indentation tab-width)))
 
-              (when (< new-bracket-level 0)
+              (when current-line-starts-with-closing-bracket
                 (setq new-indentation (- new-indentation tab-width)))
 
               ;; Decrease indentation if current line decreases in bracket level
@@ -3324,8 +3327,9 @@ SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
                 (setq new-indentation 0))
 
               (indent-line-to new-indentation))))))
-    ;; Only move to end of line if point is the current point
-    (when (equal point (point))
+    ;; Only move to end of line if point is the current point and is at end of line
+    (when (and (equal point (point))
+               point-at-end-of-line)
       (end-of-line))
     new-indentation))
 
@@ -3353,6 +3357,10 @@ SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
            (t
             (setq bracket-level (1- bracket-level)))))))
     (* bracket-level tab-width)))
+
+(defun phps-mode-analyzer--string-starts-with-closing-bracket-p (string)
+  "Get bracket count for STRING."
+  (string-match-p "^\\([\]{}()[]\\|<[a-zA-Z]+\\|</[a-zA-Z]+\\|/>\\)" string))
 
 (defun phps-mode-functions--cancel-idle-timer ()
   "Cancel idle timer."

@@ -118,6 +118,30 @@
               buffer-contents
               "<?php\nif ($test) {\n    if ($test2) {\n\n    }\n}"))))
 
+  (phps-mode-test-with-buffer
+   "<?php\nif ($test) {\n    if ($test2) {\n        \n    }\n\n}"
+   "Alternative indentation on multiple closing brackets"
+   (goto-char 53)
+   (should (equal
+            (phps-mode-analyzer--alternative-indentation)
+            4))
+   (let ((buffer-contents (buffer-substring-no-properties (point-min) (point-max))))
+     (should (equal
+              buffer-contents
+              "<?php\nif ($test) {\n    if ($test2) {\n        \n    }\n    \n}"))))
+
+  (phps-mode-test-with-buffer
+   "<?php\nif ($test) {\n    \n} else if ($test) {\n    \n}\n"
+   "Alternative indentation on elseif block"
+   (goto-char 25)
+   (should (equal
+            (phps-mode-analyzer--alternative-indentation)
+            0))
+   (let ((buffer-contents (buffer-substring-no-properties (point-min) (point-max))))
+     (should (equal
+              buffer-contents
+              "<?php\nif ($test) {\n    \n} else if ($test) {\n    \n}\n"))))
+
   )
 
 (defun phps-mode-test-functions-move-lines-indent ()
