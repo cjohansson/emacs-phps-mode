@@ -3306,12 +3306,17 @@ SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
           (unless line-is-empty
             (let* ((old-indentation (current-indentation))
                    (current-line-starts-with-closing-bracket (phps-mode-analyzer--string-starts-with-closing-bracket-p current-line-string))
+                   (line-starts-with-closing-bracket (phps-mode-analyzer--string-starts-with-closing-bracket-p line-string))
                    (bracket-level (phps-mode-analyzer--get-string-brackets-count line-string)))
               (setq new-indentation old-indentation)
 
               (forward-line move-length)
 
               (when (> bracket-level 0)
+                (setq new-indentation (+ new-indentation tab-width)))
+
+              (when (and (= bracket-level 0)
+                     line-starts-with-closing-bracket)
                 (setq new-indentation (+ new-indentation tab-width)))
 
               (when current-line-starts-with-closing-bracket
