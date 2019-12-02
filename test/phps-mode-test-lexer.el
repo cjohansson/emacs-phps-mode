@@ -304,6 +304,13 @@
    (should (equal phps-mode-lexer-tokens
                   '((T_OPEN_TAG 1 . 7) (T_VARIABLE 7 . 11) ("=" 12 . 13) (T_START_HEREDOC 14 . 21) (T_ENCAPSED_AND_WHITESPACE 21 . 28) (T_CURLY_OPEN 28 . 29) (T_VARIABLE 29 . 35) ("[" 35 . 36) (T_CONSTANT_ENCAPSED_STRING 36 . 43) ("]" 43 . 44) (T_OBJECT_OPERATOR 44 . 46) (T_STRING 46 . 54) ("}" 54 . 55) (T_ENCAPSED_AND_WHITESPACE 55 . 62) (T_CURLY_OPEN 62 . 63) (T_VARIABLE 63 . 69) (T_OBJECT_OPERATOR 69 . 71) (T_STRING 71 . 75) ("(" 75 . 76) (")" 76 . 77) ("}" 77 . 78) (T_ENCAPSED_AND_WHITESPACE 78 . 86) (T_END_HEREDOC 86 . 90) (";" 90 . 91)))))
 
+  (phps-mode-test-with-buffer
+   "<?php echo \"\\\"$string\\\"\";"
+   "Escaped double quotes with variable in it"
+   ;; (message "Tokens 2: %s" phps-mode-lexer-tokens)
+   (should (equal phps-mode-lexer-tokens
+                  '((T_OPEN_TAG 1 . 7) (T_ECHO 7 . 11) ("\"" 12 . 13) (T_ENCAPSED_AND_WHITESPACE 13 . 15) (T_VARIABLE 15 . 22) (T_CONSTANT_ENCAPSED_STRING 22 . 24) ("\"" 24 . 25) (";" 25 . 26)))))
+
   )
 
 (defun phps-mode-test-lexer-namespaces ()

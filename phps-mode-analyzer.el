@@ -1526,7 +1526,7 @@
 
                        ;; Process character if it's not escaped
                        (if is-escaped
-                           (forward-char 2)
+                           (forward-char 1)
                          (setq open-quote nil)
                          (if (looking-at "\"")
                              (let ((_double-quoted-string (buffer-substring-no-properties start (+ string-start 1))))
@@ -1537,7 +1537,7 @@
                            (phps-mode-lexer-RETURN_TOKEN "\"" start (1+ start))
                            (phps-mode-lexer-RETURN_TOKEN 'T_ENCAPSED_AND_WHITESPACE (1+ start) string-start))))
                    (progn
-                     (display-warning 'phps-mode (format "Found no ending of quote at %s" (point)))
+                     (display-warning 'phps-mode (format "Found no ending of quote at %s-%s" start (point)))
                      (phps-mode-lexer-MOVE_FORWARD (point-max))
                      (setq open-quote nil))))))))
 
