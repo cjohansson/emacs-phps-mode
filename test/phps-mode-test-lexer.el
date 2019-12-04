@@ -432,14 +432,19 @@
 (defun phps-mode-test-lexer-benchmark ()
   "Benchmark the lexer tests."
   (require 'benchmark)
-  (let ((elapsed
-         (benchmark-run
-             10
-           (progn
-             (phps-mode-test-lexer)
-             (message "Finished iteration")
-             (setq-local phps-mode-lexer-tokens nil)))))
-    (message "Lexer tests completed in: %ss." elapsed)))
+  (let ((iteration 1))
+    (let ((elapsed
+           (benchmark-run
+               10
+             (progn
+               (phps-mode-test-lexer-script-boundaries)
+               (phps-mode-test-lexer-simple-tokens)
+               (phps-mode-test-lexer-complex-tokens)
+               (phps-mode-test-lexer-namespaces)
+               (phps-mode-test-lexer-errors)
+               (message "Finished iteration %s" iteration)
+               (setq iteration (1+ iteration))))))
+      (message "Lexer tests completed in: %ss." elapsed))))
 
 (defun phps-mode-test-lexer ()
   "Run test for lexer."
