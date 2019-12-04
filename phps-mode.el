@@ -56,6 +56,9 @@
 (defvar phps-mode-use-psr-2 t
   "Whether to use PSR-2 guidelines for white-space or not.")
 
+(defvar phps-mode-use-psr-12 t
+  "Whether to use PSR-12 guidelines for white-space or not.")
+
 (defvar phps-mode-map
   (let ((map (make-sparse-keymap)))
     (define-key map (kbd "C-c C-r") #'phps-mode-lexer-run)
@@ -81,6 +84,15 @@
       (progn
         (when phps-mode-use-psr-2
           (untabify (point-min) (point-max)))
+        (when phps-mode-use-psr-12
+
+          ;; All PHP files MUST use the Unix LF (linefeed) line ending only.
+          (set-buffer-file-coding-system 'unix t t)
+
+          ;; There MUST NOT be trailing whitespace at the end of lines.
+          (delete-trailing-whitespace (point-min) (point-max))
+
+          )
         (phps-mode-analyzer-process-changes)
         (phps-mode-functions-process-current-buffer)
         (indent-region (point-min) (point-max)))
@@ -95,6 +107,13 @@
         (phps-mode)
         (when phps-mode-use-psr-2
           (untabify (point-min) (point-max)))
+        (when phps-mode-use-psr-12
+
+          ;; All PHP files MUST use the Unix LF (linefeed) line ending only.
+          (set-buffer-file-coding-system 'unix t t)
+
+          ;; There MUST NOT be trailing whitespace at the end of lines.
+          (delete-trailing-whitespace (point-min) (point-max)))
         (indent-region (point-min) (point-max))
         (setq
          new-buffer-contents
@@ -135,6 +154,17 @@
 
     ;; MUST NOT use tabs for indenting
     (setq-local indent-tabs-mode nil))
+
+  (when phps-mode-use-psr-12
+
+    ;; All PHP files MUST use the Unix LF (linefeed) line ending only.
+    (set-buffer-file-coding-system 'unix t t)
+
+    ;; TODO There MUST NOT be trailing whitespace at the end of lines.
+    
+    ;; TODO All PHP files MUST end with a non-blank line, terminated with a single LF.
+
+    )
 
   ;; Reset flags
   (setq-local phps-mode-functions-allow-after-change t)
@@ -179,6 +209,7 @@
 
   ;; Wisent LALR parser TODO
   ;; (phps-mode-tags-init)
+
   )
 
 (provide 'phps-mode)
