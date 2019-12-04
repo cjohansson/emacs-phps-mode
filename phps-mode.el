@@ -136,10 +136,10 @@
   (setq-local font-lock-keywords-only nil)
   (setq-local font-lock-defaults '(nil t))
 
-  ;; Flymake TODO
+  ;; Flymake TODO?
   ;; (phps-mode-flymake-init)
 
-  ;; Custom indentation
+  ;; Indentation
   ;; Indent-region will call this on each line of selected region
   (setq-local indent-line-function #'phps-mode-functions-indent-line)
 
@@ -166,7 +166,7 @@
 
     )
 
-  ;; Reset flags
+  ;; Reset buffer-local variables
   (setq-local phps-mode-functions-allow-after-change t)
   (setq-local phps-mode-analyzer-change-min nil)
   (setq-local phps-mode-functions-idle-timer nil)
