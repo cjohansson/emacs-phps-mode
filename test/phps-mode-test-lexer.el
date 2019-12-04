@@ -432,10 +432,12 @@
 (defun phps-mode-test-lexer-benchmark ()
   "Benchmark the lexer tests."
   (require 'benchmark)
-  (let ((iteration 1))
+  (let ((iteration 1)
+        (iterations 50))
+    (message "Benchmarking %s iterations" iterations)
     (let ((elapsed
            (benchmark-run
-               10
+               iterations
              (progn
                (phps-mode-test-lexer-script-boundaries)
                (phps-mode-test-lexer-simple-tokens)
