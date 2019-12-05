@@ -5,8 +5,8 @@
 ;; Author: Christian Johansson <christian@cvj.se>
 ;; Maintainer: Christian Johansson <christian@cvj.se>
 ;; Created: 3 Mar 2018
-;; Modified: 2 Dec 2019
-;; Version: 0.3.20
+;; Modified: 5 Dec 2019
+;; Version: 0.3.21
 ;; Keywords: tools, convenience
 ;; URL: https://github.com/cjohansson/emacs-phps-mode
 
@@ -76,6 +76,16 @@
     (flycheck-add-mode 'php-phpmd 'phps-mode)
     (flycheck-add-mode 'php-phpcs 'phps-mode)))
 
+(defun phps-mode-add-trailing-newline ()
+  "Add a trailing newline to buffer if missing."
+  (let ((max (point-max)))
+    (when (> max 1)
+      (let ((last-character (buffer-substring-no-properties (1- max) max)))
+        (unless (string= last-character "\n")
+          (save-excursion
+            (goto-char (point-max))
+            (insert "\n")))))))
+
 ;;;###autoload
 (defun phps-mode-format-buffer ()
   "Format current buffer according to PHPs mode."
@@ -91,8 +101,12 @@
 
           ;; There MUST NOT be trailing whitespace at the end of lines.
           (delete-trailing-whitespace (point-min) (point-max))
+          (whitespace-cleanup)
 
+          ;; All PHP files MUST end with a non-blank line, terminated with a single LF.
+          (phps-mode-add-trailing-newline)
           )
+          
         (phps-mode-analyzer-process-changes)
         (phps-mode-functions-process-current-buffer)
         (indent-region (point-min) (point-max)))
@@ -113,7 +127,13 @@
           (set-buffer-file-coding-system 'unix t t)
 
           ;; There MUST NOT be trailing whitespace at the end of lines.
-          (delete-trailing-whitespace (point-min) (point-max)))
+          (delete-trailing-whitespace (point-min) (point-max))
+          (whitespace-cleanup)
+
+          ;; All PHP files MUST end with a non-blank line, terminated with a single LF.
+          (phps-mode-add-trailing-newline)
+
+          )
         (indent-region (point-min) (point-max))
         (setq
          new-buffer-contents
@@ -162,7 +182,8 @@
 
     ;; TODO There MUST NOT be trailing whitespace at the end of lines.
     
-    ;; TODO All PHP files MUST end with a non-blank line, terminated with a single LF.
+    ;; All PHP files MUST end with a non-blank line, terminated with a single LF.
+    (setq require-final-newline t)
 
     )
 
