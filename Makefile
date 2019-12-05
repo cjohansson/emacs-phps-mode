@@ -28,7 +28,11 @@ test-integration:
 
 .PHONY: test-lexer
 test-lexer:
-	$(EMACS_CMD) -l test/phps-mode-test-lexer.el
+	$(EMACS_CMD) -l test/phps-mode-test-lexer.el -f "phps-mode-test-lexer"
+
+.PHONY: benchmark-lexer
+benchmark-lexer:
+	$(EMACS_CMD) -l test/phps-mode-test-lexer.el -f "phps-mode-test-lexer-benchmark"
 
 .PHONY: test-parser
 test-parser:

@@ -429,10 +429,30 @@
             -2)))
   )
 
+(defun phps-mode-test-lexer-benchmark ()
+  "Benchmark the lexer tests."
+  (require 'benchmark)
+  (let ((iteration 1)
+        (iterations 50))
+    (message "Benchmarking %s iterations" iterations)
+    (let ((elapsed
+           (benchmark-run
+               iterations
+             (progn
+               (phps-mode-test-lexer-script-boundaries)
+               (phps-mode-test-lexer-simple-tokens)
+               (phps-mode-test-lexer-complex-tokens)
+               (phps-mode-test-lexer-namespaces)
+               (phps-mode-test-lexer-errors)
+               (message "Finished iteration %s" iteration)
+               (setq iteration (1+ iteration))))))
+      (message "Lexer tests completed in: %ss." elapsed))))
+
 (defun phps-mode-test-lexer ()
   "Run test for lexer."
   ;; (message "-- Running all tests for lexer... --\n")
   ;; (setq debug-on-error t)
+  
   (phps-mode-test-lexer-script-boundaries)
   (phps-mode-test-lexer-simple-tokens)
   (phps-mode-test-lexer-complex-tokens)
@@ -441,9 +461,8 @@
   (phps-mode-test-lexer-get-moved-lexer-tokens)
   (phps-mode-test-lexer-get-moved-lexer-states)
   ;; (message "\n-- Ran all tests for lexer. --")
-  )
 
-(phps-mode-test-lexer)
+  )
 
 (provide 'phps-mode-test-lexer)
 

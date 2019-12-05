@@ -5,8 +5,8 @@
 ;; Author: Christian Johansson <christian@cvj.se>
 ;; Maintainer: Christian Johansson <christian@cvj.se>
 ;; Created: 3 Mar 2018
-;; Modified: 2 Dec 2019
-;; Version: 0.3.20
+;; Modified: 5 Dec 2019
+;; Version: 0.3.21
 ;; Keywords: tools, convenience
 ;; URL: https://github.com/cjohansson/emacs-phps-mode
 
@@ -56,6 +56,9 @@
 (defvar phps-mode-use-psr-2 t
   "Whether to use PSR-2 guidelines for white-space or not.")
 
+(defvar phps-mode-use-psr-12 t
+  "Whether to use PSR-12 guidelines for white-space or not.")
+
 (defvar phps-mode-map
   (let ((map (make-sparse-keymap)))
     (define-key map (kbd "C-c C-r") #'phps-mode-lexer-run)
@@ -73,6 +76,16 @@
     (flycheck-add-mode 'php-phpmd 'phps-mode)
     (flycheck-add-mode 'php-phpcs 'phps-mode)))
 
+(defun phps-mode-add-trailing-newline ()
+  "Add a trailing newline to buffer if missing."
+  (let ((max (point-max)))
+    (when (> max 1)
+      (let ((last-character (buffer-substring-no-properties (1- max) max)))
+        (unless (string= last-character "\n")
+          (save-excursion
+            (goto-char (point-max))
+            (insert "\n")))))))
+
 ;;;###autoload
 (defun phps-mode-format-buffer ()
   "Format current buffer according to PHPs mode."
@@ -81,6 +94,19 @@
       (progn
         (when phps-mode-use-psr-2
           (untabify (point-min) (point-max)))
+        (when phps-mode-use-psr-12
+
+          ;; All PHP files MUST use the Unix LF (linefeed) line ending only.
+          (set-buffer-file-coding-system 'unix t t)
+
+          ;; There MUST NOT be trailing whitespace at the end of lines.
+          (delete-trailing-whitespace (point-min) (point-max))
+          (whitespace-cleanup)
+
+          ;; All PHP files MUST end with a non-blank line, terminated with a single LF.
+          (phps-mode-add-trailing-newline)
+          )
+          
         (phps-mode-analyzer-process-changes)
         (phps-mode-functions-process-current-buffer)
         (indent-region (point-min) (point-max)))
@@ -95,6 +121,19 @@
         (phps-mode)
         (when phps-mode-use-psr-2
           (untabify (point-min) (point-max)))
+        (when phps-mode-use-psr-12
+
+          ;; All PHP files MUST use the Unix LF (linefeed) line ending only.
+          (set-buffer-file-coding-system 'unix t t)
+
+          ;; There MUST NOT be trailing whitespace at the end of lines.
+          (delete-trailing-whitespace (point-min) (point-max))
+          (whitespace-cleanup)
+
+          ;; All PHP files MUST end with a non-blank line, terminated with a single LF.
+          (phps-mode-add-trailing-newline)
+
+          )
         (indent-region (point-min) (point-max))
         (setq
          new-buffer-contents
@@ -117,10 +156,10 @@
   (setq-local font-lock-keywords-only nil)
   (setq-local font-lock-defaults '(nil t))
 
-  ;; Flymake TODO
+  ;; Flymake TODO?
   ;; (phps-mode-flymake-init)
 
-  ;; Custom indentation
+  ;; Indentation
   ;; Indent-region will call this on each line of selected region
   (setq-local indent-line-function #'phps-mode-functions-indent-line)
 
@@ -136,7 +175,19 @@
     ;; MUST NOT use tabs for indenting
     (setq-local indent-tabs-mode nil))
 
-  ;; Reset flags
+  (when phps-mode-use-psr-12
+
+    ;; All PHP files MUST use the Unix LF (linefeed) line ending only.
+    (set-buffer-file-coding-system 'unix t t)
+
+    ;; TODO There MUST NOT be trailing whitespace at the end of lines.
+    
+    ;; All PHP files MUST end with a non-blank line, terminated with a single LF.
+    (setq require-final-newline t)
+
+    )
+
+  ;; Reset buffer-local variables
   (setq-local phps-mode-functions-allow-after-change t)
   (setq-local phps-mode-analyzer-change-min nil)
   (setq-local phps-mode-functions-idle-timer nil)
@@ -179,6 +230,7 @@
 
   ;; Wisent LALR parser TODO
   ;; (phps-mode-tags-init)
+
   )
 
 (provide 'phps-mode)

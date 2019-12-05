@@ -155,10 +155,10 @@
 ;; NOTE Original is [;:,.\[\]()|^&+-/*=%!~$<>?@]
 ;; NOTE The hyphen moved last since it has special meaning and to avoid it being interpreted as a range.
 
-(defvar phps-mode-lexer-ANY_CHAR ".\\|\n"
+(defvar phps-mode-lexer-ANY_CHAR "[^z-a]"
   "Any character.  The Zend equivalent is [^] but is not possible in Emacs Lisp.")
 
-(defvar phps-mode-lexer-NEWLINE "\\(\r\n\\|\r\\|\n\\)"
+(defvar phps-mode-lexer-NEWLINE "[\n\r]"
   "Newline characters.  The Zend equivalent is (\"\r\"|\"\n\"|\"\r\n\").")
 
 
