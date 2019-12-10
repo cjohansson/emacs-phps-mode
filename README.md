@@ -29,7 +29,10 @@ This mode does not require PHP installed on your computer because it has a built
 
 ## Roadmap
 
-* Wisent Parser support
+* 1. Refactor lexer to separate buffer, error handling and error presentation
+* 2. Wisent Parser support
+* 3. Improved token-blind indentation
+* 4. Other enhancements
 
 ## Keymap
 
