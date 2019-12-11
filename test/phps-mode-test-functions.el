@@ -167,16 +167,16 @@
               "/**\n *\n */"))))
 
   (phps-mode-test-with-buffer
-   "/**\n *\n */"
-   "Alternative indentation on line after opening of doc comment block"
-   (goto-char 7)
+   "/**\n *\n */\n"
+   "Alternative indentation on line after closing of doc comment block"
+   (goto-char 12)
    (should (equal
             (phps-mode-analyzer--alternative-indentation)
-            1))
+            0))
    (let ((buffer-contents (buffer-substring-no-properties (point-min) (point-max))))
      (should (equal
               buffer-contents
-              "/**\n *\n */"))))
+              "/**\n *\n */\n"))))
 
   )
 
