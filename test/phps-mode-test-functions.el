@@ -142,6 +142,18 @@
               buffer-contents
               "<?php\nif ($test) {\n    \n} else if ($test) {\n    \n}\n"))))
 
+  (phps-mode-test-with-buffer
+   "if ($true) {\n    if ($true) {\n    }\n}"
+   "Alternative indentation on closing bracket inside parent bracket"
+   (goto-char 36)
+   (should (equal
+            (phps-mode-analyzer--alternative-indentation)
+            4))
+   (let ((buffer-contents (buffer-substring-no-properties (point-min) (point-max))))
+     (should (equal
+              buffer-contents
+              "if ($true) {\n    if ($true) {\n    }\n}"))))
+
   )
 
 (defun phps-mode-test-functions-move-lines-indent ()
