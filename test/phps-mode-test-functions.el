@@ -154,6 +154,30 @@
               buffer-contents
               "if ($true) {\n    if ($true) {\n    }\n}"))))
 
+  (phps-mode-test-with-buffer
+   "/**\n *\n */"
+   "Alternative indentation on last line of doc comment block"
+   (goto-char 11)
+   (should (equal
+            (phps-mode-analyzer--alternative-indentation)
+            1))
+   (let ((buffer-contents (buffer-substring-no-properties (point-min) (point-max))))
+     (should (equal
+              buffer-contents
+              "/**\n *\n */"))))
+
+  (phps-mode-test-with-buffer
+   "/**\n *\n */"
+   "Alternative indentation on line after opening of doc comment block"
+   (goto-char 7)
+   (should (equal
+            (phps-mode-analyzer--alternative-indentation)
+            1))
+   (let ((buffer-contents (buffer-substring-no-properties (point-min) (point-max))))
+     (should (equal
+              buffer-contents
+              "/**\n *\n */"))))
+
   )
 
 (defun phps-mode-test-functions-move-lines-indent ()
