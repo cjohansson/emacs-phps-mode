@@ -3317,6 +3317,9 @@ SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
                     (setq new-indentation (+ new-indentation 1))
                   (setq new-indentation (+ new-indentation tab-width))))
 
+              (when (= bracket-level -1)
+                (setq new-indentation (1- new-indentation)))
+
               (when (and (= bracket-level 0)
                      line-starts-with-closing-bracket)
                 (setq new-indentation (+ new-indentation tab-width)))
