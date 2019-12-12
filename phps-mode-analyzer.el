@@ -3268,7 +3268,7 @@ SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
   "Apply alternative indentation at POINT here."
   (unless point
     (setq point (point)))
-  (let ((new-indentation)
+  (let ((new-indentation 0)
         (point-at-end-of-line (equal point (line-end-position))))
     (save-excursion
       (let ((line-number (line-number-at-pos point))

@@ -178,6 +178,82 @@
               buffer-contents
               "/**\n *\n */\n"))))
 
+  (phps-mode-test-with-buffer
+   "$var = 'abc';\n// Comment"
+   "Alternative indentation on single-line assignment"
+   (goto-char 1)
+   (should (equal
+            (phps-mode-analyzer--alternative-indentation)
+            0))
+   (let ((buffer-contents (buffer-substring-no-properties (point-min) (point-max))))
+     (should (equal
+              buffer-contents
+              "$var = 'abc';\n// Comment"))))
+
+  (phps-mode-test-with-buffer
+   "$var = 'abc';\n// Comment"
+   "Alternative indentation on line after single-line assignment"
+   (goto-char 15)
+   (should (equal
+            (phps-mode-analyzer--alternative-indentation)
+            0))
+   (let ((buffer-contents (buffer-substring-no-properties (point-min) (point-max))))
+     (should (equal
+              buffer-contents
+              "$var = 'abc';\n// Comment"))))
+
+  (phps-mode-test-with-buffer
+   "$var =\n    'abc';\n$var =\n    'abc'\n    . 'def';\n// Comment\n"
+   "Alternative indentation on first line of multi-line assignment"
+   (goto-char 1)
+   (should (equal
+            (phps-mode-analyzer--alternative-indentation)
+            0))
+   (let ((buffer-contents (buffer-substring-no-properties (point-min) (point-max))))
+     (should (equal
+              buffer-contents
+              "$var =\n    'abc';\n$var =\n    'abc'\n    . 'def';\n// Comment\n"))))
+
+  (phps-mode-test-with-buffer
+   "$var =\n    'abc';\n$var =\n    'abc'\n    . 'def';\n// Comment\n"
+   "Alternative indentation on second line of multi-line assignment"
+   (goto-char 30)
+   (should (equal
+            (phps-mode-analyzer--alternative-indentation)
+            4))
+   (let ((buffer-contents (buffer-substring-no-properties (point-min) (point-max))))
+     (should (equal
+              buffer-contents
+              "$var =\n    'abc';\n$var =\n    'abc'\n    . 'def';\n// Comment\n"))))
+
+  (phps-mode-test-with-buffer
+   "$var =\n    'abc';\n$var =\n    'abc'\n    . 'def';\n// Comment\n"
+   "Alternative indentation on last line of multi-line assignment"
+   (goto-char 40)
+   (should (equal
+            (phps-mode-analyzer--alternative-indentation)
+            4))
+   (goto-char 40)
+   (should (equal
+            (phps-mode-analyzer--alternative-indentation)
+            12))
+   (let ((buffer-contents (buffer-substring-no-properties (point-min) (point-max))))
+     (should (equal
+              buffer-contents
+              "$var =\n    'abc';\n$var =\n    'abc'\n    . 'def';\n// Comment\n"))))
+
+  (phps-mode-test-with-buffer
+   "$var =\n    'abc';\n$var =\n    'abc'\n    . 'def';\n// Comment\n"
+   "Alternative indentation on line after multi-line assignment"
+   (goto-char 53)
+   (should (equal
+            (phps-mode-analyzer--alternative-indentation)
+            4))
+   (let ((buffer-contents (buffer-substring-no-properties (point-min) (point-max))))
+     (should (equal
+              buffer-contents
+              "$var =\n    'abc';\n$var =\n    'abc'\n    . 'def';\n// Comment\n"))))
+
   )
 
 (defun phps-mode-test-functions-move-lines-indent ()
