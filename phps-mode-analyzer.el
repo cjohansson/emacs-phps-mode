@@ -3313,7 +3313,12 @@ SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
               (forward-line move-length)
 
               (when (> bracket-level 0)
-                (setq new-indentation (+ new-indentation tab-width)))
+                (if (< bracket-level tab-width)
+                    (setq new-indentation (+ new-indentation 1))
+                  (setq new-indentation (+ new-indentation tab-width))))
+
+              (when (= bracket-level -1)
+                (setq new-indentation (1- new-indentation)))
 
               (when (and (= bracket-level 0)
                      line-starts-with-closing-bracket)
@@ -3341,7 +3346,7 @@ SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
          (string-match-p "^[ \t\f\r\n]*$" string)))
     (unless line-is-empty
       (while (string-match
-              "\\([\]{}()[]\\|<[a-zA-Z]+\\|</[a-zA-Z]+\\|/>\\)"
+              "\\([\]{}()[]\\|<[a-zA-Z]+\\|</[a-zA-Z]+\\|/>\\|^/\\*\\*\\|^ \\*/\\)"
               string
               start)
         (setq start (match-end 0))
@@ -3353,14 +3358,20 @@ SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
              (string= bracket "(")
              (string= bracket "<")
              (string-match "<[a-zA-Z]+" bracket))
-            (setq bracket-level (1+ bracket-level)))
+            (setq bracket-level (+ bracket-level tab-width)))
+           ((string-match "^ \\*/" bracket )
+            (setq bracket-level (- bracket-level 1)))
+           ((or
+             (string-match "^/\\*\\*" bracket)
+             (string-match "^ \\*" bracket))
+            (setq bracket-level (+ bracket-level 1)))
            (t
-            (setq bracket-level (1- bracket-level)))))))
-    (* bracket-level tab-width)))
+            (setq bracket-level (- bracket-level tab-width)))))))
+    bracket-level))
 
 (defun phps-mode-analyzer--string-starts-with-closing-bracket-p (string)
   "Get bracket count for STRING."
-  (string-match-p "^\\([\]{}()[]\\|<[a-zA-Z]+\\|</[a-zA-Z]+\\|/>\\)" string))
+  (string-match-p "^[\n\r\t ]*\\([\]{}()[]\\|<[a-zA-Z]+\\|</[a-zA-Z]+\\|/>\\)" string))
 
 (defun phps-mode-functions--cancel-idle-timer ()
   "Cancel idle timer."
