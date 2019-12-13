@@ -229,14 +229,14 @@
   (phps-mode-test-with-buffer
    "$var =\n    'abc';\n$var =\n    'abc'\n    . 'def';\n// Comment\n"
    "Alternative indentation on last line of multi-line assignment"
-   (goto-char 40)
+   (goto-char 12)
    (should (equal
             (phps-mode-analyzer--alternative-indentation)
             4))
    (goto-char 40)
    (should (equal
             (phps-mode-analyzer--alternative-indentation)
-            12))
+            4))
    (let ((buffer-contents (buffer-substring-no-properties (point-min) (point-max))))
      (should (equal
               buffer-contents
@@ -248,7 +248,7 @@
    (goto-char 53)
    (should (equal
             (phps-mode-analyzer--alternative-indentation)
-            4))
+            0))
    (let ((buffer-contents (buffer-substring-no-properties (point-min) (point-max))))
      (should (equal
               buffer-contents

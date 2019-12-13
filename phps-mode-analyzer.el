@@ -3307,9 +3307,10 @@ SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
             (let* ((old-indentation (current-indentation))
                    (current-line-starts-with-closing-bracket (phps-mode-analyzer--string-starts-with-closing-bracket-p current-line-string))
                    (line-starts-with-closing-bracket (phps-mode-analyzer--string-starts-with-closing-bracket-p line-string))
+                   (line-ends-with-assignment (phps-mode-analyzer--string-ends-with-assignment-p line-string))
+                   (line-ends-with-semicolon (phps-mode-analyzer--string-ends-with-semicolon-p line-string))
                    (bracket-level (phps-mode-analyzer--get-string-brackets-count line-string)))
               (setq new-indentation old-indentation)
-
               (forward-line move-length)
 
               (when (> bracket-level 0)
@@ -3326,6 +3327,14 @@ SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
 
               (when current-line-starts-with-closing-bracket
                 (setq new-indentation (- new-indentation tab-width)))
+
+              (when line-ends-with-assignment
+                (setq new-indentation (+ new-indentation tab-width)))
+
+              (when line-ends-with-semicolon
+                ;; TODO Back-trace buffer from previous line, determine if semi-colon ended an assignment or not
+                ;; TODO If it ended an assignment, decrease indentation
+                )
 
               ;; Decrease indentation if current line decreases in bracket level
               (when (< new-indentation 0)
@@ -3371,7 +3380,15 @@ SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
 
 (defun phps-mode-analyzer--string-starts-with-closing-bracket-p (string)
   "Get bracket count for STRING."
-  (string-match-p "^[\n\r\t ]*\\([\]{}()[]\\|<[a-zA-Z]+\\|</[a-zA-Z]+\\|/>\\)" string))
+  (string-match-p "^[\r\t ]*\\([\]{}()[]\\|<[a-zA-Z]+\\|</[a-zA-Z]+\\|/>\\)" string))
+
+(defun phps-mode-analyzer--string-ends-with-assignment-p (string)
+  "Get bracket count for STRING."
+  (string-match-p "[\t ]*=$" string))
+
+(defun phps-mode-analyzer--string-ends-with-semicolon-p (string)
+  "Get bracket count for STRING."
+  (string-match-p ";$" string))
 
 (defun phps-mode-functions--cancel-idle-timer ()
   "Cancel idle timer."
