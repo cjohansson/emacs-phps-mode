@@ -3335,21 +3335,20 @@ SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
                 ;; Back-trace buffer from previous line
                 ;; Determine if semi-colon ended an assignment or not
                 (forward-line (* -1 move-length))
-                (message "Moved back to line %s, point: %s" (line-number-at-pos (point)) (point))
                 (let ((not-found t)
                       (is-assignment nil))
                   (while (and
                           not-found
                           (search-backward-regexp "\\(;\\|=\\)" nil t))
                     (let ((match (buffer-substring-no-properties (match-beginning 0) (match-end 0))))
-                      (message "match: '%s'" match)
                       (setq is-assignment (string= match "="))
                       (setq not-found nil)
                       ))
                   ;; If it ended an assignment, decrease indentation
                   (when is-assignment
                     (setq new-indentation (- new-indentation tab-width))))
-                (forward-line move-length))
+
+                (goto-char point))
 
               ;; Decrease indentation if current line decreases in bracket level
               (when (< new-indentation 0)
