@@ -11,5 +11,6 @@
 * Eldoc support (0%)
 * Flymake support (0%)
 * PSR-2 auto-formatting tool based on lexer tokens (0%)
+* Alternative indentation for inline control structures (0%)
 
 [Back to start](../../../)
