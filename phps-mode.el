@@ -217,7 +217,7 @@
   (setq-local semantic-lex-syntax-table phps-mode-syntax-table)
 
   ;; Semantic
-  (setq-local semantic-lex-analyzer #'phps-mode-lexer-lex)
+  (setq-local semantic-lex-analyzer #'phps-mode-analyzer-lex)
 
   ;; Set semantic-lex initializer function
   (add-hook 'semantic-lex-reset-functions #'phps-mode-lexer-setup 0 t)
