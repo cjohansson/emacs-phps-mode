@@ -183,7 +183,7 @@
     ;; (message "Going back to poppped state %s" old-state)
     (if old-state
         (phps-mode-lexer-BEGIN old-state)
-      (display-warning 'phps-mode "PHPs Lexer Error - Going back to nil?"))))
+      (signal 'error "PHPs Lexer Error - Going back from state to nil?"))))
 
 (defun phps-mode-lexer-MOVE_FORWARD (position)
   "Move forward to POSITION."
@@ -389,12 +389,6 @@
 (defun phps-mode-analyzer-emit-token (token start end)
   "Emit TOKEN with START and END."
 
-  ;; Colourize token
-  (let ((token-syntax-color (phps-mode-lexer-get-token-syntax-color token)))
-    (if token-syntax-color
-        (phps-mode-lexer-set-region-syntax-color start end token-syntax-color)
-      (phps-mode-lexer-clear-region-syntax-color start end)))
-
   ;; (when (and
   ;;        (equal token 'T_INLINE_HTML)
   ;;        phps-mode-inline-mmm-submode
@@ -442,7 +436,7 @@
         ;; (message "Found match %s" phps-mode-lexer-re2c-matching-data)
         (set-match-data phps-mode-lexer-re2c-matching-data)
         (funcall phps-mode-lexer-re2c-matching-body))
-    (error "Failed to lex input")))
+    (signal 'error "Found no matching lexer rule to execute")))
 
 
 ;; LEXERS
@@ -465,10 +459,23 @@
             (let ((start (car (cdr token)))
                   (end (cdr (cdr token)))
                   (token-name (car token)))
+
+              ;; Apply syntax color on token
+              (let ((token-syntax-color (phps-mode-lexer-get-token-syntax-color token-name)))
+                (if token-syntax-color
+                    (phps-mode-lexer-set-region-syntax-color start end token-syntax-color)
+                  (phps-mode-lexer-clear-region-syntax-color start end)))
+
               (semantic-lex-push-token
                (semantic-lex-token token-name start end))))
 
           (phps-mode-lexer-MOVE_FORWARD (point-max)))
+
+      (phps-mode-lexer-set-region-syntax-color
+       (point-min)
+       (point-max)
+       (list 'font-lock-face 'font-lock-warning-face))
+
       (semantic-lex-push-token
        (semantic-lex-token 'T_ERROR (point-min) (point-max))))))
 
@@ -815,7 +822,7 @@
               ")")))
        (lambda()
          (when (phps-mode-wy-macros-CG 'PARSER_MODE)
-           (display-warning 'phps-mode "PHPs Lexer Error - The (real) cast is deprecated, use (float) instead"))
+           (signal 'warning "PHPs Lexer Error - The (real) cast is deprecated, use (float) instead"))
          (phps-mode-lexer-RETURN_TOKEN 'T_DOUBLE_CAST (match-beginning 0) (match-end 0))))
 
       (phps-mode-lexer-re2c-rule
@@ -1463,10 +1470,9 @@
                      (phps-mode-lexer-RETURN_TOKEN 'T_DOC_COMMENT start (match-end 0))
                    (phps-mode-lexer-RETURN_TOKEN 'T_COMMENT start (match-end 0)))
                (progn
-                 (display-warning 'phps-mode
-                                  (format
-                                   "PHPs Lexer Error - Unterminated comment starting at %s"
-                                   (point)))
+                 (signal 'error (format
+                                 "PHPs Lexer Error - Unterminated comment starting at %s"
+                                 (point)))
                  (phps-mode-lexer-MOVE_FORWARD (point-max))))))))
 
       (phps-mode-lexer-re2c-rule
@@ -1545,7 +1551,7 @@
                          (phps-mode-lexer-RETURN_TOKEN "\"" start (1+ start))
                          (phps-mode-lexer-RETURN_TOKEN 'T_ENCAPSED_AND_WHITESPACE (1+ start) string-start))))
                  (progn
-                   (display-warning 'phps-mode (format "Found no ending of quote at %s-%s" start (point)))
+                   (signal 'error (format "Found no ending of quote at %s-%s" start (point)))
                    (phps-mode-lexer-MOVE_FORWARD (point-max))
                    (setq open-quote nil))))))))
 
@@ -1649,7 +1655,7 @@
                        ;; (message "Found end of quote at %s-%s, moving ahead after '%s'" start end (buffer-substring-no-properties start end))
                        )))
                (progn
-                 (display-warning 'phps-mode (format "Found no ending of double quoted region starting at %s" start))
+                 (signal 'error (format "Found no ending of double quoted region starting at %s" start))
                  (phps-mode-lexer-MOVE_FORWARD (point-max))))))))
 
       (phps-mode-lexer-re2c-rule
@@ -1662,7 +1668,7 @@
                  (phps-mode-lexer-RETURN_TOKEN 'T_CONSTANT_ENCAPSED_STRING old-start start)
                  )
              (progn
-               (display-warning 'phps-mode (format "Found no ending of backquoted string starting at %s" (point)))
+               (signal 'error (format "Found no ending of backquoted string starting at %s" (point)))
                (phps-mode-lexer-MOVE_FORWARD (point-max)))))))
 
       (phps-mode-lexer-re2c-rule
@@ -1702,7 +1708,7 @@
 
                   ))
              (progn
-               (display-warning 'phps-mode (format "Found no ending of heredoc at %s" (point)))
+               (signal 'error (format "Found no ending of heredoc at %s" (point)))
                (phps-mode-lexer-MOVE_FORWARD (point-max)))))))
 
       (phps-mode-lexer-re2c-rule
@@ -1719,13 +1725,13 @@
                  (phps-mode-lexer-RETURN_TOKEN 'T_ENCAPSED_AND_WHITESPACE old-start start)
                  )
              (progn
-               (display-warning 'phps-mode (format "Found no ending of newdoc starting at %s" (point)))
+               (signal 'error (format "Found no ending of newdoc starting at %s" (point)))
                (phps-mode-lexer-MOVE_FORWARD (point-max)))))))
 
       (phps-mode-lexer-re2c-rule
        (and (or ST_IN_SCRIPTING ST_VAR_OFFSET) (looking-at phps-mode-lexer-ANY_CHAR))
        (lambda()
-         (display-warning 'phps-mode (format "Unexpected character at %s" (point)))
+         (signal 'error (format "Unexpected character at %s" (point)))
          (phps-mode-lexer-MOVE_FORWARD (point-max))))
 
       (phps-mode-lexer-re2c-execute))))
