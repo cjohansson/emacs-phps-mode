@@ -183,7 +183,7 @@
     ;; (message "Going back to poppped state %s" old-state)
     (if old-state
         (phps-mode-lexer-BEGIN old-state)
-      (signal 'error "PHPs Lexer Error - Going back from state to nil?"))))
+      (signal 'error (list "PHPs Lexer Error - Going back from state to nil?")))))
 
 (defun phps-mode-lexer-MOVE_FORWARD (position)
   "Move forward to POSITION."
@@ -384,7 +384,7 @@
 
 (defun phps-mode-lexer-RETURN_TOKEN (token start end)
   "Push TOKEN to list with START and END."
-(phps-mode-analyzer-emit-token token start end))
+  (phps-mode-analyzer-emit-token token start end))
 
 (defun phps-mode-analyzer-emit-token (token start end)
   "Emit TOKEN with START and END."
@@ -436,7 +436,7 @@
         ;; (message "Found match %s" phps-mode-lexer-re2c-matching-data)
         (set-match-data phps-mode-lexer-re2c-matching-data)
         (funcall phps-mode-lexer-re2c-matching-body))
-    (signal 'error "Found no matching lexer rule to execute")))
+    (signal 'error (list "Found no matching lexer rule to execute"))))
 
 
 ;; LEXERS
@@ -822,7 +822,7 @@
               ")")))
        (lambda()
          (when (phps-mode-wy-macros-CG 'PARSER_MODE)
-           (signal 'warning "PHPs Lexer Error - The (real) cast is deprecated, use (float) instead"))
+           (signal 'phps-mode (list "PHPs Lexer Error - The (real) cast is deprecated, use (float) instead")))
          (phps-mode-lexer-RETURN_TOKEN 'T_DOUBLE_CAST (match-beginning 0) (match-end 0))))
 
       (phps-mode-lexer-re2c-rule
@@ -1470,10 +1470,9 @@
                      (phps-mode-lexer-RETURN_TOKEN 'T_DOC_COMMENT start (match-end 0))
                    (phps-mode-lexer-RETURN_TOKEN 'T_COMMENT start (match-end 0)))
                (progn
-                 (signal 'error (format
+                 (signal 'phps-mode (list (format
                                  "PHPs Lexer Error - Unterminated comment starting at %s"
-                                 (point)))
-                 (phps-mode-lexer-MOVE_FORWARD (point-max))))))))
+                                 (point))))))))))
 
       (phps-mode-lexer-re2c-rule
        (and ST_IN_SCRIPTING (looking-at (concat "\\?>" phps-mode-lexer-NEWLINE "?")))
@@ -1551,8 +1550,7 @@
                          (phps-mode-lexer-RETURN_TOKEN "\"" start (1+ start))
                          (phps-mode-lexer-RETURN_TOKEN 'T_ENCAPSED_AND_WHITESPACE (1+ start) string-start))))
                  (progn
-                   (signal 'error (format "Found no ending of quote at %s-%s" start (point)))
-                   (phps-mode-lexer-MOVE_FORWARD (point-max))
+                   (signal 'error (list (format "Found no ending of quote at %s-%s" start (point))))
                    (setq open-quote nil))))))))
 
       (phps-mode-lexer-re2c-rule
@@ -1655,8 +1653,7 @@
                        ;; (message "Found end of quote at %s-%s, moving ahead after '%s'" start end (buffer-substring-no-properties start end))
                        )))
                (progn
-                 (signal 'error (format "Found no ending of double quoted region starting at %s" start))
-                 (phps-mode-lexer-MOVE_FORWARD (point-max))))))))
+                 (signal 'error (list (format "Found no ending of double quoted region starting at %s" start)))))))))
 
       (phps-mode-lexer-re2c-rule
        (and ST_BACKQUOTE (looking-at phps-mode-lexer-ANY_CHAR))
@@ -1668,8 +1665,7 @@
                  (phps-mode-lexer-RETURN_TOKEN 'T_CONSTANT_ENCAPSED_STRING old-start start)
                  )
              (progn
-               (signal 'error (format "Found no ending of backquoted string starting at %s" (point)))
-               (phps-mode-lexer-MOVE_FORWARD (point-max)))))))
+               (signal 'error (list (format "Found no ending of backquoted string starting at %s" (point)))))))))
 
       (phps-mode-lexer-re2c-rule
        (and ST_HEREDOC (looking-at phps-mode-lexer-ANY_CHAR))
@@ -1708,8 +1704,7 @@
 
                   ))
              (progn
-               (signal 'error (format "Found no ending of heredoc at %s" (point)))
-               (phps-mode-lexer-MOVE_FORWARD (point-max)))))))
+               (signal 'error (list (format "Found no ending of heredoc at %s" (point)))))))))
 
       (phps-mode-lexer-re2c-rule
        (and ST_NOWDOC (looking-at phps-mode-lexer-ANY_CHAR))
@@ -1725,14 +1720,12 @@
                  (phps-mode-lexer-RETURN_TOKEN 'T_ENCAPSED_AND_WHITESPACE old-start start)
                  )
              (progn
-               (signal 'error (format "Found no ending of newdoc starting at %s" (point)))
-               (phps-mode-lexer-MOVE_FORWARD (point-max)))))))
+               (signal 'error (list (format "Found no ending of newdoc starting at %s" (point)))))))))
 
       (phps-mode-lexer-re2c-rule
        (and (or ST_IN_SCRIPTING ST_VAR_OFFSET) (looking-at phps-mode-lexer-ANY_CHAR))
        (lambda()
-         (signal 'error (format "Unexpected character at %s" (point)))
-         (phps-mode-lexer-MOVE_FORWARD (point-max))))
+         (signal 'error (list (format "Unexpected character at %s" (point))))))
 
       (phps-mode-lexer-re2c-execute))))
 
@@ -1777,40 +1770,60 @@
   (setq-local phps-mode-lexer-buffer-length (1- (point-max)))
   (setq-local phps-mode-lexer-buffer-contents (buffer-substring-no-properties (point-min) (point-max)))
 
-  ;; TODO Create a separate buffer, run lexer inside of it, catch errors and present them nicely
-  (let ((buffer (generate-new-buffer "*PHPs Lexer*"))
-        (contents phps-mode-lexer-buffer-contents)
-        (state)
-        (state_stack)
-        (states)
-        (tokens))
-
-    ;; Create temporary buffer and run lexer in it
-    (save-excursion
-      (switch-to-buffer buffer)
-      (insert contents)
-
-      (setq-local semantic-lex-syntax-table phps-mode-syntax-table)
-      (setq-local semantic-lex-analyzer #'phps-mode-analyzer-re2c-lex)
-      (phps-mode-lexer-BEGIN 'ST_INITIAL)
-
-      ;; Catch any potential errors
-      (condition-case conditions
-          (progn (setq-local phps-mode-lexer-tokens (semantic-lex-buffer)))
-          (error (message "Got error '%s'" (car (cdr conditions)))))
-
-      ;; Move variables outside of buffer
-      (setq state phps-mode-lexer-STATE)
-      (setq state_stack phps-mode-lexer-state_stack)
-      (setq states phps-mode-lexer-states)
-      (setq tokens phps-mode-lexer-tokens)
-      (kill-buffer))
+  (let ((result (phps-mode-analyzer-lex-string phps-mode-lexer-buffer-contents)))
 
     ;; Move variables into this buffers variables
-    (setq phps-mode-lexer-tokens tokens)
-    (setq phps-mode-lexer-states states)
-    (setq phps-mode-lexer-STATE state)
-    (setq phps-mode-lexer-state_stack state_stack)))
+    (setq phps-mode-lexer-tokens (nth 0 result))
+    (setq phps-mode-lexer-states (nth 1 result))
+    (setq phps-mode-lexer-STATE (nth 2 result))
+    (setq phps-mode-lexer-state_stack (nth 3 result))
+
+    (let ((errors (nth 4 result)))
+      (when errors
+        (display-warning 'phps-mode (format "Lex Errors: %s" errors))))))
+
+(defun phps-mode-analyzer-lex-string (contents &optional start end states state state-stack tokens)
+  "Run lexer on CONTENTS."
+  ;; Create a separate buffer, run lexer inside of it, catch errors and return them
+  ;; to enable nice presentation
+  (let ((errors))
+    (let ((buffer (generate-new-buffer "*PHPs Lexer*")))
+
+      ;; Create temporary buffer and run lexer in it
+      (save-excursion
+        (switch-to-buffer buffer)
+        (insert contents)
+
+        (when states
+          (setq-local phps-mode-lexer-states states))
+        (when state-stack
+          (setq-local phps-mode-lexer-state_stack state-stack))
+        (when tokens
+          (setq-local phps-mode-lexer-tokens tokens))
+        (if state
+            (setq-local phps-mode-lexer-STATE state)
+          (phps-mode-lexer-BEGIN 'ST_INITIAL))
+
+        (setq-local semantic-lex-syntax-table phps-mode-syntax-table)
+        (setq-local semantic-lex-analyzer #'phps-mode-analyzer-re2c-lex)
+
+        ;; Catch any potential errors
+        (condition-case conditions
+            (progn
+              (when (and start end)
+                (let ((incremental-tokens (semantic-lex start end)))
+                  (setq-local phps-mode-lexer-tokens (append tokens incremental-tokens))))
+              (setq-local phps-mode-lexer-tokens (semantic-lex-buffer)))
+          (error
+           (setq errors (car (cdr conditions)))))
+
+        ;; Move variables outside of buffer
+        (setq state phps-mode-lexer-STATE)
+        (setq state-stack phps-mode-lexer-state_stack)
+        (setq states phps-mode-lexer-states)
+        (setq tokens phps-mode-lexer-tokens)
+        (kill-buffer)))
+    (list tokens states state state-stack errors)))
 
 (defun phps-mode-lexer-move-states (start diff)
   "Move lexer states after (or equal to) START with modification DIFF."
@@ -1965,15 +1978,26 @@
 
                           ;; Do partial lex from previous-token-end to change-stop
 
-                          ;; Rewind lexer state here
-                          (setq-local phps-mode-lexer-states head-states)
-                          (setq-local phps-mode-lexer-STATE incremental-state)
-                          (setq-local phps-mode-lexer-state_stack incremental-state-stack)
+                          (let ((result (phps-mode-analyzer-lex-string
+                                         (buffer-substring-no-properties (point-min) (point-max))
+                                         incremental-start-new-buffer
+                                         (point-max)
+                                         head-states
+                                         incremental-state
+                                         incremental-state-stack
+                                         head-tokens)))
 
-                          ;; Generate new tokens
-                          (setq incremental-tokens (semantic-lex incremental-start-new-buffer (point-max)))
+                            (phps-mode-debug-message
+                             (message "Incrementally-lexed-string: %s" result))
 
-                          (setq-local phps-mode-lexer-tokens (append head-tokens incremental-tokens))
+                            (setq phps-mode-lexer-tokens (nth 0 result))
+                            (setq phps-mode-lexer-states (nth 1 result))
+                            (setq phps-mode-lexer-STATE (nth 2 result))
+                            (setq phps-mode-lexer-state_stack (nth 3 result))
+
+                            (let ((errors (nth 4 result)))
+                              (when errors
+                                (display-warning 'phps-mode (format "Incremental Lex Errors: %s" errors)))))
 
                           (push (list 'INCREMENTAL-LEX incremental-start-new-buffer) log)
 
@@ -1997,6 +2021,7 @@
         (phps-mode-debug-message
          (message "Running full lexer"))
         (phps-mode-lexer-run))
+
       log)))
 
 (defun phps-mode-functions-get-processed-buffer ()
@@ -3372,7 +3397,7 @@ SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
                 (setq new-indentation (1- new-indentation)))
 
               (when (and (= bracket-level 0)
-                     line-starts-with-closing-bracket)
+                         line-starts-with-closing-bracket)
                 (setq new-indentation (+ new-indentation tab-width)))
 
               (when current-line-starts-with-closing-bracket

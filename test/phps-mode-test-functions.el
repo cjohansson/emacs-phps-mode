@@ -53,6 +53,7 @@
    "Process changes after existing tokens"
    (goto-char (point-max))
    (insert "\necho 'I was here';\n")
+   (message "Result %s" (phps-mode-analyzer-process-changes))
    (should (equal
             (phps-mode-analyzer-process-changes)
             '((INCREMENTAL-LEX 15)))))
