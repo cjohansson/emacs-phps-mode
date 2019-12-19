@@ -1794,12 +1794,12 @@
         (switch-to-buffer buffer)
         (insert contents)
 
-        (when states
-          (setq-local phps-mode-lexer-states states))
-        (when state-stack
-          (setq-local phps-mode-lexer-state_stack state-stack))
-        (when tokens
-          (setq-local phps-mode-lexer-tokens tokens))
+        (if states
+            (setq-local phps-mode-lexer-states states)
+          (setq-local phps-mode-lexer-states nil))
+        (if state-stack
+            (setq-local phps-mode-lexer-state_stack state-stack)
+          (setq-local phps-mode-lexer-state_stack nil))
         (if state
             (setq-local phps-mode-lexer-STATE state)
           (phps-mode-lexer-BEGIN 'ST_INITIAL))
@@ -1812,10 +1812,15 @@
         ;; Catch any potential errors
         (condition-case conditions
             (progn
-              (when (and start end)
-                (let ((incremental-tokens (semantic-lex start end)))
-                  (setq-local phps-mode-lexer-tokens (append tokens incremental-tokens))))
-              (setq-local phps-mode-lexer-tokens (semantic-lex-buffer)))
+              (if (and start end)
+                  (progn
+                    (phps-mode-debug-message
+                     (message "Running (semantic-lex %s %s)" start end))
+                    (let ((incremental-tokens (semantic-lex start end)))
+                      (setq-local phps-mode-lexer-tokens (append tokens incremental-tokens))))
+                (phps-mode-debug-message
+                 (message "Running (semantic-lex-buffer)"))
+                (setq-local phps-mode-lexer-tokens (semantic-lex-buffer))))
           (error
            (setq errors (car (cdr conditions)))))
 
