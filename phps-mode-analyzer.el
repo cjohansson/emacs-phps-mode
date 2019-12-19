@@ -1778,9 +1778,20 @@
     (setq phps-mode-lexer-STATE (nth 2 result))
     (setq phps-mode-lexer-state_stack (nth 3 result))
 
-    (let ((errors (nth 4 result)))
-      (when errors
-        (display-warning 'phps-mode (format "Lex Errors: %s" errors))))))
+    ;; Apply syntax color on tokens
+    (dolist (token phps-mode-lexer-tokens)
+      (let ((start (car (cdr token)))
+            (end (cdr (cdr token)))
+            (token-name (car token)))
+        (let ((token-syntax-color (phps-mode-lexer-get-token-syntax-color token-name)))
+          (if token-syntax-color
+              (phps-mode-lexer-set-region-syntax-color start end token-syntax-color)
+            (phps-mode-lexer-clear-region-syntax-color start end)))))
+
+
+        (let ((errors (nth 4 result)))
+          (when errors
+            (display-warning 'phps-mode (format "Lex Errors: %s" errors))))))
 
 (defun phps-mode-analyzer-lex-string (contents &optional start end states state state-stack tokens)
   "Run lexer on CONTENTS."
@@ -2002,14 +2013,27 @@
                             (setq phps-mode-lexer-STATE (nth 2 result))
                             (setq phps-mode-lexer-state_stack (nth 3 result))
 
+                            ;; Apply syntax color on token
+                            (dolist (token phps-mode-lexer-tokens)
+                              (let ((start (car (cdr token)))
+                                    (end (cdr (cdr token)))
+                                    (token-name (car token)))
+
+                                ;; Apply syntax color on token
+                                (let ((token-syntax-color (phps-mode-lexer-get-token-syntax-color token-name)))
+                                  (if token-syntax-color
+                                      (phps-mode-lexer-set-region-syntax-color start end token-syntax-color)
+                                    (phps-mode-lexer-clear-region-syntax-color start end)))))
+
+
                             (let ((errors (nth 4 result)))
                               (when errors
-                                (display-warning 'phps-mode (format "Incremental Lex Errors: %s" errors)))))
+                                (display-warning 'phps-mode (format "Incremental Lex Errors: %s" errors))))
 
-                          (push (list 'INCREMENTAL-LEX incremental-start-new-buffer) log)
+                            (push (list 'INCREMENTAL-LEX incremental-start-new-buffer) log)
 
-                          (phps-mode-debug-message
-                           (message "Incremental tokens: %s" incremental-tokens)))
+                            (phps-mode-debug-message
+                             (message "Incremental tokens: %s" incremental-tokens))))
                       (push (list 'FOUND-NO-HEAD-STATES incremental-start-new-buffer) log)
                       (phps-mode-debug-message
                        (message "Found no head states"))
