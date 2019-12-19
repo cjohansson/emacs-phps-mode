@@ -336,19 +336,19 @@
    "<?php\necho \"My neverending double quotation\n"
    "Neverending double quotation"
    (should (equal phps-mode-lexer-tokens
-                  '((T_OPEN_TAG 1 . 7) (T_ECHO 7 . 11)))))
+                  nil)))
 
   (phps-mode-test-with-buffer
    "<?php\n`My neverending backquotes\n"
    "Neverending backquotes"
    (should (equal phps-mode-lexer-tokens
-                  '((T_OPEN_TAG 1 . 7) ("`" 7 . 8)))))
+                  nil)))
 
   (phps-mode-test-with-buffer
    "<?php\n<<<LABEL\nMy neverending heredoc\ngoes on forever\n"
    "Neverending heredoc"
    (should (equal phps-mode-lexer-tokens
-                  '((T_OPEN_TAG 1 . 7) (T_START_HEREDOC 7 . 16)))))
+                  nil)))
 
   )
 
