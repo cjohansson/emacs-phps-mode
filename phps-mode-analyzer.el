@@ -1804,8 +1804,10 @@
             (setq-local phps-mode-lexer-STATE state)
           (phps-mode-lexer-BEGIN 'ST_INITIAL))
 
-        (setq-local semantic-lex-syntax-table phps-mode-syntax-table)
-        (setq-local semantic-lex-analyzer #'phps-mode-analyzer-re2c-lex)
+        (when (boundp 'phps-mode-syntax-table)
+          (setq-local semantic-lex-syntax-table phps-mode-syntax-table))
+        (when (fboundp 'phps-mode-analyzer-re2c-lex)
+          (setq-local semantic-lex-analyzer #'phps-mode-analyzer-re2c-lex))
 
         ;; Catch any potential errors
         (condition-case conditions
