@@ -1481,10 +1481,10 @@
                  (signal
                   'phps-mode
                   (list (format
-                    "PHPs Lexer Error - Unterminated comment starting at %d"
-                    (point)
-                    (point))
-                   ))))))))
+                         "PHPs Lexer Error - Unterminated comment starting at %d"
+                         (point))
+                        (point)
+                        ))))))))
 
       (phps-mode-lexer-re2c-rule
        (and ST_IN_SCRIPTING (looking-at (concat "\\?>" phps-mode-lexer-NEWLINE "?")))
