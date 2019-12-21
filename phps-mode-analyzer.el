@@ -183,7 +183,9 @@
     ;; (message "Going back to poppped state %s" old-state)
     (if old-state
         (phps-mode-lexer-BEGIN old-state)
-      (signal 'error (list "PHPs Lexer Error - Going back from state to nil?")))))
+      (signal 'error (list
+                      (format "PHPs Lexer Error - Trying to pop last state at %d" (point))
+                      (point))))))
 
 (defun phps-mode-lexer-MOVE_FORWARD (position)
   "Move forward to POSITION."
@@ -436,7 +438,7 @@
         ;; (message "Found match %s" phps-mode-lexer-re2c-matching-data)
         (set-match-data phps-mode-lexer-re2c-matching-data)
         (funcall phps-mode-lexer-re2c-matching-body))
-    (signal 'error (list "Found no matching lexer rule to execute"))))
+    (signal 'error (list "Found no matching lexer rule to execute at %d" (point)))))
 
 
 ;; LEXERS
@@ -822,7 +824,13 @@
               ")")))
        (lambda()
          (when (phps-mode-wy-macros-CG 'PARSER_MODE)
-           (signal 'phps-mode (list "PHPs Lexer Error - The (real) cast is deprecated, use (float) instead")))
+           (signal 'phps-mode (list
+                               (format
+                                "PHPs Lexer Error - The (real) cast is deprecated, use (float) instead at %d"
+                                (match-beginning 0)
+                                )
+                               (match-beginning 0)
+                               (match-end 0))))
          (phps-mode-lexer-RETURN_TOKEN 'T_DOUBLE_CAST (match-beginning 0) (match-end 0))))
 
       (phps-mode-lexer-re2c-rule
@@ -1470,9 +1478,13 @@
                      (phps-mode-lexer-RETURN_TOKEN 'T_DOC_COMMENT start (match-end 0))
                    (phps-mode-lexer-RETURN_TOKEN 'T_COMMENT start (match-end 0)))
                (progn
-                 (signal 'phps-mode (list (format
-                                 "PHPs Lexer Error - Unterminated comment starting at %s"
-                                 (point))))))))))
+                 (signal
+                  'phps-mode
+                  (list (format
+                         "PHPs Lexer Error - Unterminated comment starting at %d"
+                         (point))
+                        (point)
+                        ))))))))
 
       (phps-mode-lexer-re2c-rule
        (and ST_IN_SCRIPTING (looking-at (concat "\\?>" phps-mode-lexer-NEWLINE "?")))
@@ -1550,7 +1562,9 @@
                          (phps-mode-lexer-RETURN_TOKEN "\"" start (1+ start))
                          (phps-mode-lexer-RETURN_TOKEN 'T_ENCAPSED_AND_WHITESPACE (1+ start) string-start))))
                  (progn
-                   (signal 'error (list (format "Found no ending of quote at %s-%s" start (point))))
+                   (signal 'error (list
+                                   (format "Found no ending of quote at %s" start)
+                                   start))
                    (setq open-quote nil))))))))
 
       (phps-mode-lexer-re2c-rule
@@ -1653,7 +1667,9 @@
                        ;; (message "Found end of quote at %s-%s, moving ahead after '%s'" start end (buffer-substring-no-properties start end))
                        )))
                (progn
-                 (signal 'error (list (format "Found no ending of double quoted region starting at %s" start)))))))))
+                 (signal 'error (list
+                                 (format "Found no ending of double quoted region starting at %d" start)
+                                 start))))))))
 
       (phps-mode-lexer-re2c-rule
        (and ST_BACKQUOTE (looking-at phps-mode-lexer-ANY_CHAR))
@@ -1665,7 +1681,9 @@
                  (phps-mode-lexer-RETURN_TOKEN 'T_CONSTANT_ENCAPSED_STRING old-start start)
                  )
              (progn
-               (signal 'error (list (format "Found no ending of backquoted string starting at %s" (point)))))))))
+               (signal 'error (list
+                               (format "Found no ending of back-quoted string starting at %d" (point))
+                               (point))))))))
 
       (phps-mode-lexer-re2c-rule
        (and ST_HEREDOC (looking-at phps-mode-lexer-ANY_CHAR))
@@ -1704,7 +1722,9 @@
 
                   ))
              (progn
-               (signal 'error (list (format "Found no ending of heredoc at %s" (point)))))))))
+               (signal 'error (list
+                               (format "Found no ending of heredoc at %d" (point))
+                               (point))))))))
 
       (phps-mode-lexer-re2c-rule
        (and ST_NOWDOC (looking-at phps-mode-lexer-ANY_CHAR))
@@ -1720,12 +1740,16 @@
                  (phps-mode-lexer-RETURN_TOKEN 'T_ENCAPSED_AND_WHITESPACE old-start start)
                  )
              (progn
-               (signal 'error (list (format "Found no ending of newdoc starting at %s" (point)))))))))
+               (signal 'error (list
+                               (format "Found no ending of newdoc starting at %d" (point))
+                               (point))))))))
 
       (phps-mode-lexer-re2c-rule
        (and (or ST_IN_SCRIPTING ST_VAR_OFFSET) (looking-at phps-mode-lexer-ANY_CHAR))
        (lambda()
-         (signal 'error (list (format "Unexpected character at %s" (point))))))
+         (signal 'error (list
+                         (format "Unexpected character at %d" (point))
+                         (point)))))
 
       (phps-mode-lexer-re2c-execute))))
 
@@ -1788,10 +1812,25 @@
               (phps-mode-lexer-set-region-syntax-color start end token-syntax-color)
             (phps-mode-lexer-clear-region-syntax-color start end)))))
 
-
-        (let ((errors (nth 4 result)))
-          (when errors
-            (display-warning 'phps-mode (format "Lex Errors: %s" errors))))))
+    (let ((errors (nth 4 result))
+          (error-start)
+          (error-end))
+      (when errors
+        (display-warning 'phps-mode (format "Lex Errors: %s" (car errors)))
+        (setq error-start (car (cdr errors)))
+        (when error-start
+          (if (car (cdr (cdr errors)))
+              (progn
+                (setq error-end (car (cdr (cdr (cdr errors)))))
+                (phps-mode-lexer-set-region-syntax-color
+                 error-start
+                 error-end
+                 (list 'font-lock-face 'font-lock-warning-face)))
+            (setq error-end (point-max))
+            (phps-mode-lexer-set-region-syntax-color
+             error-start
+             error-end
+             (list 'font-lock-face 'font-lock-warning-face))))))))
 
 (defun phps-mode-analyzer-lex-string (contents &optional start end states state state-stack tokens)
   "Run lexer on CONTENTS."
@@ -1833,7 +1872,7 @@
                  (message "Running (semantic-lex-buffer)"))
                 (setq-local phps-mode-lexer-tokens (semantic-lex-buffer))))
           (error
-           (setq errors (car (cdr conditions)))))
+           (setq errors (cdr conditions))))
 
         ;; Move variables outside of buffer
         (setq state phps-mode-lexer-STATE)
@@ -2013,7 +2052,7 @@
                             (setq phps-mode-lexer-STATE (nth 2 result))
                             (setq phps-mode-lexer-state_stack (nth 3 result))
 
-                            ;; Apply syntax color on token
+                            ;; Apply syntax color on tokens
                             (dolist (token phps-mode-lexer-tokens)
                               (let ((start (car (cdr token)))
                                     (end (cdr (cdr token)))
@@ -2025,10 +2064,25 @@
                                       (phps-mode-lexer-set-region-syntax-color start end token-syntax-color)
                                     (phps-mode-lexer-clear-region-syntax-color start end)))))
 
-
-                            (let ((errors (nth 4 result)))
+                            (let ((errors (nth 4 result))
+                                  (error-start)
+                                  (error-end))
                               (when errors
-                                (display-warning 'phps-mode (format "Incremental Lex Errors: %s" errors))))
+                                (display-warning 'phps-mode (format "Incremental Lex Errors: %s" (car errors)))
+                                (setq error-start (car (cdr errors)))
+                                (when error-start
+                                  (if (car (cdr (cdr errors)))
+                                      (progn
+                                        (setq error-end (car (cdr (cdr (cdr errors)))))
+                                        (phps-mode-lexer-set-region-syntax-color
+                                         error-start
+                                         error-end
+                                         (list 'font-lock-face 'font-lock-warning-face)))
+                                    (setq error-end (point-max))
+                                    (phps-mode-lexer-set-region-syntax-color
+                                     error-start
+                                     error-end
+                                     (list 'font-lock-face 'font-lock-warning-face))))))
 
                             (push (list 'INCREMENTAL-LEX incremental-start-new-buffer) log)
 
@@ -3462,9 +3516,10 @@ SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
 
               (indent-line-to new-indentation))))))
     ;; Only move to end of line if point is the current point and is at end of line
-    (when (and (equal point (point))
-               point-at-end-of-line)
-      (end-of-line))
+    (when (equal point (point))
+      (if point-at-end-of-line
+          (end-of-line)
+        (back-to-indentation)))
     new-indentation))
 
 (defun phps-mode-analyzer--get-string-brackets-count (string)
