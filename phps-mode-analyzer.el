@@ -51,6 +51,12 @@
 (defvar phps-mode-idle-interval 1
   "Idle seconds before running the incremental lexer.")
 
+(defvar phps-mode-async-process t
+  "Whether or not to use asynchronous process.")
+
+(defvar phps-mode-async-processes (make-hash-table :test 'equal)
+  "Table of active asynchronous processes.")
+
 (defvar phps-mode-functions-allow-after-change t
   "Flag to tell us whether after change detection is enabled or not.")
 
@@ -164,6 +170,36 @@
 
 ;; FUNCTIONS
 
+
+(defun phps-mode-serial-commands (start end key)
+  "Run command START and if it succeeds, after that command run END with identifier KEY."
+  (if phps-mode-async-process
+      (progn
+
+        ;; Kill thread if thread with associated key already exists
+        (let ((thread-key (gethash key phps-mode-async-processes)))
+          (when thread-key
+            (when (thread-live-p thread-key)
+              (thread-signal thread-key 'quit nil))
+            (puthash thread-key nil phps-mode-async-processes)))
+
+        ;; Run start command asynchronously
+        (make-thread
+         (lambda()
+           (condition-case conditions
+               (progn
+                 (let ((start-return (funcall start)))
+                   (let ((end-return (funcall end start-return)))
+                     (list 'success end-return))))
+             (error (list 'error "Serial command received error" error))))
+         thread-key))
+
+    (condition-case conditions
+        (progn
+          (let ((start-return (funcall start)))
+            (let ((end-return (funcall end start-return)))
+              (list 'success end-return))))
+      (error (list 'error "Serial command received error" error)))))
 
 (defun phps-mode-lexer-BEGIN (state)
   "Begin STATE."
@@ -1794,6 +1830,8 @@
   (setq-local phps-mode-lexer-buffer-length (1- (point-max)))
   (setq-local phps-mode-lexer-buffer-contents (buffer-substring-no-properties (point-min) (point-max)))
 
+  ;; TODO Use phps-mode-serial-commands here
+  
   (let ((result (phps-mode-analyzer-lex-string phps-mode-lexer-buffer-contents)))
 
     ;; Move variables into this buffers variables
@@ -2034,6 +2072,8 @@
                            (message "Found head states"))
 
                           ;; Do partial lex from previous-token-end to change-stop
+
+                          ;; TODO Use phps-mode-serial-commands here
 
                           (let ((result (phps-mode-analyzer-lex-string
                                          (buffer-substring-no-properties (point-min) (point-max))
