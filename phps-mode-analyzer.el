@@ -170,29 +170,36 @@
 
 ;; FUNCTIONS
 
-
-(defun phps-mode-serial-commands (start end key)
+(defun phps-mode-serial-commands (key start end)
   "Run command START and if it succeeds, after that command run END with identifier KEY."
   (if phps-mode-async-process
       (progn
 
-        ;; Kill thread if thread with associated key already exists
-        (let ((thread-key (gethash key phps-mode-async-processes)))
-          (when thread-key
-            (when (thread-live-p thread-key)
-              (thread-signal thread-key 'quit nil))
-            (puthash thread-key nil phps-mode-async-processes)))
+        (message "Running serial command asynchronously")
 
-        ;; Run start command asynchronously
-        (make-thread
-         (lambda()
-           (condition-case conditions
-               (progn
-                 (let ((start-return (funcall start)))
-                   (let ((end-return (funcall end start-return)))
-                     (list 'success end-return))))
-             (error (list 'error "Serial command received error" error))))
-         thread-key))
+        ;; Kill thread if thread with associated key already exists
+        (when (and
+               (gethash key phps-mode-async-processes)
+               (thread-live-p (gethash key phps-mode-async-processes)))
+          (thread-signal key 'quit nil))
+
+        ;; Run command(s) asynchronously
+        (puthash
+         key
+         (make-thread
+          (lambda()
+            (condition-case conditions
+                (progn
+                  (let ((start-return (funcall start)))
+                    (let ((end-return (funcall end start-return)))
+                      (list 'success end-return))))
+              (error (list 'error "Serial command received error" error))))
+          key)
+         phps-mode-async-processes)
+
+        (message "Done running serial command asynchronously")
+
+        )
 
     (condition-case conditions
         (progn
@@ -1830,45 +1837,49 @@
   (setq-local phps-mode-lexer-buffer-length (1- (point-max)))
   (setq-local phps-mode-lexer-buffer-contents (buffer-substring-no-properties (point-min) (point-max)))
 
-  ;; TODO Use phps-mode-serial-commands here
-  
-  (let ((result (phps-mode-analyzer-lex-string phps-mode-lexer-buffer-contents)))
+  (let ((buffer (current-buffer))
+        (buffer-name (buffer-name)))
+    (phps-mode-serial-commands
+     buffer-name
+     (lambda() (phps-mode-analyzer-lex-string phps-mode-lexer-buffer-contents))
+     `(lambda(result)
+        (with-current-buffer ,buffer
 
-    ;; Move variables into this buffers variables
-    (setq phps-mode-lexer-tokens (nth 0 result))
-    (setq phps-mode-lexer-states (nth 1 result))
-    (setq phps-mode-lexer-STATE (nth 2 result))
-    (setq phps-mode-lexer-state_stack (nth 3 result))
+          ;; Move variables into this buffers variables
+          (setq phps-mode-lexer-tokens (nth 0 result))
+          (setq phps-mode-lexer-states (nth 1 result))
+          (setq phps-mode-lexer-STATE (nth 2 result))
+          (setq phps-mode-lexer-state_stack (nth 3 result))
 
-    ;; Apply syntax color on tokens
-    (dolist (token phps-mode-lexer-tokens)
-      (let ((start (car (cdr token)))
-            (end (cdr (cdr token)))
-            (token-name (car token)))
-        (let ((token-syntax-color (phps-mode-lexer-get-token-syntax-color token-name)))
-          (if token-syntax-color
-              (phps-mode-lexer-set-region-syntax-color start end token-syntax-color)
-            (phps-mode-lexer-clear-region-syntax-color start end)))))
+          ;; Apply syntax color on tokens
+          (dolist (token phps-mode-lexer-tokens)
+            (let ((start (car (cdr token)))
+                  (end (cdr (cdr token)))
+                  (token-name (car token)))
+              (let ((token-syntax-color (phps-mode-lexer-get-token-syntax-color token-name)))
+                (if token-syntax-color
+                    (phps-mode-lexer-set-region-syntax-color start end token-syntax-color)
+                  (phps-mode-lexer-clear-region-syntax-color start end)))))
 
-    (let ((errors (nth 4 result))
-          (error-start)
-          (error-end))
-      (when errors
-        (display-warning 'phps-mode (format "Lex Errors: %s" (car errors)))
-        (setq error-start (car (cdr errors)))
-        (when error-start
-          (if (car (cdr (cdr errors)))
-              (progn
-                (setq error-end (car (cdr (cdr (cdr errors)))))
-                (phps-mode-lexer-set-region-syntax-color
-                 error-start
-                 error-end
-                 (list 'font-lock-face 'font-lock-warning-face)))
-            (setq error-end (point-max))
-            (phps-mode-lexer-set-region-syntax-color
-             error-start
-             error-end
-             (list 'font-lock-face 'font-lock-warning-face))))))))
+          (let ((errors (nth 4 result))
+                (error-start)
+                (error-end))
+            (when errors
+              (display-warning 'phps-mode (format "Lex Errors: %s" (car errors)))
+              (setq error-start (car (cdr errors)))
+              (when error-start
+                (if (car (cdr (cdr errors)))
+                    (progn
+                      (setq error-end (car (cdr (cdr (cdr errors)))))
+                      (phps-mode-lexer-set-region-syntax-color
+                       error-start
+                       error-end
+                       (list 'font-lock-face 'font-lock-warning-face)))
+                  (setq error-end (point-max))
+                  (phps-mode-lexer-set-region-syntax-color
+                   error-start
+                   error-end
+                   (list 'font-lock-face 'font-lock-warning-face)))))))))))
 
 (defun phps-mode-analyzer-lex-string (contents &optional start end states state state-stack tokens)
   "Run lexer on CONTENTS."
@@ -2073,61 +2084,65 @@
 
                           ;; Do partial lex from previous-token-end to change-stop
 
-                          ;; TODO Use phps-mode-serial-commands here
+                          (let ((buffer (current-buffer))
+                                (buffer-name (buffer-name)))
+                            (phps-mode-serial-commands
+                             buffer-name
+                             (lambda() (phps-mode-analyzer-lex-string
+                                        (buffer-substring-no-properties (point-min) (point-max))
+                                        incremental-start-new-buffer
+                                        (point-max)
+                                        head-states
+                                        incremental-state
+                                        incremental-state-stack
+                                        head-tokens))
+                             `(lambda(result)
+                                (with-current-buffer ,buffer
 
-                          (let ((result (phps-mode-analyzer-lex-string
-                                         (buffer-substring-no-properties (point-min) (point-max))
-                                         incremental-start-new-buffer
-                                         (point-max)
-                                         head-states
-                                         incremental-state
-                                         incremental-state-stack
-                                         head-tokens)))
+                                  (phps-mode-debug-message
+                                   (message "Incrementally-lexed-string: %s" result))
 
-                            (phps-mode-debug-message
-                             (message "Incrementally-lexed-string: %s" result))
+                                  (setq phps-mode-lexer-tokens (nth 0 result))
+                                  (setq phps-mode-lexer-states (nth 1 result))
+                                  (setq phps-mode-lexer-STATE (nth 2 result))
+                                  (setq phps-mode-lexer-state_stack (nth 3 result))
 
-                            (setq phps-mode-lexer-tokens (nth 0 result))
-                            (setq phps-mode-lexer-states (nth 1 result))
-                            (setq phps-mode-lexer-STATE (nth 2 result))
-                            (setq phps-mode-lexer-state_stack (nth 3 result))
+                                  ;; Apply syntax color on tokens
+                                  (dolist (token phps-mode-lexer-tokens)
+                                    (let ((start (car (cdr token)))
+                                          (end (cdr (cdr token)))
+                                          (token-name (car token)))
 
-                            ;; Apply syntax color on tokens
-                            (dolist (token phps-mode-lexer-tokens)
-                              (let ((start (car (cdr token)))
-                                    (end (cdr (cdr token)))
-                                    (token-name (car token)))
+                                      ;; Apply syntax color on token
+                                      (let ((token-syntax-color (phps-mode-lexer-get-token-syntax-color token-name)))
+                                        (if token-syntax-color
+                                            (phps-mode-lexer-set-region-syntax-color start end token-syntax-color)
+                                          (phps-mode-lexer-clear-region-syntax-color start end)))))
 
-                                ;; Apply syntax color on token
-                                (let ((token-syntax-color (phps-mode-lexer-get-token-syntax-color token-name)))
-                                  (if token-syntax-color
-                                      (phps-mode-lexer-set-region-syntax-color start end token-syntax-color)
-                                    (phps-mode-lexer-clear-region-syntax-color start end)))))
+                                  (let ((errors (nth 4 result))
+                                        (error-start)
+                                        (error-end))
+                                    (when errors
+                                      (display-warning 'phps-mode (format "Incremental Lex Errors: %s" (car errors)))
+                                      (setq error-start (car (cdr errors)))
+                                      (when error-start
+                                        (if (car (cdr (cdr errors)))
+                                            (progn
+                                              (setq error-end (car (cdr (cdr (cdr errors)))))
+                                              (phps-mode-lexer-set-region-syntax-color
+                                               error-start
+                                               error-end
+                                               (list 'font-lock-face 'font-lock-warning-face)))
+                                          (setq error-end (point-max))
+                                          (phps-mode-lexer-set-region-syntax-color
+                                           error-start
+                                           error-end
+                                           (list 'font-lock-face 'font-lock-warning-face))))))
 
-                            (let ((errors (nth 4 result))
-                                  (error-start)
-                                  (error-end))
-                              (when errors
-                                (display-warning 'phps-mode (format "Incremental Lex Errors: %s" (car errors)))
-                                (setq error-start (car (cdr errors)))
-                                (when error-start
-                                  (if (car (cdr (cdr errors)))
-                                      (progn
-                                        (setq error-end (car (cdr (cdr (cdr errors)))))
-                                        (phps-mode-lexer-set-region-syntax-color
-                                         error-start
-                                         error-end
-                                         (list 'font-lock-face 'font-lock-warning-face)))
-                                    (setq error-end (point-max))
-                                    (phps-mode-lexer-set-region-syntax-color
-                                     error-start
-                                     error-end
-                                     (list 'font-lock-face 'font-lock-warning-face))))))
+                                  (push (list 'INCREMENTAL-LEX incremental-start-new-buffer) log)
 
-                            (push (list 'INCREMENTAL-LEX incremental-start-new-buffer) log)
-
-                            (phps-mode-debug-message
-                             (message "Incremental tokens: %s" incremental-tokens))))
+                                  (phps-mode-debug-message
+                                   (message "Incremental tokens: %s" incremental-tokens)))))))
                       (push (list 'FOUND-NO-HEAD-STATES incremental-start-new-buffer) log)
                       (phps-mode-debug-message
                        (message "Found no head states"))
