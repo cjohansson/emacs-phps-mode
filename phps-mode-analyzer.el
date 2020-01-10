@@ -180,7 +180,7 @@
           (progn
             (require 'async)
 
-            (message "Running serial command asynchronously using async.el start: %s, end: %s" start end)
+            ;; (message "Running serial command asynchronously using async.el start: %s, end: %s" start end)
 
             ;; TODO Kill async process if process with associated key already exists
 
@@ -190,23 +190,28 @@
                (lambda()
                  (add-to-list 'load-path script-filename)
                  (require 'phps-mode)
+                 (setq debug-on-signal t)
                  (condition-case conditions
                      (progn
                        (let ((start-return (funcall start)))
-                         (let ((end-return (funcall end start-return)))
-                           (list 'success end-return))))
-                   (error (list 'error "Serial command received error" conditions))))
+                         (list 'success start-return)))
+                   (error (list 'error conditions))))
                (lambda (start-return)
-                 (message "Got return value: %s" start-return)
-                 (condition-case conditions
-                     (progn
-                       (let ((end-return (funcall end start-return)))
-                         (list 'success end-return)))
-                   (error (list 'error "Serial command received error" conditions)))
+                 (let ((status (car start-return))
+                       (value (car (cdr start-return))))
 
-                 )))
+                   (when (string= status "success")
+                     ;; (message "Running end code %s with argument: %s" end value)
+                     (condition-case conditions
+                         (progn
+                           (let ((end-return (funcall end value)))
+                             (list 'success end-return)))
+                       (error (list 'error conditions))))
 
-            (message "Done running serial command asynchronously using async.el")
+                   (when (string= status "error")
+                     (display-warning 'phps-mode (format "Async error %s" (cdr start-return))))))))
+
+            ;; (message "Done running serial command asynchronously using async.el")
 
             )
           (progn
@@ -1873,10 +1878,11 @@
   (setq-local phps-mode-lexer-buffer-length (1- (point-max)))
   (setq-local phps-mode-lexer-buffer-contents (buffer-substring-no-properties (point-min) (point-max)))
 
-  (let (buffer-name (buffer-name))
+  (let ((buffer-name (buffer-name))
+        (buffer-contents (buffer-substring-no-properties (point-min) (point-max))))
     (phps-mode-serial-commands
      buffer-name
-     (lambda() (phps-mode-analyzer-lex-string phps-mode-lexer-buffer-contents))
+     (lambda() (phps-mode-analyzer-lex-string buffer-contents))
      (lambda(result)
         (with-current-buffer buffer-name
 
