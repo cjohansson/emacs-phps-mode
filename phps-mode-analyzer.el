@@ -185,24 +185,26 @@
             ;; TODO Kill async process if process with associated key already exists
 
             ;; Run command(s) asynchronously
-            (async-start
-             (lambda()
-               (condition-case conditions
-                   (progn
-                     (let ((start-return (funcall start)))
-                       (signal 'error (list "Was here"))
+            (let ((script-filename (file-name-directory (symbol-file 'phps-mode-serial-commands))))
+              (async-start
+               (lambda()
+                 (add-to-list 'load-path script-filename)
+                 (require 'phps-mode)
+                 (condition-case conditions
+                     (progn
+                       (let ((start-return (funcall start)))
+                         (let ((end-return (funcall end start-return)))
+                           (list 'success end-return))))
+                   (error (list 'error "Serial command received error" conditions))))
+               (lambda (start-return)
+                 (message "Got return value: %s" start-return)
+                 (condition-case conditions
+                     (progn
                        (let ((end-return (funcall end start-return)))
-                         (list 'success end-return))))
-                 (error (list 'error "Serial command received error" conditions))))
-             (lambda (start-return)
-               (message "Got return value: %s" start-return)
-               (condition-case conditions
-                   (progn
-                     (let ((end-return (funcall end start-return)))
-                       (list 'success end-return)))
-                 (error (list 'error "Serial command received error" conditions)))
+                         (list 'success end-return)))
+                   (error (list 'error "Serial command received error" conditions)))
 
-               ))
+                 )))
 
             (message "Done running serial command asynchronously using async.el")
 
