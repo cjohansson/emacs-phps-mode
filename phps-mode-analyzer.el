@@ -57,6 +57,9 @@
 (defvar phps-mode-async-processes (make-hash-table :test 'equal)
   "Table of active asynchronous processes.")
 
+(defvar phps-mode-async-process-using-async-el t
+  "Use async.el for asynchronous processing.")
+
 (defvar phps-mode-functions-allow-after-change t
   "Flag to tell us whether after change detection is enabled or not.")
 
@@ -173,40 +176,71 @@
 (defun phps-mode-serial-commands (key start end)
   "Run command START and if it succeeds, after that command run END with identifier KEY."
   (if phps-mode-async-process
-      (progn
+      (if phps-mode-async-process-using-async-el
+          (progn
+            (require 'async)
 
-        (message "Running serial command asynchronously")
+            (message "Running serial command asynchronously using async.el start: %s, end: %s" start end)
 
-        ;; Kill thread if thread with associated key already exists
-        (when (and
-               (gethash key phps-mode-async-processes)
-               (thread-live-p (gethash key phps-mode-async-processes)))
-          (thread-signal key 'quit nil))
+            ;; TODO Kill async process if process with associated key already exists
 
-        ;; Run command(s) asynchronously
-        (puthash
-         key
-         (make-thread
-          (lambda()
-            (condition-case conditions
-                (progn
-                  (let ((start-return (funcall start)))
-                    (let ((end-return (funcall end start-return)))
-                      (list 'success end-return))))
-              (error (list 'error "Serial command received error" error))))
-          key)
-         phps-mode-async-processes)
+            ;; Run command(s) asynchronously
+            (async-start
+             (lambda()
+               (condition-case conditions
+                   (progn
+                     (let ((start-return (funcall start)))
+                       (signal 'error (list "Was here"))
+                       (let ((end-return (funcall end start-return)))
+                         (list 'success end-return))))
+                 (error (list 'error "Serial command received error" conditions))))
+             (lambda (start-return)
+               (message "Got return value: %s" start-return)
+               (condition-case conditions
+                   (progn
+                     (let ((end-return (funcall end start-return)))
+                       (list 'success end-return)))
+                 (error (list 'error "Serial command received error" conditions)))
 
-        (message "Done running serial command asynchronously")
+               ))
 
-        )
+            (message "Done running serial command asynchronously using async.el")
+
+            )
+          (progn
+
+            (message "Running serial command asynchronously")
+
+            ;; Kill thread if thread with associated key already exists
+            ;; (when (and
+            ;;        (gethash key phps-mode-async-processes)
+            ;;        (thread-live-p (gethash key phps-mode-async-processes)))
+            ;;   (thread-signal key 'quit nil))
+
+            ;; Run command(s) asynchronously
+            (puthash
+             key
+             (make-thread
+              (lambda()
+                (condition-case conditions
+                    (progn
+                      (let ((start-return (funcall start)))
+                        (let ((end-return (funcall end start-return)))
+                          (list 'success end-return))))
+                  (error (list 'error "Serial command received error" conditions))))
+              key)
+             phps-mode-async-processes)
+
+            (message "Done running serial command asynchronously")
+
+            ))
 
     (condition-case conditions
         (progn
           (let ((start-return (funcall start)))
             (let ((end-return (funcall end start-return)))
               (list 'success end-return))))
-      (error (list 'error "Serial command received error" error)))))
+      (error (list 'error "Serial command received error" conditions)))))
 
 (defun phps-mode-lexer-BEGIN (state)
   "Begin STATE."
@@ -1837,13 +1871,12 @@
   (setq-local phps-mode-lexer-buffer-length (1- (point-max)))
   (setq-local phps-mode-lexer-buffer-contents (buffer-substring-no-properties (point-min) (point-max)))
 
-  (let ((buffer (current-buffer))
-        (buffer-name (buffer-name)))
+  (let (buffer-name (buffer-name))
     (phps-mode-serial-commands
      buffer-name
      (lambda() (phps-mode-analyzer-lex-string phps-mode-lexer-buffer-contents))
-     `(lambda(result)
-        (with-current-buffer ,buffer
+     (lambda(result)
+        (with-current-buffer buffer-name
 
           ;; Move variables into this buffers variables
           (setq phps-mode-lexer-tokens (nth 0 result))
@@ -2084,20 +2117,21 @@
 
                           ;; Do partial lex from previous-token-end to change-stop
 
-                          (let ((buffer (current-buffer))
-                                (buffer-name (buffer-name)))
+                          (let ((buffer-name (buffer-name))
+                                (buffer-contents (buffer-substring-no-properties (point-min) (point-max)))
+                                (point-max (point-max)))
                             (phps-mode-serial-commands
                              buffer-name
                              (lambda() (phps-mode-analyzer-lex-string
-                                        (buffer-substring-no-properties (point-min) (point-max))
+                                        buffer-contents
                                         incremental-start-new-buffer
-                                        (point-max)
+                                        point-max
                                         head-states
                                         incremental-state
                                         incremental-state-stack
                                         head-tokens))
-                             `(lambda(result)
-                                (with-current-buffer ,buffer
+                             (lambda(result)
+                                (with-current-buffer buffer-name
 
                                   (phps-mode-debug-message
                                    (message "Incrementally-lexed-string: %s" result))
