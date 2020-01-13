@@ -51,14 +51,17 @@
 (defvar phps-mode-idle-interval 1
   "Idle seconds before running the incremental lexer.")
 
-(defvar phps-mode-async-process t
+(defvar phps-mode-async-process nil
   "Whether or not to use asynchronous process.")
+
+(defvar phps-mode-async-process-using-async-el t
+  "Use async.el for asynchronous processing.")
 
 (defvar phps-mode-async-processes (make-hash-table :test 'equal)
   "Table of active asynchronous processes.")
 
-(defvar phps-mode-async-process-using-async-el t
-  "Use async.el for asynchronous processing.")
+(defvar phps-mode-async-threads (make-hash-table :test 'equal)
+  "Table of active asynchronous threads.")
 
 (defvar phps-mode-functions-allow-after-change t
   "Flag to tell us whether after change detection is enabled or not.")
@@ -182,74 +185,80 @@
 
             (message "Running serial command asynchronously using async.el start: %s, end: %s" start end)
 
-            ;; TODO Kill async process if process with associated key already exists
-            ;; (message "Starting async process %s" key)
+            ;; Kill async process if process with associated key already exists
+            (when (and
+                   (gethash key phps-mode-async-processes)
+                   (process-live-p (gethash key phps-mode-async-processes)))
+              (kill-process (gethash key phps-mode-async-processes)))
 
             ;; Run command(s) asynchronously
             (let ((script-filename (file-name-directory (symbol-file 'phps-mode-serial-commands))))
-              (async-start
-               (lambda()
-                 (add-to-list 'load-path script-filename)
-                 (require 'phps-mode)
-                 (setq debug-on-signal t)
-                 (condition-case conditions
-                     (progn
-                       (let ((start-return (funcall start)))
-                         (list 'success start-return)))
-                   (error (list 'error conditions))))
-               (lambda (start-return)
-                 (let ((status (car start-return))
-                       (value (car (cdr start-return))))
+              (puthash
+               key
+               (async-start
+                (lambda()
+                  (add-to-list 'load-path script-filename)
+                  (require 'phps-mode)
+                  (setq debug-on-signal t)
+                  (condition-case conditions
+                      (progn
+                        (let ((start-return (funcall start)))
+                          (list 'success start-return)))
+                    (error (list 'error conditions))))
+                (lambda (start-return)
+                  (let ((status (car start-return))
+                        (value (car (cdr start-return))))
 
-                   (when (string= status "success")
-                     ;; (message "Running end code %s with argument: %s" end value)
-                     (condition-case conditions
-                         (progn
-                           (let ((end-return (funcall end value)))
-                             (list 'success end-return)))
-                       (error (list 'error conditions))))
+                    (when (string= status "success")
+                      ;; (message "Running end code %s with argument: %s" end value)
+                      (condition-case conditions
+                          (progn
+                            (let ((end-return (funcall end value)))
+                              (list 'success end-return)))
+                        (error (list 'error conditions))))
 
-                   (when (string= status "error")
-                     (display-warning 'phps-mode (format "Async error %s" (cdr start-return))))))))
+                    (when (string= status "error")
+                      (display-warning 'phps-mode (format "Async error %s" (cdr start-return)))))))
+               phps-mode-async-processes))
 
             ;; (message "Done running serial command asynchronously using async.el")
-            (message "Done starting async process %s" key)
-
-            )
-          (progn
-
-            (message "Running serial command asynchronously")
-
-            ;; Kill thread if thread with associated key already exists
-            ;; (when (and
-            ;;        (gethash key phps-mode-async-processes)
-            ;;        (thread-live-p (gethash key phps-mode-async-processes)))
-            ;;   (thread-signal key 'quit nil))
-
-            ;; Run command(s) asynchronously
-            (puthash
-             key
-             (make-thread
-              (lambda()
-                (condition-case conditions
-                    (progn
-                      (let ((start-return (funcall start)))
-                        (let ((end-return (funcall end start-return)))
-                          (list 'success end-return))))
-                  (error (list 'error "Serial command received error" conditions))))
-              key)
-             phps-mode-async-processes)
-
-            (message "Done running serial command asynchronously")
+            (message "Done starting async process %s" key )
 
             ))
+    (progn
 
-    (condition-case conditions
-        (progn
-          (let ((start-return (funcall start)))
-            (let ((end-return (funcall end start-return)))
-              (list 'success end-return))))
-      (error (list 'error "Serial command received error" conditions)))))
+      (message "Running serial command asynchronously")
+
+      ;; Kill thread if thread with associated key already exists
+      (when (and
+             (gethash key phps-mode-async-threads)
+             (thread-live-p (gethash key phps-mode-async-threads)))
+        (thread-signal key 'quit nil))
+
+      ;; Run command(s) asynchronously
+      (puthash
+       key
+       (make-thread
+        (lambda()
+          (condition-case conditions
+              (progn
+                (let ((start-return (funcall start)))
+                  (let ((end-return (funcall end start-return)))
+                    (list 'success end-return))))
+            (error (list 'error "Serial command received error" conditions))))
+        key)
+       phps-mode-async-processes)
+
+      (message "Done running serial command asynchronously")
+
+      ))
+
+  (condition-case conditions
+      (progn
+        (let ((start-return (funcall start)))
+          (let ((end-return (funcall end start-return)))
+            (list 'success end-return))))
+    (error (list 'error "Serial command received error" conditions))))
 
 (defun phps-mode-lexer-BEGIN (state)
   "Begin STATE."
