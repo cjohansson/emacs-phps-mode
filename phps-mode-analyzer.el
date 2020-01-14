@@ -183,7 +183,8 @@
           (progn
             (require 'async)
 
-            (message "Running serial command asynchronously using async.el start: %s, end: %s" start end)
+            (message "Running serial command asynchronously using async.el")
+            ;; (message "Running serial command asynchronously using async.el start: %s, end: %s" start end)
 
             ;; Kill async process if process with associated key already exists
             (when (and
@@ -208,7 +209,7 @@
                 (lambda (start-return)
                   (let ((status (car start-return))
                         (value (car (cdr start-return))))
-
+                    (message "Running end code with status %s" status)
                     (when (string= status "success")
                       ;; (message "Running end code %s with argument: %s" end value)
                       (condition-case conditions
@@ -218,47 +219,51 @@
                         (error (list 'error conditions))))
 
                     (when (string= status "error")
-                      (display-warning 'phps-mode (format "Async error %s" (cdr start-return)))))))
+                      (display-warning 'phps-mode (format "Async error %s" (cdr start-return)))))
+
+                  (message "Async.el end lambda finished")
+
+                  ))
                phps-mode-async-processes))
 
             ;; (message "Done running serial command asynchronously using async.el")
             (message "Done starting async process %s" key )
 
-            ))
-    (progn
+            )
+        (progn
 
-      (message "Running serial command asynchronously")
+          (message "Running serial command asynchronously")
 
-      ;; Kill thread if thread with associated key already exists
-      (when (and
-             (gethash key phps-mode-async-threads)
-             (thread-live-p (gethash key phps-mode-async-threads)))
-        (thread-signal key 'quit nil))
+          ;; Kill thread if thread with associated key already exists
+          (when (and
+                 (gethash key phps-mode-async-threads)
+                 (thread-live-p (gethash key phps-mode-async-threads)))
+            (thread-signal key 'quit nil))
 
-      ;; Run command(s) asynchronously
-      (puthash
-       key
-       (make-thread
-        (lambda()
-          (condition-case conditions
-              (progn
-                (let ((start-return (funcall start)))
-                  (let ((end-return (funcall end start-return)))
-                    (list 'success end-return))))
-            (error (list 'error "Serial command received error" conditions))))
-        key)
-       phps-mode-async-processes)
+          ;; Run command(s) asynchronously
+          (puthash
+           key
+           (make-thread
+            (lambda()
+              (condition-case conditions
+                  (progn
+                    (let ((start-return (funcall start)))
+                      (let ((end-return (funcall end start-return)))
+                        (list 'success end-return))))
+                (error (list 'error "Serial command received error" conditions))))
+            key)
+           phps-mode-async-processes)
 
-      (message "Done running serial command asynchronously")
+          (message "Done running serial command asynchronously")
 
-      ))
+          ))
 
-  (condition-case conditions
-      (progn
-        (let ((start-return (funcall start)))
-          (let ((end-return (funcall end start-return)))
-            (list 'success end-return))))
-    (error (list 'error "Serial command received error" conditions))))
+    (condition-case conditions
+        (progn
+          (let ((start-return (funcall start)))
+            (let ((end-return (funcall end start-return)))
+              (list 'success end-return))))
+      (error (list 'error "Serial command received error" conditions)))))
 
 (defun phps-mode-lexer-BEGIN (state)
   "Begin STATE."
