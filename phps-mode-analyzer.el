@@ -87,12 +87,6 @@
 (defvar phps-mode-lexer-states nil
   "A list of lists containing start, state and state stack.")
 
-(defvar phps-mode-lexer-buffer-length nil
-  "Length of lexed buffer.")
-
-(defvar phps-mode-lexer-buffer-contents nil
-  "Contents of lexed buffer.")
-
 
 ;; SETTINGS
 
@@ -1917,8 +1911,6 @@
   "Run lexer."
   (interactive)
   (phps-mode-debug-message (message "Lexer run"))
-  (setq-local phps-mode-lexer-buffer-length (1- (point-max)))
-  (setq-local phps-mode-lexer-buffer-contents (buffer-substring-no-properties (point-min) (point-max)))
 
   (let ((buffer-name (buffer-name))
         (buffer-contents (buffer-substring-no-properties (point-min) (point-max))))
@@ -1929,10 +1921,11 @@
         (with-current-buffer buffer-name
 
           ;; Move variables into this buffers variables
-          (setq phps-mode-lexer-tokens (nth 0 result))
-          (setq phps-mode-lexer-states (nth 1 result))
-          (setq phps-mode-lexer-STATE (nth 2 result))
-          (setq phps-mode-lexer-state_stack (nth 3 result))
+          (setq-local phps-mode-lexer-tokens (nth 0 result))
+          (setq-local phps-mode-lexer-states (nth 1 result))
+          (setq-local phps-mode-lexer-STATE (nth 2 result))
+          (setq-local phps-mode-lexer-state_stack (nth 3 result))
+          (setq-local phps-mode-functions-processed-buffer nil)
 
           ;; Apply syntax color on tokens
           (dolist (token phps-mode-lexer-tokens)
@@ -2098,9 +2091,6 @@
               ;; Reset idle timer
               (phps-mode-functions--cancel-idle-timer)
 
-              ;; Reset processed buffer flag
-              (phps-mode-functions-reset-processed-buffer)
-
               ;; Reset buffer changes minimum index
               (phps-mode-functions--reset-changes)
 
@@ -2170,7 +2160,6 @@
 
                           ;; Do partial lex from previous-token-end to change-stop
 
-                          ;; TODO Issue here is that buffer is not marked as processed and may be processed before lexeris finished
 
                           (phps-mode-incremental-lex-string
                            (buffer-name)
@@ -2188,14 +2177,27 @@
                       (push (list 'FOUND-NO-HEAD-STATES incremental-start-new-buffer) log)
                       (phps-mode-debug-message
                        (message "Found no head states"))
+
+                      ;; Reset processed buffer flag
+                      (phps-mode-functions-reset-processed-buffer)
+
                       (setq run-full-lexer t)))
+
                 (push (list 'FOUND-NO-HEAD-TOKENS incremental-start-new-buffer) log)
                 (phps-mode-debug-message
                  (message "Found no head tokens"))
+
+                ;; Reset processed buffer flag
+                (phps-mode-functions-reset-processed-buffer)
+
                 (setq run-full-lexer t))))
         (push (list 'FOUND-NO-CHANGE-POINT-MINIMUM) log)
         (phps-mode-debug-message
          (message "Found no change point minimum"))
+
+        ;; Reset processed buffer flag
+        (phps-mode-functions-reset-processed-buffer)
+
         (setq run-full-lexer t))
 
       (when run-full-lexer
@@ -2228,6 +2230,7 @@
        (setq-local phps-mode-lexer-states (nth 1 result))
        (setq-local phps-mode-lexer-STATE (nth 2 result))
        (setq-local phps-mode-lexer-state_stack (nth 3 result))
+       (setq-local phps-mode-functions-processed-buffer nil)
 
        ;; Apply syntax color on tokens
        (dolist (token phps-mode-lexer-tokens)
@@ -2298,7 +2301,8 @@
                  (point-max)))))
           (phps-mode-debug-message (message "Processed result: %s" processed))
           (setq-local phps-mode-functions-imenu (nth 0 processed))
-          (setq-local phps-mode-functions-lines-indent (nth 1 processed)))
+          (setq-local phps-mode-functions-lines-indent (nth 1 processed))
+          (phps-mode-analyzer--reset-imenu))
         (setq-local phps-mode-functions-processed-buffer t))
     (phps-mode-debug-message
      (when phps-mode-functions-processed-buffer
@@ -3564,13 +3568,7 @@ SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
 
                               ;; Reset change flag
                               (phps-mode-functions--reset-changes)
-                              (phps-mode-functions--cancel-idle-timer)
-
-                              ;; Update last buffer states
-                              (setq-local phps-mode-lexer-buffer-length (1- (point-max)))
-                              (setq-local
-                               phps-mode-lexer-buffer-contents
-                               (buffer-substring-no-properties (point-min) (point-max))))))))
+                              (phps-mode-functions--cancel-idle-timer))))))
                 (phps-mode-analyzer--alternative-indentation (point))
                 (phps-mode-debug-message
                  (message "Did not find indent for line, using alternative indentation..")))))
