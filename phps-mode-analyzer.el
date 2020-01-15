@@ -1926,6 +1926,7 @@
           (setq-local phps-mode-lexer-STATE (nth 2 result))
           (setq-local phps-mode-lexer-state_stack (nth 3 result))
           (setq-local phps-mode-functions-processed-buffer nil)
+          (phps-mode-analyzer--reset-imenu)
 
           ;; Apply syntax color on tokens
           (dolist (token phps-mode-lexer-tokens)
@@ -2231,6 +2232,7 @@
        (setq-local phps-mode-lexer-STATE (nth 2 result))
        (setq-local phps-mode-lexer-state_stack (nth 3 result))
        (setq-local phps-mode-functions-processed-buffer nil)
+       (phps-mode-analyzer--reset-imenu)
 
        ;; Apply syntax color on tokens
        (dolist (token phps-mode-lexer-tokens)
@@ -2301,8 +2303,8 @@
                  (point-max)))))
           (phps-mode-debug-message (message "Processed result: %s" processed))
           (setq-local phps-mode-functions-imenu (nth 0 processed))
-          (setq-local phps-mode-functions-lines-indent (nth 1 processed))
-          (phps-mode-analyzer--reset-imenu))
+          (setq-local phps-mode-functions-lines-indent (nth 1 processed)))
+        (phps-mode-analyzer--reset-imenu)
         (setq-local phps-mode-functions-processed-buffer t))
     (phps-mode-debug-message
      (when phps-mode-functions-processed-buffer
