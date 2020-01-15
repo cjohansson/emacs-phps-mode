@@ -177,104 +177,119 @@
 ;; FUNCTIONS
 
 ;; TODO Fix imenu when using asynchronous lexer
-;; TODO Add timer here
 (defun phps-mode-serial-commands (key start end)
   "Run command START and if it succeeds, after that command run END with identifier KEY."
-  (if phps-mode-async-process
-      (if phps-mode-async-process-using-async-el
-          (progn
-            (require 'async)
+  (let ((start-time (current-time)))
+    (if phps-mode-async-process
+        (if phps-mode-async-process-using-async-el
+            (progn
+              (require 'async)
 
-            (phps-mode-debug-message
-             (message "Running serial command asynchronously using async.el"))
-            ;; (message "Running serial command asynchronously using async.el start: %s, end: %s" start end)
+              (phps-mode-debug-message
+               (message "Running serial command asynchronously using async.el at: %s" (car start-time)))
+              ;; (message "Running serial command asynchronously using async.el start: %s, end: %s" start end)
 
-            ;; Kill async process if process with associated key already exists
-            (when (and
-                   (gethash key phps-mode-async-processes)
-                   (process-live-p (gethash key phps-mode-async-processes)))
-              (let ((process-buffer (process-buffer (gethash key phps-mode-async-processes))))
-                (delete-process (gethash key phps-mode-async-processes))
-                (kill-buffer process-buffer)
-                (message "Killed existing buffer and process")))
+              ;; Kill async process if process with associated key already exists
+              (when (and
+                     (gethash key phps-mode-async-processes)
+                     (process-live-p (gethash key phps-mode-async-processes)))
+                (let ((process-buffer (process-buffer (gethash key phps-mode-async-processes))))
+                  (delete-process (gethash key phps-mode-async-processes))
+                  (kill-buffer process-buffer)
+                  (message "Killed existing buffer and process")))
 
-            ;; Run command(s) asynchronously
-            (let ((script-filename (file-name-directory (symbol-file 'phps-mode-serial-commands))))
-              (puthash
-               key
-               (async-start
-                (lambda()
-                  (add-to-list 'load-path script-filename)
-                  (require 'phps-mode)
-                  (setq debug-on-signal t)
-                  (condition-case conditions
-                      (progn
-                        (let ((start-return (funcall start)))
-                          (list 'success start-return)))
-                    (error (list 'error conditions))))
-                (lambda (start-return)
-                  (let ((status (car start-return))
-                        (value (car (cdr start-return))))
-                    (phps-mode-debug-message
-                     (message "Running end code with status %s" status))
-                    (when (string= status "success")
-                      ;; (message "Running end code %s with argument: %s" end value)
-                      (condition-case conditions
-                          (progn
-                            (let ((end-return (funcall end value)))
-                              (list 'success end-return)))
-                        (error (list 'error conditions))))
+              ;; Run command(s) asynchronously
+              (let ((script-filename (file-name-directory (symbol-file 'phps-mode-serial-commands))))
+                (puthash
+                 key
+                 (async-start
+                  (lambda()
+                    (add-to-list 'load-path script-filename)
+                    (require 'phps-mode)
+                    (setq debug-on-signal t)
+                    (condition-case conditions
+                        (progn
+                          (let ((start-return (funcall start)))
+                            (list 'success start-return start-time)))
+                      (error (list 'error conditions start-time))))
+                  (lambda (start-return)
+                    (message "Async.el return: %s" start-return)
+                    (let ((status (car start-return))
+                          (value (car (cdr start-return)))
+                          (start-time (car (cdr (cdr start-return))))
+                          (return nil))
+                      ;; (message "Running end code with status %s start-time: %s" status start-time)
+                      (when (string= status "success")
+                        ;; (message "Running end code %s with argument: %s" end value)
+                        (condition-case conditions
+                            (progn
+                              (let ((end-return (funcall end value)))
+                                (setq return (list 'success end-return))))
+                          (error (setq return (list 'error conditions)))))
 
-                    (when (string= status "error")
-                      (display-warning 'phps-mode (format "Async error %s" (cdr start-return)))))
+                      (let* ((end-time (current-time))
+                             (end-time-float (+ (car end-time) (car (cdr end-time)) (* (car (cdr (cdr end-time))) 0.000001)))
+                             (start-time-float (+ (car start-time) (car (cdr start-time)) (* (car (cdr (cdr start-time))) 0.000001)))
+                             (elapsed (- end-time-float start-time-float)))
+                        (message "Asynchronous serial command using async.el finished, elapsed: %fs" elapsed))
 
-                  (phps-mode-debug-message
-                   (message "Async.el end lambda finished"))
+                      (when (string= status "error")
+                        (display-warning 'phps-mode (format "Async error %s" (cdr start-return)))))))
+                 phps-mode-async-processes))
 
-                  ))
-               phps-mode-async-processes))
-
-            ;; (message "Done running serial command asynchronously using async.el")
-            (phps-mode-debug-message
-             (message "Done starting async process %s" key))
-
-            )
-        (progn
+              ;; (message "Done running serial command asynchronously using async.el")
+              (phps-mode-debug-message
+               (message "Done starting asynchronous command using async.el: %s" key)))
 
           (phps-mode-debug-message
-           (message "Running serial command asynchronously"))
+           (message "Running serial command asynchronously using threads at: %s" (car start-time)))
 
           ;; Kill thread if thread with associated key already exists
           (when (and
                  (gethash key phps-mode-async-threads)
                  (thread-live-p (gethash key phps-mode-async-threads)))
-            (thread-signal key 'quit nil))
+            (thread-signal (gethash key phps-mode-async-threads) 'quit nil))
 
           ;; Run command(s) asynchronously
           (puthash
            key
            (make-thread
             (lambda()
-              (condition-case conditions
-                  (progn
-                    (let ((start-return (funcall start)))
-                      (let ((end-return (funcall end start-return)))
-                        (list 'success end-return))))
-                (error (list 'error "Serial command received error" conditions))))
+              (let ((return nil))
+                (condition-case conditions
+                    (progn
+                      (let ((start-return (funcall start)))
+                        (let ((end-return (funcall end start-return)))
+                          (setq return (list 'success end-return)))))
+                  (error (setq return (list 'error "Serial command received error" conditions))))
+
+                (let* ((end-time (current-time))
+                       (end-time-float (+ (car end-time) (car (cdr end-time)) (* (car (cdr (cdr end-time))) 0.000001)))
+                       (start-time-float (+ (car start-time) (car (cdr start-time)) (* (car (cdr (cdr start-time))) 0.000001)))
+                       (elapsed (- end-time-float start-time-float)))
+                  (message "Asynchronous serial command using thread finished, elapsed: %fs" elapsed))))
             key)
            phps-mode-async-processes)
 
           (phps-mode-debug-message
-           (message "Done running serial command asynchronously"))
+           (message "Done starting asynchronous serial command using threads: %s" key)))
 
-          ))
+      (let ((return nil))
+        (phps-mode-debug-message
+         (message "Running serial command synchronously at: %s" (car start-time)))
 
-    (condition-case conditions
-        (progn
-          (let ((start-return (funcall start)))
-            (let ((end-return (funcall end start-return)))
-              (list 'success end-return))))
-      (error (list 'error "Serial command received error" conditions)))))
+        (condition-case conditions
+            (progn
+              (let ((start-return (funcall start)))
+                (let ((end-return (funcall end start-return)))
+                  (setq return (list 'success end-return)))))
+          (error (setq return (list 'error "Serial command received error" conditions))))
+
+        (let* ((end-time (current-time))
+               (end-time-float (+ (car end-time) (car (cdr end-time)) (* (car (cdr (cdr end-time))) 0.000001)))
+               (start-time-float (+ (car start-time) (car (cdr start-time)) (* (car (cdr (cdr start-time))) 0.000001)))
+               (elapsed (- end-time-float start-time-float)))
+          (message "Synchronous serial command finished, elapsed: %fs" elapsed))))))
 
 (defun phps-mode-lexer-BEGIN (state)
   "Begin STATE."
