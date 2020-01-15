@@ -176,6 +176,8 @@
 
 ;; FUNCTIONS
 
+;; TODO Fix imenu when using asynchronous lexer
+;; TODO Add timer here
 (defun phps-mode-serial-commands (key start end)
   "Run command START and if it succeeds, after that command run END with identifier KEY."
   (if phps-mode-async-process
@@ -190,7 +192,10 @@
             (when (and
                    (gethash key phps-mode-async-processes)
                    (process-live-p (gethash key phps-mode-async-processes)))
-              (kill-process (gethash key phps-mode-async-processes)))
+              (let ((process-buffer (process-buffer (gethash key phps-mode-async-processes))))
+                (delete-process (gethash key phps-mode-async-processes))
+                (kill-buffer process-buffer)
+                (message "Killed existing buffer and process")))
 
             ;; Run command(s) asynchronously
             (let ((script-filename (file-name-directory (symbol-file 'phps-mode-serial-commands))))
