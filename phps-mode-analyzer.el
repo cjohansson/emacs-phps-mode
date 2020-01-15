@@ -185,7 +185,8 @@
           (progn
             (require 'async)
 
-            (message "Running serial command asynchronously using async.el")
+            (phps-mode-debug-message
+             (message "Running serial command asynchronously using async.el"))
             ;; (message "Running serial command asynchronously using async.el start: %s, end: %s" start end)
 
             ;; Kill async process if process with associated key already exists
@@ -214,7 +215,8 @@
                 (lambda (start-return)
                   (let ((status (car start-return))
                         (value (car (cdr start-return))))
-                    (message "Running end code with status %s" status)
+                    (phps-mode-debug-message
+                     (message "Running end code with status %s" status))
                     (when (string= status "success")
                       ;; (message "Running end code %s with argument: %s" end value)
                       (condition-case conditions
@@ -226,18 +228,21 @@
                     (when (string= status "error")
                       (display-warning 'phps-mode (format "Async error %s" (cdr start-return)))))
 
-                  (message "Async.el end lambda finished")
+                  (phps-mode-debug-message
+                   (message "Async.el end lambda finished"))
 
                   ))
                phps-mode-async-processes))
 
             ;; (message "Done running serial command asynchronously using async.el")
-            (message "Done starting async process %s" key )
+            (phps-mode-debug-message
+             (message "Done starting async process %s" key))
 
             )
         (progn
 
-          (message "Running serial command asynchronously")
+          (phps-mode-debug-message
+           (message "Running serial command asynchronously"))
 
           ;; Kill thread if thread with associated key already exists
           (when (and
@@ -259,7 +264,8 @@
             key)
            phps-mode-async-processes)
 
-          (message "Done running serial command asynchronously")
+          (phps-mode-debug-message
+           (message "Done running serial command asynchronously"))
 
           ))
 
@@ -2074,11 +2080,11 @@
                   (change-start phps-mode-analyzer-change-min)
                   (incremental-start-new-buffer phps-mode-analyzer-change-min))
 
-              ;; Reset processed buffer flag
-              (phps-mode-functions-reset-processed-buffer)
-
               ;; Reset idle timer
               (phps-mode-functions--cancel-idle-timer)
+
+              ;; Reset processed buffer flag
+              (phps-mode-functions-reset-processed-buffer)
 
               ;; Reset buffer changes minimum index
               (phps-mode-functions--reset-changes)
@@ -2144,7 +2150,12 @@
                           (phps-mode-debug-message
                            (message "Found head states"))
 
+
+                          (push (list 'INCREMENTAL-LEX incremental-start-new-buffer) log)
+
                           ;; Do partial lex from previous-token-end to change-stop
+
+                          ;; TODO Issue here is that buffer is not marked as processed and may be processed before lexeris finished
 
                           (phps-mode-incremental-lex-string
                            (buffer-name)
@@ -2155,8 +2166,6 @@
                            incremental-state
                            incremental-state-stack
                            head-tokens)
-
-                          (push (list 'INCREMENTAL-LEX incremental-start-new-buffer) log)
 
                           (phps-mode-debug-message
                            (message "Incremental tokens: %s" incremental-tokens)))
