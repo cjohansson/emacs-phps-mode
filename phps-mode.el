@@ -5,8 +5,8 @@
 ;; Author: Christian Johansson <christian@cvj.se>
 ;; Maintainer: Christian Johansson <christian@cvj.se>
 ;; Created: 3 Mar 2018
-;; Modified: 20 Dec 2019
-;; Version: 0.3.27
+;; Modified: 16 Jan 2019
+;; Version: 0.3.28
 ;; Keywords: tools, convenience
 ;; URL: https://github.com/cjohansson/emacs-phps-mode
 
@@ -37,7 +37,11 @@
 ;; Improved syntax table in comparison with old PHP major-mode.
 ;;
 ;; For flycheck support run `(phps-mode-flycheck-setup)'.
-
+;;
+;; For asynchronous lexer run: `(setq phps-mode-async-process t)'
+;;
+;; For asynchronous lexer via `async.el' instead of threads run: `(phps-mode-async-process-using-async-el t)'
+;;
 ;; Please see README.md from the same repository for extended documentation.
 
 
@@ -157,8 +161,6 @@
   (setq-local phps-mode-functions-lines-indent nil)
   (setq-local phps-mode-functions-imenu nil)
   (setq-local phps-mode-functions-processed-buffer nil)
-  (setq-local phps-mode-lexer-buffer-length nil)
-  (setq-local phps-mode-lexer-buffer-contents nil)
   (setq-local phps-mode-lexer-tokens nil)
   (setq-local phps-mode-lexer-states nil))
 

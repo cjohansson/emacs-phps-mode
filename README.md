@@ -26,6 +26,7 @@ This mode does not require PHP installed on your computer because it has a built
 * Continuous integration tests using Travis
 * Included in GNU ELPA package archive
 * A interactive function that can be used interactively to format buffers `(phps-mode-format-buffer)`
+* Support for asynchronous lexer via processes (`async.el`) or threads
 
 ## Roadmap
 
@@ -52,7 +53,37 @@ If you have downloaded manually i.e. to `~/.emacs.d/phps-mode/` you need to add 
 
 You can install via ELPA (`M-x package-install` + `RET` + `phps-mode` + `RET`), package will now be loaded automatically when Emacs starts.
 
-### Install, load and configure via use-package
+## Configuration
+
+### Enable flycheck support
+
+For flycheck support run `(phps-mode-flycheck-setup)`.
+
+### Asynchronous lexer
+
+Enable with `(setq phps-mode-async-process t)`
+
+### Asynchronous lexer via async.el processes
+
+Enable with:
+
+``` emacs-lisp
+(setq phps-mode-async-process t)
+(setq phps-mode-async-process-using-async-el t)
+```
+
+### Asynchronous lexer via threads
+
+Enable with:
+
+``` emacs-lisp
+(setq phps-mode-async-process t)
+(setq phps-mode-async-process-using-async-el nil)
+```
+
+## Installation and Configuration examples
+
+### Install, load and configure via use-package with flycheck support, asynchronous support via async.el
 
 ``` emacs-lisp
 (use-package phps-mode
@@ -60,24 +91,29 @@ You can install via ELPA (`M-x package-install` + `RET` + `phps-mode` + `RET`), 
     :ensure t
     :mode ("\\.php\\'" "\\.phtml\\'")
     :config
-    (phps-mode-flycheck-setup))
+    (phps-mode-flycheck-setup)
+    (setq phps-mode-async-process t)
+    (setq phps-mode-async-process-using-async-el t))
 ```
 
-### Load and configure using use-package
+### Load and configure using use-package with flycheck support, asynchronous support via threads
 
 ``` emacs-lisp
 (use-package phps-mode
     :after flycheck
     :mode ("\\.php\\'" "\\.phtml\\'")
     :config
-    (phps-mode-flycheck-setup))
+    (phps-mode-flycheck-setup)
+    (setq phps-mode-async-process t)
+    (setq phps-mode-async-process-using-async-el nil))
 ```
 
-### Load and configure using regular emacs-lisp
+### Load and configure using regular emacs-lisp with flycheck support, no asynchronous support
 ``` emacs-lisp
 (require 'phps-mode)
 (add-to-list 'auto-mode-alist '("\\.\\(php\\|phtml\\)\\'" . phps-mode))
 (phps-mode-flycheck-setup)
+(setq phps-mode-async-process nil)
 ```
 
 ## Read more
