@@ -170,8 +170,8 @@
 
 ;; FUNCTIONS
 
-(defun phps-mode-serial-commands (key start end)
-  "Run command START and if it succeeds, after that command run END with identifier KEY."
+(defun phps-mode-serial-commands (key start end &optional callback)
+  "Run command with KEY, first START and then END, optionally call CALLBACK at the end."
   (let ((start-time (current-time)))
     (if phps-mode-async-process
         (if (and phps-mode-async-process-using-async-el
@@ -230,7 +230,10 @@
                          (message "Asynchronous serial command using async.el finished, elapsed: %fs" elapsed)))
 
                       (when (string= status "error")
-                        (display-warning 'phps-mode (format "Async error %s" (cdr start-return)))))))
+                        (display-warning 'phps-mode (format "Async error %s" (cdr start-return))))
+
+                      (when (boundp callback)
+                        (funcall callback return)))))
                  phps-mode-async-processes))
 
               ;; (message "Done running serial command asynchronously using async.el")
@@ -264,9 +267,12 @@
                         (end-time-float (+ (car end-time) (car (cdr end-time)) (* (car (cdr (cdr end-time))) 0.000001)))
                         (start-time-float (+ (car start-time) (car (cdr start-time)) (* (car (cdr (cdr start-time))) 0.000001)))
                         (elapsed (- end-time-float start-time-float)))
-                   (message "Asynchronous serial command using thread finished, elapsed: %fs" elapsed)))))
+                   (message "Asynchronous serial command using thread finished, elapsed: %fs" elapsed)))
+
+                (when (boundp callback)
+                  (funcall callback return))))
             key)
-           phps-mode-async-processes)
+           phps-mode-async-threads)
 
           (phps-mode-debug-message
            (message "Done starting asynchronous serial command using threads: %s" key)))
@@ -287,7 +293,10 @@
                 (end-time-float (+ (car end-time) (car (cdr end-time)) (* (car (cdr (cdr end-time))) 0.000001)))
                 (start-time-float (+ (car start-time) (car (cdr start-time)) (* (car (cdr (cdr start-time))) 0.000001)))
                 (elapsed (- end-time-float start-time-float)))
-           (message "Synchronous serial command finished, elapsed: %fs" elapsed)))))))
+           (message "Synchronous serial command finished, elapsed: %fs" elapsed)))
+
+        (when (boundp 'callback)
+          (funcall callback return))))))
 
 (defun phps-mode-lexer-BEGIN (state)
   "Begin STATE."
