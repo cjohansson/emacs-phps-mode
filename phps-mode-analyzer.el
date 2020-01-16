@@ -42,6 +42,8 @@
 
 (require 'subr-x)
 
+(autoload 'async-start "async")
+
 (defvar phps-mode-inline-mmm-submode nil
   "Symbol declaring what mmm-mode to use as submode in inline areas.")
 
@@ -174,8 +176,7 @@
   "Run command with KEY, first START and then END, optionally call CALLBACK at the end."
   (let ((start-time (current-time)))
     (if phps-mode-async-process
-        (if (and phps-mode-async-process-using-async-el
-                 (fboundp 'async-start))
+        (if phps-mode-async-process-using-async-el
             (progn
               (require 'async)
 

@@ -26,6 +26,7 @@ This mode does not require PHP installed on your computer because it has a built
 * Continuous integration tests using Travis
 * Included in GNU ELPA package archive
 * A interactive function that can be used interactively to format buffers `(phps-mode-format-buffer)`
+* Support for asynchronous lexer via processes (`async.el`) or threads
 
 ## Roadmap
 
@@ -51,6 +52,34 @@ If you have downloaded manually i.e. to `~/.emacs.d/phps-mode/` you need to add 
 ### Install via package manager
 
 You can install via ELPA (`M-x package-install` + `RET` + `phps-mode` + `RET`), package will now be loaded automatically when Emacs starts.
+
+## Configuration
+
+### Enable flycheck support
+
+For flycheck support run `(phps-mode-flycheck-setup)`.
+
+### Asynchronous lexer
+
+Enable with `(setq phps-mode-async-process t)`
+
+### Asynchronous lexer via async.el processes
+
+Enable with:
+
+``` emacs-lisp
+(setq phps-mode-async-process t)
+(setq phps-mode-async-process-using-async-el t)
+```
+
+### Asynchronous lexer via threads
+
+Enable with:
+
+``` emacs-lisp
+(setq phps-mode-async-process t)
+(setq phps-mode-async-process-using-async-el nil)
+```
 
 ### Install, load and configure via use-package
 
