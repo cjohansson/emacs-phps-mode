@@ -233,7 +233,8 @@
                       (when (string= status "error")
                         (display-warning 'phps-mode (format "Async error %s" (cdr start-return))))
 
-                      (when (boundp callback)
+                      (when (and (boundp 'callback)
+                                 callback)
                         (funcall callback return)))))
                  phps-mode-async-processes))
 
@@ -270,7 +271,8 @@
                         (elapsed (- end-time-float start-time-float)))
                    (message "Asynchronous serial command using thread finished, elapsed: %fs" elapsed)))
 
-                (when (boundp callback)
+                (when (and (boundp 'callback)
+                           callback)
                   (funcall callback return))))
             key)
            phps-mode-async-threads)
@@ -296,7 +298,8 @@
                 (elapsed (- end-time-float start-time-float)))
            (message "Synchronous serial command finished, elapsed: %fs" elapsed)))
 
-        (when (boundp 'callback)
+        (when (and (boundp 'callback)
+                   callback)
           (funcall callback return))))))
 
 (defun phps-mode-lexer-BEGIN (state)
