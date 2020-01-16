@@ -113,7 +113,7 @@ Enable with:
 (require 'phps-mode)
 (add-to-list 'auto-mode-alist '("\\.\\(php\\|phtml\\)\\'" . phps-mode))
 (phps-mode-flycheck-setup)
-(setq phps-mode-async-process t)
+(setq phps-mode-async-process nil)
 ```
 
 ## Read more
