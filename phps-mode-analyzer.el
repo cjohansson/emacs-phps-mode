@@ -194,7 +194,9 @@
                    (message "Killed existing buffer and process"))))
 
               ;; Run command(s) asynchronously
-              (let ((script-filename (file-name-directory (symbol-file 'phps-mode-serial-commands))))
+              (let ((script-filename
+                     (file-name-directory
+                      (symbol-file 'phps-mode-serial-commands))))
                 (puthash
                  key
                  (async-start
@@ -225,8 +227,10 @@
 
                       (phps-mode-debug-message
                        (let* ((end-time (current-time))
-                              (end-time-float (+ (car end-time) (car (cdr end-time)) (* (car (cdr (cdr end-time))) 0.000001)))
-                              (start-time-float (+ (car start-time) (car (cdr start-time)) (* (car (cdr (cdr start-time))) 0.000001)))
+                              (end-time-float
+                               (+ (car end-time) (car (cdr end-time)) (* (car (cdr (cdr end-time))) 0.000001)))
+                              (start-time-float
+                               (+ (car start-time) (car (cdr start-time)) (* (car (cdr (cdr start-time))) 0.000001)))
                               (elapsed (- end-time-float start-time-float)))
                          (message "Asynchronous serial command using async.el finished, elapsed: %fs" elapsed)))
 
@@ -266,8 +270,10 @@
 
                 (phps-mode-debug-message
                  (let* ((end-time (current-time))
-                        (end-time-float (+ (car end-time) (car (cdr end-time)) (* (car (cdr (cdr end-time))) 0.000001)))
-                        (start-time-float (+ (car start-time) (car (cdr start-time)) (* (car (cdr (cdr start-time))) 0.000001)))
+                        (end-time-float
+                         (+ (car end-time) (car (cdr end-time)) (* (car (cdr (cdr end-time))) 0.000001)))
+                        (start-time-float
+                         (+ (car start-time) (car (cdr start-time)) (* (car (cdr (cdr start-time))) 0.000001)))
                         (elapsed (- end-time-float start-time-float)))
                    (message "Asynchronous serial command using thread finished, elapsed: %fs" elapsed)))
 
@@ -618,7 +624,8 @@
       (semantic-lex-push-token
        (semantic-lex-token 'T_ERROR (point-min) (point-max))))))
 
-;; If multiple rules match, re2c prefers the longest match. If rules match the same string, the earlier rule has priority.
+;; If multiple rules match, re2c prefers the longest match.
+;; If rules match the same string, the earlier rule has priority.
 ;; @see http://re2c.org/manual/syntax/syntax.html
 (define-lex-analyzer phps-mode-analyzer-re2c-lexer
   "Elisp port of original Zend re2c lexer."
@@ -1848,7 +1855,7 @@
                  (cond
 
                   ((string-match (concat "\n" heredoc_label ";?\n") data)
-                                        ;, (message "Found heredoc end at %s-%s" start end)
+                   ;; (message "Found heredoc end at %s-%s" start end)
                    (phps-mode-lexer-BEGIN 'ST_END_HEREDOC)
                    (phps-mode-lexer-RETURN_TOKEN 'T_ENCAPSED_AND_WHITESPACE old-start start))
 
@@ -2226,7 +2233,8 @@
 
       log)))
 
-(defun phps-mode-incremental-lex-string (buffer-name buffer-contents incremental-start-new-buffer point-max head-states incremental-state incremental-state-stack head-tokens)
+(defun phps-mode-incremental-lex-string (buffer-name buffer-contents incremental-start-new-buffer point-max
+                                                     head-states incremental-state incremental-state-stack head-tokens)
   "Incremental lex region."
   (phps-mode-serial-commands
    buffer-name
@@ -3079,7 +3087,10 @@ SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
                       (setq first-token-is-nesting-decrease t))
 
                     (phps-mode-debug-message
-                     (message "\nDecreasing alternative control structure nesting at %s to %s\n" token alternative-control-structure-level)))
+                     (message
+                      "\nDecreasing alternative control structure nesting at %s to %s\n"
+                      token
+                      alternative-control-structure-level)))
 
                   )
 
@@ -3180,7 +3191,12 @@ SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
                             (string= next-token "("))
                     (progn
                       (phps-mode-debug-message
-                       (message "Started object-operator at %s %s on level %s"  token next-token in-object-operator-level))
+                       (message
+                        "Started object-operator at %s %s on level %s"
+                        token
+                        next-token
+                        in-object-operator-level
+                        ))
                       (push round-bracket-level in-object-operator-round-bracket-level)
                       (push square-bracket-level in-object-operator-square-bracket-level)
                       (setq in-object-operator t)
