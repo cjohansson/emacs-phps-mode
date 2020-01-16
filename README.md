@@ -81,7 +81,9 @@ Enable with:
 (setq phps-mode-async-process-using-async-el nil)
 ```
 
-### Install, load and configure via use-package
+## Installation and Configuration examples
+
+### Install, load and configure via use-package with flycheck support, asynchronous support via async.el
 
 ``` emacs-lisp
 (use-package phps-mode
@@ -89,24 +91,29 @@ Enable with:
     :ensure t
     :mode ("\\.php\\'" "\\.phtml\\'")
     :config
-    (phps-mode-flycheck-setup))
+    (phps-mode-flycheck-setup)
+    (setq phps-mode-async-process t)
+    (setq phps-mode-async-process-using-async-el t))
 ```
 
-### Load and configure using use-package
+### Load and configure using use-package with flycheck support, asynchronous support via threads
 
 ``` emacs-lisp
 (use-package phps-mode
     :after flycheck
     :mode ("\\.php\\'" "\\.phtml\\'")
     :config
-    (phps-mode-flycheck-setup))
+    (phps-mode-flycheck-setup)
+    (setq phps-mode-async-process t)
+    (setq phps-mode-async-process-using-async-el nil))
 ```
 
-### Load and configure using regular emacs-lisp
+### Load and configure using regular emacs-lisp with flycheck support, no asynchronous support
 ``` emacs-lisp
 (require 'phps-mode)
 (add-to-list 'auto-mode-alist '("\\.\\(php\\|phtml\\)\\'" . phps-mode))
 (phps-mode-flycheck-setup)
+(setq phps-mode-async-process t)
 ```
 
 ## Read more
