@@ -235,7 +235,7 @@
                          (message "Asynchronous serial command using async.el finished, elapsed: %fs" elapsed)))
 
                       (when (string= status "error")
-                        (display-warning 'phps-mode (format "Async error %s" (cdr start-return)) :debug))
+                        (display-warning 'phps-mode (format "Async error %s" (cdr start-return))))
 
                       (when (and (boundp 'callback)
                                  callback)
@@ -1966,7 +1966,7 @@
                 (error-start)
                 (error-end))
             (when errors
-              (display-warning 'phps-mode (format "Lex Errors: %s" (car errors)) :debug)
+              (display-warning 'phps-mode (format "Lex Errors: %s" (car errors)))
               (setq error-start (car (cdr errors)))
               (when error-start
                 (if (car (cdr (cdr errors)))
@@ -2275,7 +2275,7 @@
              (error-start)
              (error-end))
          (when errors
-           (display-warning 'phps-mode (format "Incremental Lex Errors: %s" (car errors)) :debug)
+           (display-warning 'phps-mode (format "Incremental Lex Errors: %s" (car errors)))
            (setq error-start (car (cdr errors)))
            (when error-start
              (if (car (cdr (cdr errors)))
