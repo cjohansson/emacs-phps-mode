@@ -172,8 +172,10 @@
 
 ;; FUNCTIONS
 
+;; TODO Need to fix error reporting for synchronous and threaded asynchronous
+;; TODO Need to add support for format buffer when using asynchronous processes
 (defun phps-mode-serial-commands (key start end &optional callback)
-  "Run command with KEY, first START and then END, optionally call CALLBACK at the end."
+  "Run command with KEY, first START and if successfully then END, if successfully optionally call CALLBACK at the end."
   (let ((start-time (current-time)))
     (if phps-mode-async-process
         (if phps-mode-async-process-using-async-el
@@ -203,7 +205,6 @@
                   (lambda()
                     (add-to-list 'load-path script-filename)
                     (require 'phps-mode)
-                    (setq debug-on-signal t)
                     (condition-case conditions
                         (progn
                           (let ((start-return (funcall start)))
@@ -215,15 +216,7 @@
                     (let ((status (car start-return))
                           (value (car (cdr start-return)))
                           (start-time (car (cdr (cdr start-return))))
-                          (return nil))
-                      ;; (message "Running end code with status %s start-time: %s" status start-time)
-                      (when (string= status "success")
-                        ;; (message "Running end code %s with argument: %s" end value)
-                        (condition-case conditions
-                            (progn
-                              (let ((end-return (funcall end value)))
-                                (setq return (list 'success end-return))))
-                          (error (setq return (list 'error conditions)))))
+                          (end-return nil))
 
                       (phps-mode-debug-message
                        (let* ((end-time (current-time))
@@ -234,12 +227,29 @@
                               (elapsed (- end-time-float start-time-float)))
                          (message "Asynchronous serial command using async.el finished, elapsed: %fs" elapsed)))
 
-                      (when (string= status "error")
-                        (display-warning 'phps-mode (format "Async error %s" (cdr start-return))))
+                      ;; (message "Running end code with status %s start-time: %s" status start-time)
+                      (cond
+                       ((string= status "success")
+                        ;; (message "Running end code %s with argument: %s" end value)
+                        (condition-case conditions
+                            (progn
+                              (let ((return (funcall end value)))
+                                (setq end-return (list 'success return))))
+                          (error (setq end-return (list 'error conditions))))
 
-                      (when (and (boundp 'callback)
-                                 callback)
-                        (funcall callback return)))))
+                        (let ((status (car end-return))
+                              (value (car (cdr end-return)))
+                              (start-time (car (cdr (cdr end-return)))))
+
+                          (cond
+                           ((string= status "success")
+                            (when (and (boundp 'callback)
+                                       callback)
+                              (funcall callback return)))
+                           ((string= status "error")
+                            (display-warning 'phps-mode (format "%s" (car (cdr value))))))))
+                       ((string= status "error")
+                        (display-warning 'phps-mode (format "%s" (car (cdr value)))))))))
                  phps-mode-async-processes))
 
               ;; (message "Done running serial command asynchronously using async.el")
@@ -260,13 +270,14 @@
            key
            (make-thread
             (lambda()
-              (let ((return nil))
+              (let ((start-return)
+                    (end-return))
+
+                ;; First execute start lambda
                 (condition-case conditions
-                    (progn
-                      (let ((start-return (funcall start)))
-                        (let ((end-return (funcall end start-return)))
-                          (setq return (list 'success end-return)))))
-                  (error (setq return (list 'error "Serial command received error" conditions))))
+                    (let ((return (funcall start)))
+                      (setq start-return (list 'success return start-time)))
+                  (error (setq start-return (list 'error conditions start-time))))
 
                 (phps-mode-debug-message
                  (let* ((end-time (current-time))
@@ -275,11 +286,28 @@
                         (start-time-float
                          (+ (car start-time) (car (cdr start-time)) (* (car (cdr (cdr start-time))) 0.000001)))
                         (elapsed (- end-time-float start-time-float)))
-                   (message "Asynchronous serial command using thread finished, elapsed: %fs" elapsed)))
+                   (message "Asynchronous serial start command using thread finished, elapsed: %fs" elapsed)))
 
-                (when (and (boundp 'callback)
-                           callback)
-                  (funcall callback return))))
+                (let ((status (car start-return))
+                      (value (car (cdr start-return)))
+                      (start-time (car (cdr (cdr start-return)))))
+                  (message "Status: '%s' value: '%s'" status value)
+
+                  (when (string= status "success")
+
+                    ;; Then execute end lambda
+                    (condition-case conditions
+                        (let ((return (funcall end)))
+                          (setq end-return (list 'success return start-time)))
+                      (error (setq start-return (list 'error conditions start-time)))))
+
+                  (when (string= status "error")
+                    (message "Error: %s" (car (cdr value)))
+                    ;; (display-warning 'phps-mode (format "Async thread error: %s" (car (cdr value))))
+
+                    (when (and (boundp 'callback)
+                               callback)
+                      (funcall callback return))))))
             key)
            phps-mode-async-threads)
 
@@ -968,7 +996,7 @@
               ")")))
        (lambda()
          (when (phps-mode-wy-macros-CG 'PARSER_MODE)
-           (signal 'phps-mode (list
+           (signal 'error (list
                                (format
                                 "PHPs Lexer Error - The (real) cast is deprecated, use (float) instead at %d"
                                 (match-beginning 0)
@@ -1623,7 +1651,7 @@
                    (phps-mode-lexer-RETURN_TOKEN 'T_COMMENT start (match-end 0)))
                (progn
                  (signal
-                  'phps-mode
+                  'error
                   (list (format
                          "PHPs Lexer Error - Unterminated comment starting at %d"
                          (point))
@@ -1942,45 +1970,45 @@
      buffer-name
      (lambda() (phps-mode-analyzer-lex-string buffer-contents))
      (lambda(result)
-        (with-current-buffer buffer-name
+       (with-current-buffer buffer-name
 
-          ;; Move variables into this buffers variables
-          (setq-local phps-mode-lexer-tokens (nth 0 result))
-          (setq-local phps-mode-lexer-states (nth 1 result))
-          (setq-local phps-mode-lexer-STATE (nth 2 result))
-          (setq-local phps-mode-lexer-state_stack (nth 3 result))
-          (setq-local phps-mode-functions-processed-buffer nil)
-          (phps-mode-analyzer--reset-imenu)
+         ;; Move variables into this buffers variables
+         (setq-local phps-mode-lexer-tokens (nth 0 result))
+         (setq-local phps-mode-lexer-states (nth 1 result))
+         (setq-local phps-mode-lexer-STATE (nth 2 result))
+         (setq-local phps-mode-lexer-state_stack (nth 3 result))
+         (setq-local phps-mode-functions-processed-buffer nil)
+         (phps-mode-analyzer--reset-imenu)
 
-          ;; Apply syntax color on tokens
-          (dolist (token phps-mode-lexer-tokens)
-            (let ((start (car (cdr token)))
-                  (end (cdr (cdr token)))
-                  (token-name (car token)))
-              (let ((token-syntax-color (phps-mode-lexer-get-token-syntax-color token-name)))
-                (if token-syntax-color
-                    (phps-mode-lexer-set-region-syntax-color start end token-syntax-color)
-                  (phps-mode-lexer-clear-region-syntax-color start end)))))
+         ;; Apply syntax color on tokens
+         (dolist (token phps-mode-lexer-tokens)
+           (let ((start (car (cdr token)))
+                 (end (cdr (cdr token)))
+                 (token-name (car token)))
+             (let ((token-syntax-color (phps-mode-lexer-get-token-syntax-color token-name)))
+               (if token-syntax-color
+                   (phps-mode-lexer-set-region-syntax-color start end token-syntax-color)
+                 (phps-mode-lexer-clear-region-syntax-color start end)))))
 
-          (let ((errors (nth 4 result))
-                (error-start)
-                (error-end))
-            (when errors
-              (display-warning 'phps-mode (format "Lex Errors: %s" (car errors)))
-              (setq error-start (car (cdr errors)))
-              (when error-start
-                (if (car (cdr (cdr errors)))
-                    (progn
-                      (setq error-end (car (cdr (cdr (cdr errors)))))
-                      (phps-mode-lexer-set-region-syntax-color
-                       error-start
-                       error-end
-                       (list 'font-lock-face 'font-lock-warning-face)))
-                  (setq error-end (point-max))
-                  (phps-mode-lexer-set-region-syntax-color
-                   error-start
-                   error-end
-                   (list 'font-lock-face 'font-lock-warning-face)))))))))))
+         (let ((errors (nth 4 result))
+               (error-start)
+               (error-end))
+           (when errors
+             (setq error-start (car (cdr errors)))
+             (when error-start
+               (if (car (cdr (cdr errors)))
+                   (progn
+                     (setq error-end (car (cdr (cdr (cdr errors)))))
+                     (phps-mode-lexer-set-region-syntax-color
+                      error-start
+                      error-end
+                      (list 'font-lock-face 'font-lock-warning-face)))
+                 (setq error-end (point-max))
+                 (phps-mode-lexer-set-region-syntax-color
+                  error-start
+                  error-end
+                  (list 'font-lock-face 'font-lock-warning-face))))
+             (signal 'error (list (format "Lex Errors: %s" (car errors)))))))))))
 
 (defun phps-mode-analyzer-lex-string (contents &optional start end states state state-stack tokens)
   "Run lexer on CONTENTS."
@@ -2275,7 +2303,6 @@
              (error-start)
              (error-end))
          (when errors
-           (display-warning 'phps-mode (format "Incremental Lex Errors: %s" (car errors)))
            (setq error-start (car (cdr errors)))
            (when error-start
              (if (car (cdr (cdr errors)))
@@ -2289,7 +2316,8 @@
                (phps-mode-lexer-set-region-syntax-color
                 error-start
                 error-end
-                (list 'font-lock-face 'font-lock-warning-face))))))
+                (list 'font-lock-face 'font-lock-warning-face))))
+           (signal 'error (list (format "Incremental Lex Errors: %s" (car errors))))))
 
        (phps-mode-debug-message
         (message "Incremental tokens: %s" incremental-tokens))))))
