@@ -1794,45 +1794,46 @@
      buffer-name
      (lambda() (phps-mode-analyzer-lex-string buffer-contents))
      (lambda(result)
-       (with-current-buffer buffer-name
+       (when (get-buffer buffer-name)
+         (with-current-buffer buffer-name
 
-         ;; Move variables into this buffers variables
-         (setq-local phps-mode-lexer-tokens (nth 0 result))
-         (setq-local phps-mode-lexer-states (nth 1 result))
-         (setq-local phps-mode-lexer-STATE (nth 2 result))
-         (setq-local phps-mode-lexer-state_stack (nth 3 result))
-         (setq-local phps-mode-functions-processed-buffer nil)
-         (phps-mode-analyzer--reset-imenu)
+           ;; Move variables into this buffers variables
+           (setq-local phps-mode-lexer-tokens (nth 0 result))
+           (setq-local phps-mode-lexer-states (nth 1 result))
+           (setq-local phps-mode-lexer-STATE (nth 2 result))
+           (setq-local phps-mode-lexer-state_stack (nth 3 result))
+           (setq-local phps-mode-functions-processed-buffer nil)
+           (phps-mode-analyzer--reset-imenu)
 
-         ;; Apply syntax color on tokens
-         (dolist (token phps-mode-lexer-tokens)
-           (let ((start (car (cdr token)))
-                 (end (cdr (cdr token)))
-                 (token-name (car token)))
-             (let ((token-syntax-color (phps-mode-lexer-get-token-syntax-color token-name)))
-               (if token-syntax-color
-                   (phps-mode-lexer-set-region-syntax-color start end token-syntax-color)
-                 (phps-mode-lexer-clear-region-syntax-color start end)))))
+           ;; Apply syntax color on tokens
+           (dolist (token phps-mode-lexer-tokens)
+             (let ((start (car (cdr token)))
+                   (end (cdr (cdr token)))
+                   (token-name (car token)))
+               (let ((token-syntax-color (phps-mode-lexer-get-token-syntax-color token-name)))
+                 (if token-syntax-color
+                     (phps-mode-lexer-set-region-syntax-color start end token-syntax-color)
+                   (phps-mode-lexer-clear-region-syntax-color start end)))))
 
-         (let ((errors (nth 4 result))
-               (error-start)
-               (error-end))
-           (when errors
-             (setq error-start (car (cdr errors)))
-             (when error-start
-               (if (car (cdr (cdr errors)))
-                   (progn
-                     (setq error-end (car (cdr (cdr (cdr errors)))))
-                     (phps-mode-lexer-set-region-syntax-color
-                      error-start
-                      error-end
-                      (list 'font-lock-face 'font-lock-warning-face)))
-                 (setq error-end (point-max))
-                 (phps-mode-lexer-set-region-syntax-color
-                  error-start
-                  error-end
-                  (list 'font-lock-face 'font-lock-warning-face))))
-             (signal 'error (list (format "Lex Errors: %s" (car errors)))))))))))
+           (let ((errors (nth 4 result))
+                 (error-start)
+                 (error-end))
+             (when errors
+               (setq error-start (car (cdr errors)))
+               (when error-start
+                 (if (car (cdr (cdr errors)))
+                     (progn
+                       (setq error-end (car (cdr (cdr (cdr errors)))))
+                       (phps-mode-lexer-set-region-syntax-color
+                        error-start
+                        error-end
+                        (list 'font-lock-face 'font-lock-warning-face)))
+                   (setq error-end (point-max))
+                   (phps-mode-lexer-set-region-syntax-color
+                    error-start
+                    error-end
+                    (list 'font-lock-face 'font-lock-warning-face))))
+               (signal 'error (list (format "Lex Errors: %s" (car errors))))))))))))
 
 (defun phps-mode-analyzer-lex-string (contents &optional start end states state state-stack tokens)
   "Run lexer on CONTENTS."
@@ -2099,52 +2100,53 @@
               incremental-state-stack
               head-tokens))
    (lambda(result)
-     (with-current-buffer buffer-name
+     (when (get-buffer buffer-name)
+       (with-current-buffer buffer-name
 
-       (phps-mode-debug-message
-        (message "Incrementally-lexed-string: %s" result))
+         (phps-mode-debug-message
+          (message "Incrementally-lexed-string: %s" result))
 
-       (setq-local phps-mode-lexer-tokens (nth 0 result))
-       (setq-local phps-mode-lexer-states (nth 1 result))
-       (setq-local phps-mode-lexer-STATE (nth 2 result))
-       (setq-local phps-mode-lexer-state_stack (nth 3 result))
-       (setq-local phps-mode-functions-processed-buffer nil)
-       (phps-mode-analyzer--reset-imenu)
+         (setq-local phps-mode-lexer-tokens (nth 0 result))
+         (setq-local phps-mode-lexer-states (nth 1 result))
+         (setq-local phps-mode-lexer-STATE (nth 2 result))
+         (setq-local phps-mode-lexer-state_stack (nth 3 result))
+         (setq-local phps-mode-functions-processed-buffer nil)
+         (phps-mode-analyzer--reset-imenu)
 
-       ;; Apply syntax color on tokens
-       (dolist (token phps-mode-lexer-tokens)
-         (let ((start (car (cdr token)))
-               (end (cdr (cdr token)))
-               (token-name (car token)))
+         ;; Apply syntax color on tokens
+         (dolist (token phps-mode-lexer-tokens)
+           (let ((start (car (cdr token)))
+                 (end (cdr (cdr token)))
+                 (token-name (car token)))
 
-           ;; Apply syntax color on token
-           (let ((token-syntax-color (phps-mode-lexer-get-token-syntax-color token-name)))
-             (if token-syntax-color
-                 (phps-mode-lexer-set-region-syntax-color start end token-syntax-color)
-               (phps-mode-lexer-clear-region-syntax-color start end)))))
+             ;; Apply syntax color on token
+             (let ((token-syntax-color (phps-mode-lexer-get-token-syntax-color token-name)))
+               (if token-syntax-color
+                   (phps-mode-lexer-set-region-syntax-color start end token-syntax-color)
+                 (phps-mode-lexer-clear-region-syntax-color start end)))))
 
-       (let ((errors (nth 4 result))
-             (error-start)
-             (error-end))
-         (when errors
-           (setq error-start (car (cdr errors)))
-           (when error-start
-             (if (car (cdr (cdr errors)))
-                 (progn
-                   (setq error-end (car (cdr (cdr (cdr errors)))))
-                   (phps-mode-lexer-set-region-syntax-color
-                    error-start
-                    error-end
-                    (list 'font-lock-face 'font-lock-warning-face)))
-               (setq error-end (point-max))
-               (phps-mode-lexer-set-region-syntax-color
-                error-start
-                error-end
-                (list 'font-lock-face 'font-lock-warning-face))))
-           (signal 'error (list (format "Incremental Lex Errors: %s" (car errors))))))
+         (let ((errors (nth 4 result))
+               (error-start)
+               (error-end))
+           (when errors
+             (setq error-start (car (cdr errors)))
+             (when error-start
+               (if (car (cdr (cdr errors)))
+                   (progn
+                     (setq error-end (car (cdr (cdr (cdr errors)))))
+                     (phps-mode-lexer-set-region-syntax-color
+                      error-start
+                      error-end
+                      (list 'font-lock-face 'font-lock-warning-face)))
+                 (setq error-end (point-max))
+                 (phps-mode-lexer-set-region-syntax-color
+                  error-start
+                  error-end
+                  (list 'font-lock-face 'font-lock-warning-face))))
+             (signal 'error (list (format "Incremental Lex Errors: %s" (car errors))))))
 
-       (phps-mode-debug-message
-        (message "Incremental tokens: %s" incremental-tokens))))))
+         (phps-mode-debug-message
+          (message "Incremental tokens: %s" incremental-tokens)))))))
 
 (defun phps-mode-functions-get-processed-buffer ()
   "Get flag for whether buffer is processed or not."
