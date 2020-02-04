@@ -1,12 +1,12 @@
 ;;; phps-mode.el --- Major mode for PHP with Semantic integration -*- lexical-binding: t -*-
 
-;; Copyright (C) 2018-2019  Free Software Foundation, Inc.
+;; Copyright (C) 2018-2020  Free Software Foundation, Inc.
 
 ;; Author: Christian Johansson <christian@cvj.se>
 ;; Maintainer: Christian Johansson <christian@cvj.se>
 ;; Created: 3 Mar 2018
-;; Modified: 28 Jan 2019
-;; Version: 0.3.30
+;; Modified: 4 Feb 2020
+;; Version: 0.3.31
 ;; Keywords: tools, convenience
 ;; URL: https://github.com/cjohansson/emacs-phps-mode
 

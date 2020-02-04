@@ -311,6 +311,13 @@
    (should (equal phps-mode-lexer-tokens
                   '((T_OPEN_TAG 1 . 7) (T_ECHO 7 . 11) ("\"" 12 . 13) (T_ENCAPSED_AND_WHITESPACE 13 . 15) (T_VARIABLE 15 . 22) (T_CONSTANT_ENCAPSED_STRING 22 . 24) ("\"" 24 . 25) (";" 25 . 26)))))
 
+  (phps-mode-test-with-buffer
+   "<?php $var = \"\\\\\";"
+   "Double quoted string containing only two backslashes"
+   ;; (message "Tokens 2: %s" phps-mode-lexer-tokens)
+   (should (equal phps-mode-lexer-tokens
+                  '((T_OPEN_TAG 1 . 7) (T_VARIABLE 7 . 11) ("=" 12 . 13) (T_CONSTANT_ENCAPSED_STRING 14 . 18) (";" 18 . 19)))))
+
   )
 
 (defun phps-mode-test-lexer-namespaces ()

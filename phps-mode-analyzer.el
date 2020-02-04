@@ -1518,7 +1518,7 @@
                 (_data (buffer-substring-no-properties start end))
                 (open-quote t))
 
-           ;; Move forward from the double-quote
+           ;; Move forward from the double-quote one character
            (forward-char)
 
            (while open-quote
@@ -1534,13 +1534,22 @@
                ;; Do we find a ending double quote or starting variable?
                (if string-start
                    (let ((string-start (match-beginning 0))
-                         (is-escaped nil))
+                         (is-escaped nil)
+                         (is-escaped-1 nil)
+                         (is-escaped-2 nil))
 
-                     ;; Go to character before match start
+                     ;; Check whether one character back is escape character
                      (goto-char (1- string-start))
+                     (setq is-escaped-1 (looking-at-p "\\\\"))
 
-                     ;; Store whether character is escaped or not
-                     (setq is-escaped (looking-at-p "\\\\"))
+                     ;; Check whether two characters back is escape character
+                     (goto-char (- string-start 2))
+                     (setq is-escaped-2 (looking-at-p "\\\\"))
+
+                     (setq is-escaped
+                           (and
+                            is-escaped-1
+                            (not is-escaped-2)))
 
                      ;; Do we find variable inside quote?
                      (goto-char string-start)
@@ -1558,10 +1567,12 @@
                          (phps-mode-lexer-RETURN_TOKEN "\"" start (1+ start))
                          (phps-mode-lexer-RETURN_TOKEN 'T_ENCAPSED_AND_WHITESPACE (1+ start) string-start))))
                  (progn
-                   (signal 'error (list
-                                   (format "Found no ending of quote at %s" start)
-                                   start))
-                   (setq open-quote nil))))))))
+                   (setq open-quote nil)
+                   (signal
+                    'error
+                    (list
+                     (format "Found no ending of quote at %s" start)
+                     start)))))))))
 
       (phps-mode-lexer-re2c-rule
        (and ST_IN_SCRIPTING
