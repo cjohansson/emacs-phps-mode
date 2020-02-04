@@ -43,6 +43,21 @@
 
 (require 'subr-x)
 
+(defvar phps-mode-serial-profiling nil
+  "Whether to profile serial commands or not.")
+
+(defvar phps-mode-async-process nil
+  "Whether or not to use asynchronous process.")
+
+(defvar phps-mode-async-process-using-async-el nil
+  "Use async.el for asynchronous processing.")
+
+(defvar phps-mode-async-processes (make-hash-table :test 'equal)
+  "Table of active asynchronous processes.")
+
+(defvar phps-mode-async-threads (make-hash-table :test 'equal)
+  "Table of active asynchronous threads.")
+
 (defvar phps-mode-inline-mmm-submode nil
   "Symbol declaring what mmm-mode to use as submode in inline areas.")
 
@@ -1844,7 +1859,10 @@
                     error-start
                     error-end
                     (list 'font-lock-face 'font-lock-warning-face))))
-               (signal 'error (list (format "Lex Errors: %s" (car errors))))))))))))
+               (signal 'error (list (format "Lex Errors: %s" (car errors)))))))))
+     phps-mode-async-process
+     phps-mode-async-process-using-async-el
+     phps-mode-serial-profiling)))
 
 (defun phps-mode-analyzer-lex-string (contents &optional start end states state state-stack tokens)
   "Run lexer on CONTENTS."
@@ -2157,7 +2175,10 @@
              (signal 'error (list (format "Incremental Lex Errors: %s" (car errors))))))
 
          (phps-mode-debug-message
-          (message "Incremental tokens: %s" incremental-tokens)))))))
+          (message "Incremental tokens: %s" incremental-tokens)))))
+   phps-mode-async-process
+   phps-mode-async-process-using-async-el
+   phps-mode-serial-profiling))
 
 (defun phps-mode-functions-get-processed-buffer ()
   "Get flag for whether buffer is processed or not."

@@ -8,28 +8,15 @@
 ;;; Code:
 
 
-(defvar phps-mode-serial-profiling nil
-  "Whether to profile serial commands or not.")
-
-(defvar phps-mode-async-process nil
-  "Whether or not to use asynchronous process.")
-
-(defvar phps-mode-async-process-using-async-el nil
-  "Use async.el for asynchronous processing.")
-
-(defvar phps-mode-async-processes (make-hash-table :test 'equal)
-  "Table of active asynchronous processes.")
-
-(defvar phps-mode-async-threads (make-hash-table :test 'equal)
-  "Table of active asynchronous threads.")
-
 ;; TODO Need to fix error reporting in synchronous mode
 ;; TODO Need to add support for format buffer when using asynchronous processes
-(defun phps-mode-serial-commands (key start end)
-  "Run command with KEY, first START and if successfully then END with the result of START as argument."
+(defun phps-mode-serial-commands (key start end &optional async async-by-process profiling)
+  "Run command with KEY, first START and if successfully then END with the result of START as argument.  Optional arguments ASYNC ASYNC-BY-PROCESS and PROFILING specifies additional opions."
   (let ((start-time (current-time)))
-    (if phps-mode-async-process
-        (if phps-mode-async-process-using-async-el
+    (if (and async
+             (boundp 'phps-mode-async-processes)
+             (boundp 'phps-mode-async-threads))
+        (if async-by-process
             (progn
               (require 'async)
 
@@ -65,7 +52,7 @@
                           (end-return nil))
 
                       ;; Profile execution in debug mode
-                      (when phps-mode-serial-profiling
+                      (when profiling
                         (let* ((end-time (current-time))
                                (end-time-float
                                 (+ (car end-time) (car (cdr end-time)) (* (car (cdr (cdr end-time))) 0.000001)))
@@ -89,7 +76,7 @@
                           (error (setq end-return (list 'error conditions start-time))))
 
                         ;; Profile execution in debug mode
-                        (when phps-mode-serial-profiling
+                        (when profiling
                           (let* ((end-time (current-time))
                                  (end-time-float
                                   (+ (car end-time) (car (cdr end-time)) (* (car (cdr (cdr end-time))) 0.000001)))
@@ -132,7 +119,7 @@
                   (error (setq start-return (list 'error conditions start-time))))
 
                 ;; Profile execution in debug mode
-                (when phps-mode-serial-profiling
+                (when profiling
                   (let* ((end-time (current-time))
                          (end-time-float
                           (+ (car end-time) (car (cdr end-time)) (* (car (cdr (cdr end-time))) 0.000001)))
@@ -157,7 +144,7 @@
                       (error (setq end-return (list 'error conditions start-time))))
 
                     ;; Profile execution in debug mode
-                    (when phps-mode-serial-profiling
+                    (when profiling
                       (let* ((end-time (current-time))
                              (end-time-float
                               (+ (car end-time) (car (cdr end-time)) (* (car (cdr (cdr end-time))) 0.000001)))
@@ -198,7 +185,7 @@
           (error (setq start-return (list 'error conditions start-time))))
 
         ;; Profile execution in debug mode
-        (when phps-mode-serial-profiling
+        (when profiling
           (let* ((end-time (current-time))
                  (end-time-float
                   (+ (car end-time) (car (cdr end-time)) (* (car (cdr (cdr end-time))) 0.000001)))
@@ -222,7 +209,7 @@
               (error (setq end-return (list 'error conditions start-time))))
 
             ;; Profile execution in debug mode
-            (when phps-mode-serial-profiling
+            (when profiling
               (let* ((end-time (current-time))
                      (end-time-float
                       (+ (car end-time) (car (cdr end-time)) (* (car (cdr (cdr end-time))) 0.000001)))
