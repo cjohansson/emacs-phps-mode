@@ -50,12 +50,15 @@
 
 ;; NOTE use wisent-parse-toggle-verbose-flag and (semantic-debug) to debug parsing
 
-(require 'phps-mode-analyzer)
 (require 'phps-mode-flymake)
+(require 'phps-mode-lex-analyzer)
 (require 'phps-mode-semantic)
 (require 'phps-mode-syntax-table)
-(require 'phps-mode-tags)
+
 (require 'semantic)
+
+(defvar phps-mode-idle-interval 1
+  "Idle seconds before running the incremental lexer.")
 
 (defvar phps-mode-use-psr-2 t
   "Whether to use PSR-2 guidelines for white-space or not.")
@@ -213,13 +216,13 @@
   (setq-local comment-end "")
 
   ;; Support for change detection
-  (add-hook 'after-change-functions #'phps-mode-functions-after-change 0 t)
+  (add-hook 'after-change-functions #'phps-mode-analyzer-after-change 0 t)
 
   ;; Lexer
   (setq-local semantic-lex-syntax-table phps-mode-syntax-table)
 
   ;; Semantic
-  (setq-local semantic-lex-analyzer #'phps-mode-analyzer-lex)
+  (setq-local semantic-lex-analyzer #'phps-mode-lex-analyzer)
 
   ;; Set semantic-lex initializer function
   (add-hook 'semantic-lex-reset-functions #'phps-mode-lexer-setup 0 t)
@@ -236,8 +239,7 @@
 
   ;; Wisent LALR parser TODO
   ;; (phps-mode-tags-init)
-
-  )
+)
 
 (provide 'phps-mode)
 ;;; phps-mode.el ends here

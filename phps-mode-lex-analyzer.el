@@ -1,6 +1,6 @@
-;;; phps-mode-analyzer.el -- Lexer and helper functions for PHPs -*- lexical-binding: t -*-
+;;; phps-mode-lex-analyzer.el -- Lex analyzer for PHPs -*- lexical-binding: t -*-
 
-;; Copyright (C) 2018-2019  Free Software Foundation, Inc.
+;; Copyright (C) 2018-2020  Free Software Foundation, Inc.
 
 ;; This file is not part of GNU Emacs.
 
@@ -20,22 +20,21 @@
 
 ;;; Commentary:
 
-;; *Define the lexer for this grammar
-;; based on the Zend PHP Lexer at
-;; `https://github.com/php/php-src/blob/master/Zend/zend_language_scanner.l'
-;; which is using re2c.
+;; This file contains all meta-lexer logic. That is things like:
 ;;
+;; * Executing different kinds of lexers based on conditions
 ;; * Also supply logic for indentation and imenu-handling
-;; Change detection and incremental lexer
-;;
+;; * Indentation based on lexer tokens
+;; * Imenu based on lexer tokens
 ;; * Syntax coloring based on lexer tokens
+
 
 ;;; Code:
 
 
+(require 'phps-mode-lexer)
 (require 'phps-mode-macros)
 (require 'phps-mode-serial)
-(require 'phps-mode-wy-macros)
 
 (require 'semantic)
 (require 'semantic/lex)
@@ -43,187 +42,48 @@
 
 (require 'subr-x)
 
-(defvar phps-mode-serial-profiling nil
-  "Whether to profile serial commands or not.")
 
-(defvar phps-mode-async-process nil
-  "Whether or not to use asynchronous process.")
+;; FLAGS
 
-(defvar phps-mode-async-process-using-async-el nil
-  "Use async.el for asynchronous processing.")
 
-(defvar phps-mode-async-processes (make-hash-table :test 'equal)
-  "Table of active asynchronous processes.")
-
-(defvar phps-mode-async-threads (make-hash-table :test 'equal)
-  "Table of active asynchronous threads.")
-
-(defvar phps-mode-inline-mmm-submode nil
-  "Symbol declaring what mmm-mode to use as submode in inline areas.")
-
-(defvar phps-mode-analyzer-change-min nil
-  "The minium point of change.");
-
-(defvar phps-mode-idle-interval 1
-  "Idle seconds before running the incremental lexer.")
-
-(defvar phps-mode-functions-allow-after-change t
+(defvar phps-mode-lex-analyzer--allow-after-change-p t
   "Flag to tell us whether after change detection is enabled or not.")
 
-(defvar phps-mode-functions-idle-timer nil
-  "Timer object of idle timer.")
+(defvar phps-mode-lex-analyzer--change-min nil
+  "The minium point of change.");
 
-(defvar phps-mode-functions-imenu nil
-  "The Imenu alist for current buffer, nil if none.")
-
-(defvar phps-mode-functions-lines-indent nil
-  "The indentation of each line in buffer, nil if none.")
-
-(defvar phps-mode-functions-processed-buffer nil
+(defvar phps-mode-lex-analyzer--processed-buffer-p nil
   "Flag whether current buffer is processed or not.")
 
-(defvar phps-mode-analyzer-process-on-indent-and-imenu nil
+(defvar phps-mode-lex-analyzer--process-on-indent-and-imenu-p nil
   "Whether to automatically process buffer when using indent or imenu.")
 
-(defvar phps-mode-lexer-tokens nil
-  "Last lexer tokens.")
 
-(defvar phps-mode-lexer-states nil
-  "A list of lists containing start, state and state stack.")
+;; VARIABLES
 
 
-;; SETTINGS
+(defvar phps-mode-lex-analyzer--idle-timer nil
+  "Timer object of idle timer.")
 
+(defvar phps-mode-lex-analyzer--imenu nil
+  "The Imenu alist for current buffer, nil if none.")
 
-;; @see https://secure.php.net/manual/en/language.types.integer.php
-(defvar phps-mode-lexer-long-limit 2147483648
-  "Limit for 32-bit integer.")
-
-
-(phps-mode-wy-macros-CG 'PARSER_MODE t)
-(phps-mode-wy-macros-CG 'SHORT_TAGS t)
-
-
-;; FLAGS/SIGNALS
-
-
-(defvar phps-mode-lexer-declaring_namespace nil
-  "Flag whether we are declaring namespace.")
-
-(defvar phps-mode-lexer-prepend_trailing_brace nil
-  "Flag whether we should prepend trailing brace.")
-
-(defvar phps-mode-lexer-STATE nil
-  "Current state.")
-
-(defvar phps-mode-lexer-state_stack nil
-  "Stack of states.")
-
-(defvar phps-mode-lexer-EXPECTED nil
-  "Flag whether something is expected or not.")
-
-(defvar phps-mode-lexer-heredoc_label_stack (list)
-  "The current heredoc_label.")
-
-
-;; REGULAR EXPRESSIONS
-
-
-(defvar phps-mode-lexer-BNUM "0b[01]+"
-  "Boolean number.")
-
-(defvar phps-mode-lexer-HNUM "0x[0-9a-fA-F]+"
-  "Hexadecimal number.")
-
-(defvar phps-mode-lexer-LNUM "[0-9]+"
-  "Long number.")
-
-(defvar phps-mode-lexer-DNUM "\\([0-9]*\\.[0-9]+\\)\\|\\([0-9]+\\.[0-9]*\\)"
-  "Double number.")
-
-(defvar phps-mode-lexer-EXPONENT_DNUM
-  (format "\\(\\(%s\\|%s\\)[eE][\\+-]?%s\\)"
-          phps-mode-lexer-LNUM
-          phps-mode-lexer-DNUM
-          phps-mode-lexer-LNUM)
-  "Exponent double number.")
-
-(defvar phps-mode-lexer-LABEL
-  "[A-Za-z_[:nonascii:]][0-9A-Za-z_[:nonascii:]]*"
-  "Labels are used for names.")
-;; NOTE original is [a-zA-Z_\x80-\xff][a-zA-Z0-9_\x80-\xff]*
-;; NOTE Rebuilt for comparability with emacs-lisp
-
-(defvar phps-mode-lexer-WHITESPACE "[ \n\r\t]+"
-  "White-space.")
-
-(defvar phps-mode-lexer-TABS_AND_SPACES "[ \t]*"
-  "Tabs and white-spaces.")
-
-(defvar phps-mode-lexer-TOKENS "[][;:,.()|^&+/*=%!~$<>?@-]"
-  "Tokens.")
-;; NOTE Original is [;:,.\[\]()|^&+-/*=%!~$<>?@]
-;; NOTE The hyphen moved last since it has special meaning and to avoid it being interpreted as a range.
-
-(defvar phps-mode-lexer-ANY_CHAR "[^z-a]"
-  "Any character.  The Zend equivalent is [^] but is not possible in Emacs Lisp.")
-
-(defvar phps-mode-lexer-NEWLINE "[\n\r]"
-  "Newline characters.  The Zend equivalent is (\"\r\"|\"\n\"|\"\r\n\").")
+(defvar phps-mode-lex-analyzer--lines-indent nil
+  "The indentation of each line in buffer, nil if none.")
 
 
 ;; FUNCTIONS
 
 
-(defun phps-mode-lexer-BEGIN (state)
-  "Begin STATE."
-  ;; (message "Begun state %s" state)
-  (setq-local phps-mode-lexer-STATE state))
-
-;; _yy_push_state
-(defun phps-mode-lexer-yy_push_state (new-state)
-  "Add NEW-STATE to stack and then begin state."
-  (push phps-mode-lexer-STATE phps-mode-lexer-state_stack)
-  ;; (message "Added state %s to stack begun state %s" phps-mode-lexer-STATE new-state)
-  (phps-mode-lexer-BEGIN new-state))
-
-(defun phps-mode-lexer-yy_pop_state ()
-  "Pop current state from stack."
-  (let ((old-state (pop phps-mode-lexer-state_stack)))
-    ;; (message "Going back to poppped state %s" old-state)
-    (if old-state
-        (phps-mode-lexer-BEGIN old-state)
-      (signal 'error (list
-                      (format "PHPs Lexer Error - Trying to pop last state at %d" (point))
-                      (point))))))
-
-(defun phps-mode-lexer-MOVE_FORWARD (position)
-  "Move forward to POSITION."
-  (when (boundp 'semantic-lex-end-point)
-    (setq semantic-lex-end-point position)))
-
-(defun phps-mode-lexer-yyless (points)
-  "Move lexer back POINTS."
-  (when (boundp 'semantic-lex-end-point)
-    (setq semantic-lex-end-point (- semantic-lex-end-point points))))
-
-(defun phps-mode-lexer-set-region-syntax-color (start end properties)
+(defun phps-mode-lex-analyzer--set-region-syntax-color (start end properties)
   "Do syntax coloring for region START to END with PROPERTIES."
   (with-silent-modifications (set-text-properties start end properties)))
 
-(defun phps-mode-lexer-clear-region-syntax-color (start end)
+(defun phps-mode-lex-analyzer--clear-region-syntax-color (start end)
   "Clear region of syntax coloring from START to END."
   (with-silent-modifications (set-text-properties start end nil)))
 
-(defun phps-mode-anaylzer-inline-char-handler ()
-  "Mimic inline_char_handler."
-  (let ((start (match-beginning 0)))
-    (let ((string-start (search-forward "<?" nil t)))
-      (if string-start
-          (phps-mode-lexer-RETURN_TOKEN 'T_INLINE_HTML start (- string-start 2))
-        (phps-mode-lexer-RETURN_TOKEN 'T_INLINE_HTML start (point-max))))))
-
-(defun phps-mode-lexer-get-token-syntax-color (token)
+(defun phps-mode-lex-analyzer--get-token-syntax-color (token)
   "Return syntax color for TOKEN."
   ;; Syntax coloring
   ;; see https://www.gnu.org/software/emacs/manual/html_node/elisp/Faces-for-Font-Lock.html#Faces-for-Font-Lock
@@ -387,103 +247,48 @@
      )
     (list 'font-lock-face 'font-lock-constant-face))
 
+   ((string= token 'T_ERROR)
+    ;; NOTE This token is artificial and not PHP native
+    (list 'font-lock-face 'font-lock-warning-face))
+
    (t (list 'font-lock-face 'font-lock-constant-face))))
-
-(defun phps-mode-lexer-RETURN_OR_SKIP_TOKEN (token start end)
-  "Return TOKEN with START and END but only in parse-mode."
-  (when (phps-mode-wy-macros-CG 'PARSER_MODE)
-    (phps-mode-analyzer-emit-token token start end)))
-
-(defun phps-mode-lexer-RETURN_TOKEN (token start end)
-  "Push TOKEN to list with START and END."
-  (phps-mode-analyzer-emit-token token start end))
-
-(defun phps-mode-analyzer-emit-token (token start end)
-  "Emit TOKEN with START and END."
-
-  ;; (when (and
-  ;;        (equal token 'T_INLINE_HTML)
-  ;;        phps-mode-inline-mmm-submode
-  ;;        (fboundp 'mmm-make-region))
-  ;;   (mmm-make-region phps-mode-inline-mmm-submode start end))
-
-  ;; Push token start, end, lexer state and state stack to variable
-  (push
-   (list start end phps-mode-lexer-STATE phps-mode-lexer-state_stack) phps-mode-lexer-states)
-
-  (semantic-lex-push-token (semantic-lex-token token start end)))
-
-;; TODO Figure out what this does
-(defun phps-mode-lexer-SKIP_TOKEN (_token _start _end)
-  "Skip TOKEN to list with START and END.")
-
-(defvar phps-mode-lexer-re2c-matching-body nil
-  "Lambda-expression for longest matching condition.")
-
-(defvar phps-mode-lexer-re2c-matching-length nil
-  "Length of longest matching condition.")
-
-(defvar phps-mode-lexer-re2c-matching-data nil
-  "Match data for longest matching condition.")
-
-(defun phps-mode-lexer-re2c-rule (condition body)
-  "Process rule with CONDITION and BODY."
-  (when condition
-    (let ((match-end (match-end 0))
-          (match-beginning (match-beginning 0)))
-      (let ((matching-length (- match-end match-beginning)))
-        (when (> matching-length 0)
-          (when (or (not phps-mode-lexer-re2c-matching-length)
-                    (> matching-length phps-mode-lexer-re2c-matching-length))
-            (setq phps-mode-lexer-re2c-matching-length matching-length)
-            (setq phps-mode-lexer-re2c-matching-data (match-data))
-            (setq phps-mode-lexer-re2c-matching-body body)))))))
-
-(defun phps-mode-lexer-re2c-execute ()
-  "Execute matching body (if any)."
-  (if phps-mode-lexer-re2c-matching-body
-      (progn
-        
-        ;; (message "Executing body: %s" phps-mode-lexer-re2c-matching-body)
-        ;; (message "Found match %s" phps-mode-lexer-re2c-matching-data)
-        (set-match-data phps-mode-lexer-re2c-matching-data)
-        (funcall phps-mode-lexer-re2c-matching-body))
-    (signal 'error (list "Found no matching lexer rule to execute at %d" (point)))))
 
 
 ;; LEXERS
 
-(define-lex-analyzer phps-mode-analyzer-lexer
-  "Elisp port of original Zend re2c lexer."
+
+(define-lex-analyzer phps-mode-lex-analyzer--cached-analyzer
+  "Return latest processed tokens or else just return one giant error token."
   t
 
   (let ((old-start (point)))
-    (if phps-mode-lexer-tokens
+    (if phps-mode-lexer--tokens
         (progn
           ;; Add all updated tokens to semantic
           (phps-mode-debug-message
            (message
             "Updating semantic lexer tokens from point %s, tokens: %s, point-max: %s"
             old-start
-            phps-mode-lexer-tokens
+            phps-mode-lexer--tokens
             (point-max)))
-          (dolist (token phps-mode-lexer-tokens)
+          (dolist (token phps-mode-lexer--tokens)
             (let ((start (car (cdr token)))
                   (end (cdr (cdr token)))
                   (token-name (car token)))
 
               ;; Apply syntax color on token
-              (let ((token-syntax-color (phps-mode-lexer-get-token-syntax-color token-name)))
+              (let ((token-syntax-color
+                     (phps-mode-lex-analyzer--get-token-syntax-color token-name)))
                 (if token-syntax-color
-                    (phps-mode-lexer-set-region-syntax-color start end token-syntax-color)
-                  (phps-mode-lexer-clear-region-syntax-color start end)))
+                    (phps-mode-lex-analyzer--set-region-syntax-color start end token-syntax-color)
+                  (phps-mode-lex-analyzer--clear-region-syntax-color start end)))
 
               (semantic-lex-push-token
                (semantic-lex-token token-name start end))))
 
-          (phps-mode-lexer-MOVE_FORWARD (point-max)))
+          (phps-mode-lexer--MOVE_FORWARD (point-max)))
 
-      (phps-mode-lexer-set-region-syntax-color
+      (phps-mode-lex-analyzer--set-region-syntax-color
        (point-min)
        (point-max)
        (list 'font-lock-face 'font-lock-warning-face))
@@ -498,1320 +303,12 @@
   "Elisp port of original Zend re2c lexer."
   t
 
-  (let ((old-start (point)))
+  )
 
-    (phps-mode-debug-message (message "Running lexer from %s" old-start))
-    
-    (let ((heredoc_label (car phps-mode-lexer-heredoc_label_stack))
-          (SHEBANG (equal phps-mode-lexer-STATE 'SHEBANG))
-          (ST_IN_SCRIPTING (equal phps-mode-lexer-STATE 'ST_IN_SCRIPTING))
-          (ST_INITIAL (equal phps-mode-lexer-STATE 'ST_INITIAL))
-          (ST_LOOKING_FOR_PROPERTY (equal phps-mode-lexer-STATE 'ST_LOOKING_FOR_PROPERTY))
-          (ST_DOUBLE_QUOTES (equal phps-mode-lexer-STATE 'ST_DOUBLE_QUOTES))
-          (ST_BACKQUOTE (equal phps-mode-lexer-STATE 'ST_BACKQUOTE))
-          (ST_HEREDOC (equal phps-mode-lexer-STATE 'ST_HEREDOC))
-          (ST_NOWDOC (equal phps-mode-lexer-STATE 'ST_NOWDOC))
-          (ST_LOOKING_FOR_VARNAME (equal phps-mode-lexer-STATE 'ST_LOOKING_FOR_VARNAME))
-          (ST_END_HEREDOC (equal phps-mode-lexer-STATE 'ST_END_HEREDOC))
-          (ST_VAR_OFFSET (equal phps-mode-lexer-STATE 'ST_VAR_OFFSET)))
-
-      ;; Reset re2c flags
-      (setq phps-mode-lexer-re2c-matching-body nil)
-      (setq phps-mode-lexer-re2c-matching-length nil)
-
-      (phps-mode-lexer-re2c-rule
-       (and ST_IN_SCRIPTING (looking-at "exit"))
-       (lambda()
-         (phps-mode-lexer-RETURN_TOKEN 'T_EXIT (match-beginning 0) (match-end 0))))
-
-      (phps-mode-lexer-re2c-rule
-       (and ST_IN_SCRIPTING (looking-at "die"))
-       (lambda()
-         (phps-mode-lexer-RETURN_TOKEN 'T_DIE (match-beginning 0) (match-end 0))))
-
-      (phps-mode-lexer-re2c-rule
-       (and ST_IN_SCRIPTING (looking-at "fn"))
-       (lambda()
-         (phps-mode-lexer-RETURN_TOKEN 'T_FN (match-beginning 0) (match-end 0))))
-
-      (phps-mode-lexer-re2c-rule
-       (and ST_IN_SCRIPTING (looking-at "function"))
-       (lambda()
-         (phps-mode-lexer-RETURN_TOKEN 'T_FUNCTION (match-beginning 0) (match-end 0))))
-
-      (phps-mode-lexer-re2c-rule
-       (and ST_IN_SCRIPTING (looking-at "const"))
-       (lambda()
-         (phps-mode-lexer-RETURN_TOKEN 'T_CONST (match-beginning 0) (match-end 0))))
-
-      (phps-mode-lexer-re2c-rule
-       (and ST_IN_SCRIPTING (looking-at "return"))
-       (lambda()
-         (phps-mode-lexer-RETURN_TOKEN 'T_RETURN (match-beginning 0) (match-end 0))))
-
-      (phps-mode-lexer-re2c-rule
-       (and ST_IN_SCRIPTING
-            (looking-at
-             (concat "yield" phps-mode-lexer-WHITESPACE "from" "[^a-zA-Z0-9_\x80-\xff]")))
-       (lambda()
-         (phps-mode-lexer-RETURN_TOKEN 'T_YIELD_FROM (match-beginning 0) (match-end 0))))
-
-      (phps-mode-lexer-re2c-rule
-       (and ST_IN_SCRIPTING (looking-at "yield"))
-       (lambda()
-         (phps-mode-lexer-RETURN_TOKEN 'T_YIELD (match-beginning 0) (match-end 0))))
-
-      (phps-mode-lexer-re2c-rule
-       (and ST_IN_SCRIPTING (looking-at "try"))
-       (lambda()
-         (phps-mode-lexer-RETURN_TOKEN 'T_TRY (match-beginning 0) (match-end 0))))
-
-      (phps-mode-lexer-re2c-rule
-       (and ST_IN_SCRIPTING (looking-at "catch"))
-       (lambda()
-         (phps-mode-lexer-RETURN_TOKEN 'T_CATCH (match-beginning 0) (match-end 0))))
-
-      (phps-mode-lexer-re2c-rule
-       (and ST_IN_SCRIPTING (looking-at "finally"))
-       (lambda()
-         (phps-mode-lexer-RETURN_TOKEN 'T_FINALLY (match-beginning 0) (match-end 0))))
-
-      (phps-mode-lexer-re2c-rule
-       (and ST_IN_SCRIPTING (looking-at "throw"))
-       (lambda()
-         (phps-mode-lexer-RETURN_TOKEN 'T_THROW (match-beginning 0) (match-end 0))))
-
-      (phps-mode-lexer-re2c-rule
-       (and ST_IN_SCRIPTING (looking-at "if"))
-       (lambda()
-         (phps-mode-lexer-RETURN_TOKEN 'T_IF (match-beginning 0) (match-end 0))))
-
-      (phps-mode-lexer-re2c-rule
-       (and ST_IN_SCRIPTING (looking-at "elseif"))
-       (lambda()
-         (phps-mode-lexer-RETURN_TOKEN 'T_ELSEIF (match-beginning 0) (match-end 0))))
-
-      (phps-mode-lexer-re2c-rule
-       (and ST_IN_SCRIPTING (looking-at "endif"))
-       (lambda()
-         (phps-mode-lexer-RETURN_TOKEN 'T_ENDIF (match-beginning 0) (match-end 0))))
-
-      (phps-mode-lexer-re2c-rule
-       (and ST_IN_SCRIPTING (looking-at "else"))
-       (lambda()
-         (phps-mode-lexer-RETURN_TOKEN 'T_ELSE (match-beginning 0) (match-end 0))))
-
-      (phps-mode-lexer-re2c-rule
-       (and ST_IN_SCRIPTING (looking-at "while"))
-       (lambda()
-         (phps-mode-lexer-RETURN_TOKEN 'T_WHILE (match-beginning 0) (match-end 0))))
-
-      (phps-mode-lexer-re2c-rule
-       (and ST_IN_SCRIPTING (looking-at "endwhile"))
-       (lambda()
-         (phps-mode-lexer-RETURN_TOKEN 'T_ENDWHILE (match-beginning 0) (match-end 0))))
-
-      (phps-mode-lexer-re2c-rule
-       (and ST_IN_SCRIPTING (looking-at "do"))
-       (lambda()
-         (phps-mode-lexer-RETURN_TOKEN 'T_DO (match-beginning 0) (match-end 0))))
-
-      (phps-mode-lexer-re2c-rule
-       (and ST_IN_SCRIPTING (looking-at "for"))
-       (lambda()
-         (phps-mode-lexer-RETURN_TOKEN 'T_FOR (match-beginning 0) (match-end 0))))
-
-      (phps-mode-lexer-re2c-rule
-       (and ST_IN_SCRIPTING (looking-at "endfor"))
-       (lambda()
-         (phps-mode-lexer-RETURN_TOKEN 'T_ENDFOR (match-beginning 0) (match-end 0))))
-
-      (phps-mode-lexer-re2c-rule
-       (and ST_IN_SCRIPTING (looking-at "foreach"))
-       (lambda()
-         (phps-mode-lexer-RETURN_TOKEN 'T_FOREACH (match-beginning 0) (match-end 0))))
-
-      (phps-mode-lexer-re2c-rule
-       (and ST_IN_SCRIPTING (looking-at "endforeach"))
-       (lambda()
-         (phps-mode-lexer-RETURN_TOKEN 'T_ENDFOREACH (match-beginning 0) (match-end 0))))
-
-      (phps-mode-lexer-re2c-rule
-       (and ST_IN_SCRIPTING (looking-at "declare"))
-       (lambda()
-         (phps-mode-lexer-RETURN_TOKEN 'T_DECLARE (match-beginning 0) (match-end 0))))
-
-      (phps-mode-lexer-re2c-rule
-       (and ST_IN_SCRIPTING (looking-at "enddeclare"))
-       (lambda()
-         (phps-mode-lexer-RETURN_TOKEN 'T_ENDDECLARE (match-beginning 0) (match-end 0))))
-
-      (phps-mode-lexer-re2c-rule
-       (and ST_IN_SCRIPTING (looking-at "instanceof"))
-       (lambda()
-         (phps-mode-lexer-RETURN_TOKEN 'T_INSTANCEOF (match-beginning 0) (match-end 0))))
-
-      (phps-mode-lexer-re2c-rule
-       (and ST_IN_SCRIPTING (looking-at "as"))
-       (lambda()
-         (phps-mode-lexer-RETURN_TOKEN 'T_AS (match-beginning 0) (match-end 0))))
-
-      (phps-mode-lexer-re2c-rule
-       (and ST_IN_SCRIPTING (looking-at "switch"))
-       (lambda()
-         (phps-mode-lexer-RETURN_TOKEN 'T_SWITCH (match-beginning 0) (match-end 0))))
-
-      (phps-mode-lexer-re2c-rule
-       (and ST_IN_SCRIPTING (looking-at "endswitch"))
-       (lambda()
-         (phps-mode-lexer-RETURN_TOKEN 'T_ENDSWITCH (match-beginning 0) (match-end 0))))
-
-      (phps-mode-lexer-re2c-rule
-       (and ST_IN_SCRIPTING (looking-at "case"))
-       (lambda()
-         (phps-mode-lexer-RETURN_TOKEN 'T_CASE (match-beginning 0) (match-end 0))))
-
-      (phps-mode-lexer-re2c-rule
-       (and ST_IN_SCRIPTING (looking-at "default"))
-       (lambda()
-         (phps-mode-lexer-RETURN_TOKEN 'T_DEFAULT (match-beginning 0) (match-end 0))))
-
-      (phps-mode-lexer-re2c-rule
-       (and ST_IN_SCRIPTING (looking-at "break"))
-       (lambda()
-         (phps-mode-lexer-RETURN_TOKEN 'T_BREAK (match-beginning 0) (match-end 0))))
-
-      (phps-mode-lexer-re2c-rule
-       (and ST_IN_SCRIPTING (looking-at "continue"))
-       (lambda()
-         (phps-mode-lexer-RETURN_TOKEN 'T_CONTINUE (match-beginning 0) (match-end 0))))
-
-      (phps-mode-lexer-re2c-rule
-       (and ST_IN_SCRIPTING (looking-at "goto"))
-       (lambda()
-         (phps-mode-lexer-RETURN_TOKEN 'T_GOTO (match-beginning 0) (match-end 0))))
-
-      (phps-mode-lexer-re2c-rule
-       (and ST_IN_SCRIPTING (looking-at "echo"))
-       (lambda()
-         (phps-mode-lexer-RETURN_TOKEN 'T_ECHO (match-beginning 0) (match-end 0))))
-
-      (phps-mode-lexer-re2c-rule
-       (and ST_IN_SCRIPTING (looking-at "print"))
-       (lambda()
-         (phps-mode-lexer-RETURN_TOKEN 'T_PRINT (match-beginning 0) (match-end 0))))
-
-      (phps-mode-lexer-re2c-rule
-       (and ST_IN_SCRIPTING (looking-at "class"))
-       (lambda()
-         (phps-mode-lexer-RETURN_TOKEN 'T_CLASS (match-beginning 0) (match-end 0))))
-
-      (phps-mode-lexer-re2c-rule
-       (and ST_IN_SCRIPTING (looking-at "interface"))
-       (lambda()
-         (phps-mode-lexer-RETURN_TOKEN 'T_INTERFACE (match-beginning 0) (match-end 0))))
-
-      (phps-mode-lexer-re2c-rule
-       (and ST_IN_SCRIPTING (looking-at "trait"))
-       (lambda()
-         (phps-mode-lexer-RETURN_TOKEN 'T_TRAIT (match-beginning 0) (match-end 0))))
-
-      (phps-mode-lexer-re2c-rule
-       (and ST_IN_SCRIPTING (looking-at "extends"))
-       (lambda()
-         (phps-mode-lexer-RETURN_TOKEN 'T_EXTENDS (match-beginning 0) (match-end 0))))
-
-      (phps-mode-lexer-re2c-rule
-       (and ST_IN_SCRIPTING (looking-at "implements"))
-       (lambda()
-         (phps-mode-lexer-RETURN_TOKEN 'T_IMPLEMENTS (match-beginning 0) (match-end 0))))
-
-      (phps-mode-lexer-re2c-rule
-       (and ST_IN_SCRIPTING (looking-at "->"))
-       (lambda()
-         (phps-mode-lexer-yy_push_state 'ST_LOOKING_FOR_PROPERTY)
-         (phps-mode-lexer-RETURN_TOKEN 'T_OBJECT_OPERATOR (match-beginning 0) (match-end 0))))
-
-      (phps-mode-lexer-re2c-rule
-       (and (or ST_IN_SCRIPTING ST_LOOKING_FOR_PROPERTY)
-            (looking-at phps-mode-lexer-WHITESPACE))
-       (lambda()
-         (let* ((start (match-beginning 0))
-                (end (match-end 0))
-                (data (buffer-substring-no-properties start end)))
-           (if (phps-mode-wy-macros-CG 'PARSER_MODE)
-               (phps-mode-lexer-MOVE_FORWARD end)
-             (phps-mode-lexer-RETURN_TOKEN data start end)))))
-
-      (phps-mode-lexer-re2c-rule
-       (and ST_LOOKING_FOR_PROPERTY (looking-at "->"))
-       (lambda()
-         (phps-mode-lexer-RETURN_TOKEN 'T_OBJECT_OPERATOR (match-beginning 0) (match-end 0))))
-
-      (phps-mode-lexer-re2c-rule
-       (and ST_LOOKING_FOR_PROPERTY (looking-at phps-mode-lexer-LABEL))
-       (lambda()
-         (let ((start (match-beginning 0))
-               (end (match-end 0)))
-           (phps-mode-lexer-yy_pop_state)
-           (phps-mode-lexer-RETURN_TOKEN 'T_STRING start end))))
-
-      (phps-mode-lexer-re2c-rule
-       (and ST_LOOKING_FOR_PROPERTY (looking-at phps-mode-lexer-ANY_CHAR))
-       (lambda()
-         (let ((end (match-end 0)))
-           (phps-mode-lexer-yy_pop_state)
-           ;; TODO goto restart here?
-           ;; (message "Restart here")
-           (phps-mode-lexer-MOVE_FORWARD end))))
-
-      (phps-mode-lexer-re2c-rule
-       (and ST_IN_SCRIPTING (looking-at "::"))
-       (lambda()
-         (phps-mode-lexer-RETURN_TOKEN 'T_PAAMAYIM_NEKUDOTAYIM (match-beginning 0) (match-end 0))))
-
-      (phps-mode-lexer-re2c-rule
-       (and ST_IN_SCRIPTING (looking-at "\\\\"))
-       (lambda()
-         (phps-mode-lexer-RETURN_TOKEN 'T_NS_SEPARATOR (match-beginning 0) (match-end 0))))
-
-      (phps-mode-lexer-re2c-rule
-       (and ST_IN_SCRIPTING (looking-at "\\.\\.\\."))
-       (lambda()
-         (phps-mode-lexer-RETURN_TOKEN 'T_ELLIPSIS (match-beginning 0) (match-end 0))))
-
-      (phps-mode-lexer-re2c-rule
-       (and ST_IN_SCRIPTING (looking-at "\\?\\?"))
-       (lambda()
-         (phps-mode-lexer-RETURN_TOKEN 'T_COALESCE (match-beginning 0) (match-end 0))))
-
-      (phps-mode-lexer-re2c-rule
-       (and ST_IN_SCRIPTING (looking-at "new"))
-       (lambda()
-         (phps-mode-lexer-RETURN_TOKEN 'T_NEW (match-beginning 0) (match-end 0))))
-
-      (phps-mode-lexer-re2c-rule
-       (and ST_IN_SCRIPTING (looking-at "clone"))
-       (lambda()
-         (phps-mode-lexer-RETURN_TOKEN 'T_CLONE (match-beginning 0) (match-end 0))))
-
-      (phps-mode-lexer-re2c-rule
-       (and ST_IN_SCRIPTING (looking-at "var"))
-       (lambda()
-         (phps-mode-lexer-RETURN_TOKEN 'T_VAR (match-beginning 0) (match-end 0))))
-
-      (phps-mode-lexer-re2c-rule
-       (and ST_IN_SCRIPTING
-            (looking-at
-             (concat
-              "("
-              phps-mode-lexer-TABS_AND_SPACES
-              "\\(int\\|integer\\)"
-              phps-mode-lexer-TABS_AND_SPACES
-              ")")))
-       (lambda()
-         (phps-mode-lexer-RETURN_TOKEN 'T_INT_CAST (match-beginning 0) (match-end 0))))
-
-      (phps-mode-lexer-re2c-rule
-       (and ST_IN_SCRIPTING
-            (looking-at
-             (concat
-              "("
-              phps-mode-lexer-TABS_AND_SPACES
-              "\\(double\\|float\\)"
-              phps-mode-lexer-TABS_AND_SPACES
-              ")")))
-       (lambda()
-         (phps-mode-lexer-RETURN_TOKEN 'T_DOUBLE_CAST (match-beginning 0) (match-end 0))))
-
-      (phps-mode-lexer-re2c-rule
-       (and ST_IN_SCRIPTING
-            (looking-at
-             (concat
-              "("
-              phps-mode-lexer-TABS_AND_SPACES
-              "\\(real\\)"
-              phps-mode-lexer-TABS_AND_SPACES
-              ")")))
-       (lambda()
-         (when (phps-mode-wy-macros-CG 'PARSER_MODE)
-           (signal 'error (list
-                               (format
-                                "PHPs Lexer Error - The (real) cast is deprecated, use (float) instead at %d"
-                                (match-beginning 0)
-                                )
-                               (match-beginning 0)
-                               (match-end 0))))
-         (phps-mode-lexer-RETURN_TOKEN 'T_DOUBLE_CAST (match-beginning 0) (match-end 0))))
-
-      (phps-mode-lexer-re2c-rule
-       (and ST_IN_SCRIPTING
-            (looking-at
-             (concat
-              "("
-              phps-mode-lexer-TABS_AND_SPACES
-              "\\(string\\|binary\\)"
-              phps-mode-lexer-TABS_AND_SPACES
-              ")")))
-       (lambda()
-         (phps-mode-lexer-RETURN_TOKEN 'T_STRING_CAST (match-beginning 0) (match-end 0))))
-
-      (phps-mode-lexer-re2c-rule
-       (and ST_IN_SCRIPTING
-            (looking-at
-             (concat
-              "("
-              phps-mode-lexer-TABS_AND_SPACES
-              "array"
-              phps-mode-lexer-TABS_AND_SPACES
-              ")")))
-       (lambda()
-         (phps-mode-lexer-RETURN_TOKEN 'T_ARRAY_CAST (match-beginning 0) (match-end 0))))
-
-      (phps-mode-lexer-re2c-rule
-       (and ST_IN_SCRIPTING
-            (looking-at
-             (concat
-              "("
-              phps-mode-lexer-TABS_AND_SPACES
-              "object"
-              phps-mode-lexer-TABS_AND_SPACES
-              ")")))
-       (lambda()
-         (phps-mode-lexer-RETURN_TOKEN 'T_OBJECT_CAST (match-beginning 0) (match-end 0))))
-
-      (phps-mode-lexer-re2c-rule
-       (and ST_IN_SCRIPTING (looking-at (concat "(" phps-mode-lexer-TABS_AND_SPACES "\\(bool\\|boolean\\)" phps-mode-lexer-TABS_AND_SPACES ")")))
-       (lambda()
-         (phps-mode-lexer-RETURN_TOKEN 'T_BOOL_CAST (match-beginning 0) (match-end 0))))
-
-      (phps-mode-lexer-re2c-rule
-       (and ST_IN_SCRIPTING
-            (looking-at
-             (concat
-              "("
-              phps-mode-lexer-TABS_AND_SPACES
-              "unset"
-              phps-mode-lexer-TABS_AND_SPACES ")")))
-       (lambda()
-         (phps-mode-lexer-RETURN_TOKEN 'T_UNSET_CAST (match-beginning 0) (match-end 0))))
-
-      (phps-mode-lexer-re2c-rule
-       (and ST_IN_SCRIPTING (looking-at "eval"))
-       (lambda()
-         (phps-mode-lexer-RETURN_TOKEN 'T_EVAL (match-beginning 0) (match-end 0))))
-
-      (phps-mode-lexer-re2c-rule
-       (and ST_IN_SCRIPTING (looking-at "include"))
-       (lambda()
-         (phps-mode-lexer-RETURN_TOKEN 'T_INCLUDE (match-beginning 0) (match-end 0))))
-
-      (phps-mode-lexer-re2c-rule
-       (and ST_IN_SCRIPTING (looking-at "include_once"))
-       (lambda()
-         (phps-mode-lexer-RETURN_TOKEN 'T_INCLUDE_ONCE (match-beginning 0) (match-end 0))))
-
-      (phps-mode-lexer-re2c-rule
-       (and ST_IN_SCRIPTING (looking-at "require"))
-       (lambda()
-         (phps-mode-lexer-RETURN_TOKEN 'T_REQUIRE (match-beginning 0) (match-end 0))))
-
-      (phps-mode-lexer-re2c-rule
-       (and ST_IN_SCRIPTING (looking-at "require_once"))
-       (lambda()
-         (phps-mode-lexer-RETURN_TOKEN 'T_REQUIRE_ONCE (match-beginning 0) (match-end 0))))
-
-      (phps-mode-lexer-re2c-rule
-       (and ST_IN_SCRIPTING (looking-at "namespace"))
-       (lambda()
-         (setq phps-mode-lexer-declaring_namespace t)
-         (phps-mode-lexer-RETURN_TOKEN 'T_NAMESPACE (match-beginning 0) (match-end 0))))
-
-      (phps-mode-lexer-re2c-rule
-       (and ST_IN_SCRIPTING (looking-at "use"))
-       (lambda()
-         (phps-mode-lexer-RETURN_TOKEN 'T_USE (match-beginning 0) (match-end 0))))
-
-      (phps-mode-lexer-re2c-rule
-       (and ST_IN_SCRIPTING (looking-at "insteadof"))
-       (lambda()
-         (phps-mode-lexer-RETURN_TOKEN 'T_INSTEADOF (match-beginning 0) (match-end 0))))
-
-      (phps-mode-lexer-re2c-rule
-       (and ST_IN_SCRIPTING (looking-at "global"))
-       (lambda()
-         (phps-mode-lexer-RETURN_TOKEN 'T_GLOBAL (match-beginning 0) (match-end 0))))
-
-      (phps-mode-lexer-re2c-rule
-       (and ST_IN_SCRIPTING (looking-at "isset"))
-       (lambda()
-         (phps-mode-lexer-RETURN_TOKEN 'T_ISSET (match-beginning 0) (match-end 0))))
-
-      (phps-mode-lexer-re2c-rule
-       (and ST_IN_SCRIPTING (looking-at "empty"))
-       (lambda()
-         (phps-mode-lexer-RETURN_TOKEN 'T_EMPTY (match-beginning 0) (match-end 0))))
-
-      (phps-mode-lexer-re2c-rule
-       (and ST_IN_SCRIPTING (looking-at "__halt_compiler"))
-       (lambda()
-         (phps-mode-lexer-RETURN_TOKEN 'T_HALT_COMPILER (match-beginning 0) (match-end 0))))
-
-      (phps-mode-lexer-re2c-rule
-       (and ST_IN_SCRIPTING (looking-at "static"))
-       (lambda()
-         (phps-mode-lexer-RETURN_TOKEN 'T_STATIC (match-beginning 0) (match-end 0))))
-
-      (phps-mode-lexer-re2c-rule
-       (and ST_IN_SCRIPTING (looking-at "abstract"))
-       (lambda()
-         (phps-mode-lexer-RETURN_TOKEN 'T_ABSTRACT (match-beginning 0) (match-end 0))))
-
-      (phps-mode-lexer-re2c-rule
-       (and ST_IN_SCRIPTING (looking-at "final"))
-       (lambda()
-         (phps-mode-lexer-RETURN_TOKEN 'T_FINAL (match-beginning 0) (match-end 0))))
-
-      (phps-mode-lexer-re2c-rule
-       (and ST_IN_SCRIPTING (looking-at "private"))
-       (lambda()
-         (phps-mode-lexer-RETURN_TOKEN 'T_PRIVATE (match-beginning 0) (match-end 0))))
-
-      (phps-mode-lexer-re2c-rule
-       (and ST_IN_SCRIPTING (looking-at "protected"))
-       (lambda()
-         (phps-mode-lexer-RETURN_TOKEN 'T_PROTECTED (match-beginning 0) (match-end 0))))
-
-      (phps-mode-lexer-re2c-rule
-       (and ST_IN_SCRIPTING (looking-at "public"))
-       (lambda()
-         (phps-mode-lexer-RETURN_TOKEN 'T_PUBLIC (match-beginning 0) (match-end 0))))
-
-      (phps-mode-lexer-re2c-rule
-       (and ST_IN_SCRIPTING (looking-at "unset"))
-       (lambda()
-         (phps-mode-lexer-RETURN_TOKEN 'T_UNSET (match-beginning 0) (match-end 0))))
-
-      (phps-mode-lexer-re2c-rule
-       (and ST_IN_SCRIPTING (looking-at "=>"))
-       (lambda()
-         (phps-mode-lexer-RETURN_TOKEN 'T_DOUBLE_ARROW (match-beginning 0) (match-end 0))))
-
-      (phps-mode-lexer-re2c-rule
-       (and ST_IN_SCRIPTING (looking-at "list"))
-       (lambda()
-         (phps-mode-lexer-RETURN_TOKEN 'T_LIST (match-beginning 0) (match-end 0))))
-
-      (phps-mode-lexer-re2c-rule
-       (and ST_IN_SCRIPTING (looking-at "array"))
-       (lambda()
-         (phps-mode-lexer-RETURN_TOKEN 'T_ARRAY (match-beginning 0) (match-end 0))))
-
-      (phps-mode-lexer-re2c-rule
-       (and ST_IN_SCRIPTING (looking-at "callable"))
-       (lambda()
-         (phps-mode-lexer-RETURN_TOKEN 'T_CALLABLE (match-beginning 0) (match-end 0))))
-
-      (phps-mode-lexer-re2c-rule
-       (and ST_IN_SCRIPTING (looking-at "\\+\\+"))
-       (lambda()
-         (phps-mode-lexer-RETURN_TOKEN 'T_INC (match-beginning 0) (match-end 0))))
-
-      (phps-mode-lexer-re2c-rule
-       (and ST_IN_SCRIPTING (looking-at "--"))
-       (lambda()
-         (phps-mode-lexer-RETURN_TOKEN 'T_DEC (match-beginning 0) (match-end 0))))
-
-      (phps-mode-lexer-re2c-rule
-       (and ST_IN_SCRIPTING (looking-at "==="))
-       (lambda()
-         (phps-mode-lexer-RETURN_TOKEN 'T_IS_IDENTICAL (match-beginning 0) (match-end 0))))
-
-      (phps-mode-lexer-re2c-rule
-       (and ST_IN_SCRIPTING (looking-at "!=="))
-       (lambda()
-         (phps-mode-lexer-RETURN_TOKEN 'T_IS_NOT_IDENTICAL (match-beginning 0) (match-end 0))))
-
-      (phps-mode-lexer-re2c-rule
-       (and ST_IN_SCRIPTING (looking-at "=="))
-       (lambda()
-         (phps-mode-lexer-RETURN_TOKEN 'T_IS_EQUAL (match-beginning 0) (match-end 0))))
-
-      (phps-mode-lexer-re2c-rule
-       (and ST_IN_SCRIPTING (looking-at "\\(!=\\|<>\\)"))
-       (lambda()
-         (phps-mode-lexer-RETURN_TOKEN 'T_IS_NOT_EQUAL (match-beginning 0) (match-end 0))))
-
-      (phps-mode-lexer-re2c-rule
-       (and ST_IN_SCRIPTING (looking-at "<=>"))
-       (lambda()
-         (phps-mode-lexer-RETURN_TOKEN 'T_SPACESHIP (match-beginning 0) (match-end 0))))
-
-      (phps-mode-lexer-re2c-rule
-       (and ST_IN_SCRIPTING (looking-at "<="))
-       (lambda()
-         (phps-mode-lexer-RETURN_TOKEN 'T_IS_SMALLER_OR_EQUAL (match-beginning 0) (match-end 0))))
-
-      (phps-mode-lexer-re2c-rule
-       (and ST_IN_SCRIPTING (looking-at ">="))
-       (lambda()
-         (phps-mode-lexer-RETURN_TOKEN 'T_IS_GREATER_OR_EQUAL (match-beginning 0) (match-end 0))))
-
-      (phps-mode-lexer-re2c-rule
-       (and ST_IN_SCRIPTING (looking-at "\\+="))
-       (lambda()
-         (phps-mode-lexer-RETURN_TOKEN 'T_PLUS_EQUAL (match-beginning 0) (match-end 0))))
-
-      (phps-mode-lexer-re2c-rule
-       (and ST_IN_SCRIPTING (looking-at "-="))
-       (lambda()
-         (phps-mode-lexer-RETURN_TOKEN 'T_MINUS_EQUAL (match-beginning 0) (match-end 0))))
-
-      (phps-mode-lexer-re2c-rule
-       (and ST_IN_SCRIPTING (looking-at "\\*="))
-       (lambda()
-         (phps-mode-lexer-RETURN_TOKEN 'T_MUL_EQUAL (match-beginning 0) (match-end 0))))
-
-      (phps-mode-lexer-re2c-rule
-       (and ST_IN_SCRIPTING (looking-at "\\*\\\\\\*="))
-       (lambda()
-         (phps-mode-lexer-RETURN_TOKEN 'T_POW_EQUAL (match-beginning 0) (match-end 0))))
-
-      (phps-mode-lexer-re2c-rule
-       (and ST_IN_SCRIPTING (looking-at "\\*\\\\\\*"))
-       (lambda()
-         (phps-mode-lexer-RETURN_TOKEN 'T_POW (match-beginning 0) (match-end 0))))
-
-      (phps-mode-lexer-re2c-rule
-       (and ST_IN_SCRIPTING (looking-at "/="))
-       (lambda()
-         (phps-mode-lexer-RETURN_TOKEN 'T_DIV_EQUAL (match-beginning 0) (match-end 0))))
-
-      (phps-mode-lexer-re2c-rule
-       (and ST_IN_SCRIPTING (looking-at "\\.="))
-       (lambda()
-         (phps-mode-lexer-RETURN_TOKEN 'T_CONCAT_EQUAL (match-beginning 0) (match-end 0))))
-
-      (phps-mode-lexer-re2c-rule
-       (and ST_IN_SCRIPTING (looking-at "%="))
-       (lambda()
-         (phps-mode-lexer-RETURN_TOKEN 'T_MOD_EQUAL (match-beginning 0) (match-end 0))))
-
-      (phps-mode-lexer-re2c-rule
-       (and ST_IN_SCRIPTING (looking-at "<<="))
-       (lambda()
-         (phps-mode-lexer-RETURN_TOKEN 'T_SL_EQUAL (match-beginning 0) (match-end 0))))
-
-      (phps-mode-lexer-re2c-rule
-       (and ST_IN_SCRIPTING (looking-at ">>="))
-       (lambda()
-         (phps-mode-lexer-RETURN_TOKEN 'T_SR_EQUAL (match-beginning 0) (match-end 0))))
-
-      (phps-mode-lexer-re2c-rule
-       (and ST_IN_SCRIPTING (looking-at "&="))
-       (lambda()
-         (phps-mode-lexer-RETURN_TOKEN 'T_AND_EQUAL (match-beginning 0) (match-end 0))))
-
-      (phps-mode-lexer-re2c-rule
-       (and ST_IN_SCRIPTING (looking-at "|="))
-       (lambda()
-         (phps-mode-lexer-RETURN_TOKEN 'T_OR_EQUAL (match-beginning 0) (match-end 0))))
-
-      (phps-mode-lexer-re2c-rule
-       (and ST_IN_SCRIPTING (looking-at "\\^="))
-       (lambda()
-         (phps-mode-lexer-RETURN_TOKEN 'T_XOR_EQUAL (match-beginning 0) (match-end 0))))
-
-      (phps-mode-lexer-re2c-rule
-       (and ST_IN_SCRIPTING (looking-at "\\?\\?="))
-       (lambda()
-         (phps-mode-lexer-RETURN_TOKEN 'T_COALESCE_EQUAL (match-beginning 0) (match-end 0))))
-
-      (phps-mode-lexer-re2c-rule
-       (and ST_IN_SCRIPTING (looking-at "||"))
-       (lambda()
-         (phps-mode-lexer-RETURN_TOKEN 'T_BOOLEAN_OR (match-beginning 0) (match-end 0))))
-
-      (phps-mode-lexer-re2c-rule
-       (and ST_IN_SCRIPTING (looking-at "&&"))
-       (lambda()
-         (phps-mode-lexer-RETURN_TOKEN 'T_BOOLEAN_AND (match-beginning 0) (match-end 0))))
-
-      (phps-mode-lexer-re2c-rule
-       (and ST_IN_SCRIPTING (looking-at "OR"))
-       (lambda()
-         (phps-mode-lexer-RETURN_TOKEN 'T_LOGICAL_OR (match-beginning 0) (match-end 0))))
-
-      (phps-mode-lexer-re2c-rule
-       (and ST_IN_SCRIPTING (looking-at "AND"))
-       (lambda()
-         (phps-mode-lexer-RETURN_TOKEN 'T_LOGICAL_AND (match-beginning 0) (match-end 0))))
-
-      (phps-mode-lexer-re2c-rule
-       (and ST_IN_SCRIPTING (looking-at "XOR"))
-       (lambda()
-         (phps-mode-lexer-RETURN_TOKEN 'T_LOGICAL_XOR (match-beginning 0) (match-end 0))))
-
-      (phps-mode-lexer-re2c-rule
-       (and ST_IN_SCRIPTING (looking-at "<<"))
-       (lambda()
-         (phps-mode-lexer-RETURN_TOKEN 'T_SL (match-beginning 0) (match-end 0))))
-
-      (phps-mode-lexer-re2c-rule
-       (and ST_IN_SCRIPTING (looking-at ">>"))
-       (lambda()
-         (phps-mode-lexer-RETURN_TOKEN 'T_SR (match-beginning 0) (match-end 0))))
-
-      (phps-mode-lexer-re2c-rule
-       (and ST_IN_SCRIPTING (looking-at phps-mode-lexer-TOKENS))
-       (lambda()
-         (let* ((start (match-beginning 0))
-                (end (match-end 0))
-                (data (buffer-substring-no-properties start end))
-                (use-brace nil))
-           ;; (message "Found token '%s'" data)
-           (when phps-mode-lexer-declaring_namespace
-             (when (string= data ";")
-               (setq phps-mode-lexer-prepend_trailing_brace t)
-               ;; (message "Set flag prepend trailing brace")
-               ;; (setq use-brace t)
-               )
-             (setq phps-mode-lexer-declaring_namespace nil))
-           (if use-brace
-               (phps-mode-lexer-RETURN_TOKEN "{" start end)
-             (phps-mode-lexer-RETURN_TOKEN data start end)))))
-
-      (phps-mode-lexer-re2c-rule
-       (and ST_IN_SCRIPTING (looking-at "{"))
-       (lambda()
-         (phps-mode-lexer-yy_push_state 'ST_IN_SCRIPTING)
-         (when phps-mode-lexer-declaring_namespace
-           (setq phps-mode-lexer-declaring_namespace nil))
-         (phps-mode-lexer-RETURN_TOKEN "{" (match-beginning 0) (match-end 0))))
-
-      (phps-mode-lexer-re2c-rule
-       (and (or ST_DOUBLE_QUOTES ST_BACKQUOTE ST_HEREDOC) (looking-at "\\${"))
-       (lambda()
-         (phps-mode-lexer-yy_push_state 'ST_LOOKING_FOR_VARNAME)
-         (phps-mode-lexer-RETURN_TOKEN 'T_DOLLAR_OPEN_CURLY_BRACES (match-beginning 0) (match-end 0))))
-
-      (phps-mode-lexer-re2c-rule
-       (and ST_IN_SCRIPTING (looking-at "}"))
-       (lambda()
-         (when phps-mode-lexer-state_stack
-           (phps-mode-lexer-yy_pop_state))
-         (phps-mode-lexer-RETURN_TOKEN "}" (match-beginning 0) (match-end 0))))
-
-      (phps-mode-lexer-re2c-rule
-       (and ST_LOOKING_FOR_VARNAME (looking-at (concat phps-mode-lexer-LABEL "[\\[}]")))
-       (lambda()
-         (let ((start (match-beginning 0))
-               (end (- (match-end 0) 1)))
-           ;; (message "Stopped here")
-           (phps-mode-lexer-yy_pop_state)
-           (phps-mode-lexer-yy_push_state 'ST_IN_SCRIPTING)
-           (phps-mode-lexer-RETURN_TOKEN 'T_STRING_VARNAME start end))))
-
-      (phps-mode-lexer-re2c-rule
-       (and ST_LOOKING_FOR_VARNAME (looking-at phps-mode-lexer-ANY_CHAR))
-       (lambda()
-         (phps-mode-lexer-yy_pop_state)
-         (phps-mode-lexer-yy_push_state 'ST_IN_SCRIPTING)))
-
-      (phps-mode-lexer-re2c-rule
-       (and ST_IN_SCRIPTING (looking-at phps-mode-lexer-BNUM))
-       (lambda()
-         (let* ((start (match-beginning 0))
-                (end (match-end 0))
-                (data (buffer-substring-no-properties (+ start 2) end))
-                (long-number (string-to-number data 2)))
-           ;; (message "Binary number %s from %s" long-number data)
-           (if (> long-number phps-mode-lexer-long-limit)
-               (phps-mode-lexer-RETURN_TOKEN 'T_DNUMBER start end)
-             (phps-mode-lexer-RETURN_TOKEN 'T_LNUMBER start end)))))
-
-      (phps-mode-lexer-re2c-rule
-       (and ST_IN_SCRIPTING (looking-at phps-mode-lexer-LNUM))
-       (lambda()
-         (let* ((start (match-beginning 0))
-                (end (match-end 0))
-                (data (string-to-number (buffer-substring-no-properties start end))))
-           ;; (message "Long number: %d" data)
-           (if (> data phps-mode-lexer-long-limit)
-               (phps-mode-lexer-RETURN_TOKEN 'T_DNUMBER start end)
-             (phps-mode-lexer-RETURN_TOKEN 'T_LNUMBER start end)))))
-
-      (phps-mode-lexer-re2c-rule
-       (and ST_IN_SCRIPTING (looking-at phps-mode-lexer-HNUM))
-       (lambda()
-         (let* ((start (match-beginning 0))
-                (end (match-end 0))
-                (data (buffer-substring-no-properties (+ start 2) end))
-                (long-number (string-to-number data 16)))
-           ;; (message "Hexadecimal number %s from %s" long-number data)
-           (if (> long-number phps-mode-lexer-long-limit)
-               (phps-mode-lexer-RETURN_TOKEN 'T_DNUMBER start end)
-             (phps-mode-lexer-RETURN_TOKEN 'T_LNUMBER start end)))))
-
-      (phps-mode-lexer-re2c-rule
-       (and ST_VAR_OFFSET (looking-at "\\([0]\\|[1-9][0-9]*\\)"))
-       (lambda()
-         (let ((start (match-beginning 0))
-               (end (match-end 0)))
-           (phps-mode-lexer-RETURN_TOKEN 'T_NUM_STRING start end))))
-
-      (phps-mode-lexer-re2c-rule
-       (and ST_VAR_OFFSET (looking-at (concat "\\("
-                                              phps-mode-lexer-LNUM "\\|"
-                                              phps-mode-lexer-HNUM "\\|"
-                                              phps-mode-lexer-BNUM "\\)")))
-       (lambda()
-         (phps-mode-lexer-RETURN_TOKEN 'T_NUM_STRING (match-beginning 0) (match-end 0))))
-
-      (phps-mode-lexer-re2c-rule
-       (and ST_IN_SCRIPTING (or (looking-at phps-mode-lexer-EXPONENT_DNUM)
-                                (looking-at phps-mode-lexer-DNUM)))
-       (lambda()
-         (let* ((start (match-beginning 0))
-                (end (match-end 0))
-                (_data (buffer-substring-no-properties start end)))
-           ;; (message "Exponent/double at: %s" _data)
-           (phps-mode-lexer-RETURN_TOKEN 'T_DNUMBER start end))))
-
-      (phps-mode-lexer-re2c-rule
-       (and ST_IN_SCRIPTING (looking-at "__CLASS__"))
-       (lambda()
-         (phps-mode-lexer-RETURN_TOKEN 'T_CLASS_C (match-beginning 0) (match-end 0))))
-
-      (phps-mode-lexer-re2c-rule
-       (and ST_IN_SCRIPTING (looking-at "__TRAIT__"))
-       (lambda()
-         (phps-mode-lexer-RETURN_TOKEN 'T_TRAIT_C (match-beginning 0) (match-end 0))))
-
-      (phps-mode-lexer-re2c-rule
-       (and ST_IN_SCRIPTING (looking-at "__FUNCTION__"))
-       (lambda()
-         (phps-mode-lexer-RETURN_TOKEN 'T_FUNC_C (match-beginning 0) (match-end 0))))
-
-      (phps-mode-lexer-re2c-rule
-       (and ST_IN_SCRIPTING (looking-at "__METHOD__"))
-       (lambda()
-         (phps-mode-lexer-RETURN_TOKEN 'T_METHOD_C (match-beginning 0) (match-end 0))))
-
-      (phps-mode-lexer-re2c-rule
-       (and ST_IN_SCRIPTING (looking-at "__LINE__"))
-       (lambda()
-         (phps-mode-lexer-RETURN_TOKEN 'T_LINE (match-beginning 0) (match-end 0))))
-
-      (phps-mode-lexer-re2c-rule
-       (and ST_IN_SCRIPTING (looking-at "__FILE__"))
-       (lambda()
-         (phps-mode-lexer-RETURN_TOKEN 'T_FILE (match-beginning 0) (match-end 0))))
-
-      (phps-mode-lexer-re2c-rule
-       (and ST_IN_SCRIPTING (looking-at "__DIR__"))
-       (lambda()
-         (phps-mode-lexer-RETURN_TOKEN 'T_DIR (match-beginning 0) (match-end 0))))
-
-      (phps-mode-lexer-re2c-rule
-       (and ST_IN_SCRIPTING (looking-at "__NAMESPACE__"))
-       (lambda()
-         (phps-mode-lexer-RETURN_TOKEN 'T_NS_C (match-beginning 0) (match-end 0))))
-
-      (phps-mode-lexer-re2c-rule
-       (and SHEBANG (looking-at (concat "#!.*" phps-mode-lexer-NEWLINE)))
-       (lambda()
-         (phps-mode-lexer-BEGIN 'ST_INITIAL)))
-
-      (phps-mode-lexer-re2c-rule
-       (and SHEBANG (looking-at phps-mode-lexer-ANY_CHAR))
-       (lambda()
-         (phps-mode-lexer-BEGIN 'ST_INITIAL)))
-
-      (phps-mode-lexer-re2c-rule
-       (and ST_INITIAL (looking-at "<\\?="))
-       (lambda()
-         (let ((start (match-beginning 0))
-               (end (match-end 0)))
-           (phps-mode-lexer-BEGIN 'ST_IN_SCRIPTING)
-           (when (phps-mode-wy-macros-CG 'PARSER_MODE)
-             (phps-mode-lexer-RETURN_TOKEN 'T_ECHO start end))
-           (phps-mode-lexer-RETURN_TOKEN 'T_OPEN_TAG_WITH_ECHO start end))))
-
-      (phps-mode-lexer-re2c-rule
-       (and ST_INITIAL (looking-at (concat "<\\?php\\([ \t]\\|" phps-mode-lexer-NEWLINE "\\)")))
-       (lambda()
-         (let ((start (match-beginning 0))
-               (end (match-end 0)))
-           (phps-mode-lexer-BEGIN 'ST_IN_SCRIPTING)
-           ;; (message "Starting scripting after <?php")
-           (when phps-mode-lexer-EXPECTED
-             (phps-mode-lexer-SKIP_TOKEN 'T_OPEN_TAG start end))
-           (phps-mode-lexer-RETURN_TOKEN 'T_OPEN_TAG start end))))
-
-      (phps-mode-lexer-re2c-rule
-       (and ST_INITIAL (looking-at "<\\?php"))
-       (lambda()
-         (let ((start (match-beginning 0))
-               (end (match-end 0)))
-
-           ;; Allow <?php followed by end of file.
-           (cond
-
-            ((equal end (point-max))
-             (phps-mode-lexer-BEGIN 'ST_IN_SCRIPTING)
-             (phps-mode-lexer-RETURN_OR_SKIP_TOKEN
-              'T_OPEN_TAG
-              start
-              end))
-
-            ((phps-mode-wy-macros-CG 'SHORT_TAGS)
-             (phps-mode-lexer-yyless 3)
-             (setq end (- end 3))
-             (phps-mode-lexer-BEGIN 'ST_IN_SCRIPTING)
-             (phps-mode-lexer-RETURN_OR_SKIP_TOKEN
-              'T_OPEN_TAG
-              start
-              end))
-
-            (t
-             (phps-mode-anaylzer-inline-char-handler))))))
-
-      (phps-mode-lexer-re2c-rule
-       (and ST_INITIAL (looking-at "<\\?"))
-       (lambda()
-         (when (phps-mode-wy-macros-CG 'SHORT_TAGS)
-           (let ((start (match-beginning 0))
-                 (end (match-end 0)))
-             (phps-mode-lexer-BEGIN 'ST_IN_SCRIPTING)
-             (when phps-mode-lexer-EXPECTED
-               (phps-mode-lexer-SKIP_TOKEN 'T_OPEN_TAG start end))
-             ;; (message "Starting scripting after <?")
-             (phps-mode-lexer-RETURN_TOKEN 'T_OPEN_TAG start end)))))
-
-      (phps-mode-lexer-re2c-rule
-       (and ST_INITIAL (looking-at phps-mode-lexer-ANY_CHAR))
-       (lambda()
-         (phps-mode-anaylzer-inline-char-handler)))
-
-      (phps-mode-lexer-re2c-rule
-       (and (or ST_DOUBLE_QUOTES ST_HEREDOC ST_BACKQUOTE)
-            (looking-at
-             (concat
-              "\\$"
-              phps-mode-lexer-LABEL
-              "->"
-              "[a-zA-Z_\x80-\xff]")))
-       (lambda()
-         (phps-mode-lexer-yy_push_state 'ST_LOOKING_FOR_PROPERTY)
-         (forward-char -3)
-         (phps-mode-lexer-RETURN_TOKEN 'T_VARIABLE (match-beginning 0) (- (match-end 0) 3))))
-
-      (phps-mode-lexer-re2c-rule
-       (and (or ST_DOUBLE_QUOTES ST_HEREDOC ST_BACKQUOTE)
-            (looking-at
-             (concat
-              "\\$"
-              phps-mode-lexer-LABEL
-              "\\[")))
-       (lambda()
-         (phps-mode-lexer-yy_push_state 'ST_VAR_OFFSET)
-         (phps-mode-lexer-RETURN_TOKEN 'T_VARIABLE (match-beginning 0) (match-end 0))))
-
-      (phps-mode-lexer-re2c-rule
-       (and (or ST_IN_SCRIPTING ST_DOUBLE_QUOTES ST_HEREDOC ST_BACKQUOTE ST_VAR_OFFSET)
-            (looking-at
-             (concat
-              "\\$"
-              phps-mode-lexer-LABEL)))
-       (lambda()
-         (phps-mode-lexer-RETURN_TOKEN 'T_VARIABLE (match-beginning 0) (match-end 0))))
-
-      (phps-mode-lexer-re2c-rule
-       (and ST_VAR_OFFSET (looking-at "\\]"))
-       (lambda()
-         (phps-mode-lexer-yy_pop_state)
-         (phps-mode-lexer-RETURN_TOKEN "]" (match-beginning 0) (match-end 0))))
-
-      (phps-mode-lexer-re2c-rule
-       (and ST_VAR_OFFSET (looking-at (concat "\\(" phps-mode-lexer-TOKENS
-                                              "\\|[{}\"`]\\)")))
-       (lambda()
-         (let* ((start (match-beginning 0))
-                (end (match-end 0))
-                (data (buffer-substring-no-properties start end)))
-           (phps-mode-lexer-RETURN_TOKEN data start end))))
-
-      (phps-mode-lexer-re2c-rule
-       (and ST_VAR_OFFSET (looking-at (concat "[ \n\r\t'#]")))
-       (lambda()
-         (let* ((start (match-beginning 0))
-                (end (- (match-end 0) 1)))
-           (phps-mode-lexer-yy_pop_state)
-           (phps-mode-lexer-RETURN_TOKEN 'T_ENCAPSED_AND_WHITESPACE start end))))
-
-      (phps-mode-lexer-re2c-rule
-       (and (or ST_IN_SCRIPTING ST_VAR_OFFSET) (looking-at phps-mode-lexer-LABEL))
-       (lambda()
-         ;; (message "Adding T_STRING from %s to %s" (match-beginning 0) (match-end 0))
-         (phps-mode-lexer-RETURN_TOKEN 'T_STRING (match-beginning 0) (match-end 0))))
-
-      (phps-mode-lexer-re2c-rule
-       (and ST_IN_SCRIPTING (looking-at "\\(#\\|//\\)"))
-       (lambda()
-         (let* ((start (match-beginning 0))
-                (end (match-end 0))
-                (_data (buffer-substring-no-properties start end))
-                (line (buffer-substring-no-properties end (line-end-position))))
-           (if (string-match "\\?>" line)
-               (progn
-                 (phps-mode-lexer-RETURN_TOKEN 'T_COMMENT start (+ end (match-beginning 0))))
-             (progn
-               ;; TODO Handle expecting values here
-               ;; (message "Found comment 2 from %s to %s" start (line-end-position))
-               (phps-mode-lexer-RETURN_TOKEN 'T_COMMENT start (line-end-position)))))))
-
-      (phps-mode-lexer-re2c-rule
-       (and ST_IN_SCRIPTING
-            (looking-at
-             (concat
-              "\\(/\\*\\|/\\*\\*"
-              phps-mode-lexer-WHITESPACE
-              "\\)")))
-       (lambda()
-         (let* ((start (match-beginning 0))
-                (end (match-end 0))
-                (_data (buffer-substring-no-properties start end))
-                (doc-com (looking-at-p (concat "/\\*\\*" phps-mode-lexer-WHITESPACE))))
-           (let ((string-start (search-forward "*/" nil t)))
-             (if string-start
-                 (if doc-com
-                     (phps-mode-lexer-RETURN_TOKEN 'T_DOC_COMMENT start (match-end 0))
-                   (phps-mode-lexer-RETURN_TOKEN 'T_COMMENT start (match-end 0)))
-               (progn
-                 (signal
-                  'error
-                  (list (format
-                         "PHPs Lexer Error - Unterminated comment starting at %d"
-                         (point))
-                        (point)
-                        ))))))))
-
-      (phps-mode-lexer-re2c-rule
-       (and ST_IN_SCRIPTING (looking-at (concat "\\?>" phps-mode-lexer-NEWLINE "?")))
-       (lambda()
-         (let ((start (match-beginning 0))
-               (end (match-end 0)))
-           (when (= (- end start) 3)
-             (setq end (1- end)))
-           (phps-mode-lexer-BEGIN 'ST_INITIAL)
-           (when (phps-mode-wy-macros-CG 'PARSER_MODE)
-             (phps-mode-lexer-RETURN_TOKEN ";" start end))
-           (phps-mode-lexer-RETURN_TOKEN 'T_CLOSE_TAG start end))))
-
-      (phps-mode-lexer-re2c-rule
-       (and ST_IN_SCRIPTING (looking-at "'"))
-       (lambda()
-         (let* ((start (match-beginning 0))
-                (end (match-end 0))
-                (_data (buffer-substring-no-properties start end))
-                (un-escaped-end (phps-mode-lexer--get-next-unescaped "'")))
-           (if un-escaped-end
-               (progn
-                 (phps-mode-lexer-RETURN_TOKEN 'T_CONSTANT_ENCAPSED_STRING start un-escaped-end))
-             (progn
-               ;; Unclosed single quotes
-               (phps-mode-lexer-RETURN_TOKEN 'T_ENCAPSED_AND_WHITESPACE start (point-max))
-               (phps-mode-lexer-MOVE_FORWARD (point-max)))))))
-
-      ;; Double quoted string
-      (phps-mode-lexer-re2c-rule
-       (and ST_IN_SCRIPTING (looking-at "\""))
-       (lambda()
-         (let* ((start (match-beginning 0))
-                (end (match-end 0))
-                (_data (buffer-substring-no-properties start end))
-                (open-quote t))
-
-           ;; Move forward from the double-quote one character
-           (forward-char)
-
-           (while open-quote
-             (let ((string-start
-                    (search-forward-regexp
-                     (concat
-                      "\\(\""
-                      "\\|\\$" phps-mode-lexer-LABEL
-                      "\\|\\${" phps-mode-lexer-LABEL
-                      "\\|{\\$" phps-mode-lexer-LABEL "\\)")
-                     nil t)))
-
-               ;; Do we find a ending double quote or starting variable?
-               (if string-start
-                   (let ((string-start (match-beginning 0))
-                         (is-escaped nil)
-                         (is-escaped-1 nil)
-                         (is-escaped-2 nil))
-
-                     ;; Check whether one character back is escape character
-                     (goto-char (1- string-start))
-                     (setq is-escaped-1 (looking-at-p "\\\\"))
-
-                     ;; Check whether two characters back is escape character
-                     (goto-char (- string-start 2))
-                     (setq is-escaped-2 (looking-at-p "\\\\"))
-
-                     (setq is-escaped
-                           (and
-                            is-escaped-1
-                            (not is-escaped-2)))
-
-                     ;; Do we find variable inside quote?
-                     (goto-char string-start)
-
-                     ;; Process character if it's not escaped
-                     (if is-escaped
-                         (forward-char 1)
-                       (setq open-quote nil)
-                       (if (looking-at "\"")
-                           (let ((_double-quoted-string (buffer-substring-no-properties start (+ string-start 1))))
-                             ;; (message "Double quoted string: %s" _double-quoted-string)
-                             (phps-mode-lexer-RETURN_TOKEN 'T_CONSTANT_ENCAPSED_STRING start (+ string-start 1)))
-                         ;; (message "Found variable after '%s'" (buffer-substring-no-properties start string-start))
-                         (phps-mode-lexer-BEGIN 'ST_DOUBLE_QUOTES)
-                         (phps-mode-lexer-RETURN_TOKEN "\"" start (1+ start))
-                         (phps-mode-lexer-RETURN_TOKEN 'T_ENCAPSED_AND_WHITESPACE (1+ start) string-start))))
-                 (progn
-                   (setq open-quote nil)
-                   (signal
-                    'error
-                    (list
-                     (format "Found no ending of quote at %s" start)
-                     start)))))))))
-
-      (phps-mode-lexer-re2c-rule
-       (and ST_IN_SCRIPTING
-            (looking-at
-             (concat
-              "<<<"
-              phps-mode-lexer-TABS_AND_SPACES
-              "\\("
-              phps-mode-lexer-LABEL
-              "\\|'"
-              phps-mode-lexer-LABEL
-              "'\\|\""
-              phps-mode-lexer-LABEL
-              "\"\\)"
-              phps-mode-lexer-NEWLINE)))
-       (lambda()
-         (let* ((start (match-beginning 0))
-                (end (match-end 0))
-                (data (buffer-substring-no-properties (match-beginning 1) (match-end 1)))
-                (heredoc_label))
-
-           ;; Determine if it's HEREDOC or NOWDOC and extract label here
-           (if (string= (substring data 0 1) "'")
-               (progn
-                 (setq heredoc_label (substring data 1 (- (length data) 1)))
-                 (phps-mode-lexer-BEGIN 'ST_NOWDOC))
-             (progn
-               (if (string= (substring data 0 1) "\"")
-                   (setq heredoc_label (substring data 1 (- (length data) 1)))
-                 (setq heredoc_label data))
-               (phps-mode-lexer-BEGIN 'ST_HEREDOC)))
-
-           ;; Check for ending label on the next line
-           (when (string= (buffer-substring-no-properties end (+ end (length heredoc_label))) heredoc_label)
-             (phps-mode-lexer-BEGIN 'ST_END_HEREDOC))
-
-           (push heredoc_label phps-mode-lexer-heredoc_label_stack)
-           ;; (message "Found heredoc or nowdoc at %s with label %s" data heredoc_label)
-
-           (phps-mode-lexer-RETURN_TOKEN 'T_START_HEREDOC start end))))
-
-      (phps-mode-lexer-re2c-rule
-       (and ST_IN_SCRIPTING (looking-at "[`]"))
-       (lambda()
-         ;; (message "Begun backquote at %s-%s" (match-beginning 0) (match-end 0))
-         (phps-mode-lexer-BEGIN 'ST_BACKQUOTE)
-         (phps-mode-lexer-RETURN_TOKEN "`" (match-beginning 0) (match-end 0))))
-
-      (phps-mode-lexer-re2c-rule
-       (and ST_END_HEREDOC (looking-at (concat phps-mode-lexer-ANY_CHAR)))
-       (lambda()
-         (let* ((start (match-beginning 0))
-                (end (+ start (length heredoc_label) 1))
-                (_data (buffer-substring-no-properties start end)))
-           ;; (message "Found ending heredoc at %s, %s of %s" _data (thing-at-point 'line) heredoc_label)
-           (pop phps-mode-lexer-heredoc_label_stack)
-           (phps-mode-lexer-BEGIN 'ST_IN_SCRIPTING)
-           (phps-mode-lexer-RETURN_TOKEN 'T_END_HEREDOC start end))))
-
-      (phps-mode-lexer-re2c-rule
-       (and (or ST_DOUBLE_QUOTES ST_BACKQUOTE ST_HEREDOC) (looking-at (concat "{\\$")))
-       (lambda()
-         (phps-mode-lexer-yy_push_state 'ST_IN_SCRIPTING)
-         (phps-mode-lexer-RETURN_TOKEN 'T_CURLY_OPEN (match-beginning 0) (- (match-end 0) 1))))
-
-      (phps-mode-lexer-re2c-rule
-       (and ST_DOUBLE_QUOTES (looking-at "[\"]"))
-       (lambda()
-         (phps-mode-lexer-BEGIN 'ST_IN_SCRIPTING)
-         ;; (message "Ended double-quote at %s" (match-beginning 0))
-         (phps-mode-lexer-RETURN_TOKEN "\"" (match-beginning 0) (match-end 0))))
-
-      (phps-mode-lexer-re2c-rule
-       (and ST_BACKQUOTE (looking-at "[`]"))
-       (lambda()
-         (phps-mode-lexer-BEGIN 'ST_IN_SCRIPTING)
-         (phps-mode-lexer-RETURN_TOKEN "`" (match-beginning 0) (match-end 0))))
-
-      (phps-mode-lexer-re2c-rule
-       (and ST_DOUBLE_QUOTES (looking-at phps-mode-lexer-ANY_CHAR))
-       (lambda()
-         (let ((start (point)))
-           (let ((string-start (search-forward-regexp "[^\\\\]\"" nil t)))
-             (if string-start
-                 (let* ((end (- (match-end 0) 1))
-                        (double-quoted-string (buffer-substring-no-properties start end)))
-                   ;; Do we find variable inside quote?
-                   (if (or (string-match (concat "\\${" phps-mode-lexer-LABEL) double-quoted-string)
-                           (string-match (concat "{\\$" phps-mode-lexer-LABEL) double-quoted-string)
-                           (string-match (concat "\\$" phps-mode-lexer-LABEL) double-quoted-string))
-                       (progn
-                         (let ((variable-start (+ start (match-beginning 0))))
-
-                           ;; (message "Found starting expression inside double-quoted string at: %s %s" start variable-start)
-                           (phps-mode-lexer-RETURN_TOKEN 'T_CONSTANT_ENCAPSED_STRING start variable-start)
-                           ))
-                     (progn
-                       (phps-mode-lexer-RETURN_TOKEN 'T_CONSTANT_ENCAPSED_STRING start end)
-                       ;; (message "Found end of quote at %s-%s, moving ahead after '%s'" start end (buffer-substring-no-properties start end))
-                       )))
-               (progn
-                 (signal 'error (list
-                                 (format "Found no ending of double quoted region starting at %d" start)
-                                 start))))))))
-
-      (phps-mode-lexer-re2c-rule
-       (and ST_BACKQUOTE (looking-at phps-mode-lexer-ANY_CHAR))
-       (lambda()
-         (let ((string-start (search-forward-regexp "\\([^\\\\]`\\|\\$\\|{\\)" nil t)))
-           (if string-start
-               (let ((start (- (match-end 0) 1)))
-                 ;; (message "Skipping backquote forward over %s" (buffer-substring-no-properties old-start start))
-                 (phps-mode-lexer-RETURN_TOKEN 'T_CONSTANT_ENCAPSED_STRING old-start start)
-                 )
-             (progn
-               (signal 'error (list
-                               (format "Found no ending of back-quoted string starting at %d" (point))
-                               (point))))))))
-
-      (phps-mode-lexer-re2c-rule
-       (and ST_HEREDOC (looking-at phps-mode-lexer-ANY_CHAR))
-       (lambda()
-         ;; Check for $, ${ and {$ forward
-         (let ((string-start
-                (search-forward-regexp
-                 (concat
-                  "\\(\n"
-                  heredoc_label
-                  ";?\n\\|\\$"
-                  phps-mode-lexer-LABEL
-                  "\\|{\\$"
-                  phps-mode-lexer-LABEL
-                  "\\|\\${"
-                  phps-mode-lexer-LABEL
-                  "\\)"
-                  ) nil t)))
-           (if string-start
-               (let* ((start (match-beginning 0))
-                      (end (match-end 0))
-                      (data (buffer-substring-no-properties start end)))
-                 ;; (message "Found something ending at %s" data)
-
-                 (cond
-
-                  ((string-match (concat "\n" heredoc_label ";?\n") data)
-                   ;; (message "Found heredoc end at %s-%s" start end)
-                   (phps-mode-lexer-BEGIN 'ST_END_HEREDOC)
-                   (phps-mode-lexer-RETURN_TOKEN 'T_ENCAPSED_AND_WHITESPACE old-start start))
-
-                  (t
-                   ;; (message "Found variable at '%s'.. Skipping forward to %s" data start)
-                   (phps-mode-lexer-RETURN_TOKEN 'T_ENCAPSED_AND_WHITESPACE old-start start)
-                   )
-
-                  ))
-             (progn
-               (signal 'error (list
-                               (format "Found no ending of heredoc at %d" (point))
-                               (point))))))))
-
-      (phps-mode-lexer-re2c-rule
-       (and ST_NOWDOC (looking-at phps-mode-lexer-ANY_CHAR))
-       (lambda()
-         (let ((string-start (search-forward-regexp (concat "\n" heredoc_label ";?\\\n") nil t)))
-           (if string-start
-               (let* ((start (match-beginning 0))
-                      (end (match-end 0))
-                      (_data (buffer-substring-no-properties start end)))
-                 ;; (message "Found something ending at %s" _data)
-                 ;; (message "Found nowdoc end at %s-%s" start end)
-                 (phps-mode-lexer-BEGIN 'ST_END_HEREDOC)
-                 (phps-mode-lexer-RETURN_TOKEN 'T_ENCAPSED_AND_WHITESPACE old-start start)
-                 )
-             (progn
-               (signal 'error (list
-                               (format "Found no ending of newdoc starting at %d" (point))
-                               (point))))))))
-
-      (phps-mode-lexer-re2c-rule
-       (and (or ST_IN_SCRIPTING ST_VAR_OFFSET) (looking-at phps-mode-lexer-ANY_CHAR))
-       (lambda()
-         (signal 'error (list
-                         (format "Unexpected character at %d" (point))
-                         (point)))))
-
-      (phps-mode-lexer-re2c-execute))))
-
-(define-lex phps-mode-analyzer-lex
-  "Call lexer analyzer action."
-  phps-mode-analyzer-lexer
-  semantic-lex-default-action)
-
-(define-lex phps-mode-analyzer-re2c-lex
-  "Call lexer analyzer action."
-  phps-mode-analyzer-re2c-lexer
-  semantic-lex-default-action)
-
-(defun phps-mode-lexer--get-next-unescaped (character)
-  "Find where next un-escaped CHARACTER comes, if none is found return nil."
-  ;; (message "phps-mode-lexer--get-next-unescaped(%s)" character)
-  (let ((escaped nil)
-        (pos nil))
-    (while (and (not pos)
-                (< (point) (point-max)))
-      (progn
-        ;; (message "Setting forward one %s vs %s" (point) (point-max))
-        (forward-char)
-        (if (and (not escaped)
-                 (looking-at-p character))
-            (setq pos (1+ (point)))
-          (if (looking-at-p "\\\\")
-              (setq escaped (not escaped))
-            (setq escaped nil)))))
-    pos))
-
-(defun phps-mode-lexer-setup (start end)
-  "Just prepare other lexers for lexing region START to END."
-  (phps-mode-debug-message (message "Lexer setup %s - %s" start end))
-  (unless phps-mode-lexer-STATE
-    (phps-mode-lexer-BEGIN 'ST_INITIAL)))
-
-(defun phps-mode-lexer-run ()
+(defun phps-mode-lex-analyzer--re2c-run ()
   "Run lexer."
   (interactive)
+  (require 'phps-mode-macros)
   (phps-mode-debug-message (message "Lexer run"))
 
   (let ((buffer-name (buffer-name))
@@ -1824,15 +321,15 @@
          (with-current-buffer buffer-name
 
            ;; Move variables into this buffers variables
-           (setq-local phps-mode-lexer-tokens (nth 0 result))
-           (setq-local phps-mode-lexer-states (nth 1 result))
-           (setq-local phps-mode-lexer-STATE (nth 2 result))
-           (setq-local phps-mode-lexer-state_stack (nth 3 result))
+           (setq-local phps-mode-lexer--tokens (nth 0 result))
+           (setq-local phps-mode-lexer--states (nth 1 result))
+           (setq-local phps-mode-lexer--STATE (nth 2 result))
+           (setq-local phps-mode-lexer--state_stack (nth 3 result))
            (setq-local phps-mode-functions-processed-buffer nil)
            (phps-mode-analyzer--reset-imenu)
 
            ;; Apply syntax color on tokens
-           (dolist (token phps-mode-lexer-tokens)
+           (dolist (token phps-mode-lexer--tokens)
              (let ((start (car (cdr token)))
                    (end (cdr (cdr token)))
                    (token-name (car token)))
@@ -1863,6 +360,137 @@
      phps-mode-async-process
      phps-mode-async-process-using-async-el
      phps-mode-serial-profiling)))
+
+(defun phps-mode-lex-analyzer--incremental-lex-string
+    (buffer-name buffer-contents incremental-start-new-buffer point-max
+                 head-states incremental-state incremental-state-stack head-tokens)
+  "Incremental lex region."
+  (require 'phps-mode-macros)
+  (phps-mode-serial-commands
+   buffer-name
+   (lambda() (phps-mode-analyzer-lex-string
+              buffer-contents
+              incremental-start-new-buffer
+              point-max
+              head-states
+              incremental-state
+              incremental-state-stack
+              head-tokens))
+   (lambda(result)
+     (when (get-buffer buffer-name)
+       (with-current-buffer buffer-name
+
+         (phps-mode-debug-message
+          (message "Incrementally-lexed-string: %s" result))
+
+         (setq-local phps-mode-lexer--tokens (nth 0 result))
+         (setq-local phps-mode-lexer--states (nth 1 result))
+         (setq-local phps-mode-lexer--STATE (nth 2 result))
+         (setq-local phps-mode-lexer--state_stack (nth 3 result))
+         (setq-local phps-mode-functions-processed-buffer nil)
+         (phps-mode-analyzer--reset-imenu)
+
+         ;; Apply syntax color on tokens
+         (dolist (token phps-mode-lexer--tokens)
+           (let ((start (car (cdr token)))
+                 (end (cdr (cdr token)))
+                 (token-name (car token)))
+
+             ;; Apply syntax color on token
+             (let ((token-syntax-color (phps-mode-lexer-get-token-syntax-color token-name)))
+               (if token-syntax-color
+                   (phps-mode-lexer-set-region-syntax-color start end token-syntax-color)
+                 (phps-mode-lexer-clear-region-syntax-color start end)))))
+
+         (let ((errors (nth 4 result))
+               (error-start)
+               (error-end))
+           (when errors
+             (setq error-start (car (cdr errors)))
+             (when error-start
+               (if (car (cdr (cdr errors)))
+                   (progn
+                     (setq error-end (car (cdr (cdr (cdr errors)))))
+                     (phps-mode-lexer-set-region-syntax-color
+                      error-start
+                      error-end
+                      (list 'font-lock-face 'font-lock-warning-face)))
+                 (setq error-end (point-max))
+                 (phps-mode-lexer-set-region-syntax-color
+                  error-start
+                  error-end
+                  (list 'font-lock-face 'font-lock-warning-face))))
+             (signal 'error (list (format "Incremental Lex Errors: %s" (car errors))))))
+
+         (phps-mode-debug-message
+          (message "Incremental tokens: %s" incremental-tokens)))))
+   phps-mode-async-process
+   phps-mode-async-process-using-async-el
+   phps-mode-serial-profiling))
+
+(define-lex phps-mode-analyzer-lex
+  "Call lexer analyzer action."
+  phps-mode-analyzer-lexer
+  semantic-lex-default-action)
+
+(define-lex phps-mode-analyzer-re2c-lex
+  "Call lexer analyzer action."
+  phps-mode-analyzer-re2c-lexer
+  semantic-lex-default-action)
+
+(defun phps-mode-lexer-run ()
+  "Run lexer."
+  (interactive)
+  (phps-mode-debug-message (message "Lexer run"))
+
+  (let ((buffer-name (buffer-name))
+        (buffer-contents (buffer-substring-no-properties (point-min) (point-max))))
+    (phps-mode-serial-commands
+     buffer-name
+     (lambda() (phps-mode-analyzer-lex-string buffer-contents))
+     (lambda(result)
+       (when (get-buffer buffer-name)
+         (with-current-buffer buffer-name
+
+           ;; Move variables into this buffers variables
+           (setq-local phps-mode-lexer-tokens (nth 0 result))
+           (setq-local phps-mode-lexer-states (nth 1 result))
+           (setq-local phps-mode-lexer-STATE (nth 2 result))
+           (setq-local phps-mode-lexer-state_stack (nth 3 result))
+           (setq-local phps-mode-lex-analyzer--processed-buffer-p nil)
+           (phps-mode-analyzer--reset-imenu)
+
+           ;; Apply syntax color on tokens
+           (dolist (token phps-mode-lexer-tokens)
+             (let ((start (car (cdr token)))
+                   (end (cdr (cdr token)))
+                   (token-name (car token)))
+               (let ((token-syntax-color (phps-mode-lex-analyzer--get-token-syntax-color token-name)))
+                 (if token-syntax-color
+                     (phps-mode-lex-analyzer--set-region-syntax-color start end token-syntax-color)
+                   (phps-mode-lex-analyzer--clear-region-syntax-color start end)))))
+
+           (let ((errors (nth 4 result))
+                 (error-start)
+                 (error-end))
+             (when errors
+               (setq error-start (car (cdr errors)))
+               (when error-start
+                 (if (car (cdr (cdr errors)))
+                     (progn
+                       (setq error-end (car (cdr (cdr (cdr errors)))))
+                       (phps-mode-lex-analyzer--set-region-syntax-color
+                        error-start
+                        error-end
+                        (list 'font-lock-face 'font-lock-warning-face)))
+                   (setq error-end (point-max))
+                   (phps-mode-lex-analyzer--set-region-syntax-color
+                    error-start
+                    error-end
+                    (list 'font-lock-face 'font-lock-warning-face))))
+               (signal 'error (list (format "Lex Errors: %s" (car errors)))))))))
+     phps-mode-async-process
+     phps-mode-async-process-using-async-el)))
 
 (defun phps-mode-analyzer-lex-string (contents &optional start end states state state-stack tokens)
   "Run lexer on CONTENTS."
@@ -1969,9 +597,9 @@
 
 (defun phps-mode-functions--reset-changes ()
   "Reset change."
-  (setq phps-mode-analyzer-change-min nil))
+  (setq phps-mode-lex-analyzer--change-min nil))
 
-(defun phps-mode-analyzer-process-changes (&optional buffer)
+(defun phps-mode-lex-analyzer-process-changes (&optional buffer)
   "Run incremental lexer on BUFFER.  Return list of performed operations."
   (unless buffer
     (setq buffer (current-buffer)))
@@ -1983,17 +611,17 @@
           (old-states phps-mode-lexer-states)
           (log '()))
 
-      (if phps-mode-analyzer-change-min
+      (if phps-mode-lex-analyzer--change-min
           (progn
             (phps-mode-debug-message
-             (message "Processing change point minimum: %s" phps-mode-analyzer-change-min))
+             (message "Processing change point minimum: %s" phps-mode-lex-analyzer--change-min))
             (let ((incremental-state nil)
                   (incremental-state-stack nil)
                   (incremental-tokens nil)
                   (head-states '())
                   (head-tokens '())
-                  (change-start phps-mode-analyzer-change-min)
-                  (incremental-start-new-buffer phps-mode-analyzer-change-min))
+                  (change-start phps-mode-lex-analyzer--change-min)
+                  (incremental-start-new-buffer phps-mode-lex-analyzer--change-min))
 
               ;; Reset idle timer
               (phps-mode-functions--cancel-idle-timer)
@@ -2115,12 +743,13 @@
 
       log)))
 
-(defun phps-mode-incremental-lex-string (buffer-name buffer-contents incremental-start-new-buffer point-max
-                                                     head-states incremental-state incremental-state-stack head-tokens)
+(defun phps-mode-incremental-lex-string
+    (buffer-name buffer-contents incremental-start-new-buffer point-max
+                 head-states incremental-state incremental-state-stack head-tokens)
   "Incremental lex region."
   (phps-mode-serial-commands
    buffer-name
-   (lambda() (phps-mode-analyzer-lex-string
+   (lambda() (phps-mode-lexer--lex-string
               buffer-contents
               incremental-start-new-buffer
               point-max
@@ -2139,7 +768,7 @@
          (setq-local phps-mode-lexer-states (nth 1 result))
          (setq-local phps-mode-lexer-STATE (nth 2 result))
          (setq-local phps-mode-lexer-state_stack (nth 3 result))
-         (setq-local phps-mode-functions-processed-buffer nil)
+         (setq-local phps-mode-lex-analyzer--processed-buffer-p nil)
          (phps-mode-analyzer--reset-imenu)
 
          ;; Apply syntax color on tokens
@@ -2149,10 +778,10 @@
                  (token-name (car token)))
 
              ;; Apply syntax color on token
-             (let ((token-syntax-color (phps-mode-lexer-get-token-syntax-color token-name)))
+             (let ((token-syntax-color (phps-mode-lex-analyzer--get-token-syntax-color token-name)))
                (if token-syntax-color
-                   (phps-mode-lexer-set-region-syntax-color start end token-syntax-color)
-                 (phps-mode-lexer-clear-region-syntax-color start end)))))
+                   (phps-mode-lex-analyzer--set-region-syntax-color start end token-syntax-color)
+                 (phps-mode-lex-analyzer--clear-region-syntax-color start end)))))
 
          (let ((errors (nth 4 result))
                (error-start)
@@ -2163,12 +792,12 @@
                (if (car (cdr (cdr errors)))
                    (progn
                      (setq error-end (car (cdr (cdr (cdr errors)))))
-                     (phps-mode-lexer-set-region-syntax-color
+                     (phps-mode-lex-analyzer--set-region-syntax-color
                       error-start
                       error-end
                       (list 'font-lock-face 'font-lock-warning-face)))
                  (setq error-end (point-max))
-                 (phps-mode-lexer-set-region-syntax-color
+                 (phps-mode-lex-analyzer--set-region-syntax-color
                   error-start
                   error-end
                   (list 'font-lock-face 'font-lock-warning-face))))
@@ -2177,31 +806,30 @@
          (phps-mode-debug-message
           (message "Incremental tokens: %s" incremental-tokens)))))
    phps-mode-async-process
-   phps-mode-async-process-using-async-el
-   phps-mode-serial-profiling))
+   phps-mode-async-process-using-async-el))
 
 (defun phps-mode-functions-get-processed-buffer ()
   "Get flag for whether buffer is processed or not."
-  phps-mode-functions-processed-buffer)
+  phps-mode-lex-analyzer--processed-buffer-p)
 
 (defun phps-mode-functions-reset-processed-buffer ()
   "Reset flag for whether buffer is processed or not."
-  (setq-local phps-mode-functions-processed-buffer nil))
+  (setq-local phps-mode-lex-analyzer--processed-buffer-p nil))
 
 (defun phps-mode-functions-process-current-buffer ()
   "Process current buffer, generate indentations and Imenu, trigger incremental lexer if we have change."
   (interactive)
   (phps-mode-debug-message (message "Process current buffer"))
-  (when phps-mode-functions-idle-timer
+  (when phps-mode-lex-analyzer--idle-timer
     (phps-mode-debug-message
      (message "Flag buffer as not processed since changes are detected"))
-    (setq-local phps-mode-functions-processed-buffer nil)
-    (when phps-mode-analyzer-process-on-indent-and-imenu
+    (setq-local phps-mode-lex-analyzer--processed-buffer-p nil)
+    (when phps-mode-lex-analyzer--process-on-indent-and-imenu-p
       (phps-mode-debug-message (message "Trigger incremental lexer"))
       (phps-mode-analyzer-process-changes)))
   (if (and
-       (not phps-mode-functions-processed-buffer)
-       (not phps-mode-functions-idle-timer))
+       (not phps-mode-lex-analyzer--processed-buffer-p)
+       (not phps-mode-lex-analyzer--idle-timer))
       (progn
         (phps-mode-debug-message (message "Buffer is not processed"))
         (let ((processed
@@ -2211,14 +839,14 @@
                  (point-min)
                  (point-max)))))
           (phps-mode-debug-message (message "Processed result: %s" processed))
-          (setq-local phps-mode-functions-imenu (nth 0 processed))
-          (setq-local phps-mode-functions-lines-indent (nth 1 processed)))
+          (setq-local phps-mode-lex-analyzer--imenu (nth 0 processed))
+          (setq-local phps-mode-lex-analyzer--lines-indent (nth 1 processed)))
         (phps-mode-analyzer--reset-imenu)
-        (setq-local phps-mode-functions-processed-buffer t))
+        (setq-local phps-mode-lex-analyzer--processed-buffer-p t))
     (phps-mode-debug-message
-     (when phps-mode-functions-processed-buffer
+     (when phps-mode-lex-analyzer--processed-buffer-p
        (message "Buffer is already processed"))
-     (when phps-mode-functions-idle-timer
+     (when phps-mode-lex-analyzer--idle-timer
        (message "Not processing buffer since there are non-lexed changes")))))
 
 (defun phps-mode-functions-get-moved-lines-indent (old-lines-indents start-line-number diff)
@@ -2251,31 +879,31 @@
 
 (defun phps-mode-functions-move-imenu-index (start diff)
   "Moved imenu from START by DIFF points."
-  (when phps-mode-functions-imenu
-    (setq-local phps-mode-functions-imenu
-                (phps-mode-functions-get-moved-imenu phps-mode-functions-imenu start diff))
+  (when phps-mode-lex-analyzer--imenu
+    (setq-local phps-mode-lex-analyzer--imenu
+                (phps-mode-functions-get-moved-imenu phps-mode-lex-analyzer--imenu start diff))
     (phps-mode-analyzer--reset-imenu)))
 
 (defun phps-mode-functions-move-lines-indent (start-line-number diff)
   "Move lines indent from START-LINE-NUMBER with DIFF points."
-  (when phps-mode-functions-lines-indent
+  (when phps-mode-lex-analyzer--lines-indent
     ;; (message "Moving line-indent index from %s with %s" start-line-number diff)
     (setq-local
-     phps-mode-functions-lines-indent
+     phps-mode-lex-analyzer--lines-indent
      (phps-mode-functions-get-moved-lines-indent
-      phps-mode-functions-lines-indent
+      phps-mode-lex-analyzer--lines-indent
       start-line-number
       diff))))
 
 (defun phps-mode-functions-get-lines-indent ()
   "Return lines indent, process buffer if not done already."
   (phps-mode-functions-process-current-buffer)
-  phps-mode-functions-lines-indent)
+  phps-mode-lex-analyzer--lines-indent)
 
 (defun phps-mode-functions-get-imenu ()
   "Return Imenu, process buffer if not done already."
   (phps-mode-functions-process-current-buffer)
-  phps-mode-functions-imenu)
+  phps-mode-lex-analyzer--imenu)
 
 (defun phps-mode-functions-get-moved-imenu (old-index start diff)
   "Move imenu-index OLD-INDEX beginning from START with DIFF."
@@ -3450,11 +2078,11 @@ SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
   "Indent line."
   (phps-mode-debug-message (message "Indent line"))
   (phps-mode-functions-process-current-buffer)
-  (if phps-mode-functions-processed-buffer
-      (if phps-mode-functions-lines-indent
+  (if phps-mode-lex-analyzer--processed-buffer-p
+      (if phps-mode-lex-analyzer--lines-indent
           (let ((line-number (line-number-at-pos (point))))
             (phps-mode-debug-message (message "Found lines indent index, indenting.."))
-            (let ((indent (gethash line-number phps-mode-functions-lines-indent)))
+            (let ((indent (gethash line-number phps-mode-lex-analyzer--lines-indent)))
               (if indent
                   (progn
                     (let ((indent-sum (+ (* (car indent) tab-width) (car (cdr indent))))
@@ -3468,9 +2096,9 @@ SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
                       (if (not (equal indent-sum old-indentation))
                           (progn
 
-                            (setq-local phps-mode-functions-allow-after-change nil)
+                            (setq-local phps-mode-lex-analyzer--allow-after-change-p nil)
                             (indent-line-to indent-sum)
-                            (setq-local phps-mode-functions-allow-after-change t)
+                            (setq-local phps-mode-lex-analyzer--allow-after-change-p t)
 
                             (let ((indent-diff (- (current-indentation) old-indentation)))
 
@@ -3642,9 +2270,9 @@ SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
 (defun phps-mode-functions--cancel-idle-timer ()
   "Cancel idle timer."
   (phps-mode-debug-message (message "Cancelled idle timer"))
-  (when phps-mode-functions-idle-timer
-    (cancel-timer phps-mode-functions-idle-timer)
-    (setq-local phps-mode-functions-idle-timer nil)))
+  (when phps-mode-lex-analyzer--idle-timer
+    (cancel-timer phps-mode-lex-analyzer--idle-timer)
+    (setq-local phps-mode-lex-analyzer--idle-timer nil)))
 
 (defun phps-mode-functions--start-idle-timer ()
   "Start idle timer."
@@ -3652,7 +2280,7 @@ SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
   (when (boundp 'phps-mode-idle-interval)
     (let ((buffer (current-buffer)))
       (setq-local
-       phps-mode-functions-idle-timer
+       phps-mode-lex-analyzer--idle-timer
        (run-with-idle-timer
         phps-mode-idle-interval
         nil
@@ -3670,28 +2298,28 @@ SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
   (phps-mode-debug-message
    (message "After change %s - %s, length: %s" start stop length))
 
-  (if phps-mode-functions-allow-after-change
+  (if phps-mode-lex-analyzer--allow-after-change-p
       (progn
         (phps-mode-debug-message (message "After change registration is enabled"))
         
         ;; If we haven't scheduled incremental lexer before - do it
         (when (and (boundp 'phps-mode-idle-interval)
                    phps-mode-idle-interval
-                   (not phps-mode-functions-idle-timer))
+                   (not phps-mode-lex-analyzer--idle-timer))
 
           (phps-mode-analyzer--reset-imenu)
           (phps-mode-functions--start-idle-timer))
 
         (when (or
-               (not phps-mode-analyzer-change-min)
-               (< start phps-mode-analyzer-change-min))
-          (setq phps-mode-analyzer-change-min start)))
+               (not phps-mode-lex-analyzer--change-min)
+               (< start phps-mode-lex-analyzer--change-min))
+          (setq phps-mode-lex-analyzer--change-min start)))
     (phps-mode-debug-message (message "After change registration is disabled"))))
 
-(defun phps-mode-functions-imenu-create-index ()
+(defun phps-mode-lex-analyzer--imenu-create-index ()
   "Get Imenu for current buffer."
   (phps-mode-functions-process-current-buffer)
-  phps-mode-functions-imenu)
+  phps-mode-lex-analyzer--imenu)
 
 (defun phps-mode-functions-comment-region (beg end &optional _arg)
   "Comment region from BEG to END with optional _ARG."
@@ -3858,6 +2486,6 @@ SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
                       "Do not un-comment comment ending at %s"
                       token-end))))))))))))
 
-(provide 'phps-mode-analyzer)
+(provide 'phps-mode-lex-analyzer)
 
-;;; phps-mode-analyzer.el ends here
+;;; phps-mode-lex-analyzer.el ends here
