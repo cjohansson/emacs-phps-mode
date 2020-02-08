@@ -222,10 +222,10 @@
   (setq-local semantic-lex-syntax-table phps-mode-syntax-table)
 
   ;; Semantic
-  (setq-local semantic-lex-analyzer #'phps-mode-lex-analyzer)
+  (setq-local semantic-lex-analyzer #'phps-mode-lex-analyzer--cached-lex-analyzer)
 
   ;; Set semantic-lex initializer function
-  (add-hook 'semantic-lex-reset-functions #'phps-mode-lexer-setup 0 t)
+  (add-hook 'semantic-lex-reset-functions #'phps-mode-lex-analyzer--setup 0 t)
 
   ;; Initial run of lexer
   (phps-mode-lexer-run)

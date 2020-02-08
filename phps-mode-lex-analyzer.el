@@ -71,6 +71,21 @@
 (defvar phps-mode-lex-analyzer--lines-indent nil
   "The indentation of each line in buffer, nil if none.")
 
+(defvar phps-mode-lex-analyzer--tokens nil
+  "Last lexer tokens.")
+
+(defvar phps-mode-lex-analyzer--states nil
+  "A list of lists containing start, state and state stack.")
+
+(defvar phps-mode-lex-analyzer--STATE nil
+  "Current state.")
+
+(defvar phps-mode-lex-analyzer--state_stack nil
+  "Stack of states.")
+
+(defvar phps-mode-lex-analyzer--heredoc_label_stack (list)
+  "The current heredoc_label.")
+
 
 ;; FUNCTIONS
 
@@ -257,7 +272,7 @@
 ;; LEXERS
 
 
-(define-lex-analyzer phps-mode-lex-analyzer--cached-analyzer
+(define-lex-analyzer phps-mode-lex-analyzer--cached-lex-analyzer
   "Return latest processed tokens or else just return one giant error token."
   t
 
@@ -299,11 +314,10 @@
 ;; If multiple rules match, re2c prefers the longest match.
 ;; If rules match the same string, the earlier rule has priority.
 ;; @see http://re2c.org/manual/syntax/syntax.html
-(define-lex-analyzer phps-mode-analyzer-re2c-lexer
+(define-lex-analyzer phps-mode-analyzer--re2c-lex-analyzer
   "Elisp port of original Zend re2c lexer."
   t
-
-  )
+  (phps-mode-lexer--re2c))
 
 (defun phps-mode-lex-analyzer--re2c-run ()
   "Run lexer."
@@ -315,7 +329,7 @@
         (buffer-contents (buffer-substring-no-properties (point-min) (point-max))))
     (phps-mode-serial-commands
      buffer-name
-     (lambda() (phps-mode-analyzer-lex-string buffer-contents))
+     (lambda() (phps-mode-lex-analyzer--lex-string buffer-contents))
      (lambda(result)
        (when (get-buffer buffer-name)
          (with-current-buffer buffer-name
@@ -326,7 +340,7 @@
            (setq-local phps-mode-lexer--STATE (nth 2 result))
            (setq-local phps-mode-lexer--state_stack (nth 3 result))
            (setq-local phps-mode-functions-processed-buffer nil)
-           (phps-mode-analyzer--reset-imenu)
+           (phps-mode-lex-analyzer--reset-imenu)
 
            ;; Apply syntax color on tokens
            (dolist (token phps-mode-lexer--tokens)
@@ -368,7 +382,7 @@
   (require 'phps-mode-macros)
   (phps-mode-serial-commands
    buffer-name
-   (lambda() (phps-mode-analyzer-lex-string
+   (lambda() (phps-mode-lex-analyzer--lex-string
               buffer-contents
               incremental-start-new-buffer
               point-max
@@ -428,126 +442,22 @@
    phps-mode-async-process-using-async-el
    phps-mode-serial-profiling))
 
-(define-lex phps-mode-analyzer-lex
+(define-lex phps-mode-lex-analyzer--cached-lex
   "Call lexer analyzer action."
-  phps-mode-analyzer-lexer
+  phps-mode-analyzer--cached-lex-analyzer
   semantic-lex-default-action)
 
-(define-lex phps-mode-analyzer-re2c-lex
+(define-lex phps-mode-lex-analyzer--re2c-lex
   "Call lexer analyzer action."
-  phps-mode-analyzer-re2c-lexer
+  phps-mode-lex-analyzer--re2c-lex-analyzer
   semantic-lex-default-action)
 
-(defun phps-mode-lexer-run ()
-  "Run lexer."
-  (interactive)
-  (phps-mode-debug-message (message "Lexer run"))
-
-  (let ((buffer-name (buffer-name))
-        (buffer-contents (buffer-substring-no-properties (point-min) (point-max))))
-    (phps-mode-serial-commands
-     buffer-name
-     (lambda() (phps-mode-analyzer-lex-string buffer-contents))
-     (lambda(result)
-       (when (get-buffer buffer-name)
-         (with-current-buffer buffer-name
-
-           ;; Move variables into this buffers variables
-           (setq-local phps-mode-lexer-tokens (nth 0 result))
-           (setq-local phps-mode-lexer-states (nth 1 result))
-           (setq-local phps-mode-lexer-STATE (nth 2 result))
-           (setq-local phps-mode-lexer-state_stack (nth 3 result))
-           (setq-local phps-mode-lex-analyzer--processed-buffer-p nil)
-           (phps-mode-analyzer--reset-imenu)
-
-           ;; Apply syntax color on tokens
-           (dolist (token phps-mode-lexer-tokens)
-             (let ((start (car (cdr token)))
-                   (end (cdr (cdr token)))
-                   (token-name (car token)))
-               (let ((token-syntax-color (phps-mode-lex-analyzer--get-token-syntax-color token-name)))
-                 (if token-syntax-color
-                     (phps-mode-lex-analyzer--set-region-syntax-color start end token-syntax-color)
-                   (phps-mode-lex-analyzer--clear-region-syntax-color start end)))))
-
-           (let ((errors (nth 4 result))
-                 (error-start)
-                 (error-end))
-             (when errors
-               (setq error-start (car (cdr errors)))
-               (when error-start
-                 (if (car (cdr (cdr errors)))
-                     (progn
-                       (setq error-end (car (cdr (cdr (cdr errors)))))
-                       (phps-mode-lex-analyzer--set-region-syntax-color
-                        error-start
-                        error-end
-                        (list 'font-lock-face 'font-lock-warning-face)))
-                   (setq error-end (point-max))
-                   (phps-mode-lex-analyzer--set-region-syntax-color
-                    error-start
-                    error-end
-                    (list 'font-lock-face 'font-lock-warning-face))))
-               (signal 'error (list (format "Lex Errors: %s" (car errors)))))))))
-     phps-mode-async-process
-     phps-mode-async-process-using-async-el)))
-
-(defun phps-mode-analyzer-lex-string (contents &optional start end states state state-stack tokens)
-  "Run lexer on CONTENTS."
-  ;; Create a separate buffer, run lexer inside of it, catch errors and return them
-  ;; to enable nice presentation
-  (let ((errors))
-    (let ((buffer (generate-new-buffer "*PHPs Lexer*")))
-
-      ;; Create temporary buffer and run lexer in it
-      (save-excursion
-        (switch-to-buffer buffer)
-        (insert contents)
-
-        (if states
-            (setq-local phps-mode-lexer-states states)
-          (setq-local phps-mode-lexer-states nil))
-        (if state-stack
-            (setq-local phps-mode-lexer-state_stack state-stack)
-          (setq-local phps-mode-lexer-state_stack nil))
-        (if state
-            (setq-local phps-mode-lexer-STATE state)
-          (phps-mode-lexer-BEGIN 'ST_INITIAL))
-
-        (when (boundp 'phps-mode-syntax-table)
-          (setq-local semantic-lex-syntax-table phps-mode-syntax-table))
-        (when (fboundp 'phps-mode-analyzer-re2c-lex)
-          (setq-local semantic-lex-analyzer #'phps-mode-analyzer-re2c-lex))
-
-        ;; Catch any potential errors
-        (condition-case conditions
-            (progn
-              (if (and start end)
-                  (progn
-                    (phps-mode-debug-message
-                     (message "Running (semantic-lex %s %s)" start end))
-                    (let ((incremental-tokens (semantic-lex start end)))
-                      (setq-local phps-mode-lexer-tokens (append tokens incremental-tokens))))
-                (phps-mode-debug-message
-                 (message "Running (semantic-lex-buffer)"))
-                (setq-local phps-mode-lexer-tokens (semantic-lex-buffer))))
-          (error
-           (setq errors (cdr conditions))))
-
-        ;; Move variables outside of buffer
-        (setq state phps-mode-lexer-STATE)
-        (setq state-stack phps-mode-lexer-state_stack)
-        (setq states phps-mode-lexer-states)
-        (setq tokens phps-mode-lexer-tokens)
-        (kill-buffer)))
-    (list tokens states state state-stack errors)))
-
-(defun phps-mode-lexer-move-states (start diff)
+(defun phps-mode-lex-analyzer--move-states (start diff)
   "Move lexer states after (or equal to) START with modification DIFF."
   (when phps-mode-lexer-states
     (setq-local phps-mode-lexer-states (phps-mode-lexer-get-moved-states phps-mode-lexer-states start diff))))
 
-(defun phps-mode-lexer-get-moved-states (states start diff)
+(defun phps-mode-lex-analyzer--get-moved-states (states start diff)
   "Return moved lexer STATES after (or equal to) START with modification DIFF."
   (let ((old-states states)
         (new-states '()))
@@ -570,12 +480,12 @@
 
     new-states))
 
-(defun phps-mode-lexer-move-tokens (start diff)
+(defun phps-mode-lex-analyzer--move-tokens (start diff)
   "Update tokens with moved lexer tokens after or equal to START with modification DIFF."
   (when phps-mode-lexer-tokens
     (setq-local phps-mode-lexer-tokens (phps-mode-lexer-get-moved-tokens phps-mode-lexer-tokens start diff))))
 
-(defun phps-mode-lexer-get-moved-tokens (old-tokens start diff)
+(defun phps-mode-lex-analyzer--get-moved-tokens (old-tokens start diff)
   "Return moved lexer OLD-TOKENS positions after (or equal to) START with DIFF points."
   (let ((new-tokens '()))
     (when old-tokens
@@ -595,11 +505,11 @@
               (push token new-tokens))))))
     new-tokens))
 
-(defun phps-mode-functions--reset-changes ()
+(defun phps-mode-lex-analyzer--reset-changes ()
   "Reset change."
   (setq phps-mode-lex-analyzer--change-min nil))
 
-(defun phps-mode-lex-analyzer-process-changes (&optional buffer)
+(defun phps-mode-lex-analyzer--process-changes (&optional buffer)
   "Run incremental lexer on BUFFER.  Return list of performed operations."
   (unless buffer
     (setq buffer (current-buffer)))
@@ -743,80 +653,15 @@
 
       log)))
 
-(defun phps-mode-incremental-lex-string
-    (buffer-name buffer-contents incremental-start-new-buffer point-max
-                 head-states incremental-state incremental-state-stack head-tokens)
-  "Incremental lex region."
-  (phps-mode-serial-commands
-   buffer-name
-   (lambda() (phps-mode-lexer--lex-string
-              buffer-contents
-              incremental-start-new-buffer
-              point-max
-              head-states
-              incremental-state
-              incremental-state-stack
-              head-tokens))
-   (lambda(result)
-     (when (get-buffer buffer-name)
-       (with-current-buffer buffer-name
-
-         (phps-mode-debug-message
-          (message "Incrementally-lexed-string: %s" result))
-
-         (setq-local phps-mode-lexer-tokens (nth 0 result))
-         (setq-local phps-mode-lexer-states (nth 1 result))
-         (setq-local phps-mode-lexer-STATE (nth 2 result))
-         (setq-local phps-mode-lexer-state_stack (nth 3 result))
-         (setq-local phps-mode-lex-analyzer--processed-buffer-p nil)
-         (phps-mode-analyzer--reset-imenu)
-
-         ;; Apply syntax color on tokens
-         (dolist (token phps-mode-lexer-tokens)
-           (let ((start (car (cdr token)))
-                 (end (cdr (cdr token)))
-                 (token-name (car token)))
-
-             ;; Apply syntax color on token
-             (let ((token-syntax-color (phps-mode-lex-analyzer--get-token-syntax-color token-name)))
-               (if token-syntax-color
-                   (phps-mode-lex-analyzer--set-region-syntax-color start end token-syntax-color)
-                 (phps-mode-lex-analyzer--clear-region-syntax-color start end)))))
-
-         (let ((errors (nth 4 result))
-               (error-start)
-               (error-end))
-           (when errors
-             (setq error-start (car (cdr errors)))
-             (when error-start
-               (if (car (cdr (cdr errors)))
-                   (progn
-                     (setq error-end (car (cdr (cdr (cdr errors)))))
-                     (phps-mode-lex-analyzer--set-region-syntax-color
-                      error-start
-                      error-end
-                      (list 'font-lock-face 'font-lock-warning-face)))
-                 (setq error-end (point-max))
-                 (phps-mode-lex-analyzer--set-region-syntax-color
-                  error-start
-                  error-end
-                  (list 'font-lock-face 'font-lock-warning-face))))
-             (signal 'error (list (format "Incremental Lex Errors: %s" (car errors))))))
-
-         (phps-mode-debug-message
-          (message "Incremental tokens: %s" incremental-tokens)))))
-   phps-mode-async-process
-   phps-mode-async-process-using-async-el))
-
-(defun phps-mode-functions-get-processed-buffer ()
+(defun phps-mode-lex-analyzer--get-processed-buffer ()
   "Get flag for whether buffer is processed or not."
   phps-mode-lex-analyzer--processed-buffer-p)
 
-(defun phps-mode-functions-reset-processed-buffer ()
+(defun phps-mode-lex-analyzer--reset-processed-buffer ()
   "Reset flag for whether buffer is processed or not."
   (setq-local phps-mode-lex-analyzer--processed-buffer-p nil))
 
-(defun phps-mode-functions-process-current-buffer ()
+(defun phps-mode-lex-analyzer--process-current-buffer ()
   "Process current buffer, generate indentations and Imenu, trigger incremental lexer if we have change."
   (interactive)
   (phps-mode-debug-message (message "Process current buffer"))
@@ -849,7 +694,7 @@
      (when phps-mode-lex-analyzer--idle-timer
        (message "Not processing buffer since there are non-lexed changes")))))
 
-(defun phps-mode-functions-get-moved-lines-indent (old-lines-indents start-line-number diff)
+(defun phps-mode-lex-analyzer--get-moved-lines-indent (old-lines-indents start-line-number diff)
   "Move OLD-LINES-INDENTS from START-LINE-NUMBER with DIFF points."
   (let ((lines-indents (make-hash-table :test 'equal))
         (line-number 1))
@@ -877,14 +722,14 @@
           (setq line-indent (gethash line-number old-lines-indents))))
       lines-indents)))
 
-(defun phps-mode-functions-move-imenu-index (start diff)
+(defun phps-mode-lex-analyzer--move-imenu-index (start diff)
   "Moved imenu from START by DIFF points."
   (when phps-mode-lex-analyzer--imenu
     (setq-local phps-mode-lex-analyzer--imenu
                 (phps-mode-functions-get-moved-imenu phps-mode-lex-analyzer--imenu start diff))
     (phps-mode-analyzer--reset-imenu)))
 
-(defun phps-mode-functions-move-lines-indent (start-line-number diff)
+(defun phps-mode-lex-analyzer--move-lines-indent (start-line-number diff)
   "Move lines indent from START-LINE-NUMBER with DIFF points."
   (when phps-mode-lex-analyzer--lines-indent
     ;; (message "Moving line-indent index from %s with %s" start-line-number diff)
@@ -895,17 +740,17 @@
       start-line-number
       diff))))
 
-(defun phps-mode-functions-get-lines-indent ()
+(defun phps-mode-lex-analyzer--get-lines-indent ()
   "Return lines indent, process buffer if not done already."
   (phps-mode-functions-process-current-buffer)
   phps-mode-lex-analyzer--lines-indent)
 
-(defun phps-mode-functions-get-imenu ()
+(defun phps-mode-lex-analyzer--get-imenu ()
   "Return Imenu, process buffer if not done already."
   (phps-mode-functions-process-current-buffer)
   phps-mode-lex-analyzer--imenu)
 
-(defun phps-mode-functions-get-moved-imenu (old-index start diff)
+(defun phps-mode-lex-analyzer--get-moved-imenu (old-index start diff)
   "Move imenu-index OLD-INDEX beginning from START with DIFF."
   (let ((new-index '()))
 
@@ -927,11 +772,11 @@
 
     (nreverse new-index)))
 
-(defun phps-mode-functions--get-lines-in-buffer (beg end)
+(defun phps-mode-lex-analyzer--get-lines-in-buffer (beg end)
   "Return the number of lines in buffer between BEG and END."
   (phps-mode-functions--get-lines-in-string (buffer-substring-no-properties beg end)))
 
-(defun phps-mode-functions--get-lines-in-string (string)
+(defun phps-mode-lex-analyzer--get-lines-in-string (string)
   "Return the number of lines in STRING."
   (let ((lines-in-string 0)
         (start 0))
@@ -940,7 +785,7 @@
       (setq lines-in-string (1+ lines-in-string)))
     lines-in-string))
 
-(defun phps-mode-functions--get-inline-html-indentation
+(defun phps-mode-lex-analyzer--get-inline-html-indentation
     (
      inline-html
      indent
@@ -1037,7 +882,7 @@ SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
         (setq start end)))
     (list (nreverse line-indents) indent tag-level curly-bracket-level square-bracket-level round-bracket-level)))
 
-(defun phps-mode-functions--process-tokens-in-string (tokens string)
+(defun phps-mode-lex-analyzer--process-tokens-in-string (tokens string)
   "Generate indexes for imenu and indentation for TOKENS and STRING one pass.  Complexity: O(n)."
   (if tokens
       (progn
@@ -2074,7 +1919,7 @@ SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
           (list (nreverse imenu-index) line-indents)))
     (list nil nil)))
 
-(defun phps-mode-functions-indent-line ()
+(defun phps-mode-lex-analyzer--indent-line ()
   "Indent line."
   (phps-mode-debug-message (message "Indent line"))
   (phps-mode-functions-process-current-buffer)
@@ -2126,7 +1971,7 @@ SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
     (phps-mode-debug-message
      (message "Using alternative indentation since buffer is not processed yet"))))
 
-(defun phps-mode-analyzer--alternative-indentation (&optional point)
+(defun phps-mode-lex-analyzer--alternative-indentation (&optional point)
   "Apply alternative indentation at POINT here."
   (unless point
     (setq point (point)))
@@ -2224,7 +2069,7 @@ SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
         (back-to-indentation)))
     new-indentation))
 
-(defun phps-mode-analyzer--get-string-brackets-count (string)
+(defun phps-mode-lex-analyzer--get-string-brackets-count (string)
   "Get bracket count for STRING."
   (let ((bracket-level 0)
         (start 0)
@@ -2255,26 +2100,26 @@ SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
             (setq bracket-level (- bracket-level tab-width)))))))
     bracket-level))
 
-(defun phps-mode-analyzer--string-starts-with-closing-bracket-p (string)
+(defun phps-mode-lex-analyzer--string-starts-with-closing-bracket-p (string)
   "Get bracket count for STRING."
   (string-match-p "^[\r\t ]*\\([\]{}()[]\\|<[a-zA-Z]+\\|</[a-zA-Z]+\\|/>\\)" string))
 
-(defun phps-mode-analyzer--string-ends-with-assignment-p (string)
+(defun phps-mode-lex-analyzer--string-ends-with-assignment-p (string)
   "Get bracket count for STRING."
   (string-match-p "[\t ]*=$" string))
 
-(defun phps-mode-analyzer--string-ends-with-semicolon-p (string)
+(defun phps-mode-lex-analyzer--string-ends-with-semicolon-p (string)
   "Get bracket count for STRING."
   (string-match-p ";$" string))
 
-(defun phps-mode-functions--cancel-idle-timer ()
+(defun phps-mode-lex-analyzer--cancel-idle-timer ()
   "Cancel idle timer."
   (phps-mode-debug-message (message "Cancelled idle timer"))
   (when phps-mode-lex-analyzer--idle-timer
     (cancel-timer phps-mode-lex-analyzer--idle-timer)
     (setq-local phps-mode-lex-analyzer--idle-timer nil)))
 
-(defun phps-mode-functions--start-idle-timer ()
+(defun phps-mode-lex-analyzer--start-idle-timer ()
   "Start idle timer."
   (phps-mode-debug-message (message "Enqueued idle timer"))
   (when (boundp 'phps-mode-idle-interval)
@@ -2286,14 +2131,14 @@ SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
         nil
         #'phps-mode-analyzer-process-changes buffer)))))
 
-(defun phps-mode-analyzer--reset-imenu ()
+(defun phps-mode-lex-analyzer--reset-imenu ()
   "Reset imenu index."
   (when (and (boundp 'imenu--index-alist)
              imenu--index-alist)
     (setq-local imenu--index-alist nil)
     (phps-mode-debug-message (message "Cleared Imenu index"))))
 
-(defun phps-mode-functions-after-change (start stop length)
+(defun phps-mode-lex-analyzer--after-change (start stop length)
   "Track buffer change from START to STOP with LENGTH."
   (phps-mode-debug-message
    (message "After change %s - %s, length: %s" start stop length))
@@ -2321,7 +2166,7 @@ SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
   (phps-mode-functions-process-current-buffer)
   phps-mode-lex-analyzer--imenu)
 
-(defun phps-mode-functions-comment-region (beg end &optional _arg)
+(defun phps-mode-lex-analyzer--comment-region (beg end &optional _arg)
   "Comment region from BEG to END with optional _ARG."
   ;; Iterate tokens from beginning to end and comment out all PHP code
   (when-let ((tokens phps-mode-lexer-tokens))
@@ -2409,7 +2254,7 @@ SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
         (setq token-comment-start nil)
         (setq token-comment-end nil)))))
 
-(defun phps-mode-functions-uncomment-region (beg end &optional _arg)
+(defun phps-mode-lex-analyzer--uncomment-region (beg end &optional _arg)
   "Un-comment region from BEG to END with optional ARG."
   ;; Iterate tokens from beginning to end and uncomment out all commented PHP code
   (when-let ((tokens phps-mode-lexer-tokens))
@@ -2485,6 +2330,74 @@ SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
                      (message
                       "Do not un-comment comment ending at %s"
                       token-end))))))))))))
+
+(defun phps-mode-lex-analyzer---setup (start end)
+  "Just prepare other lexers for lexing region START to END."
+  (require 'phps-mode-macros)
+  (phps-mode-debug-message (message "Lexer setup %s - %s" start end))
+  (unless phps-mode-lexer--STATE (phps-mode-lexer--BEGIN 'ST_INITIAL)))
+
+(defun phps-mode-lex-analyzer--lex-string (contents &optional start end states state state-stack tokens)
+  "Run lexer on CONTENTS."
+  ;; Create a separate buffer, run lexer inside of it, catch errors and return them
+  ;; to enable nice presentation
+  (require 'phps-mode-macros)
+  (let ((errors))
+    (let ((buffer (generate-new-buffer "*PHPs Lexer*")))
+
+      ;; Create temporary buffer and run lexer in it
+      (save-excursion
+        (switch-to-buffer buffer)
+        (insert contents)
+
+        (if states
+            (setq-local phps-mode-lex-analyzer--states states)
+          (setq-local phps-mode-lex-analyzer--states nil))
+        (if state-stack
+            (setq-local phps-mode-lex-anylzer--state_stack state-stack)
+          (setq-local phps-mode-lex-analyzer--state_stack nil))
+        (if state
+            (setq-local phps-mode-lex-analyzer--STATE state)
+          (phps-mode-lexer--BEGIN 'ST_INITIAL))
+
+        ;; Setup lexer settings
+        (when (and
+               (boundp 'phps-mode-syntax-table)
+               (boundp 'semantic-lex-syntax-table))
+          (setq-local semantic-lex-syntax-table phps-mode-syntax-table))
+        (when (and
+               (fboundp 'phps-mode-analyzer-re2c-lex)
+               (boundp 'semantic-lex-analyzer))
+          (setq-local semantic-lex-analyzer #'phps-mode-analyzer--re2c-lex-analyzer))
+
+        ;; Catch any potential errors
+        (condition-case conditions
+            (progn
+              (if (and start end)
+                  (progn
+                    (phps-mode-debug-message
+                     (message "Running (semantic-lex %s %s)" start end))
+                    (when (fboundp 'semantic-lex)
+                      (let ((incremental-tokens (semantic-lex start end)))
+                        (setq-local
+                         phps-mode-lex-analyzer--tokens
+                         (append tokens incremental-tokens)))))
+                (phps-mode-debug-message
+                 (message "Running (semantic-lex-buffer)"))
+                (when (fboundp 'semantic-lex-buffer)
+                  (setq-local
+                   phps-mode-lex-analyzer--tokens
+                   (semantic-lex-buffer)))))
+          (error
+           (setq errors (cdr conditions))))
+
+        ;; Move variables outside of buffer
+        (setq state phps-mode-lex-analyzer--STATE)
+        (setq state-stack phps-mode-lex-analyzer--state_stack)
+        (setq states phps-mode-lex-analyzer--states)
+        (setq tokens phps-mode-lex-analyzer--tokens)
+        (kill-buffer)))
+    (list tokens states state state-stack errors)))
 
 (provide 'phps-mode-lex-analyzer)
 

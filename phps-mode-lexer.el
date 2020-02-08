@@ -30,7 +30,9 @@
 
 ;;; Code:
 
+
 (require 'phps-mode-macros)
+(require 'phps-mode-wy-macros)
 
 (require 'subr-x)
 
@@ -42,75 +44,56 @@
 (phps-mode-wy-macros--CG 'SHORT_TAGS t)
 
 
-;; FLAGS/SIGNALS
+;; SETTINGS
+
 
 ;; @see https://secure.php.net/manual/en/language.types.integer.php
-(defvar phps-mode-lexer--long-limit 2147483648
+(defconst phps-mode-lexer--long-limit 2147483648
   "Limit for 32-bit integer.")
 
-(defvar phps-mode-lexer--tokens nil
-  "Last lexer tokens.")
-
-(defvar phps-mode-lexer--states nil
-  "A list of lists containing start, state and state stack.")
-
-(defvar phps-mode-lexer--STATE nil
-  "Current state.")
-
-(defvar phps-mode-lexer--state_stack nil
-  "Stack of states.")
-
-(defvar phps-mode-lexer--EXPECTED nil
-  "Flag whether something is expected or not.")
-
-(defvar phps-mode-lexer--heredoc_label_stack (list)
-  "The current heredoc_label.")
-
-
-;; REGULAR EXPRESSIONS
-
-
-(defvar phps-mode-lexer--BNUM "0b[01]+"
+(defconst phps-mode-lexer--BNUM "0b[01]+"
   "Boolean number.")
 
-(defvar phps-mode-lexer--HNUM "0x[0-9a-fA-F]+"
+(defconst phps-mode-lexer--HNUM "0x[0-9a-fA-F]+"
   "Hexadecimal number.")
 
-(defvar phps-mode-lexer--LNUM "[0-9]+"
+(defconst phps-mode-lexer--LNUM "[0-9]+"
   "Long number.")
 
-(defvar phps-mode-lexer--DNUM "\\([0-9]*\\.[0-9]+\\)\\|\\([0-9]+\\.[0-9]*\\)"
+(defconst phps-mode-lexer--DNUM "\\([0-9]*\\.[0-9]+\\)\\|\\([0-9]+\\.[0-9]*\\)"
   "Double number.")
 
-(defvar phps-mode-lexer--EXPONENT_DNUM
+(defconst phps-mode-lexer--EXPONENT_DNUM
   (format "\\(\\(%s\\|%s\\)[eE][\\+-]?%s\\)"
           phps-mode-lexer--LNUM
           phps-mode-lexer--DNUM
           phps-mode-lexer--LNUM)
   "Exponent double number.")
 
-(defvar phps-mode-lexer--LABEL
+(defconst phps-mode-lexer--LABEL
   "[A-Za-z_[:nonascii:]][0-9A-Za-z_[:nonascii:]]*"
   "Labels are used for names.")
 ;; NOTE original is [a-zA-Z_\x80-\xff][a-zA-Z0-9_\x80-\xff]*
 ;; NOTE Rebuilt for comparability with emacs-lisp
 
-(defvar phps-mode-lexer--WHITESPACE "[ \n\r\t]+"
+(defconst phps-mode-lexer--WHITESPACE "[ \n\r\t]+"
   "White-space.")
 
-(defvar phps-mode-lexer--TABS_AND_SPACES "[ \t]*"
+(defconst phps-mode-lexer--TABS_AND_SPACES "[ \t]*"
   "Tabs and white-spaces.")
 
-(defvar phps-mode-lexer--TOKENS "[][;:,.()|^&+/*=%!~$<>?@-]"
+(defconst phps-mode-lexer--TOKENS "[][;:,.()|^&+/*=%!~$<>?@-]"
   "Tokens.")
 ;; NOTE Original is [;:,.\[\]()|^&+-/*=%!~$<>?@]
 ;; NOTE The hyphen moved last since it has special meaning and to avoid it being interpreted as a range.
 
-(defvar phps-mode-lexer--ANY_CHAR "[^z-a]"
+(defconst phps-mode-lexer--ANY_CHAR "[^z-a]"
   "Any character.  The Zend equivalent is [^] but is not possible in Emacs Lisp.")
 
-(defvar phps-mode-lexer--NEWLINE "[\n\r]"
+(defconst phps-mode-lexer--NEWLINE "[\n\r]"
   "Newline characters.  The Zend equivalent is (\"\r\"|\"\n\"|\"\r\n\").")
+
+;; VARIABLES
 
 (defvar phps-mode-lexer--re2c-matching-body nil
   "Lambda-expression for longest matching condition.")
@@ -120,6 +103,9 @@
 
 (defvar phps-mode-lexer--re2c-matching-data nil
   "Match data for longest matching condition.")
+
+(defvar phps-mode-lexer--EXPECTED nil
+  "Flag whether something is expected or not.")
 
 
 ;; FUNCTIONS
@@ -1509,9 +1495,10 @@
                  )
              (progn
                (signal
-                'error (list
-                        (format "Found no ending of newdoc starting at %d" (point))
-                        (point))))))))
+                'error
+                (list
+                 (format "Found no ending of newdoc starting at %d" (point))
+                 (point))))))))
 
       (phps-mode-lexer--re2c-rule
        (and (or ST_IN_SCRIPTING ST_VAR_OFFSET) (looking-at phps-mode-lexer--ANY_CHAR))
@@ -1539,66 +1526,6 @@
             (setq escaped nil)))))
     pos))
 
-(defun phps-mode-lexer--setup (start end)
-  "Just prepare other lexers for lexing region START to END."
-  (require 'phps-mode-macros)
-  (phps-mode-debug-message (message "Lexer setup %s - %s" start end))
-  (unless phps-mode-lexer--STATE (phps-mode-lexer--BEGIN 'ST_INITIAL)))
-
-(defun phps-mode-lexer--lex-string (contents &optional start end states state state-stack tokens)
-  "Run lexer on CONTENTS."
-  ;; Create a separate buffer, run lexer inside of it, catch errors and return them
-  ;; to enable nice presentation
-  (require 'phps-mode-macros)
-  (let ((errors))
-    (let ((buffer (generate-new-buffer "*PHPs Lexer*")))
-
-      ;; Create temporary buffer and run lexer in it
-      (save-excursion
-        (switch-to-buffer buffer)
-        (insert contents)
-
-        (if states
-            (setq-local phps-mode-lexer--states states)
-          (setq-local phps-mode-lexer--states nil))
-        (if state-stack
-            (setq-local phps-mode-lexer--state_stack state-stack)
-          (setq-local phps-mode-lexer--state_stack nil))
-        (if state
-            (setq-local phps-mode-lexer--STATE state)
-          (phps-mode-lexer--BEGIN 'ST_INITIAL))
-
-        (when (and (boundp 'phps-mode-syntax-table)
-                   (boundp 'semantic-lex-syntax-table))
-          (setq-local semantic-lex-syntax-table phps-mode-syntax-table))
-        (when (and (fboundp 'phps-mode-analyzer-re2c-lex)
-                   (boundp 'semantic-lex-analyzer))
-          (setq-local semantic-lex-analyzer #'phps-mode-analyzer-re2c-lex))
-
-        ;; Catch any potential errors
-        (condition-case conditions
-            (progn
-              (if (and start end)
-                  (progn
-                    (phps-mode-debug-message
-                     (message "Running (semantic-lex %s %s)" start end))
-                    (when (fboundp 'semantic-lex)
-                      (let ((incremental-tokens (semantic-lex start end)))
-                        (setq-local phps-mode-lexer--TOKENS (append tokens incremental-tokens)))))
-                (phps-mode-debug-message
-                 (message "Running (semantic-lex-buffer)"))
-                (when (fboundp 'semantic-lex-buffer)
-                  (setq-local phps-mode-lexer--TOKENS (semantic-lex-buffer)))))
-          (error
-           (setq errors (cdr conditions))))
-
-        ;; Move variables outside of buffer
-        (setq state phps-mode-lexer--STATE)
-        (setq state-stack phps-mode-lexer--state_stack)
-        (setq states phps-mode-lexer--states)
-        (setq tokens phps-mode-lexer--tokens)
-        (kill-buffer)))
-    (list tokens states state state-stack errors)))
 
 (provide 'phps-mode-lexer)
 
