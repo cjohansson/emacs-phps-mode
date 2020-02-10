@@ -1,4 +1,4 @@
-;;; phps-mode-analyzer.el -- Lexer and helper functions for PHPs -*- lexical-binding: t -*-
+;;; phps-mode-lexer.el -- Lexer for PHPs -*- lexical-binding: t -*-
 
 ;; Copyright (C) 2018-2020  Free Software Foundation, Inc.
 
@@ -200,10 +200,7 @@
 (defun phps-mode-lexer--re2c-execute ()
   "Execute matching body (if any)."
   (if phps-mode-lexer--re2c-matching-body
-      (progn
-        
-        ;; (message "Executing body: %s" phps-mode-lexer--re2c-matching-body)
-        ;; (message "Found match %s" phps-mode-lexer-re2c-matching-data)
+      (progn        
         (set-match-data phps-mode-lexer--re2c-matching-data)
         (funcall phps-mode-lexer--re2c-matching-body))
     (signal

@@ -314,6 +314,8 @@
 ;; If multiple rules match, re2c prefers the longest match.
 ;; If rules match the same string, the earlier rule has priority.
 ;; @see http://re2c.org/manual/syntax/syntax.html
+;;
+;; TODO Pass all local variables as arguments to lexer here
 (define-lex-analyzer phps-mode-analyzer--re2c-lex-analyzer
   "Elisp port of original Zend re2c lexer."
   t
@@ -2361,37 +2363,21 @@ SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
           (phps-mode-lexer--BEGIN 'ST_INITIAL))
 
         ;; Setup lexer settings
-        (when (and
-               (boundp 'phps-mode-syntax-table)
-               (boundp 'semantic-lex-syntax-table))
+        (when (boundp 'phps-mode-syntax-table)
           (setq-local semantic-lex-syntax-table phps-mode-syntax-table))
-        (when (and
-               (fboundp 'phps-mode-analyzer-re2c-lex)
-               (boundp 'semantic-lex-analyzer))
-          (setq-local semantic-lex-analyzer #'phps-mode-analyzer--re2c-lex-analyzer))
+        (setq-local semantic-lex-analyzer #'phps-mode-analyzer--re2c-lex-analyzer)
 
-        ;; Catch any potential errors
-        (condition-case conditions
-            (progn
-              (if (and start end)
-                  (progn
-                    (phps-mode-debug-message
-                     (message "Running (semantic-lex %s %s)" start end))
-                    (when (fboundp 'semantic-lex)
-                      (let ((incremental-tokens (semantic-lex start end)))
-                        (setq-local
-                         phps-mode-lex-analyzer--tokens
-                         (append tokens incremental-tokens)))))
-                (phps-mode-debug-message
-                 (message "Running (semantic-lex-buffer)"))
-                (when (fboundp 'semantic-lex-buffer)
-                  (setq-local
-                   phps-mode-lex-analyzer--tokens
-                   (semantic-lex-buffer)))))
-          (error
-           (setq errors (cdr conditions))))
+        ;; Run lexer or incremental lexer
+        (if (and start end)
+            (let ((incremental-tokens (semantic-lex start end)))
+              (setq-local
+               phps-mode-lex-analyzer--tokens
+               (append tokens incremental-tokens)))
+          (setq-local
+           phps-mode-lex-analyzer--tokens
+           (semantic-lex-buffer)))
 
-        ;; Move variables outside of buffer
+        ;; Copy variables outside of buffer
         (setq state phps-mode-lex-analyzer--STATE)
         (setq state-stack phps-mode-lex-analyzer--state_stack)
         (setq states phps-mode-lex-analyzer--states)

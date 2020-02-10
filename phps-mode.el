@@ -183,10 +183,10 @@
 
   ;; Indentation
   ;; Indent-region will call this on each line of selected region
-  (setq-local indent-line-function #'phps-mode-functions-indent-line)
+  (setq-local indent-line-function #'phps-mode-lex-analyzer--indent-line)
 
   ;; Custom Imenu
-  (setq-local imenu-create-index-function #'phps-mode-functions-imenu-create-index)
+  (setq-local imenu-create-index-function #'phps-mode-lex-analyzer--imenu-create-index)
 
   ;; Should we follow PSR-2?
   (when phps-mode-use-psr-2
@@ -210,13 +210,13 @@
   (phps-mode-reset-local-variables)
 
   ;; Make (comment-region) and (uncomment-region) work
-  (setq-local comment-region-function #'phps-mode-functions-comment-region)
-  (setq-local uncomment-region-function #'phps-mode-functions-uncomment-region)
+  (setq-local comment-region-function #'phps-mode-lex-analyzer--comment-region)
+  (setq-local uncomment-region-function #'phps-mode-lex-analyzer--uncomment-region)
   (setq-local comment-start "// ")
   (setq-local comment-end "")
 
   ;; Support for change detection
-  (add-hook 'after-change-functions #'phps-mode-analyzer-after-change 0 t)
+  (add-hook 'after-change-functions #'phps-mode-lex-analyzer--after-change 0 t)
 
   ;; Lexer
   (setq-local semantic-lex-syntax-table phps-mode-syntax-table)
@@ -237,8 +237,6 @@
   (when (boundp 'semantic-idle-scheduler-mode)
     (setq semantic-idle-scheduler-mode nil))
 
-  ;; Wisent LALR parser TODO
-  ;; (phps-mode-tags-init)
 )
 
 (provide 'phps-mode)
