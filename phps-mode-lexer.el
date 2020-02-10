@@ -34,6 +34,8 @@
 (require 'phps-mode-macros)
 (require 'phps-mode-wy-macros)
 
+(require 'semantic)
+(require 'semantic/lex)
 (require 'subr-x)
 
 
@@ -113,19 +115,18 @@
 
 (defun phps-mode-lexer--BEGIN (state)
   "Begin STATE."
-  ;; (message "Begun state %s" state)
-  (setq-local phps-mode-lexer--STATE state))
+  state)
 
 ;; _yy_push_state
-(defun phps-mode-lexer--yy_push_state (new-state)
+(defun phps-mode-lexer--yy_push_state (new-state state_stack)
   "Add NEW-STATE to stack and then begin state."
-  (push phps-mode-lexer--STATE phps-mode-lexer--state_stack)
-  ;; (message "Added state %s to stack begun state %s" phps-mode-lexer--STATE new-state)
-  (phps-mode-lexer--BEGIN new-state))
+  (push state state_stack)
+  ;; (message "Added state %s to stack begun state %s" state new-state)
+  (list new-state state_stack))
 
-(defun phps-mode-lexer--yy_pop_state ()
+(defun phps-mode-lexer--yy_pop_state (state_stack)
   "Pop current state from stack."
-  (let ((old-state (pop phps-mode-lexer--state_stack)))
+  (let ((old-state (pop state_stack)))
     ;; (message "Going back to poppped state %s" old-state)
     (if old-state
         (phps-mode-lexer--BEGIN old-state)
@@ -133,17 +134,16 @@
        'error
        (list
         (format "PHPs Lexer Error - Trying to pop last state at %d" (point))
-        (point))))))
+        (point))))
+    state_stack))
 
 (defun phps-mode-lexer--MOVE_FORWARD (position)
   "Move forward to POSITION."
-  (when (boundp 'semantic-lex-end-point)
-    (setq semantic-lex-end-point position)))
+  (setq semantic-lex-end-point position))
 
 (defun phps-mode-lexer--yyless (points)
   "Move lexer back POINTS."
-  (when (boundp 'semantic-lex-end-point)
-    (setq semantic-lex-end-point (- semantic-lex-end-point points))))
+  (setq semantic-lex-end-point (- semantic-lex-end-point points)))
 
 (defun phps-mode-lexer--inline-char-handler ()
   "Mimic inline_char_handler."
@@ -162,23 +162,20 @@
   "Push TOKEN to list with START and END."
   (phps-mode-lexer--emit-token token start end))
 
-(defun phps-mode-lexer--emit-token (token start end)
+(defun phps-mode-lexer--emit-token (token start end state state_stack states)
   "Emit TOKEN with START and END."
 
-  (when (and (fboundp 'semantic-lex-push-token)
-             (fboundp 'semantic-lex-token))
+  ;; (when (and
+  ;;        (equal token 'T_INLINE_HTML)
+  ;;        phps-mode-inline-mmm-submode
+  ;;        (fboundp 'mmm-make-region))
+  ;;   (mmm-make-region phps-mode-inline-mmm-submode start end))
 
-    ;; (when (and
-    ;;        (equal token 'T_INLINE_HTML)
-    ;;        phps-mode-inline-mmm-submode
-    ;;        (fboundp 'mmm-make-region))
-    ;;   (mmm-make-region phps-mode-inline-mmm-submode start end))
+  (semantic-lex-push-token (semantic-lex-token token start end))
 
-    ;; Push token start, end, lexer state and state stack to variable
-    (push
-     (list start end phps-mode-lexer--STATE phps-mode-lexer--state_stack) phps-mode-lexer--states)
-
-    (semantic-lex-push-token (semantic-lex-token token start end))))
+  ;; Push token start, end, lexer state and state stack to variable
+  (push (list start end state state_stack) states)
+  states)
 
 ;; TODO Figure out what this does
 (defun phps-mode-lexer--SKIP_TOKEN (_token _start _end)
@@ -193,16 +190,17 @@
         (when (> matching-length 0)
           (when (or (not phps-mode-lexer--re2c-matching-length)
                     (> matching-length phps-mode-lexer--re2c-matching-length))
-            (setq phps-mode-lexer--re2c-matching-length matching-length)
-            (setq phps-mode-lexer--re2c-matching-data (match-data))
-            (setq phps-mode-lexer--re2c-matching-body body)))))))
+            (list
+             phps-mode-lexer--re2c-matching-length matching-length
+             (match-data)
+             body)))))))
 
-(defun phps-mode-lexer--re2c-execute ()
+(defun phps-mode-lexer--re2c-execute (matching_data matching_body)
   "Execute matching body (if any)."
-  (if phps-mode-lexer--re2c-matching-body
+  (if matching_body
       (progn        
-        (set-match-data phps-mode-lexer--re2c-matching-data)
-        (funcall phps-mode-lexer--re2c-matching-body))
+        (set-match-data matching_data)
+        (funcall matching_body))
     (signal
      'error
      (list "Found no matching lexer rule to execute at %d" (point)))))
@@ -210,30 +208,30 @@
 ;; If multiple rules match, re2c prefers the longest match.
 ;; If rules match the same string, the earlier rule has priority.
 ;; @see http://re2c.org/manual/syntax/syntax.html
-(defun phps-mode-lexer--re2c ()
+(defun phps-mode-lexer--re2c (&optional state state_stack heredoc_label)
   "Elisp port of original Zend re2c lexer."
 
-  (require 'phps-mode-macros)
-  (let ((old-start (point)))
+  (unless (boundp state)
+    (setq state 'ST_INITIAL))
+  (let ((old-start (point))
+        (matching_body nil)
+        (matching_length nil)
+        (matching_data nil))
 
     (phps-mode-debug-message (message "Running lexer from %s" old-start))
     
-    (let ((heredoc_label (car phps-mode-lexer--heredoc_label_stack))
-          (SHEBANG (equal phps-mode-lexer--STATE 'SHEBANG))
-          (ST_IN_SCRIPTING (equal phps-mode-lexer--STATE 'ST_IN_SCRIPTING))
-          (ST_INITIAL (equal phps-mode-lexer--STATE 'ST_INITIAL))
-          (ST_LOOKING_FOR_PROPERTY (equal phps-mode-lexer--STATE 'ST_LOOKING_FOR_PROPERTY))
-          (ST_DOUBLE_QUOTES (equal phps-mode-lexer--STATE 'ST_DOUBLE_QUOTES))
-          (ST_BACKQUOTE (equal phps-mode-lexer--STATE 'ST_BACKQUOTE))
-          (ST_HEREDOC (equal phps-mode-lexer--STATE 'ST_HEREDOC))
-          (ST_NOWDOC (equal phps-mode-lexer--STATE 'ST_NOWDOC))
-          (ST_LOOKING_FOR_VARNAME (equal phps-mode-lexer--STATE 'ST_LOOKING_FOR_VARNAME))
-          (ST_END_HEREDOC (equal phps-mode-lexer--STATE 'ST_END_HEREDOC))
-          (ST_VAR_OFFSET (equal phps-mode-lexer--STATE 'ST_VAR_OFFSET)))
-
-      ;; Reset re2c flags
-      (setq phps-mode-lexer--re2c-matching-body nil)
-      (setq phps-mode-lexer--re2c-matching-length nil)
+    (let ((heredoc_label (car heredoc_label_stack))
+          (SHEBANG (equal state 'SHEBANG))
+          (ST_IN_SCRIPTING (equal state 'ST_IN_SCRIPTING))
+          (ST_INITIAL (equal state 'ST_INITIAL))
+          (ST_LOOKING_FOR_PROPERTY (equal state 'ST_LOOKING_FOR_PROPERTY))
+          (ST_DOUBLE_QUOTES (equal state 'ST_DOUBLE_QUOTES))
+          (ST_BACKQUOTE (equal state 'ST_BACKQUOTE))
+          (ST_HEREDOC (equal state 'ST_HEREDOC))
+          (ST_NOWDOC (equal state 'ST_NOWDOC))
+          (ST_LOOKING_FOR_VARNAME (equal state 'ST_LOOKING_FOR_VARNAME))
+          (ST_END_HEREDOC (equal state 'ST_END_HEREDOC))
+          (ST_VAR_OFFSET (equal state 'ST_VAR_OFFSET)))
 
       (phps-mode-lexer--re2c-rule
        (and ST_IN_SCRIPTING (looking-at "exit"))
@@ -912,7 +910,7 @@
       (phps-mode-lexer--re2c-rule
        (and ST_IN_SCRIPTING (looking-at "}"))
        (lambda()
-         (when phps-mode-lexer--state_stack
+         (when state_stack
            (phps-mode-lexer--yy_pop_state))
          (phps-mode-lexer--RETURN_TOKEN "}" (match-beginning 0) (match-end 0))))
 
@@ -1347,7 +1345,7 @@
            (when (string= (buffer-substring-no-properties end (+ end (length heredoc_label))) heredoc_label)
              (phps-mode-lexer--BEGIN 'ST_END_HEREDOC))
 
-           (push heredoc_label phps-mode-lexer--heredoc_label_stack)
+           (push heredoc_label heredoc_label_stack)
            ;; (message "Found heredoc or nowdoc at %s with label %s" data heredoc_label)
 
            (phps-mode-lexer--RETURN_TOKEN 'T_START_HEREDOC start end))))
@@ -1366,7 +1364,7 @@
                 (end (+ start (length heredoc_label) 1))
                 (_data (buffer-substring-no-properties start end)))
            ;; (message "Found ending heredoc at %s, %s of %s" _data (thing-at-point 'line) heredoc_label)
-           (pop phps-mode-lexer--heredoc_label_stack)
+           (pop heredoc_label_stack)
            (phps-mode-lexer--BEGIN 'ST_IN_SCRIPTING)
            (phps-mode-lexer--RETURN_TOKEN 'T_END_HEREDOC start end))))
 
