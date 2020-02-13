@@ -99,19 +99,19 @@
 ;; VARIABLES
 
 
-(defvar-local phps-mode-lexer-tokens nil
+(defvar-local phps-mode-lexer--tokens nil
   "List of current generated tokens.")
 
-(defvar-local phps-mode-lexer-state nil
+(defvar-local phps-mode-lexer--state nil
   "Current state of lexer.")
 
-(defvar-local phps-mode-lexer-state-stack nil
+(defvar-local phps-mode-lexer--state-stack nil
   "Current state-stack of lexer.")
 
-(defvar-local phps-mode-lexer-states nil
+(defvar-local phps-mode-lexer--states nil
   "History of state and state-stack.")
 
-(defvar-local phps-mode-lexer-heredoc-label-stack nil
+(defvar-local phps-mode-lexer--heredoc-label-stack nil
   "Stack of heredoc labels.")
 
 (defvar-local phps-mode-lexer--match-length nil
@@ -129,12 +129,12 @@
 
 (defun phps-mode-lexer--BEGIN (state)
   "Begin STATE."
-  (setq phps-mode-lexer-state state))
+  (setq phps-mode-lexer--state state))
 
 ;; _yy_push_state
 (defun phps-mode-lexer--yy_push_state (state)
   "Add NEW-STATE to stack and then begin state."
-  (push state phps-mode-lexer-state-stack)
+  (push state phps-mode-lexer--state-stack)
   (phps-mode-lexer--BEGIN state))
 
 (defun phps-mode-lexer--yy_pop_state (state-stack state)
@@ -179,8 +179,8 @@
   
   ;; Push token start, end, lexer state and state stack to variable
   (push
-   (list start end phps-mode-lexer-state phps-mode-lexer-state-stack)
-   phps-mode-lexer-states))
+   (list start end phps-mode-lexer--state phps-mode-lexer--state-stack)
+   phps-mode-lexer--states))
 
 (defun phps-mode-lexer--get-next-unescaped (character)
   "Find where next un-escaped CHARACTER comes, if none is found return nil."
@@ -263,18 +263,18 @@
     (phps-mode-debug-message (message "Running lexer from %s" old-start))
     (phps-mode-lexer--reset-match-data)
     
-    (let ((heredoc-label (car phps-mode-lexer-heredoc-label-stack))
-          (SHEBANG (equal phps-mode-lexer-state 'SHEBANG))
-          (ST_IN_SCRIPTING (equal phps-mode-lexer-state 'ST_IN_SCRIPTING))
-          (ST_INITIAL (equal phps-mode-lexer-state 'ST_INITIAL))
-          (ST_LOOKING_FOR_PROPERTY (equal phps-mode-lexer-state 'ST_LOOKING_FOR_PROPERTY))
-          (ST_DOUBLE_QUOTES (equal phps-mode-lexer-state 'ST_DOUBLE_QUOTES))
-          (ST_BACKQUOTE (equal phps-mode-lexer-state 'ST_BACKQUOTE))
-          (ST_HEREDOC (equal phps-mode-lexer-state 'ST_HEREDOC))
-          (ST_NOWDOC (equal phps-mode-lexer-state 'ST_NOWDOC))
-          (ST_LOOKING_FOR_VARNAME (equal phps-mode-lexer-state 'ST_LOOKING_FOR_VARNAME))
-          (ST_END_HEREDOC (equal phps-mode-lexer-state 'ST_END_HEREDOC))
-          (ST_VAR_OFFSET (equal phps-mode-lexer-state 'ST_VAR_OFFSET)))
+    (let ((heredoc-label (car phps-mode-lexer--heredoc-label-stack))
+          (SHEBANG (equal phps-mode-lexer--state 'SHEBANG))
+          (ST_IN_SCRIPTING (equal phps-mode-lexer--state 'ST_IN_SCRIPTING))
+          (ST_INITIAL (equal phps-mode-lexer--state 'ST_INITIAL))
+          (ST_LOOKING_FOR_PROPERTY (equal phps-mode-lexer--state 'ST_LOOKING_FOR_PROPERTY))
+          (ST_DOUBLE_QUOTES (equal phps-mode-lexer--state 'ST_DOUBLE_QUOTES))
+          (ST_BACKQUOTE (equal phps-mode-lexer--state 'ST_BACKQUOTE))
+          (ST_HEREDOC (equal phps-mode-lexer--state 'ST_HEREDOC))
+          (ST_NOWDOC (equal phps-mode-lexer--state 'ST_NOWDOC))
+          (ST_LOOKING_FOR_VARNAME (equal phps-mode-lexer--state 'ST_LOOKING_FOR_VARNAME))
+          (ST_END_HEREDOC (equal phps-mode-lexer--state 'ST_END_HEREDOC))
+          (ST_VAR_OFFSET (equal phps-mode-lexer--state 'ST_VAR_OFFSET)))
 
       (phps-mode-lexer--match-macro
        (and ST_IN_SCRIPTING (looking-at "exit"))
@@ -445,9 +445,9 @@
 
       (phps-mode-lexer--match-macro
        (and ST_IN_SCRIPTING (looking-at "->"))
-       (let ((pushed-phps-mode-lexer-state (phps-mode-lexer--yy_push_phps-mode-lexer-state 'ST_LOOKING_FOR_PROPERTY phps-mode-lexer-state-stack)))
-         (setq phps-mode-lexer-state (car pushed-phps-mode-lexer-state))
-         (setq phps-mode-lexer-state-stack (car (cdr pushed-phps-mode-lexer-state)))
+       (let ((pushed-phps-mode-lexer--state (phps-mode-lexer--yy_push_phps-mode-lexer--state 'ST_LOOKING_FOR_PROPERTY phps-mode-lexer--state-stack)))
+         (setq phps-mode-lexer--state (car pushed-phps-mode-lexer--state))
+         (setq phps-mode-lexer--state-stack (car (cdr pushed-phps-mode-lexer--state)))
          (phps-mode-lexer--RETURN_TOKEN 'T_OBJECT_OPERATOR (match-beginning 0) (match-end 0))))
 
       (phps-mode-lexer--match-macro
@@ -468,17 +468,17 @@
        (and ST_LOOKING_FOR_PROPERTY (looking-at phps-mode-lexer--LABEL))
        (let ((start (match-beginning 0))
              (end (match-end 0)))
-         (let ((popped-phps-mode-lexer-state (phps-mode-lexer--yy_pop_phps-mode-lexer-state phps-mode-lexer-state-stack phps-mode-lexer-state)))
-           (setq phps-mode-lexer-state-stack (car popped-phps-mode-lexer-state))
-           (setq phps-mode-lexer-state (car (cdr popped-phps-mode-lexer-state))))
+         (let ((popped-phps-mode-lexer--state (phps-mode-lexer--yy_pop_phps-mode-lexer--state phps-mode-lexer--state-stack phps-mode-lexer--state)))
+           (setq phps-mode-lexer--state-stack (car popped-phps-mode-lexer--state))
+           (setq phps-mode-lexer--state (car (cdr popped-phps-mode-lexer--state))))
          (phps-mode-lexer--RETURN_TOKEN 'T_STRING start ende)))
 
       (phps-mode-lexer--match-macro
        (and ST_LOOKING_FOR_PROPERTY (looking-at phps-mode-lexer--ANY_CHAR))
        (let ((end (match-end 0)))
-         (let ((popped-phps-mode-lexer-state (phps-mode-lexer--yy_pop_phps-mode-lexer-state phps-mode-lexer-state-stack phps-mode-lexer-state)))
-           (setq phps-mode-lexer-state-stack (car popped-phps-mode-lexer-state))
-           (setq phps-mode-lexer-state (car (cdr popped-phps-mode-lexer-state))))
+         (let ((popped-phps-mode-lexer--state (phps-mode-lexer--yy_pop_phps-mode-lexer--state phps-mode-lexer--state-stack phps-mode-lexer--state)))
+           (setq phps-mode-lexer--state-stack (car popped-phps-mode-lexer--state))
+           (setq phps-mode-lexer--state (car (cdr popped-phps-mode-lexer--state))))
          ;; TODO goto restart here?
          ;; (message "Restart here")
          (phps-mode-lexer--MOVE_FORWARD end)))
@@ -821,7 +821,7 @@
        (phps-mode-lexer--RETURN_TOKEN 'T_SR (match-beginning 0) (match-end 0)))
 
       (phps-mode-lexer--match-macro
-       (and ST_IN_SCRIPTING (looking-at phps-mode-lexer-tokens))
+       (and ST_IN_SCRIPTING (looking-at phps-mode-lexer--tokens))
        (let* ((start (match-beginning 0))
               (end (match-end 0))
               (data (buffer-substring-no-properties start end))
@@ -833,25 +833,25 @@
 
       (phps-mode-lexer--match-macro
        (and ST_IN_SCRIPTING (looking-at "{"))
-       (let ((pushed-phps-mode-lexer-state (phps-mode-lexer--yy_push_phps-mode-lexer-state 'ST_IN_SCRIPTING phps-mode-lexer-state-stack)))
-         (setq phps-mode-lexer-state (car pushed-phps-mode-lexer-state))
-         (setq phps-mode-lexer-state-stack (car (cdr pushed-phps-mode-lexer-state)))
+       (let ((pushed-phps-mode-lexer--state (phps-mode-lexer--yy_push_phps-mode-lexer--state 'ST_IN_SCRIPTING phps-mode-lexer--state-stack)))
+         (setq phps-mode-lexer--state (car pushed-phps-mode-lexer--state))
+         (setq phps-mode-lexer--state-stack (car (cdr pushed-phps-mode-lexer--state)))
          (phps-mode-lexer--RETURN_TOKEN "{" (match-beginning 0) (match-end 0)))
        )
 
       (phps-mode-lexer--match-macro
        (and (or ST_DOUBLE_QUOTES ST_BACKQUOTE ST_HEREDOC) (looking-at "\\${"))
-       (let ((pushed-phps-mode-lexer-state (phps-mode-lexer--yy_push_phps-mode-lexer-state 'ST_LOOKING_FOR_VARNAME phps-mode-lexer-state-stack)))
-         (setq phps-mode-lexer-state (car pushed-phps-mode-lexer-state))
-         (setq phps-mode-lexer-state-stack (car (cdr pushed-phps-mode-lexer-state)))
+       (let ((pushed-phps-mode-lexer--state (phps-mode-lexer--yy_push_phps-mode-lexer--state 'ST_LOOKING_FOR_VARNAME phps-mode-lexer--state-stack)))
+         (setq phps-mode-lexer--state (car pushed-phps-mode-lexer--state))
+         (setq phps-mode-lexer--state-stack (car (cdr pushed-phps-mode-lexer--state)))
          (phps-mode-lexer--RETURN_TOKEN 'T_DOLLAR_OPEN_CURLY_BRACES (match-beginning 0) (match-end 0))))
 
       (phps-mode-lexer--match-macro
        (and ST_IN_SCRIPTING (looking-at "}"))
-       (when phps-mode-lexer-state-stack
-         (let ((popped-phps-mode-lexer-state (phps-mode-lexer--yy_pop_phps-mode-lexer-state phps-mode-lexer-state-stack phps-mode-lexer-state)))
-           (setq phps-mode-lexer-state-stack (car popped-phps-mode-lexer-state))
-           (setq phps-mode-lexer-state (car (cdr popped-phps-mode-lexer-state))))
+       (when phps-mode-lexer--state-stack
+         (let ((popped-phps-mode-lexer--state (phps-mode-lexer--yy_pop_phps-mode-lexer--state phps-mode-lexer--state-stack phps-mode-lexer--state)))
+           (setq phps-mode-lexer--state-stack (car popped-phps-mode-lexer--state))
+           (setq phps-mode-lexer--state (car (cdr popped-phps-mode-lexer--state))))
          (phps-mode-lexer--RETURN_TOKEN "}" (match-beginning 0) (match-end 0))))
 
       (phps-mode-lexer--match-macro
@@ -859,22 +859,22 @@
        (let ((start (match-beginning 0))
              (end (- (match-end 0) 1)))
          ;; (message "Stopped here")
-         (let ((popped-phps-mode-lexer-state (phps-mode-lexer--yy_pop_phps-mode-lexer-state phps-mode-lexer-state-stack phps-mode-lexer-state)))
-           (setq phps-mode-lexer-state-stack (car popped-phps-mode-lexer-state))
-           (setq phps-mode-lexer-state (car (cdr popped-phps-mode-lexer-state))))
-         (let ((pushed-phps-mode-lexer-state (phps-mode-lexer--yy_push_phps-mode-lexer-state 'ST_IN_SCRIPTING phps-mode-lexer-state-stack)))
-           (setq phps-mode-lexer-state (car pushed-phps-mode-lexer-state))
-           (setq phps-mode-lexer-state-stack (car (cdr pushed-phps-mode-lexer-state))))
+         (let ((popped-phps-mode-lexer--state (phps-mode-lexer--yy_pop_phps-mode-lexer--state phps-mode-lexer--state-stack phps-mode-lexer--state)))
+           (setq phps-mode-lexer--state-stack (car popped-phps-mode-lexer--state))
+           (setq phps-mode-lexer--state (car (cdr popped-phps-mode-lexer--state))))
+         (let ((pushed-phps-mode-lexer--state (phps-mode-lexer--yy_push_phps-mode-lexer--state 'ST_IN_SCRIPTING phps-mode-lexer--state-stack)))
+           (setq phps-mode-lexer--state (car pushed-phps-mode-lexer--state))
+           (setq phps-mode-lexer--state-stack (car (cdr pushed-phps-mode-lexer--state))))
          (phps-mode-lexer--RETURN_TOKEN 'T_STRING_VARNAME start end)))
 
       (phps-mode-lexer--match-macro
        (and ST_LOOKING_FOR_VARNAME (looking-at phps-mode-lexer--ANY_CHAR))
-       (let ((popped-phps-mode-lexer-state (phps-mode-lexer--yy_pop_phps-mode-lexer-state phps-mode-lexer-state-stack phps-mode-lexer-state)))
-         (setq phps-mode-lexer-state-stack (car popped-phps-mode-lexer-state))
-         (setq phps-mode-lexer-state (car (cdr popped-phps-mode-lexer-state)))
-         (let ((pushed-phps-mode-lexer-state (phps-mode-lexer--yy_push_phps-mode-lexer-state 'ST_IN_SCRIPTING phps-mode-lexer-state-stack)))
-           (setq phps-mode-lexer-state (car pushed-phps-mode-lexer-state))
-           (setq phps-mode-lexer-state-stack (car (cdr pushed-phps-mode-lexer-state))))))
+       (let ((popped-phps-mode-lexer--state (phps-mode-lexer--yy_pop_phps-mode-lexer--state phps-mode-lexer--state-stack phps-mode-lexer--state)))
+         (setq phps-mode-lexer--state-stack (car popped-phps-mode-lexer--state))
+         (setq phps-mode-lexer--state (car (cdr popped-phps-mode-lexer--state)))
+         (let ((pushed-phps-mode-lexer--state (phps-mode-lexer--yy_push_phps-mode-lexer--state 'ST_IN_SCRIPTING phps-mode-lexer--state-stack)))
+           (setq phps-mode-lexer--state (car pushed-phps-mode-lexer--state))
+           (setq phps-mode-lexer--state-stack (car (cdr pushed-phps-mode-lexer--state))))))
 
       (phps-mode-lexer--match-macro
        (and ST_IN_SCRIPTING (looking-at phps-mode-lexer--BNUM))
@@ -965,17 +965,17 @@
 
       (phps-mode-lexer--match-macro
        (and SHEBANG (looking-at (concat "#!.*" phps-mode-lexer--NEWLINE)))
-       (setq phps-mode-lexer-state (phps-mode-lexer--BEGIN 'ST_INITIAL)))
+       (setq phps-mode-lexer--state (phps-mode-lexer--BEGIN 'ST_INITIAL)))
 
       (phps-mode-lexer--match-macro
        (and SHEBANG (looking-at phps-mode-lexer--ANY_CHAR))
-       (setq phps-mode-lexer-state (phps-mode-lexer--BEGIN 'ST_INITIAL)))
+       (setq phps-mode-lexer--state (phps-mode-lexer--BEGIN 'ST_INITIAL)))
 
       (phps-mode-lexer--match-macro
        (and ST_INITIAL (looking-at "<\\?="))
        (let ((start (match-beginning 0))
              (end (match-end 0)))
-         (setq phps-mode-lexer-state (phps-mode-lexer--BEGIN 'ST_IN_SCRIPTING))
+         (setq phps-mode-lexer--state (phps-mode-lexer--BEGIN 'ST_IN_SCRIPTING))
          (when (phps-mode-wy-macros--CG 'PARSER_MODE)
            (phps-mode-lexer--RETURN_TOKEN 'T_ECHO start end))
          (phps-mode-lexer--RETURN_TOKEN 'T_OPEN_TAG_WITH_ECHO start end)))
@@ -986,7 +986,7 @@
         (looking-at (concat "<\\?php\\([ \t]\\|" phps-mode-lexer--NEWLINE "\\)")))
        (let ((start (match-beginning 0))
              (end (match-end 0)))
-         (setq phps-mode-lexer-state (phps-mode-lexer--BEGIN 'ST_IN_SCRIPTING))
+         (setq phps-mode-lexer--state (phps-mode-lexer--BEGIN 'ST_IN_SCRIPTING))
          ;; (message "Starting scripting after <?php")
          (when phps-mode-lexer--EXPECTED
            (phps-mode-lexer--SKIP_TOKEN 'T_OPEN_TAG start end))
@@ -1001,7 +1001,7 @@
          (cond
 
           ((equal end (point-max))
-           (setq phps-mode-lexer-state (phps-mode-lexer--BEGIN 'ST_IN_SCRIPTING))
+           (setq phps-mode-lexer--state (phps-mode-lexer--BEGIN 'ST_IN_SCRIPTING))
            (phps-mode-lexer--RETURN_OR_SKIP_TOKEN
             'T_OPEN_TAG
             start
@@ -1010,7 +1010,7 @@
           ((phps-mode-wy-macros--CG 'SHORT_TAGS)
            (phps-mode-lexer--yyless 3)
            (setq end (- end 3))
-           (setq phps-mode-lexer-state (phps-mode-lexer--BEGIN 'ST_IN_SCRIPTING))
+           (setq phps-mode-lexer--state (phps-mode-lexer--BEGIN 'ST_IN_SCRIPTING))
            (phps-mode-lexer--RETURN_OR_SKIP_TOKEN
             'T_OPEN_TAG
             start
@@ -1025,7 +1025,7 @@
        (when (phps-mode-wy-macros--CG 'SHORT_TAGS)
          (let ((start (match-beginning 0))
                (end (match-end 0)))
-           (setq phps-mode-lexer-state (phps-mode-lexer--BEGIN 'ST_IN_SCRIPTING))
+           (setq phps-mode-lexer--state (phps-mode-lexer--BEGIN 'ST_IN_SCRIPTING))
            (when phps-mode-lexer--EXPECTED
              (phps-mode-lexer--SKIP_TOKEN 'T_OPEN_TAG start end))
            ;; (message "Starting scripting after <?")
@@ -1043,9 +1043,9 @@
               phps-mode-lexer--LABEL
               "->"
               "[a-zA-Z_\x80-\xff]")))
-       (let ((pushed-phps-mode-lexer-state (phps-mode-lexer--yy_push_phps-mode-lexer-state 'ST_LOOKING_FOR_PROPERTY phps-mode-lexer-state-stack)))
-         (setq phps-mode-lexer-state (car pushed-phps-mode-lexer-state))
-         (setq phps-mode-lexer-state-stack (car (cdr pushed-phps-mode-lexer-state)))
+       (let ((pushed-phps-mode-lexer--state (phps-mode-lexer--yy_push_phps-mode-lexer--state 'ST_LOOKING_FOR_PROPERTY phps-mode-lexer--state-stack)))
+         (setq phps-mode-lexer--state (car pushed-phps-mode-lexer--state))
+         (setq phps-mode-lexer--state-stack (car (cdr pushed-phps-mode-lexer--state)))
          (forward-char -3)
          (phps-mode-lexer--RETURN_TOKEN 'T_VARIABLE (match-beginning 0) (- (match-end 0) 3))))
 
@@ -1056,9 +1056,9 @@
               "\\$"
               phps-mode-lexer--LABEL
               "\\[")))
-       (let ((pushed-phps-mode-lexer-state (phps-mode-lexer--yy_push_phps-mode-lexer-state 'ST_VAR_OFFSET phps-mode-lexer-state-stack)))
-         (setq phps-mode-lexer-state (car pushed-phps-mode-lexer-state))
-         (setq phps-mode-lexer-state-stack (car (cdr pushed-phps-mode-lexer-state)))
+       (let ((pushed-phps-mode-lexer--state (phps-mode-lexer--yy_push_phps-mode-lexer--state 'ST_VAR_OFFSET phps-mode-lexer--state-stack)))
+         (setq phps-mode-lexer--state (car pushed-phps-mode-lexer--state))
+         (setq phps-mode-lexer--state-stack (car (cdr pushed-phps-mode-lexer--state)))
          (phps-mode-lexer--RETURN_TOKEN 'T_VARIABLE (match-beginning 0) (match-end 0))))
 
       (phps-mode-lexer--match-macro
@@ -1071,13 +1071,13 @@
 
       (phps-mode-lexer--match-macro
        (and ST_VAR_OFFSET (looking-at "\\]"))
-       (let ((popped-phps-mode-lexer-state (phps-mode-lexer--yy_pop_phps-mode-lexer-state phps-mode-lexer-state-stack phps-mode-lexer-state)))
-         (setq phps-mode-lexer-state-stack (car popped-phps-mode-lexer-state))
-         (setq phps-mode-lexer-state (car (cdr popped-phps-mode-lexer-state)))
+       (let ((popped-phps-mode-lexer--state (phps-mode-lexer--yy_pop_phps-mode-lexer--state phps-mode-lexer--state-stack phps-mode-lexer--state)))
+         (setq phps-mode-lexer--state-stack (car popped-phps-mode-lexer--state))
+         (setq phps-mode-lexer--state (car (cdr popped-phps-mode-lexer--state)))
          (phps-mode-lexer--RETURN_TOKEN "]" (match-beginning 0) (match-end 0))))
 
       (phps-mode-lexer--match-macro
-       (and ST_VAR_OFFSET (looking-at (concat "\\(" phps-mode-lexer-tokens
+       (and ST_VAR_OFFSET (looking-at (concat "\\(" phps-mode-lexer--tokens
                                               "\\|[{}\"`]\\)")))
        (let* ((start (match-beginning 0))
               (end (match-end 0))
@@ -1088,9 +1088,9 @@
        (and ST_VAR_OFFSET (looking-at (concat "[ \n\r\t'#]")))
        (let* ((start (match-beginning 0))
               (end (- (match-end 0) 1)))
-         (let ((popped-phps-mode-lexer-state (phps-mode-lexer--yy_pop_phps-mode-lexer-state phps-mode-lexer-state-stack phps-mode-lexer-state)))
-           (setq phps-mode-lexer-state-stack (car popped-phps-mode-lexer-state))
-           (setq phps-mode-lexer-state (car (cdr popped-phps-mode-lexer-state))))
+         (let ((popped-phps-mode-lexer--state (phps-mode-lexer--yy_pop_phps-mode-lexer--state phps-mode-lexer--state-stack phps-mode-lexer--state)))
+           (setq phps-mode-lexer--state-stack (car popped-phps-mode-lexer--state))
+           (setq phps-mode-lexer--state (car (cdr popped-phps-mode-lexer--state))))
          (phps-mode-lexer--RETURN_TOKEN 'T_ENCAPSED_AND_WHITESPACE start end)))
 
       (phps-mode-lexer--match-macro
@@ -1143,7 +1143,7 @@
              (end (match-end 0)))
          (when (= (- end start) 3)
            (setq end (1- end)))
-         (setq phps-mode-lexer-state (phps-mode-lexer--BEGIN 'ST_INITIAL))
+         (setq phps-mode-lexer--state (phps-mode-lexer--BEGIN 'ST_INITIAL))
          (when (phps-mode-wy-macros--CG 'PARSER_MODE)
            (phps-mode-lexer--RETURN_TOKEN ";" start end))
          (phps-mode-lexer--RETURN_TOKEN 'T_CLOSE_TAG start end)))
@@ -1219,7 +1219,7 @@
                             start
                             (+ string-start 1)))
                        ;; (message "Found variable after '%s'" (buffer-substring-no-properties start string-start))
-                       (setq phps-mode-lexer-state (phps-mode-lexer--BEGIN 'ST_DOUBLE_QUOTES))
+                       (setq phps-mode-lexer--state (phps-mode-lexer--BEGIN 'ST_DOUBLE_QUOTES))
                        (phps-mode-lexer--RETURN_TOKEN "\"" start (1+ start))
                        (phps-mode-lexer--RETURN_TOKEN
                         'T_ENCAPSED_AND_WHITESPACE
@@ -1256,18 +1256,18 @@
          (if (string= (substring data 0 1) "'")
              (progn
                (setq heredoc-label (substring data 1 (- (length data) 1)))
-               (setq phps-mode-lexer-state (phps-mode-lexer--BEGIN 'ST_NOWDOC)))
+               (setq phps-mode-lexer--state (phps-mode-lexer--BEGIN 'ST_NOWDOC)))
            (progn
              (if (string= (substring data 0 1) "\"")
                  (setq heredoc-label (substring data 1 (- (length data) 1)))
                (setq heredoc-label data))
-             (setq phps-mode-lexer-state (phps-mode-lexer--BEGIN 'ST_HEREDOC))))
+             (setq phps-mode-lexer--state (phps-mode-lexer--BEGIN 'ST_HEREDOC))))
 
          ;; Check for ending label on the next line
          (when (string= (buffer-substring-no-properties end (+ end (length heredoc-label))) heredoc-label)
-           (setq phps-mode-lexer-state (phps-mode-lexer--BEGIN 'ST_END_HEREDOC)))
+           (setq phps-mode-lexer--state (phps-mode-lexer--BEGIN 'ST_END_HEREDOC)))
 
-         (push heredoc-label phps-mode-lexer-heredoc-label-stack)
+         (push heredoc-label phps-mode-lexer--heredoc-label-stack)
          ;; (message "Found heredoc or nowdoc at %s with label %s" data heredoc-label)
 
          (phps-mode-lexer--RETURN_TOKEN 'T_START_HEREDOC start end)))
@@ -1275,7 +1275,7 @@
       (phps-mode-lexer--match-macro
        (and ST_IN_SCRIPTING (looking-at "[`]"))
        ;; (message "Begun backquote at %s-%s" (match-beginning 0) (match-end 0))
-       (setq phps-mode-lexer-state (phps-mode-lexer--BEGIN 'ST_BACKQUOTE)
+       (setq phps-mode-lexer--state (phps-mode-lexer--BEGIN 'ST_BACKQUOTE)
              (phps-mode-lexer--RETURN_TOKEN "`" (match-beginning 0) (match-end 0))))
 
       (phps-mode-lexer--match-macro
@@ -1284,26 +1284,26 @@
               (end (+ start (length heredoc-label) 1))
               (_data (buffer-substring-no-properties start end)))
          ;; (message "Found ending heredoc at %s, %s of %s" _data (thing-at-point 'line) heredoc-label)
-         (pop phps-mode-lexer-heredoc-label-stack)
-         (setq phps-mode-lexer-state (phps-mode-lexer--BEGIN 'ST_IN_SCRIPTING))
+         (pop phps-mode-lexer--heredoc-label-stack)
+         (setq phps-mode-lexer--state (phps-mode-lexer--BEGIN 'ST_IN_SCRIPTING))
          (phps-mode-lexer--RETURN_TOKEN 'T_END_HEREDOC start end)))
 
       (phps-mode-lexer--match-macro
        (and (or ST_DOUBLE_QUOTES ST_BACKQUOTE ST_HEREDOC) (looking-at (concat "{\\$")))
-       (let ((pushed-phps-mode-lexer-state (phps-mode-lexer--yy_push_phps-mode-lexer-state 'ST_IN_SCRIPTING phps-mode-lexer-state-stack)))
-         (setq phps-mode-lexer-state (car pushed-phps-mode-lexer-state))
-         (setq phps-mode-lexer-state-stack (car (cdr pushed-phps-mode-lexer-state)))
+       (let ((pushed-phps-mode-lexer--state (phps-mode-lexer--yy_push_phps-mode-lexer--state 'ST_IN_SCRIPTING phps-mode-lexer--state-stack)))
+         (setq phps-mode-lexer--state (car pushed-phps-mode-lexer--state))
+         (setq phps-mode-lexer--state-stack (car (cdr pushed-phps-mode-lexer--state)))
          (phps-mode-lexer--RETURN_TOKEN 'T_CURLY_OPEN (match-beginning 0) (- (match-end 0) 1))))
 
       (phps-mode-lexer--match-macro
        (and ST_DOUBLE_QUOTES (looking-at "[\"]"))
-       (setq phps-mode-lexer-state (phps-mode-lexer--BEGIN 'ST_IN_SCRIPTING)
+       (setq phps-mode-lexer--state (phps-mode-lexer--BEGIN 'ST_IN_SCRIPTING)
              ;; (message "Ended double-quote at %s" (match-beginning 0))
              (phps-mode-lexer--RETURN_TOKEN "\"" (match-beginning 0) (match-end 0))))
 
       (phps-mode-lexer--match-macro
        (and ST_BACKQUOTE (looking-at "[`]"))
-       (setq phps-mode-lexer-state (phps-mode-lexer--BEGIN 'ST_IN_SCRIPTING)
+       (setq phps-mode-lexer--state (phps-mode-lexer--BEGIN 'ST_IN_SCRIPTING)
              (phps-mode-lexer--RETURN_TOKEN "`" (match-beginning 0) (match-end 0))))
 
       (phps-mode-lexer--match-macro
@@ -1375,7 +1375,7 @@
 
                 ((string-match (concat "\n" heredoc-label ";?\n") data)
                  ;; (message "Found heredoc end at %s-%s" start end)
-                 (setq phps-mode-lexer-state (phps-mode-lexer--BEGIN 'ST_END_HEREDOC))
+                 (setq phps-mode-lexer--state (phps-mode-lexer--BEGIN 'ST_END_HEREDOC))
                  (phps-mode-lexer--RETURN_TOKEN 'T_ENCAPSED_AND_WHITESPACE old-start start))
 
                 (t
@@ -1400,7 +1400,7 @@
                     (_data (buffer-substring-no-properties start end)))
                ;; (message "Found something ending at %s" _data)
                ;; (message "Found nowdoc end at %s-%s" start end)
-               (setq phps-mode-lexer-state (phps-mode-lexer--BEGIN 'ST_END_HEREDOC))
+               (setq phps-mode-lexer--state (phps-mode-lexer--BEGIN 'ST_END_HEREDOC))
                (phps-mode-lexer--RETURN_TOKEN 'T_ENCAPSED_AND_WHITESPACE old-start start))
            (progn
              (signal
