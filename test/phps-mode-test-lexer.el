@@ -29,7 +29,7 @@
 (require 'phps-mode)
 (require 'phps-mode-test)
 
-(defun phps-mode-test-lexer-script-boundaries ()
+(defun phps-mode-test-lexer--script-boundaries ()
   "Run test for lexer."
 
   (phps-mode-test-with-buffer
@@ -71,7 +71,7 @@
 
   )
 
-(defun phps-mode-test-lexer-simple-tokens ()
+(defun phps-mode-test-lexer--simple-tokens ()
   "Run test for simple tokens."
 
   (phps-mode-test-with-buffer
@@ -191,7 +191,7 @@
 
   )
 
-(defun phps-mode-test-lexer-complex-tokens ()
+(defun phps-mode-test-lexer--complex-tokens ()
   "Run test for complex tokens."
 
   (phps-mode-test-with-buffer
@@ -320,7 +320,7 @@
 
   )
 
-(defun phps-mode-test-lexer-namespaces ()
+(defun phps-mode-test-lexer--namespaces ()
   "Run test for namespaces."
 
   (phps-mode-test-with-buffer
@@ -336,7 +336,7 @@
                   '((T_OPEN_TAG 1 . 7) (T_NAMESPACE 7 . 16) (T_STRING 17 . 28) (";" 28 . 29) (T_CLASS 30 . 35) (T_STRING 36 . 43) ("{" 44 . 45) (T_PUBLIC 47 . 53) (T_FUNCTION 54 . 62) (T_STRING 63 . 74) ("(" 74 . 75) (")" 75 . 76) ("{" 77 . 78) (T_EXIT 81 . 85) (";" 85 . 86) ("}" 88 . 89) ("}" 90 . 91)))))
   )
 
-(defun phps-mode-test-lexer-errors ()
+(defun phps-mode-test-lexer--errors ()
   "Run test for errors."
 
   (phps-mode-test-with-buffer
@@ -359,7 +359,7 @@
 
   )
 
-(defun phps-mode-test-lexer-get-moved-lexer-tokens ()
+(defun phps-mode-test-lexer--get-moved-lexer-tokens ()
   "Run test for get moved lexer tokens."
 
   (should (equal
@@ -384,7 +384,7 @@
 
   )
 
-(defun phps-mode-test-lexer-get-moved-lexer-states ()
+(defun phps-mode-test-lexer--get-moved-lexer-states ()
   "Run test for get moved lexer states."
 
   (should (equal
@@ -436,7 +436,7 @@
             -2)))
   )
 
-(defun phps-mode-test-lexer-benchmark ()
+(defun phps-mode-test-lexer--benchmark ()
   "Benchmark the lexer tests."
   (require 'benchmark)
   (let ((iteration 1)
@@ -460,13 +460,13 @@
   ;; (message "-- Running all tests for lexer... --\n")
   ;; (setq debug-on-error t)
   
-  (phps-mode-test-lexer-script-boundaries)
-  (phps-mode-test-lexer-simple-tokens)
-  (phps-mode-test-lexer-complex-tokens)
-  (phps-mode-test-lexer-namespaces)
-  (phps-mode-test-lexer-errors)
-  (phps-mode-test-lexer-get-moved-lexer-tokens)
-  (phps-mode-test-lexer-get-moved-lexer-states)
+  (phps-mode-test-lexer--script-boundaries)
+  (phps-mode-test-lexer--simple-tokens)
+  (phps-mode-test-lexer--complex-tokens)
+  (phps-mode-test-lexer--namespaces)
+  (phps-mode-test-lexer--errors)
+  (phps-mode-test-lexer--get-moved-lexer-tokens)
+  (phps-mode-test-lexer--get-moved-lexer-states)
   ;; (message "\n-- Ran all tests for lexer. --")
 
   )

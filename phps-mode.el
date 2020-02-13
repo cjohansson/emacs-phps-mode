@@ -120,8 +120,8 @@
           ;; All PHP files MUST end with a non-blank line, terminated with a single LF.
           (phps-mode-add-trailing-newline))
           
-        (phps-mode-analyzer-process-changes)
-        (phps-mode-functions-process-current-buffer)
+        (phps-mode-lex-analyzer--process-changes)
+        (phps-mode-lex-analyzer--process-current-buffer)
         (indent-region (point-min) (point-max)))
     (let ((old-buffer-contents
            (buffer-substring-no-properties (point-min) (point-max)))
@@ -158,14 +158,14 @@
 
 (defun phps-mode-reset-local-variables ()
   "Reset local variables."
-  (setq-local phps-mode-functions-allow-after-change t)
-  (setq-local phps-mode-analyzer-change-min nil)
-  (setq-local phps-mode-functions-idle-timer nil)
-  (setq-local phps-mode-functions-lines-indent nil)
-  (setq-local phps-mode-functions-imenu nil)
-  (setq-local phps-mode-functions-processed-buffer nil)
-  (setq-local phps-mode-lexer-tokens nil)
-  (setq-local phps-mode-lexer-states nil))
+  (setq phps-mode-lex-analyzer--allow-after-change t)
+  (setq phps-mode-lex-analyzer--change-min nil)
+  (setq phps-mode-lex-analyzer--idle-timer nil)
+  (setq phps-mode-lex-analyzer--lines-indent nil)
+  (setq phps-mode-lex-analyzer--imenu nil)
+  (setq phps-mode-lex-analyzer--processed-buffer-p nil)
+  (setq phps-mode-glex-analyzer--tokens nil)
+  (setq phps-mode-lex-analyzer--states nil))
 
 (define-derived-mode phps-mode prog-mode "PHPs"
   "Major mode for PHP with Semantic integration."

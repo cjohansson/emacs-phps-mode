@@ -256,7 +256,7 @@
 ;; If multiple rules match, re2c prefers the longest match.
 ;; If rules match the same string, the earlier rule has priority.
 ;; @see http://re2c.org/manual/syntax/syntax.html
-(defun phps-mode-lexer-re2c ()
+(defun phps-mode-lexer--re2c ()
   "Elisp port of original Zend re2c lexer."
 
   (let ((old-start (point)))
@@ -821,7 +821,7 @@
        (phps-mode-lexer--RETURN_TOKEN 'T_SR (match-beginning 0) (match-end 0)))
 
       (phps-mode-lexer--match-macro
-       (and ST_IN_SCRIPTING (looking-at phps-mode-lexer--tokens))
+       (and ST_IN_SCRIPTING (looking-at phps-mode-lexer--TOKENS))
        (let* ((start (match-beginning 0))
               (end (match-end 0))
               (data (buffer-substring-no-properties start end))
@@ -1077,7 +1077,7 @@
          (phps-mode-lexer--RETURN_TOKEN "]" (match-beginning 0) (match-end 0))))
 
       (phps-mode-lexer--match-macro
-       (and ST_VAR_OFFSET (looking-at (concat "\\(" phps-mode-lexer--tokens
+       (and ST_VAR_OFFSET (looking-at (concat "\\(" phps-mode-lexer--TOKENS
                                               "\\|[{}\"`]\\)")))
        (let* ((start (match-beginning 0))
               (end (match-end 0))

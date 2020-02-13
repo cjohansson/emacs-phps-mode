@@ -326,7 +326,7 @@
 ;; If multiple rules match, re2c prefers the longest match.
 ;; If rules match the same string, the earlier rule has priority.
 ;; @see http://re2c.org/manual/syntax/syntax.html
-(define-lex-analyzer phps-mode-analyzer--re2c-lex-analyzer
+(define-lex-analyzer phps-mode-lex-analyzer--re2c-lex-analyzer
   "Elisp port of original Zend re2c lexer."
   t
   (phps-mode-lexer--re2c))
@@ -351,7 +351,7 @@
            (setq phps-mode-lex-analyzer--states (nth 1 result))
            (setq phps-mode-lex-analyzer--state (nth 2 result))
            (setq phps-mode-lex-analyzer--state_stack (nth 3 result))
-           (setq phps-mode-functions-processed-buffer nil)
+           (setq phps-mode-lex-analyzer--processed-buffer-p nil)
            (phps-mode-lex-analyzer--reset-imenu)
 
            ;; Apply syntax color on tokens
@@ -412,8 +412,8 @@
          (setq phps-mode-lex-analyzer--states (nth 1 result))
          (setq phps-mode-lex-analyzer--STATE (nth 2 result))
          (setq phps-mode-lex-analyzer--state_stack (nth 3 result))
-         (setq phps-mode-functions-processed-buffer nil)
-         (phps-mode-analyzer--reset-imenu)
+         (setq phps-mode-lex-analyzer--processed-buffer-p nil)
+         (phps-mode-lex-analyzer--reset-imenu)
 
          ;; Apply syntax color on tokens
          (dolist (token phps-mode-lex-analyzer--tokens)
@@ -454,7 +454,7 @@
 
 (define-lex phps-mode-lex-analyzer--cached-lex
   "Call lexer analyzer action."
-  phps-mode-analyzer--cached-lex-analyzer
+  phps-mode-lex-analyzer--cached-lex-analyzer
   semantic-lex-default-action)
 
 (define-lex phps-mode-lex-analyzer--re2c-lex
@@ -544,10 +544,10 @@
                   (incremental-start-new-buffer phps-mode-lex-analyzer--change-min))
 
               ;; Reset idle timer
-              (phps-mode-functions--cancel-idle-timer)
+              (phps-mode-lex-analyzer--cancel-idle-timer)
 
               ;; Reset buffer changes minimum index
-              (phps-mode-functions--reset-changes)
+              (phps-mode-lex-analyzer--reset-changes)
 
               ;; Reset tokens and states here
               (setq phps-mode-lex-analyzer--tokens nil)
@@ -634,7 +634,7 @@
                        (message "Found no head states"))
 
                       ;; Reset processed buffer flag
-                      (phps-mode-functions-reset-processed-buffer)
+                      (phps-mode-lex-analyzer--reset-processed-buffer)
 
                       (setq run-full-lexer t)))
 
@@ -643,7 +643,7 @@
                  (message "Found no head tokens"))
 
                 ;; Reset processed buffer flag
-                (phps-mode-functions-reset-processed-buffer)
+                (phps-mode-lex-analyzer--reset-processed-buffer)
 
                 (setq run-full-lexer t))))
         (push (list 'FOUND-NO-CHANGE-POINT-MINIMUM) log)
@@ -651,7 +651,7 @@
          (message "Found no change point minimum"))
 
         ;; Reset processed buffer flag
-        (phps-mode-functions-reset-processed-buffer)
+        (phps-mode-lex-analyzer--reset-processed-buffer)
 
         (setq run-full-lexer t))
 
@@ -681,7 +681,7 @@
     (setq phps-mode-lex-analyzer--processed-buffer-p nil)
     (when phps-mode-lex-analyzer--process-on-indent-and-imenu-p
       (phps-mode-debug-message (message "Trigger incremental lexer"))
-      (phps-mode-analyzer-process-changes)))
+      (phps-mode-lex-analyzer--process-changes)))
   (if (and
        (not phps-mode-lex-analyzer--processed-buffer-p)
        (not phps-mode-lex-analyzer--idle-timer))
@@ -696,7 +696,7 @@
           (phps-mode-debug-message (message "Processed result: %s" processed))
           (setq phps-mode-lex-analyzer--imenu (nth 0 processed))
           (setq phps-mode-lex-analyzer--lines-indent (nth 1 processed)))
-        (phps-mode-analyzer--reset-imenu)
+        (phps-mode-lex-analyzer--reset-imenu)
         (setq phps-mode-lex-analyzer--processed-buffer-p t))
     (phps-mode-debug-message
      (when phps-mode-lex-analyzer--processed-buffer-p
@@ -736,8 +736,8 @@
   "Moved imenu from START by DIFF points."
   (when phps-mode-lex-analyzer--imenu
     (setq phps-mode-lex-analyzer--imenu
-                (phps-mode-functions-get-moved-imenu phps-mode-lex-analyzer--imenu start diff))
-    (phps-mode-analyzer--reset-imenu)))
+                (phps-mode-lex-analyzer--get-moved-imenu phps-mode-lex-analyzer--imenu start diff))
+    (phps-mode-lex-analyzer--reset-imenu)))
 
 (defun phps-mode-lex-analyzer--move-lines-indent (start-line-number diff)
   "Move lines indent from START-LINE-NUMBER with DIFF points."
@@ -745,19 +745,19 @@
     ;; (message "Moving line-indent index from %s with %s" start-line-number diff)
     (setq
      phps-mode-lex-analyzer--lines-indent
-     (phps-mode-functions-get-moved-lines-indent
+     (phps-mode-lex-analyzer--get-moved-lines-indent
       phps-mode-lex-analyzer--lines-indent
       start-line-number
       diff))))
 
 (defun phps-mode-lex-analyzer--get-lines-indent ()
   "Return lines indent, process buffer if not done already."
-  (phps-mode-functions-process-current-buffer)
+  (phps-mode-lex-analyzer--process-current-buffer)
   phps-mode-lex-analyzer--lines-indent)
 
 (defun phps-mode-lex-analyzer--get-imenu ()
   "Return Imenu, process buffer if not done already."
-  (phps-mode-functions-process-current-buffer)
+  (phps-mode-lex-analyzer--process-current-buffer)
   phps-mode-lex-analyzer--imenu)
 
 (defun phps-mode-lex-analyzer--get-moved-imenu (old-index start diff)
@@ -768,12 +768,12 @@
       (if (and (listp old-index)
                (listp (car old-index)))
           (dolist (item old-index)
-            (let ((sub-item (phps-mode-functions-get-moved-imenu item start diff)))
+            (let ((sub-item (phps-mode-lex-analyzer--get-moved-imenu item start diff)))
               (push (car sub-item) new-index)))
         (let ((item old-index))
           (let ((item-label (car item)))
             (if (listp (cdr item))
-                (let ((sub-item (phps-mode-functions-get-moved-imenu (cdr item) start diff)))
+                (let ((sub-item (phps-mode-lex-analyzer--get-moved-imenu (cdr item) start diff)))
                   (push `(,item-label . ,sub-item) new-index))
               (let ((item-start (cdr item)))
                 (when (>= item-start start)
@@ -784,7 +784,7 @@
 
 (defun phps-mode-lex-analyzer--get-lines-in-buffer (beg end)
   "Return the number of lines in buffer between BEG and END."
-  (phps-mode-functions--get-lines-in-string (buffer-substring-no-properties beg end)))
+  (phps-mode-lex-analyzer--get-lines-in-string (buffer-substring-no-properties beg end)))
 
 (defun phps-mode-lex-analyzer--get-lines-in-string (string)
   "Return the number of lines in STRING."
@@ -1002,7 +1002,7 @@ SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
                  incremental-line-number
                  (+
                   incremental-line-number
-                  (phps-mode-functions--get-lines-in-string
+                  (phps-mode-lex-analyzer--get-lines-in-string
                    (substring
                     string
                     (1- token-end)
@@ -1021,7 +1021,7 @@ SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
                  incremental-line-number
                  (+
                   incremental-line-number
-                  (phps-mode-functions--get-lines-in-string
+                  (phps-mode-lex-analyzer--get-lines-in-string
                    (substring
                     string
                     (1- next-token-start)
@@ -1198,7 +1198,7 @@ SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
                     (setq first-token-is-inline-html t))
 
                   (let ((inline-html-indents
-                         (phps-mode-functions--get-inline-html-indentation
+                         (phps-mode-lex-analyzer--get-inline-html-indentation
                           (substring
                            string
                            (1- token-start)
@@ -1932,7 +1932,7 @@ SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
 (defun phps-mode-lex-analyzer--indent-line ()
   "Indent line."
   (phps-mode-debug-message (message "Indent line"))
-  (phps-mode-functions-process-current-buffer)
+  (phps-mode-lex-analyzer--process-current-buffer)
   (if phps-mode-lex-analyzer--processed-buffer-p
       (if phps-mode-lex-analyzer--lines-indent
           (let ((line-number (line-number-at-pos (point))))
@@ -1962,22 +1962,22 @@ SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
                               ;; need to adjust their positions, this will improve speed of indent-region a lot
                               (phps-mode-lex-analyzer--move-tokens line-start indent-diff)
                               (phps-mode-lex-analyzer--move-states line-start indent-diff)
-                              (phps-mode-functions-move-imenu-index line-start indent-diff)
+                              (phps-mode-lex-analyzer--move-imenu-index line-start indent-diff)
 
                               (phps-mode-debug-message
                                (message "Lexer tokens after move: %s" phps-mode-lex-analyzer--tokens)
                                (message "Lexer states after move: %s" phps-mode-lex-analyzer--states))
 
                               ;; Reset change flag
-                              (phps-mode-functions--reset-changes)
-                              (phps-mode-functions--cancel-idle-timer))))))
-                (phps-mode-analyzer--alternative-indentation (point))
+                              (phps-mode-lex-analyzer--reset-changes)
+                              (phps-mode-lex-analyzer--cancel-idle-timer))))))
+                (phps-mode-lex-analyzer--alternative-indentation (point))
                 (phps-mode-debug-message
                  (message "Did not find indent for line, using alternative indentation..")))))
-        (phps-mode-analyzer--alternative-indentation (point))
+        (phps-mode-lex-analyzer--alternative-indentation (point))
         (phps-mode-debug-message
          (message "Did not find lines indent index, using alternative indentation..")))
-    (phps-mode-analyzer--alternative-indentation (point))
+    (phps-mode-lex-analyzer--alternative-indentation (point))
     (phps-mode-debug-message
      (message "Using alternative indentation since buffer is not processed yet"))))
 
@@ -2022,11 +2022,11 @@ SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
 
           (unless line-is-empty
             (let* ((old-indentation (current-indentation))
-                   (current-line-starts-with-closing-bracket (phps-mode-analyzer--string-starts-with-closing-bracket-p current-line-string))
-                   (line-starts-with-closing-bracket (phps-mode-analyzer--string-starts-with-closing-bracket-p line-string))
-                   (line-ends-with-assignment (phps-mode-analyzer--string-ends-with-assignment-p line-string))
-                   (line-ends-with-semicolon (phps-mode-analyzer--string-ends-with-semicolon-p line-string))
-                   (bracket-level (phps-mode-analyzer--get-string-brackets-count line-string)))
+                   (current-line-starts-with-closing-bracket (phps-mode-lex-analyzer--string-starts-with-closing-bracket-p current-line-string))
+                   (line-starts-with-closing-bracket (phps-mode-lex-analyzer--string-starts-with-closing-bracket-p line-string))
+                   (line-ends-with-assignment (phps-mode-lex-analyzer--string-ends-with-assignment-p line-string))
+                   (line-ends-with-semicolon (phps-mode-lex-analyzer--string-ends-with-semicolon-p line-string))
+                   (bracket-level (phps-mode-lex-analyzer--get-string-brackets-count line-string)))
               (setq new-indentation old-indentation)
               (forward-line move-length)
 
@@ -2139,7 +2139,7 @@ SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
        (run-with-idle-timer
         phps-mode-idle-interval
         nil
-        #'phps-mode-analyzer-process-changes buffer)))))
+        #'phps-mode-lex-analyzer--process-changes buffer)))))
 
 (defun phps-mode-lex-analyzer--reset-imenu ()
   "Reset imenu index."
@@ -2162,8 +2162,8 @@ SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
                    phps-mode-idle-interval
                    (not phps-mode-lex-analyzer--idle-timer))
 
-          (phps-mode-analyzer--reset-imenu)
-          (phps-mode-functions--start-idle-timer))
+          (phps-mode-lex-analyzer--reset-imenu)
+          (phps-mode-lex-analyzer--start-idle-timer))
 
         (when (or
                (not phps-mode-lex-analyzer--change-min)
@@ -2173,7 +2173,7 @@ SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
 
 (defun phps-mode-lex-analyzer--imenu-create-index ()
   "Get Imenu for current buffer."
-  (phps-mode-functions-process-current-buffer)
+  (phps-mode-lex-analyzer--process-current-buffer)
   phps-mode-lex-analyzer--imenu)
 
 (defun phps-mode-lex-analyzer--comment-region (beg end &optional _arg)
