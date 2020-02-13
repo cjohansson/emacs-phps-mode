@@ -2373,7 +2373,7 @@ SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
         ;; Setup lexer settings
         (when (boundp 'phps-mode-syntax-table)
           (setq semantic-lex-syntax-table phps-mode-syntax-table))
-        (setq semantic-lex-analyzer #'phps-mode-lex-analyzer--re2c-lex-analyzer)
+        (setq semantic-lex-analyzer #'phps-mode-lex-analyzer--re2c-lex)
 
         ;; Run lexer or incremental lexer
         (if (and start end)
@@ -2389,7 +2389,7 @@ SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
         (setq state phps-mode-lexer--state)
         (setq state-stack phps-mode-lexer--state-stack)
         (setq states phps-mode-lexer--states)
-        (setq tokens phps-mode-lexer--tokens)
+        (setq tokens (nreverse phps-mode-lexer--tokens))
         (kill-buffer)))
     (list tokens states state state-stack errors)))
 

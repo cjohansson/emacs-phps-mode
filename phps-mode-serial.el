@@ -8,6 +8,8 @@
 ;;; Code:
 
 
+;; VARIABLES
+
 (defvar phps-mode-serial--async-processes (make-hash-table :test 'equal)
   "Table of active asynchronous processes.")
 
@@ -15,7 +17,9 @@
   "Table of active asynchronous threads.")
 
 
-;; TODO Need to fix error reporting in synchronous mode
+;; FUNCTIONS
+
+
 ;; TODO Need to add support for format buffer when using asynchronous processes
 (defun phps-mode-serial-commands (key start end &optional async async-by-process)
   "Run command with KEY, first START and if successfully then END with the result of START as argument.  Optional arguments ASYNC ASYNC-BY-PROCESS specifies additional opions."
@@ -182,7 +186,7 @@
         (condition-case conditions
             (progn
               (let ((return (funcall start)))
-                (setq start-return (list 'success return))))
+                (setq start-return (list 'success return start-time))))
           (error (setq start-return (list 'error conditions start-time))))
 
         ;; Profile execution in debug mode
@@ -199,6 +203,7 @@
               (start-time (car (cdr (cdr start-return)))))
 
           (when (string= status "success")
+            (message "Return: %s" start-return)
 
             ;; (setq start-time (current-time))
 

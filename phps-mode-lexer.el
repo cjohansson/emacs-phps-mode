@@ -99,6 +99,9 @@
 ;; VARIABLES
 
 
+(defvar-local phps-mode-lexer--EXPECTED nil
+  "Flag whether something is expected or not.")
+
 (defvar-local phps-mode-lexer--tokens nil
   "List of current generated tokens.")
 
@@ -176,6 +179,8 @@
   ;;   (mmm-make-region phps-mode-inline-mmm-submode start end))
 
   (semantic-lex-push-token (semantic-lex-token token start end))
+
+  (push `(,token ,start . ,end) phps-mode-lexer--tokens)
   
   ;; Push token start, end, lexer state and state stack to variable
   (push
@@ -445,7 +450,7 @@
 
       (phps-mode-lexer--match-macro
        (and ST_IN_SCRIPTING (looking-at "->"))
-       (let ((pushed-phps-mode-lexer--state (phps-mode-lexer--yy_push_phps-mode-lexer--state 'ST_LOOKING_FOR_PROPERTY phps-mode-lexer--state-stack)))
+       (let ((pushed-phps-mode-lexer--state (phps-mode-lexer--yy_push phps-mode-lexer--state 'ST_LOOKING_FOR_PROPERTY phps-mode-lexer--state-stack)))
          (setq phps-mode-lexer--state (car pushed-phps-mode-lexer--state))
          (setq phps-mode-lexer--state-stack (car (cdr pushed-phps-mode-lexer--state)))
          (phps-mode-lexer--RETURN_TOKEN 'T_OBJECT_OPERATOR (match-beginning 0) (match-end 0))))
