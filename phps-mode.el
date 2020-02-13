@@ -78,7 +78,7 @@
   "Re-scan buffer."
   (interactive)
   (phps-mode-reset-local-variables)
-  (phps-mode-lexer-run))
+  (phps-mode-lex-analyzer--re2c-run))
 
 ;;;###autoload
 (defun phps-mode-flycheck-setup ()
@@ -228,7 +228,7 @@
   (add-hook 'semantic-lex-reset-functions #'phps-mode-lex-analyzer--setup 0 t)
 
   ;; Initial run of lexer
-  (phps-mode-lexer-run)
+  (phps-mode-lex-analyzer--re2c-run)
 
   ;; Run semantic functions for new buffer
   (semantic-new-buffer-fcn)

@@ -43,6 +43,22 @@
 (require 'subr-x)
 
 
+;; VARIABLES
+
+
+(defvar-local phps-mode-lex-analyzer--tokens nil
+  "Latest tokens.")
+
+(defvar-local phps-mode-lex-analyzer--state nil
+  "Latest state.")
+
+(defvar-local phps-mode-lex-analyzer--state-stack nil
+  "Latest state-stack.")
+
+(defvar-local phps-mode-lex-analyzer--states nil
+  "History of state and stack-stack.")
+
+
 ;; FLAGS
 
 
@@ -337,10 +353,10 @@
          (with-current-buffer buffer-name
 
            ;; Move variables into this buffers variables
-           (setq-local phps-mode-lexer--tokens (nth 0 result))
-           (setq-local phps-mode-lexer--states (nth 1 result))
-           (setq-local phps-mode-lexer--STATE (nth 2 result))
-           (setq-local phps-mode-lexer--state_stack (nth 3 result))
+           (setq-local phps-mode-lex-analyzer--tokens (nth 0 result))
+           (setq-local phps-mode-lex-analyzer--states (nth 1 result))
+           (setq-local phps-mode-lex-analyzer--state (nth 2 result))
+           (setq-local phps-mode-lex-analyzer--state_stack (nth 3 result))
            (setq-local phps-mode-functions-processed-buffer nil)
            (phps-mode-lex-analyzer--reset-imenu)
 
@@ -373,9 +389,8 @@
                     error-end
                     (list 'font-lock-face 'font-lock-warning-face))))
                (signal 'error (list (format "Lex Errors: %s" (car errors)))))))))
-     phps-mode-async-process
-     phps-mode-async-process-using-async-el
-     phps-mode-serial-profiling)))
+     (if (boundp 'phps-mode-async-process) phps-mode-async-process nil)
+     (if (boundp 'phps-mode-async-process-using-async-el) phps-mode-async-process-using-async-el nil))))
 
 (defun phps-mode-lex-analyzer--incremental-lex-string
     (buffer-name buffer-contents incremental-start-new-buffer point-max
@@ -440,9 +455,8 @@
 
          (phps-mode-debug-message
           (message "Incremental tokens: %s" incremental-tokens)))))
-   phps-mode-async-process
-   phps-mode-async-process-using-async-el
-   phps-mode-serial-profiling))
+   (if (boundp 'phps-mode-async-process) phps-mode-async-process nil)
+   (if (boundp 'phps-mode-async-process-using-async-el) phps-mode-async-process-using-async-el nil)))
 
 (define-lex phps-mode-lex-analyzer--cached-lex
   "Call lexer analyzer action."
@@ -484,8 +498,8 @@
 
 (defun phps-mode-lex-analyzer--move-tokens (start diff)
   "Update tokens with moved lexer tokens after or equal to START with modification DIFF."
-  (when phps-mode-lexer-tokens
-    (setq-local phps-mode-lexer-tokens (phps-mode-lexer-get-moved-tokens phps-mode-lexer-tokens start diff))))
+  (when phps-mode-lex-analyzer--tokens
+    (setq-local phps-mode-lex-analyzer--tokens (phps-mode-lex-analyzer--get-moved-tokens phps-mode-lex-analyzer--tokens start diff))))
 
 (defun phps-mode-lex-analyzer--get-moved-tokens (old-tokens start diff)
   "Return moved lexer OLD-TOKENS positions after (or equal to) START with DIFF points."
@@ -519,8 +533,8 @@
    (message "Run process changes on buffer '%s'" buffer))
   (with-current-buffer buffer
     (let ((run-full-lexer nil)
-          (old-tokens phps-mode-lexer-tokens)
-          (old-states phps-mode-lexer-states)
+          (old-tokens phps-mode-lex-analyzer--tokens)
+          (old-states phps-mode-lex-analyzer--states)
           (log '()))
 
       (if phps-mode-lex-analyzer--change-min
@@ -542,10 +556,10 @@
               (phps-mode-functions--reset-changes)
 
               ;; Reset tokens and states here
-              (setq-local phps-mode-lexer-tokens nil)
-              (setq-local phps-mode-lexer-states nil)
-              (setq-local phps-mode-lexer-STATE nil)
-              (setq-local phps-mode-lexer-state_stack nil)
+              (setq phps-mode-lex-analyzer--tokens nil)
+              (setq phps-mode-lex-analyzer--states nil)
+              (setq phps-mode-lex-analyzer--state nil)
+              (setq phps-mode-lex-analyzer--state_stack nil)
 
               ;; NOTE Starts are inclusive while ends are exclusive buffer locations
 
@@ -651,7 +665,7 @@
         (push (list 'RUN-FULL-LEXER) log)
         (phps-mode-debug-message
          (message "Running full lexer"))
-        (phps-mode-lexer-run))
+        (phps-mode-lex-analyzer--re2c-run))
 
       log)))
 
@@ -680,8 +694,8 @@
       (progn
         (phps-mode-debug-message (message "Buffer is not processed"))
         (let ((processed
-               (phps-mode-functions--process-tokens-in-string
-                phps-mode-lexer-tokens
+               (phps-mode-lex-analyzer--process-tokens-in-string
+                phps-mode-lex-analyzer--tokens
                 (buffer-substring-no-properties
                  (point-min)
                  (point-max)))))
@@ -980,7 +994,7 @@ SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
 
           ;; Iterate through all buffer tokens from beginning to end
           (dolist (item (nreverse tokens))
-            ;; (message "Items: %s %s" item phps-mode-lexer-tokens)
+            ;; (message "Items: %s %s" item phps-mode-lex-analyzer--tokens)
             (let ((next-token (car item))
                   (next-token-start (car (cdr item)))
                   (next-token-end (cdr (cdr item)))
