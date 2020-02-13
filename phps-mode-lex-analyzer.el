@@ -319,7 +319,7 @@
 (define-lex-analyzer phps-mode-analyzer--re2c-lex-analyzer
   "Elisp port of original Zend re2c lexer."
   t
-  (phps-mode-lexer--re2c))
+  (phps-mode-lexer-re2c))
 
 (defun phps-mode-lex-analyzer--re2c-run ()
   "Run lexer."
@@ -2353,19 +2353,19 @@ SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
         (insert contents)
 
         (if states
-            (setq-local phps-mode-lex-analyzer--states states)
-          (setq-local phps-mode-lex-analyzer--states nil))
+            (setq-local phps-mode-lexer-states states)
+          (setq-local phps-mode-lexer-states nil))
         (if state-stack
-            (setq-local phps-mode-lex-anylzer--state_stack state-stack)
-          (setq-local phps-mode-lex-analyzer--state_stack nil))
+            (setq-local phps-mode-lexer-state-stack state-stack)
+          (setq-local phps-mode-lexer-state-stack nil))
         (if state
-            (setq-local phps-mode-lex-analyzer--STATE state)
-          (phps-mode-lexer--BEGIN 'ST_INITIAL))
+            (setq-local phps-mode-lexer-state state)
+          (phps-mode-lexer-state 'ST_INITIAL))
 
         ;; Setup lexer settings
         (when (boundp 'phps-mode-syntax-table)
           (setq-local semantic-lex-syntax-table phps-mode-syntax-table))
-        (setq-local semantic-lex-analyzer #'phps-mode-analyzer--re2c-lex-analyzer)
+        (setq-local semantic-lex-analyzer #'phps-mode-lex-analyzer--re2c-lex-analyzer)
 
         ;; Run lexer or incremental lexer
         (if (and start end)
@@ -2378,10 +2378,10 @@ SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
            (semantic-lex-buffer)))
 
         ;; Copy variables outside of buffer
-        (setq state phps-mode-lex-analyzer--STATE)
-        (setq state-stack phps-mode-lex-analyzer--state_stack)
-        (setq states phps-mode-lex-analyzer--states)
-        (setq tokens phps-mode-lex-analyzer--tokens)
+        (setq state phps-mode-lexer-state)
+        (setq state-stack phps-mode-lexer-state-stack)
+        (setq states phps-mode-lexer-states)
+        (setq tokens phps-mode-lexer-tokens)
         (kill-buffer)))
     (list tokens states state state-stack errors)))
 
