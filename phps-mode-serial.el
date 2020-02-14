@@ -20,24 +20,30 @@
 ;; FUNCTIONS
 
 
+(defun phps-mode-serial-commands--kill-active (key)
+  "Kill active command KEY."
+  (when (and
+         (gethash key phps-mode-serial--async-processes)
+         (process-live-p (gethash key phps-mode-serial--async-processes)))
+    (let ((process-buffer (process-buffer (gethash key phps-mode-serial--async-processes))))
+      (delete-process (gethash key phps-mode-serial--async-processes))
+      (kill-buffer process-buffer)))
+  (when (and
+         (gethash key phps-mode-serial--async-threads)
+         (thread-live-p (gethash key phps-mode-serial--async-threads)))
+    (thread-signal (gethash key phps-mode-serial--async-threads) 'quit nil)))
+
 ;; TODO Need to add support for format buffer when using asynchronous processes
 (defun phps-mode-serial-commands (key start end &optional async async-by-process)
   "Run command with KEY, first START and if successfully then END with the result of START as argument.  Optional arguments ASYNC ASYNC-BY-PROCESS specifies additional opions."
   (let ((start-time (current-time)))
     (message "PHPs - Starting serial commands for buffer '%s'.." key)
+    (phps-mode-serial-commands--kill-active key)
     (if async
         (if async-by-process
             (progn
               (unless (fboundp 'async-start)
                 (signal 'error (list "Async-start function is missing")))
-
-              ;; Kill async process if process with associated key already exists
-              (when (and
-                     (gethash key phps-mode-serial--async-processes)
-                     (process-live-p (gethash key phps-mode-serial--async-processes)))
-                (let ((process-buffer (process-buffer (gethash key phps-mode-serial--async-processes))))
-                  (delete-process (gethash key phps-mode-serial--async-processes))
-                  (kill-buffer process-buffer)))
 
               ;; Run command(s) asynchronously
               (let ((script-filename
@@ -98,12 +104,6 @@
                        ((string= status "error")
                         (display-warning 'phps-mode (format "%s" (car value))))))))
                  phps-mode-serial--async-processes)))
-
-          ;; Kill thread if thread with associated key already exists
-          (when (and
-                 (gethash key phps-mode-serial--async-threads)
-                 (thread-live-p (gethash key phps-mode-serial--async-threads)))
-            (thread-signal (gethash key phps-mode-serial--async-threads) 'quit nil))
 
           ;; Run command(s) asynchronously
           (puthash
