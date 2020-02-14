@@ -66,6 +66,12 @@
 (defvar phps-mode-use-psr-12 t
   "Whether to use PSR-12 guidelines for white-space or not.")
 
+(defvar phps-mode-async-process t
+  "Whether to use asynchronous processes.")
+
+(defvar phps-mode-async-process-using-async-el nil
+  "Whether to use async.el for asynchronous processes.")
+
 (defvar phps-mode-map
   (let ((map (make-sparse-keymap)))
     (define-key map (kbd "C-c C-r") #'phps-mode-rescan-buffer)
@@ -120,14 +126,15 @@
           ;; All PHP files MUST end with a non-blank line, terminated with a single LF.
           (phps-mode-add-trailing-newline))
           
-        (phps-mode-lex-analyzer--process-changes)
+        (phps-mode-lex-analyzer--process-changes nil t)
         (phps-mode-lex-analyzer--process-current-buffer)
         (indent-region (point-min) (point-max)))
     (let ((old-buffer-contents
            (buffer-substring-no-properties (point-min) (point-max)))
           (old-buffer (current-buffer))
           (temp-buffer (generate-new-buffer "*PHPs Formatting*"))
-          (new-buffer-contents ""))
+          (new-buffer-contents "")
+          (phps-mode-async-process nil))
       (save-excursion
         (switch-to-buffer temp-buffer)
         (insert old-buffer-contents)

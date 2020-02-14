@@ -331,14 +331,20 @@
   t
   (phps-mode-lexer--re2c))
 
-(defun phps-mode-lex-analyzer--re2c-run ()
+(defun phps-mode-lex-analyzer--re2c-run (&optional force-synchronous)
   "Run lexer."
   (interactive)
   (require 'phps-mode-macros)
   (phps-mode-debug-message (message "Lexer run"))
 
   (let ((buffer-name (buffer-name))
-        (buffer-contents (buffer-substring-no-properties (point-min) (point-max))))
+        (buffer-contents (buffer-substring-no-properties (point-min) (point-max)))
+        (async (and (boundp 'phps-mode-async-process)
+                    phps-mode-async-process))
+        (async-by-process (and (boundp 'phps-mode-async-process-using-async-el)
+                               phps-mode-async-process-using-async-el)))
+    (when force-synchronous
+      (setq async nil))
     (phps-mode-serial-commands
      buffer-name
      (lambda() (phps-mode-lex-analyzer--lex-string buffer-contents))
@@ -383,74 +389,79 @@
                     error-end
                     (list 'font-lock-face 'font-lock-warning-face))))
                (signal 'error (list (format "Lex Errors: %s" (car errors)))))))))
-     (if (boundp 'phps-mode-async-process) phps-mode-async-process nil)
-     (if (boundp 'phps-mode-async-process-using-async-el) phps-mode-async-process-using-async-el nil))))
+     async
+     async-by-process)))
 
 (defun phps-mode-lex-analyzer--incremental-lex-string
     (buffer-name buffer-contents incremental-start-new-buffer point-max
-                 head-states incremental-state incremental-state-stack head-tokens)
+                 head-states incremental-state incremental-state-stack head-tokens &optional force-synchronous)
   "Incremental lex region."
-  (require 'phps-mode-macros)
-  (phps-mode-serial-commands
-   buffer-name
-   (lambda() (phps-mode-lex-analyzer--lex-string
-              buffer-contents
-              incremental-start-new-buffer
-              point-max
-              head-states
-              incremental-state
-              incremental-state-stack
-              head-tokens))
-   (lambda(result)
-     (when (get-buffer buffer-name)
-       (with-current-buffer buffer-name
+  (let ((async (and (boundp 'phps-mode-async-process)
+                    phps-mode-async-process))
+        (async-by-process (and (boundp 'phps-mode-async-process-using-async-el)
+                               phps-mode-async-process-using-async-el)))
+    (when force-synchronous
+      (setq async nil))
+    (phps-mode-serial-commands
+     buffer-name
+     (lambda() (phps-mode-lex-analyzer--lex-string
+                buffer-contents
+                incremental-start-new-buffer
+                point-max
+                head-states
+                incremental-state
+                incremental-state-stack
+                head-tokens))
+     (lambda(result)
+       (when (get-buffer buffer-name)
+         (with-current-buffer buffer-name
 
-         (phps-mode-debug-message
-          (message "Incrementally-lexed-string: %s" result))
+           (phps-mode-debug-message
+            (message "Incrementally-lexed-string: %s" result))
 
-         (setq phps-mode-lex-analyzer--tokens (nth 0 result))
-         (setq phps-mode-lex-analyzer--states (nth 1 result))
-         (setq phps-mode-lex-analyzer--STATE (nth 2 result))
-         (setq phps-mode-lex-analyzer--state_stack (nth 3 result))
-         (setq phps-mode-lex-analyzer--processed-buffer-p nil)
-         (phps-mode-lex-analyzer--reset-imenu)
+           (setq phps-mode-lex-analyzer--tokens (nth 0 result))
+           (setq phps-mode-lex-analyzer--states (nth 1 result))
+           (setq phps-mode-lex-analyzer--STATE (nth 2 result))
+           (setq phps-mode-lex-analyzer--state_stack (nth 3 result))
+           (setq phps-mode-lex-analyzer--processed-buffer-p nil)
+           (phps-mode-lex-analyzer--reset-imenu)
 
-         ;; Apply syntax color on tokens
-         (dolist (token phps-mode-lex-analyzer--tokens)
-           (let ((start (car (cdr token)))
-                 (end (cdr (cdr token)))
-                 (token-name (car token)))
+           ;; Apply syntax color on tokens
+           (dolist (token phps-mode-lex-analyzer--tokens)
+             (let ((start (car (cdr token)))
+                   (end (cdr (cdr token)))
+                   (token-name (car token)))
 
-             ;; Apply syntax color on token
-             (let ((token-syntax-color (phps-mode-lex-analyzer--get-token-syntax-color token-name)))
-               (if token-syntax-color
-                   (phps-mode-lex-analyzer--set-region-syntax-color start end token-syntax-color)
-                 (phps-mode-lex-analyzer--clear-region-syntax-color start end)))))
+               ;; Apply syntax color on token
+               (let ((token-syntax-color (phps-mode-lex-analyzer--get-token-syntax-color token-name)))
+                 (if token-syntax-color
+                     (phps-mode-lex-analyzer--set-region-syntax-color start end token-syntax-color)
+                   (phps-mode-lex-analyzer--clear-region-syntax-color start end)))))
 
-         (let ((errors (nth 4 result))
-               (error-start)
-               (error-end))
-           (when errors
-             (setq error-start (car (cdr errors)))
-             (when error-start
-               (if (car (cdr (cdr errors)))
-                   (progn
-                     (setq error-end (car (cdr (cdr (cdr errors)))))
-                     (phps-mode-lex-analyzer--set-region-syntax-color
-                      error-start
-                      error-end
-                      (list 'font-lock-face 'font-lock-warning-face)))
-                 (setq error-end (point-max))
-                 (phps-mode-lex-analyzer--set-region-syntax-color
-                  error-start
-                  error-end
-                  (list 'font-lock-face 'font-lock-warning-face))))
-             (signal 'error (list (format "Incremental Lex Errors: %s" (car errors))))))
+           (let ((errors (nth 4 result))
+                 (error-start)
+                 (error-end))
+             (when errors
+               (setq error-start (car (cdr errors)))
+               (when error-start
+                 (if (car (cdr (cdr errors)))
+                     (progn
+                       (setq error-end (car (cdr (cdr (cdr errors)))))
+                       (phps-mode-lex-analyzer--set-region-syntax-color
+                        error-start
+                        error-end
+                        (list 'font-lock-face 'font-lock-warning-face)))
+                   (setq error-end (point-max))
+                   (phps-mode-lex-analyzer--set-region-syntax-color
+                    error-start
+                    error-end
+                    (list 'font-lock-face 'font-lock-warning-face))))
+               (signal 'error (list (format "Incremental Lex Errors: %s" (car errors))))))
 
-         (phps-mode-debug-message
-          (message "Incremental tokens: %s" incremental-tokens)))))
-   (if (boundp 'phps-mode-async-process) phps-mode-async-process nil)
-   (if (boundp 'phps-mode-async-process-using-async-el) phps-mode-async-process-using-async-el nil)))
+           (phps-mode-debug-message
+            (message "Incremental tokens: %s" incremental-tokens)))))
+     async
+     async-by-process)))
 
 (define-lex phps-mode-lex-analyzer--cached-lex
   "Call lexer analyzer action."
@@ -519,7 +530,7 @@
   "Reset change."
   (setq phps-mode-lex-analyzer--change-min nil))
 
-(defun phps-mode-lex-analyzer--process-changes (&optional buffer)
+(defun phps-mode-lex-analyzer--process-changes (&optional buffer force-synchronous)
   "Run incremental lexer on BUFFER.  Return list of performed operations."
   (unless buffer
     (setq buffer (current-buffer)))
@@ -624,7 +635,8 @@
                            head-states
                            incremental-state
                            incremental-state-stack
-                           head-tokens)
+                           head-tokens
+                           force-synchronous)
 
                           (phps-mode-debug-message
                            (message "Incremental tokens: %s" incremental-tokens)))
@@ -659,7 +671,7 @@
         (push (list 'RUN-FULL-LEXER) log)
         (phps-mode-debug-message
          (message "Running full lexer"))
-        (phps-mode-lex-analyzer--re2c-run))
+        (phps-mode-lex-analyzer--re2c-run force-synchronous))
 
       log)))
 
