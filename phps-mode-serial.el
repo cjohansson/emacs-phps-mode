@@ -33,7 +33,6 @@
          (thread-live-p (gethash key phps-mode-serial--async-threads)))
     (thread-signal (gethash key phps-mode-serial--async-threads) 'quit nil)))
 
-;; TODO Need to add support for format buffer when using asynchronous processes
 (defun phps-mode-serial-commands (key start end &optional async async-by-process)
   "Run command with KEY, first START and if successfully then END with the result of START as argument.  Optional arguments ASYNC ASYNC-BY-PROCESS specifies additional opions."
   (let ((start-time (current-time)))
@@ -158,9 +157,9 @@
                         (display-warning 'phps-mode (format "%s" (car value)))))
 
                     (when (string= status "error")
-                      (display-warning 'phps-mode (format "%s" (car value)))))))
-              key)
-            phps-mode-serial--async-threads)))
+                      (display-warning 'phps-mode (format "%s" (car value))))))))
+            key)
+           phps-mode-serial--async-threads))
 
       (let ((start-return)
             (end-return))

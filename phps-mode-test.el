@@ -119,6 +119,7 @@
 
 (transient-mark-mode t)
 (electric-pair-mode t)
+(setq phps-mode-async-process nil)
 
 (provide 'phps-mode-test)
 
