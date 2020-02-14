@@ -424,7 +424,7 @@
              ;; Apply syntax color on token
              (let ((token-syntax-color (phps-mode-lex-analyzer--get-token-syntax-color token-name)))
                (if token-syntax-color
-                   (phps-mode-lex-analyzer-set-region-syntax-color start end token-syntax-color)
+                   (phps-mode-lex-analyzer--set-region-syntax-color start end token-syntax-color)
                  (phps-mode-lex-analyzer--clear-region-syntax-color start end)))))
 
          (let ((errors (nth 4 result))
