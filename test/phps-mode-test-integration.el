@@ -156,7 +156,7 @@
 (defun phps-mode-test-integration--whitespace-modifications ()
   "Test white-space modifications functions."
 
-  (phps-mode-test-with-buffer
+  (phps-mode-test--with-buffer
    "<?php\n$var = 'abc';\n\n$var2 = '123';\n"
    "Add newline between two assignments and inspect moved tokens and states"
    ;; (message "Tokens %s" phps-mode-lexer-tokens)
@@ -191,7 +191,7 @@
    (should (equal phps-mode-lex-analyzer--states
                   '((36 37 1 nil) (31 36 1 nil) (29 30 1 nil) (23 28 1 nil) (19 20 1 nil) (14 19 1 nil) (12 13 1 nil) (7 11 1 nil) (1 7 1 nil)))))
 
-  (phps-mode-test-with-buffer
+  (phps-mode-test--with-buffer
    "<?php\n$var = 'abc';\n\n$var2 = '123';\n"
    "Delete backward char between two assignments and inspect moved tokens and states"
    ;; (message "Tokens %s" phps-mode-lexer-tokens)
@@ -226,7 +226,7 @@
    (should (equal phps-mode-lex-analyzer--states
                   '((34 35 1 nil) (29 34 1 nil) (27 28 1 nil) (21 26 1 nil) (19 20 1 nil) (14 19 1 nil) (12 13 1 nil) (7 11 1 nil) (1 7 1 nil)))))
 
-  (phps-mode-test-with-buffer
+  (phps-mode-test--with-buffer
    "<?php\nif (true):\n    $var = 'abc';\n    $var2 = '123';\nendif;\n"
    "Add newline inside if body after two assignments and inspect moved tokens and states"
 
@@ -254,7 +254,7 @@
    (should (equal phps-mode-lex-analyzer--states
                   '((65 66 1 nil) (60 65 1 nil) (53 54 1 nil) (48 53 1 nil) (46 47 1 nil) (40 45 1 nil) (34 35 1 nil) (29 34 1 nil) (27 28 1 nil) (22 26 1 nil) (16 17 1 nil) (15 16 1 nil) (11 15 1 nil) (10 11 1 nil) (7 9 1 nil) (1 7 1 nil)))))
 
-  (phps-mode-test-with-buffer
+  (phps-mode-test--with-buffer
    "<?php\nif (true):\n    $var = \"abc\nanother line here\nmore text here\";\n    $var2 = '123';\nendif;"
    "Add test for inserting newlines inside token"
 
@@ -279,7 +279,7 @@
    (should (equal phps-mode-lex-analyzer--states
                   '((102 103 1 nil) (97 102 1 nil) (95 96 1 nil) (90 95 1 nil) (88 89 1 nil) (82 87 1 nil) (76 77 1 nil) (29 76 1 nil) (27 28 1 nil) (22 26 1 nil) (16 17 1 nil) (15 16 1 nil) (11 15 1 nil) (10 11 1 nil) (7 9 1 nil) (1 7 1 nil)))))
 
-  (phps-mode-test-with-buffer
+  (phps-mode-test--with-buffer
    "<?php\nfunction myFunctionA() {}\nfunction myFunctionB() {}\n"
    "White-space changes in imenu function-oriented file"
 

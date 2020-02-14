@@ -2360,15 +2360,18 @@ SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
         (switch-to-buffer buffer)
         (insert contents)
 
+        (if tokens
+            (setq phps-mode-lexer--tokens (nreverse tokens))
+          (setq phps-mode-lexer--tokens nil))
+        (if state
+            (setq phps-mode-lexer--state state)
+          (setq phps-mode-lexer--state 'ST_INITIAL))
         (if states
             (setq phps-mode-lexer--states states)
           (setq phps-mode-lexer--states nil))
         (if state-stack
             (setq phps-mode-lexer--state-stack state-stack)
           (setq phps-mode-lexer--state-stack nil))
-        (if state
-            (setq phps-mode-lexer--state state)
-          (setq phps-mode-lexer--state 'ST_INITIAL))
 
         ;; Setup lexer settings
         (when (boundp 'phps-mode-syntax-table)
