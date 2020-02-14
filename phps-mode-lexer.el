@@ -31,11 +31,8 @@
 ;;; Code:
 
 
-(autoload 'phps-mode-debug-message "phps-mode-macros")
-(autoload 'phps-mode-wy-macros--CG "phps-mode-wy-macros")
-
-;; (require 'phps-mode-macros)
-;; (require 'phps-mode-wy-macros)
+(require 'phps-mode-macros)
+(require 'phps-mode-wy-macros)
 
 (require 'semantic)
 (require 'semantic/lex)
