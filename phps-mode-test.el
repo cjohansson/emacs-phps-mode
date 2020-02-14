@@ -27,7 +27,7 @@
 (require 'phps-mode)
 (require 'phps-mode-macros)
 
-(defmacro phps-mode-test-incremental-vs-intial-buffer (source &optional title &rest change)
+(defmacro phps-mode-test--incremental-vs-intial-buffer (source &optional title &rest change)
   "Set up test buffer with SOURCE, TITLE, apply CHANGE and compare incremental values with initial values."
   `(let ((test-buffer-incremental (generate-new-buffer "test-incremental"))
          (incremental-states nil)
@@ -55,7 +55,7 @@
      (setq incremental-states phps-mode-lexer-states)
      (setq incremental-tokens phps-mode-lexer-tokens)
      (setq incremental-imenu phps-mode-functions-imenu)
-     (setq incremental-indent (phps-mode-test-hash-to-list phps-mode-functions-lines-indent))
+     (setq incremental-indent (phps-mode-test--hash-to-list phps-mode-functions-lines-indent))
      (setq incremental-buffer (buffer-substring (point-min) (point-max)))
 
      ;; Setup incremental buffer
@@ -69,7 +69,7 @@
      (setq initial-states phps-mode-lexer-states)
      (setq initial-tokens phps-mode-lexer-tokens)
      (setq initial-imenu phps-mode-functions-imenu)
-     (setq initial-indent (phps-mode-test-hash-to-list phps-mode-functions-lines-indent))
+     (setq initial-indent (phps-mode-test--hash-to-list phps-mode-functions-lines-indent))
      (setq initial-buffer (buffer-substring (point-min) (point-max)))
 
      ;; Run tests
@@ -91,7 +91,7 @@
      (when ,title
        (message "\nPassed incremental tests for '%s'\n" ,title))))
 
-(defmacro phps-mode-test-with-buffer (source &optional title &rest body)
+(defmacro phps-mode-test--with-buffer (source &optional title &rest body)
   "Set up test buffer with SOURCE, TITLE and BODY."
   `(let ((test-buffer (generate-new-buffer "test")))
      (switch-to-buffer test-buffer)
@@ -105,7 +105,7 @@
      (when ,title
        (message "\nPassed tests for '%s'\n" ,title))))
 
-(defun phps-mode-test-hash-to-list (hash-table)
+(defun phps-mode-test--hash-to-list (hash-table)
   "Return a list that represent the HASH-TABLE.  Each element is a list: (list key value)."
   (let (result)
     (if (hash-table-p hash-table)
