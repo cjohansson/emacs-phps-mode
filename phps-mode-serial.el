@@ -202,8 +202,9 @@
               (value (car (cdr start-return)))
               (start-time (car (cdr (cdr start-return)))))
 
+          ;; (message "Return: %s" start-return)
+
           (when (string= status "success")
-            (message "Return: %s" start-return)
 
             ;; (setq start-time (current-time))
 

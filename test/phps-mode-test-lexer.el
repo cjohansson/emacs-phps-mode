@@ -66,7 +66,7 @@
   (phps-mode-test--with-buffer
    "<?php\n\n$k = 'key';\n\necho \"\\$a['{$k}']\";"
    "A tricky case where variable inside double quote is escaped"
-   (message "Tokens: %s" phps-mode-lex-analyzer--tokens)
+   ;; (message "Tokens: %s" phps-mode-lex-analyzer--tokens)
    (should (equal
             phps-mode-lex-analyzer--tokens
             '((T_OPEN_TAG 1 . 7) (T_VARIABLE 8 . 10) ("=" 11 . 12) (T_CONSTANT_ENCAPSED_STRING 13 . 18) (";" 18 . 19) (T_ECHO 21 . 25) ("\"" 26 . 27) (T_ENCAPSED_AND_WHITESPACE 27 . 32) (T_CURLY_OPEN 32 . 33) (T_VARIABLE 33 . 35) ("}" 35 . 36) (T_CONSTANT_ENCAPSED_STRING 36 . 38) ("\"" 38 . 39) (";" 39 . 40)))))

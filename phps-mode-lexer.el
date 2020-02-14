@@ -31,8 +31,11 @@
 ;;; Code:
 
 
-(require 'phps-mode-macros)
-(require 'phps-mode-wy-macros)
+(autoload 'phps-mode-debug-message "phps-mode-macros")
+(autoload 'phps-mode-wy-macros--CG "phps-mode-wy-macros")
+
+;; (require 'phps-mode-macros)
+;; (require 'phps-mode-wy-macros)
 
 (require 'semantic)
 (require 'semantic/lex)
@@ -137,7 +140,7 @@
 ;; _yy_push_state
 (defun phps-mode-lexer--yy_push_state (state)
   "Add NEW-STATE to stack and then begin state."
-  (push state phps-mode-lexer--state-stack)
+  (push phps-mode-lexer--state phps-mode-lexer--state-stack)
   (phps-mode-lexer--BEGIN state))
 
 (defun phps-mode-lexer--yy_pop_state ()
@@ -471,7 +474,7 @@
        (let ((start (match-beginning 0))
              (end (match-end 0)))
          (phps-mode-lexer--yy_pop_state)
-         (phps-mode-lexer--RETURN_TOKEN 'T_STRING start ende)))
+         (phps-mode-lexer--RETURN_TOKEN 'T_STRING start end)))
 
       (phps-mode-lexer--match-macro
        (and ST_LOOKING_FOR_PROPERTY (looking-at phps-mode-lexer--ANY_CHAR))
@@ -1223,14 +1226,13 @@
               phps-mode-lexer--NEWLINE)))
        (let* ((start (match-beginning 0))
               (end (match-end 0))
-              (data (buffer-substring-no-properties (match-beginning 1) (match-end 1)))
-              (heredoc-label))
+              (data (buffer-substring-no-properties (match-beginning 1) (match-end 1))))
 
          ;; Determine if it's HEREDOC or NOWDOC and extract label here
          (if (string= (substring data 0 1) "'")
              (progn
                (setq heredoc-label (substring data 1 (- (length data) 1)))
-               (phps-mode-lexer--BEGIN 'ST_NOWDOC)))
+               (phps-mode-lexer--BEGIN 'ST_NOWDOC))
            (progn
              (if (string= (substring data 0 1) "\"")
                  (setq heredoc-label (substring data 1 (- (length data) 1)))
@@ -1244,7 +1246,7 @@
          (push heredoc-label phps-mode-lexer--heredoc-label-stack)
          ;; (message "Found heredoc or nowdoc at %s with label %s" data heredoc-label)
 
-         (phps-mode-lexer--RETURN_TOKEN 'T_START_HEREDOC start end))
+         (phps-mode-lexer--RETURN_TOKEN 'T_START_HEREDOC start end)))
 
       (phps-mode-lexer--match-macro
        (and ST_IN_SCRIPTING (looking-at "[`]"))
@@ -1293,8 +1295,7 @@
                        (let ((variable-start (+ start (match-beginning 0))))
 
                          ;; (message "Found starting expression inside double-quoted string at: %s %s" start variable-start)
-                         (phps-mode-lexer--RETURN_TOKEN 'T_CONSTANT_ENCAPSED_STRING start variable-start)
-                         ))
+                         (phps-mode-lexer--RETURN_TOKEN 'T_CONSTANT_ENCAPSED_STRING start variable-start)))
                    (progn
                      (phps-mode-lexer--RETURN_TOKEN 'T_CONSTANT_ENCAPSED_STRING start end)
                      ;; (message "Found end of quote at %s-%s, moving ahead after '%s'" start end (buffer-substring-no-properties start end))
