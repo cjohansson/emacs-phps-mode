@@ -1,4 +1,4 @@
-;;; phps-mode-test-functions.el --- Tests for functions -*- lexical-binding: t -*-
+;;; phps-mode-test-lex-analyzer.el --- Tests for functions -*- lexical-binding: t -*-
 
 ;; Copyright (C) 2018-2019  Free Software Foundation, Inc.
 
@@ -29,8 +29,8 @@
 (require 'phps-mode)
 (require 'phps-mode-test)
 
-(defun phps-mode-test-functions-process-changes ()
-  "Test `phps-mode-analyzer-process-changes'."
+(defun phps-mode-test-lex-analyzer-process-changes ()
+  "Test `phps-mode-lex-analyzer--process-changes'."
 
   (phps-mode-test-with-buffer
    "\n<html>\n<?php\n/**\n * Bla\n */"
@@ -38,14 +38,14 @@
    (goto-char (point-min))
    (insert "<?php echo 'test';\n?>")
    (should (equal
-            (phps-mode-analyzer-process-changes)
+            (phps-mode-lex-analyzer--process-changes)
             '((RUN-FULL-LEXER) (FOUND-NO-HEAD-TOKENS 1)))))
 
   (phps-mode-test-with-buffer
    "\n<html>\n<?php\n/**\n * Bla\n */"
    "Process changes without changes"
    (should (equal
-            (phps-mode-analyzer-process-changes)
+            (phps-mode-lex-analyzer--process-changes)
             '((RUN-FULL-LEXER) (FOUND-NO-CHANGE-POINT-MINIMUM)))))
 
   (phps-mode-test-with-buffer
@@ -54,28 +54,28 @@
    (goto-char (point-max))
    (insert "\necho 'I was here';\n")
    (should (equal
-            (phps-mode-analyzer-process-changes)
+            (phps-mode-lex-analyzer--process-changes)
             '((INCREMENTAL-LEX 15)))))
 
    )
 
-(defun phps-mode-test-functions-alternative-indentation ()
-  "Test `phps-mode-analyzer--alternative-indentation'."
+(defun phps-mode-test-lex-analyzer-alternative-indentation ()
+  "Test `phps-mode-lex-analyzer--alternative-indentation'."
 
   (phps-mode-test-with-buffer
    "<?php\nif ($myCondition) {\necho 'I was here';\n}"
    "Alternative indentation inside if block" 
    (goto-char 32)
    (should (equal
-            (phps-mode-analyzer--alternative-indentation)
+            (phps-mode-lex-analyzer--alternative-indentation)
             4))
    (goto-char 15)
    (should (equal
-            (phps-mode-analyzer--alternative-indentation)
+            (phps-mode-lex-analyzer--alternative-indentation)
             0))
    (goto-char (point-max))
    (should (equal
-            (phps-mode-analyzer--alternative-indentation)
+            (phps-mode-lex-analyzer--alternative-indentation)
             0))
    (let ((buffer-contents (buffer-substring-no-properties (point-min) (point-max))))
      (should (equal
@@ -87,15 +87,15 @@
    "Alternative indentation on closing if block" 
    (goto-char 30)
    (should (equal
-            (phps-mode-analyzer--alternative-indentation)
+            (phps-mode-lex-analyzer--alternative-indentation)
             4))
    (goto-char 57)
    (should (equal
-            (phps-mode-analyzer--alternative-indentation)
+            (phps-mode-lex-analyzer--alternative-indentation)
             4))
    (goto-char (point-max))
    (should (equal
-            (phps-mode-analyzer--alternative-indentation)
+            (phps-mode-lex-analyzer--alternative-indentation)
             0))
    (let ((buffer-contents (buffer-substring-no-properties (point-min) (point-max))))
      (should (equal
@@ -107,11 +107,11 @@
    "Alternative indentation on nested if block with empty contents" 
    (goto-char 40)
    (should (equal
-            (phps-mode-analyzer--alternative-indentation)
+            (phps-mode-lex-analyzer--alternative-indentation)
             4))
    (goto-char (point-max))
    (should (equal
-            (phps-mode-analyzer--alternative-indentation)
+            (phps-mode-lex-analyzer--alternative-indentation)
             0))
    (let ((buffer-contents (buffer-substring-no-properties (point-min) (point-max))))
      (should (equal
@@ -123,7 +123,7 @@
    "Alternative indentation on multiple closing brackets"
    (goto-char 53)
    (should (equal
-            (phps-mode-analyzer--alternative-indentation)
+            (phps-mode-lex-analyzer--alternative-indentation)
             4))
    (let ((buffer-contents (buffer-substring-no-properties (point-min) (point-max))))
      (should (equal
@@ -135,7 +135,7 @@
    "Alternative indentation on elseif block"
    (goto-char 25)
    (should (equal
-            (phps-mode-analyzer--alternative-indentation)
+            (phps-mode-lex-analyzer--alternative-indentation)
             0))
    (let ((buffer-contents (buffer-substring-no-properties (point-min) (point-max))))
      (should (equal
@@ -147,7 +147,7 @@
    "Alternative indentation on closing bracket inside parent bracket"
    (goto-char 36)
    (should (equal
-            (phps-mode-analyzer--alternative-indentation)
+            (phps-mode-lex-analyzer--alternative-indentation)
             4))
    (let ((buffer-contents (buffer-substring-no-properties (point-min) (point-max))))
      (should (equal
@@ -159,7 +159,7 @@
    "Alternative indentation on last line of doc comment block"
    (goto-char 11)
    (should (equal
-            (phps-mode-analyzer--alternative-indentation)
+            (phps-mode-lex-analyzer--alternative-indentation)
             1))
    (let ((buffer-contents (buffer-substring-no-properties (point-min) (point-max))))
      (should (equal
@@ -171,7 +171,7 @@
    "Alternative indentation on line after closing of doc comment block"
    (goto-char 12)
    (should (equal
-            (phps-mode-analyzer--alternative-indentation)
+            (phps-mode-lex-analyzer--alternative-indentation)
             0))
    (let ((buffer-contents (buffer-substring-no-properties (point-min) (point-max))))
      (should (equal
@@ -183,7 +183,7 @@
    "Alternative indentation on single-line assignment"
    (goto-char 1)
    (should (equal
-            (phps-mode-analyzer--alternative-indentation)
+            (phps-mode-lex-analyzer--alternative-indentation)
             0))
    (let ((buffer-contents (buffer-substring-no-properties (point-min) (point-max))))
      (should (equal
@@ -195,7 +195,7 @@
    "Alternative indentation on line after single-line assignment"
    (goto-char 15)
    (should (equal
-            (phps-mode-analyzer--alternative-indentation)
+            (phps-mode-lex-analyzer--alternative-indentation)
             0))
    (let ((buffer-contents (buffer-substring-no-properties (point-min) (point-max))))
      (should (equal
@@ -207,7 +207,7 @@
    "Alternative indentation on first line of multi-line assignment"
    (goto-char 1)
    (should (equal
-            (phps-mode-analyzer--alternative-indentation)
+            (phps-mode-lex-analyzer--alternative-indentation)
             0))
    (let ((buffer-contents (buffer-substring-no-properties (point-min) (point-max))))
      (should (equal
@@ -219,7 +219,7 @@
    "Alternative indentation on second line of multi-line assignment"
    (goto-char 30)
    (should (equal
-            (phps-mode-analyzer--alternative-indentation)
+            (phps-mode-lex-analyzer--alternative-indentation)
             4))
    (let ((buffer-contents (buffer-substring-no-properties (point-min) (point-max))))
      (should (equal
@@ -231,11 +231,11 @@
    "Alternative indentation on last line of multi-line assignment"
    (goto-char 12)
    (should (equal
-            (phps-mode-analyzer--alternative-indentation)
+            (phps-mode-lex-analyzer--alternative-indentation)
             4))
    (goto-char 40)
    (should (equal
-            (phps-mode-analyzer--alternative-indentation)
+            (phps-mode-lex-analyzer--alternative-indentation)
             4))
    (let ((buffer-contents (buffer-substring-no-properties (point-min) (point-max))))
      (should (equal
@@ -247,7 +247,7 @@
    "Alternative indentation on line after multi-line assignment"
    (goto-char 53)
    (should (equal
-            (phps-mode-analyzer--alternative-indentation)
+            (phps-mode-lex-analyzer--alternative-indentation)
             0))
    (let ((buffer-contents (buffer-substring-no-properties (point-min) (point-max))))
      (should (equal
@@ -256,7 +256,7 @@
 
   )
 
-(defun phps-mode-test-functions-move-lines-indent ()
+(defun phps-mode-test-lex-analyzer-move-lines-indent ()
   "Test `phps-mode-functions-move-lines-indent'."
 
   (phps-mode-test-with-buffer
@@ -291,7 +291,7 @@
 
   )
 
-(defun phps-mode-test-functions-get-lines-indent ()
+(defun phps-mode-test-lex-analyzer-get-lines-indent ()
   "Test `phps-mode-functions-get-lines-indent' function."
   
   (phps-mode-test-with-buffer
@@ -514,7 +514,7 @@
 
   )
 
-(defun phps-mode-test-functions-get-lines-indent-psr-2 ()
+(defun phps-mode-test-lex-analyzer-get-lines-indent-psr-2 ()
   "Test PSR-2 examples from: https://www.php-fig.org/psr/psr-2/."
 
   (phps-mode-test-with-buffer
@@ -633,7 +633,7 @@
 
   )
 
-(defun phps-mode-test-functions-get-lines-indent-multi-line-assignments ()
+(defun phps-mode-test-lex-analyzer-get-lines-indent-multi-line-assignments ()
   "Test for multi-line assignments."
 
   (phps-mode-test-with-buffer
@@ -686,7 +686,7 @@
 
   )
 
-(defun phps-mode-test-functions-get-lines-indent-inline-if ()
+(defun phps-mode-test-lex-analyzer-get-lines-indent-inline-if ()
   "Test for inline if indentations."
 
   (phps-mode-test-with-buffer
@@ -706,7 +706,7 @@
 
   )
 
-(defun phps-mode-test-functions-get-lines-indent-alternative-if ()
+(defun phps-mode-test-lex-analyzer-get-lines-indent-alternative-if ()
   "Test for alternative if indentations."
 
   (phps-mode-test-with-buffer
@@ -726,7 +726,7 @@
 
   )
 
-(defun phps-mode-test-functions-get-lines-indent-classes ()
+(defun phps-mode-test-lex-analyzer-get-lines-indent-classes ()
   "Test for class indent."
 
   (phps-mode-test-with-buffer
@@ -759,7 +759,7 @@
 
   )
 
-(defun phps-mode-test-functions-get-lines-indent-if ()
+(defun phps-mode-test-lex-analyzer-get-lines-indent-if ()
   "Test for multi-line if expressions."
 
   (phps-mode-test-with-buffer
@@ -818,7 +818,7 @@
 
   )
 
-(defun phps-mode-test-functions-get-lines-indent-switch-case ()
+(defun phps-mode-test-lex-analyzer-get-lines-indent-switch-case ()
   "Test for switch-case indentation."
 
   (phps-mode-test-with-buffer
@@ -845,7 +845,7 @@
 
   )
 
-(defun phps-mode-test-functions-indent-line ()
+(defun phps-mode-test-lex-analyzer-indent-line ()
   "Test for indentation."
 
   ;; Curly bracket tests
@@ -1102,7 +1102,7 @@
 
   )
 
-(defun phps-mode-test-functions-imenu ()
+(defun phps-mode-test-lex-analyzer-imenu ()
   "Test for imenu."
 
   (phps-mode-test-with-buffer
@@ -1182,7 +1182,7 @@
 
   )
 
-(defun phps-mode-test-functions-get-moved-imenu ()
+(defun phps-mode-test-lex-analyzer-get-moved-imenu ()
   "Test for moving imenu index."
 
   ;; (message "Moved imenu %s" (phps-mode-functions-get-moved-imenu '(("myNamespace" ("myClass" ("myFunctionA" . 108) ("myFunctionB" . 161)))) 0 2))
@@ -1205,7 +1205,7 @@
 
   )
 
-(defun phps-mode-test-functions-comment-uncomment-region ()
+(defun phps-mode-test-lex-analyzer-comment-uncomment-region ()
   "Test (comment-region) and (uncomment-region)."
 
   (phps-mode-test-with-buffer
@@ -1270,7 +1270,7 @@
 
   )
 
-(defun phps-mode-test-functions-get-inline-html-indentation ()
+(defun phps-mode-test-lex-analyzer-get-inline-html-indentation ()
   "Test function."
 
   (should (equal
@@ -1321,29 +1321,29 @@
 
 
 
-(defun phps-mode-test-functions ()
+(defun phps-mode-test-lex-analyzer ()
   "Run test for functions."
   ;; (setq debug-on-error t)
-  (phps-mode-test-functions-process-changes)
-  (phps-mode-test-functions-alternative-indentation)
-  (phps-mode-test-functions-move-lines-indent)
-  (phps-mode-test-functions-get-inline-html-indentation)
-  (phps-mode-test-functions-get-lines-indent-if)
-  (phps-mode-test-functions-get-lines-indent-classes)
-  (phps-mode-test-functions-get-lines-indent-inline-if)
-  (phps-mode-test-functions-get-lines-indent-alternative-if)
-  (phps-mode-test-functions-get-lines-indent-multi-line-assignments)
-  (phps-mode-test-functions-get-lines-indent-switch-case)
-  (phps-mode-test-functions-get-lines-indent-psr-2)
-  (phps-mode-test-functions-get-lines-indent)
-  (phps-mode-test-functions-indent-line)
-  (phps-mode-test-functions-imenu)
-  (phps-mode-test-functions-get-moved-imenu)
-  (phps-mode-test-functions-comment-uncomment-region)
-  (phps-mode-test-functions-move-lines-indent))
+  (phps-mode-test-lex-analyzer-process-changes)
+  (phps-mode-test-lex-analyzer-alternative-indentation)
+  (phps-mode-test-lex-analyzer-move-lines-indent)
+  (phps-mode-test-lex-analyzer-get-inline-html-indentation)
+  (phps-mode-test-lex-analyzer-get-lines-indent-if)
+  (phps-mode-test-lex-analyzer-get-lines-indent-classes)
+  (phps-mode-test-lex-analyzer-get-lines-indent-inline-if)
+  (phps-mode-test-lex-analyzer-get-lines-indent-alternative-if)
+  (phps-mode-test-lex-analyzer-get-lines-indent-multi-line-assignments)
+  (phps-mode-test-lex-analyzer-get-lines-indent-switch-case)
+  (phps-mode-test-lex-analyzer-get-lines-indent-psr-2)
+  (phps-mode-test-lex-analyzer-get-lines-indent)
+  (phps-mode-test-lex-analyzer-indent-line)
+  (phps-mode-test-lex-analyzer-imenu)
+  (phps-mode-test-lex-analyzer-get-moved-imenu)
+  (phps-mode-test-lex-analyzer-comment-uncomment-region)
+  (phps-mode-test-lex-analyzer-move-lines-indent))
 
-(phps-mode-test-functions)
+(phps-mode-test-lex-analyzer)
 
-(provide 'phps-mode-test-functions)
+(provide 'phps-mode-test-lex-analyzer)
 
-;;; phps-mode-test-functions.el ends here
+;;; phps-mode-test-lex-analyzer.el ends here

@@ -616,7 +616,7 @@
                           ;; Do partial lex from previous-token-end to change-stop
 
 
-                          (phps-mode-incremental-lex-string
+                          (phps-mode-lex-analyzer--incremental-lex-string
                            (buffer-name)
                            (buffer-substring-no-properties (point-min) (point-max))
                            incremental-start-new-buffer

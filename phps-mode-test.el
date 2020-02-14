@@ -50,12 +50,12 @@
        (message "\nTesting incremental buffer '%s':\n'%s'\n" ,title ,source))
      (phps-mode)
      ,@change
-     (phps-mode-analyzer-process-changes test-buffer-incremental)
-     (phps-mode-functions-process-current-buffer)
-     (setq incremental-states phps-mode-lexer-states)
-     (setq incremental-tokens phps-mode-lexer-tokens)
-     (setq incremental-imenu phps-mode-functions-imenu)
-     (setq incremental-indent (phps-mode-test--hash-to-list phps-mode-functions-lines-indent))
+     (phps-mode-lex-analyzer--process-changes test-buffer-incremental)
+     (phps-mode-lex-analyzer--process-current-buffer)
+     (setq incremental-states phps-mode-lex-analyzer--states)
+     (setq incremental-tokens phps-mode-lex-analyzer--tokens)
+     (setq incremental-imenu phps-mode-lex-analyzer--imenu)
+     (setq incremental-indent (phps-mode-test--hash-to-list phps-mode-lex-analyzer--lines-indent))
      (setq incremental-buffer (buffer-substring (point-min) (point-max)))
 
      ;; Setup incremental buffer
@@ -65,11 +65,11 @@
      (phps-mode-debug-message
        (message "\nTesting initial buffer '%s':\n'%s'\n" ,title incremental-buffer))
      (phps-mode)
-     (phps-mode-functions-process-current-buffer)
-     (setq initial-states phps-mode-lexer-states)
-     (setq initial-tokens phps-mode-lexer-tokens)
-     (setq initial-imenu phps-mode-functions-imenu)
-     (setq initial-indent (phps-mode-test--hash-to-list phps-mode-functions-lines-indent))
+     (phps-mode-lex-analyzer--process-current-buffer)
+     (setq initial-states phps-mode-lex-analyzer--states)
+     (setq initial-tokens phps-mode-lex-analyzer--tokens)
+     (setq initial-imenu phps-mode-lex-analyzer--imenu)
+     (setq initial-indent (phps-mode-test--hash-to-list phps-mode-lex-analyzer--lines-indent))
      (setq initial-buffer (buffer-substring (point-min) (point-max)))
 
      ;; Run tests
