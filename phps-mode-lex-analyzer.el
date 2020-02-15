@@ -62,18 +62,6 @@
 ;; VARIABLES
 
 
-(defvar-local phps-mode-lex-analyzer--tokens nil
-  "Latest tokens.")
-
-(defvar-local phps-mode-lex-analyzer--state nil
-  "Latest state.")
-
-(defvar-local phps-mode-lex-analyzer--state-stack nil
-  "Latest state-stack.")
-
-(defvar-local phps-mode-lex-analyzer--states nil
-  "History of state and stack-stack.")
-
 (defvar-local phps-mode-lex-analyzer--idle-timer nil
   "Timer object of idle timer.")
 
@@ -84,23 +72,33 @@
   "The indentation of each line in buffer, nil if none.")
 
 (defvar-local phps-mode-lex-analyzer--tokens nil
-  "Last lexer tokens.")
+  "Latest tokens.")
+
+(defvar-local phps-mode-lex-analyzer--state nil
+  "Latest state.")
 
 (defvar-local phps-mode-lex-analyzer--states nil
-  "A list of lists containing start, state and state stack.")
+  "History of state and stack-stack.")
 
-(defvar-local phps-mode-lex-analyzer--STATE nil
-  "Current state.")
-
-(defvar-local phps-mode-lex-analyzer--state_stack nil
-  "Stack of states.")
-
-(defvar-local phps-mode-lex-analyzer--heredoc_label_stack (list)
-  "The current heredoc_label.")
+(defvar-local phps-mode-lex-analyzer--state-stack nil
+  "Latest state-stack.")
 
 
 ;; FUNCTIONS
 
+
+(defun phps-mode-lex-analyzer--reset-local-variables ()
+  "Reset local variables."
+  (setq phps-mode-lex-analyzer--allow-after-change-p t)
+  (setq phps-mode-lex-analyzer--change-min nil)
+  (setq phps-mode-lex-analyzer--idle-timer nil)
+  (setq phps-mode-lex-analyzer--lines-indent nil)
+  (setq phps-mode-lex-analyzer--imenu nil)
+  (setq phps-mode-lex-analyzer--processed-buffer-p nil)
+  (setq phps-mode-lex-analyzer--tokens nil)
+  (setq phps-mode-lex-analyzer--state nil)
+  (setq phps-mode-lex-analyzer--states nil)
+  (setq phps-mode-lex-analyzer--state-stack nil))
 
 (defun phps-mode-lex-analyzer--set-region-syntax-color (start end properties)
   "Do syntax coloring for region START to END with PROPERTIES."
@@ -356,7 +354,7 @@
            (setq phps-mode-lex-analyzer--tokens (nth 0 result))
            (setq phps-mode-lex-analyzer--states (nth 1 result))
            (setq phps-mode-lex-analyzer--state (nth 2 result))
-           (setq phps-mode-lex-analyzer--state_stack (nth 3 result))
+           (setq phps-mode-lex-analyzer--state-stack (nth 3 result))
            (setq phps-mode-lex-analyzer--processed-buffer-p nil)
            (phps-mode-lex-analyzer--reset-imenu)
 
@@ -421,8 +419,8 @@
 
            (setq phps-mode-lex-analyzer--tokens (nth 0 result))
            (setq phps-mode-lex-analyzer--states (nth 1 result))
-           (setq phps-mode-lex-analyzer--STATE (nth 2 result))
-           (setq phps-mode-lex-analyzer--state_stack (nth 3 result))
+           (setq phps-mode-lex-analyzer--state (nth 2 result))
+           (setq phps-mode-lex-analyzer--state-stack (nth 3 result))
            (setq phps-mode-lex-analyzer--processed-buffer-p nil)
            (phps-mode-lex-analyzer--reset-imenu)
 
@@ -564,7 +562,7 @@
               (setq phps-mode-lex-analyzer--tokens nil)
               (setq phps-mode-lex-analyzer--states nil)
               (setq phps-mode-lex-analyzer--state nil)
-              (setq phps-mode-lex-analyzer--state_stack nil)
+              (setq phps-mode-lex-analyzer--state-stack nil)
 
               ;; NOTE Starts are inclusive while ends are exclusive buffer locations
 
@@ -2358,7 +2356,8 @@ SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
   "Just prepare other lexers for lexing region START to END."
   (require 'phps-mode-macros)
   (phps-mode-debug-message (message "Lexer setup %s - %s" start end))
-  (unless phps-mode-lex-analyzer--state (phps-mode-lex-analyzer--state 'ST_INITIAL)))
+  (unless phps-mode-lex-analyzer--state
+    (setq phps-mode-lex-analyzer--state 'ST_INITIAL)))
 
 (defun phps-mode-lex-analyzer--lex-string (contents &optional start end states state state-stack tokens)
   "Run lexer on CONTENTS."

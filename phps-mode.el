@@ -83,7 +83,7 @@
 (defun phps-mode-rescan-buffer ()
   "Re-scan buffer."
   (interactive)
-  (phps-mode-reset-local-variables)
+  (phps-mode-lex-analyzer--reset-local-variables)
   (phps-mode-lex-analyzer--re2c-run))
 
 ;;;###autoload
@@ -163,17 +163,6 @@
         (delete-region (point-min) (point-max))
         (insert new-buffer-contents)))))
 
-(defun phps-mode-reset-local-variables ()
-  "Reset local variables."
-  (setq phps-mode-lex-analyzer--allow-after-change t)
-  (setq phps-mode-lex-analyzer--change-min nil)
-  (setq phps-mode-lex-analyzer--idle-timer nil)
-  (setq phps-mode-lex-analyzer--lines-indent nil)
-  (setq phps-mode-lex-analyzer--imenu nil)
-  (setq phps-mode-lex-analyzer--processed-buffer-p nil)
-  (setq phps-mode-glex-analyzer--tokens nil)
-  (setq phps-mode-lex-analyzer--states nil))
-
 (define-derived-mode phps-mode prog-mode "PHPs"
   "Major mode for PHP with Semantic integration."
 
@@ -214,7 +203,7 @@
     ;; All PHP files MUST end with a non-blank line, terminated with a single LF.
     (setq require-final-newline t))
 
-  (phps-mode-reset-local-variables)
+  (phps-mode-lex-analyzer--reset-local-variables)
 
   ;; Make (comment-region) and (uncomment-region) work
   (setq-local comment-region-function #'phps-mode-lex-analyzer--comment-region)
