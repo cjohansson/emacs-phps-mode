@@ -26,15 +26,15 @@
 ;;; Code:
 
 
-(defvar phps-mode-wy-macros--CG
+(defvar phps-mode-wy-macros--CG-data
   (make-hash-table :test 'equal)
   "A hash-table with all settings.")
 
-(defun phps-mode-wy-macros-CG (subject &optional value)
+(defun phps-mode-wy-macros--CG (subject &optional value)
   "Return and optionally set VALUE of SUBJECT."
   (if value
-      (puthash subject value phps-mode-wy-macros--CG)
-    (gethash subject phps-mode-wy-macros--CG)))
+      (puthash subject value phps-mode-wy-macros--CG-data)
+    (gethash subject phps-mode-wy-macros--CG-data)))
 
 (defun zend_add_class_modifier (_class _modifier)
   "Add CLASS MODIFIER."

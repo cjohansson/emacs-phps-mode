@@ -1,12 +1,12 @@
 ;;; phps-mode.el --- Major mode for PHP with Semantic integration -*- lexical-binding: t -*-
 
-;; Copyright (C) 2018-2019  Free Software Foundation, Inc.
+;; Copyright (C) 2018-2020  Free Software Foundation, Inc.
 
 ;; Author: Christian Johansson <christian@cvj.se>
 ;; Maintainer: Christian Johansson <christian@cvj.se>
 ;; Created: 3 Mar 2018
-;; Modified: 16 Jan 2019
-;; Version: 0.3.28
+;; Modified: 14 Feb 2020
+;; Version: 0.3.32
 ;; Keywords: tools, convenience
 ;; URL: https://github.com/cjohansson/emacs-phps-mode
 
@@ -50,18 +50,27 @@
 
 ;; NOTE use wisent-parse-toggle-verbose-flag and (semantic-debug) to debug parsing
 
-(require 'phps-mode-analyzer)
 (require 'phps-mode-flymake)
+(require 'phps-mode-lex-analyzer)
 (require 'phps-mode-semantic)
 (require 'phps-mode-syntax-table)
-(require 'phps-mode-tags)
+
 (require 'semantic)
+
+(defvar phps-mode-idle-interval 1
+  "Idle seconds before running the incremental lexer.")
 
 (defvar phps-mode-use-psr-2 t
   "Whether to use PSR-2 guidelines for white-space or not.")
 
 (defvar phps-mode-use-psr-12 t
   "Whether to use PSR-12 guidelines for white-space or not.")
+
+(defvar phps-mode-async-process t
+  "Whether to use asynchronous processes.")
+
+(defvar phps-mode-async-process-using-async-el nil
+  "Whether to use async.el for asynchronous processes.")
 
 (defvar phps-mode-map
   (let ((map (make-sparse-keymap)))
@@ -74,8 +83,8 @@
 (defun phps-mode-rescan-buffer ()
   "Re-scan buffer."
   (interactive)
-  (phps-mode-reset-local-variables)
-  (phps-mode-lexer-run))
+  (phps-mode-lex-analyzer--reset-local-variables)
+  (phps-mode-lex-analyzer--re2c-run))
 
 ;;;###autoload
 (defun phps-mode-flycheck-setup ()
@@ -117,14 +126,15 @@
           ;; All PHP files MUST end with a non-blank line, terminated with a single LF.
           (phps-mode-add-trailing-newline))
           
-        (phps-mode-analyzer-process-changes)
-        (phps-mode-functions-process-current-buffer)
+        (phps-mode-lex-analyzer--process-changes nil t)
+        (phps-mode-lex-analyzer--process-current-buffer)
         (indent-region (point-min) (point-max)))
     (let ((old-buffer-contents
            (buffer-substring-no-properties (point-min) (point-max)))
           (old-buffer (current-buffer))
           (temp-buffer (generate-new-buffer "*PHPs Formatting*"))
-          (new-buffer-contents ""))
+          (new-buffer-contents "")
+          (phps-mode-async-process nil))
       (save-excursion
         (switch-to-buffer temp-buffer)
         (insert old-buffer-contents)
@@ -153,17 +163,6 @@
         (delete-region (point-min) (point-max))
         (insert new-buffer-contents)))))
 
-(defun phps-mode-reset-local-variables ()
-  "Reset local variables."
-  (setq-local phps-mode-functions-allow-after-change t)
-  (setq-local phps-mode-analyzer-change-min nil)
-  (setq-local phps-mode-functions-idle-timer nil)
-  (setq-local phps-mode-functions-lines-indent nil)
-  (setq-local phps-mode-functions-imenu nil)
-  (setq-local phps-mode-functions-processed-buffer nil)
-  (setq-local phps-mode-lexer-tokens nil)
-  (setq-local phps-mode-lexer-states nil))
-
 (define-derived-mode phps-mode prog-mode "PHPs"
   "Major mode for PHP with Semantic integration."
 
@@ -180,10 +179,10 @@
 
   ;; Indentation
   ;; Indent-region will call this on each line of selected region
-  (setq-local indent-line-function #'phps-mode-functions-indent-line)
+  (setq-local indent-line-function #'phps-mode-lex-analyzer--indent-line)
 
   ;; Custom Imenu
-  (setq-local imenu-create-index-function #'phps-mode-functions-imenu-create-index)
+  (setq-local imenu-create-index-function #'phps-mode-lex-analyzer--imenu-create-index)
 
   ;; Should we follow PSR-2?
   (when phps-mode-use-psr-2
@@ -204,28 +203,28 @@
     ;; All PHP files MUST end with a non-blank line, terminated with a single LF.
     (setq require-final-newline t))
 
-  (phps-mode-reset-local-variables)
+  (phps-mode-lex-analyzer--reset-local-variables)
 
   ;; Make (comment-region) and (uncomment-region) work
-  (setq-local comment-region-function #'phps-mode-functions-comment-region)
-  (setq-local uncomment-region-function #'phps-mode-functions-uncomment-region)
+  (setq-local comment-region-function #'phps-mode-lex-analyzer--comment-region)
+  (setq-local uncomment-region-function #'phps-mode-lex-analyzer--uncomment-region)
   (setq-local comment-start "// ")
   (setq-local comment-end "")
 
   ;; Support for change detection
-  (add-hook 'after-change-functions #'phps-mode-functions-after-change 0 t)
+  (add-hook 'after-change-functions #'phps-mode-lex-analyzer--after-change 0 t)
 
   ;; Lexer
   (setq-local semantic-lex-syntax-table phps-mode-syntax-table)
 
   ;; Semantic
-  (setq-local semantic-lex-analyzer #'phps-mode-analyzer-lex)
+  (setq-local semantic-lex-analyzer #'phps-mode-lex-analyzer--cached-lex-analyzer)
 
   ;; Set semantic-lex initializer function
-  (add-hook 'semantic-lex-reset-functions #'phps-mode-lexer-setup 0 t)
+  (add-hook 'semantic-lex-reset-functions #'phps-mode-lex-analyzer--setup 0 t)
 
   ;; Initial run of lexer
-  (phps-mode-lexer-run)
+  (phps-mode-lex-analyzer--re2c-run)
 
   ;; Run semantic functions for new buffer
   (semantic-new-buffer-fcn)
@@ -234,10 +233,7 @@
   (when (boundp 'semantic-idle-scheduler-mode)
     (setq semantic-idle-scheduler-mode nil))
 
-  ;; Wisent LALR parser TODO
-  ;; (phps-mode-tags-init)
-
-  )
+)
 
 (provide 'phps-mode)
 ;;; phps-mode.el ends here

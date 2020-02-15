@@ -27,7 +27,7 @@
 (require 'phps-mode)
 (require 'phps-mode-macros)
 
-(defmacro phps-mode-test-incremental-vs-intial-buffer (source &optional title &rest change)
+(defmacro phps-mode-test--incremental-vs-intial-buffer (source &optional title &rest change)
   "Set up test buffer with SOURCE, TITLE, apply CHANGE and compare incremental values with initial values."
   `(let ((test-buffer-incremental (generate-new-buffer "test-incremental"))
          (incremental-states nil)
@@ -50,12 +50,12 @@
        (message "\nTesting incremental buffer '%s':\n'%s'\n" ,title ,source))
      (phps-mode)
      ,@change
-     (phps-mode-analyzer-process-changes test-buffer-incremental)
-     (phps-mode-functions-process-current-buffer)
-     (setq incremental-states phps-mode-lexer-states)
-     (setq incremental-tokens phps-mode-lexer-tokens)
-     (setq incremental-imenu phps-mode-functions-imenu)
-     (setq incremental-indent (phps-mode-test-hash-to-list phps-mode-functions-lines-indent))
+     (phps-mode-lex-analyzer--process-changes test-buffer-incremental)
+     (phps-mode-lex-analyzer--process-current-buffer)
+     (setq incremental-states phps-mode-lex-analyzer--states)
+     (setq incremental-tokens phps-mode-lex-analyzer--tokens)
+     (setq incremental-imenu phps-mode-lex-analyzer--imenu)
+     (setq incremental-indent (phps-mode-test--hash-to-list phps-mode-lex-analyzer--lines-indent))
      (setq incremental-buffer (buffer-substring (point-min) (point-max)))
 
      ;; Setup incremental buffer
@@ -65,11 +65,11 @@
      (phps-mode-debug-message
        (message "\nTesting initial buffer '%s':\n'%s'\n" ,title incremental-buffer))
      (phps-mode)
-     (phps-mode-functions-process-current-buffer)
-     (setq initial-states phps-mode-lexer-states)
-     (setq initial-tokens phps-mode-lexer-tokens)
-     (setq initial-imenu phps-mode-functions-imenu)
-     (setq initial-indent (phps-mode-test-hash-to-list phps-mode-functions-lines-indent))
+     (phps-mode-lex-analyzer--process-current-buffer)
+     (setq initial-states phps-mode-lex-analyzer--states)
+     (setq initial-tokens phps-mode-lex-analyzer--tokens)
+     (setq initial-imenu phps-mode-lex-analyzer--imenu)
+     (setq initial-indent (phps-mode-test--hash-to-list phps-mode-lex-analyzer--lines-indent))
      (setq initial-buffer (buffer-substring (point-min) (point-max)))
 
      ;; Run tests
@@ -91,7 +91,7 @@
      (when ,title
        (message "\nPassed incremental tests for '%s'\n" ,title))))
 
-(defmacro phps-mode-test-with-buffer (source &optional title &rest body)
+(defmacro phps-mode-test--with-buffer (source &optional title &rest body)
   "Set up test buffer with SOURCE, TITLE and BODY."
   `(let ((test-buffer (generate-new-buffer "test")))
      (switch-to-buffer test-buffer)
@@ -105,7 +105,7 @@
      (when ,title
        (message "\nPassed tests for '%s'\n" ,title))))
 
-(defun phps-mode-test-hash-to-list (hash-table)
+(defun phps-mode-test--hash-to-list (hash-table)
   "Return a list that represent the HASH-TABLE.  Each element is a list: (list key value)."
   (let (result)
     (if (hash-table-p hash-table)
@@ -119,6 +119,7 @@
 
 (transient-mark-mode t)
 (electric-pair-mode t)
+(setq phps-mode-async-process nil)
 
 (provide 'phps-mode-test)
 

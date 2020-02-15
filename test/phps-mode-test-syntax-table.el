@@ -31,10 +31,10 @@
 
 ;; TODO Should test `backward-sexp', `forward-sexp', `backward-word', `forward-word', `backward-list', `forward-list' as well
 
-(defun phps-mode-test-syntax-table-quote-region ()
+(defun phps-mode-test-syntax-table--quote-region ()
   "Test double quotes, single quotes, curly bracket, square bracket, round bracket, back-quotes on regions."
 
-  (phps-mode-test-with-buffer
+  (phps-mode-test--with-buffer
    "<?php\n$var = abc;"
    "Double quotes around region"
    (goto-char 14)
@@ -44,7 +44,7 @@
    (let ((buffer-contents (buffer-substring-no-properties (point-min) (point-max))))
      (should (equal buffer-contents "<?php\n$var = \"abc\";"))))
 
-  (phps-mode-test-with-buffer
+  (phps-mode-test--with-buffer
    "<?php\n$var = abc;"
    "Single-quotes brackets around region"
    (goto-char 14)
@@ -54,7 +54,7 @@
    (let ((buffer-contents (buffer-substring-no-properties (point-min) (point-max))))
      (should (equal buffer-contents "<?php\n$var = 'abc';"))))
 
-  (phps-mode-test-with-buffer
+  (phps-mode-test--with-buffer
    "<?php\n$var = abc;"
    "Round brackets around region"
    (goto-char 14)
@@ -64,7 +64,7 @@
    (let ((buffer-contents (buffer-substring-no-properties (point-min) (point-max))))
      (should (equal buffer-contents "<?php\n$var = (abc);"))))
 
-  (phps-mode-test-with-buffer
+  (phps-mode-test--with-buffer
    "<?php\n$var = abc;"
    "Square brackets around region"
    (goto-char 14)
@@ -74,7 +74,7 @@
    (let ((buffer-contents (buffer-substring-no-properties (point-min) (point-max))))
      (should (equal buffer-contents "<?php\n$var = [abc];"))))
 
-  (phps-mode-test-with-buffer
+  (phps-mode-test--with-buffer
    "<?php\n$var = abc;"
    "Curly brackets around region"
    (goto-char 14)
@@ -84,7 +84,7 @@
    (let ((buffer-contents (buffer-substring-no-properties (point-min) (point-max))))
      (should (equal buffer-contents "<?php\n$var = {abc};"))))
 
-  (phps-mode-test-with-buffer
+  (phps-mode-test--with-buffer
    "<?php\n$var = abc;"
    "Backquotes brackets around region"
    (goto-char 14)
@@ -98,7 +98,7 @@
 
 (defun phps-mode-test-syntax-table ()
   "Run test."
-  (phps-mode-test-syntax-table-quote-region))
+  (phps-mode-test-syntax-table--quote-region))
 
 (phps-mode-test-syntax-table)
 
