@@ -311,7 +311,7 @@
               (semantic-lex-push-token
                (semantic-lex-token token-name start end))))
 
-          (setq semantic-lex-end-point position (point-max)))
+          (setq semantic-lex-end-point (point-max)))
 
       (phps-mode-lex-analyzer--set-region-syntax-color
        (point-min)
@@ -2352,7 +2352,7 @@ SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
                       "Do not un-comment comment ending at %s"
                       token-end))))))))))))
 
-(defun phps-mode-lex-analyzer---setup (start end)
+(defun phps-mode-lex-analyzer--setup (start end)
   "Just prepare other lexers for lexing region START to END."
   (require 'phps-mode-macros)
   (phps-mode-debug-message (message "Lexer setup %s - %s" start end))
