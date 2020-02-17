@@ -55,9 +55,6 @@
 (defvar-local phps-mode-lex-analyzer--processed-buffer-p nil
   "Flag whether current buffer is processed or not.")
 
-(defvar-local phps-mode-lex-analyzer--process-on-indent-and-imenu-p nil
-  "Whether to automatically process buffer when using indent or imenu.")
-
 
 ;; VARIABLES
 
@@ -671,10 +668,7 @@
   (when phps-mode-lex-analyzer--idle-timer
     (phps-mode-debug-message
      (message "Flag buffer as not processed since changes are detected"))
-    (setq phps-mode-lex-analyzer--processed-buffer-p nil)
-    (when phps-mode-lex-analyzer--process-on-indent-and-imenu-p
-      (phps-mode-debug-message (message "Trigger incremental lexer"))
-      (phps-mode-lex-analyzer--process-changes)))
+    (setq phps-mode-lex-analyzer--processed-buffer-p nil))
   (if (or
        force
        (and
