@@ -1989,8 +1989,7 @@ SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
          current-line-string
          (buffer-substring-no-properties
           (line-beginning-position)
-          (line-end-position)
-          )
+          (line-end-position))
          )
         (when (> line-number 1)
           (while (and
@@ -2101,7 +2100,7 @@ SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
 
 (defun phps-mode-lex-analyzer--string-starts-with-closing-bracket-p (string)
   "Get bracket count for STRING."
-  (string-match-p "^[\r\t ]*\\([\]{}()[]\\|<[a-zA-Z]+\\|</[a-zA-Z]+\\|/>\\)" string))
+  (string-match-p "^[\r\t ]*\\([\]})[]\\|</[a-zA-Z]+\\|/>\\)" string))
 
 (defun phps-mode-lex-analyzer--string-ends-with-assignment-p (string)
   "Get bracket count for STRING."

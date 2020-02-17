@@ -260,7 +260,7 @@
    (goto-char 38)
    (should (equal
             (phps-mode-lex-analyzer--alternative-indentation)
-            1))
+            4))
    (let ((buffer-contents (buffer-substring-no-properties (point-min) (point-max))))
      (should (equal
               buffer-contents
