@@ -5,8 +5,8 @@
 ;; Author: Christian Johansson <christian@cvj.se>
 ;; Maintainer: Christian Johansson <christian@cvj.se>
 ;; Created: 3 Mar 2018
-;; Modified: 14 Feb 2020
-;; Version: 0.3.32
+;; Modified: 17 Feb 2020
+;; Version: 0.3.33
 ;; Keywords: tools, convenience
 ;; URL: https://github.com/cjohansson/emacs-phps-mode
 
@@ -125,9 +125,9 @@
 
           ;; All PHP files MUST end with a non-blank line, terminated with a single LF.
           (phps-mode-add-trailing-newline))
-          
+
         (phps-mode-lex-analyzer--process-changes nil t)
-        (phps-mode-lex-analyzer--process-current-buffer)
+        (phps-mode-lex-analyzer--process-current-buffer t)
         (indent-region (point-min) (point-max)))
     (let ((old-buffer-contents
            (buffer-substring-no-properties (point-min) (point-max)))

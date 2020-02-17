@@ -55,9 +55,6 @@
 (defvar-local phps-mode-lex-analyzer--processed-buffer-p nil
   "Flag whether current buffer is processed or not.")
 
-(defvar-local phps-mode-lex-analyzer--process-on-indent-and-imenu-p nil
-  "Whether to automatically process buffer when using indent or imenu.")
-
 
 ;; VARIABLES
 
@@ -350,12 +347,12 @@
        (when (get-buffer buffer-name)
          (with-current-buffer buffer-name
 
-           ;; Move variables into this buffers variables
+           ;; Move variables into this buffers local variables
+           (setq phps-mode-lex-analyzer--processed-buffer-p nil)
            (setq phps-mode-lex-analyzer--tokens (nth 0 result))
            (setq phps-mode-lex-analyzer--states (nth 1 result))
            (setq phps-mode-lex-analyzer--state (nth 2 result))
            (setq phps-mode-lex-analyzer--state-stack (nth 3 result))
-           (setq phps-mode-lex-analyzer--processed-buffer-p nil)
            (phps-mode-lex-analyzer--reset-imenu)
 
            ;; Apply syntax color on tokens
@@ -643,25 +640,16 @@
                       (phps-mode-debug-message
                        (message "Found no head states"))
 
-                      ;; Reset processed buffer flag
-                      (phps-mode-lex-analyzer--reset-processed-buffer)
-
                       (setq run-full-lexer t)))
 
                 (push (list 'FOUND-NO-HEAD-TOKENS incremental-start-new-buffer) log)
                 (phps-mode-debug-message
                  (message "Found no head tokens"))
 
-                ;; Reset processed buffer flag
-                (phps-mode-lex-analyzer--reset-processed-buffer)
-
                 (setq run-full-lexer t))))
         (push (list 'FOUND-NO-CHANGE-POINT-MINIMUM) log)
         (phps-mode-debug-message
          (message "Found no change point minimum"))
-
-        ;; Reset processed buffer flag
-        (phps-mode-lex-analyzer--reset-processed-buffer)
 
         (setq run-full-lexer t))
 
@@ -673,28 +661,19 @@
 
       log)))
 
-(defun phps-mode-lex-analyzer--get-processed-buffer ()
-  "Get flag for whether buffer is processed or not."
-  phps-mode-lex-analyzer--processed-buffer-p)
-
-(defun phps-mode-lex-analyzer--reset-processed-buffer ()
-  "Reset flag for whether buffer is processed or not."
-  (setq phps-mode-lex-analyzer--processed-buffer-p nil))
-
-(defun phps-mode-lex-analyzer--process-current-buffer ()
+(defun phps-mode-lex-analyzer--process-current-buffer (&optional force)
   "Process current buffer, generate indentations and Imenu, trigger incremental lexer if we have change."
   (interactive)
   (phps-mode-debug-message (message "Process current buffer"))
   (when phps-mode-lex-analyzer--idle-timer
     (phps-mode-debug-message
      (message "Flag buffer as not processed since changes are detected"))
-    (setq phps-mode-lex-analyzer--processed-buffer-p nil)
-    (when phps-mode-lex-analyzer--process-on-indent-and-imenu-p
-      (phps-mode-debug-message (message "Trigger incremental lexer"))
-      (phps-mode-lex-analyzer--process-changes)))
-  (if (and
-       (not phps-mode-lex-analyzer--processed-buffer-p)
-       (not phps-mode-lex-analyzer--idle-timer))
+    (setq phps-mode-lex-analyzer--processed-buffer-p nil))
+  (if (or
+       force
+       (and
+        (not phps-mode-lex-analyzer--processed-buffer-p)
+        (not phps-mode-lex-analyzer--idle-timer)))
       (progn
         (phps-mode-debug-message (message "Buffer is not processed"))
         (let ((processed
@@ -939,6 +918,7 @@ SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
               (in-concatenation-round-bracket-level nil)
               (in-concatenation-square-bracket-level nil)
               (in-concatenation-level 0)
+              (in-double-quotes nil)
               (column-level 0)
               (column-level-start 0)
               (tuning-level 0)
@@ -1167,6 +1147,7 @@ SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
 
                 ;; INDENTATION LOGIC
 
+
                 ;; Keep track of round bracket level
                 (when (string= token "(")
                   (setq round-bracket-level (1+ round-bracket-level)))
@@ -1175,10 +1156,17 @@ SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
                   (when first-token-on-line
                     (setq first-token-is-nesting-decrease t)))
 
+                ;; Keep track of opened double quotes
+                (when (string= token "\"")
+                  (setq in-double-quotes (not in-double-quotes)))
+
                 ;; Keep track of square bracket level
                 (when (string= token "[")
                   (setq square-bracket-level (1+ square-bracket-level)))
-                (when (string= token "]")
+                (when (and
+                       (string= token "]")
+                       (not in-double-quotes))
+                  ;; You can have stuff like this $var = "abc $b[test]"; and only the closing square bracket will be tokenized
                   (setq square-bracket-level (1- square-bracket-level))
                   (when first-token-on-line
                     (setq first-token-is-nesting-decrease t)))
@@ -2010,8 +1998,7 @@ SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
          current-line-string
          (buffer-substring-no-properties
           (line-beginning-position)
-          (line-end-position)
-          )
+          (line-end-position))
          )
         (when (> line-number 1)
           (while (and
@@ -2122,7 +2109,7 @@ SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
 
 (defun phps-mode-lex-analyzer--string-starts-with-closing-bracket-p (string)
   "Get bracket count for STRING."
-  (string-match-p "^[\r\t ]*\\([\]{}()[]\\|<[a-zA-Z]+\\|</[a-zA-Z]+\\|/>\\)" string))
+  (string-match-p "^[\r\t ]*\\([\]})[]\\|</[a-zA-Z]+\\|/>\\)" string))
 
 (defun phps-mode-lex-analyzer--string-ends-with-assignment-p (string)
   "Get bracket count for STRING."

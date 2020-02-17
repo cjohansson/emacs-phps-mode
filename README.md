@@ -62,13 +62,13 @@ For flycheck support run `(phps-mode-flycheck-setup)`.
 ### Asynchronous lexer
 
 Enable with `(setq phps-mode-async-process t)`
+Disable with `(setq phps-mode-async-process nil)`
 
 ### Asynchronous lexer via async.el processes
 
 Enable with:
 
 ``` emacs-lisp
-(setq phps-mode-async-process t)
 (setq phps-mode-async-process-using-async-el t)
 ```
 
@@ -77,7 +77,6 @@ Enable with:
 Enable with:
 
 ``` emacs-lisp
-(setq phps-mode-async-process t)
 (setq phps-mode-async-process-using-async-el nil)
 ```
 
