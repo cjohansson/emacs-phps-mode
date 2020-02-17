@@ -23,7 +23,7 @@ test-integration:
 	$(EMACS_CMD) -l test/phps-mode-test-integration.el
 
 .PHONY: test-lex-analyzer
-test-functions:
+test-lex-analyzer:
 	$(EMACS_CMD) -l test/phps-mode-test-lex-analyzer.el
 
 
