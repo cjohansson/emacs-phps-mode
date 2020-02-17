@@ -918,6 +918,7 @@ SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
               (in-concatenation-round-bracket-level nil)
               (in-concatenation-square-bracket-level nil)
               (in-concatenation-level 0)
+              (in-double-quotes nil)
               (column-level 0)
               (column-level-start 0)
               (tuning-level 0)
@@ -1146,6 +1147,7 @@ SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
 
                 ;; INDENTATION LOGIC
 
+
                 ;; Keep track of round bracket level
                 (when (string= token "(")
                   (setq round-bracket-level (1+ round-bracket-level)))
@@ -1154,10 +1156,17 @@ SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
                   (when first-token-on-line
                     (setq first-token-is-nesting-decrease t)))
 
+                ;; Keep track of opened double quotes
+                (when (string= token "\"")
+                  (setq in-double-quotes (not in-double-quotes)))
+
                 ;; Keep track of square bracket level
                 (when (string= token "[")
                   (setq square-bracket-level (1+ square-bracket-level)))
-                (when (string= token "]")
+                (when (and
+                       (string= token "]")
+                       (not in-double-quotes))
+                  ;; You can have stuff like this $var = "abc $b[test]"; and only the closing square bracket will be tokenized
                   (setq square-bracket-level (1- square-bracket-level))
                   (when first-token-on-line
                     (setq first-token-is-nesting-decrease t)))
