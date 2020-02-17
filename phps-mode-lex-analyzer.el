@@ -350,12 +350,12 @@
        (when (get-buffer buffer-name)
          (with-current-buffer buffer-name
 
-           ;; Move variables into this buffers variables
+           ;; Move variables into this buffers local variables
+           (setq phps-mode-lex-analyzer--processed-buffer-p nil)
            (setq phps-mode-lex-analyzer--tokens (nth 0 result))
            (setq phps-mode-lex-analyzer--states (nth 1 result))
            (setq phps-mode-lex-analyzer--state (nth 2 result))
            (setq phps-mode-lex-analyzer--state-stack (nth 3 result))
-           (setq phps-mode-lex-analyzer--processed-buffer-p nil)
            (phps-mode-lex-analyzer--reset-imenu)
 
            ;; Apply syntax color on tokens
@@ -643,25 +643,16 @@
                       (phps-mode-debug-message
                        (message "Found no head states"))
 
-                      ;; Reset processed buffer flag
-                      (phps-mode-lex-analyzer--reset-processed-buffer)
-
                       (setq run-full-lexer t)))
 
                 (push (list 'FOUND-NO-HEAD-TOKENS incremental-start-new-buffer) log)
                 (phps-mode-debug-message
                  (message "Found no head tokens"))
 
-                ;; Reset processed buffer flag
-                (phps-mode-lex-analyzer--reset-processed-buffer)
-
                 (setq run-full-lexer t))))
         (push (list 'FOUND-NO-CHANGE-POINT-MINIMUM) log)
         (phps-mode-debug-message
          (message "Found no change point minimum"))
-
-        ;; Reset processed buffer flag
-        (phps-mode-lex-analyzer--reset-processed-buffer)
 
         (setq run-full-lexer t))
 
@@ -673,15 +664,7 @@
 
       log)))
 
-(defun phps-mode-lex-analyzer--get-processed-buffer ()
-  "Get flag for whether buffer is processed or not."
-  phps-mode-lex-analyzer--processed-buffer-p)
-
-(defun phps-mode-lex-analyzer--reset-processed-buffer ()
-  "Reset flag for whether buffer is processed or not."
-  (setq phps-mode-lex-analyzer--processed-buffer-p nil))
-
-(defun phps-mode-lex-analyzer--process-current-buffer ()
+(defun phps-mode-lex-analyzer--process-current-buffer (&optional force)
   "Process current buffer, generate indentations and Imenu, trigger incremental lexer if we have change."
   (interactive)
   (phps-mode-debug-message (message "Process current buffer"))
@@ -692,9 +675,11 @@
     (when phps-mode-lex-analyzer--process-on-indent-and-imenu-p
       (phps-mode-debug-message (message "Trigger incremental lexer"))
       (phps-mode-lex-analyzer--process-changes)))
-  (if (and
-       (not phps-mode-lex-analyzer--processed-buffer-p)
-       (not phps-mode-lex-analyzer--idle-timer))
+  (if (or
+       force
+       (and
+        (not phps-mode-lex-analyzer--processed-buffer-p)
+        (not phps-mode-lex-analyzer--idle-timer)))
       (progn
         (phps-mode-debug-message (message "Buffer is not processed"))
         (let ((processed
