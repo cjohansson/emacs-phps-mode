@@ -149,7 +149,7 @@
       (signal
        'error
        (list
-        (format "PHPs Lexer Error - Trying to pop last state at %d" (point))
+        (format "Trying to pop last state at %d" (point))
         (point))))))
 
 (defun phps-mode-lexer--MOVE_FORWARD (position)
@@ -545,7 +545,7 @@
          (signal
           'error (list
                   (format
-                   "PHPs Lexer Error - The (real) cast is deprecated, use (float) instead at %d"
+                   "The (real) cast is deprecated, use (float) instead at %d"
                    (match-beginning 0)
                    )
                   (match-beginning 0)
@@ -1106,7 +1106,7 @@
                (signal
                 'error
                 (list (format
-                       "PHPs Lexer Error - Unterminated comment starting at %d"
+                       "Un-terminated comment starting at %d"
                        (point))
                       (point)
                       )))))))
