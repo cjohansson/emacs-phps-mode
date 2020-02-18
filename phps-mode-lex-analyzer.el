@@ -2059,7 +2059,10 @@ SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
                       (setq not-found nil)
                       ))
                   ;; If it ended an assignment, decrease indentation
-                  (when is-assignment
+                  (when (and is-assignment
+                             (> bracket-level -1))
+                    ;; NOTE stuff like $var = array(\n    4\n);\n
+                    ;; will end assignment but also decrease bracket-level
                     (setq new-indentation (- new-indentation tab-width))))
 
                 (goto-char point))
@@ -2113,11 +2116,11 @@ SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
 
 (defun phps-mode-lex-analyzer--string-ends-with-assignment-p (string)
   "Get bracket count for STRING."
-  (string-match-p "[\t ]*=$" string))
+  (string-match-p "[\t ]*=[\t ]*$" string))
 
 (defun phps-mode-lex-analyzer--string-ends-with-semicolon-p (string)
   "Get bracket count for STRING."
-  (string-match-p ";$" string))
+  (string-match-p ";[\t ]*$" string))
 
 (defun phps-mode-lex-analyzer--cancel-idle-timer ()
   "Cancel idle timer."
