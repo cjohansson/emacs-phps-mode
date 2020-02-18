@@ -101,7 +101,7 @@
                           (when (string= status "error")
                             (display-warning 'phps-mode (format "%s" (car value))))))
                        ((string= status "error")
-                        (display-warning 'phps-mode (format "%s" (car value))))))))
+                        (display-warning 'phps-mode (format "%s" (car (cdr value)))))))))
                  phps-mode-serial--async-processes)))
 
           ;; Run command(s) asynchronously
@@ -157,7 +157,7 @@
                         (display-warning 'phps-mode (format "%s" (car value)))))
 
                     (when (string= status "error")
-                      (display-warning 'phps-mode (format "%s" (car value))))))))
+                      (display-warning 'phps-mode (format "%s" (car (cdr value)))))))))
             key)
            phps-mode-serial--async-threads))
 
@@ -214,7 +214,7 @@
                 (display-warning 'phps-mode (format "%s" (car value))))))
 
           (when (string= status "error")
-            (display-warning 'phps-mode (format "%s" (car value)))))))))
+            (display-warning 'phps-mode (format "%s" (car (cdr value))))))))))
 
 
 (provide 'phps-mode-serial)
