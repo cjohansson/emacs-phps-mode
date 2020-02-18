@@ -266,6 +266,19 @@
               buffer-contents
               "<?php\nif ($here) {\n    if ($wasHere)\n    {\n    \n    }\n}\n\n"))))
 
+  (phps-mode-test--with-buffer
+   "<?php\nif ($myCondition)\n{\n    $var = array(\n        'was here'\n    );\n// Was here\n}\n"
+   "Alternative indentation on line after array declaration"
+   (goto-char 71)
+   (should (equal
+            (phps-mode-lex-analyzer--alternative-indentation)
+            4))
+   (let ((buffer-contents (buffer-substring-no-properties (point-min) (point-max))))
+     (should (equal
+              buffer-contents
+              "<?php\nif ($myCondition)\n{\n    $var = array(\n        'was here'\n    );\n    // Was here\n}\n"
+              ))))
+
   )
 
 (defun phps-mode-test-lex-analyzer--move-lines-indent ()
