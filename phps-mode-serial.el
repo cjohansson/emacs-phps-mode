@@ -33,6 +33,7 @@
          (thread-live-p (gethash key phps-mode-serial--async-threads)))
     (thread-signal (gethash key phps-mode-serial--async-threads) 'quit nil)))
 
+;; TODO We need to quit running threads gracefully
 (defun phps-mode-serial-commands (key start end &optional async async-by-process)
   "Run command with KEY, first START and if successfully then END with the result of START as argument.  Optional arguments ASYNC ASYNC-BY-PROCESS specifies additional opions."
   (let ((start-time (current-time)))
@@ -60,7 +61,7 @@
                         (progn
                           (let ((start-return (funcall start)))
                             (list 'success start-return start-time)))
-                      (error (list 'error conditions start-time))))
+                      (error (list 'error (cdr conditions) start-time))))
                   (lambda (start-return)
                     (let ((status (car start-return))
                           (value (car (cdr start-return)))
@@ -84,7 +85,7 @@
                             (progn
                               (let ((return (funcall end value)))
                                 (setq end-return (list 'success return start-time))))
-                          (error (setq end-return (list 'error conditions start-time))))
+                          (error (setq end-return (list 'error (cdr conditions) start-time))))
 
                         ;; Profile execution in debug mode
                         (let* ((end-time (current-time))
@@ -101,7 +102,7 @@
                           (when (string= status "error")
                             (display-warning 'phps-mode (format "%s" (car value))))))
                        ((string= status "error")
-                        (display-warning 'phps-mode (format "%s" (car (cdr value)))))))))
+                        (display-warning 'phps-mode (format "%s" (car value))))))))
                  phps-mode-serial--async-processes)))
 
           ;; Run command(s) asynchronously
@@ -116,7 +117,7 @@
                 (condition-case conditions
                     (let ((return (funcall start)))
                       (setq start-return (list 'success return start-time)))
-                  (error (setq start-return (list 'error conditions start-time))))
+                  (error (setq start-return (list 'error (cdr conditions) start-time))))
 
                 ;; Profile execution in debug mode
                 (let* ((end-time (current-time))
@@ -139,7 +140,7 @@
                     (condition-case conditions
                         (let ((return (funcall end value)))
                           (setq end-return (list 'success return start-time)))
-                      (error (setq end-return (list 'error conditions start-time))))
+                      (error (setq end-return (list 'error (cdr conditions) start-time))))
 
                     ;; Profile execution
                     (let* ((end-time (current-time))
@@ -157,7 +158,7 @@
                         (display-warning 'phps-mode (format "%s" (car value)))))
 
                     (when (string= status "error")
-                      (display-warning 'phps-mode (format "%s" (car (cdr value)))))))))
+                      (display-warning 'phps-mode (format "%s" (car value))))))))
             key)
            phps-mode-serial--async-threads))
 
@@ -169,7 +170,7 @@
             (progn
               (let ((return (funcall start)))
                 (setq start-return (list 'success return start-time))))
-          (error (setq start-return (list 'error conditions start-time))))
+          (error (setq start-return (list 'error (cdr conditions) start-time))))
 
         ;; Profile execution in debug mode
         (let* ((end-time (current-time))
@@ -194,7 +195,7 @@
             (condition-case conditions
                 (let ((return (funcall end value)))
                   (setq end-return (list 'success return start-time)))
-              (error (setq end-return (list 'error conditions start-time))))
+              (error (setq end-return (list 'error (cdr conditions) start-time))))
 
             ;; Profile execution in debug mode
             (let* ((end-time (current-time))
@@ -214,7 +215,7 @@
                 (display-warning 'phps-mode (format "%s" (car value))))))
 
           (when (string= status "error")
-            (display-warning 'phps-mode (format "%s" (car (cdr value))))))))))
+            (display-warning 'phps-mode (format "%s" (car value)))))))))
 
 
 (provide 'phps-mode-serial)
