@@ -60,7 +60,7 @@
                         (progn
                           (let ((start-return (funcall start)))
                             (list 'success start-return start-time)))
-                      (error (list 'error conditions start-time))))
+                      (error (list 'error (cdr conditions) start-time))))
                   (lambda (start-return)
                     (let ((status (car start-return))
                           (value (car (cdr start-return)))
@@ -84,7 +84,7 @@
                             (progn
                               (let ((return (funcall end value)))
                                 (setq end-return (list 'success return start-time))))
-                          (error (setq end-return (list 'error conditions start-time))))
+                          (error (setq end-return (list 'error (cdr conditions) start-time))))
 
                         ;; Profile execution in debug mode
                         (let* ((end-time (current-time))
@@ -116,7 +116,7 @@
                 (condition-case conditions
                     (let ((return (funcall start)))
                       (setq start-return (list 'success return start-time)))
-                  (error (setq start-return (list 'error conditions start-time))))
+                  (error (setq start-return (list 'error (cdr conditions) start-time))))
 
                 ;; Profile execution in debug mode
                 (let* ((end-time (current-time))
@@ -139,7 +139,7 @@
                     (condition-case conditions
                         (let ((return (funcall end value)))
                           (setq end-return (list 'success return start-time)))
-                      (error (setq end-return (list 'error conditions start-time))))
+                      (error (setq end-return (list 'error (cdr conditions) start-time))))
 
                     ;; Profile execution
                     (let* ((end-time (current-time))
@@ -169,7 +169,7 @@
             (progn
               (let ((return (funcall start)))
                 (setq start-return (list 'success return start-time))))
-          (error (setq start-return (list 'error conditions start-time))))
+          (error (setq start-return (list 'error (cdr conditions) start-time))))
 
         ;; Profile execution in debug mode
         (let* ((end-time (current-time))
@@ -194,7 +194,7 @@
             (condition-case conditions
                 (let ((return (funcall end value)))
                   (setq end-return (list 'success return start-time)))
-              (error (setq end-return (list 'error conditions start-time))))
+              (error (setq end-return (list 'error (cdr conditions) start-time))))
 
             ;; Profile execution in debug mode
             (let* ((end-time (current-time))
