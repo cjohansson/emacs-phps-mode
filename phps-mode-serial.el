@@ -33,7 +33,6 @@
          (thread-live-p (gethash key phps-mode-serial--async-threads)))
     (thread-signal (gethash key phps-mode-serial--async-threads) 'quit nil)))
 
-;; TODO We need to quit running threads gracefully
 (defun phps-mode-serial-commands (key start end &optional async async-by-process)
   "Run command with KEY, first START and if successfully then END with the result of START as argument.  Optional arguments ASYNC ASYNC-BY-PROCESS specifies additional opions."
   (let ((start-time (current-time)))
