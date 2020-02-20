@@ -5,8 +5,8 @@
 ;; Author: Christian Johansson <christian@cvj.se>
 ;; Maintainer: Christian Johansson <christian@cvj.se>
 ;; Created: 3 Mar 2018
-;; Modified: 19 Feb 2020
-;; Version: 0.3.35
+;; Modified: 20 Feb 2020
+;; Version: 0.3.36
 ;; Keywords: tools, convenience
 ;; URL: https://github.com/cjohansson/emacs-phps-mode
 
@@ -231,9 +231,7 @@
 
   ;; Disable idle scheduler since we have customized this feature
   (when (boundp 'semantic-idle-scheduler-mode)
-    (setq semantic-idle-scheduler-mode nil))
-
-)
+    (setq semantic-idle-scheduler-mode nil)))
 
 (provide 'phps-mode)
 ;;; phps-mode.el ends here

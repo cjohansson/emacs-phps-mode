@@ -127,14 +127,11 @@
                        (elapsed (- end-time-float start-time-float)))
                   (message "Serial asynchronous thread start finished, elapsed: %fs" elapsed))
 
-                ;; (setq start-time (current-time))
-
                 (let ((status (car start-return))
                       (value (car (cdr start-return)))
                       (start-time (car (cdr (cdr start-return)))))
 
                   (when (string= status "success")
-                    
                     ;; Then execute end lambda
                     (condition-case conditions
                         (let ((return (funcall end value)))
@@ -154,10 +151,10 @@
                           (value (car (cdr end-return))))
 
                       (when (string= status "error")
-                        (display-warning 'phps-mode (format "%s" (car value)))))
+                        (display-warning 'phps-mode (format "%s" (car value))))))
 
-                    (when (string= status "error")
-                      (display-warning 'phps-mode (format "%s" (car value))))))))
+                  (when (string= status "error")
+                    (display-warning 'phps-mode (format "%s" (car value)))))))
             key)
            phps-mode-serial--async-threads))
 
@@ -184,11 +181,7 @@
               (value (car (cdr start-return)))
               (start-time (car (cdr (cdr start-return)))))
 
-          ;; (message "Return: %s" start-return)
-
           (when (string= status "success")
-
-            ;; (setq start-time (current-time))
 
             ;; Then execute end lambda
             (condition-case conditions
