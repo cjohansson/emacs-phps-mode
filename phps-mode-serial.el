@@ -16,6 +16,28 @@
 (defvar phps-mode-serial--async-threads (make-hash-table :test 'equal)
   "Table of active asynchronous threads.")
 
+(defface phps-mode-serial--mode-line-face-run
+  '((t :inherit warning))
+  "Face for PHPs mode \"running\" asynchronous process mode line indicator."
+  :group 'phps-mode)
+
+(defface phps-mode-serial--mode-line-face-success
+  '((t :inherit success))
+  "Face for PHPs mode \"running\" asynchronous process mode line indicator."
+  :group 'phps-mode)
+
+(defface phps-mode-serial--mode-line-face-error
+  '((t :inherit error))
+  "Face for PHPs mode \"running\" asynchronous process mode line indicator."
+  :group 'phps-mode)
+
+
+(defvar-local phps-mode-serial--mode-line-status-run
+  '(" [" (:propertize "Error"
+                      face phps-mode-serial--mode-line-face-error)
+    " " (:propertize "Success"
+                     face phps-mode-serial--mode-line-face-success)
+    "]"))
 
 ;; FUNCTIONS
 
@@ -37,6 +59,10 @@
   "Run command with KEY, first START and if successfully then END with the result of START as argument.  Optional arguments ASYNC ASYNC-BY-PROCESS specifies additional opions."
   (let ((start-time (current-time)))
     (message "PHPs - Starting serial commands for buffer '%s'.." key)
+    (setq-local
+     mode-line-process
+     '((:propertize ":%s" face phps-mode-serial--mode-line-face-run)
+       phps-mode-serial--mode-line-status-run))
     (phps-mode-serial-commands--kill-active key)
     (if async
         (if async-by-process
@@ -98,9 +124,27 @@
                         (let ((status (car end-return))
                               (value (cdr end-return)))
 
+                          (when (string= status "success")
+                            (setq-local
+                             mode-line-process
+                             '((:propertize ":%s" face phps-mode-serial--mode-line-face-success)
+                               phps-mode-serial--mode-line-status-run)))
+
                           (when (string= status "error")
+
+                            (setq-local
+                             mode-line-process
+                             '((:propertize ":%s" face phps-mode-serial--mode-line-face-error)
+                               phps-mode-serial--mode-line-status-run))
+
                             (display-warning 'phps-mode (format "%s" (car value))))))
                        ((string= status "error")
+
+                        (setq-local
+                         mode-line-process
+                         '((:propertize ":%s" face phps-mode-serial--mode-line-face-error)
+                           phps-mode-serial--mode-line-status-run))
+
                         (display-warning 'phps-mode (format "%s" (car value))))))))
                  phps-mode-serial--async-processes)))
 
@@ -150,10 +194,28 @@
                     (let ((status (car end-return))
                           (value (car (cdr end-return))))
 
+                      (when (string= status "success")
+                        (setq-local
+                         mode-line-process
+                         '((:propertize ":%s" face phps-mode-serial--mode-line-face-success)
+                           phps-mode-serial--mode-line-status-run)))
+
                       (when (string= status "error")
+
+                        (setq-local
+                         mode-line-process
+                         '((:propertize ":%s" face phps-mode-serial--mode-line-face-error)
+                           phps-mode-serial--mode-line-status-run))
+
                         (display-warning 'phps-mode (format "%s" (car value))))))
 
                   (when (string= status "error")
+
+                    (setq-local
+                     mode-line-process
+                     '((:propertize ":%s" face phps-mode-serial--mode-line-face-error)
+                       phps-mode-serial--mode-line-status-run))
+
                     (display-warning 'phps-mode (format "%s" (car value)))))))
             key)
            phps-mode-serial--async-threads))
@@ -203,10 +265,28 @@
 
               ;; (message "End-status: '%s' value: '%s'" status value)
 
+              (when (string= status "success")
+                (setq-local
+                 mode-line-process
+                 '((:propertize ":%s" face phps-mode-serial--mode-line-face-success)
+                   phps-mode-serial--mode-line-status-run)))
+
               (when (string= status "error")
+
+                (setq-local
+                 mode-line-process
+                 '((:propertize ":%s" face phps-mode-serial--mode-line-face-error)
+                   phps-mode-serial--mode-line-status-run))
+
                 (display-warning 'phps-mode (format "%s" (car value))))))
 
           (when (string= status "error")
+
+            (setq-local
+                 mode-line-process
+                 '((:propertize ":%s" face phps-mode-serial--mode-line-face-error)
+                   phps-mode-serial--mode-line-status-run))
+
             (display-warning 'phps-mode (format "%s" (car value)))))))))
 
 
