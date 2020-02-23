@@ -27,6 +27,7 @@ This mode does not require PHP installed on your computer because it has a built
 * Included in GNU ELPA package archive
 * A interactive function that can be used interactively to format buffers `(phps-mode-format-buffer)`
 * Support for asynchronous lexer via processes (`async.el`) or threads
+* Mode-line asynchronous status
 
 ## Roadmap
 
