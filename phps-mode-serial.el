@@ -41,7 +41,7 @@
   '(" ["
     (:propertize (:eval (if (equal phps-mode-serial--status 'running) "Running.." ""))
                  face phps-mode-serial--mode-line-face-running)
-    (:propertize (:eval (if (equal phps-mode-serial--status 'error) "Error!" ""))
+    (:propertize (:eval (if (equal phps-mode-serial--status 'error) "Error" ""))
                      face phps-mode-serial--mode-line-face-error)
     (:propertize (:eval (if (equal phps-mode-serial--status 'success) "OK" ""))
                  face phps-mode-serial--mode-line-face-success)
@@ -69,8 +69,9 @@
   (let ((start-time (current-time)))
     (when phps-mode-serial--profiling
       (message "PHPs - Starting serial commands for buffer '%s'.." key))
-    (setq phps-mode-serial--status 'running)
-    (setq mode-line-process phps-mode-serial--mode-line-status-run)
+    (with-current-buffer key
+      (setq mode-line-process phps-mode-serial--mode-line-status-run)
+      (setq phps-mode-serial--status 'running))
     (phps-mode-serial-commands--kill-active key)
     (if async
         (if async-by-process
@@ -135,19 +136,16 @@
                                   (value (cdr end-return)))
 
                               (when (string= status "success")
-                                (progn
-                                  (setq phps-mode-serial--status 'success)
-                                  (setq mode-line-process phps-mode-serial--mode-line-status-run)
-                                  (force-mode-line-update))
-                                (message "Was here"))
+                                (with-current-buffer key
+                                  (setq phps-mode-serial--status 'success)))
 
                               (when (string= status "error")
-                                (setq phps-mode-serial--status 'error)
-                                (setq mode-line-process phps-mode-serial--mode-line-status-run)
+                                (with-current-buffer key
+                                  (setq phps-mode-serial--status 'error))
                                 (display-warning 'phps-mode (format "%s" (car value))))))
                         (when (string= status "error")
-                          (setq phps-mode-serial--status 'error)
-                          (setq mode-line-process phps-mode-serial--mode-line-status-run)
+                          (with-current-buffer key
+                            (setq phps-mode-serial--status 'error))
                           (display-warning 'phps-mode (format "%s" (car value))))))))
                  phps-mode-serial--async-processes)))
 
@@ -201,17 +199,17 @@
                               (value (car (cdr end-return))))
 
                           (when (string= status "success")
-                            (setq phps-mode-serial--status 'success)
-                            (setq mode-line-process phps-mode-serial--mode-line-status-run))
+                            (with-current-buffer key
+                              (setq phps-mode-serial--status 'success)))
 
                           (when (string= status "error")
-                            (setq phps-mode-serial--status 'error)
-                            (setq mode-line-process phps-mode-serial--mode-line-status-run)
+                            (with-current-buffer key
+                              (setq phps-mode-serial--status 'error))
                             (display-warning 'phps-mode (format "%s" (car value))))))
 
                     (when (string= status "error")
-                      (setq phps-mode-serial--status 'error)
-                      (setq mode-line-process phps-mode-serial--mode-line-status-run)
+                      (with-current-buffer key
+                        (setq phps-mode-serial--status 'error))
                       (display-warning 'phps-mode (format "%s" (car value))))))))
             key)
            phps-mode-serial--async-threads))
@@ -263,17 +261,17 @@
                       (value (car (cdr end-return))))
 
                   (when (string= status "success")
-                    (setq phps-mode-serial--status 'success)
-                    (setq mode-line-process phps-mode-serial--mode-line-status-run))
+                    (with-current-buffer key
+                      (setq phps-mode-serial--status 'success)))
 
                   (when (string= status "error")
-                    (setq phps-mode-serial--status 'error)
-                    (setq mode-line-process phps-mode-serial--mode-line-status-run)
+                    (with-current-buffer key
+                      (setq phps-mode-serial--status 'error))
                     (display-warning 'phps-mode (format "%s" (car value))))))
 
             (when (string= status "error")
-              (setq phps-mode-serial--status 'error)
-              (setq mode-line-process phps-mode-serial--mode-line-status-run)
+              (with-current-buffer key
+                (setq phps-mode-serial--status 'error))
               (display-warning 'phps-mode (format "%s" (car value))))))))))
 
 
