@@ -38,14 +38,13 @@
   "Current status of serial-commands.")
 
 (defconst phps-mode-serial--mode-line-status-run
-  '(" ["
+  '(":"
     (:propertize (:eval (if (equal phps-mode-serial--status 'running) "Running.." ""))
                  face phps-mode-serial--mode-line-face-running)
     (:propertize (:eval (if (equal phps-mode-serial--status 'error) "Error" ""))
                      face phps-mode-serial--mode-line-face-error)
     (:propertize (:eval (if (equal phps-mode-serial--status 'success) "OK" ""))
-                 face phps-mode-serial--mode-line-face-success)
-    "]"))
+                 face phps-mode-serial--mode-line-face-success)))
 
 
 ;; FUNCTIONS
