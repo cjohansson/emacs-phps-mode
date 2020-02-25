@@ -10,6 +10,7 @@
 
 ;; VARIABLES
 
+
 (defvar phps-mode-serial--async-processes (make-hash-table :test 'equal)
   "Table of active asynchronous processes.")
 
@@ -64,7 +65,7 @@
     (thread-signal (gethash key phps-mode-serial--async-threads) 'quit nil)))
 
 (defun phps-mode-serial-commands (key start end &optional async async-by-process)
-  "Run command with KEY, first START and if successfully then END with the result of START as argument.  Optional arguments ASYNC ASYNC-BY-PROCESS specifies additional opions."
+  "Run command with KEY, first START and if successfully then END with the result of START as argument.  Optional arguments ASYNC ASYNC-BY-PROCESS specifies additional options."
   (let ((start-time (current-time)))
     (when phps-mode-serial--profiling
       (message "PHPs - Starting serial commands for buffer '%s'.." key))
@@ -74,79 +75,77 @@
     (phps-mode-serial--kill-active key)
     (if async
         (if async-by-process
-            (progn
-              (unless (fboundp 'async-start)
-                (signal 'error (list "Async-start function is missing")))
+            (if (fboundp 'async-start)
+                ;; Run command(s) asynchronously
+                (let ((script-filename
+                       (file-name-directory
+                        (symbol-file 'phps-mode))))
+                  (puthash
+                   key
+                   (async-start
+                    (lambda()
+                      (add-to-list 'load-path script-filename)
+                      (require 'phps-mode)
 
-              ;; Run command(s) asynchronously
-              (let ((script-filename
-                     (file-name-directory
-                      (symbol-file 'phps-mode))))
-                (puthash
-                 key
-                 (async-start
-                  (lambda()
-                    (add-to-list 'load-path script-filename)
-                    (require 'phps-mode)
-
-                    ;; Execute start lambda
-                    (condition-case conditions
-                        (progn
-                          (let ((start-return (funcall start)))
-                            (list 'success start-return start-time)))
-                      (error (list 'error (cdr conditions) start-time))))
-                  (lambda (start-return)
-                    (let ((status (car start-return))
-                          (value (car (cdr start-return)))
-                          (start-time (car (cdr (cdr start-return))))
-                          (end-return nil))
-
-                      ;; Profile execution in debug mode
-                      (when phps-mode-serial--profiling
-                        (let* ((end-time (current-time))
-                               (end-time-float
-                                (+ (car end-time) (car (cdr end-time)) (* (car (cdr (cdr end-time))) 0.000001)))
-                               (start-time-float
-                                (+ (car start-time) (car (cdr start-time)) (* (car (cdr (cdr start-time))) 0.000001)))
-                               (elapsed (- end-time-float start-time-float)))
-                          (message "Serial asynchronous process start finished, elapsed: %fs" elapsed)))
-
-                      (if (string= status "success")
+                      ;; Execute start lambda
+                      (condition-case conditions
                           (progn
+                            (let ((start-return (funcall start)))
+                              (list 'success start-return start-time)))
+                        (error (list 'error (cdr conditions) start-time))))
+                    (lambda (start-return)
+                      (let ((status (car start-return))
+                            (value (car (cdr start-return)))
+                            (start-time (car (cdr (cdr start-return))))
+                            (end-return nil))
 
-                            ;; Execute end lambda
-                            (condition-case conditions
-                                (progn
-                                  (let ((return (funcall end value)))
-                                    (setq end-return (list 'success return start-time))))
-                              (error (setq end-return (list 'error (cdr conditions) start-time))))
+                        ;; Profile execution in debug mode
+                        (when phps-mode-serial--profiling
+                          (let* ((end-time (current-time))
+                                 (end-time-float
+                                  (+ (car end-time) (car (cdr end-time)) (* (car (cdr (cdr end-time))) 0.000001)))
+                                 (start-time-float
+                                  (+ (car start-time) (car (cdr start-time)) (* (car (cdr (cdr start-time))) 0.000001)))
+                                 (elapsed (- end-time-float start-time-float)))
+                            (message "Serial asynchronous process start finished, elapsed: %fs" elapsed)))
 
-                            ;; Profile execution in debug mode
-                            (when phps-mode-serial--profiling
-                              (let* ((end-time (current-time))
-                                     (end-time-float
-                                      (+ (car end-time) (car (cdr end-time)) (* (car (cdr (cdr end-time))) 0.000001)))
-                                     (start-time-float
-                                      (+ (car start-time) (car (cdr start-time)) (* (car (cdr (cdr start-time))) 0.000001)))
-                                     (elapsed (- end-time-float start-time-float)))
-                                (message "Serial synchronous thread finished, elapsed: %fs" elapsed)))
+                        (if (string= status "success")
+                            (progn
 
-                            (let ((status (car end-return))
-                                  (value (cdr end-return)))
+                              ;; Execute end lambda
+                              (condition-case conditions
+                                  (progn
+                                    (let ((return (funcall end value)))
+                                      (setq end-return (list 'success return start-time))))
+                                (error (setq end-return (list 'error (cdr conditions) start-time))))
 
-                              (when (string= status "success")
-                                (with-current-buffer key
-                                  (setq phps-mode-serial--status 'success)))
+                              ;; Profile execution in debug mode
+                              (when phps-mode-serial--profiling
+                                (let* ((end-time (current-time))
+                                       (end-time-float
+                                        (+ (car end-time) (car (cdr end-time)) (* (car (cdr (cdr end-time))) 0.000001)))
+                                       (start-time-float
+                                        (+ (car start-time) (car (cdr start-time)) (* (car (cdr (cdr start-time))) 0.000001)))
+                                       (elapsed (- end-time-float start-time-float)))
+                                  (message "Serial synchronous thread finished, elapsed: %fs" elapsed)))
 
-                              (when (string= status "error")
-                                (with-current-buffer key
-                                  (setq phps-mode-serial--status 'error))
-                                (display-warning 'phps-mode (format "%s" (car value))))))
-                        (when (string= status "error")
-                          (with-current-buffer key
-                            (setq phps-mode-serial--status 'error))
-                          (display-warning 'phps-mode (format "%s" (car value))))))))
-                 phps-mode-serial--async-processes)))
+                              (let ((status (car end-return))
+                                    (value (cdr end-return)))
+
+                                (when (string= status "success")
+                                  (with-current-buffer key
+                                    (setq phps-mode-serial--status 'success)))
+
+                                (when (string= status "error")
+                                  (with-current-buffer key
+                                    (setq phps-mode-serial--status 'error))
+                                  (display-warning 'phps-mode (format "%s" (car value))))))
+                          (when (string= status "error")
+                            (with-current-buffer key
+                              (setq phps-mode-serial--status 'error))
+                            (display-warning 'phps-mode (format "%s" (car value))))))))
+                   phps-mode-serial--async-processes))
+              (signal 'error (list "Async-start function is missing")))
 
           ;; Run command(s) asynchronously
           (puthash
