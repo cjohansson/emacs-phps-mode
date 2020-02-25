@@ -1,4 +1,4 @@
-;;; phps-mode-serial.el --- Functions for synchronity -*- lexical-binding: t -*-
+;;; phps-mode-serial.el --- Functions for serial commands with varied synchronicity -*- lexical-binding: t -*-
 
 ;; Copyright (C) 2018-2020  Free Software Foundation, Inc.
 
@@ -50,7 +50,7 @@
 ;; FUNCTIONS
 
 
-(defun phps-mode-serial-commands--kill-active (key)
+(defun phps-mode-serial--kill-active (key)
   "Kill active command KEY."
   (when (and
          (gethash key phps-mode-serial--async-processes)
@@ -71,7 +71,7 @@
     (with-current-buffer key
       (setq mode-line-process phps-mode-serial--mode-line-status-run)
       (setq phps-mode-serial--status 'running))
-    (phps-mode-serial-commands--kill-active key)
+    (phps-mode-serial--kill-active key)
     (if async
         (if async-by-process
             (progn

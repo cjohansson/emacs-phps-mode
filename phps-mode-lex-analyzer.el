@@ -2164,7 +2164,7 @@ SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
 
           (phps-mode-lex-analyzer--reset-imenu)
           (phps-mode-lex-analyzer--start-idle-timer)
-          (phps-mode-serial-commands--kill-active (buffer-name)))
+          (phps-mode-serial--kill-active (buffer-name)))
 
         (when (or
                (not phps-mode-lex-analyzer--change-min)
