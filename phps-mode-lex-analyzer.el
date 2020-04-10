@@ -2358,8 +2358,7 @@ SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
     (let ((buffer (generate-new-buffer "*PHPs Lexer*")))
 
       ;; Create temporary buffer and run lexer in it
-      (save-excursion
-        (switch-to-buffer buffer)
+      (with-current-buffer buffer
         (insert contents)
 
         (if tokens
