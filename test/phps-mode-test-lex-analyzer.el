@@ -57,14 +57,14 @@
             (phps-mode-lex-analyzer--process-changes)
             '((INCREMENTAL-LEX 15)))))
 
-   )
+  )
 
 (defun phps-mode-test-lex-analyzer--alternative-indentation ()
   "Test `phps-mode-lex-analyzer--alternative-indentation'."
 
   (phps-mode-test--with-buffer
    "<?php\nif ($myCondition) {\necho 'I was here';\n}"
-   "Alternative indentation inside if block" 
+   "Alternative indentation inside if block"
    (goto-char 32)
    (should (equal
             (phps-mode-lex-analyzer--alternative-indentation)
@@ -84,7 +84,7 @@
 
   (phps-mode-test--with-buffer
    "<?php\nif ($myCondition) {\necho 'I was here';\necho 'I was here again';\n}"
-   "Alternative indentation on closing if block" 
+   "Alternative indentation on closing if block"
    (goto-char 30)
    (should (equal
             (phps-mode-lex-analyzer--alternative-indentation)
@@ -104,7 +104,7 @@
 
   (phps-mode-test--with-buffer
    "<?php\nif ($test) {\n    if ($test2) {\n\n}\n}"
-   "Alternative indentation on nested if block with empty contents" 
+   "Alternative indentation on nested if block with empty contents"
    (goto-char 40)
    (should (equal
             (phps-mode-lex-analyzer--alternative-indentation)
@@ -278,6 +278,24 @@
               buffer-contents
               "<?php\nif ($myCondition)\n{\n    $var = array(\n        'was here'\n    );\n    // Was here\n}\n"
               ))))
+
+  (phps-mode-test--with-buffer
+   "<?php\nif ($myCondition == 2) {\n    echo 'store_vars: <pre>' . print_r($store_vars, true) . '</pre>';\n    echo 'search_ids: <pre>' . print_r($search_ids, true) . '</pre>';\n}"
+   "Alternative indentation on line echo"
+   (goto-char 36)
+   (should (equal
+            (phps-mode-lex-analyzer--alternative-indentation)
+            4))
+   (goto-char 106)
+   (should (equal
+            (phps-mode-lex-analyzer--alternative-indentation)
+            4))
+   (let ((buffer-contents (buffer-substring-no-properties (point-min) (point-max))))
+     (should (equal
+              buffer-contents
+              "<?php\nif ($myCondition == 2) {\n    echo 'store_vars: <pre>' . print_r($store_vars, true) . '</pre>';\n    echo 'search_ids: <pre>' . print_r($search_ids, true) . '</pre>';\n}"
+              ))))
+
 
   )
 
