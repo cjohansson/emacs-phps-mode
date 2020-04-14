@@ -20,7 +20,7 @@
 
 ;;; Commentary:
 
-;; This file contains all meta-lexer logic. That is things like:
+;; This file contains all meta-lexer logic.  That is things like:
 ;;
 ;; * Executing different kinds of lexers based on conditions
 ;; * Also supply logic for indentation and imenu-handling
@@ -2011,11 +2011,9 @@ SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
             (setq line-end-position (line-end-position))
             (setq
              line-string
-             (buffer-substring-no-properties line-beginning-position line-end-position)
-             )
+             (buffer-substring-no-properties line-beginning-position line-end-position))
             (setq line-is-empty (string-match-p "^[ \t\f\r\n]*$" line-string))
-            (setq move-length (1+ move-length))
-            )
+            (setq move-length (1+ move-length)))
 
           (unless line-is-empty
             (let* ((old-indentation (current-indentation))
@@ -2025,7 +2023,7 @@ SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
                    (line-ends-with-semicolon (phps-mode-lex-analyzer--string-ends-with-semicolon-p line-string))
                    (bracket-level (phps-mode-lex-analyzer--get-string-brackets-count line-string)))
               (setq new-indentation old-indentation)
-              (forward-line move-length)
+              (goto-char point)
 
               (when (> bracket-level 0)
                 (if (< bracket-level tab-width)
@@ -2053,11 +2051,10 @@ SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
                       (is-assignment nil))
                   (while (and
                           not-found
-                          (search-backward-regexp "\\(;\\|=\\)" nil t))
+                          (search-backward-regexp "\\(;\\|:\\|)\\|=\\)" nil t))
                     (let ((match (buffer-substring-no-properties (match-beginning 0) (match-end 0))))
                       (setq is-assignment (string= match "="))
-                      (setq not-found nil)
-                      ))
+                      (setq not-found nil)))
                   ;; If it ended an assignment, decrease indentation
                   (when (and is-assignment
                              (> bracket-level -1))
@@ -2112,7 +2109,7 @@ SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
 
 (defun phps-mode-lex-analyzer--string-starts-with-closing-bracket-p (string)
   "Get bracket count for STRING."
-  (string-match-p "^[\r\t ]*\\([\]})[]\\|</[a-zA-Z]+\\|/>\\)" string))
+  (string-match-p "^[\t ]*\\([\]})[]\\|</[a-zA-Z]+\\|/>\\)" string))
 
 (defun phps-mode-lex-analyzer--string-ends-with-assignment-p (string)
   "Get bracket count for STRING."
