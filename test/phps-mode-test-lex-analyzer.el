@@ -296,6 +296,13 @@
               "<?php\nif ($myCondition == 2) {\n    echo 'store_vars: <pre>' . print_r($store_vars, true) . '</pre>';\n    echo 'search_ids: <pre>' . print_r($search_ids, true) . '</pre>';\n}"
               ))))
 
+  (phps-mode-test--with-buffer
+   "<?php\nif (is_array(\n    $array\n)) {\n    echo 'was here';\n}"
+   "Alternative indentation after trailing opening bracket while closing two earlier on line"
+   (goto-char 41)
+   (should (equal
+            (phps-mode-lex-analyzer--alternative-indentation)
+            4)))
 
   )
 

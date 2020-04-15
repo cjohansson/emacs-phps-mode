@@ -2020,6 +2020,7 @@ SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
                    (current-line-starts-with-closing-bracket (phps-mode-lex-analyzer--string-starts-with-closing-bracket-p current-line-string))
                    (line-starts-with-closing-bracket (phps-mode-lex-analyzer--string-starts-with-closing-bracket-p line-string))
                    (line-ends-with-assignment (phps-mode-lex-analyzer--string-ends-with-assignment-p line-string))
+                   (line-ends-with-opening-bracket (phps-mode-lex-analyzer--string-ends-with-opening-bracket-p line-string))
                    (line-ends-with-semicolon (phps-mode-lex-analyzer--string-ends-with-semicolon-p line-string))
                    (bracket-level (phps-mode-lex-analyzer--get-string-brackets-count line-string)))
               (setq new-indentation old-indentation)
@@ -2041,6 +2042,10 @@ SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
                 (setq new-indentation (- new-indentation tab-width)))
 
               (when line-ends-with-assignment
+                (setq new-indentation (+ new-indentation tab-width)))
+
+              (when (and line-ends-with-opening-bracket
+                         (< bracket-level 0))
                 (setq new-indentation (+ new-indentation tab-width)))
 
               (when line-ends-with-semicolon
@@ -2111,9 +2116,13 @@ SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
   "Get bracket count for STRING."
   (string-match-p "^[\t ]*\\([\]})[]\\|</[a-zA-Z]+\\|/>\\)" string))
 
+(defun phps-mode-lex-analyzer--string-ends-with-opening-bracket-p (string)
+  "Get bracket count for STRING."
+  (string-match-p "\\([\[{(]\\|<[a-zA-Z]+\\)[\t ]*$" string))
+
 (defun phps-mode-lex-analyzer--string-ends-with-assignment-p (string)
   "Get bracket count for STRING."
-  (string-match-p "[\t ]*=[\t ]*$" string))
+  (string-match-p "=[\t ]*$" string))
 
 (defun phps-mode-lex-analyzer--string-ends-with-semicolon-p (string)
   "Get bracket count for STRING."
