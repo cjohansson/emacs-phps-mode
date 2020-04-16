@@ -2089,7 +2089,7 @@ SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
          (string-match-p "^[ \t\f\r\n]*$" string)))
     (unless line-is-empty
       (while (string-match
-              "\\([\]{}()[]\\|<[a-zA-Z]+\\|</[a-zA-Z]+\\|/>\\|^/\\*\\*\\|^ \\*/\\)"
+              "\\([\]{}()[]\\|<[a-zA-Z]+\\|</[a-zA-Z]+\\|/>\\|^[\t ]/\\*\\*\\|^[\t\\* ]*\\*/\\)"
               string
               start)
         (setq start (match-end 0))
@@ -2102,11 +2102,11 @@ SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
              (string= bracket "<")
              (string-match "<[a-zA-Z]+" bracket))
             (setq bracket-level (+ bracket-level tab-width)))
-           ((string-match "^ \\*/" bracket )
+           ((string-match "^[\t\\* ]*\\*/" bracket )
             (setq bracket-level (- bracket-level 1)))
            ((or
              (string-match "^/\\*\\*" bracket)
-             (string-match "^ \\*" bracket))
+             (string-match "^[\t ]*\\*" bracket))
             (setq bracket-level (+ bracket-level 1)))
            (t
             (setq bracket-level (- bracket-level tab-width)))))))
