@@ -179,6 +179,14 @@
               "/**\n *\n */\n"))))
 
   (phps-mode-test--with-buffer
+   "/**\n *\n **/\n"
+   "Alternative indentation on line after closing of doc comment block variant 2"
+   (goto-char 13)
+   (should (equal
+            (phps-mode-lex-analyzer--alternative-indentation)
+            0)))
+
+  (phps-mode-test--with-buffer
    "$var = 'abc';\n// Comment"
    "Alternative indentation on single-line assignment"
    (goto-char 1)
