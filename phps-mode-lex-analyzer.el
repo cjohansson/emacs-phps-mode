@@ -2021,7 +2021,7 @@ SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
                    (line-starts-with-closing-bracket (phps-mode-lex-analyzer--string-starts-with-closing-bracket-p line-string))
                    (line-ends-with-assignment (phps-mode-lex-analyzer--string-ends-with-assignment-p line-string))
                    (line-ends-with-opening-bracket (phps-mode-lex-analyzer--string-ends-with-opening-bracket-p line-string))
-                   (line-ends-with-semicolon (phps-mode-lex-analyzer--string-ends-with-semicolon-p line-string))
+                   (line-ends-with-terminus (phps-mode-lex-analyzer--string-ends-with-terminus-p line-string))
                    (bracket-level (phps-mode-lex-analyzer--get-string-brackets-count line-string)))
               (setq new-indentation old-indentation)
               (goto-char point)
@@ -2048,21 +2048,25 @@ SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
                          (< bracket-level 0))
                 (setq new-indentation (+ new-indentation tab-width)))
 
-              (when line-ends-with-semicolon
+              (when line-ends-with-terminus
                 ;; Back-trace buffer from previous line
                 ;; Determine if semi-colon ended an assignment or not
                 (forward-line (* -1 move-length))
+                (end-of-line)
+                (forward-char -1)
                 (let ((not-found t)
                       (is-assignment nil))
                   (while (and
                           not-found
-                          (search-backward-regexp "\\(;\\|:\\|)\\|=\\)" nil t))
+                          (search-backward-regexp "\\(;\\|,\\|:\\|)\\|=\\)" nil t))
                     (let ((match (buffer-substring-no-properties (match-beginning 0) (match-end 0))))
                       (setq is-assignment (string= match "="))
                       (setq not-found nil)))
-                  ;; If it ended an assignment, decrease indentation
+                  ;; If it ended an assignment on a previous line, decrease indentation
                   (when (and is-assignment
-                             (> bracket-level -1))
+                             (> bracket-level -1)
+                             (not
+                              (= line-number (line-number-at-pos))))
                     ;; NOTE stuff like $var = array(\n    4\n);\n
                     ;; will end assignment but also decrease bracket-level
                     (setq new-indentation (- new-indentation tab-width))))
@@ -2122,11 +2126,11 @@ SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
 
 (defun phps-mode-lex-analyzer--string-ends-with-assignment-p (string)
   "Get bracket count for STRING."
-  (string-match-p "=[\t ]*$" string))
+  (string-match-p "=>?[\t ]*$" string))
 
-(defun phps-mode-lex-analyzer--string-ends-with-semicolon-p (string)
+(defun phps-mode-lex-analyzer--string-ends-with-terminus-p (string)
   "Get bracket count for STRING."
-  (string-match-p ";[\t ]*$" string))
+  (string-match-p "\\(;\\|,\\)[\t ]*$" string))
 
 (defun phps-mode-lex-analyzer--cancel-idle-timer ()
   "Cancel idle timer."
