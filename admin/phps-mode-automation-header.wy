@@ -37,20 +37,20 @@
 %languagemode phps-mode
 
 %use-macros phps-mode-wy-macros {
-             zend_add_class_modifier
-             zend_add_member_modifier
-             zend_append_str
-             zend_ast_create
-             zend_ast_create_assign_op
-             zend_ast_create_binary_op
-             zend_ast_create_cast
-             zend_ast_create_decl
-             zend_ast_create_ex
-             zend_ast_create_list
-             zend_ast_create_zval_from_str
-             zend_ast_get_str
-             zend_ast_list_add
-             zend_ast_list_rtrim
-             zend_handle_encoding_declaration
-             zend_negate_num_string
+             phps-mode-wy-macros--zend_add_class_modifier
+             phps-mode-wy-macros--zend_add_member_modifier
+             phps-mode-wy-macros--zend_append_str
+             phps-mode-wy-macros--zend_ast_create
+             phps-mode-wy-macros--zend_ast_create_assign_op
+             phps-mode-wy-macros--zend_ast_create_binary_op
+             phps-mode-wy-macros--zend_ast_create_cast
+             phps-mode-wy-macros--zend_ast_create_decl
+             phps-mode-wy-macros--zend_ast_create_ex
+             phps-mode-wy-macros--zend_ast_create_list
+             phps-mode-wy-macros--zend_ast_create_zval_from_str
+             phps-mode-wy-macros--zend_ast_get_str
+             phps-mode-wy-macros--zend_ast_list_add
+             phps-mode-wy-macros--zend_ast_list_rtrim
+             phps-mode-wy-macros--zend_handle_encoding_declaration
+             phps-mode-wy-macros--zend_negate_num_string
 }

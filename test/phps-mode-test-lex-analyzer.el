@@ -312,6 +312,33 @@
             (phps-mode-lex-analyzer--alternative-indentation)
             4)))
 
+  (phps-mode-test--with-buffer
+   "<?php\n\n$var = array(\n    '123' =>\n        'def',\n);"
+   "Token-blind indentation on lines after lines ending with T_DOUBLE_ARROW"
+   (goto-char 43)
+   (should (equal
+            (phps-mode-lex-analyzer--alternative-indentation)
+            8))
+   (goto-char 50)
+   (should (equal
+            (phps-mode-lex-analyzer--alternative-indentation)
+            0)))
+
+  (phps-mode-test--with-buffer
+   "<?php\n$var = array(\n    '123' => true,\n    \n);"
+   "Line after comma ended double arrow assignment"
+   (goto-char 44)
+   (should (equal
+            (phps-mode-lex-analyzer--alternative-indentation)
+            4)))
+
+  (phps-mode-test--with-buffer
+   "<?php\nfunction myFunction(\n    $arg = true,\n    $arg2 = false\n) {\n    \n}"
+   "Line after function argument with default value"
+   (goto-char 49)
+   (should (equal
+            (phps-mode-lex-analyzer--alternative-indentation)
+            4)))
   )
 
 (defun phps-mode-test-lex-analyzer--move-lines-indent ()

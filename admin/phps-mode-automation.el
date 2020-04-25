@@ -40,9 +40,9 @@
 
   ;; Generate grammar
   (message "Generating Wisent grammar..")
-  (if (fboundp 'emacs-wisent-grammar-converter-generate-grammar-from-filename)
-      (emacs-wisent-grammar-converter-generate-grammar-from-filename
-       php-yacc-file wisent-destination header)
+  (if (fboundp 'emacs-wisent-grammar-converter--generate-grammar-from-filename)
+      (emacs-wisent-grammar-converter--generate-grammar-from-filename
+       php-yacc-file wisent-destination header "phps-mode-wy-macros--")
     (display-warning 'warning "Missing emacs-wisent-grammar-converter!"))
   (message "Automation completed"))
 
