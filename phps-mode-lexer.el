@@ -143,7 +143,7 @@
 (defun phps-mode-lexer--yy_pop_state ()
   "Pop current state from stack."
   (let ((old-state (pop phps-mode-lexer--state-stack)))
-    ;; (message "Going back to poppped state %s" old-state)
+    (message "Going back to poppped state %s" old-state)
     (if old-state
         (phps-mode-lexer--BEGIN old-state)
       (signal
@@ -475,11 +475,10 @@
 
       (phps-mode-lexer--match-macro
        (and ST_LOOKING_FOR_PROPERTY (looking-at phps-mode-lexer--ANY_CHAR))
-       (let ((end (match-end 0)))
-         (phps-mode-lexer--yy_pop_state)
-         ;; TODO goto restart here?
-         ;; (message "Restart here")
-         (phps-mode-lexer--MOVE_FORWARD end)))
+       (message "Restarting at %s" (point))
+       (phps-mode-lexer--yy_pop_state)
+       ;; TODO restart here
+       )
 
       (phps-mode-lexer--match-macro
        (and ST_IN_SCRIPTING (looking-at "::"))

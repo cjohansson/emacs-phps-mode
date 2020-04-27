@@ -322,16 +322,24 @@
    (should (equal phps-mode-lex-analyzer--tokens
                   '((T_OPEN_TAG 1 . 7) (T_VARIABLE 7 . 11) ("=" 12 . 13) (T_CONSTANT_ENCAPSED_STRING 14 . 18) (";" 18 . 19)))))
 
+  (phps-mode-test--with-buffer
+   "<?php\n\n$object = (object) array(\n    'field_random' => 25\n);\n$field = 'random';\necho $object->{\"field_$field\"};"
+   "Dynamic object property"
+   (message "Tokens: %s" phps-mode-lex-analyzer--tokens)
+   (should (equal phps-mode-lex-analyzer--tokens
+                  '((T_OPEN_TAG 1 . 7) (T_VARIABLE 7 . 11) ("=" 12 . 13) (T_CONSTANT_ENCAPSED_STRING 14 . 18) (";" 18 . 19)))))
+
+  (phps-mode-test--with-buffer
+   "<?php\nclass MyClass { function myFunction() { return 'hello'; }}\n$class = new MyClass();\n$function = \"Function\";\necho $class->{\"my$function\"}();"
+   "Dynamic object method"
+   (message "Tokens: %s" phps-mode-lex-analyzer--tokens)
+   (should (equal phps-mode-lex-analyzer--tokens
+                  '((T_OPEN_TAG 1 . 7) (T_NAMESPACE 7 . 16) (T_STRING 17 . 28) ("{" 28 . 29) (T_CLASS 31 . 36) (T_STRING 37 . 44) ("{" 45 . 46) (T_PUBLIC 49 . 55) (T_FUNCTION 56 . 64) (T_STRING 65 . 76) ("(" 76 . 77) (")" 77 . 78) ("{" 79 . 80) (T_EXIT 84 . 88) (";" 88 . 89) ("}" 92 . 93) ("}" 95 . 96) ("}" 97 . 98)))))
+
   )
 
 (defun phps-mode-test-lexer--namespaces ()
   "Run test for namespaces."
-
-  (phps-mode-test--with-buffer
-   "<?php\nnamespace MyNameSpace{\n\tclass MyClass {\n\t\tpublic function __construct() {\n\t\t\texit;\n\t\t}\n\t}\n}\n"
-   "Object-oriented namespace file"
-   (should (equal phps-mode-lex-analyzer--tokens
-                  '((T_OPEN_TAG 1 . 7) (T_NAMESPACE 7 . 16) (T_STRING 17 . 28) ("{" 28 . 29) (T_CLASS 31 . 36) (T_STRING 37 . 44) ("{" 45 . 46) (T_PUBLIC 49 . 55) (T_FUNCTION 56 . 64) (T_STRING 65 . 76) ("(" 76 . 77) (")" 77 . 78) ("{" 79 . 80) (T_EXIT 84 . 88) (";" 88 . 89) ("}" 92 . 93) ("}" 95 . 96) ("}" 97 . 98)))))
 
   (phps-mode-test--with-buffer
    "<?php\nNAMESPACE MyNameSpace;\nCLASS MyClass {\n\tpublic function __construct() {\n\t\texit;\n\t}\n}\n"
