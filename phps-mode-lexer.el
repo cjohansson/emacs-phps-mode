@@ -475,11 +475,8 @@
 
       (phps-mode-lexer--match-macro
        (and ST_LOOKING_FOR_PROPERTY (looking-at phps-mode-lexer--ANY_CHAR))
-       (let ((end (match-end 0)))
-         (phps-mode-lexer--yy_pop_state)
-         ;; TODO goto restart here?
-         ;; (message "Restart here")
-         (phps-mode-lexer--MOVE_FORWARD end)))
+       (phps-mode-lexer--yy_pop_state)
+      (phps-mode-lexer--re2c))
 
       (phps-mode-lexer--match-macro
        (and ST_IN_SCRIPTING (looking-at "::"))

@@ -322,16 +322,22 @@
    (should (equal phps-mode-lex-analyzer--tokens
                   '((T_OPEN_TAG 1 . 7) (T_VARIABLE 7 . 11) ("=" 12 . 13) (T_CONSTANT_ENCAPSED_STRING 14 . 18) (";" 18 . 19)))))
 
+  (phps-mode-test--with-buffer
+   "<?php\n\n$object = (object) array(\n    'field_random' => 25\n);\n$field = 'random';\necho $object->{\"field_$field\"};"
+   "Dynamic object property"
+   (should (equal phps-mode-lex-analyzer--tokens
+                  '((T_OPEN_TAG 1 . 7) (T_VARIABLE 8 . 15) ("=" 16 . 17) (T_OBJECT_CAST 18 . 26) (T_ARRAY 27 . 32) ("(" 32 . 33) (T_CONSTANT_ENCAPSED_STRING 38 . 52) (T_DOUBLE_ARROW 53 . 55) (T_LNUMBER 56 . 58) (")" 59 . 60) (";" 60 . 61) (T_VARIABLE 62 . 68) ("=" 69 . 70) (T_CONSTANT_ENCAPSED_STRING 71 . 79) (";" 79 . 80) (T_ECHO 81 . 85) (T_VARIABLE 86 . 93) (T_OBJECT_OPERATOR 93 . 95) ("{" 95 . 96) ("\"" 96 . 97) (T_ENCAPSED_AND_WHITESPACE 97 . 103) (T_VARIABLE 103 . 109) ("\"" 109 . 110) ("}" 110 . 111) (";" 111 . 112)))))
+
+  (phps-mode-test--with-buffer
+   "<?php\nclass MyClass { function myFunction() { return 'hello'; }}\n$class = new MyClass();\n$function = \"Function\";\necho $class->{\"my$function\"}();"
+   "Dynamic object method"
+   (should (equal phps-mode-lex-analyzer--tokens
+                  '((T_OPEN_TAG 1 . 7) (T_CLASS 7 . 12) (T_STRING 13 . 20) ("{" 21 . 22) (T_FUNCTION 23 . 31) (T_STRING 32 . 42) ("(" 42 . 43) (")" 43 . 44) ("{" 45 . 46) (T_RETURN 47 . 53) (T_CONSTANT_ENCAPSED_STRING 54 . 61) (";" 61 . 62) ("}" 63 . 64) ("}" 64 . 65) (T_VARIABLE 66 . 72) ("=" 73 . 74) (T_NEW 75 . 78) (T_STRING 79 . 86) ("(" 86 . 87) (")" 87 . 88) (";" 88 . 89) (T_VARIABLE 90 . 99) ("=" 100 . 101) (T_CONSTANT_ENCAPSED_STRING 102 . 112) (";" 112 . 113) (T_ECHO 114 . 118) (T_VARIABLE 119 . 125) (T_OBJECT_OPERATOR 125 . 127) ("{" 127 . 128) ("\"" 128 . 129) (T_ENCAPSED_AND_WHITESPACE 129 . 131) (T_VARIABLE 131 . 140) ("\"" 140 . 141) ("}" 141 . 142) ("(" 142 . 143) (")" 143 . 144) (";" 144 . 145)))))
+
   )
 
 (defun phps-mode-test-lexer--namespaces ()
   "Run test for namespaces."
-
-  (phps-mode-test--with-buffer
-   "<?php\nnamespace MyNameSpace{\n\tclass MyClass {\n\t\tpublic function __construct() {\n\t\t\texit;\n\t\t}\n\t}\n}\n"
-   "Object-oriented namespace file"
-   (should (equal phps-mode-lex-analyzer--tokens
-                  '((T_OPEN_TAG 1 . 7) (T_NAMESPACE 7 . 16) (T_STRING 17 . 28) ("{" 28 . 29) (T_CLASS 31 . 36) (T_STRING 37 . 44) ("{" 45 . 46) (T_PUBLIC 49 . 55) (T_FUNCTION 56 . 64) (T_STRING 65 . 76) ("(" 76 . 77) (")" 77 . 78) ("{" 79 . 80) (T_EXIT 84 . 88) (";" 88 . 89) ("}" 92 . 93) ("}" 95 . 96) ("}" 97 . 98)))))
 
   (phps-mode-test--with-buffer
    "<?php\nNAMESPACE MyNameSpace;\nCLASS MyClass {\n\tpublic function __construct() {\n\t\texit;\n\t}\n}\n"
