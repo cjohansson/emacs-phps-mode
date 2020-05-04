@@ -59,6 +59,13 @@
 
   )
 
+(defun phps-mode-test-lex-analyzer--alternative-indentation-whole-buffer ()
+  "Use alternative indentation of every line of buffer."
+  (goto-char (point-min))
+  (phps-mode-lex-analyzer--alternative-indentation)
+  (while (search-forward "\n" nil t nil)
+    (phps-mode-lex-analyzer--alternative-indentation)))
+
 (defun phps-mode-test-lex-analyzer--alternative-indentation ()
   "Test `phps-mode-lex-analyzer--alternative-indentation'."
 
@@ -77,6 +84,7 @@
    (should (equal
             (phps-mode-lex-analyzer--alternative-indentation)
             0))
+   (phps-mode-test-lex-analyzer--alternative-indentation-whole-buffer)
    (let ((buffer-contents (buffer-substring-no-properties (point-min) (point-max))))
      (should (equal
               buffer-contents
@@ -97,6 +105,7 @@
    (should (equal
             (phps-mode-lex-analyzer--alternative-indentation)
             0))
+   (phps-mode-test-lex-analyzer--alternative-indentation-whole-buffer)
    (let ((buffer-contents (buffer-substring-no-properties (point-min) (point-max))))
      (should (equal
               buffer-contents
@@ -113,10 +122,11 @@
    (should (equal
             (phps-mode-lex-analyzer--alternative-indentation)
             0))
+   (phps-mode-test-lex-analyzer--alternative-indentation-whole-buffer)
    (let ((buffer-contents (buffer-substring-no-properties (point-min) (point-max))))
      (should (equal
               buffer-contents
-              "<?php\nif ($test) {\n    if ($test2) {\n\n    }\n}"))))
+              "<?php\nif ($test) {\n    if ($test2) {\n        \n    }\n}"))))
 
   (phps-mode-test--with-buffer
    "<?php\nif ($test) {\n    if ($test2) {\n        \n    }\n\n}"
@@ -125,6 +135,7 @@
    (should (equal
             (phps-mode-lex-analyzer--alternative-indentation)
             4))
+   (phps-mode-test-lex-analyzer--alternative-indentation-whole-buffer)
    (let ((buffer-contents (buffer-substring-no-properties (point-min) (point-max))))
      (should (equal
               buffer-contents
@@ -137,6 +148,7 @@
    (should (equal
             (phps-mode-lex-analyzer--alternative-indentation)
             0))
+   (phps-mode-test-lex-analyzer--alternative-indentation-whole-buffer)
    (let ((buffer-contents (buffer-substring-no-properties (point-min) (point-max))))
      (should (equal
               buffer-contents
@@ -149,6 +161,7 @@
    (should (equal
             (phps-mode-lex-analyzer--alternative-indentation)
             4))
+   (phps-mode-test-lex-analyzer--alternative-indentation-whole-buffer)
    (let ((buffer-contents (buffer-substring-no-properties (point-min) (point-max))))
      (should (equal
               buffer-contents
@@ -161,6 +174,7 @@
    (should (equal
             (phps-mode-lex-analyzer--alternative-indentation)
             1))
+   (phps-mode-test-lex-analyzer--alternative-indentation-whole-buffer)
    (let ((buffer-contents (buffer-substring-no-properties (point-min) (point-max))))
      (should (equal
               buffer-contents
@@ -173,6 +187,7 @@
    (should (equal
             (phps-mode-lex-analyzer--alternative-indentation)
             0))
+   (phps-mode-test-lex-analyzer--alternative-indentation-whole-buffer)
    (let ((buffer-contents (buffer-substring-no-properties (point-min) (point-max))))
      (should (equal
               buffer-contents
@@ -184,7 +199,12 @@
    (goto-char 13)
    (should (equal
             (phps-mode-lex-analyzer--alternative-indentation)
-            0)))
+            0))
+   (phps-mode-test-lex-analyzer--alternative-indentation-whole-buffer)
+   (let ((buffer-contents (buffer-substring-no-properties (point-min) (point-max))))
+     (should (equal
+              buffer-contents
+              "/**\n *\n **/\n"))))
 
   (phps-mode-test--with-buffer
    "$var = 'abc';\n// Comment"
@@ -193,6 +213,7 @@
    (should (equal
             (phps-mode-lex-analyzer--alternative-indentation)
             0))
+   (phps-mode-test-lex-analyzer--alternative-indentation-whole-buffer)
    (let ((buffer-contents (buffer-substring-no-properties (point-min) (point-max))))
      (should (equal
               buffer-contents
@@ -205,6 +226,7 @@
    (should (equal
             (phps-mode-lex-analyzer--alternative-indentation)
             0))
+   (phps-mode-test-lex-analyzer--alternative-indentation-whole-buffer)
    (let ((buffer-contents (buffer-substring-no-properties (point-min) (point-max))))
      (should (equal
               buffer-contents
@@ -217,6 +239,7 @@
    (should (equal
             (phps-mode-lex-analyzer--alternative-indentation)
             0))
+   (phps-mode-test-lex-analyzer--alternative-indentation-whole-buffer)
    (let ((buffer-contents (buffer-substring-no-properties (point-min) (point-max))))
      (should (equal
               buffer-contents
@@ -229,6 +252,7 @@
    (should (equal
             (phps-mode-lex-analyzer--alternative-indentation)
             4))
+   (phps-mode-test-lex-analyzer--alternative-indentation-whole-buffer)
    (let ((buffer-contents (buffer-substring-no-properties (point-min) (point-max))))
      (should (equal
               buffer-contents
@@ -245,6 +269,7 @@
    (should (equal
             (phps-mode-lex-analyzer--alternative-indentation)
             4))
+   (phps-mode-test-lex-analyzer--alternative-indentation-whole-buffer)
    (let ((buffer-contents (buffer-substring-no-properties (point-min) (point-max))))
      (should (equal
               buffer-contents
@@ -257,6 +282,7 @@
    (should (equal
             (phps-mode-lex-analyzer--alternative-indentation)
             0))
+   (phps-mode-test-lex-analyzer--alternative-indentation-whole-buffer)
    (let ((buffer-contents (buffer-substring-no-properties (point-min) (point-max))))
      (should (equal
               buffer-contents
@@ -269,10 +295,11 @@
    (should (equal
             (phps-mode-lex-analyzer--alternative-indentation)
             4))
+   (phps-mode-test-lex-analyzer--alternative-indentation-whole-buffer)
    (let ((buffer-contents (buffer-substring-no-properties (point-min) (point-max))))
      (should (equal
               buffer-contents
-              "<?php\nif ($here) {\n    if ($wasHere)\n    {\n    \n    }\n}\n\n"))))
+              "<?php\nif ($here) {\n    if ($wasHere)\n    {\n        \n    }\n}\n\n"))))
 
   (phps-mode-test--with-buffer
    "<?php\nif ($myCondition)\n{\n    $var = array(\n        'was here'\n    );\n// Was here\n}\n"
@@ -281,6 +308,7 @@
    (should (equal
             (phps-mode-lex-analyzer--alternative-indentation)
             4))
+   (phps-mode-test-lex-analyzer--alternative-indentation-whole-buffer)
    (let ((buffer-contents (buffer-substring-no-properties (point-min) (point-max))))
      (should (equal
               buffer-contents
@@ -298,6 +326,7 @@
    (should (equal
             (phps-mode-lex-analyzer--alternative-indentation)
             4))
+   (phps-mode-test-lex-analyzer--alternative-indentation-whole-buffer)
    (let ((buffer-contents (buffer-substring-no-properties (point-min) (point-max))))
      (should (equal
               buffer-contents
@@ -310,7 +339,13 @@
    (goto-char 41)
    (should (equal
             (phps-mode-lex-analyzer--alternative-indentation)
-            4)))
+            4))
+   (phps-mode-test-lex-analyzer--alternative-indentation-whole-buffer)
+   (let ((buffer-contents (buffer-substring-no-properties (point-min) (point-max))))
+     (should (equal
+              buffer-contents
+              "<?php\nif (is_array(\n    $array\n)) {\n    echo 'was here';\n}"
+              ))))
 
   (phps-mode-test--with-buffer
    "<?php\n\n$var = array(\n    '123' =>\n        'def',\n);"
@@ -322,7 +357,13 @@
    (goto-char 50)
    (should (equal
             (phps-mode-lex-analyzer--alternative-indentation)
-            0)))
+            0))
+   (phps-mode-test-lex-analyzer--alternative-indentation-whole-buffer)
+   (let ((buffer-contents (buffer-substring-no-properties (point-min) (point-max))))
+     (should (equal
+              buffer-contents
+              "<?php\n\n$var = array(\n    '123' =>\n        'def',\n);"
+              ))))
 
   (phps-mode-test--with-buffer
    "<?php\n$var = array(\n    '123' => true,\n    \n);"
@@ -330,7 +371,13 @@
    (goto-char 44)
    (should (equal
             (phps-mode-lex-analyzer--alternative-indentation)
-            4)))
+            4))
+   (phps-mode-test-lex-analyzer--alternative-indentation-whole-buffer)
+   (let ((buffer-contents (buffer-substring-no-properties (point-min) (point-max))))
+     (should (equal
+              buffer-contents
+              "<?php\n$var = array(\n    '123' => true,\n    \n);"
+              ))))
 
   (phps-mode-test--with-buffer
    "<?php\nfunction myFunction(\n    $arg = true,\n    $arg2 = false\n) {\n    \n}"
@@ -338,7 +385,14 @@
    (goto-char 49)
    (should (equal
             (phps-mode-lex-analyzer--alternative-indentation)
-            4)))
+            4))
+   (phps-mode-test-lex-analyzer--alternative-indentation-whole-buffer)
+   (let ((buffer-contents (buffer-substring-no-properties (point-min) (point-max))))
+     (should (equal
+              buffer-contents
+              "<?php\nfunction myFunction(\n    $arg = true,\n    $arg2 = false\n) {\n    \n}"
+              ))))
+
   )
 
 (defun phps-mode-test-lex-analyzer--move-lines-indent ()

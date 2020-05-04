@@ -2019,6 +2019,7 @@ SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
             (let* ((old-indentation (current-indentation))
                    (current-line-starts-with-closing-bracket (phps-mode-lex-analyzer--string-starts-with-closing-bracket-p current-line-string))
                    (line-starts-with-closing-bracket (phps-mode-lex-analyzer--string-starts-with-closing-bracket-p line-string))
+                   (line-starts-with-opening-doc-comment (phps-mode-lex-analyzer--string-starts-with-opening-doc-comment-p line-string))
                    (line-ends-with-assignment (phps-mode-lex-analyzer--string-ends-with-assignment-p line-string))
                    (line-ends-with-opening-bracket (phps-mode-lex-analyzer--string-ends-with-opening-bracket-p line-string))
                    (line-ends-with-terminus (phps-mode-lex-analyzer--string-ends-with-terminus-p line-string))
@@ -2040,6 +2041,9 @@ SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
 
               (when current-line-starts-with-closing-bracket
                 (setq new-indentation (- new-indentation tab-width)))
+
+              (when line-starts-with-opening-doc-comment
+                (setq new-indentation (+ new-indentation 1)))
 
               (when line-ends-with-assignment
                 (setq new-indentation (+ new-indentation tab-width)))
@@ -2119,6 +2123,10 @@ SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
 (defun phps-mode-lex-analyzer--string-starts-with-closing-bracket-p (string)
   "Get bracket count for STRING."
   (string-match-p "^[\t ]*\\([\]})[]\\|</[a-zA-Z]+\\|/>\\)" string))
+
+(defun phps-mode-lex-analyzer--string-starts-with-opening-doc-comment-p (string)
+  "Get bracket count for STRING."
+  (string-match-p "^[\t ]*/\\*\\*" string))
 
 (defun phps-mode-lex-analyzer--string-ends-with-opening-bracket-p (string)
   "Get bracket count for STRING."
