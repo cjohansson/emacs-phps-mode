@@ -299,7 +299,7 @@
    (let ((buffer-contents (buffer-substring-no-properties (point-min) (point-max))))
      (should (equal
               buffer-contents
-              "<?php\nif ($here) {\n    if ($wasHere)\n    {\n    \n    }\n}\n\n"))))
+              "<?php\nif ($here) {\n    if ($wasHere)\n    {\n        \n    }\n}\n\n"))))
 
   (phps-mode-test--with-buffer
    "<?php\nif ($myCondition)\n{\n    $var = array(\n        'was here'\n    );\n// Was here\n}\n"
