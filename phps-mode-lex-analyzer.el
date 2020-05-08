@@ -2000,88 +2000,97 @@ SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
           (line-beginning-position)
           (line-end-position))
          )
-        (when (> line-number 1)
-          (while (and
-                  (> line-number 0)
-                  line-is-empty)
-            (forward-line -1)
-            (setq line-number (1- line-number))
-            (beginning-of-line)
-            (setq line-beginning-position (line-beginning-position))
-            (setq line-end-position (line-end-position))
-            (setq
-             line-string
-             (buffer-substring-no-properties line-beginning-position line-end-position))
-            (setq line-is-empty (string-match-p "^[ \t\f\r\n]*$" line-string))
-            (setq move-length (1+ move-length)))
+        (if (> line-number 1)
+            (progn
+              (while (and
+                      (> line-number 0)
+                      line-is-empty)
+                (forward-line -1)
+                (setq line-number (1- line-number))
+                (beginning-of-line)
+                (setq line-beginning-position (line-beginning-position))
+                (setq line-end-position (line-end-position))
+                (setq
+                 line-string
+                 (buffer-substring-no-properties line-beginning-position line-end-position))
+                (setq line-is-empty (string-match-p "^[ \t\f\r\n]*$" line-string))
+                (setq move-length (1+ move-length)))
 
-          (unless line-is-empty
-            (let* ((old-indentation (current-indentation))
-                   (current-line-starts-with-closing-bracket (phps-mode-lex-analyzer--string-starts-with-closing-bracket-p current-line-string))
-                   (line-starts-with-closing-bracket (phps-mode-lex-analyzer--string-starts-with-closing-bracket-p line-string))
-                   (line-starts-with-opening-doc-comment (phps-mode-lex-analyzer--string-starts-with-opening-doc-comment-p line-string))
-                   (line-ends-with-assignment (phps-mode-lex-analyzer--string-ends-with-assignment-p line-string))
-                   (line-ends-with-opening-bracket (phps-mode-lex-analyzer--string-ends-with-opening-bracket-p line-string))
-                   (line-ends-with-terminus (phps-mode-lex-analyzer--string-ends-with-terminus-p line-string))
-                   (bracket-level (phps-mode-lex-analyzer--get-string-brackets-count line-string)))
-              (setq new-indentation old-indentation)
-              (goto-char point)
+              (unless line-is-empty
+                (let* ((old-indentation (current-indentation))
+                       (current-line-starts-with-closing-bracket (phps-mode-lex-analyzer--string-starts-with-closing-bracket-p current-line-string))
+                       (line-starts-with-closing-bracket (phps-mode-lex-analyzer--string-starts-with-closing-bracket-p line-string))
+                       (line-starts-with-opening-doc-comment (phps-mode-lex-analyzer--string-starts-with-opening-doc-comment-p line-string))
+                       (line-ends-with-assignment (phps-mode-lex-analyzer--string-ends-with-assignment-p line-string))
+                       (line-ends-with-opening-bracket (phps-mode-lex-analyzer--string-ends-with-opening-bracket-p line-string))
+                       (line-ends-with-terminus (phps-mode-lex-analyzer--string-ends-with-terminus-p line-string))
+                       (bracket-level (phps-mode-lex-analyzer--get-string-brackets-count line-string)))
+                  (setq new-indentation old-indentation)
+                  (goto-char point)
 
-              (when (> bracket-level 0)
-                (if (< bracket-level tab-width)
-                    (setq new-indentation (+ new-indentation 1))
-                  (setq new-indentation (+ new-indentation tab-width))))
+                  (when (> bracket-level 0)
+                    (if (< bracket-level tab-width)
+                        (setq new-indentation (+ new-indentation 1))
+                      (setq new-indentation (+ new-indentation tab-width))))
 
-              (when (= bracket-level -1)
-                (setq new-indentation (1- new-indentation)))
+                  (when (= bracket-level -1)
+                    (setq new-indentation (1- new-indentation)))
 
-              (when (and (= bracket-level 0)
-                         line-starts-with-closing-bracket)
-                (setq new-indentation (+ new-indentation tab-width)))
+                  (when (and (= bracket-level 0)
+                             line-starts-with-closing-bracket)
+                    (setq new-indentation (+ new-indentation tab-width)))
 
-              (when current-line-starts-with-closing-bracket
-                (setq new-indentation (- new-indentation tab-width)))
+                  (when current-line-starts-with-closing-bracket
+                    (setq new-indentation (- new-indentation tab-width)))
 
-              (when line-starts-with-opening-doc-comment
-                (setq new-indentation (+ new-indentation 1)))
+                  (when line-starts-with-opening-doc-comment
+                    (setq new-indentation (+ new-indentation 1)))
 
-              (when line-ends-with-assignment
-                (setq new-indentation (+ new-indentation tab-width)))
+                  (when line-ends-with-assignment
+                    (setq new-indentation (+ new-indentation tab-width)))
 
-              (when (and line-ends-with-opening-bracket
-                         (< bracket-level 0))
-                (setq new-indentation (+ new-indentation tab-width)))
+                  (when (and line-ends-with-opening-bracket
+                             (< bracket-level 0))
+                    (setq new-indentation (+ new-indentation tab-width)))
 
-              (when line-ends-with-terminus
-                ;; Back-trace buffer from previous line
-                ;; Determine if semi-colon ended an assignment or not
-                (forward-line (* -1 move-length))
-                (end-of-line)
-                (forward-char -1)
-                (let ((not-found t)
-                      (is-assignment nil))
-                  (while (and
-                          not-found
-                          (search-backward-regexp "\\(;\\|,\\|:\\|)\\|=\\)" nil t))
-                    (let ((match (buffer-substring-no-properties (match-beginning 0) (match-end 0))))
-                      (setq is-assignment (string= match "="))
-                      (setq not-found nil)))
-                  ;; If it ended an assignment on a previous line, decrease indentation
-                  (when (and is-assignment
-                             (> bracket-level -1)
-                             (not
-                              (= line-number (line-number-at-pos))))
-                    ;; NOTE stuff like $var = array(\n    4\n);\n
-                    ;; will end assignment but also decrease bracket-level
-                    (setq new-indentation (- new-indentation tab-width))))
+                  (when line-ends-with-terminus
+                    ;; Back-trace buffer from previous line
+                    ;; Determine if semi-colon ended an assignment or not
+                    (forward-line (* -1 move-length))
+                    (end-of-line)
+                    (forward-char -1)
+                    (let ((not-found t)
+                          (is-assignment nil)
+                          (parenthesis-level 0))
+                      (while (and
+                              not-found
+                              (search-backward-regexp "\\(;\\|{\\|(\\|)\\|=\\)" nil t))
+                        (let ((match (buffer-substring-no-properties (match-beginning 0) (match-end 0))))
+                          (when (string= match ")")
+                            (setq parenthesis-level (1- parenthesis-level)))
+                          (when (= parenthesis-level 0)
+                            (setq is-assignment (string= match "="))
+                            (setq not-found nil))
 
-                (goto-char point))
+                          (when (string= match "(")
+                            (setq parenthesis-level (1+ parenthesis-level)))))
+                      ;; If it ended an assignment on a previous line, decrease indentation
+                      (when (and is-assignment
+                                 (> bracket-level -1)
+                                 (not
+                                  (= line-number (line-number-at-pos))))
+                        ;; NOTE stuff like $var = array(\n    4\n);\n
+                        ;; will end assignment but also decrease bracket-level
+                        (setq new-indentation (- new-indentation tab-width))))
 
-              ;; Decrease indentation if current line decreases in bracket level
-              (when (< new-indentation 0)
-                (setq new-indentation 0))
+                    (goto-char point))
 
-              (indent-line-to new-indentation))))))
+                  ;; Decrease indentation if current line decreases in bracket level
+                  (when (< new-indentation 0)
+                    (setq new-indentation 0))
+
+                  (indent-line-to new-indentation))))
+          (indent-line-to 0))))
     ;; Only move to end of line if point is the current point and is at end of line
     (when (equal point (point))
       (if point-at-end-of-line

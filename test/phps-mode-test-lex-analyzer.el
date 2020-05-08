@@ -72,18 +72,6 @@
   (phps-mode-test--with-buffer
    "<?php\nif ($myCondition) {\necho 'I was here';\n}"
    "Alternative indentation inside if block"
-   (goto-char 32)
-   (should (equal
-            (phps-mode-lex-analyzer--alternative-indentation)
-            4))
-   (goto-char 15)
-   (should (equal
-            (phps-mode-lex-analyzer--alternative-indentation)
-            0))
-   (goto-char (point-max))
-   (should (equal
-            (phps-mode-lex-analyzer--alternative-indentation)
-            0))
    (phps-mode-test-lex-analyzer--alternative-indentation-whole-buffer)
    (let ((buffer-contents (buffer-substring-no-properties (point-min) (point-max))))
      (should (equal
@@ -93,18 +81,6 @@
   (phps-mode-test--with-buffer
    "<?php\nif ($myCondition) {\necho 'I was here';\necho 'I was here again';\n}"
    "Alternative indentation on closing if block"
-   (goto-char 30)
-   (should (equal
-            (phps-mode-lex-analyzer--alternative-indentation)
-            4))
-   (goto-char 57)
-   (should (equal
-            (phps-mode-lex-analyzer--alternative-indentation)
-            4))
-   (goto-char (point-max))
-   (should (equal
-            (phps-mode-lex-analyzer--alternative-indentation)
-            0))
    (phps-mode-test-lex-analyzer--alternative-indentation-whole-buffer)
    (let ((buffer-contents (buffer-substring-no-properties (point-min) (point-max))))
      (should (equal
@@ -112,16 +88,8 @@
               "<?php\nif ($myCondition) {\n    echo 'I was here';\n    echo 'I was here again';\n}"))))
 
   (phps-mode-test--with-buffer
-   "<?php\nif ($test) {\n    if ($test2) {\n\n}\n}"
+   "<?php\nif ($test) {\nif ($test2) {\n\n}\n}"
    "Alternative indentation on nested if block with empty contents"
-   (goto-char 40)
-   (should (equal
-            (phps-mode-lex-analyzer--alternative-indentation)
-            4))
-   (goto-char (point-max))
-   (should (equal
-            (phps-mode-lex-analyzer--alternative-indentation)
-            0))
    (phps-mode-test-lex-analyzer--alternative-indentation-whole-buffer)
    (let ((buffer-contents (buffer-substring-no-properties (point-min) (point-max))))
      (should (equal
@@ -129,12 +97,8 @@
               "<?php\nif ($test) {\n    if ($test2) {\n        \n    }\n}"))))
 
   (phps-mode-test--with-buffer
-   "<?php\nif ($test) {\n    if ($test2) {\n        \n    }\n\n}"
+   "<?php\nif ($test) {\nif ($test2) {\n\n}\n\n}"
    "Alternative indentation on multiple closing brackets"
-   (goto-char 53)
-   (should (equal
-            (phps-mode-lex-analyzer--alternative-indentation)
-            4))
    (phps-mode-test-lex-analyzer--alternative-indentation-whole-buffer)
    (let ((buffer-contents (buffer-substring-no-properties (point-min) (point-max))))
      (should (equal
@@ -142,12 +106,8 @@
               "<?php\nif ($test) {\n    if ($test2) {\n        \n    }\n    \n}"))))
 
   (phps-mode-test--with-buffer
-   "<?php\nif ($test) {\n    \n} else if ($test) {\n    \n}\n"
+   "<?php\nif ($test) {\n\n} else if ($test) {\n\n}\n"
    "Alternative indentation on elseif block"
-   (goto-char 25)
-   (should (equal
-            (phps-mode-lex-analyzer--alternative-indentation)
-            0))
    (phps-mode-test-lex-analyzer--alternative-indentation-whole-buffer)
    (let ((buffer-contents (buffer-substring-no-properties (point-min) (point-max))))
      (should (equal
@@ -155,12 +115,8 @@
               "<?php\nif ($test) {\n    \n} else if ($test) {\n    \n}\n"))))
 
   (phps-mode-test--with-buffer
-   "if ($true) {\n    if ($true) {\n    }\n}"
+   "if ($true) {\nif ($true) {\n}\n}"
    "Alternative indentation on closing bracket inside parent bracket"
-   (goto-char 36)
-   (should (equal
-            (phps-mode-lex-analyzer--alternative-indentation)
-            4))
    (phps-mode-test-lex-analyzer--alternative-indentation-whole-buffer)
    (let ((buffer-contents (buffer-substring-no-properties (point-min) (point-max))))
      (should (equal
@@ -168,12 +124,8 @@
               "if ($true) {\n    if ($true) {\n    }\n}"))))
 
   (phps-mode-test--with-buffer
-   "/**\n *\n */"
+   "/**\n*\n*/"
    "Alternative indentation on last line of doc comment block"
-   (goto-char 11)
-   (should (equal
-            (phps-mode-lex-analyzer--alternative-indentation)
-            1))
    (phps-mode-test-lex-analyzer--alternative-indentation-whole-buffer)
    (let ((buffer-contents (buffer-substring-no-properties (point-min) (point-max))))
      (should (equal
@@ -181,38 +133,8 @@
               "/**\n *\n */"))))
 
   (phps-mode-test--with-buffer
-   "/**\n *\n */\n"
-   "Alternative indentation on line after closing of doc comment block"
-   (goto-char 12)
-   (should (equal
-            (phps-mode-lex-analyzer--alternative-indentation)
-            0))
-   (phps-mode-test-lex-analyzer--alternative-indentation-whole-buffer)
-   (let ((buffer-contents (buffer-substring-no-properties (point-min) (point-max))))
-     (should (equal
-              buffer-contents
-              "/**\n *\n */\n"))))
-
-  (phps-mode-test--with-buffer
-   "/**\n *\n **/\n"
-   "Alternative indentation on line after closing of doc comment block variant 2"
-   (goto-char 13)
-   (should (equal
-            (phps-mode-lex-analyzer--alternative-indentation)
-            0))
-   (phps-mode-test-lex-analyzer--alternative-indentation-whole-buffer)
-   (let ((buffer-contents (buffer-substring-no-properties (point-min) (point-max))))
-     (should (equal
-              buffer-contents
-              "/**\n *\n **/\n"))))
-
-  (phps-mode-test--with-buffer
-   "$var = 'abc';\n// Comment"
+   "    $var = 'abc';\n        // Comment"
    "Alternative indentation on single-line assignment"
-   (goto-char 1)
-   (should (equal
-            (phps-mode-lex-analyzer--alternative-indentation)
-            0))
    (phps-mode-test-lex-analyzer--alternative-indentation-whole-buffer)
    (let ((buffer-contents (buffer-substring-no-properties (point-min) (point-max))))
      (should (equal
@@ -220,25 +142,8 @@
               "$var = 'abc';\n// Comment"))))
 
   (phps-mode-test--with-buffer
-   "$var = 'abc';\n// Comment"
-   "Alternative indentation on line after single-line assignment"
-   (goto-char 15)
-   (should (equal
-            (phps-mode-lex-analyzer--alternative-indentation)
-            0))
-   (phps-mode-test-lex-analyzer--alternative-indentation-whole-buffer)
-   (let ((buffer-contents (buffer-substring-no-properties (point-min) (point-max))))
-     (should (equal
-              buffer-contents
-              "$var = 'abc';\n// Comment"))))
-
-  (phps-mode-test--with-buffer
-   "$var =\n    'abc';\n$var =\n    'abc'\n    . 'def';\n// Comment\n"
-   "Alternative indentation on first line of multi-line assignment"
-   (goto-char 1)
-   (should (equal
-            (phps-mode-lex-analyzer--alternative-indentation)
-            0))
+   "$var =\n'abc';\n$var =\n'abc'\n. 'def';\n// Comment\n"
+   "Alternative indentation on multi-line assignment"
    (phps-mode-test-lex-analyzer--alternative-indentation-whole-buffer)
    (let ((buffer-contents (buffer-substring-no-properties (point-min) (point-max))))
      (should (equal
@@ -246,55 +151,8 @@
               "$var =\n    'abc';\n$var =\n    'abc'\n    . 'def';\n// Comment\n"))))
 
   (phps-mode-test--with-buffer
-   "$var =\n    'abc';\n$var =\n    'abc'\n    . 'def';\n// Comment\n"
-   "Alternative indentation on second line of multi-line assignment"
-   (goto-char 30)
-   (should (equal
-            (phps-mode-lex-analyzer--alternative-indentation)
-            4))
-   (phps-mode-test-lex-analyzer--alternative-indentation-whole-buffer)
-   (let ((buffer-contents (buffer-substring-no-properties (point-min) (point-max))))
-     (should (equal
-              buffer-contents
-              "$var =\n    'abc';\n$var =\n    'abc'\n    . 'def';\n// Comment\n"))))
-
-  (phps-mode-test--with-buffer
-   "$var =\n    'abc';\n$var =\n    'abc'\n    . 'def';\n// Comment\n"
-   "Alternative indentation on last line of multi-line assignment"
-   (goto-char 12)
-   (should (equal
-            (phps-mode-lex-analyzer--alternative-indentation)
-            4))
-   (goto-char 40)
-   (should (equal
-            (phps-mode-lex-analyzer--alternative-indentation)
-            4))
-   (phps-mode-test-lex-analyzer--alternative-indentation-whole-buffer)
-   (let ((buffer-contents (buffer-substring-no-properties (point-min) (point-max))))
-     (should (equal
-              buffer-contents
-              "$var =\n    'abc';\n$var =\n    'abc'\n    . 'def';\n// Comment\n"))))
-
-  (phps-mode-test--with-buffer
-   "$var =\n    'abc';\n$var =\n    'abc'\n    . 'def';\n// Comment\n"
-   "Alternative indentation on line after multi-line assignment"
-   (goto-char 53)
-   (should (equal
-            (phps-mode-lex-analyzer--alternative-indentation)
-            0))
-   (phps-mode-test-lex-analyzer--alternative-indentation-whole-buffer)
-   (let ((buffer-contents (buffer-substring-no-properties (point-min) (point-max))))
-     (should (equal
-              buffer-contents
-              "$var =\n    'abc';\n$var =\n    'abc'\n    . 'def';\n// Comment\n"))))
-
-  (phps-mode-test--with-buffer
-   "<?php\nif ($here) {\n    if ($wasHere)\n{\n    \n    }\n}\n\n"
+   "<?php\nif ($here) {\nif ($wasHere)\n{\n\n}\n}\n\n"
    "Alternative indentation on line after condition"
-   (goto-char 38)
-   (should (equal
-            (phps-mode-lex-analyzer--alternative-indentation)
-            4))
    (phps-mode-test-lex-analyzer--alternative-indentation-whole-buffer)
    (let ((buffer-contents (buffer-substring-no-properties (point-min) (point-max))))
      (should (equal
@@ -302,12 +160,8 @@
               "<?php\nif ($here) {\n    if ($wasHere)\n    {\n        \n    }\n}\n\n"))))
 
   (phps-mode-test--with-buffer
-   "<?php\nif ($myCondition)\n{\n    $var = array(\n        'was here'\n    );\n// Was here\n}\n"
+   "<?php\nif ($myCondition)\n{\n$var = array(\n'was here'\n);\n// Was here\n}\n"
    "Alternative indentation on line after array declaration"
-   (goto-char 71)
-   (should (equal
-            (phps-mode-lex-analyzer--alternative-indentation)
-            4))
    (phps-mode-test-lex-analyzer--alternative-indentation-whole-buffer)
    (let ((buffer-contents (buffer-substring-no-properties (point-min) (point-max))))
      (should (equal
@@ -316,16 +170,8 @@
               ))))
 
   (phps-mode-test--with-buffer
-   "<?php\nif ($myCondition == 2) {\n    echo 'store_vars: <pre>' . print_r($store_vars, true) . '</pre>';\n    echo 'search_ids: <pre>' . print_r($search_ids, true) . '</pre>';\n}"
+   "<?php\nif ($myCondition == 2) {\necho 'store_vars: <pre>' . print_r($store_vars, true) . '</pre>';\necho 'search_ids: <pre>' . print_r($search_ids, true) . '</pre>';\n}"
    "Alternative indentation on line echo"
-   (goto-char 36)
-   (should (equal
-            (phps-mode-lex-analyzer--alternative-indentation)
-            4))
-   (goto-char 106)
-   (should (equal
-            (phps-mode-lex-analyzer--alternative-indentation)
-            4))
    (phps-mode-test-lex-analyzer--alternative-indentation-whole-buffer)
    (let ((buffer-contents (buffer-substring-no-properties (point-min) (point-max))))
      (should (equal
@@ -334,12 +180,8 @@
               ))))
 
   (phps-mode-test--with-buffer
-   "<?php\nif (is_array(\n    $array\n)) {\n    echo 'was here';\n}"
+   "<?php\nif (is_array(\n$array\n)) {\necho 'was here';\n}"
    "Alternative indentation after trailing opening bracket while closing two earlier on line"
-   (goto-char 41)
-   (should (equal
-            (phps-mode-lex-analyzer--alternative-indentation)
-            4))
    (phps-mode-test-lex-analyzer--alternative-indentation-whole-buffer)
    (let ((buffer-contents (buffer-substring-no-properties (point-min) (point-max))))
      (should (equal
@@ -348,16 +190,8 @@
               ))))
 
   (phps-mode-test--with-buffer
-   "<?php\n\n$var = array(\n    '123' =>\n        'def',\n);"
-   "Token-blind indentation on lines after lines ending with T_DOUBLE_ARROW"
-   (goto-char 43)
-   (should (equal
-            (phps-mode-lex-analyzer--alternative-indentation)
-            8))
-   (goto-char 50)
-   (should (equal
-            (phps-mode-lex-analyzer--alternative-indentation)
-            0))
+   "<?php\n\n$var = array(\n'123' =>\n'def',\n);"
+   "Alternative indentation on lines after lines ending with T_DOUBLE_ARROW"
    (phps-mode-test-lex-analyzer--alternative-indentation-whole-buffer)
    (let ((buffer-contents (buffer-substring-no-properties (point-min) (point-max))))
      (should (equal
@@ -366,12 +200,8 @@
               ))))
 
   (phps-mode-test--with-buffer
-   "<?php\n$var = array(\n    '123' => true,\n    \n);"
-   "Line after comma ended double arrow assignment"
-   (goto-char 44)
-   (should (equal
-            (phps-mode-lex-analyzer--alternative-indentation)
-            4))
+   "<?php\n$var = array(\n'123' => true,\n\n);"
+   "Alternative indentation after comma ended double arrow assignment"
    (phps-mode-test-lex-analyzer--alternative-indentation-whole-buffer)
    (let ((buffer-contents (buffer-substring-no-properties (point-min) (point-max))))
      (should (equal
@@ -380,17 +210,43 @@
               ))))
 
   (phps-mode-test--with-buffer
-   "<?php\nfunction myFunction(\n    $arg = true,\n    $arg2 = false\n) {\n    \n}"
+   "<?php\nfunction myFunction(\n$arg = true,\n$arg2 = false\n) {\n\n}"
    "Line after function argument with default value"
-   (goto-char 49)
-   (should (equal
-            (phps-mode-lex-analyzer--alternative-indentation)
-            4))
    (phps-mode-test-lex-analyzer--alternative-indentation-whole-buffer)
    (let ((buffer-contents (buffer-substring-no-properties (point-min) (point-max))))
      (should (equal
               buffer-contents
               "<?php\nfunction myFunction(\n    $arg = true,\n    $arg2 = false\n) {\n    \n}"
+              ))))
+
+(phps-mode-test--with-buffer
+   "$random = get_post_meta(\n                $postId,\n            '_random', // TODO Here\n            true // TODO Here\n        );"
+   "Line in multi-line function call"
+   (phps-mode-test-lex-analyzer--alternative-indentation-whole-buffer)
+   (let ((buffer-contents (buffer-substring-no-properties (point-min) (point-max))))
+     (should (equal
+              buffer-contents
+              "$random = get_post_meta(\n    $postId,\n    '_random', // TODO Here\n    true // TODO Here\n);"
+              ))))
+
+  (phps-mode-test--with-buffer
+   "$cartPrice = round(\n    $cartPrice,\n2 // TODO Here\n);"
+   "Assignment with multi-line function call"
+   (phps-mode-test-lex-analyzer--alternative-indentation-whole-buffer)
+   (let ((buffer-contents (buffer-substring-no-properties (point-min) (point-max))))
+     (should (equal
+              buffer-contents
+              "$cartPrice = round(\n    $cartPrice,\n    2 // TODO Here\n);"
+              ))))
+
+  (phps-mode-test--with-buffer
+   "$applications =\n    $transaction->getResponseBodyDecoded();\n    // TODO Here\n"
+   "Line after multi-line assignment with object-operator"
+   (phps-mode-test-lex-analyzer--alternative-indentation-whole-buffer)
+   (let ((buffer-contents (buffer-substring-no-properties (point-min) (point-max))))
+     (should (equal
+              buffer-contents
+              "$applications =\n    $transaction->getResponseBodyDecoded();\n// TODO Here\n"
               ))))
 
   )
