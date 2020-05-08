@@ -2060,13 +2060,20 @@ SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
                     (end-of-line)
                     (forward-char -1)
                     (let ((not-found t)
-                          (is-assignment nil))
+                          (is-assignment nil)
+                          (parenthesis-level 0))
                       (while (and
                               not-found
-                              (search-backward-regexp "\\(;\\|,\\|:\\|)\\|=\\)" nil t))
+                              (search-backward-regexp "\\(;\\|{\\|(\\|)\\|=\\)" nil t))
                         (let ((match (buffer-substring-no-properties (match-beginning 0) (match-end 0))))
-                          (setq is-assignment (string= match "="))
-                          (setq not-found nil)))
+                          (when (string= match ")")
+                            (setq parenthesis-level (1- parenthesis-level)))
+                          (when (= parenthesis-level 0)
+                            (setq is-assignment (string= match "="))
+                            (setq not-found nil))
+
+                          (when (string= match "(")
+                            (setq parenthesis-level (1+ parenthesis-level)))))
                       ;; If it ended an assignment on a previous line, decrease indentation
                       (when (and is-assignment
                                  (> bracket-level -1)

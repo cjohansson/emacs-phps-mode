@@ -172,14 +172,6 @@
   (phps-mode-test--with-buffer
    "<?php\nif ($myCondition == 2) {\necho 'store_vars: <pre>' . print_r($store_vars, true) . '</pre>';\necho 'search_ids: <pre>' . print_r($search_ids, true) . '</pre>';\n}"
    "Alternative indentation on line echo"
-   (goto-char 36)
-   (should (equal
-            (phps-mode-lex-analyzer--alternative-indentation)
-            4))
-   (goto-char 106)
-   (should (equal
-            (phps-mode-lex-analyzer--alternative-indentation)
-            4))
    (phps-mode-test-lex-analyzer--alternative-indentation-whole-buffer)
    (let ((buffer-contents (buffer-substring-no-properties (point-min) (point-max))))
      (should (equal
@@ -225,6 +217,26 @@
      (should (equal
               buffer-contents
               "<?php\nfunction myFunction(\n    $arg = true,\n    $arg2 = false\n) {\n    \n}"
+              ))))
+
+(phps-mode-test--with-buffer
+   "$random = get_post_meta(\n                $postId,\n            '_random', // TODO Here\n            true // TODO Here\n        );"
+   "Line in multi-line function call"
+   (phps-mode-test-lex-analyzer--alternative-indentation-whole-buffer)
+   (let ((buffer-contents (buffer-substring-no-properties (point-min) (point-max))))
+     (should (equal
+              buffer-contents
+              "$random = get_post_meta(\n    $postId,\n    '_random', // TODO Here\n    true // TODO Here\n);"
+              ))))
+
+  (phps-mode-test--with-buffer
+   "$cartPrice = round(\n    $cartPrice,\n2 // TODO Here\n);"
+   "Assignment with multi-line function call"
+   (phps-mode-test-lex-analyzer--alternative-indentation-whole-buffer)
+   (let ((buffer-contents (buffer-substring-no-properties (point-min) (point-max))))
+     (should (equal
+              buffer-contents
+              "$cartPrice = round(\n    $cartPrice,\n    2 // TODO Here\n);"
               ))))
 
   (phps-mode-test--with-buffer
