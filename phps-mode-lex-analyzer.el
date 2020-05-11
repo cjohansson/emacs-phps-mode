@@ -2420,7 +2420,10 @@ SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
                  (semantic-lex-buffer))))
           (error (progn
                    (kill-buffer)
-                   (signal 'error (cdr conditions)))))
+                   (signal 'error (cdr conditions))))
+          (t (progn
+               (kill-buffer)
+               (signal 'error (cdr conditions)))))
 
         ;; Copy variables outside of buffer
         (setq state phps-mode-lexer--state)
