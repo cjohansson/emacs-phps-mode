@@ -92,7 +92,7 @@
                           (progn
                             (let ((start-return (funcall start)))
                               (list 'success start-return start-time)))
-                        ((error t) (list 'error (cdr conditions) start-time))))
+                        (error (list 'error (cdr conditions) start-time))))
                     (lambda (start-return)
                       (let ((status (car start-return))
                             (value (car (cdr start-return)))
@@ -117,7 +117,7 @@
                                   (progn
                                     (let ((return (funcall end value)))
                                       (setq end-return (list 'success return start-time))))
-                                ((error t) (setq end-return (list 'error (cdr conditions) start-time))))
+                                (error (setq end-return (list 'error (cdr conditions) start-time))))
 
                               ;; Profile execution in debug mode
                               (when phps-mode-serial--profiling
@@ -159,7 +159,7 @@
                 (condition-case conditions
                     (let ((return (funcall start)))
                       (setq start-return (list 'success return start-time)))
-                  ((error t) (setq start-return (list 'error (cdr conditions) start-time))))
+                  (error (setq start-return (list 'error (cdr conditions) start-time))))
 
                 ;; Profile execution in debug mode
                 (when phps-mode-serial--profiling
@@ -181,7 +181,7 @@
                         (condition-case conditions
                             (let ((return (funcall end value)))
                               (setq end-return (list 'success return start-time)))
-                          ((error t) (setq end-return (list 'error (cdr conditions) start-time))))
+                          (error (setq end-return (list 'error (cdr conditions) start-time))))
 
                         ;; Profile execution
                         (when phps-mode-serial--profiling
@@ -220,7 +220,7 @@
             (progn
               (let ((return (funcall start)))
                 (setq start-return (list 'success return start-time))))
-          ((error t) (setq start-return (list 'error (cdr conditions) start-time))))
+          (error (setq start-return (list 'error (cdr conditions) start-time))))
 
         ;; Profile execution in debug mode
         (when phps-mode-serial--profiling
@@ -243,7 +243,7 @@
                 (condition-case conditions
                     (let ((return (funcall end value)))
                       (setq end-return (list 'success return start-time)))
-                  ((error t) (setq end-return (list 'error (cdr conditions) start-time))))
+                  (error (setq end-return (list 'error (cdr conditions) start-time))))
 
                 ;; Profile execution in debug mode
                 (when phps-mode-serial--profiling
