@@ -374,19 +374,21 @@
                  (error-message (nth 1 result))
                  (error-start (nth 2 result))
                  (error-end (nth 3 result)))
-             (when (and error-message
-                        (equal error-type 'phps-lexer-error))
-               (when error-start
-                 (if error-end
-                     (phps-mode-lex-analyzer--set-region-syntax-color
-                      error-start
-                      error-end
-                      (list 'font-lock-face 'font-lock-warning-face))
-                   (phps-mode-lex-analyzer--set-region-syntax-color
-                    error-start
-                    (point-max)
-                    (list 'font-lock-face 'font-lock-warning-face))))
-               (display-warning 'phps-mode error-message :warning "*PHPs Lexer Errors*"))))))
+             (when error-message
+               (if (equal error-type 'phps-lexer-error)
+                   (progn
+                     (when error-start
+                       (if error-end
+                           (phps-mode-lex-analyzer--set-region-syntax-color
+                            error-start
+                            error-end
+                            (list 'font-lock-face 'font-lock-warning-face))
+                         (phps-mode-lex-analyzer--set-region-syntax-color
+                          error-start
+                          (point-max)
+                          (list 'font-lock-face 'font-lock-warning-face))))
+                     (display-warning 'phps-mode error-message :warning "*PHPs Lexer Errors*"))
+                 (display-warning error-type error-message :warning)))))))
 
      nil
 
@@ -450,19 +452,21 @@
                  (error-message (nth 1 result))
                  (error-start (nth 2 result))
                  (error-end (nth 3 result)))
-             (when (and error-message
-                        (equal error-type 'phps-lexer-error))
-               (when error-start
-                 (if error-end
-                     (phps-mode-lex-analyzer--set-region-syntax-color
-                      error-start
-                      error-end
-                      (list 'font-lock-face 'font-lock-warning-face))
-                   (phps-mode-lex-analyzer--set-region-syntax-color
-                    error-start
-                    (point-max)
-                    (list 'font-lock-face 'font-lock-warning-face))))
-               (display-warning 'phps-mode error-message :warning "*PHPs Lexer Errors*"))))))
+             (when error-message
+               (if (equal error-type 'phps-lexer-error)
+                   (progn
+                     (when error-start
+                       (if error-end
+                           (phps-mode-lex-analyzer--set-region-syntax-color
+                            error-start
+                            error-end
+                            (list 'font-lock-face 'font-lock-warning-face))
+                         (phps-mode-lex-analyzer--set-region-syntax-color
+                          error-start
+                          (point-max)
+                          (list 'font-lock-face 'font-lock-warning-face))))
+                     (display-warning 'phps-mode error-message :warning "*PHPs Lexer Errors*"))
+                 (display-warning error-type error-message :warning)))))))
 
      nil
      async
