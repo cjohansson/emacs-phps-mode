@@ -39,6 +39,9 @@
 (require 'subr-x)
 
 
+(define-error 'phps-lexer-error "PHPs Lexer Error")
+
+
 ;; INITIALIZE SETTINGS
 
 
@@ -147,7 +150,7 @@
     (if old-state
         (phps-mode-lexer--BEGIN old-state)
       (signal
-       'error
+       'phps-lexer-error
        (list
         (format "Trying to pop last state at %d" (point))
         (point))))))
@@ -248,8 +251,10 @@
         (set-match-data phps-mode-lexer--match-data)
         (funcall phps-mode-lexer--match-body))
     (signal
-     'error
-     (list "Found no matching lexer rule to execute at %d" (point)))))
+     'phps-lexer-error
+     (list
+      (format "Found no matching lexer rule to execute at %d" (point))
+      (point)))))
 
 (defun phps-mode-lexer--reset-match-data ()
   "Reset match data."
@@ -540,13 +545,13 @@
               ")")))
        (when (phps-mode-wy-macros--CG 'PARSER_MODE)
          (signal
-          'error (list
-                  (format
-                   "The (real) cast is deprecated, use (float) instead at %d"
-                   (match-beginning 0)
-                   )
-                  (match-beginning 0)
-                  (match-end 0)))
+          'phps-lexer-error
+          (list
+           (format
+            "The (real) cast is deprecated, use (float) instead at %d"
+            (match-beginning 0))
+           (match-beginning 0)
+           (match-end 0)))
          (phps-mode-lexer--RETURN_TOKEN 'T_DOUBLE_CAST (match-beginning 0) (match-end 0))))
 
       (phps-mode-lexer--match-macro
@@ -1101,12 +1106,12 @@
                  (phps-mode-lexer--RETURN_TOKEN 'T_COMMENT start (match-end 0)))
              (progn
                (signal
-                'error
-                (list (format
-                       "Un-terminated comment starting at %d"
-                       (point))
-                      (point)
-                      )))))))
+                'phps-lexer-error
+                (list
+                 (format
+                  "Un-terminated comment starting at %d"
+                  (point))
+                 (point))))))))
 
       (phps-mode-lexer--match-macro
        (and ST_IN_SCRIPTING (looking-at (concat "\\?>" phps-mode-lexer--NEWLINE "?")))
@@ -1199,7 +1204,7 @@
                (progn
                  (setq open-quote nil)
                  (signal
-                  'error
+                  'phps-lexer-error
                   (list
                    (format "Found no ending of quote at %s" start)
                    start))))))))
@@ -1296,7 +1301,7 @@
                      )))
              (progn
                (signal
-                'error
+                'phps-lexer-error
                 (list
                  (format "Found no ending of double quoted region starting at %d" start)
                  start)))))))
@@ -1311,7 +1316,7 @@
                )
            (progn
              (signal
-              'error
+              'phps-lexer-error
               (list
                (format "Found no ending of back-quoted string starting at %d" (point))
                (point)))))))
@@ -1353,7 +1358,7 @@
                 ))
            (progn
              (signal
-              'error
+              'phps-lexer-error
               (list
                (format "Found no ending of heredoc at %d" (point))
                (point)))))))
@@ -1371,7 +1376,7 @@
                (phps-mode-lexer--RETURN_TOKEN 'T_ENCAPSED_AND_WHITESPACE old-start start))
            (progn
              (signal
-              'error
+              'phps-lexer-error
               (list
                (format "Found no ending of newdoc starting at %d" (point))
                (point)))))))
@@ -1379,9 +1384,10 @@
       (phps-mode-lexer--match-macro
        (and (or ST_IN_SCRIPTING ST_VAR_OFFSET) (looking-at phps-mode-lexer--ANY_CHAR))
        (signal
-        'error (list
-                (format "Unexpected character at %d" (point))
-                (point))))
+        'phps-lexer-error
+        (list
+         (format "Unexpected character at %d" (point))
+         (point))))
 
       (when phps-mode-lexer--match-length
         (phps-mode-lexer--re2c-execute)))))
