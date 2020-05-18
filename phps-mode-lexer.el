@@ -1281,7 +1281,7 @@
 
       (phps-mode-lexer--match-macro
        (and ST_DOUBLE_QUOTES (looking-at phps-mode-lexer--ANY_CHAR))
-       (let ((start (point)))
+       (let ((start (car (cdr (car (cdr phps-mode-lexer--tokens))))))
          (let ((string-start (search-forward-regexp "[^\\\\]\"" nil t)))
            (if string-start
                (let* ((end (- (match-end 0) 1))
@@ -1312,8 +1312,7 @@
          (if string-start
              (let ((start (- (match-end 0) 1)))
                ;; (message "Skipping backquote forward over %s" (buffer-substring-no-properties old-start start))
-               (phps-mode-lexer--RETURN_TOKEN 'T_CONSTANT_ENCAPSED_STRING old-start start)
-               )
+               (phps-mode-lexer--RETURN_TOKEN 'T_CONSTANT_ENCAPSED_STRING old-start start))
            (progn
              (signal
               'phps-lexer-error
