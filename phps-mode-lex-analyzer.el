@@ -342,7 +342,9 @@
       (setq async nil))
     (phps-mode-serial-commands
      buffer-name
-     (lambda() (phps-mode-lex-analyzer--lex-string buffer-contents))
+     (lambda()
+       (phps-mode-lex-analyzer--lex-string buffer-contents))
+
      (lambda(result)
        (when (get-buffer buffer-name)
          (with-current-buffer buffer-name
@@ -363,27 +365,31 @@
                (let ((token-syntax-color (phps-mode-lex-analyzer--get-token-syntax-color token-name)))
                  (if token-syntax-color
                      (phps-mode-lex-analyzer--set-region-syntax-color start end token-syntax-color)
-                   (phps-mode-lex-analyzer--clear-region-syntax-color start end)))))
+                   (phps-mode-lex-analyzer--clear-region-syntax-color start end))))))))
 
-           (let ((errors (nth 4 result))
-                 (error-start)
-                 (error-end))
-             (when errors
-               (setq error-start (car (cdr errors)))
+     (lambda(result)
+       (when (get-buffer buffer-name)
+         (with-current-buffer buffer-name
+           (let ((error-type (nth 0 result))
+                 (error-message (nth 1 result))
+                 (error-start (nth 2 result))
+                 (error-end (nth 3 result)))
+             (when (and error-message
+                        (equal error-type 'phps-lexer-error))
                (when error-start
-                 (if (car (cdr (cdr errors)))
-                     (progn
-                       (setq error-end (car (cdr (cdr (cdr errors)))))
-                       (phps-mode-lex-analyzer--set-region-syntax-color
-                        error-start
-                        error-end
-                        (list 'font-lock-face 'font-lock-warning-face)))
-                   (setq error-end (point-max))
+                 (if error-end
+                     (phps-mode-lex-analyzer--set-region-syntax-color
+                      error-start
+                      error-end
+                      (list 'font-lock-face 'font-lock-warning-face))
                    (phps-mode-lex-analyzer--set-region-syntax-color
                     error-start
-                    error-end
+                    (point-max)
                     (list 'font-lock-face 'font-lock-warning-face))))
-               (signal 'error (list (format "Lex Errors: %s" (car errors)))))))))
+               (display-warning 'phps-mode error-message :warning "*PHPs Lexer Errors*"))))))
+
+     nil
+
      async
      async-by-process)))
 
@@ -407,6 +413,7 @@
                 incremental-state
                 incremental-state-stack
                 head-tokens))
+
      (lambda(result)
        (when (get-buffer buffer-name)
          (with-current-buffer buffer-name
@@ -433,28 +440,31 @@
                      (phps-mode-lex-analyzer--set-region-syntax-color start end token-syntax-color)
                    (phps-mode-lex-analyzer--clear-region-syntax-color start end)))))
 
-           (let ((errors (nth 4 result))
-                 (error-start)
-                 (error-end))
-             (when errors
-               (setq error-start (car (cdr errors)))
-               (when error-start
-                 (if (car (cdr (cdr errors)))
-                     (progn
-                       (setq error-end (car (cdr (cdr (cdr errors)))))
-                       (phps-mode-lex-analyzer--set-region-syntax-color
-                        error-start
-                        error-end
-                        (list 'font-lock-face 'font-lock-warning-face)))
-                   (setq error-end (point-max))
-                   (phps-mode-lex-analyzer--set-region-syntax-color
-                    error-start
-                    error-end
-                    (list 'font-lock-face 'font-lock-warning-face))))
-               (signal 'error (list (format "Incremental Lex Errors: %s" (car errors))))))
-
            (phps-mode-debug-message
             (message "Incremental tokens: %s" incremental-tokens)))))
+
+     (lambda(result)
+       (when (get-buffer buffer-name)
+         (with-current-buffer buffer-name
+           (let ((error-type (nth 0 result))
+                 (error-message (nth 1 result))
+                 (error-start (nth 2 result))
+                 (error-end (nth 3 result)))
+             (when (and error-message
+                        (equal error-type 'phps-lexer-error))
+               (when error-start
+                 (if error-end
+                     (phps-mode-lex-analyzer--set-region-syntax-color
+                      error-start
+                      error-end
+                      (list 'font-lock-face 'font-lock-warning-face))
+                   (phps-mode-lex-analyzer--set-region-syntax-color
+                    error-start
+                    (point-max)
+                    (list 'font-lock-face 'font-lock-warning-face))))
+               (display-warning 'phps-mode error-message :warning "*PHPs Lexer Errors*"))))))
+
+     nil
      async
      async-by-process)))
 

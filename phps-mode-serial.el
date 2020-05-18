@@ -63,8 +63,8 @@
          (thread-live-p (gethash key phps-mode-serial--async-threads)))
     (thread-signal (gethash key phps-mode-serial--async-threads) 'quit nil)))
 
-(defun phps-mode-serial-commands (key start end &optional async async-by-process)
-  "Run command with KEY, first START and if successfully then END with the result of START as argument.  Optional arguments ASYNC ASYNC-BY-PROCESS specifies additional options."
+(defun phps-mode-serial-commands (key start end &optional start-error end-error async async-by-process)
+  "Run command with KEY, first START and if successfully then END with the result of START as argument.  Optional arguments START-ERROR, END-ERROR that are called on errors. ASYNC ASYNC-BY-PROCESS specifies additional options for synchronicity."
   (let ((start-time (current-time)))
     (when phps-mode-serial--profiling
       (message "PHPs - Starting serial commands for buffer '%s'.." key))
@@ -139,11 +139,13 @@
                                 (when (string= status "error")
                                   (with-current-buffer key
                                     (setq phps-mode-serial--status 'error))
-                                  (display-warning 'phps-mode (format "%s" (car (cdr value)))))))
+                                  (when end-error
+                                    (funcall end-error value)))))
                           (when (string= status "error")
                             (with-current-buffer key
                               (setq phps-mode-serial--status 'error))
-                            (display-warning 'phps-mode (format "%s" (car (cdr value)))))))))
+                            (when start-error
+                              (funcall start-error value)))))))
                    phps-mode-serial--async-processes))
               (signal 'error (list "Async-start function is missing")))
 
@@ -204,12 +206,14 @@
                           (when (string= status "error")
                             (with-current-buffer key
                               (setq phps-mode-serial--status 'error))
-                            (display-warning 'phps-mode (format "%s" (car (cdr value)))))))
+                            (when end-error
+                              (funcall end-error value)))))
 
                     (when (string= status "error")
                       (with-current-buffer key
                         (setq phps-mode-serial--status 'error))
-                      (display-warning 'phps-mode (format "%s" (car (cdr value)))))))))
+                      (when start-error
+                        (funcall start-error)))))))
             key)
            phps-mode-serial--async-threads))
 
@@ -266,13 +270,14 @@
                   (when (string= status "error")
                     (with-current-buffer key
                       (setq phps-mode-serial--status 'error))
-                    (display-warning 'phps-mode (format "%s" (car (cdr value)))))))
+                    (when end-error
+                      (funcall end-error value)))))
 
             (when (string= status "error")
               (with-current-buffer key
                 (setq phps-mode-serial--status 'error))
-              (display-warning 'phps-mode (format "%s" (car (cdr value)))))))))))
-
+              (when start-error
+                (funcall start-error value)))))))))
 
 (provide 'phps-mode-serial)
 ;;; phps-mode-serial.el ends here
