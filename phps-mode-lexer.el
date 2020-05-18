@@ -1281,7 +1281,8 @@
 
       (phps-mode-lexer--match-macro
        (and ST_DOUBLE_QUOTES (looking-at phps-mode-lexer--ANY_CHAR))
-       (let ((start (car (cdr (nth 2 phps-mode-lexer--tokens)))))
+       (let ((start (point))
+             (start-error (car (cdr (nth 2 phps-mode-lexer--tokens)))))
          (let ((string-start (search-forward-regexp "[^\\\\]\"" nil t)))
            (if string-start
                (let* ((end (- (match-end 0) 1))
@@ -1303,8 +1304,8 @@
                (signal
                 'phps-lexer-error
                 (list
-                 (format "Found no ending of double quoted region starting at %d" start)
-                 start)))))))
+                 (format "Found no ending of double quoted region starting at %d" start-error)
+                 start-error)))))))
 
       (phps-mode-lexer--match-macro
        (and ST_BACKQUOTE (looking-at phps-mode-lexer--ANY_CHAR))
