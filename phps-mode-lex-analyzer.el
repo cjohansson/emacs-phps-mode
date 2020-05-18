@@ -2407,20 +2407,21 @@ SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
         (setq semantic-lex-analyzer #'phps-mode-lex-analyzer--re2c-lex)
 
         ;; Catch errors to kill generated buffer
-        (condition-case conditions
-            (progn
+        (let ((got-error t))
+          (unwind-protect
               ;; Run lexer or incremental lexer
-              (if (and start end)
-                  (let ((incremental-tokens (semantic-lex start end)))
-                    (setq
-                     phps-mode-lex-analyzer--tokens
-                     (append tokens incremental-tokens)))
-                (setq
-                 phps-mode-lex-analyzer--tokens
-                 (semantic-lex-buffer))))
-          (error (progn
-                   (kill-buffer)
-                   (signal 'error (cdr conditions)))))
+              (progn
+                (if (and start end)
+                    (let ((incremental-tokens (semantic-lex start end)))
+                      (setq
+                       phps-mode-lex-analyzer--tokens
+                       (append tokens incremental-tokens)))
+                  (setq
+                   phps-mode-lex-analyzer--tokens
+                   (semantic-lex-buffer)))
+                (setq got-error nil))
+            (when got-error
+              (kill-buffer))))
 
         ;; Copy variables outside of buffer
         (setq state phps-mode-lexer--state)
