@@ -213,7 +213,7 @@
                       (with-current-buffer key
                         (setq phps-mode-serial--status 'error))
                       (when start-error
-                        (funcall start-error)))))))
+                        (funcall start-error value)))))))
             key)
            phps-mode-serial--async-threads))
 
