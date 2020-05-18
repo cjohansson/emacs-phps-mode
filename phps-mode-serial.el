@@ -7,7 +7,6 @@
 
 ;;; Code:
 
-
 ;; VARIABLES
 
 
@@ -43,7 +42,7 @@
     (:propertize (:eval (if (equal phps-mode-serial--status 'running) "Running.." ""))
                  face phps-mode-serial--mode-line-face-running)
     (:propertize (:eval (if (equal phps-mode-serial--status 'error) "Error" ""))
-                     face phps-mode-serial--mode-line-face-error)
+                 face phps-mode-serial--mode-line-face-error)
     (:propertize (:eval (if (equal phps-mode-serial--status 'success) "OK" ""))
                  face phps-mode-serial--mode-line-face-success)))
 
@@ -64,8 +63,8 @@
          (thread-live-p (gethash key phps-mode-serial--async-threads)))
     (thread-signal (gethash key phps-mode-serial--async-threads) 'quit nil)))
 
-(defun phps-mode-serial-commands (key start end &optional async async-by-process)
-  "Run command with KEY, first START and if successfully then END with the result of START as argument.  Optional arguments ASYNC ASYNC-BY-PROCESS specifies additional options."
+(defun phps-mode-serial-commands (key start end &optional start-error end-error async async-by-process)
+  "Run command with KEY, first START and if successfully then END with the result of START as argument.  Optional arguments START-ERROR, END-ERROR that are called on errors. ASYNC ASYNC-BY-PROCESS specifies additional options for synchronicity."
   (let ((start-time (current-time)))
     (when phps-mode-serial--profiling
       (message "PHPs - Starting serial commands for buffer '%s'.." key))
@@ -92,7 +91,8 @@
                           (progn
                             (let ((start-return (funcall start)))
                               (list 'success start-return start-time)))
-                        ((error t) (list 'error (cdr conditions) start-time))))
+                        (error (list 'error conditions start-time))))
+
                     (lambda (start-return)
                       (let ((status (car start-return))
                             (value (car (cdr start-return)))
@@ -117,7 +117,7 @@
                                   (progn
                                     (let ((return (funcall end value)))
                                       (setq end-return (list 'success return start-time))))
-                                ((error t) (setq end-return (list 'error (cdr conditions) start-time))))
+                                (error (setq end-return (list 'error conditions start-time))))
 
                               ;; Profile execution in debug mode
                               (when phps-mode-serial--profiling
@@ -139,11 +139,13 @@
                                 (when (string= status "error")
                                   (with-current-buffer key
                                     (setq phps-mode-serial--status 'error))
-                                  (display-warning 'phps-mode (format "%s" (car value))))))
+                                  (when end-error
+                                    (funcall end-error value)))))
                           (when (string= status "error")
                             (with-current-buffer key
                               (setq phps-mode-serial--status 'error))
-                            (display-warning 'phps-mode (format "%s" (car value))))))))
+                            (when start-error
+                              (funcall start-error value)))))))
                    phps-mode-serial--async-processes))
               (signal 'error (list "Async-start function is missing")))
 
@@ -159,7 +161,7 @@
                 (condition-case conditions
                     (let ((return (funcall start)))
                       (setq start-return (list 'success return start-time)))
-                  ((error t) (setq start-return (list 'error (cdr conditions) start-time))))
+                  (error (setq start-return (list 'error conditions start-time))))
 
                 ;; Profile execution in debug mode
                 (when phps-mode-serial--profiling
@@ -177,11 +179,12 @@
 
                   (if (string= status "success")
                       (progn
+
                         ;; Then execute end lambda
                         (condition-case conditions
                             (let ((return (funcall end value)))
                               (setq end-return (list 'success return start-time)))
-                          ((error t) (setq end-return (list 'error (cdr conditions) start-time))))
+                          (error (setq end-return (list 'error conditions start-time))))
 
                         ;; Profile execution
                         (when phps-mode-serial--profiling
@@ -203,12 +206,14 @@
                           (when (string= status "error")
                             (with-current-buffer key
                               (setq phps-mode-serial--status 'error))
-                            (display-warning 'phps-mode (format "%s" (car value))))))
+                            (when end-error
+                              (funcall end-error value)))))
 
                     (when (string= status "error")
                       (with-current-buffer key
                         (setq phps-mode-serial--status 'error))
-                      (display-warning 'phps-mode (format "%s" (car value))))))))
+                      (when start-error
+                        (funcall start-error value)))))))
             key)
            phps-mode-serial--async-threads))
 
@@ -220,7 +225,7 @@
             (progn
               (let ((return (funcall start)))
                 (setq start-return (list 'success return start-time))))
-          ((error t) (setq start-return (list 'error (cdr conditions) start-time))))
+          (error (setq start-return (list 'error conditions start-time))))
 
         ;; Profile execution in debug mode
         (when phps-mode-serial--profiling
@@ -243,7 +248,7 @@
                 (condition-case conditions
                     (let ((return (funcall end value)))
                       (setq end-return (list 'success return start-time)))
-                  ((error t) (setq end-return (list 'error (cdr conditions) start-time))))
+                  (error (setq end-return (list 'error conditions start-time))))
 
                 ;; Profile execution in debug mode
                 (when phps-mode-serial--profiling
@@ -265,13 +270,14 @@
                   (when (string= status "error")
                     (with-current-buffer key
                       (setq phps-mode-serial--status 'error))
-                    (display-warning 'phps-mode (format "%s" (car value))))))
+                    (when end-error
+                      (funcall end-error value)))))
 
             (when (string= status "error")
               (with-current-buffer key
                 (setq phps-mode-serial--status 'error))
-              (display-warning 'phps-mode (format "%s" (car value))))))))))
-
+              (when start-error
+                (funcall start-error value)))))))))
 
 (provide 'phps-mode-serial)
 ;;; phps-mode-serial.el ends here
