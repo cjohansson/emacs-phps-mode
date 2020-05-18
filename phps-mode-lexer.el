@@ -247,7 +247,7 @@
 (defun phps-mode-lexer--re2c-execute ()
   "Execute matching body (if any)."
   (if phps-mode-lexer--match-body
-      (progn        
+      (progn
         (set-match-data phps-mode-lexer--match-data)
         (funcall phps-mode-lexer--match-body))
     (signal
@@ -1110,8 +1110,8 @@
                 (list
                  (format
                   "Un-terminated comment starting at %d"
-                  (point))
-                 (point))))))))
+                  start)
+                 start)))))))
 
       (phps-mode-lexer--match-macro
        (and ST_IN_SCRIPTING (looking-at (concat "\\?>" phps-mode-lexer--NEWLINE "?")))
@@ -1281,7 +1281,7 @@
 
       (phps-mode-lexer--match-macro
        (and ST_DOUBLE_QUOTES (looking-at phps-mode-lexer--ANY_CHAR))
-       (let ((start (car (cdr (car (cdr phps-mode-lexer--tokens))))))
+       (let ((start (car (cdr (nth 2 phps-mode-lexer--tokens)))))
          (let ((string-start (search-forward-regexp "[^\\\\]\"" nil t)))
            (if string-start
                (let* ((end (- (match-end 0) 1))
@@ -1308,60 +1308,64 @@
 
       (phps-mode-lexer--match-macro
        (and ST_BACKQUOTE (looking-at phps-mode-lexer--ANY_CHAR))
-       (let ((string-start (search-forward-regexp "\\([^\\\\]`\\|\\$\\|{\\)" nil t)))
-         (if string-start
-             (let ((start (- (match-end 0) 1)))
-               ;; (message "Skipping backquote forward over %s" (buffer-substring-no-properties old-start start))
-               (phps-mode-lexer--RETURN_TOKEN 'T_CONSTANT_ENCAPSED_STRING old-start start))
-           (progn
-             (signal
-              'phps-lexer-error
-              (list
-               (format "Found no ending of back-quoted string starting at %d" (point))
-               (point)))))))
+       (let ((start (match-beginning 0)))
+         (let ((string-start (search-forward-regexp "\\([^\\\\]`\\|\\$\\|{\\)" nil t)))
+           (if string-start
+               (let ((start (- (match-end 0) 1)))
+                 ;; (message "Skipping backquote forward over %s" (buffer-substring-no-properties old-start start))
+                 (phps-mode-lexer--RETURN_TOKEN 'T_CONSTANT_ENCAPSED_STRING old-start start))
+             (progn
+               (message "Was here")
+               (signal
+                'phps-lexer-error
+                (list
+                 (format "Found no ending of back-quoted string starting at %d" start)
+                 start)))))))
 
       (phps-mode-lexer--match-macro
        (and ST_HEREDOC (looking-at phps-mode-lexer--ANY_CHAR))
        ;; Check for $, ${ and {$ forward
-       (let ((string-start
-              (search-forward-regexp
-               (concat
-                "\\(\n"
-                heredoc-label
-                ";?\n\\|\\$"
-                phps-mode-lexer--LABEL
-                "\\|{\\$"
-                phps-mode-lexer--LABEL
-                "\\|\\${"
-                phps-mode-lexer--LABEL
-                "\\)"
-                ) nil t)))
-         (if string-start
-             (let* ((start (match-beginning 0))
-                    (end (match-end 0))
-                    (data (buffer-substring-no-properties start end)))
-               ;; (message "Found something ending at %s" data)
+       (let ((start (car (cdr (car phps-mode-lexer--tokens)))))
+         (let ((string-start
+                (search-forward-regexp
+                 (concat
+                  "\\(\n"
+                  heredoc-label
+                  ";?\n\\|\\$"
+                  phps-mode-lexer--LABEL
+                  "\\|{\\$"
+                  phps-mode-lexer--LABEL
+                  "\\|\\${"
+                  phps-mode-lexer--LABEL
+                  "\\)"
+                  ) nil t)))
+           (if string-start
+               (let* ((start (match-beginning 0))
+                      (end (match-end 0))
+                      (data (buffer-substring-no-properties start end)))
+                 ;; (message "Found something ending at %s" data)
 
-               (cond
+                 (cond
 
-                ((string-match (concat "\n" heredoc-label ";?\n") data)
-                 ;; (message "Found heredoc end at %s-%s" start end)
-                 (phps-mode-lexer--BEGIN 'ST_END_HEREDOC)
-                 (phps-mode-lexer--RETURN_TOKEN 'T_ENCAPSED_AND_WHITESPACE old-start start))
+                  ((string-match (concat "\n" heredoc-label ";?\n") data)
+                   ;; (message "Found heredoc end at %s-%s" start end)
+                   (phps-mode-lexer--BEGIN 'ST_END_HEREDOC)
+                   (phps-mode-lexer--RETURN_TOKEN 'T_ENCAPSED_AND_WHITESPACE old-start start))
 
-                (t
-                 ;; (message "Found variable at '%s'.. Skipping forward to %s" data start)
-                 (phps-mode-lexer--RETURN_TOKEN 'T_ENCAPSED_AND_WHITESPACE old-start start)
-                 )
+                  (t
+                   ;; (message "Found variable at '%s'.. Skipping forward to %s" data start)
+                   (phps-mode-lexer--RETURN_TOKEN 'T_ENCAPSED_AND_WHITESPACE old-start start)
+                   )
 
-                ))
-           (progn
-             (signal
-              'phps-lexer-error
-              (list
-               (format "Found no ending of heredoc at %d" (point))
-               (point)))))))
+                  ))
+             (progn
+               (signal
+                'phps-lexer-error
+                (list
+                 (format "Found no ending of heredoc starting at %d" start)
+                 start)))))))
 
+      ;; TODO Fix start position of error
       (phps-mode-lexer--match-macro
        (and ST_NOWDOC (looking-at phps-mode-lexer--ANY_CHAR))
        (let ((string-start (search-forward-regexp (concat "\n" heredoc-label ";?\\\n") nil t)))
@@ -1377,7 +1381,7 @@
              (signal
               'phps-lexer-error
               (list
-               (format "Found no ending of newdoc starting at %d" (point))
+               (format "Found no ending of nowdoc starting at %d" (point))
                (point)))))))
 
       (phps-mode-lexer--match-macro
@@ -1385,8 +1389,8 @@
        (signal
         'phps-lexer-error
         (list
-         (format "Unexpected character at %d" (point))
-         (point))))
+         (format "Unexpected character at %d" (match-beginning 0))
+         (match-beginning 0))))
 
       (when phps-mode-lexer--match-length
         (phps-mode-lexer--re2c-execute)))))
