@@ -256,10 +256,22 @@
 
   ;; Nowdoc
   (phps-mode-test--with-buffer
-   "<?php echo <<<'MYLABEL'\nline 1\n line 2\nMYLABEL;\n"
-   nil
+   "<?php\necho <<<'EOD'\nExample of string spanning multiple lines\nusing nowdoc syntax. Backslashes are always treated literally,\ne.g. \\ and \'.\nEOD;\n"
+   "Example #7 Nowdoc string quoting example"
    (should (equal phps-mode-lex-analyzer--tokens
-                  '((T_OPEN_TAG 1 . 7) (T_ECHO 7 . 11) (T_START_HEREDOC 12 . 25) (T_ENCAPSED_AND_WHITESPACE 25 . 39) (T_END_HEREDOC 39 . 47) (";" 47 . 48)))))
+                  '((T_OPEN_TAG 1 . 7) (T_ECHO 7 . 11) (T_START_HEREDOC 12 . 21) (T_ENCAPSED_AND_WHITESPACE 21 . 139) (T_END_HEREDOC 139 . 143) (";" 143 . 144)))))
+
+  (phps-mode-test--with-buffer
+   "<?php\nclass foo\n{\n    public $foo;\n    public $bar;\n\n    function __construct()\n    {\n        $this->foo = 'Foo';\n        $this->bar = array('Bar1', 'Bar2', 'Bar3');\n    }\n}\n\n$foo = new foo();\n$name = 'MyName';\n\necho <<<'EOT'\nMy name is \"$name\". I am printing some $foo->foo.\nNow, I am printing some {$foo->bar[1]}.\nThis should not print a capital 'A': \x41\nEOT;\n?>\n"
+   "Example #8 Nowdoc string quoting example with variables"
+   (should (equal phps-mode-lex-analyzer--tokens
+                  '((T_OPEN_TAG 1 . 7) (T_CLASS 7 . 12) (T_STRING 13 . 16) ("{" 17 . 18) (T_PUBLIC 23 . 29) (T_VARIABLE 30 . 34) (";" 34 . 35) (T_PUBLIC 40 . 46) (T_VARIABLE 47 . 51) (";" 51 . 52) (T_FUNCTION 58 . 66) (T_STRING 67 . 78) ("(" 78 . 79) (")" 79 . 80) ("{" 85 . 86) (T_VARIABLE 95 . 100) (T_OBJECT_OPERATOR 100 . 102) (T_STRING 102 . 105) ("=" 106 . 107) (T_CONSTANT_ENCAPSED_STRING 108 . 113) (";" 113 . 114) (T_VARIABLE 123 . 128) (T_OBJECT_OPERATOR 128 . 130) (T_STRING 130 . 133) ("=" 134 . 135) (T_ARRAY 136 . 141) ("(" 141 . 142) (T_CONSTANT_ENCAPSED_STRING 142 . 148) ("," 148 . 149) (T_CONSTANT_ENCAPSED_STRING 150 . 156) ("," 156 . 157) (T_CONSTANT_ENCAPSED_STRING 158 . 164) (")" 164 . 165) (";" 165 . 166) ("}" 171 . 172) ("}" 173 . 174) (T_VARIABLE 176 . 180) ("=" 181 . 182) (T_NEW 183 . 186) (T_STRING 187 . 190) ("(" 190 . 191) (")" 191 . 192) (";" 192 . 193) (T_VARIABLE 194 . 199) ("=" 200 . 201) (T_CONSTANT_ENCAPSED_STRING 202 . 210) (";" 210 . 211) (T_ECHO 213 . 217) (T_START_HEREDOC 218 . 227) (T_ENCAPSED_AND_WHITESPACE 227 . 355) (T_END_HEREDOC 355 . 359) (";" 359 . 360) (";" 361 . 363) (T_CLOSE_TAG 361 . 363) (T_INLINE_HTML 363 . 364)))))
+
+  (phps-mode-test--with-buffer
+   "<?php\nclass foo {\n    public $bar = <<<'EOT'\nbar\nEOT;\n}\n?>\n"
+   "Example #9 Static data example (Nowdoc)"
+   (should (equal phps-mode-lex-analyzer--tokens
+                  '((T_OPEN_TAG 1 . 7) (T_CLASS 7 . 12) (T_STRING 13 . 16) ("{" 17 . 18) (T_PUBLIC 23 . 29) (T_VARIABLE 30 . 34) ("=" 35 . 36) (T_START_HEREDOC 37 . 46) (T_ENCAPSED_AND_WHITESPACE 46 . 49) (T_END_HEREDOC 49 . 53) (";" 53 . 54) ("}" 55 . 56) (";" 57 . 59) (T_CLOSE_TAG 57 . 59) (T_INLINE_HTML 59 . 60)))))
 
   ;; Backquotes
   (phps-mode-test--with-buffer
