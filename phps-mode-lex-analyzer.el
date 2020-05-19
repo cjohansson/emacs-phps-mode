@@ -75,7 +75,10 @@
   "Latest state.")
 
 (defvar-local phps-mode-lex-analyzer--states nil
-  "History of state and stack-stack.")
+  "History of state, heredoc-label, stack-stack and heredoc label stack.")
+
+(defvar-local phps-mode-lex-analyzer--heredoc-label-stack nil
+  "Latest Heredoc label-stack.")
 
 (defvar-local phps-mode-lex-analyzer--state-stack nil
   "Latest state-stack.")
@@ -91,6 +94,7 @@
   (setq phps-mode-lex-analyzer--idle-timer nil)
   (setq phps-mode-lex-analyzer--lines-indent nil)
   (setq phps-mode-lex-analyzer--imenu nil)
+  (setq phps-mode-lex-analyzer--heredoc-label-stack nil)
   (setq phps-mode-lex-analyzer--processed-buffer-p nil)
   (setq phps-mode-lex-analyzer--tokens nil)
   (setq phps-mode-lex-analyzer--state nil)
@@ -355,6 +359,9 @@
            (setq phps-mode-lex-analyzer--states (nth 1 result))
            (setq phps-mode-lex-analyzer--state (nth 2 result))
            (setq phps-mode-lex-analyzer--state-stack (nth 3 result))
+           (setq phps-mode-lex-analyzer--heredoc-label (nth 4 result))
+           (setq phps-mode-lex-analyzer--heredoc-label-stack (nth 5 result))
+
            (phps-mode-lex-analyzer--reset-imenu)
 
            ;; Apply syntax color on tokens
@@ -397,7 +404,7 @@
 
 (defun phps-mode-lex-analyzer--incremental-lex-string
     (buffer-name buffer-contents incremental-start-new-buffer point-max
-                 head-states incremental-state incremental-state-stack head-tokens &optional force-synchronous)
+                 head-states incremental-state incremental-state-stack incremental-heredoc-label incremental-heredoc-label-stack head-tokens &optional force-synchronous)
   "Incremental lex region."
   (let ((async (and (boundp 'phps-mode-async-process)
                     phps-mode-async-process))
@@ -414,6 +421,8 @@
                 head-states
                 incremental-state
                 incremental-state-stack
+                incremental-heredoc-label
+                incremental-heredoc-label-stack
                 head-tokens))
 
      (lambda(result)
@@ -427,6 +436,9 @@
            (setq phps-mode-lex-analyzer--states (nth 1 result))
            (setq phps-mode-lex-analyzer--state (nth 2 result))
            (setq phps-mode-lex-analyzer--state-stack (nth 3 result))
+           (setq phps-mode-lex-analyzer--heredoc-label (nth 4 result))
+           (setq phps-mode-lex-analyzer--heredoc-label-stack (nth 5 result))
+
            (setq phps-mode-lex-analyzer--processed-buffer-p nil)
            (phps-mode-lex-analyzer--reset-imenu)
 
@@ -557,6 +569,8 @@
              (message "Processing change point minimum: %s" phps-mode-lex-analyzer--change-min))
             (let ((incremental-state nil)
                   (incremental-state-stack nil)
+                  (incremental-heredoc-label nil)
+                  (incremental-heredoc-label-stack nil)
                   (incremental-tokens nil)
                   (head-states '())
                   (head-tokens '())
@@ -574,6 +588,8 @@
               (setq phps-mode-lex-analyzer--states nil)
               (setq phps-mode-lex-analyzer--state nil)
               (setq phps-mode-lex-analyzer--state-stack nil)
+              (setq phps-mode-lex-analyzer--heredoc-label nil)
+              (setq phps-mode-lex-analyzer--heredoc-label-stack nil)
 
               ;; NOTE Starts are inclusive while ends are exclusive buffer locations
 
@@ -606,7 +622,7 @@
                      (message "Found head tokens"))
 
                     ;; In old buffer:
-                    ;; 1. Determine state (incremental-state) and state-stack (incremental-state-stack) before incremental start
+                    ;; 1. Determine state (incremental-state) and state-stack (incremental-state-stack) heredoc label (incremental-heredoc-label) heredoc-label-stack (heredoc-label-stack) before incremental start
                     ;; 2. Build list of states before incremental start (head-states)
                     (catch 'quit
                       (dolist (state-object (nreverse old-states))
@@ -615,13 +631,17 @@
                               (progn
                                 (setq incremental-state (nth 2 state-object))
                                 (setq incremental-state-stack (nth 3 state-object))
+                                (setq incremental-heredoc-label (nth 4 state-object))
+                                (setq incremental-heredoc-label-stack (nth 5 state-object))
                                 (push state-object head-states))
                             (throw 'quit "break")))))
 
                     (phps-mode-debug-message
                      (message "Head states: %s" head-states)
                      (message "Incremental state: %s" incremental-state)
-                     (message "State stack: %s" incremental-state-stack))
+                     (message "State stack: %s" incremental-state-stack)
+                     (message "Incremental heredoc-label: %s" incremental-heredoc-label)
+                     (message "Incremental heredoc-label-stack: %s" incremental-heredoc-label-stack))
 
                     (if (and
                          head-states
@@ -644,6 +664,8 @@
                            head-states
                            incremental-state
                            incremental-state-stack
+                           incremental-heredoc-label
+                           incremental-heredoc-label-stack
                            head-tokens
                            force-synchronous)
 
@@ -2390,60 +2412,67 @@ SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
   (unless phps-mode-lex-analyzer--state
     (setq phps-mode-lex-analyzer--state 'ST_INITIAL)))
 
-(defun phps-mode-lex-analyzer--lex-string (contents &optional start end states state state-stack tokens)
+(defun phps-mode-lex-analyzer--lex-string (contents &optional start end states state state-stack heredoc-label heredoc-label-stack tokens)
   "Run lexer on CONTENTS."
   ;; Create a separate buffer, run lexer inside of it, catch errors and return them
   ;; to enable nice presentation
   (require 'phps-mode-macros)
-  (let ((errors))
-    (let ((buffer (generate-new-buffer "*PHPs Lexer*")))
+  (let ((buffer (generate-new-buffer "*PHPs Lexer*")))
 
-      ;; Create temporary buffer and run lexer in it
-      (with-current-buffer buffer
-        (insert contents)
+    ;; Create temporary buffer and run lexer in it
+    (with-current-buffer buffer
+      (insert contents)
 
-        (if tokens
-            (setq phps-mode-lexer--tokens (nreverse tokens))
-          (setq phps-mode-lexer--tokens nil))
-        (if state
-            (setq phps-mode-lexer--state state)
-          (setq phps-mode-lexer--state 'ST_INITIAL))
-        (if states
-            (setq phps-mode-lexer--states states)
-          (setq phps-mode-lexer--states nil))
-        (if state-stack
-            (setq phps-mode-lexer--state-stack state-stack)
-          (setq phps-mode-lexer--state-stack nil))
+      (if tokens
+          (setq phps-mode-lexer--tokens (nreverse tokens))
+        (setq phps-mode-lexer--tokens nil))
+      (if state
+          (setq phps-mode-lexer--state state)
+        (setq phps-mode-lexer--state 'ST_INITIAL))
+      (if states
+          (setq phps-mode-lexer--states states)
+        (setq phps-mode-lexer--states nil))
+      (if state-stack
+          (setq phps-mode-lexer--state-stack state-stack)
+        (setq phps-mode-lexer--state-stack nil))
+      (if heredoc-label
+          (setq phps-mode-lexer--heredoc-label heredoc-label)
+        (setq phps-mode-lexer--heredoc-label nil))
+      (if heredoc-label-stack
+          (setq phps-mode-lexer--heredoc-label-stack heredoc-label-stack)
+        (setq phps-mode-lexer--heredoc-label-stack nil))
 
-        ;; Setup lexer settings
-        (when (boundp 'phps-mode-syntax-table)
-          (setq semantic-lex-syntax-table phps-mode-syntax-table))
-        (setq semantic-lex-analyzer #'phps-mode-lex-analyzer--re2c-lex)
+      ;; Setup lexer settings
+      (when (boundp 'phps-mode-syntax-table)
+        (setq semantic-lex-syntax-table phps-mode-syntax-table))
+      (setq semantic-lex-analyzer #'phps-mode-lex-analyzer--re2c-lex)
 
-        ;; Catch errors to kill generated buffer
-        (let ((got-error t))
-          (unwind-protect
-              ;; Run lexer or incremental lexer
-              (progn
-                (if (and start end)
-                    (let ((incremental-tokens (semantic-lex start end)))
-                      (setq
-                       phps-mode-lex-analyzer--tokens
-                       (append tokens incremental-tokens)))
-                  (setq
-                   phps-mode-lex-analyzer--tokens
-                   (semantic-lex-buffer)))
-                (setq got-error nil))
-            (when got-error
-              (kill-buffer))))
+      ;; Catch errors to kill generated buffer
+      (let ((got-error t))
+        (unwind-protect
+            ;; Run lexer or incremental lexer
+            (progn
+              (if (and start end)
+                  (let ((incremental-tokens (semantic-lex start end)))
+                    (setq
+                     phps-mode-lex-analyzer--tokens
+                     (append tokens incremental-tokens)))
+                (setq
+                 phps-mode-lex-analyzer--tokens
+                 (semantic-lex-buffer)))
+              (setq got-error nil))
+          (when got-error
+            (kill-buffer))))
 
-        ;; Copy variables outside of buffer
-        (setq state phps-mode-lexer--state)
-        (setq state-stack phps-mode-lexer--state-stack)
-        (setq states phps-mode-lexer--states)
-        (setq tokens (nreverse phps-mode-lexer--tokens))
-        (kill-buffer)))
-    (list tokens states state state-stack errors)))
+      ;; Copy variables outside of buffer
+      (setq state phps-mode-lexer--state)
+      (setq state-stack phps-mode-lexer--state-stack)
+      (setq states phps-mode-lexer--states)
+      (setq tokens (nreverse phps-mode-lexer--tokens))
+      (setq heredoc-label phps-mode-lexer--heredoc-label)
+      (setq heredoc-label-stack phps-mode-lexer--heredoc-label-stack)
+      (kill-buffer)))
+  (list tokens states state state-stack heredoc-label heredoc-label-stack))
 
 (provide 'phps-mode-lex-analyzer)
 
