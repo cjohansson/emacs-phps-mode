@@ -229,32 +229,45 @@
                   '((T_OPEN_TAG 1 . 7) (T_ECHO 7 . 11) ("\"" 12 . 13) (T_ENCAPSED_AND_WHITESPACE 13 . 20) (T_VARIABLE 20 . 30) (T_NUM_STRING 30 . 31) ("]" 31 . 32) (T_CONSTANT_ENCAPSED_STRING 32 . 46) ("\"" 46 . 47) (";" 47 . 48)))))
 
   ;; HEREDOC
-  (phps-mode-test--with-buffer
-   "<?php echo <<<\"MYLABEL\"\nline 1\n line 2\nMYLABEL\n;"
-   nil
-   (should (equal phps-mode-lex-analyzer--tokens
-                  '((T_OPEN_TAG 1 . 7) (T_ECHO 7 . 11) (T_START_HEREDOC 12 . 25) (T_ENCAPSED_AND_WHITESPACE 25 . 39) (T_END_HEREDOC 39 . 47) (";" 48 . 49)))))
 
   (phps-mode-test--with-buffer
-   "<?php echo <<<MYLABEL\nline 1\n line 2\nMYLABEL\n;"
-   nil
+   "<?php\nclass foo {\n    public $bar = <<<EOT\nbar\n    EOT;\n}\n// Identifier must not be indented\n?>\n"
+   "Example #1 Invalid example (HEREDOC)"
    (should (equal phps-mode-lex-analyzer--tokens
-                  '((T_OPEN_TAG 1 . 7) (T_ECHO 7 . 11) (T_START_HEREDOC 12 . 23) (T_ENCAPSED_AND_WHITESPACE 23 . 37) (T_END_HEREDOC 37 . 45) (";" 46 . 47)))))
+                  nil)))
 
   (phps-mode-test--with-buffer
-   "<?php echo <<<\"MYLABEL\"\nMYLABEL\n"
-   nil
+   "<?php\nclass foo {\n    public $bar = <<<EOT\nbar\nEOT;\n}\n?>\n"
+   "Example #2 Valid example (HEREDOC)"
    (should (equal phps-mode-lex-analyzer--tokens
-                  '((T_OPEN_TAG 1 . 7) (T_ECHO 7 . 11) (T_START_HEREDOC 12 . 25) (T_END_HEREDOC 25 . 33)))))
+                  '((T_OPEN_TAG 1 . 7) (T_CLASS 7 . 12) (T_STRING 13 . 16) ("{" 17 . 18) (T_PUBLIC 23 . 29) (T_VARIABLE 30 . 34) ("=" 35 . 36) (T_START_HEREDOC 37 . 44) (T_ENCAPSED_AND_WHITESPACE 44 . 47) (T_END_HEREDOC 47 . 51) (";" 51 . 52) ("}" 53 . 54) (";" 55 . 57) (T_CLOSE_TAG 55 . 57) (T_INLINE_HTML 57 . 58)))))
 
-  ;; Test heredoc with variables $, {$, ${ here
   (phps-mode-test--with-buffer
-   "<?php echo <<<\"MYLABEL\"\nline 1 $variable1\n line 2\n${variable2} line 3\n line {$variable3} here\nline 5 $variable[3] here\nMYLABEL;\n"
-   nil
+   "<?php\n$str = <<<EOD\nExample of string\nspanning multiple lines\nusing heredoc syntax.\nEOD;\n\n/* More complex example, with variables. */\nclass foo\n{\n    var $foo;\n    var $bar;\n\n    function __construct()\n    {\n        $this->foo = 'Foo';\n        $this->bar = array('Bar1', 'Bar2', 'Bar3');\n    }\n}\n\n$foo = new foo();\n$name = 'MyName';\n\necho <<<EOT\nMy name is \"$name\". I am printing some $foo->foo.\nNow, I am printing some {$foo->bar[1]}.\nThis should print a capital 'A': \x41\nEOT;\n?>\n"
+   "Example #3 Heredoc string quoting example"
    (should (equal phps-mode-lex-analyzer--tokens
-                  '((T_OPEN_TAG 1 . 7) (T_ECHO 7 . 11) (T_START_HEREDOC 12 . 25) (T_ENCAPSED_AND_WHITESPACE 25 . 32) (T_VARIABLE 32 . 42) (T_ENCAPSED_AND_WHITESPACE 42 . 51) (T_DOLLAR_OPEN_CURLY_BRACES 51 . 53) (T_STRING_VARNAME 53 . 62) ("}" 62 . 63) (T_ENCAPSED_AND_WHITESPACE 63 . 77) (T_CURLY_OPEN 77 . 78) (T_VARIABLE 78 . 88) ("}" 88 . 89) (T_ENCAPSED_AND_WHITESPACE 89 . 102) (T_VARIABLE 102 . 112) (T_NUM_STRING 112 . 113) ("]" 113 . 114) (T_ENCAPSED_AND_WHITESPACE 114 . 119) (T_END_HEREDOC 119 . 127) (";" 127 . 128)))))
+                  '((T_OPEN_TAG 1 . 7) (T_VARIABLE 7 . 11) ("=" 12 . 13) (T_START_HEREDOC 14 . 21) (T_ENCAPSED_AND_WHITESPACE 21 . 84) (T_END_HEREDOC 84 . 88) (";" 88 . 89) (T_COMMENT 91 . 134) (T_CLASS 135 . 140) (T_STRING 141 . 144) ("{" 145 . 146) (T_VAR 151 . 154) (T_VARIABLE 155 . 159) (";" 159 . 160) (T_VAR 165 . 168) (T_VARIABLE 169 . 173) (";" 173 . 174) (T_FUNCTION 180 . 188) (T_STRING 189 . 200) ("(" 200 . 201) (")" 201 . 202) ("{" 207 . 208) (T_VARIABLE 217 . 222) (T_OBJECT_OPERATOR 222 . 224) (T_STRING 224 . 227) ("=" 228 . 229) (T_CONSTANT_ENCAPSED_STRING 230 . 235) (";" 235 . 236) (T_VARIABLE 245 . 250) (T_OBJECT_OPERATOR 250 . 252) (T_STRING 252 . 255) ("=" 256 . 257) (T_ARRAY 258 . 263) ("(" 263 . 264) (T_CONSTANT_ENCAPSED_STRING 264 . 270) ("," 270 . 271) (T_CONSTANT_ENCAPSED_STRING 272 . 278) ("," 278 . 279) (T_CONSTANT_ENCAPSED_STRING 280 . 286) (")" 286 . 287) (";" 287 . 288) ("}" 293 . 294) ("}" 295 . 296) (T_VARIABLE 298 . 302) ("=" 303 . 304) (T_NEW 305 . 308) (T_STRING 309 . 312) ("(" 312 . 313) (")" 313 . 314) (";" 314 . 315) (T_VARIABLE 316 . 321) ("=" 322 . 323) (T_CONSTANT_ENCAPSED_STRING 324 . 332) (";" 332 . 333) (T_ECHO 335 . 339) (T_START_HEREDOC 340 . 347) (T_ENCAPSED_AND_WHITESPACE 347 . 359) (T_VARIABLE 359 . 364) (T_ENCAPSED_AND_WHITESPACE 364 . 386) (T_VARIABLE 386 . 390) (T_OBJECT_OPERATOR 390 . 392) (T_STRING 392 . 395) (T_ENCAPSED_AND_WHITESPACE 395 . 421) (T_CURLY_OPEN 421 . 422) (T_VARIABLE 422 . 426) (T_OBJECT_OPERATOR 426 . 428) (T_STRING 428 . 431) ("[" 431 . 432) (T_LNUMBER 432 . 433) ("]" 433 . 434) ("}" 434 . 435) (T_ENCAPSED_AND_WHITESPACE 435 . 471) (T_END_HEREDOC 471 . 475) (";" 475 . 476) (";" 477 . 479) (T_CLOSE_TAG 477 . 479) (T_INLINE_HTML 479 . 480)))))
 
-  ;; Nowdoc
+  (phps-mode-test--with-buffer
+   "<?php\nvar_dump(array(<<<EOD\nfoobar!\nEOD\n));\n?>\n"
+   "Example #4 Heredoc in arguments example"
+   (should (equal phps-mode-lex-analyzer--tokens
+                  '((T_OPEN_TAG 1 . 7) (T_STRING 7 . 15) ("(" 15 . 16) (T_ARRAY 16 . 21) ("(" 21 . 22) (T_START_HEREDOC 22 . 29) (T_ENCAPSED_AND_WHITESPACE 29 . 36) (T_END_HEREDOC 36 . 40) (")" 41 . 42) (")" 42 . 43) (";" 43 . 44) (";" 45 . 47) (T_CLOSE_TAG 45 . 47) (T_INLINE_HTML 47 . 48)))))
+
+  (phps-mode-test--with-buffer
+   "<?php\n// Static variables\nfunction foo()\n{\n    static $bar = <<<LABEL\nNothing in here...\nLABEL;\n}\n\n// Class properties/constants\nclass foo\n{\n    const BAR = <<<FOOBAR\nConstant example\nFOOBAR;\n\n    public $baz = <<<FOOBAR\nProperty example\nFOOBAR;\n}\n?>\n"
+   "Example #5 Using Heredoc to initialize static values"
+   (should (equal phps-mode-lex-analyzer--tokens
+                  '((T_OPEN_TAG 1 . 7) (T_COMMENT 7 . 26) (T_FUNCTION 27 . 35) (T_STRING 36 . 39) ("(" 39 . 40) (")" 40 . 41) ("{" 42 . 43) (T_STATIC 48 . 54) (T_VARIABLE 55 . 59) ("=" 60 . 61) (T_START_HEREDOC 62 . 71) (T_ENCAPSED_AND_WHITESPACE 71 . 89) (T_END_HEREDOC 89 . 95) (";" 95 . 96) ("}" 97 . 98) (T_COMMENT 100 . 129) (T_CLASS 130 . 135) (T_STRING 136 . 139) ("{" 140 . 141) (T_CONST 146 . 151) (T_STRING 152 . 155) ("=" 156 . 157) (T_START_HEREDOC 158 . 168) (T_ENCAPSED_AND_WHITESPACE 168 . 184) (T_END_HEREDOC 184 . 191) (";" 191 . 192) (T_PUBLIC 198 . 204) (T_VARIABLE 205 . 209) ("=" 210 . 211) (T_START_HEREDOC 212 . 222) (T_ENCAPSED_AND_WHITESPACE 222 . 238) (T_END_HEREDOC 238 . 245) (";" 245 . 246) ("}" 247 . 248) (";" 249 . 251) (T_CLOSE_TAG 249 . 251) (T_INLINE_HTML 251 . 252)))))
+
+  (phps-mode-test--with-buffer
+   "<?php\necho <<<\"FOOBAR\"\nHello World!\nFOOBAR;\n?>\n"
+   "Example #6 Using double quotes in Heredoc"
+   (should (equal phps-mode-lex-analyzer--tokens
+                  '((T_OPEN_TAG 1 . 7) (T_ECHO 7 . 11) (T_START_HEREDOC 12 . 24) (T_ENCAPSED_AND_WHITESPACE 24 . 36) (T_END_HEREDOC 36 . 43) (";" 43 . 44) (";" 45 . 47) (T_CLOSE_TAG 45 . 47) (T_INLINE_HTML 47 . 48)))))
+
+  ;; NOWDOC
+
   (phps-mode-test--with-buffer
    "<?php\necho <<<'EOD'\nExample of string spanning multiple lines\nusing nowdoc syntax. Backslashes are always treated literally,\ne.g. \\ and \'.\nEOD;\n"
    "Example #7 Nowdoc string quoting example"
