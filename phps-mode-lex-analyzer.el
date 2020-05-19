@@ -74,14 +74,17 @@
 (defvar-local phps-mode-lex-analyzer--state nil
   "Latest state.")
 
+(defvar-local phps-mode-lex-analyzer--state-stack nil
+  "Latest state-stack.")
+
 (defvar-local phps-mode-lex-analyzer--states nil
   "History of state, heredoc-label, stack-stack and heredoc label stack.")
 
+(defvar-local phps-mode-lex-analyzer--heredoc-label nil
+  "Latest Heredoc label.")
+
 (defvar-local phps-mode-lex-analyzer--heredoc-label-stack nil
   "Latest Heredoc label-stack.")
-
-(defvar-local phps-mode-lex-analyzer--state-stack nil
-  "Latest state-stack.")
 
 
 ;; FUNCTIONS
@@ -620,6 +623,8 @@
                   (progn
                     (phps-mode-debug-message
                      (message "Found head tokens"))
+
+                    ;; TODO Change on ST_END_HEREDOC should start before it
 
                     ;; In old buffer:
                     ;; 1. Determine state (incremental-state) and state-stack (incremental-state-stack) heredoc label (incremental-heredoc-label) heredoc-label-stack (heredoc-label-stack) before incremental start

@@ -1368,7 +1368,7 @@
                (let* ((start (match-beginning 0))
                       (end (match-end 0))
                       (data (buffer-substring-no-properties start end)))
-                 ;; (message "Found something ending at %s" data)
+                ;; (message "Found something ending at %s" data)
 
                  (cond
 
@@ -1379,8 +1379,8 @@
                      ";?\n"
                      ) data)
                    ;; (message "Found heredoc end at %s-%s" start end)
-                   (phps-mode-lexer--BEGIN 'ST_END_HEREDOC)
-                   (phps-mode-lexer--RETURN_TOKEN 'T_ENCAPSED_AND_WHITESPACE old-start start))
+                   (phps-mode-lexer--RETURN_TOKEN 'T_ENCAPSED_AND_WHITESPACE old-start start)
+                   (phps-mode-lexer--BEGIN 'ST_END_HEREDOC))
 
                   (t
                    ;; (message "Found variable at '%s'.. Skipping forward to %s" data start)
@@ -1410,8 +1410,8 @@
                       (_data (buffer-substring-no-properties start end)))
                  ;; (message "Found something ending at %s" _data)
                  ;; (message "Found nowdoc end at %s-%s" start end)
-                 (phps-mode-lexer--BEGIN 'ST_END_HEREDOC)
-                 (phps-mode-lexer--RETURN_TOKEN 'T_ENCAPSED_AND_WHITESPACE old-start start))
+                 (phps-mode-lexer--RETURN_TOKEN 'T_ENCAPSED_AND_WHITESPACE old-start start)
+                 (phps-mode-lexer--BEGIN 'ST_END_HEREDOC))
              (progn
                (signal
                 'phps-lexer-error
