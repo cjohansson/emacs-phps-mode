@@ -117,6 +117,9 @@
 (defvar-local phps-mode-lexer--states nil
   "History of state and state-stack.")
 
+(defvar-local phps-mode-lexer--heredoc-label nil
+  "Current heredoc label.")
+
 (defvar-local phps-mode-lexer--heredoc-label-stack nil
   "Stack of heredoc labels.")
 
@@ -186,7 +189,13 @@
   
   ;; Push token start, end, lexer state and state stack to variable
   (push
-   (list start end phps-mode-lexer--state phps-mode-lexer--state-stack)
+   (list
+    start
+    end
+    phps-mode-lexer--state
+    phps-mode-lexer--state-stack
+    phps-mode-lexer--heredoc-label
+    phps-mode-lexer--heredoc-label-stack)
    phps-mode-lexer--states))
 
 (defun phps-mode-lexer--get-next-unescaped (character)
@@ -272,8 +281,7 @@
     (phps-mode-debug-message (message "Running lexer from %s" old-start))
     (phps-mode-lexer--reset-match-data)
     
-    (let ((heredoc-label (car phps-mode-lexer--heredoc-label-stack))
-          (SHEBANG (equal phps-mode-lexer--state 'SHEBANG))
+    (let ((SHEBANG (equal phps-mode-lexer--state 'SHEBANG))
           (ST_IN_SCRIPTING (equal phps-mode-lexer--state 'ST_IN_SCRIPTING))
           (ST_INITIAL (equal phps-mode-lexer--state 'ST_INITIAL))
           (ST_LOOKING_FOR_PROPERTY (equal phps-mode-lexer--state 'ST_LOOKING_FOR_PROPERTY))
@@ -1230,20 +1238,34 @@
          ;; Determine if it's HEREDOC or NOWDOC and extract label here
          (if (string= (substring data 0 1) "'")
              (progn
-               (setq heredoc-label (substring data 1 (- (length data) 1)))
+               (setq
+                phps-mode-lexer--heredoc-label
+                (substring data 1 (- (length data) 1)))
                (phps-mode-lexer--BEGIN 'ST_NOWDOC))
            (progn
              (if (string= (substring data 0 1) "\"")
-                 (setq heredoc-label (substring data 1 (- (length data) 1)))
-               (setq heredoc-label data))
+                 (setq
+                  phps-mode-lexer--heredoc-label
+                  (substring data 1 (- (length data) 1)))
+               (setq
+                phps-mode-lexer--heredoc-label
+                data))
              (phps-mode-lexer--BEGIN 'ST_HEREDOC)))
 
          ;; Check for ending label on the next line
-         (when (string= (buffer-substring-no-properties end (+ end (length heredoc-label))) heredoc-label)
+         (when (string=
+                (buffer-substring-no-properties
+                 end
+                 (+ end
+                    (length
+                     phps-mode-lexer--heredoc-label)))
+                phps-mode-lexer--heredoc-label)
            (phps-mode-lexer--BEGIN 'ST_END_HEREDOC))
 
-         (push heredoc-label phps-mode-lexer--heredoc-label-stack)
-         ;; (message "Found heredoc or nowdoc at %s with label %s" data heredoc-label)
+         (push
+          phps-mode-lexer--heredoc-label
+          phps-mode-lexer--heredoc-label-stack)
+         ;; (message "Found heredoc or nowdoc at %s with label %s" data phps-mode-lexer--heredoc-label)
 
          (phps-mode-lexer--RETURN_TOKEN 'T_START_HEREDOC start end)))
 
@@ -1256,9 +1278,12 @@
       (phps-mode-lexer--match-macro
        (and ST_END_HEREDOC (looking-at (concat phps-mode-lexer--ANY_CHAR)))
        (let* ((start (match-beginning 0))
-              (end (+ start (length heredoc-label) 1))
+              (end (+ start
+                      (length
+                       phps-mode-lexer--heredoc-label)
+                      1))
               (_data (buffer-substring-no-properties start end)))
-         ;; (message "Found ending heredoc at %s, %s of %s" _data (thing-at-point 'line) heredoc-label)
+         ;; (message "Found ending heredoc at %s, %s of %s" _data (thing-at-point 'line) phps-mode-lexer--heredoc-label)
          (pop phps-mode-lexer--heredoc-label-stack)
          (phps-mode-lexer--BEGIN 'ST_IN_SCRIPTING)
          (phps-mode-lexer--RETURN_TOKEN 'T_END_HEREDOC start end)))
@@ -1330,7 +1355,7 @@
                 (search-forward-regexp
                  (concat
                   "\\(\n"
-                  heredoc-label
+                  phps-mode-lexer--heredoc-label
                   ";?\n\\|\\$"
                   phps-mode-lexer--LABEL
                   "\\|{\\$"
@@ -1343,14 +1368,19 @@
                (let* ((start (match-beginning 0))
                       (end (match-end 0))
                       (data (buffer-substring-no-properties start end)))
-                 ;; (message "Found something ending at %s" data)
+                ;; (message "Found something ending at %s" data)
 
                  (cond
 
-                  ((string-match (concat "\n" heredoc-label ";?\n") data)
+                  ((string-match
+                    (concat
+                     "\n"
+                     phps-mode-lexer--heredoc-label
+                     ";?\n"
+                     ) data)
                    ;; (message "Found heredoc end at %s-%s" start end)
-                   (phps-mode-lexer--BEGIN 'ST_END_HEREDOC)
-                   (phps-mode-lexer--RETURN_TOKEN 'T_ENCAPSED_AND_WHITESPACE old-start start))
+                   (phps-mode-lexer--RETURN_TOKEN 'T_ENCAPSED_AND_WHITESPACE old-start start)
+                   (phps-mode-lexer--BEGIN 'ST_END_HEREDOC))
 
                   (t
                    ;; (message "Found variable at '%s'.. Skipping forward to %s" data start)
@@ -1368,15 +1398,20 @@
       (phps-mode-lexer--match-macro
        (and ST_NOWDOC (looking-at phps-mode-lexer--ANY_CHAR))
        (let ((start (car (cdr (car phps-mode-lexer--tokens)))))
-         (let ((string-start (search-forward-regexp (concat "\n" heredoc-label ";?\\\n") nil t)))
+         (let ((string-start (search-forward-regexp
+                              (concat
+                               "\n"
+                               phps-mode-lexer--heredoc-label
+                               ";?\\\n"
+                               ) nil t)))
            (if string-start
                (let* ((start (match-beginning 0))
                       (end (match-end 0))
                       (_data (buffer-substring-no-properties start end)))
                  ;; (message "Found something ending at %s" _data)
                  ;; (message "Found nowdoc end at %s-%s" start end)
-                 (phps-mode-lexer--BEGIN 'ST_END_HEREDOC)
-                 (phps-mode-lexer--RETURN_TOKEN 'T_ENCAPSED_AND_WHITESPACE old-start start))
+                 (phps-mode-lexer--RETURN_TOKEN 'T_ENCAPSED_AND_WHITESPACE old-start start)
+                 (phps-mode-lexer--BEGIN 'ST_END_HEREDOC))
              (progn
                (signal
                 'phps-lexer-error

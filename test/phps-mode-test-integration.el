@@ -126,7 +126,6 @@
 
    (insert "\necho 'my comments';\n"))
 
-  ;; TODO T_ENCAPSED_AND_WHITESPACE 72 should be removed by deletion (that is implicitly triggered by electric-pair-mode)
   (phps-mode-test--incremental-vs-intial-buffer
    ""
    "Integration-test 11 insert code in empty buffer using macro, use several passes"
@@ -150,9 +149,20 @@
    (execute-kbd-macro (kbd "TAB"))
    (execute-kbd-macro (kbd "RET")))
 
+  (phps-mode-test--incremental-vs-intial-buffer
+   "<?php\n$str = <<<EOD\nExample of string\nspanning multiple lines\nusing heredoc syntax.\nEOD;\n\n/* More complex example, with variables. */\nclass foo\n{\n    var $foo;\n    var $bar;\n\n    function __construct()\n    {\n        $this->foo = 'Foo';\n        $this->bar = array('Bar1', 'Bar2', 'Bar3');\n    }\n}\n\n$foo = new foo();\n$name = 'MyName';\n\necho <<<EOT\nMy name is \"$name\". I am printing some $foo->foo.\nNow, I am printing some {$foo->bar[1]}.\nThis should print a capital 'A': \x41\nEOT;\n?>\n"
+   "Integration-test 12 complex HEREDOC adding new line with variable in it"
+   (goto-char 63)
+   (insert "inserting $variable "))
+
+  (phps-mode-test--incremental-vs-intial-buffer
+   "<?php\n$str = <<<EOD\nExample of string\nspanning multiple lines\nusing heredoc syntax.\nEOD;\n\n/* More complex example, with variables. */\nclass foo\n{\n    var $foo;\n    var $bar;\n\n    function __construct()\n    {\n        $this->foo = 'Foo';\n        $this->bar = array('Bar1', 'Bar2', 'Bar3');\n    }\n}\n\n$foo = new foo();\n$name = 'MyName';\n\necho <<<EOT\nMy name is \"$name\". I am printing some $foo->foo.\nNow, I am printing some {$foo->bar[1]}.\nThis should print a capital 'A': \x41\nEOT;\n?>\n"
+   "Integration-test 13 complex HEREDOC with removed heredoc delimiter"
+   (goto-char 85)
+   (kill-line))
+
   )
 
-;; TODO Add tests for (delete-backward-char) as well
 (defun phps-mode-test-integration--whitespace-modifications ()
   "Test white-space modifications functions."
 
