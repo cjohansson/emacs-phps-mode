@@ -766,7 +766,7 @@
   "Moved imenu from START by DIFF points."
   (when phps-mode-lex-analyzer--imenu
     (setq phps-mode-lex-analyzer--imenu
-                (phps-mode-lex-analyzer--get-moved-imenu phps-mode-lex-analyzer--imenu start diff))
+          (phps-mode-lex-analyzer--get-moved-imenu phps-mode-lex-analyzer--imenu start diff))
     (phps-mode-lex-analyzer--reset-imenu)))
 
 (defun phps-mode-lex-analyzer--move-lines-indent (start-line-number diff)
@@ -2087,39 +2087,51 @@ SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
                   (when line-starts-with-opening-doc-comment
                     (setq new-indentation (+ new-indentation 1)))
 
-                  (when line-ends-with-assignment
+                  (when (and
+                         line-ends-with-assignment
+                         (<= bracket-level 0))
                     (setq new-indentation (+ new-indentation tab-width)))
 
-                  (when (and line-ends-with-opening-bracket
-                             (< bracket-level 0))
+                  (when (and
+                         line-ends-with-opening-bracket
+                         (< bracket-level 0))
                     (setq new-indentation (+ new-indentation tab-width)))
 
                   (when line-ends-with-terminus
                     ;; Back-trace buffer from previous line
-                    ;; Determine if semi-colon ended an assignment or not
+                    ;; Determine if semi-colon ended an assignment or bracket-less command or not
                     (forward-line (* -1 move-length))
                     (end-of-line)
                     (forward-char -1)
                     (let ((not-found t)
                           (is-assignment nil)
-                          (parenthesis-level 0))
+                          (parenthesis-level 0)
+                          (is-bracket-less-command nil))
                       (while (and
                               not-found
-                              (search-backward-regexp "\\(;\\|{\\|(\\|)\\|=\\)" nil t))
+                              (search-backward-regexp "\\(;\\|{\\|(\\|)\\|=\\|echo[\t ]+\\|print[\t ]+\\)" nil t))
                         (let ((match (buffer-substring-no-properties (match-beginning 0) (match-end 0))))
                           (when (string= match ")")
                             (setq parenthesis-level (1- parenthesis-level)))
                           (when (= parenthesis-level 0)
                             (setq is-assignment (string= match "="))
+                            (setq is-bracket-less-command
+                                  (string-match-p
+                                   "\\(echo[\t ]+\\|print[\t ]+\\)"
+                                   match))
                             (setq not-found nil))
 
                           (when (string= match "(")
                             (setq parenthesis-level (1+ parenthesis-level)))))
                       ;; If it ended an assignment on a previous line, decrease indentation
-                      (when (and is-assignment
-                                 (> bracket-level -1)
-                                 (not
-                                  (= line-number (line-number-at-pos))))
+                      (when
+                          (and
+                           (or
+                            (and
+                             is-assignment
+                             (> bracket-level -1))
+                            is-bracket-less-command)
+                           (not (= line-number (line-number-at-pos))))
                         ;; NOTE stuff like $var = array(\n    4\n);\n
                         ;; will end assignment but also decrease bracket-level
                         (setq new-indentation (- new-indentation tab-width))))
@@ -2175,7 +2187,7 @@ SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
   (string-match-p "^[\t ]*\\([\]})[]\\|</[a-zA-Z]+\\|/>\\)" string))
 
 (defun phps-mode-lex-analyzer--string-starts-with-opening-doc-comment-p (string)
-  "Get bracket count for STRING."
+  "Does string start with opening doc comment?"
   (string-match-p "^[\t ]*/\\*\\*" string))
 
 (defun phps-mode-lex-analyzer--string-ends-with-opening-bracket-p (string)

@@ -249,6 +249,26 @@
               "$applications =\n    $transaction->getResponseBodyDecoded();\n// TODO Here\n"
               ))))
 
+  (phps-mode-test--with-buffer
+   "<?php\necho '<dl><dt>' . __('Data', 'something')\n    . ':</dt><dd><pre>' . print_r($decodedData, true) . '</pre></dd></dl>';\necho '<div class=\"meta actions\">';\n"
+   "Two echo statements, one spans two lines"
+   (phps-mode-test-lex-analyzer--alternative-indentation-whole-buffer)
+   (let ((buffer-contents (buffer-substring-no-properties (point-min) (point-max))))
+     (should (equal
+              buffer-contents
+              "<?php\necho '<dl><dt>' . __('Data', 'something')\n    . ':</dt><dd><pre>' . print_r($decodedData, true) . '</pre></dd></dl>';\necho '<div class=\"meta actions\">';\n    "
+              ))))
+
+  (phps-mode-test--with-buffer
+   "<?php\nif ($shippingMethod->id ===\n        \\MyClass::METHOD_ID\n    ) {\n"
+   "Multi-linte if statement testing equality in two lines"
+   (phps-mode-test-lex-analyzer--alternative-indentation-whole-buffer)
+   (let ((buffer-contents (buffer-substring-no-properties (point-min) (point-max))))
+     (should (equal
+              buffer-contents
+              "<?php\nif ($shippingMethod->id ===\n    \\MyClass::METHOD_ID\n) {\n    "
+              ))))
+
   )
 
 (defun phps-mode-test-lex-analyzer--move-lines-indent ()
