@@ -256,7 +256,7 @@
    (let ((buffer-contents (buffer-substring-no-properties (point-min) (point-max))))
      (should (equal
               buffer-contents
-              "<?php\necho '<dl><dt>' . __('Data', 'something')\n    . ':</dt><dd><pre>' . print_r($decodedData, true) . '</pre></dd></dl>';\necho '<div class=\"meta actions\">';\n"
+              "<?php\necho '<dl><dt>' . __('Data', 'something')\n    . ':</dt><dd><pre>' . print_r($decodedData, true) . '</pre></dd></dl>';\necho '<div class=\"meta actions\">';\n    "
               ))))
 
   (phps-mode-test--with-buffer
@@ -266,17 +266,7 @@
    (let ((buffer-contents (buffer-substring-no-properties (point-min) (point-max))))
      (should (equal
               buffer-contents
-              "<?php\nif ($shippingMethod->id ===\n    \\MyClass::METHOD_ID\n) {\n"
-              ))))
-
-  (phps-mode-test--with-buffer
-   "<?php\n\n$options = \\MyClass::\ngetOptions(\n    $packageId,\n    $arguments\n);\n"
-   "Multi-line assignment using static class method and multi-line arguments"
-   (phps-mode-test-lex-analyzer--alternative-indentation-whole-buffer)
-   (let ((buffer-contents (buffer-substring-no-properties (point-min) (point-max))))
-     (should (equal
-              buffer-contents
-              "<?php\n\n$options = \\MyClass::\n    getOptions(\n        $packageId,\n        $arguments    \n);\n"
+              "<?php\nif ($shippingMethod->id ===\n    \\MyClass::METHOD_ID\n) {\n    "
               ))))
 
   )
