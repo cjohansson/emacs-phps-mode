@@ -1,6 +1,6 @@
 ;;; phps-automation --- Generate a Wisent Parser file -*- lexical-binding: t -*-
 
-;; Copyright (C) 2018-2019  Free Software Foundation, Inc.
+;; Copyright (C) 2018-2020  Free Software Foundation, Inc.
 
 ;; This file is not part of GNU Emacs.
 
@@ -29,7 +29,7 @@
 
 (let ((php-yacc-url "https://raw.githubusercontent.com/php/php-src/master/Zend/zend_language_parser.y")
       (php-yacc-file (expand-file-name "zend_language_parser.y"))
-      (wisent-destination (expand-file-name "../phps-mode-wy.wy"))
+      (wisent-destination (expand-file-name "phps-mode-wy.wy"))
       (header (expand-file-name "phps-mode-automation-header.wy")))
 
   ;; Download Yacc if not available
@@ -42,8 +42,13 @@
   (message "Generating Wisent grammar..")
   (if (fboundp 'emacs-wisent-grammar-converter--generate-grammar-from-filename)
       (emacs-wisent-grammar-converter--generate-grammar-from-filename
-       php-yacc-file wisent-destination header "phps-mode-wy-macros--")
-    (display-warning 'warning "Missing emacs-wisent-grammar-converter!"))
+       php-yacc-file
+       wisent-destination
+       header
+       "phps-mode-parser--")
+    (display-warning
+     'warning
+     "Missing emacs-wisent-grammar-converter!"))
   (message "Automation completed"))
 
 (provide 'phps-mode-automation)

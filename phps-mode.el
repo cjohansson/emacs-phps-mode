@@ -52,7 +52,6 @@
 
 (require 'phps-mode-flymake)
 (require 'phps-mode-lex-analyzer)
-(require 'phps-mode-semantic)
 (require 'phps-mode-syntax-table)
 
 (require 'semantic)
