@@ -1,0 +1,295 @@
+;;; phps-mode-wy.el --- Generated parser support file
+
+;; Copyright (C) 2018-2020  Free Software Foundation, Inc.
+
+;; Author: Christian Johansson <christianjohansson@Christians-MacBook-Air.local>
+;; Created: 2020-06-03 07:19:00+0200
+;; Keywords: syntax
+;; X-RCS: $Id$
+
+;; This file is not part of GNU Emacs.
+
+;; This program is free software; you can redistribute it and/or
+;; modify it under the terms of the GNU General Public License as
+;; published by the Free Software Foundation, either version 3 of
+;; the License, or (at your option) any later version.
+
+;; This software is distributed in the hope that it will be useful,
+;; but WITHOUT ANY WARRANTY; without even the implied warranty of
+;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+;; General Public License for more details.
+;;
+;; You should have received a copy of the GNU General Public License
+;; along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+;;; Commentary:
+;;
+;; PLEASE DO NOT MANUALLY EDIT THIS FILE!  It is automatically
+;; generated from the grammar file phps-mode-wy-edited.wy.
+
+;;; History:
+;;
+
+;;; Code:
+
+(require 'semantic/lex)
+(eval-when-compile (require 'semantic/bovine))
+
+;;; Prologue
+;;
+(setq max-specpdl-size 160000)
+
+;;; Declarations
+;;
+(eval-and-compile (defconst phps-mode--expected-conflicts
+                    nil
+                    "The number of expected shift/reduce conflicts in this grammar."))
+
+(defconst phps-mode--keyword-table
+  (semantic-lex-make-keyword-table
+   '(("include (T_INCLUDE)" . T_INCLUDE)
+     ("include_once (T_INCLUDE_ONCE)" . T_INCLUDE_ONCE)
+     ("eval (T_EVAL)" . T_EVAL)
+     ("require (T_REQUIRE)" . T_REQUIRE)
+     ("require_once (T_REQUIRE_ONCE)" . T_REQUIRE_ONCE)
+     ("or (T_LOGICAL_OR)" . T_LOGICAL_OR)
+     ("xor (T_LOGICAL_XOR)" . T_LOGICAL_XOR)
+     ("and (T_LOGICAL_AND)" . T_LOGICAL_AND)
+     ("print (T_PRINT)" . T_PRINT)
+     ("yield (T_YIELD)" . T_YIELD)
+     ("yield from (T_YIELD_FROM)" . T_YIELD_FROM)
+     ("+= (T_PLUS_EQUAL)" . T_PLUS_EQUAL)
+     ("-= (T_MINUS_EQUAL)" . T_MINUS_EQUAL)
+     ("*= (T_MUL_EQUAL)" . T_MUL_EQUAL)
+     ("/= (T_DIV_EQUAL)" . T_DIV_EQUAL)
+     (".= (T_CONCAT_EQUAL)" . T_CONCAT_EQUAL)
+     ("%= (T_MOD_EQUAL)" . T_MOD_EQUAL)
+     ("&= (T_AND_EQUAL)" . T_AND_EQUAL)
+     ("|= (T_OR_EQUAL)" . T_OR_EQUAL)
+     ("^= (T_XOR_EQUAL)" . T_XOR_EQUAL)
+     ("<<= (T_SL_EQUAL)" . T_SL_EQUAL)
+     (">>= (T_SR_EQUAL)" . T_SR_EQUAL)
+     ("??= (T_COALESCE_EQUAL)" . T_COALESCE_EQUAL)
+     ("|| (T_BOOLEAN_OR)" . T_BOOLEAN_OR)
+     ("&& (T_BOOLEAN_AND)" . T_BOOLEAN_AND)
+     ("== (T_IS_EQUAL)" . T_IS_EQUAL)
+     ("!= (T_IS_NOT_EQUAL)" . T_IS_NOT_EQUAL)
+     ("=== (T_IS_IDENTICAL)" . T_IS_IDENTICAL)
+     ("!== (T_IS_NOT_IDENTICAL)" . T_IS_NOT_IDENTICAL)
+     ("<= (T_IS_SMALLER_OR_EQUAL)" . T_IS_SMALLER_OR_EQUAL)
+     (">= (T_IS_GREATER_OR_EQUAL)" . T_IS_GREATER_OR_EQUAL)
+     ("<=> (T_SPACESHIP)" . T_SPACESHIP)
+     ("<< (T_SL)" . T_SL)
+     (">> (T_SR)" . T_SR)
+     ("instanceof (T_INSTANCEOF)" . T_INSTANCEOF)
+     ("++ (T_INC)" . T_INC)
+     ("-- (T_DEC)" . T_DEC)
+     ("(int) (T_INT_CAST)" . T_INT_CAST)
+     ("(double) (T_DOUBLE_CAST)" . T_DOUBLE_CAST)
+     ("(string) (T_STRING_CAST)" . T_STRING_CAST)
+     ("(array) (T_ARRAY_CAST)" . T_ARRAY_CAST)
+     ("(object) (T_OBJECT_CAST)" . T_OBJECT_CAST)
+     ("(bool) (T_BOOL_CAST)" . T_BOOL_CAST)
+     ("(unset) (T_UNSET_CAST)" . T_UNSET_CAST)
+     ("new (T_NEW)" . T_NEW)
+     ("clone (T_CLONE)" . T_CLONE)
+     ("exit (T_EXIT)" . T_EXIT)
+     ("if (T_IF)" . T_IF)
+     ("elseif (T_ELSEIF)" . T_ELSEIF)
+     ("else (T_ELSE)" . T_ELSE)
+     ("endif (T_ENDIF)" . T_ENDIF)
+     ("echo (T_ECHO)" . T_ECHO)
+     ("do (T_DO)" . T_DO)
+     ("while (T_WHILE)" . T_WHILE)
+     ("endwhile (T_ENDWHILE)" . T_ENDWHILE)
+     ("for (T_FOR)" . T_FOR)
+     ("endfor (T_ENDFOR)" . T_ENDFOR)
+     ("foreach (T_FOREACH)" . T_FOREACH)
+     ("endforeach (T_ENDFOREACH)" . T_ENDFOREACH)
+     ("declare (T_DECLARE)" . T_DECLARE)
+     ("enddeclare (T_ENDDECLARE)" . T_ENDDECLARE)
+     ("as (T_AS)" . T_AS)
+     ("switch (T_SWITCH)" . T_SWITCH)
+     ("endswitch (T_ENDSWITCH)" . T_ENDSWITCH)
+     ("case (T_CASE)" . T_CASE)
+     ("default (T_DEFAULT)" . T_DEFAULT)
+     ("break (T_BREAK)" . T_BREAK)
+     ("continue (T_CONTINUE)" . T_CONTINUE)
+     ("goto (T_GOTO)" . T_GOTO)
+     ("function (T_FUNCTION)" . T_FUNCTION)
+     ("fn (T_FN)" . T_FN)
+     ("const (T_CONST)" . T_CONST)
+     ("return (T_RETURN)" . T_RETURN)
+     ("try (T_TRY)" . T_TRY)
+     ("catch (T_CATCH)" . T_CATCH)
+     ("finally (T_FINALLY)" . T_FINALLY)
+     ("throw (T_THROW)" . T_THROW)
+     ("use (T_USE)" . T_USE)
+     ("insteadof (T_INSTEADOF)" . T_INSTEADOF)
+     ("global (T_GLOBAL)" . T_GLOBAL)
+     ("static (T_STATIC)" . T_STATIC)
+     ("abstract (T_ABSTRACT)" . T_ABSTRACT)
+     ("final (T_FINAL)" . T_FINAL)
+     ("private (T_PRIVATE)" . T_PRIVATE)
+     ("protected (T_PROTECTED)" . T_PROTECTED)
+     ("public (T_PUBLIC)" . T_PUBLIC)
+     ("var (T_VAR)" . T_VAR)
+     ("unset (T_UNSET)" . T_UNSET)
+     ("isset (T_ISSET)" . T_ISSET)
+     ("empty (T_EMPTY)" . T_EMPTY)
+     ("__halt_compiler (T_HALT_COMPILER)" . T_HALT_COMPILER)
+     ("class (T_CLASS)" . T_CLASS)
+     ("trait (T_TRAIT)" . T_TRAIT)
+     ("interface (T_INTERFACE)" . T_INTERFACE)
+     ("extends (T_EXTENDS)" . T_EXTENDS)
+     ("implements (T_IMPLEMENTS)" . T_IMPLEMENTS)
+     ("-> (T_OBJECT_OPERATOR)" . T_OBJECT_OPERATOR)
+     ("=> (T_DOUBLE_ARROW)" . T_DOUBLE_ARROW)
+     ("list (T_LIST)" . T_LIST)
+     ("array (T_ARRAY)" . T_ARRAY)
+     ("callable (T_CALLABLE)" . T_CALLABLE)
+     ("__LINE__ (T_LINE)" . T_LINE)
+     ("__FILE__ (T_FILE)" . T_FILE)
+     ("__DIR__ (T_DIR)" . T_DIR)
+     ("__CLASS__ (T_CLASS_C)" . T_CLASS_C)
+     ("__TRAIT__ (T_TRAIT_C)" . T_TRAIT_C)
+     ("__METHOD__ (T_METHOD_C)" . T_METHOD_C)
+     ("__FUNCTION__ (T_FUNC_C)" . T_FUNC_C)
+     ("comment (T_COMMENT)" . T_COMMENT)
+     ("doc comment (T_DOC_COMMENT)" . T_DOC_COMMENT)
+     ("open tag (T_OPEN_TAG)" . T_OPEN_TAG)
+     ("open tag with echo (T_OPEN_TAG_WITH_ECHO)" . T_OPEN_TAG_WITH_ECHO)
+     ("close tag (T_CLOSE_TAG)" . T_CLOSE_TAG)
+     ("whitespace (T_WHITESPACE)" . T_WHITESPACE)
+     ("heredoc start (T_START_HEREDOC)" . T_START_HEREDOC)
+     ("heredoc end (T_END_HEREDOC)" . T_END_HEREDOC)
+     ("${ (T_DOLLAR_OPEN_CURLY_BRACES)" . T_DOLLAR_OPEN_CURLY_BRACES)
+     ("{$ (T_CURLY_OPEN)" . T_CURLY_OPEN)
+     (":: (T_PAAMAYIM_NEKUDOTAYIM)" . T_PAAMAYIM_NEKUDOTAYIM)
+     ("namespace (T_NAMESPACE)" . T_NAMESPACE)
+     ("__NAMESPACE__ (T_NS_C)" . T_NS_C)
+     ("\\ (T_NS_SEPARATOR)" . T_NS_SEPARATOR)
+     ("... (T_ELLIPSIS)" . T_ELLIPSIS)
+     ("?? (T_COALESCE)" . T_COALESCE)
+     ("** (T_POW)" . T_POW)
+     ("**= (T_POW_EQUAL)" . T_POW_EQUAL)
+     ("invalid character (T_BAD_CHARACTER)" . T_BAD_CHARACTER))
+   'nil)
+  "Table of language keywords.")
+
+(defconst phps-mode--token-table
+  (semantic-lex-make-type-table
+   '(("<no-type>"
+      (T_ERROR)
+      (\0)
+      (END))
+     ("ast"
+      (T_NUM_STRING . "number (T_NUM_STRING)")
+      (T_STRING_VARNAME . "variable name (T_STRING_VARNAME)")
+      (T_CONSTANT_ENCAPSED_STRING . "quoted-string (T_CONSTANT_ENCAPSED_STRING)")
+      (T_ENCAPSED_AND_WHITESPACE . "quoted-string and whitespace (T_ENCAPSED_AND_WHITESPACE)")
+      (T_INLINE_HTML)
+      (T_VARIABLE . "variable (T_VARIABLE)")
+      (T_STRING . "identifier (T_STRING)")
+      (T_DNUMBER . "floating-point number (T_DNUMBER)")
+      (T_LNUMBER . "integer number (T_LNUMBER)")))
+   '(("num" class_modifiers class_modifier)
+     ("num" use_type backup_fn_flags)
+     ("num" :declared t)
+     ("num" returns_ref function)
+     ("num" fn is_reference)
+     ("num" is_variadic variable_modifiers)
+     ("num" :declared t)
+     ("ast" inline_function union_type)
+     ("ast" :declared t)
+     ("ast" array_pair non_empty_array_pair_list)
+     ("ast" array_pair_list possible_array_pair)
+     ("ast" :declared t)
+     ("ast" lexical_var_list encaps_list)
+     ("ast" :declared t)
+     ("ast" ctor_arguments alt_if_stmt_without_else)
+     ("ast" trait_adaptation_list lexical_vars)
+     ("ast" :declared t)
+     ("ast" class_const_list class_const_decl)
+     ("ast" class_name_list trait_adaptations)
+     ("ast" method_body non_empty_for_exprs)
+     ("ast" :declared t)
+     ("ast" non_empty_parameter_list argument_list)
+     ("ast" non_empty_argument_list property_list)
+     ("ast" :declared t)
+     ("ast" callable_expr callable_variable)
+     ("ast" static_member new_variable)
+     ("ast" :declared t)
+     ("ast" fully_dereferencable array_object_dereferencable)
+     ("ast" :declared t)
+     ("ast" variable_class_name dereferencable_scalar)
+     ("ast" constant class_constant)
+     ("ast" :declared t)
+     ("ast" absolute_trait_method_reference trait_method_reference)
+     ("ast" property echo_expr)
+     ("ast" :declared t)
+     ("ast" interface_declaration_statement interface_extends_list)
+     ("ast" :declared t)
+     ("ast" class_declaration_statement trait_declaration_statement)
+     ("ast" :declared t)))
+  "Table of lexical tokens.")
+
+(defconst phps-mode--parse-table
+  (progn
+    (eval-when-compile
+      (require 'semantic/wisent/comp))
+    (wisent-compile-grammar
+     '((T_LNUMBER T_DNUMBER T_STRING T_VARIABLE T_INLINE_HTML T_ENCAPSED_AND_WHITESPACE T_CONSTANT_ENCAPSED_STRING T_STRING_VARNAME T_NUM_STRING END \0 T_INCLUDE T_INCLUDE_ONCE T_EVAL T_REQUIRE T_REQUIRE_ONCE T_LOGICAL_OR T_LOGICAL_XOR T_LOGICAL_AND T_PRINT T_YIELD T_YIELD_FROM T_PLUS_EQUAL T_MINUS_EQUAL T_MUL_EQUAL T_DIV_EQUAL T_CONCAT_EQUAL T_MOD_EQUAL T_AND_EQUAL T_OR_EQUAL T_XOR_EQUAL T_SL_EQUAL T_SR_EQUAL T_COALESCE_EQUAL T_BOOLEAN_OR T_BOOLEAN_AND T_IS_EQUAL T_IS_NOT_EQUAL T_IS_IDENTICAL T_IS_NOT_IDENTICAL T_IS_SMALLER_OR_EQUAL T_IS_GREATER_OR_EQUAL T_SPACESHIP T_SL T_SR T_INSTANCEOF T_INC T_DEC T_INT_CAST T_DOUBLE_CAST T_STRING_CAST T_ARRAY_CAST T_OBJECT_CAST T_BOOL_CAST T_UNSET_CAST T_NEW T_CLONE T_EXIT T_IF T_ELSEIF T_ELSE T_ENDIF T_ECHO T_DO T_WHILE T_ENDWHILE T_FOR T_ENDFOR T_FOREACH T_ENDFOREACH T_DECLARE T_ENDDECLARE T_AS T_SWITCH T_ENDSWITCH T_CASE T_DEFAULT T_BREAK T_CONTINUE T_GOTO T_FUNCTION T_FN T_CONST T_RETURN T_TRY T_CATCH T_FINALLY T_THROW T_USE T_INSTEADOF T_GLOBAL T_STATIC T_ABSTRACT T_FINAL T_PRIVATE T_PROTECTED T_PUBLIC T_VAR T_UNSET T_ISSET T_EMPTY T_HALT_COMPILER T_CLASS T_TRAIT T_INTERFACE T_EXTENDS T_IMPLEMENTS T_OBJECT_OPERATOR T_DOUBLE_ARROW T_LIST T_ARRAY T_CALLABLE T_LINE T_FILE T_DIR T_CLASS_C T_TRAIT_C T_METHOD_C T_FUNC_C T_COMMENT T_DOC_COMMENT T_OPEN_TAG T_OPEN_TAG_WITH_ECHO T_CLOSE_TAG T_WHITESPACE T_START_HEREDOC T_END_HEREDOC T_DOLLAR_OPEN_CURLY_BRACES T_CURLY_OPEN T_PAAMAYIM_NEKUDOTAYIM T_NAMESPACE T_NS_C T_NS_SEPARATOR T_ELLIPSIS T_COALESCE T_POW T_POW_EQUAL T_BAD_CHARACTER T_ERROR)
+       ((left T_LOGICAL_OR)
+        (left T_LOGICAL_XOR)
+        (left T_LOGICAL_AND %precedence T_PRINT %precedence T_YIELD %precedence T_DOUBLE_ARROW %precedence T_YIELD_FROM %precedence 61 T_PLUS_EQUAL T_MINUS_EQUAL T_MUL_EQUAL T_DIV_EQUAL T_CONCAT_EQUAL T_MOD_EQUAL T_AND_EQUAL T_OR_EQUAL T_XOR_EQUAL T_SL_EQUAL T_SR_EQUAL T_POW_EQUAL T_COALESCE_EQUAL)
+        (left 63 58)
+        (right T_COALESCE)
+        (left T_BOOLEAN_OR)
+        (left T_BOOLEAN_AND)
+        (left 124)
+        (left 94)
+        (left 38)
+        (nonassoc T_IS_EQUAL T_IS_NOT_EQUAL T_IS_IDENTICAL T_IS_NOT_IDENTICAL T_SPACESHIP)
+        (nonassoc 60 T_IS_SMALLER_OR_EQUAL 62 T_IS_GREATER_OR_EQUAL)
+        (left 46)
+        (left T_SL T_SR)
+        (left 43 45)
+        (left 42 47 37 %precedence 33 %precedence T_INSTANCEOF %precedence 126 T_INT_CAST T_DOUBLE_CAST T_STRING_CAST T_ARRAY_CAST T_OBJECT_CAST T_BOOL_CAST T_UNSET_CAST 64)
+        (right T_POW %precedence T_CLONE %precedence T_NOELSE %precedence T_ELSEIF %precedence T_ELSE))
+       (isset_variable
+        ((expr)
+         (wisent-raw-tag
+          (semantic-tag 'phps-mode-parser--zend_ast_isset $1 nil)))))
+     '(isset_variable)))
+  "Parser table.")
+
+(defun phps-mode--install-parser ()
+  "Setup the Semantic Parser."
+  (semantic-install-function-overrides
+   '((semantic-parse-stream . wisent-parse-stream)))
+  (setq semantic-parser-name "LALR"
+        semantic--parse-table phps-mode--parse-table
+        semantic-debug-parser-source "phps-mode-wy-edited.wy"
+        semantic-flex-keywords-obarray phps-mode--keyword-table
+        semantic-lex-types-obarray phps-mode--token-table)
+  ;; Collect unmatched syntax lexical tokens
+  (add-hook 'wisent-discarding-token-functions
+            'wisent-collect-unmatched-syntax nil t))
+
+
+;;; Analyzers
+;;
+
+;;; Epilogue
+;;
+
+
+(provide 'phps-mode-wy)
+
+;; Local Variables:
+;; version-control: never
+;; no-update-autoloads: t
+;; End:
+
+;;; phps-mode-wy.el ends here

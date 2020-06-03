@@ -32,8 +32,6 @@
 
 ;; Check semantic/wisent/grammar.el for macro definitions
 
-;; To force compile grammar use: (semantic-grammar-create-package t)
-
 
 ;;; Code:
 
@@ -46,24 +44,7 @@
   (setq max-specpdl-size 160000)
 }
 
-%use-macros phps-mode-wy-macros {
-             phps-mode-wy-macros--zend_add_class_modifier
-             phps-mode-wy-macros--zend_add_member_modifier
-             phps-mode-wy-macros--zend_append_str
-             phps-mode-wy-macros--zend_ast_create
-             phps-mode-wy-macros--zend_ast_create_assign_op
-             phps-mode-wy-macros--zend_ast_create_binary_op
-             phps-mode-wy-macros--zend_ast_create_cast
-             phps-mode-wy-macros--zend_ast_create_decl
-             phps-mode-wy-macros--zend_ast_create_ex
-             phps-mode-wy-macros--zend_ast_create_list
-             phps-mode-wy-macros--zend_ast_create_zval_from_str
-             phps-mode-wy-macros--zend_ast_get_str
-             phps-mode-wy-macros--zend_ast_list_add
-             phps-mode-wy-macros--zend_ast_list_rtrim
-             phps-mode-wy-macros--zend_handle_encoding_declaration
-             phps-mode-wy-macros--zend_negate_num_string
-}
+%use-macros phps-mode-grammar-macro { ZEND_AST_CREATE }
 
 %precedence T_THROW
 %precedence PREC_ARROW_FUNCTION
@@ -280,4 +261,19 @@
 %type <ptr> backup_lex_pos
 %type <str> backup_doc_comment
 
-%start start
+%start isset_variable
+
+%%
+
+;; NOTE Generated grammar starts here
+
+
+
+isset_variable:
+    expr (ZEND_AST_CREATE 'phps-mode-parser--zend_ast_isset $1)
+    ;
+
+
+;; NOTE Generated grammar ends here
+
+%%
