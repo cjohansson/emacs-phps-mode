@@ -54,6 +54,7 @@
  ZEND_AST_CREATE_LIST
  ZEND_AST_LIST_ADD
  ZEND_AST_LIST_RTRIM
+ ZEND_NEGATE_NUM_STRING
  }
 
 %precedence T_THROW
@@ -344,6 +345,13 @@ encaps_var:
     | T_DOLLAR_OPEN_CURLY_BRACES T_STRING_VARNAME CLOSE_CURLY_BRACKET (ZEND_AST_CREATE 'phps-mode-parser--zend_ast_var $2)
     | T_DOLLAR_OPEN_CURLY_BRACES T_STRING_VARNAME OPEN_SQUARE_BRACKET expr CLOSE_SQUARE_BRACKET CLOSE_CURLY_BRACKET (ZEND_AST_CREATE 'phps-mode-parser--zend_ast_dim (ZEND_AST_CREATE 'phps-mode-parser--zend_ast_var $2) $4)
     | T_CURLY_OPEN variable CLOSE_CURLY_BRACKET ($2)
+    ;
+
+encaps_var_offset:
+    T_STRING ($1)
+    | T_NUM_STRING ($1)
+    | '-' T_NUM_STRING (ZEND_NEGATE_NUM_STRING $2)
+    | T_VARIABLE (ZEND_AST_CREATE 'phps-mode-parser--zend_ast_var $1)
     ;
 
 dereferencable_scalar:

@@ -3,7 +3,7 @@
 ;; Copyright (C) 2018-2020  Free Software Foundation, Inc.
 
 ;; Author: Christian Johansson <christianjohansson@Christians-MacBook-Air.local>
-;; Created: 2020-06-04 14:32:40+0200
+;; Created: 2020-06-04 14:42:23+0200
 ;; Keywords: syntax
 ;; X-RCS: $Id$
 
@@ -372,6 +372,18 @@
                         $4)))
         ((T_CURLY_OPEN variable CLOSE_CURLY_BRACKET)
          ($2)))
+       (encaps_var_offset
+        ((T_STRING)
+         ($1))
+        ((T_NUM_STRING)
+         ($1))
+        ((45 T_NUM_STRING)
+         (*
+          (string-to-number $2)
+          -1))
+        ((T_VARIABLE)
+         (wisent-raw-tag
+          (semantic-tag 'phps-mode-parser--zend_ast_var $1))))
        (dereferencable_scalar
         ((T_ARRAY OPEN_PARENTHESIS array_pair_list CLOSE_PARENTHESIS)
          (progn

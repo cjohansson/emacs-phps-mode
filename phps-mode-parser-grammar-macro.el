@@ -52,6 +52,9 @@
   `(wisent-raw-tag
     (semantic-tag ,array 'ZEND_AST_LIST_ADD :new-element ,new-element)))
 
+(defun phps-mode-parser-grammar-macro-ZEND_NEGATE_NUM_STRING (num-string)
+  `(* (string-to-number ,num-string) -1))
+
 
 (provide 'phps-mode-grammar-macro)
 ;;; phps-mode-parser-grammar-macro.el ends here
