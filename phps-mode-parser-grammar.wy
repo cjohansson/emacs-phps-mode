@@ -51,6 +51,7 @@
  ZEND_AST_CREATE_BINARY_OP
  ZEND_AST_CREATE_CAST
  ZEND_AST_CREATE_EX
+ ZEND_AST_LIST_RTRIM
  }
 
 %precedence T_THROW
@@ -301,6 +302,11 @@
 %start isset_variable
 
 %%
+
+array_pair_list:
+    non_empty_array_pair_list (ZEND_AST_LIST_RTRIM $1)
+    ;
+
 
 dereferencable_scalar:
     T_ARRAY OPEN_PARENTHESIS array_pair_list CLOSE_PARENTHESIS (progn (semantic-tag-put-attribute $3 'attr 'phps-mode-parser--zend_array_syntax_long) $3)

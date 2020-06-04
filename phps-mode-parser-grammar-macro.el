@@ -40,6 +40,10 @@
     `(wisent-raw-tag
       (semantic-tag ,symbol 'ZEND_AST_EX ,@attributes))))
 
+(defun phps-mode-parser-grammar-macro-ZEND_AST_LIST_RTRIM (subject)
+  `(wisent-raw-tag
+    (semantic-tag ,subject 'ZEND_AST_LIST_RTRIM)))
+
 
 (provide 'phps-mode-grammar-macro)
 ;;; phps-mode-parser-grammar-macro.el ends here
