@@ -309,6 +309,11 @@
 
 %%
 
+namespace_name:
+    T_STRING ($1)
+    | namespace_name T_NS_SEPARATOR T_STRING (ZEND_AST_APPEND_STR $1 $3)
+    ;
+
 name:
     namespace_name (progn (semantic-tag-put-attribute $1 'attr 'phps-mode-parser--zend_name_not_fq) $1)
     | T_NAMESPACE T_NS_SEPARATOR namespace_name (progn (semantic-tag-put-attribute $3 'attr 'phps-mode-parser--zend_name_relative) $3)
