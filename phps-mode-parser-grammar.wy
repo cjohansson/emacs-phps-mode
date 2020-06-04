@@ -310,7 +310,7 @@ array_pair_list:
   ;
 
 possible_array_pair:
-    empty (nil)
+    (nil)
     | array_pair ($1)
     ;
 
