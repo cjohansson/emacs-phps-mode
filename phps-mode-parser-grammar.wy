@@ -99,6 +99,31 @@
 %token <ast> T_STRING_VARNAME "variable name (T_STRING_VARNAME)"
 %token <ast> T_NUM_STRING "number (T_NUM_STRING)"
 
+%type <punctuation>
+%token <punctuation> ADDITION "+"
+%token <punctuation> ASSIGN "="
+%token <punctuation> AT "@"
+%token <punctuation> BACKTICK "`"
+%token <punctuation> BITWISE_AND "&"
+%token <punctuation> BITWISE_OR "|"
+%token <punctuation> CLOSE_PARENTHESIS ")"
+%token <punctuation> CLOSE_SQUARE_BRACKET "]"
+%token <punctuation> COLON ":"
+%token <punctuation> COMMA ","
+%token <punctuation> DIVISION "/"
+%token <punctuation> DOT "."
+%token <punctuation> GREATER_THAN ">"
+%token <punctuation> LESSER_THAN "<"
+%token <punctuation> MODULO "%"
+%token <punctuation> MULTIPLICATION "*"
+%token <punctuation> NEGATION "!"
+%token <punctuation> OPEN_PARENTHESIS "("
+%token <punctuation> OPEN_SQUARE_BRACKET "["
+%token <punctuation> POW "^"
+%token <punctuation> QUESTION_MARK "?"
+%token <punctuation> SUBTRACTION "-"
+%token <punctuation> UNARY "~"
+
 %token END 0 "end of file"
 %token T_INCLUDE      "include (T_INCLUDE)"
 %token T_INCLUDE_ONCE "include_once (T_INCLUDE_ONCE)"
@@ -276,10 +301,10 @@
 
 expr:
     variable ($1)
-  | T_LIST '(' array_pair_list ')' '=' expr (progn (semantic-tag-put-attribute $3 'attr phps-mode-parser--zend_array_syntax_list)(ZEND_AST_CREATE 'phps-mode-parser--zend_ast_assign $3 $6)
-  | '[' array_pair_list ']' '=' expr (progn (semantic-tag-put-attribute $2 'attr 'phps-mode-parser--zend_array_syntax_short)(ZEND_AST_CREATE 'phps-mode-parser--zend_ast_assign $2 $5))
-    | variable '=' expr (ZEND_AST_CREATE 'phps-mode-parser--zend_ast_assign $1 $3)
-    | variable '=' '&' variable (ZEND_AST_CREATE 'phps-mode-parser--zend_ast_assign_ref $1 $4)
+    | T_LIST OPEN_PARENTHESIS array_pair_list CLOSE_PARENTHESIS ASSIGN expr (progn (semantic-tag-put-attribute $3 'attr phps-mode-parser--zend_array_syntax_list)(ZEND_AST_CREATE 'phps-mode-parser--zend_ast_assign $3 $6)
+    | OPEN_SQUARE_BRACKET array_pair_list CLOSE_SQUARE_BRACKET ASSIGN expr (progn (semantic-tag-put-attribute $2 'attr 'phps-mode-parser--zend_array_syntax_short)(ZEND_AST_CREATE 'phps-mode-parser--zend_ast_assign $2 $5))
+    | variable ASSIGN expr (ZEND_AST_CREATE 'phps-mode-parser--zend_ast_assign $1 $3)
+    | variable ASSIGN BITWISE_AND variable (ZEND_AST_CREATE 'phps-mode-parser--zend_ast_assign_ref $1 $4)
     | T_CLONE expr (ZEND_AST_CREATE 'phps-mode-parser--zend_ast_clone $2)
     | variable T_PLUS_EQUAL expr (ZEND_AST_CREATE_ASSIGN_OP 'phps-mode-parser--zend_add $1 $3)
     | variable T_MINUS_EQUAL expr (ZEND_AST_CREATE_ASSIGN_OP 'phps-mode-parser--zend_sub $1 $3)
@@ -303,36 +328,36 @@ expr:
     | expr T_LOGICAL_OR expr (ZEND_AST_CREATE 'phps-mode-parser--zend_ast_or $1 $3)
     | expr T_LOGICAL_AND expr (ZEND_AST_CREATE 'phps-mode-parser--zend_ast_and $1 $3)
     | expr T_LOGICAL_XOR expr (ZEND_AST_CREATE_BINARY_OP 'phps-mode-parser--zend_bool_xor $1 $3)
-    | expr '|' expr (ZEND_AST_CREATE_BINARY_OP 'phps-mode-parser--zend_bw_or $1 $3)
-    | expr '&' expr (ZEND_AST_CREATE_BINARY_OP 'phps-mode-parser--zend_bw_and $1 $3)
-    | expr '^' expr (ZEND_AST_CREATE_BINARY_OP 'phps-mode-parser--zend_bw_xor $1 $3)
-    | expr '.' expr (ZEND_AST_CREATE_BINARY_OP 'phps-mode-parser--zend_concat $1 $3)
-    | expr '+' expr (ZEND_AST_CREATE_BINARY_OP 'phps-mode-parser--zend_add $1 $3)
-    | expr '-' expr (ZEND_AST_CREATE_BINARY_OP 'phps-mode-parser--zend_sub $1 $3)
-    | expr '*' expr (ZEND_AST_CREATE_BINARY_OP 'phps-mode-parser--zend_mul $1 $3)
+    | expr BITWISE_OR expr (ZEND_AST_CREATE_BINARY_OP 'phps-mode-parser--zend_bw_or $1 $3)
+    | expr BITWISE_AND expr (ZEND_AST_CREATE_BINARY_OP 'phps-mode-parser--zend_bw_and $1 $3)
+    | expr POW expr (ZEND_AST_CREATE_BINARY_OP 'phps-mode-parser--zend_bw_xor $1 $3)
+    | expr DOT expr (ZEND_AST_CREATE_BINARY_OP 'phps-mode-parser--zend_concat $1 $3)
+    | expr ADDITION expr (ZEND_AST_CREATE_BINARY_OP 'phps-mode-parser--zend_add $1 $3)
+    | expr SUBTRACTION expr (ZEND_AST_CREATE_BINARY_OP 'phps-mode-parser--zend_sub $1 $3)
+    | expr MULTIPLICATION expr (ZEND_AST_CREATE_BINARY_OP 'phps-mode-parser--zend_mul $1 $3)
     | expr T_POW expr (ZEND_AST_CREATE_BINARY_OP 'phps-mode-parser--zend_pow $1 $3)
-    | expr '/' expr (ZEND_AST_CREATE_BINARY_OP 'phps-mode-parser--zend_div $1 $3)
-    | expr '%' expr (ZEND_AST_CREATE_BINARY_OP 'phps-mode-parser--zend_mod $1 $3)
+    | expr DIVISION expr (ZEND_AST_CREATE_BINARY_OP 'phps-mode-parser--zend_div $1 $3)
+    | expr MODULO expr (ZEND_AST_CREATE_BINARY_OP 'phps-mode-parser--zend_mod $1 $3)
     | expr T_SL expr (ZEND_AST_CREATE_BINARY_OP 'phps-mode-parser--zend_sl $1 $3)
     | expr T_SR expr (ZEND_AST_CREATE_BINARY_OP 'phps-mode-parser--zend_sr $1 $3)
-    | '+' expr prec '~' (ZEND_AST_CREATE 'phps-mode-parser--zend_ast_unary_plus $1 $2)
-    | '-' expr prec '~' (ZEND_AST_CREATE 'phps-mode-parser--zend_ast_unary_minus $1 $2)
-    | '!' expr (ZEND_AST_CREATE_EX 'phps-mode-parser--zend_ast_unary_op 'phps-mode-parser--zend_bool_not $2)
-    | '~' expr (ZEND_AST_CREATE_EX 'phps-mode-parser--zend_ast_unary_op 'phps-mode-parser--zend_bw_not $2)
+    | ADDITION expr prec UNARY (ZEND_AST_CREATE 'phps-mode-parser--zend_ast_unary_plus $1 $2)
+    | SUBTRACTION expr prec UNARY (ZEND_AST_CREATE 'phps-mode-parser--zend_ast_unary_minus $1 $2)
+    | NEGATION expr (ZEND_AST_CREATE_EX 'phps-mode-parser--zend_ast_unary_op 'phps-mode-parser--zend_bool_not $2)
+    | UNARY expr (ZEND_AST_CREATE_EX 'phps-mode-parser--zend_ast_unary_op 'phps-mode-parser--zend_bw_not $2)
     | expr T_IS_IDENTICAL expr (ZEND_AST_CREATE_BINARY_OP 'phps-mode-parser--zend_is_identical $1 $3)
     | expr T_IS_NOT_IDENTICAL expr (ZEND_AST_CREATE_BINARY_OP 'phps-mode-parser--zend_is_not_identical $1 $3)
     | expr T_IS_EQUAL expr (ZEND_AST_CREATE_BINARY_OP 'phps-mode-parser--zend_is_equal $1 $3)
     | expr T_IS_NOT_EQUAL expr (ZEND_AST_CREATE_BINARY_OP 'phps-mode-parser--zend_is_not_equal $1 $3)
-    | expr '<' expr (ZEND_AST_CREATE_BINARY_OP 'phps-mode-parser--zend_is_smaller $1 $3)
+    | expr LESSER_THAN expr (ZEND_AST_CREATE_BINARY_OP 'phps-mode-parser--zend_is_smaller $1 $3)
     | expr T_IS_SMALLER_OR_EQUAL expr (ZEND_AST_CREATE_BINARY_OP 'phps-mode-parser--zend_is_smaller_or_equal $1 $3)
-    | expr '>' expr (ZEND_AST_CREATE_BINARY_OP 'phps-mode-parser--zend_is_greater $1 $3)
+    | expr GREATER_THAN expr (ZEND_AST_CREATE_BINARY_OP 'phps-mode-parser--zend_is_greater $1 $3)
     | expr T_IS_GREATER_OR_EQUAL expr (ZEND_AST_CREATE_BINARY_OP 'phps-mode-parser--zend_is_greater_or_equal $1 $3)
     | expr T_SPACESHIP expr (ZEND_AST_CREATE_BINARY_OP 'phps-mode-parser--zend_spaceship $1 $3)
     | expr T_INSTANCEOF class_name_reference (ZEND_AST_CREATE 'phps-mode-parser--zend_instanceof $1 $3)
-    | '(' expr ')' (progn (when (equal (semantic-tag-get-attribute $2 'kind) 'phps-mode-parser--zend_ast_conditional) (semantic-tag-put-attribute $2 'attr 'phps-mode-parser--zend_parenthesized_conditional)) $2)
+    | OPEN_PARENTHESIS expr CLOSE_PARENTHESIS (progn (when (equal (semantic-tag-get-attribute $2 'kind) 'phps-mode-parser--zend_ast_conditional) (semantic-tag-put-attribute $2 'attr 'phps-mode-parser--zend_parenthesized_conditional)) $2)
     | new_expr ($1)
-    | expr '?' expr ':' expr (ZEND_AST_CREATE 'phps-mode-parser--zend_ast_conditional $1 $3 $5)
-    | expr '?' ':' expr (ZEND_AST_CREATE 'phps-mode-parser--zend_ast_conditional $1 nil $4)
+    | expr QUESTION_MARK expr COLON expr (ZEND_AST_CREATE 'phps-mode-parser--zend_ast_conditional $1 $3 $5)
+    | expr QUESTION_MARK COLON expr (ZEND_AST_CREATE 'phps-mode-parser--zend_ast_conditional $1 nil $4)
     | expr T_COALESCE expr (ZEND_AST_CREATE 'phps-mode-parser--zend_ast_coalesce $1 $3)
     | internal_functions_in_yacc ($1))
     | T_INT_CAST expr (ZEND_AST_CREATE_CAST 'phps-mode-parser--is_long $2)
@@ -343,9 +368,9 @@ expr:
     | T_BOOL_CAST expr (ZEND_AST_CREATE_CAST 'phps-mode-parser--is_bool $2)
     | T_UNSET_CAST expr (ZEND_AST_CREATE_CAST 'phps-mode-parser--is_unset $2)
     | T_EXIT exit_expr (ZEND_AST_CREATE 'phps-mode-parser--zend_ast_exit $2)
-    | '@' expr (ZEND_AST_CREATE 'phps-mode-parser--zend_ast_silence $2)
+    | AT expr (ZEND_AST_CREATE 'phps-mode-parser--zend_ast_silence $2)
     | scalar ($1)
-    | '`' backticks_expr '`' (ZEND_AST_CREATE 'phps-mode-parser--zend_ast_shell $2)
+    | BACKTICK backticks_expr BACKTICK (ZEND_AST_CREATE 'phps-mode-parser--zend_ast_shell $2)
     | T_PRINT expr (ZEND_AST_CREATE 'phps-mode-parser--zend_ast_print $2)
     | T_YIELD (progn (CG 'phps-mode-parser--extra_fn_flags (logior (CG 'phps-mode-parser--extra_fn_flags) 'phps-mode-parser--zend_acc_generator))(ZEND_AST_CREATE 'phps-mode-parser--zend_ast_yield nil nil))
     | T_YIELD expr (progn (CG 'phps-mode-parser--extra_fn_flags (logior (CG 'phps-mode-parser--extra_fn_flags) 'phps-mode-parser--zend_acc_generator))(ZEND_AST_CREATE 'phps-mode-parser--zend_ast_yield $2 nil))

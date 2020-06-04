@@ -3,7 +3,7 @@
 ;; Copyright (C) 2018-2020  Free Software Foundation, Inc.
 
 ;; Author: Christian Johansson <christianjohansson@Christians-MacBook-Air.local>
-;; Created: 2020-06-03 16:37:40+0200
+;; Created: 2020-06-04 10:31:04+0200
 ;; Keywords: syntax
 ;; X-RCS: $Id$
 
