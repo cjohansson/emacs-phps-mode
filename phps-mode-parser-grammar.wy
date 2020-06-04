@@ -309,6 +309,12 @@
 
 %%
 
+name:
+    namespace_name (progn (semantic-tag-put-attribute $1 'attr 'phps-mode-parser--zend_name_not_fq) $1)
+    | T_NAMESPACE T_NS_SEPARATOR namespace_name (progn (semantic-tag-put-attribute $3 'attr 'phps-mode-parser--zend_name_relative) $3)
+    | T_NS_SEPARATOR namespace_name (progn (semantic-tag-put-attribute $2 'attr 'phps-mode-parser--zend_name_fq) $2)
+    ;
+
 class_name:
     T_STATIC (let ((zv nil))(ZVAL_INTERNED_STR (lambda(return) (setq zv return)) (ZSTR_KNOWN 'phps-mode-parser--zend_str_static))(ZEND_AST_CREATE_ZVAL_EX zv 'phps-mode-parser--zend_name_not_fq))
     | name ($1)

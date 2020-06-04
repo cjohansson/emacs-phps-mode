@@ -3,7 +3,7 @@
 ;; Copyright (C) 2018-2020  Free Software Foundation, Inc.
 
 ;; Author: Christian Johansson <christianjohansson@Christians-MacBook-Air.local>
-;; Created: 2020-06-04 15:16:28+0200
+;; Created: 2020-06-04 15:29:21+0200
 ;; Keywords: syntax
 ;; X-RCS: $Id$
 
@@ -287,6 +287,19 @@
         (left 43 45)
         (left 42 47 37 %precedence 33 %precedence T_INSTANCEOF %precedence 126 T_INT_CAST T_DOUBLE_CAST T_STRING_CAST T_ARRAY_CAST T_OBJECT_CAST T_BOOL_CAST T_UNSET_CAST 64)
         (right T_POW %precedence T_CLONE %precedence T_NOELSE %precedence T_ELSEIF %precedence T_ELSE))
+       (name
+        ((namespace_name)
+         (progn
+           (semantic-tag-put-attribute $1 'attr 'phps-mode-parser--zend_name_not_fq)
+           $1))
+        ((T_NAMESPACE T_NS_SEPARATOR namespace_name)
+         (progn
+           (semantic-tag-put-attribute $3 'attr 'phps-mode-parser--zend_name_relative)
+           $3))
+        ((T_NS_SEPARATOR namespace_name)
+         (progn
+           (semantic-tag-put-attribute $2 'attr 'phps-mode-parser--zend_name_fq)
+           $2)))
        (class_name
         ((T_STATIC)
          (let
