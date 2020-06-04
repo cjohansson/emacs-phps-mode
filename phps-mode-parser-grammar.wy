@@ -311,6 +311,87 @@
 
 %%
 
+reserved_non_modifiers:
+    T_INCLUDE
+    | T_INCLUDE_ONCE
+    | T_EVAL
+    | T_REQUIRE
+    | T_REQUIRE_ONCE
+    | T_LOGICAL_OR
+    | T_LOGICAL_XOR
+    | T_LOGICAL_AND
+    | T_INSTANCEOF
+    | T_NEW
+    | T_CLONE
+    | T_EXIT
+    | T_IF
+    | T_ELSEIF
+    | T_ELSE
+    | T_ENDIF
+    | T_ECHO
+    | T_DO
+    | T_WHILE
+    | T_ENDWHILE
+    | T_FOR
+    | T_ENDFOR
+    | T_FOREACH
+    | T_ENDFOREACH
+    | T_DECLARE
+    | T_ENDDECLARE
+    | T_AS
+    | T_TRY
+    | T_CATCH
+    | T_FINALLY
+    | T_THROW
+    | T_USE
+    | T_INSTEADOF
+    | T_GLOBAL
+    | T_VAR
+    | T_UNSET
+    | T_ISSET
+    | T_EMPTY
+    | T_CONTINUE
+    | T_GOTO
+    | T_FUNCTION
+    | T_CONST
+    | T_RETURN
+    | T_PRINT
+    | T_YIELD
+    | T_LIST
+    | T_SWITCH
+    | T_ENDSWITCH
+    | T_CASE
+    | T_DEFAULT
+    | T_BREAK
+    | T_ARRAY
+    | T_CALLABLE
+    | T_EXTENDS
+    | T_IMPLEMENTS
+    | T_NAMESPACE
+    | T_TRAIT
+    | T_INTERFACE
+    | T_CLASS
+    | T_CLASS_C
+    | T_TRAIT_C
+    | T_FUNC_C
+    | T_METHOD_C
+    | T_LINE
+    | T_FILE
+    | T_DIR
+    | T_NS_C
+    | T_FN
+    ;
+
+semi_reserved:
+    reserved_non_modifiers
+    | T_STATIC
+    | T_ABSTRACT
+    | T_FINAL
+    | T_PRIVATE
+    | T_PROTECTED
+    | T_PUBLIC
+    ;
+
 identifier:
     T_STRING ($1)
     | semi_reserved (let ((zv nil))(ZEND_LEX_TSTRING (lambda(ret) (setq zv ret)))(ZEND_AST_CREATE_ZVAL zv))
@@ -390,6 +471,10 @@ dereferencable_scalar:
     | OPEN_SQUARE_BRACKET array_pair_list CLOSE_SQUARE_BRACKET (progn (semantic-tag-put-attribute $2 'attr 'phps-mode-parser--zend_array_syntax_short) $2)
     | T_CONSTANT_ENCAPSED_STRING ($1)
     | DOUBLE_QUOTE encaps_list DOUBLE_QUOTE ($2)
+    ;
+
+variable_class_name:
+    fully_dereferencable ($1)
     ;
 
 fully_dereferencable:
