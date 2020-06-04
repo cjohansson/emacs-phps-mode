@@ -3,7 +3,7 @@
 ;; Copyright (C) 2018-2020  Free Software Foundation, Inc.
 
 ;; Author: Christian Johansson <christianjohansson@Christians-MacBook-Air.local>
-;; Created: 2020-06-04 13:39:09+0200
+;; Created: 2020-06-04 13:40:00+0200
 ;; Keywords: syntax
 ;; X-RCS: $Id$
 
@@ -291,6 +291,11 @@
         ((non_empty_array_pair_list)
          (wisent-raw-tag
           (semantic-tag $1 'ZEND_AST_LIST_RTRIM))))
+       (possible_array_pair
+        ((empty)
+         (nil))
+        ((array_pair)
+         ($1)))
        (non_empty_array_pair_list
         ((non_empty_array_pair_list COMMA possible_array_pair)
          (wisent-raw-tag

@@ -309,6 +309,11 @@ array_pair_list:
     non_empty_array_pair_list (ZEND_AST_LIST_RTRIM $1)
   ;
 
+possible_array_pair:
+    empty (nil)
+    | array_pair ($1)
+    ;
+
 non_empty_array_pair_list:
     non_empty_array_pair_list COMMA possible_array_pair (ZEND_AST_LIST_ADD $1 $3)
     | possible_array_pair (ZEND_AST_CREATE_LIST 1 'phps-mode-parser--zend_ast_array $1)
