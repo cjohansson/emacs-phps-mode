@@ -55,6 +55,9 @@
 (defun phps-mode-parser-grammar-macro-ZEND_NEGATE_NUM_STRING (num-string)
   `(* (string-to-number ,num-string) -1))
 
+(defun phps-mode-parser-grammar-macro-ZEND_AST_CREATE_CLASS_CONST_OR_NAME (object member)
+  `(wisent-raw-tag
+    (semantic-tag ,object 'ZEND_AST_CLASS_CONST_OR_NAME :member ,member)))
 
 (provide 'phps-mode-grammar-macro)
 ;;; phps-mode-parser-grammar-macro.el ends here

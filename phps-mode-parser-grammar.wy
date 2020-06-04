@@ -50,6 +50,7 @@
  ZEND_AST_CREATE_ASSIGN_OP
  ZEND_AST_CREATE_BINARY_OP
  ZEND_AST_CREATE_CAST
+ ZEND_AST_CREATE_CLASS_CONST_OR_NAME
  ZEND_AST_CREATE_EX
  ZEND_AST_CREATE_LIST
  ZEND_AST_LIST_ADD
@@ -305,6 +306,11 @@
 %start isset_variable
 
 %%
+
+class_constant:
+    class_name T_PAAMAYIM_NEKUDOTAYIM identifier (ZEND_AST_CREATE_CLASS_CONST_OR_NAME $1 $3)
+    | variable_class_name T_PAAMAYIM_NEKUDOTAYIM identifier (ZEND_AST_CREATE_CLASS_CONST_OR_NAME $1 $3)
+    ;
 
 array_pair_list:
     non_empty_array_pair_list (ZEND_AST_LIST_RTRIM $1)

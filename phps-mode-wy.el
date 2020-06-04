@@ -3,7 +3,7 @@
 ;; Copyright (C) 2018-2020  Free Software Foundation, Inc.
 
 ;; Author: Christian Johansson <christianjohansson@Christians-MacBook-Air.local>
-;; Created: 2020-06-04 14:42:23+0200
+;; Created: 2020-06-04 14:45:29+0200
 ;; Keywords: syntax
 ;; X-RCS: $Id$
 
@@ -287,6 +287,13 @@
         (left 43 45)
         (left 42 47 37 %precedence 33 %precedence T_INSTANCEOF %precedence 126 T_INT_CAST T_DOUBLE_CAST T_STRING_CAST T_ARRAY_CAST T_OBJECT_CAST T_BOOL_CAST T_UNSET_CAST 64)
         (right T_POW %precedence T_CLONE %precedence T_NOELSE %precedence T_ELSEIF %precedence T_ELSE))
+       (class_constant
+        ((class_name T_PAAMAYIM_NEKUDOTAYIM identifier)
+         (wisent-raw-tag
+          (semantic-tag $1 'ZEND_AST_CLASS_CONST_OR_NAME :member $3)))
+        ((variable_class_name T_PAAMAYIM_NEKUDOTAYIM identifier)
+         (wisent-raw-tag
+          (semantic-tag $1 'ZEND_AST_CLASS_CONST_OR_NAME :member $3))))
        (array_pair_list
         ((non_empty_array_pair_list)
          (wisent-raw-tag
