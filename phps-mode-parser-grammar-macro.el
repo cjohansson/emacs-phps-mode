@@ -32,11 +32,13 @@
   `(wisent-raw-tag
     (semantic-tag ,symbol 'ZEND_AST_CAST :subject ,subject)))
 
-(defun phps-mode-parser-grammar-macro-ZEND_AST_CREATE_EX (symbol operator subject &optional subject2)
+(defun phps-mode-parser-grammar-macro-ZEND_AST_CREATE_EX (symbol operator &optional subject subject2)
   "Create stuff."
-  (let ((attributes `(:operator ,operator :subject ,subject)))
+  (let ((attributes `(:operator ,operator)))
+    (when subject
+      (plist-put attributes :subject subject))
     (when subject2
-      (plist-put attributes :subject subject2))
+      (plist-put attributes :subject2 subject2))
     `(wisent-raw-tag
       (semantic-tag ,symbol 'ZEND_AST_EX ,@attributes))))
 

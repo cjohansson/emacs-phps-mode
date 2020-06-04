@@ -3,7 +3,7 @@
 ;; Copyright (C) 2018-2020  Free Software Foundation, Inc.
 
 ;; Author: Christian Johansson <christianjohansson@Christians-MacBook-Air.local>
-;; Created: 2020-06-04 19:19:50+0200
+;; Created: 2020-06-04 19:28:52+0200
 ;; Keywords: syntax
 ;; X-RCS: $Id$
 
@@ -370,8 +370,8 @@
         ((semi_reserved)
          (let
              ((zv nil))
-           ((SEMI 18161 . 18162)
-            (SYMBOL 18164 . 18184))
+           ((OR 15013 . 15014)
+            (SYMBOL 15015 . 15020))
            (wisent-raw-tag
             (semantic-tag zv 'ZEND_AST_ZVAL :attr 0)))))
        (namespace_name
@@ -404,6 +404,34 @@
             (semantic-tag zv 'phps-mode-parser--zend_name_not_fq))))
         ((name)
          ($1)))
+       (constant
+        ((name)
+         (wisent-raw-tag
+          (semantic-tag 'phps-mode-parser--zend_ast_const $1)))
+        ((T_LINE)
+         (wisent-raw-tag
+          (semantic-tag 'phps-mode-parser--zend_ast_magic_const 'ZEND_AST_EX :operator 'phps-mode-parser--t_line)))
+        ((T_FILE)
+         (wisent-raw-tag
+          (semantic-tag 'phps-mode-parser--zend_ast_magic_const 'ZEND_AST_EX :operator 'phps-mode-parser--t_file)))
+        ((T_DIR)
+         (wisent-raw-tag
+          (semantic-tag 'phps-mode-parser--zend_ast_magic_const 'ZEND_AST_EX :operator 'phps-mode-parser--t_dir)))
+        ((T_TRAIT_C)
+         (wisent-raw-tag
+          (semantic-tag 'phps-mode-parser--zend_ast_magic_const 'ZEND_AST_EX :operator 'phps-mode-parser--t_trait_c)))
+        ((T_METHOD_C)
+         (wisent-raw-tag
+          (semantic-tag 'phps-mode-parser--zend_ast_magic_const 'ZEND_AST_EX :operator 'phps-mode-parser--t_method_c)))
+        ((T_FUNC_C)
+         (wisent-raw-tag
+          (semantic-tag 'phps-mode-parser--zend_ast_magic_const 'ZEND_AST_EX :operator 'phps-mode-parser--t_func_c)))
+        ((T_NS_C)
+         (wisent-raw-tag
+          (semantic-tag 'phps-mode-parser--zend_ast_magic_const 'ZEND_AST_EX :operator 'phps-mode-parser--t_ns_c)))
+        ((T_CLASS_C)
+         (wisent-raw-tag
+          (semantic-tag 'phps-mode-parser--zend_ast_magic_const 'ZEND_AST_EX :operator 'phps-mode-parser--t_class_c))))
        (class_constant
         ((class_name T_PAAMAYIM_NEKUDOTAYIM identifier)
          (wisent-raw-tag
@@ -436,7 +464,7 @@
           (semantic-tag 'phps-mode-parser--zend_ast_array_elem $1 nil)))
         ((expr T_DOUBLE_ARROW BITWISE_AND variable)
          (wisent-raw-tag
-          (semantic-tag 'phps-mode-parser--zend_ast_array_elem 'ZEND_AST_EX :operator 1 :subject $1)))
+          (semantic-tag 'phps-mode-parser--zend_ast_array_elem 'ZEND_AST_EX :operator 1 :subject $4 :subject2 $1)))
         ((BITWISE_AND variable)
          (wisent-raw-tag
           (semantic-tag 'phps-mode-parser--zend_ast_array_elem 'ZEND_AST_EX :operator 1 :subject $2)))
@@ -547,7 +575,7 @@
           (semantic-tag 'phps-mode-parser--zend_ast_dim $1 $3)))
         ((array_object_dereferencable OPEN_CURLY_BRACKET expr CLOSE_CURLY_BRACKET)
          (wisent-raw-tag
-          (semantic-tag 'phps-mode-parser--zend_ast_dim 'ZEND_AST_EX :operator 'phps-mode-parser--zend_dim_alternative_syntax :subject $3)))
+          (semantic-tag 'phps-mode-parser--zend_ast_dim 'ZEND_AST_EX :operator 'phps-mode-parser--zend_dim_alternative_syntax :subject $1 :subject2 $3)))
         ((array_object_dereferencable T_OBJECT_OPERATOR property_name argument_list)
          (wisent-raw-tag
           (semantic-tag 'phps-mode-parser--zend_ast_method_call $1 $3 $4)))

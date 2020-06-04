@@ -413,6 +413,18 @@ class_name:
     | name ($1)
     ;
 
+constant:
+    name (ZEND_AST_CREATE 'phps-mode-parser--zend_ast_const $1)
+    | T_LINE (ZEND_AST_CREATE_EX 'phps-mode-parser--zend_ast_magic_const 'phps-mode-parser--t_line)
+    | T_FILE (ZEND_AST_CREATE_EX 'phps-mode-parser--zend_ast_magic_const 'phps-mode-parser--t_file)
+    | T_DIR (ZEND_AST_CREATE_EX 'phps-mode-parser--zend_ast_magic_const 'phps-mode-parser--t_dir)
+    | T_TRAIT_C (ZEND_AST_CREATE_EX 'phps-mode-parser--zend_ast_magic_const 'phps-mode-parser--t_trait_c)
+    | T_METHOD_C (ZEND_AST_CREATE_EX 'phps-mode-parser--zend_ast_magic_const 'phps-mode-parser--t_method_c)
+    | T_FUNC_C (ZEND_AST_CREATE_EX 'phps-mode-parser--zend_ast_magic_const 'phps-mode-parser--t_func_c)
+    | T_NS_C (ZEND_AST_CREATE_EX 'phps-mode-parser--zend_ast_magic_const 'phps-mode-parser--t_ns_c)
+    | T_CLASS_C (ZEND_AST_CREATE_EX 'phps-mode-parser--zend_ast_magic_const 'phps-mode-parser--t_class_c)
+    ;
+
 class_constant:
     class_name T_PAAMAYIM_NEKUDOTAYIM identifier (ZEND_AST_CREATE_CLASS_CONST_OR_NAME $1 $3)
     | variable_class_name T_PAAMAYIM_NEKUDOTAYIM identifier (ZEND_AST_CREATE_CLASS_CONST_OR_NAME $1 $3)
