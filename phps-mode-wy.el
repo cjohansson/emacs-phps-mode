@@ -3,7 +3,7 @@
 ;; Copyright (C) 2018-2020  Free Software Foundation, Inc.
 
 ;; Author: Christian Johansson <christianjohansson@Christians-MacBook-Air.local>
-;; Created: 2020-06-04 10:31:04+0200
+;; Created: 2020-06-04 11:11:47+0200
 ;; Keywords: syntax
 ;; X-RCS: $Id$
 
@@ -183,6 +183,30 @@
       (T_ERROR)
       (\0)
       (END))
+     ("punctuation"
+      (UNARY . "~")
+      (SUBTRACTION . "-")
+      (QUESTION_MARK . "?")
+      (POW . "^")
+      (OPEN_SQUARE_BRACKET . "[")
+      (OPEN_PARENTHESIS . "(")
+      (NEGATION . "!")
+      (MULTIPLICATION . "*")
+      (MODULO . "%")
+      (LESSER_THAN . "<")
+      (GREATER_THAN . ">")
+      (DOT . ".")
+      (DIVISION . "/")
+      (COMMA . ",")
+      (COLON . ":")
+      (CLOSE_SQUARE_BRACKET . "]")
+      (CLOSE_PARENTHESIS . ")")
+      (BITWISE_OR . "|")
+      (BITWISE_AND . "&")
+      (BACKTICK . "`")
+      (AT . "@")
+      (ASSIGN . "=")
+      (ADDITION . "+"))
      ("ast"
       (T_NUM_STRING . "number (T_NUM_STRING)")
       (T_STRING_VARNAME . "variable name (T_STRING_VARNAME)")
@@ -231,7 +255,8 @@
      ("ast" interface_declaration_statement interface_extends_list)
      ("ast" :declared t)
      ("ast" class_declaration_statement trait_declaration_statement)
-     ("ast" :declared t)))
+     ("ast" :declared t)
+     ("punctuation" :declared t)))
   "Table of lexical tokens.")
 
 (defconst phps-mode--parse-table
@@ -239,7 +264,7 @@
     (eval-when-compile
       (require 'semantic/wisent/comp))
     (wisent-compile-grammar
-     '((T_LNUMBER T_DNUMBER T_STRING T_VARIABLE T_INLINE_HTML T_ENCAPSED_AND_WHITESPACE T_CONSTANT_ENCAPSED_STRING T_STRING_VARNAME T_NUM_STRING END \0 T_INCLUDE T_INCLUDE_ONCE T_EVAL T_REQUIRE T_REQUIRE_ONCE T_LOGICAL_OR T_LOGICAL_XOR T_LOGICAL_AND T_PRINT T_YIELD T_YIELD_FROM T_PLUS_EQUAL T_MINUS_EQUAL T_MUL_EQUAL T_DIV_EQUAL T_CONCAT_EQUAL T_MOD_EQUAL T_AND_EQUAL T_OR_EQUAL T_XOR_EQUAL T_SL_EQUAL T_SR_EQUAL T_COALESCE_EQUAL T_BOOLEAN_OR T_BOOLEAN_AND T_IS_EQUAL T_IS_NOT_EQUAL T_IS_IDENTICAL T_IS_NOT_IDENTICAL T_IS_SMALLER_OR_EQUAL T_IS_GREATER_OR_EQUAL T_SPACESHIP T_SL T_SR T_INSTANCEOF T_INC T_DEC T_INT_CAST T_DOUBLE_CAST T_STRING_CAST T_ARRAY_CAST T_OBJECT_CAST T_BOOL_CAST T_UNSET_CAST T_NEW T_CLONE T_EXIT T_IF T_ELSEIF T_ELSE T_ENDIF T_ECHO T_DO T_WHILE T_ENDWHILE T_FOR T_ENDFOR T_FOREACH T_ENDFOREACH T_DECLARE T_ENDDECLARE T_AS T_SWITCH T_ENDSWITCH T_CASE T_DEFAULT T_BREAK T_CONTINUE T_GOTO T_FUNCTION T_FN T_CONST T_RETURN T_TRY T_CATCH T_FINALLY T_THROW T_USE T_INSTEADOF T_GLOBAL T_STATIC T_ABSTRACT T_FINAL T_PRIVATE T_PROTECTED T_PUBLIC T_VAR T_UNSET T_ISSET T_EMPTY T_HALT_COMPILER T_CLASS T_TRAIT T_INTERFACE T_EXTENDS T_IMPLEMENTS T_OBJECT_OPERATOR T_DOUBLE_ARROW T_LIST T_ARRAY T_CALLABLE T_LINE T_FILE T_DIR T_CLASS_C T_TRAIT_C T_METHOD_C T_FUNC_C T_COMMENT T_DOC_COMMENT T_OPEN_TAG T_OPEN_TAG_WITH_ECHO T_CLOSE_TAG T_WHITESPACE T_START_HEREDOC T_END_HEREDOC T_DOLLAR_OPEN_CURLY_BRACES T_CURLY_OPEN T_PAAMAYIM_NEKUDOTAYIM T_NAMESPACE T_NS_C T_NS_SEPARATOR T_ELLIPSIS T_COALESCE T_POW T_POW_EQUAL T_BAD_CHARACTER T_ERROR)
+     '((T_LNUMBER T_DNUMBER T_STRING T_VARIABLE T_INLINE_HTML T_ENCAPSED_AND_WHITESPACE T_CONSTANT_ENCAPSED_STRING T_STRING_VARNAME T_NUM_STRING ADDITION ASSIGN AT BACKTICK BITWISE_AND BITWISE_OR CLOSE_PARENTHESIS CLOSE_SQUARE_BRACKET COLON COMMA DIVISION DOT GREATER_THAN LESSER_THAN MODULO MULTIPLICATION NEGATION OPEN_PARENTHESIS OPEN_SQUARE_BRACKET POW QUESTION_MARK SUBTRACTION UNARY END \0 T_INCLUDE T_INCLUDE_ONCE T_EVAL T_REQUIRE T_REQUIRE_ONCE T_LOGICAL_OR T_LOGICAL_XOR T_LOGICAL_AND T_PRINT T_YIELD T_YIELD_FROM T_PLUS_EQUAL T_MINUS_EQUAL T_MUL_EQUAL T_DIV_EQUAL T_CONCAT_EQUAL T_MOD_EQUAL T_AND_EQUAL T_OR_EQUAL T_XOR_EQUAL T_SL_EQUAL T_SR_EQUAL T_COALESCE_EQUAL T_BOOLEAN_OR T_BOOLEAN_AND T_IS_EQUAL T_IS_NOT_EQUAL T_IS_IDENTICAL T_IS_NOT_IDENTICAL T_IS_SMALLER_OR_EQUAL T_IS_GREATER_OR_EQUAL T_SPACESHIP T_SL T_SR T_INSTANCEOF T_INC T_DEC T_INT_CAST T_DOUBLE_CAST T_STRING_CAST T_ARRAY_CAST T_OBJECT_CAST T_BOOL_CAST T_UNSET_CAST T_NEW T_CLONE T_EXIT T_IF T_ELSEIF T_ELSE T_ENDIF T_ECHO T_DO T_WHILE T_ENDWHILE T_FOR T_ENDFOR T_FOREACH T_ENDFOREACH T_DECLARE T_ENDDECLARE T_AS T_SWITCH T_ENDSWITCH T_CASE T_DEFAULT T_BREAK T_CONTINUE T_GOTO T_FUNCTION T_FN T_CONST T_RETURN T_TRY T_CATCH T_FINALLY T_THROW T_USE T_INSTEADOF T_GLOBAL T_STATIC T_ABSTRACT T_FINAL T_PRIVATE T_PROTECTED T_PUBLIC T_VAR T_UNSET T_ISSET T_EMPTY T_HALT_COMPILER T_CLASS T_TRAIT T_INTERFACE T_EXTENDS T_IMPLEMENTS T_OBJECT_OPERATOR T_DOUBLE_ARROW T_LIST T_ARRAY T_CALLABLE T_LINE T_FILE T_DIR T_CLASS_C T_TRAIT_C T_METHOD_C T_FUNC_C T_COMMENT T_DOC_COMMENT T_OPEN_TAG T_OPEN_TAG_WITH_ECHO T_CLOSE_TAG T_WHITESPACE T_START_HEREDOC T_END_HEREDOC T_DOLLAR_OPEN_CURLY_BRACES T_CURLY_OPEN T_PAAMAYIM_NEKUDOTAYIM T_NAMESPACE T_NS_C T_NS_SEPARATOR T_ELLIPSIS T_COALESCE T_POW T_POW_EQUAL T_BAD_CHARACTER T_ERROR)
        ((left T_LOGICAL_OR)
         (left T_LOGICAL_XOR)
         (left T_LOGICAL_AND %precedence T_PRINT %precedence T_YIELD %precedence T_DOUBLE_ARROW %precedence T_YIELD_FROM %precedence 61 T_PLUS_EQUAL T_MINUS_EQUAL T_MUL_EQUAL T_DIV_EQUAL T_CONCAT_EQUAL T_MOD_EQUAL T_AND_EQUAL T_OR_EQUAL T_XOR_EQUAL T_SL_EQUAL T_SR_EQUAL T_POW_EQUAL T_COALESCE_EQUAL)
@@ -257,6 +282,386 @@
         (left 43 45)
         (left 42 47 37 %precedence 33 %precedence T_INSTANCEOF %precedence 126 T_INT_CAST T_DOUBLE_CAST T_STRING_CAST T_ARRAY_CAST T_OBJECT_CAST T_BOOL_CAST T_UNSET_CAST 64)
         (right T_POW %precedence T_CLONE %precedence T_NOELSE %precedence T_ELSEIF %precedence T_ELSE))
+       (expr
+        ((variable)
+         ($1))
+        ((T_LIST OPEN_PARENTHESIS array_pair_list CLOSE_PARENTHESIS ASSIGN expr)
+         (progn
+           (semantic-tag-put-attribute $3 'attr phps-mode-parser--zend_array_syntax_list)
+           (wisent-raw-tag
+            (semantic-tag 'phps-mode-parser--zend_ast_assign $3
+                          ($6)))
+           | OPEN_SQUARE_BRACKET array_pair_list CLOSE_SQUARE_BRACKET ASSIGN expr
+           (progn
+             (semantic-tag-put-attribute $2 'attr 'phps-mode-parser--zend_array_syntax_short)
+             (wisent-raw-tag
+              (semantic-tag 'phps-mode-parser--zend_ast_assign $2
+                            ($5))))
+           | variable ASSIGN expr
+           (wisent-raw-tag
+            (semantic-tag 'phps-mode-parser--zend_ast_assign $1
+                          ($3)))
+           | variable ASSIGN BITWISE_AND variable
+           (wisent-raw-tag
+            (semantic-tag 'phps-mode-parser--zend_ast_assign_ref $1
+                          ($4)))
+           | T_CLONE expr
+           (wisent-raw-tag
+            (semantic-tag 'phps-mode-parser--zend_ast_clone $2 nil))
+           | variable T_PLUS_EQUAL expr
+           (wisent-raw-tag
+            (semantic-tag 'phps-mode-parser--zend_add $1 $3))
+           | variable T_MINUS_EQUAL expr
+           (wisent-raw-tag
+            (semantic-tag 'phps-mode-parser--zend_sub $1 $3))
+           | variable T_MUL_EQUAL expr
+           (wisent-raw-tag
+            (semantic-tag 'phps-mode-parser--zend_mul $1 $3))
+           | variable T_POW_EQUAL expr
+           (wisent-raw-tag
+            (semantic-tag 'phps-mode-parser--zend_pow $1 $3))
+           | variable T_DIV_EQUAL expr
+           (wisent-raw-tag
+            (semantic-tag 'phps-mode-parser--zend_div $1 $3))
+           | variable T_CONCAT_EQUAL expr
+           (wisent-raw-tag
+            (semantic-tag 'phps-mode-parser--zend_concat $1 $3))
+           | variable T_MOD_EQUAL expr
+           (wisent-raw-tag
+            (semantic-tag 'phps-mode-parser--zend_mod $1 $3))
+           | variable T_AND_EQUAL expr
+           (wisent-raw-tag
+            (semantic-tag 'phps-mode-parser--zend_bw_and $1 $3))
+           | variable T_OR_EQUAL expr
+           (wisent-raw-tag
+            (semantic-tag 'phps-mode-parser--zend_bw_or $1 $3))
+           | variable T_XOR_EQUAL expr
+           (wisent-raw-tag
+            (semantic-tag 'phps-mode-parser--zend_bw_xor $1 $3))
+           | variable T_SL_EQUAL expr
+           (wisent-raw-tag
+            (semantic-tag 'phps-mode-parser--zend_sl $1 $3))
+           | variable T_SR_EQUAL expr
+           (wisent-raw-tag
+            (semantic-tag 'phps-mode-parser--zend_sr $1 $3))
+           | variable T_COALESCE_EQUAL expr
+           (wisent-raw-tag
+            (semantic-tag 'phps-mode-parser--zend_coalesce $1
+                          ($3)))
+           | variable T_INC
+           (wisent-raw-tag
+            (semantic-tag 'phps-mode-parser--zend_post_inc $1 nil))
+           | T_INC variable
+           (wisent-raw-tag
+            (semantic-tag 'phps-mode-parser--zend_pre_inc $2 nil))
+           | variable T_DEC
+           (wisent-raw-tag
+            (semantic-tag 'phps-mode-parser--zend_post_dec $1 nil))
+           | T_DEC variable
+           (wisent-raw-tag
+            (semantic-tag 'phps-mode-parser--zend_pre_inc $2 nil))
+           | expr T_BOOLEAN_OR expr
+           (wisent-raw-tag
+            (semantic-tag 'phps-mode-parser--zend_ast_or $1
+                          ($3)))
+           | expr T_BOOLEAN_AND expr
+           (wisent-raw-tag
+            (semantic-tag 'phps-mode-parser--zend_ast_and $1
+                          ($3)))
+           | expr T_LOGICAL_OR expr
+           (wisent-raw-tag
+            (semantic-tag 'phps-mode-parser--zend_ast_or $1
+                          ($3)))
+           | expr T_LOGICAL_AND expr
+           (wisent-raw-tag
+            (semantic-tag 'phps-mode-parser--zend_ast_and $1
+                          ($3)))
+           | expr T_LOGICAL_XOR expr
+           (wisent-raw-tag
+            (semantic-tag 'phps-mode-parser--zend_bool_xor $1 $3))
+           | expr BITWISE_OR expr
+           (wisent-raw-tag
+            (semantic-tag 'phps-mode-parser--zend_bw_or $1 $3))
+           | expr BITWISE_AND expr
+           (wisent-raw-tag
+            (semantic-tag 'phps-mode-parser--zend_bw_and $1 $3))
+           | expr POW expr
+           (wisent-raw-tag
+            (semantic-tag 'phps-mode-parser--zend_bw_xor $1 $3))
+           | expr DOT expr
+           (wisent-raw-tag
+            (semantic-tag 'phps-mode-parser--zend_concat $1 $3))
+           | expr ADDITION expr
+           (wisent-raw-tag
+            (semantic-tag 'phps-mode-parser--zend_add $1 $3))
+           | expr SUBTRACTION expr
+           (wisent-raw-tag
+            (semantic-tag 'phps-mode-parser--zend_sub $1 $3))
+           | expr MULTIPLICATION expr
+           (wisent-raw-tag
+            (semantic-tag 'phps-mode-parser--zend_mul $1 $3))
+           | expr T_POW expr
+           (wisent-raw-tag
+            (semantic-tag 'phps-mode-parser--zend_pow $1 $3))
+           | expr DIVISION expr
+           (wisent-raw-tag
+            (semantic-tag 'phps-mode-parser--zend_div $1 $3))
+           | expr MODULO expr
+           (wisent-raw-tag
+            (semantic-tag 'phps-mode-parser--zend_mod $1 $3))
+           | expr T_SL expr
+           (wisent-raw-tag
+            (semantic-tag 'phps-mode-parser--zend_sl $1 $3))
+           | expr T_SR expr
+           (wisent-raw-tag
+            (semantic-tag 'phps-mode-parser--zend_sr $1 $3))
+           | ADDITION expr prec UNARY
+           (wisent-raw-tag
+            (semantic-tag 'phps-mode-parser--zend_ast_unary_plus $1
+                          ($2)))
+           | SUBTRACTION expr prec UNARY
+           (wisent-raw-tag
+            (semantic-tag 'phps-mode-parser--zend_ast_unary_minus $1
+                          ($2)))
+           | NEGATION expr
+           (wisent-raw-tag
+            (semantic-tag 'phps-mode-parser--zend_ast_unary_op 'phps-mode-parser--zend_bool_not $2))
+           | UNARY expr
+           (wisent-raw-tag
+            (semantic-tag 'phps-mode-parser--zend_ast_unary_op 'phps-mode-parser--zend_bw_not $2))
+           | expr T_IS_IDENTICAL expr
+           (wisent-raw-tag
+            (semantic-tag 'phps-mode-parser--zend_is_identical $1 $3))
+           | expr T_IS_NOT_IDENTICAL expr
+           (wisent-raw-tag
+            (semantic-tag 'phps-mode-parser--zend_is_not_identical $1 $3))
+           | expr T_IS_EQUAL expr
+           (wisent-raw-tag
+            (semantic-tag 'phps-mode-parser--zend_is_equal $1 $3))
+           | expr T_IS_NOT_EQUAL expr
+           (wisent-raw-tag
+            (semantic-tag 'phps-mode-parser--zend_is_not_equal $1 $3))
+           | expr LESSER_THAN expr
+           (wisent-raw-tag
+            (semantic-tag 'phps-mode-parser--zend_is_smaller $1 $3))
+           | expr T_IS_SMALLER_OR_EQUAL expr
+           (wisent-raw-tag
+            (semantic-tag 'phps-mode-parser--zend_is_smaller_or_equal $1 $3))
+           | expr GREATER_THAN expr
+           (wisent-raw-tag
+            (semantic-tag 'phps-mode-parser--zend_is_greater $1 $3))
+           | expr T_IS_GREATER_OR_EQUAL expr
+           (wisent-raw-tag
+            (semantic-tag 'phps-mode-parser--zend_is_greater_or_equal $1 $3))
+           | expr T_SPACESHIP expr
+           (wisent-raw-tag
+            (semantic-tag 'phps-mode-parser--zend_spaceship $1 $3))
+           | expr T_INSTANCEOF class_name_reference
+           (wisent-raw-tag
+            (semantic-tag 'phps-mode-parser--zend_instanceof $1
+                          ($3)))
+           | OPEN_PARENTHESIS expr CLOSE_PARENTHESIS
+           (progn
+             (when
+                 (equal
+                  (semantic-tag-get-attribute $2 'kind)
+                  'phps-mode-parser--zend_ast_conditional)
+               (semantic-tag-put-attribute $2 'attr 'phps-mode-parser--zend_parenthesized_conditional))
+             $2)
+           | new_expr
+           ($1)
+           | expr QUESTION_MARK expr COLON expr
+           (wisent-raw-tag
+            (semantic-tag 'phps-mode-parser--zend_ast_conditional $1
+                          ($3 $5)))
+           | expr QUESTION_MARK COLON expr
+           (wisent-raw-tag
+            (semantic-tag 'phps-mode-parser--zend_ast_conditional $1
+                          (nil $4)))
+           | expr T_COALESCE expr
+           (wisent-raw-tag
+            (semantic-tag 'phps-mode-parser--zend_ast_coalesce $1
+                          ($3)))
+           | internal_functions_in_yacc
+           ($1)))
+        ((T_INT_CAST expr)
+         (wisent-raw-tag
+          (semantic-tag 'phps-mode-parser--is_long $2)))
+        ((T_DOUBLE_CAST expr)
+         (wisent-raw-tag
+          (semantic-tag 'phps-mode-parser--is_double $2)))
+        ((T_STRING_CAST expr)
+         (wisent-raw-tag
+          (semantic-tag 'phps-mode-parser--is_string $2)))
+        ((T_ARRAY_CAST expr)
+         (wisent-raw-tag
+          (semantic-tag 'phps-mode-parser--is_array $2)))
+        ((T_OBJECT_CAST expr)
+         (wisent-raw-tag
+          (semantic-tag 'phps-mode-parser--is_object $2)))
+        ((T_BOOL_CAST expr)
+         (wisent-raw-tag
+          (semantic-tag 'phps-mode-parser--is_bool $2)))
+        ((T_UNSET_CAST expr)
+         (wisent-raw-tag
+          (semantic-tag 'phps-mode-parser--is_unset $2)))
+        ((T_EXIT exit_expr)
+         (wisent-raw-tag
+          (semantic-tag 'phps-mode-parser--zend_ast_exit $2 nil)))
+        ((AT expr)
+         (wisent-raw-tag
+          (semantic-tag 'phps-mode-parser--zend_ast_silence $2 nil)))
+        ((scalar)
+         ($1))
+        ((BACKTICK backticks_expr BACKTICK)
+         (wisent-raw-tag
+          (semantic-tag 'phps-mode-parser--zend_ast_shell $2 nil)))
+        ((T_PRINT expr)
+         (wisent-raw-tag
+          (semantic-tag 'phps-mode-parser--zend_ast_print $2 nil)))
+        ((T_YIELD)
+         (progn
+           (logior
+            (logior
+             (logior
+              (logior
+               (logior
+                (logior
+                 (logior
+                  (logior
+                   (logior
+                    (logior
+                     (logior
+                      (logior
+                       (logior nil 'phps-mode-parser--zend_acc_generator)
+                       'phps-mode-parser--zend_acc_generator)
+                      'phps-mode-parser--zend_acc_generator)
+                     'phps-mode-parser--zend_acc_generator)
+                    'phps-mode-parser--zend_acc_generator)
+                   'phps-mode-parser--zend_acc_generator)
+                  'phps-mode-parser--zend_acc_generator)
+                 'phps-mode-parser--zend_acc_generator)
+                'phps-mode-parser--zend_acc_generator)
+               'phps-mode-parser--zend_acc_generator)
+              'phps-mode-parser--zend_acc_generator)
+             'phps-mode-parser--zend_acc_generator)
+            'phps-mode-parser--zend_acc_generator)
+           (wisent-raw-tag
+            (semantic-tag 'phps-mode-parser--zend_ast_yield nil
+                          (nil)))))
+        ((T_YIELD expr)
+         (progn
+           (logior
+            (logior
+             (logior
+              (logior
+               (logior
+                (logior
+                 (logior
+                  (logior
+                   (logior
+                    (logior
+                     (logior
+                      (logior
+                       (logior
+                        (logior nil 'phps-mode-parser--zend_acc_generator)
+                        'phps-mode-parser--zend_acc_generator)
+                       'phps-mode-parser--zend_acc_generator)
+                      'phps-mode-parser--zend_acc_generator)
+                     'phps-mode-parser--zend_acc_generator)
+                    'phps-mode-parser--zend_acc_generator)
+                   'phps-mode-parser--zend_acc_generator)
+                  'phps-mode-parser--zend_acc_generator)
+                 'phps-mode-parser--zend_acc_generator)
+                'phps-mode-parser--zend_acc_generator)
+               'phps-mode-parser--zend_acc_generator)
+              'phps-mode-parser--zend_acc_generator)
+             'phps-mode-parser--zend_acc_generator)
+            'phps-mode-parser--zend_acc_generator)
+           (wisent-raw-tag
+            (semantic-tag 'phps-mode-parser--zend_ast_yield $2
+                          (nil)))))
+        ((T_YIELD expr T_DOUBLE_ARROW expr)
+         (progn
+           (logior
+            (logior
+             (logior
+              (logior
+               (logior
+                (logior
+                 (logior
+                  (logior
+                   (logior
+                    (logior
+                     (logior
+                      (logior
+                       (logior
+                        (logior
+                         (logior nil 'phps-mode-parser--zend_acc_generator)
+                         'phps-mode-parser--zend_acc_generator)
+                        'phps-mode-parser--zend_acc_generator)
+                       'phps-mode-parser--zend_acc_generator)
+                      'phps-mode-parser--zend_acc_generator)
+                     'phps-mode-parser--zend_acc_generator)
+                    'phps-mode-parser--zend_acc_generator)
+                   'phps-mode-parser--zend_acc_generator)
+                  'phps-mode-parser--zend_acc_generator)
+                 'phps-mode-parser--zend_acc_generator)
+                'phps-mode-parser--zend_acc_generator)
+               'phps-mode-parser--zend_acc_generator)
+              'phps-mode-parser--zend_acc_generator)
+             'phps-mode-parser--zend_acc_generator)
+            'phps-mode-parser--zend_acc_generator)
+           (wisent-raw-tag
+            (semantic-tag 'phps-mode-parser--zend_ast_yield $4
+                          ($2)))))
+        ((T_YIELD_FROM expr)
+         (progn
+           (logior
+            (logior
+             (logior
+              (logior
+               (logior
+                (logior
+                 (logior
+                  (logior
+                   (logior
+                    (logior
+                     (logior
+                      (logior
+                       (logior
+                        (logior
+                         (logior
+                          (logior nil 'phps-mode-parser--zend_acc_generator)
+                          'phps-mode-parser--zend_acc_generator)
+                         'phps-mode-parser--zend_acc_generator)
+                        'phps-mode-parser--zend_acc_generator)
+                       'phps-mode-parser--zend_acc_generator)
+                      'phps-mode-parser--zend_acc_generator)
+                     'phps-mode-parser--zend_acc_generator)
+                    'phps-mode-parser--zend_acc_generator)
+                   'phps-mode-parser--zend_acc_generator)
+                  'phps-mode-parser--zend_acc_generator)
+                 'phps-mode-parser--zend_acc_generator)
+                'phps-mode-parser--zend_acc_generator)
+               'phps-mode-parser--zend_acc_generator)
+              'phps-mode-parser--zend_acc_generator)
+             'phps-mode-parser--zend_acc_generator)
+            'phps-mode-parser--zend_acc_generator)
+           (wisent-raw-tag
+            (semantic-tag 'phps-mode-parser--zend_ast_yield_from $2 nil))))
+        ((T_THROW expr)
+         (wisent-raw-tag
+          (semantic-tag 'phps-mode-parser--zend_ast_throw $2 nil)))
+        ((inline_function)
+         ($1))
+        ((T_STATIC inline_function)
+         (progn
+           (semantic-tag-put-attribute $2 'flags
+                                       (logior
+                                        (semantic-tag-get-attribute $2 'flags)
+                                        'phps-mode-parser--zend_acc_static))
+           $2)))
        (isset_variable
         ((expr)
          (wisent-raw-tag
@@ -280,6 +685,34 @@
 
 ;;; Analyzers
 ;;
+(define-lex-string-type-analyzer phps-mode--<punctuation>-string-analyzer
+  "string analyzer for <punctuation> tokens."
+  "\\(\\s.\\|\\s$\\|\\s'\\)+"
+  '((UNARY . "~")
+    (SUBTRACTION . "-")
+    (QUESTION_MARK . "?")
+    (POW . "^")
+    (OPEN_SQUARE_BRACKET . "[")
+    (OPEN_PARENTHESIS . "(")
+    (NEGATION . "!")
+    (MULTIPLICATION . "*")
+    (MODULO . "%")
+    (LESSER_THAN . "<")
+    (GREATER_THAN . ">")
+    (DOT . ".")
+    (DIVISION . "/")
+    (COMMA . ",")
+    (COLON . ":")
+    (CLOSE_SQUARE_BRACKET . "]")
+    (CLOSE_PARENTHESIS . ")")
+    (BITWISE_OR . "|")
+    (BITWISE_AND . "&")
+    (BACKTICK . "`")
+    (AT . "@")
+    (ASSIGN . "=")
+    (ADDITION . "+"))
+  'punctuation)
+
 
 ;;; Epilogue
 ;;
