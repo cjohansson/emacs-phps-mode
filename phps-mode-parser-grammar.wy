@@ -105,6 +105,7 @@
 %token <punctuation> BACKTICK "`"
 %token <punctuation> BITWISE_AND "&"
 %token <punctuation> BITWISE_OR "|"
+%token <punctuation> CLOSE_CURLY_BRACKET "]"
 %token <punctuation> CLOSE_PARENTHESIS ")"
 %token <punctuation> CLOSE_SQUARE_BRACKET "]"
 %token <punctuation> COLON ":"
@@ -116,6 +117,7 @@
 %token <punctuation> MODULO "%"
 %token <punctuation> MULTIPLICATION "*"
 %token <punctuation> NEGATION "!"
+%token <punctuation> OPEN_CURLY_BRACKET "{"
 %token <punctuation> OPEN_PARENTHESIS "("
 %token <punctuation> OPEN_SQUARE_BRACKET "["
 %token <punctuation> POW "^"
@@ -296,6 +298,14 @@
 %start isset_variable
 
 %%
+
+callable_variable:
+    simple_variable (ZEND_AST_CREATE 'phps-mode-parser--zend_ast_var $1)
+    | array_object_dereferencable OPEN_SQUARE_BRACKET optional_expr CLOSE_SQUARE_BRACKET (ZEND_AST_CREATE 'phps-mode-parser--zend_ast_dim $1 $3)
+    | array_object_dereferencable OPEN_CURLY_BRACKET expr CLOSE_CURLY_BRACKET (ZEND_AST_CREATE_EX 'phps-mode-parser--zend_ast_dim 'phps-mode-parser--zend_dim_alternative_syntax $1 $3)
+    | array_object_dereferencable T_OBJECT_OPERATOR property_name argument_list (ZEND_AST_CREATE 'phps-mode-parser--zend_ast_method_call $1 $3 $4)
+    | function_call ($1)
+  ;
 
 variable:
     callable_variable ($1)
