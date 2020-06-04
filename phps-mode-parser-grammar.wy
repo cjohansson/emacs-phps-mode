@@ -319,6 +319,16 @@ non_empty_array_pair_list:
     | possible_array_pair (ZEND_AST_CREATE_LIST 1 'phps-mode-parser--zend_ast_array $1)
     ;
 
+array_pair:
+    expr T_DOUBLE_ARROW expr (ZEND_AST_CREATE 'phps-mode-parser--zend_ast_array_elem $3 $1)
+    | expr (ZEND_AST_CREATE 'phps-mode-parser--zend_ast_array_elem $1 nil)
+    | expr T_DOUBLE_ARROW BITWISE_AND variable (ZEND_AST_CREATE_EX 'phps-mode-parser--zend_ast_array_elem 1 $4 $1)
+    | BITWISE_AND variable (ZEND_AST_CREATE_EX 'phps-mode-parser--zend_ast_array_elem 1 $2 nil)
+    | T_ELLIPSIS expr (ZEND_AST_CREATE 'phps-mode-parser--zend_ast_unpack $2)
+    | expr T_DOUBLE_ARROW T_LIST OPEN_PARENTHESIS array_pair_list CLOSE_PARENTHESIS (progn (semantic-tag-put-attribute $4 'attr 'phps-mode-parser--zend_array_syntax_list)(ZEND_AST_CREATE 'phps-mode-parser--zend_ast_array_elem $5 $1))
+    | T_LIST OPEN_PARENTHESIS array_pair_list CLOSE_PARENTHESIS (progn (semantic-tag-put-attribute $3 'attr 'phps-mode-parser--zend_array_syntax_list)(ZEND_AST_CREATE 'phps-mode-parser--zend_ast_array_elem $3 nil))
+    ;
+
 dereferencable_scalar:
     T_ARRAY OPEN_PARENTHESIS array_pair_list CLOSE_PARENTHESIS (progn (semantic-tag-put-attribute $3 'attr 'phps-mode-parser--zend_array_syntax_long) $3)
     | OPEN_SQUARE_BRACKET array_pair_list CLOSE_SQUARE_BRACKET (progn (semantic-tag-put-attribute $2 'attr 'phps-mode-parser--zend_array_syntax_short) $2)
