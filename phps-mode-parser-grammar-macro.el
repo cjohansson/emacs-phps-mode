@@ -68,5 +68,13 @@
   `(wisent-raw-tag
     (semantic-tag ,subject ,symbol)))
 
+(defun phps-mode-parser-grammar-macro-ZEND_AST_CREATE_ZVAL (subject)
+  `(wisent-raw-tag
+    (semantic-tag ,subject 'ZEND_AST_ZVAL :attr 0)))
+
+(defun phps-mode-parser-grammar-macro-ZEND_LEX_TSTRING (callback)
+  (let ((token (semantic-lex (point) (point-max) nil 1)))
+    (funcall callback token)))
+
 (provide 'phps-mode-grammar-macro)
 ;;; phps-mode-parser-grammar-macro.el ends here

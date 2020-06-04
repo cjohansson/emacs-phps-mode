@@ -53,9 +53,11 @@
  ZEND_AST_CREATE_CLASS_CONST_OR_NAME
  ZEND_AST_CREATE_EX
  ZEND_AST_CREATE_LIST
+ ZEND_AST_CREATE_ZVAL
  ZEND_AST_CREATE_ZVAL_EX
  ZEND_AST_LIST_ADD
  ZEND_AST_LIST_RTRIM
+ ZEND_LEX_TSTRING
  ZEND_NEGATE_NUM_STRING
  ZVAL_INTERNED_STR
 }
@@ -308,6 +310,11 @@
 %start isset_variable
 
 %%
+
+identifier:
+    T_STRING ($1)
+    | semi_reserved (let ((zv nil))(ZEND_LEX_TSTRING (lambda(ret) (setq zv ret)))(ZEND_AST_CREATE_ZVAL zv))
+    ;
 
 namespace_name:
     T_STRING ($1)
