@@ -3,7 +3,7 @@
 ;; Copyright (C) 2018-2020  Free Software Foundation, Inc.
 
 ;; Author: Christian Johansson <christianjohansson@Christians-MacBook-Air.local>
-;; Created: 2020-06-04 13:54:38+0200
+;; Created: 2020-06-04 14:03:32+0200
 ;; Keywords: syntax
 ;; X-RCS: $Id$
 
@@ -302,7 +302,7 @@
           (semantic-tag $1 'ZEND_AST_LIST_ADD :new-element $3)))
         ((possible_array_pair)
          (wisent-raw-tag
-          (semantic-tag $1 'ZEND_AST_LIST :type 'phps-mode-parser--zend_ast_array :size 1))))
+          (semantic-tag "" 'phps-mode-parser--zend_ast_array :elements @elements :size 1))))
        (array_pair
         ((expr T_DOUBLE_ARROW expr)
          (wisent-raw-tag
@@ -329,6 +329,19 @@
            (semantic-tag-put-attribute $3 'attr 'phps-mode-parser--zend_array_syntax_list)
            (wisent-raw-tag
             (semantic-tag 'phps-mode-parser--zend_ast_array_elem $3 nil)))))
+       (encaps_list
+        ((encaps_list encaps_var)
+         (wisent-raw-tag
+          (semantic-tag $1 'ZEND_AST_LIST_ADD :new-element $2)))
+        ((encaps_list T_ENCAPSED_AND_WHITESPACE)
+         (wisent-raw-tag
+          (semantic-tag $1 'ZEND_AST_LIST_ADD :new-element $2)))
+        ((encaps_var)
+         (wisent-raw-tag
+          (semantic-tag "" 'phps-mode-parser--zend_ast_encaps_list :elements @elements :size 1)))
+        ((T_ENCAPSED_AND_WHITESPACE encaps_var)
+         (wisent-raw-tag
+          (semantic-tag "" 'phps-mode-parser--zend_ast_encaps_list :elements @elements :size 2))))
        (dereferencable_scalar
         ((T_ARRAY OPEN_PARENTHESIS array_pair_list CLOSE_PARENTHESIS)
          (progn
