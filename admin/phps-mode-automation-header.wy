@@ -113,6 +113,7 @@
 %token <punctuation> CLOSE_SQUARE_BRACKET "]"
 %token <punctuation> COLON ":"
 %token <punctuation> COMMA ","
+%token <punctuation> DOLLAR_SIGN "$"
 %token <punctuation> DIVISION "/"
 %token <punctuation> DOT "."
 %token <punctuation> GREATER_THAN ">"

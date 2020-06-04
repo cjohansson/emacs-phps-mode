@@ -110,6 +110,7 @@
 %token <punctuation> CLOSE_SQUARE_BRACKET "]"
 %token <punctuation> COLON ":"
 %token <punctuation> COMMA ","
+%token <punctuation> DOLLAR_SIGN "$"
 %token <punctuation> DIVISION "/"
 %token <punctuation> DOT "."
 %token <punctuation> GREATER_THAN ">"
@@ -305,12 +306,18 @@ callable_variable:
     | array_object_dereferencable OPEN_CURLY_BRACKET expr CLOSE_CURLY_BRACKET (ZEND_AST_CREATE_EX 'phps-mode-parser--zend_ast_dim 'phps-mode-parser--zend_dim_alternative_syntax $1 $3)
     | array_object_dereferencable T_OBJECT_OPERATOR property_name argument_list (ZEND_AST_CREATE 'phps-mode-parser--zend_ast_method_call $1 $3 $4)
     | function_call ($1)
-  ;
+    ;
 
 variable:
     callable_variable ($1)
     | static_member ($1)
     | array_object_dereferencable T_OBJECT_OPERATOR property_name (ZEND_AST_CREATE 'phps-mode-parser--zend_ast_prop $1 $2)
+    ;
+
+simple_variable:
+    T_VARIABLE ($1)
+    | DOLLAR_SIGN OPEN_CURLY_BRACKET expr CLOSE_CURLY_BRACKET ($3)
+    | DOLLAR_SIGN simple_variable (ZEND_AST_CREATE 'phps-mode-parser--zend_ast_var $2)
     ;
 
 expr:
