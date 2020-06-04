@@ -3,7 +3,7 @@
 ;; Copyright (C) 2018-2020  Free Software Foundation, Inc.
 
 ;; Author: Christian Johansson <christianjohansson@Christians-MacBook-Air.local>
-;; Created: 2020-06-03 07:19:00+0200
+;; Created: 2020-06-03 16:37:40+0200
 ;; Keywords: syntax
 ;; X-RCS: $Id$
 
@@ -25,7 +25,7 @@
 ;;; Commentary:
 ;;
 ;; PLEASE DO NOT MANUALLY EDIT THIS FILE!  It is automatically
-;; generated from the grammar file phps-mode-wy-edited.wy.
+;; generated from the grammar file phps-mode-parser-grammar.wy.
 
 ;;; History:
 ;;
@@ -270,7 +270,7 @@
    '((semantic-parse-stream . wisent-parse-stream)))
   (setq semantic-parser-name "LALR"
         semantic--parse-table phps-mode--parse-table
-        semantic-debug-parser-source "phps-mode-wy-edited.wy"
+        semantic-debug-parser-source "phps-mode-parser-grammar.wy"
         semantic-flex-keywords-obarray phps-mode--keyword-table
         semantic-lex-types-obarray phps-mode--token-table)
   ;; Collect unmatched syntax lexical tokens

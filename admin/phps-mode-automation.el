@@ -29,7 +29,7 @@
 
 (let ((php-yacc-url "https://raw.githubusercontent.com/php/php-src/master/Zend/zend_language_parser.y")
       (php-yacc-file (expand-file-name "zend_language_parser.y"))
-      (wisent-destination (expand-file-name "phps-mode-wy.wy"))
+      (wisent-destination (expand-file-name "../phps-mode-parser-grammar-raw.wy"))
       (header (expand-file-name "phps-mode-automation-header.wy")))
 
   ;; Download Yacc if not available

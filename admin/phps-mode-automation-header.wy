@@ -46,23 +46,14 @@
   (setq max-specpdl-size 160000)
 }
 
-%use-macros phps-mode-wy-macros {
-             phps-mode-wy-macros--zend_add_class_modifier
-             phps-mode-wy-macros--zend_add_member_modifier
-             phps-mode-wy-macros--zend_append_str
-             phps-mode-wy-macros--zend_ast_create
-             phps-mode-wy-macros--zend_ast_create_assign_op
-             phps-mode-wy-macros--zend_ast_create_binary_op
-             phps-mode-wy-macros--zend_ast_create_cast
-             phps-mode-wy-macros--zend_ast_create_decl
-             phps-mode-wy-macros--zend_ast_create_ex
-             phps-mode-wy-macros--zend_ast_create_list
-             phps-mode-wy-macros--zend_ast_create_zval_from_str
-             phps-mode-wy-macros--zend_ast_get_str
-             phps-mode-wy-macros--zend_ast_list_add
-             phps-mode-wy-macros--zend_ast_list_rtrim
-             phps-mode-wy-macros--zend_handle_encoding_declaration
-             phps-mode-wy-macros--zend_negate_num_string
+%use-macros phps-mode-parser-grammar-macro
+{
+ CG
+ ZEND_AST_CREATE
+ ZEND_AST_CREATE_ASSIGN_OP
+ ZEND_AST_CREATE_BINARY_OP
+ ZEND_AST_CREATE_CAST
+ ZEND_AST_CREATE_EX
 }
 
 %precedence T_THROW
