@@ -44,6 +44,14 @@
   `(wisent-raw-tag
     (semantic-tag ,subject 'ZEND_AST_LIST_RTRIM)))
 
+(defun phps-mode-parser-grammar-macro-ZEND_AST_CREATE_LIST (size type subject)
+  `(wisent-raw-tag
+    (semantic-tag ,subject 'ZEND_AST_LIST :type ,type :size ,size)))
+
+(defun phps-mode-parser-grammar-macro-ZEND_AST_LIST_ADD (array new-element)
+  `(wisent-raw-tag
+    (semantic-tag ,array 'ZEND_AST_LIST_ADD :new-element ,new-element)))
+
 
 (provide 'phps-mode-grammar-macro)
 ;;; phps-mode-parser-grammar-macro.el ends here
