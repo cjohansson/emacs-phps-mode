@@ -3,7 +3,7 @@
 ;; Copyright (C) 2018-2020  Free Software Foundation, Inc.
 
 ;; Author: Christian Johansson <christianjohansson@Christians-MacBook-Air.local>
-;; Created: 2020-06-04 11:11:47+0200
+;; Created: 2020-06-04 11:28:32+0200
 ;; Keywords: syntax
 ;; X-RCS: $Id$
 
@@ -289,177 +289,165 @@
          (progn
            (semantic-tag-put-attribute $3 'attr phps-mode-parser--zend_array_syntax_list)
            (wisent-raw-tag
-            (semantic-tag 'phps-mode-parser--zend_ast_assign $3
-                          ($6)))
+            (semantic-tag 'phps-mode-parser--zend_ast_assign $3 $6))
            | OPEN_SQUARE_BRACKET array_pair_list CLOSE_SQUARE_BRACKET ASSIGN expr
            (progn
              (semantic-tag-put-attribute $2 'attr 'phps-mode-parser--zend_array_syntax_short)
              (wisent-raw-tag
-              (semantic-tag 'phps-mode-parser--zend_ast_assign $2
-                            ($5))))
+              (semantic-tag 'phps-mode-parser--zend_ast_assign $2 $5)))
            | variable ASSIGN expr
            (wisent-raw-tag
-            (semantic-tag 'phps-mode-parser--zend_ast_assign $1
-                          ($3)))
+            (semantic-tag 'phps-mode-parser--zend_ast_assign $1 $3))
            | variable ASSIGN BITWISE_AND variable
            (wisent-raw-tag
-            (semantic-tag 'phps-mode-parser--zend_ast_assign_ref $1
-                          ($4)))
+            (semantic-tag 'phps-mode-parser--zend_ast_assign_ref $1 $4))
            | T_CLONE expr
            (wisent-raw-tag
-            (semantic-tag 'phps-mode-parser--zend_ast_clone $2 nil))
+            (semantic-tag 'phps-mode-parser--zend_ast_clone $2))
            | variable T_PLUS_EQUAL expr
            (wisent-raw-tag
-            (semantic-tag 'phps-mode-parser--zend_add $1 $3))
+            (semantic-tag 'phps-mode-parser--zend_add 'ZEND_AST_ASSIGN_OP :object object :subject subject))
            | variable T_MINUS_EQUAL expr
            (wisent-raw-tag
-            (semantic-tag 'phps-mode-parser--zend_sub $1 $3))
+            (semantic-tag 'phps-mode-parser--zend_sub 'ZEND_AST_ASSIGN_OP :object object :subject subject))
            | variable T_MUL_EQUAL expr
            (wisent-raw-tag
-            (semantic-tag 'phps-mode-parser--zend_mul $1 $3))
+            (semantic-tag 'phps-mode-parser--zend_mul 'ZEND_AST_ASSIGN_OP :object object :subject subject))
            | variable T_POW_EQUAL expr
            (wisent-raw-tag
-            (semantic-tag 'phps-mode-parser--zend_pow $1 $3))
+            (semantic-tag 'phps-mode-parser--zend_pow 'ZEND_AST_ASSIGN_OP :object object :subject subject))
            | variable T_DIV_EQUAL expr
            (wisent-raw-tag
-            (semantic-tag 'phps-mode-parser--zend_div $1 $3))
+            (semantic-tag 'phps-mode-parser--zend_div 'ZEND_AST_ASSIGN_OP :object object :subject subject))
            | variable T_CONCAT_EQUAL expr
            (wisent-raw-tag
-            (semantic-tag 'phps-mode-parser--zend_concat $1 $3))
+            (semantic-tag 'phps-mode-parser--zend_concat 'ZEND_AST_ASSIGN_OP :object object :subject subject))
            | variable T_MOD_EQUAL expr
            (wisent-raw-tag
-            (semantic-tag 'phps-mode-parser--zend_mod $1 $3))
+            (semantic-tag 'phps-mode-parser--zend_mod 'ZEND_AST_ASSIGN_OP :object object :subject subject))
            | variable T_AND_EQUAL expr
            (wisent-raw-tag
-            (semantic-tag 'phps-mode-parser--zend_bw_and $1 $3))
+            (semantic-tag 'phps-mode-parser--zend_bw_and 'ZEND_AST_ASSIGN_OP :object object :subject subject))
            | variable T_OR_EQUAL expr
            (wisent-raw-tag
-            (semantic-tag 'phps-mode-parser--zend_bw_or $1 $3))
+            (semantic-tag 'phps-mode-parser--zend_bw_or 'ZEND_AST_ASSIGN_OP :object object :subject subject))
            | variable T_XOR_EQUAL expr
            (wisent-raw-tag
-            (semantic-tag 'phps-mode-parser--zend_bw_xor $1 $3))
+            (semantic-tag 'phps-mode-parser--zend_bw_xor 'ZEND_AST_ASSIGN_OP :object object :subject subject))
            | variable T_SL_EQUAL expr
            (wisent-raw-tag
-            (semantic-tag 'phps-mode-parser--zend_sl $1 $3))
+            (semantic-tag 'phps-mode-parser--zend_sl 'ZEND_AST_ASSIGN_OP :object object :subject subject))
            | variable T_SR_EQUAL expr
            (wisent-raw-tag
-            (semantic-tag 'phps-mode-parser--zend_sr $1 $3))
+            (semantic-tag 'phps-mode-parser--zend_sr 'ZEND_AST_ASSIGN_OP :object object :subject subject))
            | variable T_COALESCE_EQUAL expr
            (wisent-raw-tag
-            (semantic-tag 'phps-mode-parser--zend_coalesce $1
-                          ($3)))
+            (semantic-tag 'phps-mode-parser--zend_coalesce $1 $3))
            | variable T_INC
            (wisent-raw-tag
-            (semantic-tag 'phps-mode-parser--zend_post_inc $1 nil))
+            (semantic-tag 'phps-mode-parser--zend_post_inc $1))
            | T_INC variable
            (wisent-raw-tag
-            (semantic-tag 'phps-mode-parser--zend_pre_inc $2 nil))
+            (semantic-tag 'phps-mode-parser--zend_pre_inc $2))
            | variable T_DEC
            (wisent-raw-tag
-            (semantic-tag 'phps-mode-parser--zend_post_dec $1 nil))
+            (semantic-tag 'phps-mode-parser--zend_post_dec $1))
            | T_DEC variable
            (wisent-raw-tag
-            (semantic-tag 'phps-mode-parser--zend_pre_inc $2 nil))
+            (semantic-tag 'phps-mode-parser--zend_pre_inc $2))
            | expr T_BOOLEAN_OR expr
            (wisent-raw-tag
-            (semantic-tag 'phps-mode-parser--zend_ast_or $1
-                          ($3)))
+            (semantic-tag 'phps-mode-parser--zend_ast_or $1 $3))
            | expr T_BOOLEAN_AND expr
            (wisent-raw-tag
-            (semantic-tag 'phps-mode-parser--zend_ast_and $1
-                          ($3)))
+            (semantic-tag 'phps-mode-parser--zend_ast_and $1 $3))
            | expr T_LOGICAL_OR expr
            (wisent-raw-tag
-            (semantic-tag 'phps-mode-parser--zend_ast_or $1
-                          ($3)))
+            (semantic-tag 'phps-mode-parser--zend_ast_or $1 $3))
            | expr T_LOGICAL_AND expr
            (wisent-raw-tag
-            (semantic-tag 'phps-mode-parser--zend_ast_and $1
-                          ($3)))
+            (semantic-tag 'phps-mode-parser--zend_ast_and $1 $3))
            | expr T_LOGICAL_XOR expr
            (wisent-raw-tag
-            (semantic-tag 'phps-mode-parser--zend_bool_xor $1 $3))
+            (semantic-tag 'phps-mode-parser--zend_bool_xor 'ZEND_AST_BINARY_OP :object object :subject subject))
            | expr BITWISE_OR expr
            (wisent-raw-tag
-            (semantic-tag 'phps-mode-parser--zend_bw_or $1 $3))
+            (semantic-tag 'phps-mode-parser--zend_bw_or 'ZEND_AST_BINARY_OP :object object :subject subject))
            | expr BITWISE_AND expr
            (wisent-raw-tag
-            (semantic-tag 'phps-mode-parser--zend_bw_and $1 $3))
+            (semantic-tag 'phps-mode-parser--zend_bw_and 'ZEND_AST_BINARY_OP :object object :subject subject))
            | expr POW expr
            (wisent-raw-tag
-            (semantic-tag 'phps-mode-parser--zend_bw_xor $1 $3))
+            (semantic-tag 'phps-mode-parser--zend_bw_xor 'ZEND_AST_BINARY_OP :object object :subject subject))
            | expr DOT expr
            (wisent-raw-tag
-            (semantic-tag 'phps-mode-parser--zend_concat $1 $3))
+            (semantic-tag 'phps-mode-parser--zend_concat 'ZEND_AST_BINARY_OP :object object :subject subject))
            | expr ADDITION expr
            (wisent-raw-tag
-            (semantic-tag 'phps-mode-parser--zend_add $1 $3))
+            (semantic-tag 'phps-mode-parser--zend_add 'ZEND_AST_BINARY_OP :object object :subject subject))
            | expr SUBTRACTION expr
            (wisent-raw-tag
-            (semantic-tag 'phps-mode-parser--zend_sub $1 $3))
+            (semantic-tag 'phps-mode-parser--zend_sub 'ZEND_AST_BINARY_OP :object object :subject subject))
            | expr MULTIPLICATION expr
            (wisent-raw-tag
-            (semantic-tag 'phps-mode-parser--zend_mul $1 $3))
+            (semantic-tag 'phps-mode-parser--zend_mul 'ZEND_AST_BINARY_OP :object object :subject subject))
            | expr T_POW expr
            (wisent-raw-tag
-            (semantic-tag 'phps-mode-parser--zend_pow $1 $3))
+            (semantic-tag 'phps-mode-parser--zend_pow 'ZEND_AST_BINARY_OP :object object :subject subject))
            | expr DIVISION expr
            (wisent-raw-tag
-            (semantic-tag 'phps-mode-parser--zend_div $1 $3))
+            (semantic-tag 'phps-mode-parser--zend_div 'ZEND_AST_BINARY_OP :object object :subject subject))
            | expr MODULO expr
            (wisent-raw-tag
-            (semantic-tag 'phps-mode-parser--zend_mod $1 $3))
+            (semantic-tag 'phps-mode-parser--zend_mod 'ZEND_AST_BINARY_OP :object object :subject subject))
            | expr T_SL expr
            (wisent-raw-tag
-            (semantic-tag 'phps-mode-parser--zend_sl $1 $3))
+            (semantic-tag 'phps-mode-parser--zend_sl 'ZEND_AST_BINARY_OP :object object :subject subject))
            | expr T_SR expr
            (wisent-raw-tag
-            (semantic-tag 'phps-mode-parser--zend_sr $1 $3))
+            (semantic-tag 'phps-mode-parser--zend_sr 'ZEND_AST_BINARY_OP :object object :subject subject))
            | ADDITION expr prec UNARY
            (wisent-raw-tag
-            (semantic-tag 'phps-mode-parser--zend_ast_unary_plus $1
-                          ($2)))
+            (semantic-tag 'phps-mode-parser--zend_ast_unary_plus $1 $2))
            | SUBTRACTION expr prec UNARY
            (wisent-raw-tag
-            (semantic-tag 'phps-mode-parser--zend_ast_unary_minus $1
-                          ($2)))
+            (semantic-tag 'phps-mode-parser--zend_ast_unary_minus $1 $2))
            | NEGATION expr
            (wisent-raw-tag
-            (semantic-tag 'phps-mode-parser--zend_ast_unary_op 'phps-mode-parser--zend_bool_not $2))
+            (semantic-tag 'phps-mode-parser--zend_ast_unary_op 'ZEND_AST_EX :operator operator :subject subject))
            | UNARY expr
            (wisent-raw-tag
-            (semantic-tag 'phps-mode-parser--zend_ast_unary_op 'phps-mode-parser--zend_bw_not $2))
+            (semantic-tag 'phps-mode-parser--zend_ast_unary_op 'ZEND_AST_EX :operator operator :subject subject))
            | expr T_IS_IDENTICAL expr
            (wisent-raw-tag
-            (semantic-tag 'phps-mode-parser--zend_is_identical $1 $3))
+            (semantic-tag 'phps-mode-parser--zend_is_identical 'ZEND_AST_BINARY_OP :object object :subject subject))
            | expr T_IS_NOT_IDENTICAL expr
            (wisent-raw-tag
-            (semantic-tag 'phps-mode-parser--zend_is_not_identical $1 $3))
+            (semantic-tag 'phps-mode-parser--zend_is_not_identical 'ZEND_AST_BINARY_OP :object object :subject subject))
            | expr T_IS_EQUAL expr
            (wisent-raw-tag
-            (semantic-tag 'phps-mode-parser--zend_is_equal $1 $3))
+            (semantic-tag 'phps-mode-parser--zend_is_equal 'ZEND_AST_BINARY_OP :object object :subject subject))
            | expr T_IS_NOT_EQUAL expr
            (wisent-raw-tag
-            (semantic-tag 'phps-mode-parser--zend_is_not_equal $1 $3))
+            (semantic-tag 'phps-mode-parser--zend_is_not_equal 'ZEND_AST_BINARY_OP :object object :subject subject))
            | expr LESSER_THAN expr
            (wisent-raw-tag
-            (semantic-tag 'phps-mode-parser--zend_is_smaller $1 $3))
+            (semantic-tag 'phps-mode-parser--zend_is_smaller 'ZEND_AST_BINARY_OP :object object :subject subject))
            | expr T_IS_SMALLER_OR_EQUAL expr
            (wisent-raw-tag
-            (semantic-tag 'phps-mode-parser--zend_is_smaller_or_equal $1 $3))
+            (semantic-tag 'phps-mode-parser--zend_is_smaller_or_equal 'ZEND_AST_BINARY_OP :object object :subject subject))
            | expr GREATER_THAN expr
            (wisent-raw-tag
-            (semantic-tag 'phps-mode-parser--zend_is_greater $1 $3))
+            (semantic-tag 'phps-mode-parser--zend_is_greater 'ZEND_AST_BINARY_OP :object object :subject subject))
            | expr T_IS_GREATER_OR_EQUAL expr
            (wisent-raw-tag
-            (semantic-tag 'phps-mode-parser--zend_is_greater_or_equal $1 $3))
+            (semantic-tag 'phps-mode-parser--zend_is_greater_or_equal 'ZEND_AST_BINARY_OP :object object :subject subject))
            | expr T_SPACESHIP expr
            (wisent-raw-tag
-            (semantic-tag 'phps-mode-parser--zend_spaceship $1 $3))
+            (semantic-tag 'phps-mode-parser--zend_spaceship 'ZEND_AST_BINARY_OP :object object :subject subject))
            | expr T_INSTANCEOF class_name_reference
            (wisent-raw-tag
-            (semantic-tag 'phps-mode-parser--zend_instanceof $1
-                          ($3)))
+            (semantic-tag 'phps-mode-parser--zend_instanceof $1 $3))
            | OPEN_PARENTHESIS expr CLOSE_PARENTHESIS
            (progn
              (when
@@ -472,53 +460,50 @@
            ($1)
            | expr QUESTION_MARK expr COLON expr
            (wisent-raw-tag
-            (semantic-tag 'phps-mode-parser--zend_ast_conditional $1
-                          ($3 $5)))
+            (semantic-tag 'phps-mode-parser--zend_ast_conditional $1 $3 $5))
            | expr QUESTION_MARK COLON expr
            (wisent-raw-tag
-            (semantic-tag 'phps-mode-parser--zend_ast_conditional $1
-                          (nil $4)))
+            (semantic-tag 'phps-mode-parser--zend_ast_conditional $1 nil $4))
            | expr T_COALESCE expr
            (wisent-raw-tag
-            (semantic-tag 'phps-mode-parser--zend_ast_coalesce $1
-                          ($3)))
+            (semantic-tag 'phps-mode-parser--zend_ast_coalesce $1 $3))
            | internal_functions_in_yacc
            ($1)))
         ((T_INT_CAST expr)
          (wisent-raw-tag
-          (semantic-tag 'phps-mode-parser--is_long $2)))
+          (semantic-tag 'phps-mode-parser--is_long 'ZEND_AST_CAST :subject subject)))
         ((T_DOUBLE_CAST expr)
          (wisent-raw-tag
-          (semantic-tag 'phps-mode-parser--is_double $2)))
+          (semantic-tag 'phps-mode-parser--is_double 'ZEND_AST_CAST :subject subject)))
         ((T_STRING_CAST expr)
          (wisent-raw-tag
-          (semantic-tag 'phps-mode-parser--is_string $2)))
+          (semantic-tag 'phps-mode-parser--is_string 'ZEND_AST_CAST :subject subject)))
         ((T_ARRAY_CAST expr)
          (wisent-raw-tag
-          (semantic-tag 'phps-mode-parser--is_array $2)))
+          (semantic-tag 'phps-mode-parser--is_array 'ZEND_AST_CAST :subject subject)))
         ((T_OBJECT_CAST expr)
          (wisent-raw-tag
-          (semantic-tag 'phps-mode-parser--is_object $2)))
+          (semantic-tag 'phps-mode-parser--is_object 'ZEND_AST_CAST :subject subject)))
         ((T_BOOL_CAST expr)
          (wisent-raw-tag
-          (semantic-tag 'phps-mode-parser--is_bool $2)))
+          (semantic-tag 'phps-mode-parser--is_bool 'ZEND_AST_CAST :subject subject)))
         ((T_UNSET_CAST expr)
          (wisent-raw-tag
-          (semantic-tag 'phps-mode-parser--is_unset $2)))
+          (semantic-tag 'phps-mode-parser--is_unset 'ZEND_AST_CAST :subject subject)))
         ((T_EXIT exit_expr)
          (wisent-raw-tag
-          (semantic-tag 'phps-mode-parser--zend_ast_exit $2 nil)))
+          (semantic-tag 'phps-mode-parser--zend_ast_exit $2)))
         ((AT expr)
          (wisent-raw-tag
-          (semantic-tag 'phps-mode-parser--zend_ast_silence $2 nil)))
+          (semantic-tag 'phps-mode-parser--zend_ast_silence $2)))
         ((scalar)
          ($1))
         ((BACKTICK backticks_expr BACKTICK)
          (wisent-raw-tag
-          (semantic-tag 'phps-mode-parser--zend_ast_shell $2 nil)))
+          (semantic-tag 'phps-mode-parser--zend_ast_shell $2)))
         ((T_PRINT expr)
          (wisent-raw-tag
-          (semantic-tag 'phps-mode-parser--zend_ast_print $2 nil)))
+          (semantic-tag 'phps-mode-parser--zend_ast_print $2)))
         ((T_YIELD)
          (progn
            (logior
@@ -533,7 +518,23 @@
                     (logior
                      (logior
                       (logior
-                       (logior nil 'phps-mode-parser--zend_acc_generator)
+                       (logior
+                        (logior
+                         (logior
+                          (logior
+                           (logior
+                            (logior
+                             (logior
+                              (logior
+                               (logior nil 'phps-mode-parser--zend_acc_generator)
+                               'phps-mode-parser--zend_acc_generator)
+                              'phps-mode-parser--zend_acc_generator)
+                             'phps-mode-parser--zend_acc_generator)
+                            'phps-mode-parser--zend_acc_generator)
+                           'phps-mode-parser--zend_acc_generator)
+                          'phps-mode-parser--zend_acc_generator)
+                         'phps-mode-parser--zend_acc_generator)
+                        'phps-mode-parser--zend_acc_generator)
                        'phps-mode-parser--zend_acc_generator)
                       'phps-mode-parser--zend_acc_generator)
                      'phps-mode-parser--zend_acc_generator)
@@ -547,8 +548,7 @@
              'phps-mode-parser--zend_acc_generator)
             'phps-mode-parser--zend_acc_generator)
            (wisent-raw-tag
-            (semantic-tag 'phps-mode-parser--zend_ast_yield nil
-                          (nil)))))
+            (semantic-tag 'phps-mode-parser--zend_ast_yield nil nil))))
         ((T_YIELD expr)
          (progn
            (logior
@@ -564,7 +564,23 @@
                      (logior
                       (logior
                        (logior
-                        (logior nil 'phps-mode-parser--zend_acc_generator)
+                        (logior
+                         (logior
+                          (logior
+                           (logior
+                            (logior
+                             (logior
+                              (logior
+                               (logior
+                                (logior nil 'phps-mode-parser--zend_acc_generator)
+                                'phps-mode-parser--zend_acc_generator)
+                               'phps-mode-parser--zend_acc_generator)
+                              'phps-mode-parser--zend_acc_generator)
+                             'phps-mode-parser--zend_acc_generator)
+                            'phps-mode-parser--zend_acc_generator)
+                           'phps-mode-parser--zend_acc_generator)
+                          'phps-mode-parser--zend_acc_generator)
+                         'phps-mode-parser--zend_acc_generator)
                         'phps-mode-parser--zend_acc_generator)
                        'phps-mode-parser--zend_acc_generator)
                       'phps-mode-parser--zend_acc_generator)
@@ -579,8 +595,7 @@
              'phps-mode-parser--zend_acc_generator)
             'phps-mode-parser--zend_acc_generator)
            (wisent-raw-tag
-            (semantic-tag 'phps-mode-parser--zend_ast_yield $2
-                          (nil)))))
+            (semantic-tag 'phps-mode-parser--zend_ast_yield $2 nil))))
         ((T_YIELD expr T_DOUBLE_ARROW expr)
          (progn
            (logior
@@ -597,7 +612,23 @@
                       (logior
                        (logior
                         (logior
-                         (logior nil 'phps-mode-parser--zend_acc_generator)
+                         (logior
+                          (logior
+                           (logior
+                            (logior
+                             (logior
+                              (logior
+                               (logior
+                                (logior
+                                 (logior nil 'phps-mode-parser--zend_acc_generator)
+                                 'phps-mode-parser--zend_acc_generator)
+                                'phps-mode-parser--zend_acc_generator)
+                               'phps-mode-parser--zend_acc_generator)
+                              'phps-mode-parser--zend_acc_generator)
+                             'phps-mode-parser--zend_acc_generator)
+                            'phps-mode-parser--zend_acc_generator)
+                           'phps-mode-parser--zend_acc_generator)
+                          'phps-mode-parser--zend_acc_generator)
                          'phps-mode-parser--zend_acc_generator)
                         'phps-mode-parser--zend_acc_generator)
                        'phps-mode-parser--zend_acc_generator)
@@ -613,8 +644,7 @@
              'phps-mode-parser--zend_acc_generator)
             'phps-mode-parser--zend_acc_generator)
            (wisent-raw-tag
-            (semantic-tag 'phps-mode-parser--zend_ast_yield $4
-                          ($2)))))
+            (semantic-tag 'phps-mode-parser--zend_ast_yield $4 $2))))
         ((T_YIELD_FROM expr)
          (progn
            (logior
@@ -632,7 +662,23 @@
                        (logior
                         (logior
                          (logior
-                          (logior nil 'phps-mode-parser--zend_acc_generator)
+                          (logior
+                           (logior
+                            (logior
+                             (logior
+                              (logior
+                               (logior
+                                (logior
+                                 (logior
+                                  (logior nil 'phps-mode-parser--zend_acc_generator)
+                                  'phps-mode-parser--zend_acc_generator)
+                                 'phps-mode-parser--zend_acc_generator)
+                                'phps-mode-parser--zend_acc_generator)
+                               'phps-mode-parser--zend_acc_generator)
+                              'phps-mode-parser--zend_acc_generator)
+                             'phps-mode-parser--zend_acc_generator)
+                            'phps-mode-parser--zend_acc_generator)
+                           'phps-mode-parser--zend_acc_generator)
                           'phps-mode-parser--zend_acc_generator)
                          'phps-mode-parser--zend_acc_generator)
                         'phps-mode-parser--zend_acc_generator)
@@ -649,10 +695,10 @@
              'phps-mode-parser--zend_acc_generator)
             'phps-mode-parser--zend_acc_generator)
            (wisent-raw-tag
-            (semantic-tag 'phps-mode-parser--zend_ast_yield_from $2 nil))))
+            (semantic-tag 'phps-mode-parser--zend_ast_yield_from $2))))
         ((T_THROW expr)
          (wisent-raw-tag
-          (semantic-tag 'phps-mode-parser--zend_ast_throw $2 nil)))
+          (semantic-tag 'phps-mode-parser--zend_ast_throw $2)))
         ((inline_function)
          ($1))
         ((T_STATIC inline_function)
@@ -665,7 +711,7 @@
        (isset_variable
         ((expr)
          (wisent-raw-tag
-          (semantic-tag 'phps-mode-parser--zend_ast_isset $1 nil)))))
+          (semantic-tag 'phps-mode-parser--zend_ast_isset $1)))))
      '(isset_variable)))
   "Parser table.")
 
