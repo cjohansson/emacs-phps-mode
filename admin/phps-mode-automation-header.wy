@@ -114,6 +114,7 @@
 %token <punctuation> COLON ":"
 %token <punctuation> COMMA ","
 %token <punctuation> DOLLAR_SIGN "$"
+%token <punctuation> DOUBLE_QUOTE "\""
 %token <punctuation> DIVISION "/"
 %token <punctuation> DOT "."
 %token <punctuation> GREATER_THAN ">"
@@ -126,6 +127,7 @@
 %token <punctuation> OPEN_SQUARE_BRACKET "["
 %token <punctuation> POW "^"
 %token <punctuation> QUESTION_MARK "?"
+%token <punctuation> SINGLE_QUOTE "'"
 %token <punctuation> SUBTRACTION "-"
 %token <punctuation> UNARY "~"
 
