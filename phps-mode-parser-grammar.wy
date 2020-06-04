@@ -53,10 +53,12 @@
  ZEND_AST_CREATE_CLASS_CONST_OR_NAME
  ZEND_AST_CREATE_EX
  ZEND_AST_CREATE_LIST
+ ZEND_AST_CREATE_ZVAL_EX
  ZEND_AST_LIST_ADD
  ZEND_AST_LIST_RTRIM
  ZEND_NEGATE_NUM_STRING
- }
+ ZVAL_INTERNED_STR
+}
 
 %precedence T_THROW
 %precedence PREC_ARROW_FUNCTION
@@ -306,6 +308,11 @@
 %start isset_variable
 
 %%
+
+class_name:
+    T_STATIC (let ((zv nil))(ZVAL_INTERNED_STR (lambda(return) (setq zv return)) (ZSTR_KNOWN 'phps-mode-parser--zend_str_static))(ZEND_AST_CREATE_ZVAL_EX zv 'phps-mode-parser--zend_name_not_fq))
+    | name ($1)
+    ;
 
 class_constant:
     class_name T_PAAMAYIM_NEKUDOTAYIM identifier (ZEND_AST_CREATE_CLASS_CONST_OR_NAME $1 $3)

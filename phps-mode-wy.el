@@ -3,7 +3,7 @@
 ;; Copyright (C) 2018-2020  Free Software Foundation, Inc.
 
 ;; Author: Christian Johansson <christianjohansson@Christians-MacBook-Air.local>
-;; Created: 2020-06-04 14:45:29+0200
+;; Created: 2020-06-04 15:16:28+0200
 ;; Keywords: syntax
 ;; X-RCS: $Id$
 
@@ -287,6 +287,18 @@
         (left 43 45)
         (left 42 47 37 %precedence 33 %precedence T_INSTANCEOF %precedence 126 T_INT_CAST T_DOUBLE_CAST T_STRING_CAST T_ARRAY_CAST T_OBJECT_CAST T_BOOL_CAST T_UNSET_CAST 64)
         (right T_POW %precedence T_CLONE %precedence T_NOELSE %precedence T_ELSEIF %precedence T_ELSE))
+       (class_name
+        ((T_STATIC)
+         (let
+             ((zv nil))
+           (let
+               ((symbol
+                 '(ZSTR_KNOWN 'phps-mode-parser--zend_str_static)))
+             (funcall callback symbol))
+           (wisent-raw-tag
+            (semantic-tag zv 'phps-mode-parser--zend_name_not_fq))))
+        ((name)
+         ($1)))
        (class_constant
         ((class_name T_PAAMAYIM_NEKUDOTAYIM identifier)
          (wisent-raw-tag
