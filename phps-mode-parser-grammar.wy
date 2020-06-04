@@ -46,7 +46,6 @@
 
 %use-macros phps-mode-parser-grammar-macro
 {
- CG
  ZEND_AST_CREATE
  ZEND_AST_CREATE_ASSIGN_OP
  ZEND_AST_CREATE_BINARY_OP
@@ -298,6 +297,11 @@
 
 %%
 
+variable:
+    callable_variable ($1)
+    | static_member ($1)
+    | array_object_dereferencable T_OBJECT_OPERATOR property_name (ZEND_AST_CREATE 'phps-mode-parser--zend_ast_prop $1 $2)
+    ;
 
 expr:
     variable ($1)
@@ -372,10 +376,10 @@ expr:
     | scalar ($1)
     | BACKTICK backticks_expr BACKTICK (ZEND_AST_CREATE 'phps-mode-parser--zend_ast_shell $2)
     | T_PRINT expr (ZEND_AST_CREATE 'phps-mode-parser--zend_ast_print $2)
-    | T_YIELD (progn (CG 'phps-mode-parser--extra_fn_flags (logior (CG 'phps-mode-parser--extra_fn_flags) 'phps-mode-parser--zend_acc_generator))(ZEND_AST_CREATE 'phps-mode-parser--zend_ast_yield nil nil))
-    | T_YIELD expr (progn (CG 'phps-mode-parser--extra_fn_flags (logior (CG 'phps-mode-parser--extra_fn_flags) 'phps-mode-parser--zend_acc_generator))(ZEND_AST_CREATE 'phps-mode-parser--zend_ast_yield $2 nil))
-    | T_YIELD expr T_DOUBLE_ARROW expr (progn (CG 'phps-mode-parser--extra_fn_flags (logior (CG 'phps-mode-parser--extra_fn_flags) 'phps-mode-parser--zend_acc_generator))(ZEND_AST_CREATE 'phps-mode-parser--zend_ast_yield $4 $2))
-    | T_YIELD_FROM expr (progn (CG 'phps-mode-parser--extra_fn_flags (logior (CG 'phps-mode-parser--extra_fn_flags) 'phps-mode-parser--zend_acc_generator))(ZEND_AST_CREATE 'phps-mode-parser--zend_ast_yield_from $2))
+    | T_YIELD (progn (phps-mode-parser-grammar-macro-CG 'phps-mode-parser--extra_fn_flags (logior (phps-mode-parser-grammar-macro-CG 'phps-mode-parser--extra_fn_flags) 'phps-mode-parser--zend_acc_generator))(ZEND_AST_CREATE 'phps-mode-parser--zend_ast_yield nil nil))
+    | T_YIELD expr (progn (phps-mode-parser-grammar-macro-CG 'phps-mode-parser--extra_fn_flags (logior (phps-mode-parser-grammar-macro-CG 'phps-mode-parser--extra_fn_flags) 'phps-mode-parser--zend_acc_generator))(ZEND_AST_CREATE 'phps-mode-parser--zend_ast_yield $2 nil))
+    | T_YIELD expr T_DOUBLE_ARROW expr (progn (phps-mode-parser-grammar-macro-CG 'phps-mode-parser--extra_fn_flags (logior (phps-mode-parser-grammar-macro-CG 'phps-mode-parser--extra_fn_flags) 'phps-mode-parser--zend_acc_generator))(ZEND_AST_CREATE 'phps-mode-parser--zend_ast_yield $4 $2))
+    | T_YIELD_FROM expr (progn (phps-mode-parser-grammar-macro-CG 'phps-mode-parser--extra_fn_flags (logior (phps-mode-parser-grammar-macro-CG 'phps-mode-parser--extra_fn_flags) 'phps-mode-parser--zend_acc_generator))(ZEND_AST_CREATE 'phps-mode-parser--zend_ast_yield_from $2))
     | T_THROW expr (ZEND_AST_CREATE 'phps-mode-parser--zend_ast_throw $2)
     | inline_function ($1)
     | T_STATIC inline_function (progn (semantic-tag-put-attribute $2 'flags (logior (semantic-tag-get-attribute $2 'flags) 'phps-mode-parser--zend_acc_static)) $2)

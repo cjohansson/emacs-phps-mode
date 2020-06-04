@@ -20,22 +20,22 @@
 (defun phps-mode-parser-grammar-macro-ZEND_AST_CREATE_ASSIGN_OP (symbol subject object)
   "Create AST assignment."
   `(wisent-raw-tag
-    (semantic-tag ,symbol 'ZEND_AST_ASSIGN_OP :object object :subject subject)))
+    (semantic-tag ,symbol 'ZEND_AST_ASSIGN_OP :object ,object :subject ,subject)))
 
 (defun phps-mode-parser-grammar-macro-ZEND_AST_CREATE_BINARY_OP (symbol subject object)
   "Create AST assignment."
   `(wisent-raw-tag
-    (semantic-tag ,symbol 'ZEND_AST_BINARY_OP :object object :subject subject)))
+    (semantic-tag ,symbol 'ZEND_AST_BINARY_OP :object ,object :subject ,subject)))
 
 (defun phps-mode-parser-grammar-macro-ZEND_AST_CREATE_CAST (symbol subject)
   "Create cast."
   `(wisent-raw-tag
-    (semantic-tag ,symbol 'ZEND_AST_CAST :subject subject)))
+    (semantic-tag ,symbol 'ZEND_AST_CAST :subject ,subject)))
 
 (defun phps-mode-parser-grammar-macro-ZEND_AST_CREATE_EX (symbol operator subject)
   "Create stuff."
   `(wisent-raw-tag
-    (semantic-tag ,symbol 'ZEND_AST_EX :operator operator :subject subject)))
+    (semantic-tag ,symbol 'ZEND_AST_EX :operator ,operator :subject ,subject)))
 
 
 (provide 'phps-mode-grammar-macro)
