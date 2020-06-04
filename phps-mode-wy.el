@@ -3,7 +3,7 @@
 ;; Copyright (C) 2018-2020  Free Software Foundation, Inc.
 
 ;; Author: Christian Johansson <christianjohansson@Christians-MacBook-Air.local>
-;; Created: 2020-06-04 13:24:43+0200
+;; Created: 2020-06-04 13:25:39+0200
 ;; Keywords: syntax
 ;; X-RCS: $Id$
 
@@ -285,6 +285,11 @@
         (left 43 45)
         (left 42 47 37 %precedence 33 %precedence T_INSTANCEOF %precedence 126 T_INT_CAST T_DOUBLE_CAST T_STRING_CAST T_ARRAY_CAST T_OBJECT_CAST T_BOOL_CAST T_UNSET_CAST 64)
         (right T_POW %precedence T_CLONE %precedence T_NOELSE %precedence T_ELSEIF %precedence T_ELSE))
+       (array_object_dereferencable
+        ((fully_dereferencable)
+         ($1))
+        ((constant)
+         ($1)))
        (callable_variable
         ((simple_variable)
          (wisent-raw-tag
