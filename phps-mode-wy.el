@@ -3,7 +3,7 @@
 ;; Copyright (C) 2018-2020  Free Software Foundation, Inc.
 
 ;; Author: Christian Johansson <christianjohansson@Christians-MacBook-Air.local>
-;; Created: 2020-06-04 14:03:32+0200
+;; Created: 2020-06-04 14:32:40+0200
 ;; Keywords: syntax
 ;; X-RCS: $Id$
 
@@ -342,6 +342,36 @@
         ((T_ENCAPSED_AND_WHITESPACE encaps_var)
          (wisent-raw-tag
           (semantic-tag "" 'phps-mode-parser--zend_ast_encaps_list :elements @elements :size 2))))
+       (encaps_var
+        ((T_VARIABLE)
+         (wisent-raw-tag
+          (semantic-tag 'phps-mode-parser--zend_ast_var $1)))
+        ((T_VARIABLE OPEN_SQUARE_BRACKET encaps_var_offset CLOSE_SQUARE_BRACKET)
+         (wisent-raw-tag
+          (semantic-tag 'phps-mode-parser--zend_ast_dim
+                        (wisent-raw-tag
+                         (semantic-tag 'phps-mode-parser--zend_ast_var $1))
+                        $3)))
+        ((T_VARIABLE T_OBJECT_OPERATOR T_STRING)
+         (wisent-raw-tag
+          (semantic-tag 'phps-mode-parser--zend_ast_prop
+                        (wisent-raw-tag
+                         (semantic-tag 'phps-mode-parser--zend_ast_var $1))
+                        $3)))
+        ((T_DOLLAR_OPEN_CURLY_BRACES expr CLOSE_CURLY_BRACKET)
+         (wisent-raw-tag
+          (semantic-tag 'phps-mode-parser--zend_ast_var $2)))
+        ((T_DOLLAR_OPEN_CURLY_BRACES T_STRING_VARNAME CLOSE_CURLY_BRACKET)
+         (wisent-raw-tag
+          (semantic-tag 'phps-mode-parser--zend_ast_var $2)))
+        ((T_DOLLAR_OPEN_CURLY_BRACES T_STRING_VARNAME OPEN_SQUARE_BRACKET expr CLOSE_SQUARE_BRACKET CLOSE_CURLY_BRACKET)
+         (wisent-raw-tag
+          (semantic-tag 'phps-mode-parser--zend_ast_dim
+                        (wisent-raw-tag
+                         (semantic-tag 'phps-mode-parser--zend_ast_var $2))
+                        $4)))
+        ((T_CURLY_OPEN variable CLOSE_CURLY_BRACKET)
+         ($2)))
        (dereferencable_scalar
         ((T_ARRAY OPEN_PARENTHESIS array_pair_list CLOSE_PARENTHESIS)
          (progn
