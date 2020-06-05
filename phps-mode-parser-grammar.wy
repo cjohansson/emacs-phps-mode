@@ -485,6 +485,11 @@ dereferencable_scalar:
     | DOUBLE_QUOTE encaps_list DOUBLE_QUOTE ($2)
     ;
 
+optional_expr:
+    (nil)
+    | expr ($1)
+    ;
+
 variable_class_name:
     fully_dereferencable ($1)
     ;
