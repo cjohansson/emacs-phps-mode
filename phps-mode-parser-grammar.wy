@@ -441,6 +441,11 @@ argument_list:
     | OPEN_PARENTHESIS non_empty_argument_list possible_comma CLOSE_PARENTHESIS ($2)
     ;
 
+non_empty_argument_list:
+    argument (ZEND_AST_CREATE_LIST 1 'phps-mode-parser--zend_ast_arg_list $1)
+    | non_empty_argument_list COMMA argument (ZEND_AST_LIST_ADD $1 $3)
+    ;
+
 array_pair_list:
     non_empty_array_pair_list (ZEND_AST_LIST_RTRIM $1)
   ;
