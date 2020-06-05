@@ -451,6 +451,11 @@ non_empty_argument_list:
     | non_empty_argument_list COMMA argument (ZEND_AST_LIST_ADD $1 $3)
     ;
 
+argument:
+    expr ($1)
+    | T_ELLIPSIS expr (ZEND_AST_CREATE 'phps-mode-parser--zend_ast_unpack $2)
+    ;
+
 array_pair_list:
     non_empty_array_pair_list (ZEND_AST_LIST_RTRIM $1)
   ;

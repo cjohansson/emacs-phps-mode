@@ -3,7 +3,7 @@
 ;; Copyright (C) 2018-2020  Free Software Foundation, Inc.
 
 ;; Author: Christian Johansson <christianjohansson@Christians-MacBook-Air.local>
-;; Created: 2020-06-05 09:33:51+0200
+;; Created: 2020-06-05 09:34:39+0200
 ;; Keywords: syntax
 ;; X-RCS: $Id$
 
@@ -370,8 +370,8 @@
         ((semi_reserved)
          (let
              ((zv nil))
-           ((SYMBOL 16284 . 16307)
-            (COLON 16307 . 16308))
+           ((COLON 16473 . 16474)
+            (SYMBOL 16479 . 16483))
            (wisent-raw-tag
             (semantic-tag zv 'ZEND_AST_ZVAL :attr 0)))))
        (namespace_name
@@ -463,6 +463,12 @@
         ((non_empty_argument_list COMMA argument)
          (wisent-raw-tag
           (semantic-tag $1 'ZEND_AST_LIST_ADD :new-element $3))))
+       (argument
+        ((expr)
+         ($1))
+        ((T_ELLIPSIS expr)
+         (wisent-raw-tag
+          (semantic-tag 'phps-mode-parser--zend_ast_unpack $2))))
        (array_pair_list
         ((non_empty_array_pair_list)
          (wisent-raw-tag
