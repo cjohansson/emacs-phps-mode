@@ -463,6 +463,12 @@ function_call:
     | callable_expr argument_list (ZEND_AST_CREATE 'phps-mode-parser--zend_ast_call $1 $2)
     ;
 
+member_name:
+    identifier ($1)
+    | OPEN_CURLY_BRACKET expr CLOSE_CURLY_BRACKET ($2)
+    | simple_variable (ZEND_AST_CREATE 'phps-mode-parser--zend_ast_var $1)
+    ;
+
 array_pair_list:
     non_empty_array_pair_list (ZEND_AST_LIST_RTRIM $1)
   ;

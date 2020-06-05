@@ -3,7 +3,7 @@
 ;; Copyright (C) 2018-2020  Free Software Foundation, Inc.
 
 ;; Author: Christian Johansson <christianjohansson@Christians-MacBook-Air.local>
-;; Created: 2020-06-05 09:36:14+0200
+;; Created: 2020-06-05 09:37:30+0200
 ;; Keywords: syntax
 ;; X-RCS: $Id$
 
@@ -370,8 +370,8 @@
         ((semi_reserved)
          (let
              ((zv nil))
-           ((OR 16948 . 16949)
-            (SYMBOL 16950 . 16963))
+           ((SYMBOL 17060 . 17069)
+            (PAREN_BLOCK 17070 . 17074))
            (wisent-raw-tag
             (semantic-tag zv 'ZEND_AST_ZVAL :attr 0)))))
        (namespace_name
@@ -482,6 +482,14 @@
         ((callable_expr argument_list)
          (wisent-raw-tag
           (semantic-tag 'phps-mode-parser--zend_ast_call $1 $2))))
+       (member_name
+        ((identifier)
+         ($1))
+        ((OPEN_CURLY_BRACKET expr CLOSE_CURLY_BRACKET)
+         ($2))
+        ((simple_variable)
+         (wisent-raw-tag
+          (semantic-tag 'phps-mode-parser--zend_ast_var $1))))
        (array_pair_list
         ((non_empty_array_pair_list)
          (wisent-raw-tag
