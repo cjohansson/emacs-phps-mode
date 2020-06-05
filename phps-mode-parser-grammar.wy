@@ -436,6 +436,11 @@ property_name:
     | simple_variable (ZEND_AST_CREATE 'phps-mode-parser--zend_ast_var $1)
     ;
 
+argument_list:
+    OPEN_PARENTHESIS CLOSE_PARENTHESIS (ZEND_AST_CREATE_LIST 0 'phps-mode-parser--zend_ast_arg_list)
+    | OPEN_PARENTHESIS non_empty_argument_list possible_comma CLOSE_PARENTHESIS ($2)
+    ;
+
 array_pair_list:
     non_empty_array_pair_list (ZEND_AST_LIST_RTRIM $1)
   ;
