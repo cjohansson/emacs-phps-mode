@@ -3,7 +3,7 @@
 ;; Copyright (C) 2018-2020  Free Software Foundation, Inc.
 
 ;; Author: Christian Johansson <christianjohansson@Christians-MacBook-Air.local>
-;; Created: 2020-06-05 09:38:27+0200
+;; Created: 2020-06-05 09:39:40+0200
 ;; Keywords: syntax
 ;; X-RCS: $Id$
 
@@ -370,8 +370,8 @@
         ((semi_reserved)
          (let
              ((zv nil))
-           ((COLON 20725 . 20726)
-            (SYMBOL 20731 . 20748))
+           ((SYMBOL 22104 . 22108)
+            (COLON 22108 . 22109))
            (wisent-raw-tag
             (semantic-tag zv 'ZEND_AST_ZVAL :attr 0)))))
        (namespace_name
@@ -660,6 +660,13 @@
         ((DOLLAR_SIGN simple_variable)
          (wisent-raw-tag
           (semantic-tag 'phps-mode-parser--zend_ast_var $2))))
+       (static_member
+        ((class_name T_PAAMAYIM_NEKUDOTAYIM simple_variable)
+         (wisent-raw-tag
+          (semantic-tag 'phps-mode-parser--zend_ast_static_prop $1 $3)))
+        ((variable_class_name T_PAAMAYIM_NEKUDOTAYIM simple_variable)
+         (wisent-raw-tag
+          (semantic-tag 'phps-mode-parser--zend_ast_static_prop $1 $3))))
        (expr
         ((variable)
          ($1))

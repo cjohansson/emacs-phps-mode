@@ -571,6 +571,11 @@ simple_variable:
     | DOLLAR_SIGN simple_variable (ZEND_AST_CREATE 'phps-mode-parser--zend_ast_var $2)
     ;
 
+static_member:
+    class_name T_PAAMAYIM_NEKUDOTAYIM simple_variable (ZEND_AST_CREATE 'phps-mode-parser--zend_ast_static_prop $1 $3)
+    | variable_class_name T_PAAMAYIM_NEKUDOTAYIM simple_variable (ZEND_AST_CREATE 'phps-mode-parser--zend_ast_static_prop $1 $3)
+    ;
+
 expr:
     variable ($1)
     | T_LIST OPEN_PARENTHESIS array_pair_list CLOSE_PARENTHESIS ASSIGN expr (progn (semantic-tag-put-attribute $3 'attr phps-mode-parser--zend_array_syntax_list)(ZEND_AST_CREATE 'phps-mode-parser--zend_ast_assign $3 $6)
