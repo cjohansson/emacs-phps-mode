@@ -134,6 +134,7 @@
 %token <punctuation> OPEN_SQUARE_BRACKET "["
 %token <punctuation> POW "^"
 %token <punctuation> QUESTION_MARK "?"
+%token <punctuation> SEMICOLON ";"
 %token <punctuation> SINGLE_QUOTE "'"
 %token <punctuation> SUBTRACTION "-"
 %token <punctuation> UNARY "~"
