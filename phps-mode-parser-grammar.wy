@@ -545,6 +545,12 @@ array_object_dereferencable:
     | constant ($1)
     ;
 
+callable_expr:
+    callable_variable ($1)
+    | OPEN_PARENTHESIS expr CLOSE_PARENTHESIS ($2)
+    | dereferencable_scalar ($1)
+    ;
+
 callable_variable:
     simple_variable (ZEND_AST_CREATE 'phps-mode-parser--zend_ast_var $1)
     | array_object_dereferencable OPEN_SQUARE_BRACKET optional_expr CLOSE_SQUARE_BRACKET (ZEND_AST_CREATE 'phps-mode-parser--zend_ast_dim $1 $3)

@@ -3,7 +3,7 @@
 ;; Copyright (C) 2018-2020  Free Software Foundation, Inc.
 
 ;; Author: Christian Johansson <christianjohansson@Christians-MacBook-Air.local>
-;; Created: 2020-06-05 09:37:30+0200
+;; Created: 2020-06-05 09:38:27+0200
 ;; Keywords: syntax
 ;; X-RCS: $Id$
 
@@ -370,8 +370,8 @@
         ((semi_reserved)
          (let
              ((zv nil))
-           ((SYMBOL 17060 . 17069)
-            (PAREN_BLOCK 17070 . 17074))
+           ((COLON 20725 . 20726)
+            (SYMBOL 20731 . 20748))
            (wisent-raw-tag
             (semantic-tag zv 'ZEND_AST_ZVAL :attr 0)))))
        (namespace_name
@@ -621,6 +621,13 @@
         ((fully_dereferencable)
          ($1))
         ((constant)
+         ($1)))
+       (callable_expr
+        ((callable_variable)
+         ($1))
+        ((OPEN_PARENTHESIS expr CLOSE_PARENTHESIS)
+         ($2))
+        ((dereferencable_scalar)
          ($1)))
        (callable_variable
         ((simple_variable)
