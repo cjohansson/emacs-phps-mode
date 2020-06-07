@@ -78,5 +78,5 @@
   (let ((token (semantic-lex (point) (point-max) nil 1)))
     (funcall callback token)))
 
-(provide 'phps-mode-grammar-macro)
+(provide 'phps-mode-parser-grammar-macro)
 ;;; phps-mode-parser-grammar-macro.el ends here
