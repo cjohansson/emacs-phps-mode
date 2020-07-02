@@ -5,8 +5,8 @@
 ;; Author: Christian Johansson <christian@cvj.se>
 ;; Maintainer: Christian Johansson <christian@cvj.se>
 ;; Created: 3 Mar 2018
-;; Modified: 25 May 2020
-;; Version: 0.3.51
+;; Modified: 7 Jul 2020
+;; Version: 0.3.52
 ;; Keywords: tools, convenience
 ;; URL: https://github.com/cjohansson/emacs-phps-mode
 
@@ -52,7 +52,6 @@
 
 (require 'phps-mode-flymake)
 (require 'phps-mode-lex-analyzer)
-(require 'phps-mode-semantic)
 (require 'phps-mode-syntax-table)
 
 (require 'semantic)

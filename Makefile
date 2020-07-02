@@ -2,9 +2,9 @@ EMACS = emacs
 ifdef emacs
 	EMACS = $(emacs)
 endif
-EMACS_CMD := $(EMACS) -Q -batch -L .
+EMACS_CMD := $(EMACS) -Q -batch -L . -L test/
 
-EL  := admin/phps-mode-automation.el phps-mode-flymake.el phps-mode-lex-analyzer.el phps-mode-lexer.el phps-mode-macros.el phps-mode-syntax-table.el  phps-mode-test.el phps-mode-wy-macros.el phps-mode.el test/phps-mode-test-lex-analyzer.el test/phps-mode-test-integration.el test/phps-mode-test-lexer.el test/phps-mode-test-parser.el test/phps-mode-test-syntax-table.el
+EL  := admin/phps-mode-automation.el phps-mode-flymake.el phps-mode-lex-analyzer.el phps-mode-lexer.el phps-mode-macros.el phps-mode-syntax-table.el  phps-mode-parser-grammar-macro.el phps-mode.el test/phps-mode-test.el test/phps-mode-test-lex-analyzer.el test/phps-mode-test-integration.el test/phps-mode-test-lexer.el test/phps-mode-test-parser.el test/phps-mode-test-syntax-table.el
 ELC := $(EL:.el=.elc)
 
 .PHONY: clean

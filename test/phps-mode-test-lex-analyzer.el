@@ -1124,6 +1124,13 @@
               buffer-contents
               "<?php\nif ($here) {\n    $var = \"abc $b[abc] def\";\n    // Was here\n}\n\n"))))
 
+  (phps-mode-test--with-buffer
+   "<?php\n\n// Adjust days to delivery accorind to document\nswitch ($dayOfWeek)\n{\n    case 1: // Monday\n    case 2: // Tuesday\n    case 3: // Wednesday\n    case 7: // Sunday\n        $daysToDelivery = 3;\n        break;\n    case 4: // Thursday\n    case 5: // Friday\n        $daysToDelivery = 5;\n        break;\n    case 6: // Saturday\n        $daysToDelivery = 4;\n        break;\n    default:\n        throw new \Exception(sprintf(\n            'day of week above interval (1-7): %d',\n            $dayOfWeek\n        ));\n}\n"
+   "Switch case with default case and trailing comments"
+   (indent-region (point-min) (point-max))
+   (let ((buffer-contents (buffer-substring-no-properties (point-min) (point-max))))
+     (should (equal buffer-contents  "<?php\n\n// Adjust days to delivery accorind to document\nswitch ($dayOfWeek)\n{\n    case 1: // Monday\n    case 2: // Tuesday\n    case 3: // Wednesday\n    case 7: // Sunday\n        $daysToDelivery = 3;\n        break;\n    case 4: // Thursday\n    case 5: // Friday\n        $daysToDelivery = 5;\n        break;\n    case 6: // Saturday\n        $daysToDelivery = 4;\n        break;\n    default:\n        throw new \Exception(sprintf(\n            'day of week above interval (1-7): %d',\n            $dayOfWeek\n        ));\n}\n"))))
+
   )
 
 (defun phps-mode-test-lex-analyzer--imenu ()

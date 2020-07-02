@@ -458,7 +458,7 @@
                    (phps-mode-lex-analyzer--clear-region-syntax-color start end)))))
 
            (phps-mode-debug-message
-            (message "Incremental tokens: %s" incremental-tokens)))))
+            (message "Incremental tokens: %s" phps-mode-lex-analyzer--tokens)))))
 
      (lambda(result)
        (when (get-buffer buffer-name)
@@ -995,6 +995,7 @@ SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
               (tokens (nreverse (copy-sequence tokens)))
               (nesting-stack nil)
               (nesting-key nil)
+              (nesting-value nil)
               (class-declaration-started-this-line nil)
               (special-control-structure-started-this-line nil)
               (temp-pre-indent nil)
@@ -1398,6 +1399,8 @@ SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
 
                             (setq alternative-control-structure-level (1+ alternative-control-structure-level))
 
+                            (setq nesting-value token)
+
                             (phps-mode-debug-message
                              (message
                               "\nIncreasing alternative-control-structure after %s %s to %s\n"
@@ -1425,6 +1428,7 @@ SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
                 ;; Support extra special control structures (CASE)
                 (when (and after-extra-special-control-structure
                            (string= token ":"))
+                  (setq nesting-value token)
                   (setq alternative-control-structure-level (1+ alternative-control-structure-level))
                   (when after-extra-special-control-structure-first-on-line
                     (setq first-token-is-nesting-decrease t))
@@ -1474,6 +1478,7 @@ SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
                   (setq after-special-control-structure-token token)
                   (setq alternative-control-structure-line token-start-line-number)
                   (setq nesting-key token)
+                  (setq nesting-value nil)
                   (setq special-control-structure-started-this-line t)
 
                   ;; ELSE and ELSEIF after a IF, ELSE, ELESIF
@@ -1569,7 +1574,8 @@ SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
                                (equal token 'T_OR_EQUAL)
                                (equal token 'T_XOR_EQUAL)
                                (equal token 'T_COALESCE_EQUAL)))
-                  (phps-mode-debug-message "Started assignment")
+                  (phps-mode-debug-message
+                   (message "Started assignment at token: %s" token))
                   (setq in-assignment t)
                   (push round-bracket-level in-assignment-round-bracket-level)
                   (push square-bracket-level in-assignment-square-bracket-level)
@@ -1639,6 +1645,7 @@ SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
                 (when (equal token 'T_CASE)
                   (setq after-extra-special-control-structure t)
                   (setq nesting-key token)
+                  (setq nesting-value nil)
                   (setq after-extra-special-control-structure-first-on-line first-token-on-line)
 
                   (when (and switch-case-alternative-stack
@@ -1829,11 +1836,11 @@ SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
                             nesting-start
                             nesting-end
                             nesting-key
-                            token
+                            nesting-value
                             nesting-end
                             (car (cdr (car nesting-stack))))
                            )
-                          (push `(,nesting-stack-end ,nesting-end ,nesting-key ,token) nesting-stack)))
+                          (push `(,nesting-stack-end ,nesting-end ,nesting-key ,nesting-value) nesting-stack)))
 
 
                       ;; Does token span over several lines and is it not a INLINE_HTML token?

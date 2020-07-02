@@ -32,7 +32,7 @@
 
 
 (require 'phps-mode-macros)
-(require 'phps-mode-wy-macros)
+(require 'phps-mode-parser-grammar-macro)
 
 (require 'semantic)
 (require 'semantic/lex)
@@ -45,8 +45,8 @@
 ;; INITIALIZE SETTINGS
 
 
-(phps-mode-wy-macros--CG 'PARSER_MODE t)
-(phps-mode-wy-macros--CG 'SHORT_TAGS t)
+(phps-mode-parser-grammar-macro-CG 'PARSER_MODE t)
+(phps-mode-parser-grammar-macro-CG 'SHORT_TAGS t)
 
 
 ;; SETTINGS
@@ -233,7 +233,7 @@
 
 (defun phps-mode-lexer--RETURN_OR_SKIP_TOKEN (token start end)
   "Return TOKEN with START and END but only in parse-mode."
-  (when (phps-mode-wy-macros--CG 'PARSER_MODE)
+  (when (phps-mode-parser-grammar-macro-CG 'PARSER_MODE)
     (phps-mode-lexer--RETURN_TOKEN token start end)))
 
 
@@ -471,7 +471,7 @@
        (let* ((start (match-beginning 0))
               (end (match-end 0))
               (data (buffer-substring-no-properties start end)))
-         (if (phps-mode-wy-macros--CG 'PARSER_MODE)
+         (if (phps-mode-parser-grammar-macro-CG 'PARSER_MODE)
              (phps-mode-lexer--MOVE_FORWARD end)
            (phps-mode-lexer--RETURN_TOKEN data start end))))
 
@@ -551,7 +551,7 @@
               "\\(real\\)"
               phps-mode-lexer--TABS_AND_SPACES
               ")")))
-       (when (phps-mode-wy-macros--CG 'PARSER_MODE)
+       (when (phps-mode-parser-grammar-macro-CG 'PARSER_MODE)
          (signal
           'phps-lexer-error
           (list
@@ -969,7 +969,7 @@
        (let ((start (match-beginning 0))
              (end (match-end 0)))
          (phps-mode-lexer--BEGIN 'ST_IN_SCRIPTING)
-         (when (phps-mode-wy-macros--CG 'PARSER_MODE)
+         (when (phps-mode-parser-grammar-macro-CG 'PARSER_MODE)
            (phps-mode-lexer--RETURN_TOKEN 'T_ECHO start end))
          (phps-mode-lexer--RETURN_TOKEN 'T_OPEN_TAG_WITH_ECHO start end)))
 
@@ -1000,7 +1000,7 @@
             start
             end))
 
-          ((phps-mode-wy-macros--CG 'SHORT_TAGS)
+          ((phps-mode-parser-grammar-macro-CG 'SHORT_TAGS)
            (phps-mode-lexer--yyless 3)
            (setq end (- end 3))
            (phps-mode-lexer--BEGIN 'ST_IN_SCRIPTING)
@@ -1014,7 +1014,7 @@
 
       (phps-mode-lexer--match-macro
        (and ST_INITIAL (looking-at "<\\?"))
-       (when (phps-mode-wy-macros--CG 'SHORT_TAGS)
+       (when (phps-mode-parser-grammar-macro-CG 'SHORT_TAGS)
          (let ((start (match-beginning 0))
                (end (match-end 0)))
            (phps-mode-lexer--BEGIN 'ST_IN_SCRIPTING)
@@ -1128,7 +1128,7 @@
          (when (= (- end start) 3)
            (setq end (1- end)))
          (phps-mode-lexer--BEGIN 'ST_INITIAL)
-         (when (phps-mode-wy-macros--CG 'PARSER_MODE)
+         (when (phps-mode-parser-grammar-macro-CG 'PARSER_MODE)
            (phps-mode-lexer--RETURN_TOKEN ";" start end))
          (phps-mode-lexer--RETURN_TOKEN 'T_CLOSE_TAG start end)))
 
