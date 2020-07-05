@@ -1,4 +1,4 @@
-;;; phps.wy --- Semantic LALR grammar for PHP -*- lexical-binding: t -*-
+;;; phps-mode-parser-grammar-raw.wy --- Semantic LALR grammar for PHP -*- lexical-binding: t -*-
 
 ;; Copyright (C) 2018-2020  Free Software Foundation, Inc.
 
@@ -97,6 +97,8 @@
 %precedence T_NOELSE
 %precedence T_ELSEIF
 %precedence T_ELSE
+%precedence UNARY
+%precedence PREC_ARROW_FUNCTION
 
 %token <ast> T_LNUMBER   "integer number (T_LNUMBER)"
 %token <ast> T_DNUMBER   "floating-point number (T_DNUMBER)"

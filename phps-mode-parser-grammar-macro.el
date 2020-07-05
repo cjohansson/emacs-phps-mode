@@ -49,7 +49,7 @@
   `(wisent-raw-tag
     (semantic-tag ,symbol 'ZEND_AST_CAST :subject ,subject)))
 
-(defun phps-mode-parser-grammar-macro-ZEND_AST_CREATE_EX (symbol operator &optional subject subject2)
+(defun phps-mode-parser-grammar-macro-ZEND_AST_CREATE_EX (symbol operator &optional subject subject2 subject3)
   "Create stuff."
   (let ((attributes `(:operator ,operator)))
     (when subject
@@ -89,11 +89,14 @@
 
 (defun phps-mode-parser-grammar-macro-ZEND_AST_CREATE_ZVAL (subject)
   `(wisent-raw-tag
-    (semantic-tag ,subject 'ZEND_AST_ZVAL :attr 0)))
+    (semantic-tag ,subject 'ZEND_AST_ZVAL)))
 
+;; TODO Should fix this somehow
 (defun phps-mode-parser-grammar-macro-ZEND_LEX_TSTRING (callback)
-  (let ((token (semantic-lex (point) (point-max) nil 1)))
-    (funcall callback token)))
+  (funcall callback "$1"))
+  ;; (let ((token (semantic-lex (point) (point-max) nil 0)))
+  ;;   (message "Lexed token: '%s'" token)
+  ;;   (funcall callback token)))
 
 (provide 'phps-mode-parser-grammar-macro)
 ;;; phps-mode-parser-grammar-macro.el ends here
