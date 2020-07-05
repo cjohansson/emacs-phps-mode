@@ -20,9 +20,7 @@
 
 ;;; Commentary:
 
-;;; Uses a parser to convert LALR Yacc grammar to Wisent grammar
-
-;;; AST should be like this: (root (block (rule (logic))))
+;;; Uses a external parser to convert LALR YACC grammar to Wisent grammar
 
 
 ;;; Code:
