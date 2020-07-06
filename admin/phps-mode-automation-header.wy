@@ -38,7 +38,7 @@
 ;;; Code:
 
 %package phps-mode
-%provide phps-mode-wy
+%provide phps-mode-parser
 
 %languagemode phps-mode
 

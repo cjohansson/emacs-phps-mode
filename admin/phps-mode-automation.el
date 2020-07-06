@@ -27,9 +27,10 @@
 
 (let ((php-yacc-url "https://raw.githubusercontent.com/php/php-src/master/Zend/zend_language_parser.y")
       (php-yacc-file (expand-file-name "zend_language_parser.y"))
-      (wisent-destination (expand-file-name "../phps-mode-parser-grammar-raw.wy"))
+      (wisent-destination (expand-file-name "../phps-mode-parser.wy"))
       (header (expand-file-name "phps-mode-automation-header.wy"))
-      (terminal-replacements (make-hash-table :test 'equal)))
+      (terminal-replacements (make-hash-table :test 'equal))
+      (macro-list (make-hash-table :test 'equal)))
 
   (puthash "'+'" "ADDITION" terminal-replacements)
   (puthash "'='" "ASSIGN" terminal-replacements)
@@ -61,7 +62,21 @@
   (puthash "'-'" "SUBTRACTION" terminal-replacements)
   (puthash "'~'" "UNARY" terminal-replacements)
 
-  ;; Download Yacc if not available
+  (puthash "zend_ast_create" t macro-list)
+  (puthash "zend_ast_create_assign_op" t macro-list)
+  (puthash "zend_ast_create_binary_op" t macro-list)
+  (puthash "zend_ast_create_cast" t macro-list)
+  (puthash "zend_ast_create_class_const_or_name" t macro-list)
+  (puthash "zend_ast_create_ex" t macro-list)
+  (puthash "zend_ast_create_list" t macro-list)
+  (puthash "zend_ast_create_zval" t macro-list)
+  (puthash "zend_ast_list_add" t macro-list)
+  (puthash "zend_ast_list_rtrim" t macro-list)
+  (puthash "zend_lex_tstring" t macro-list)
+  (puthash "zend_negate_num_string" t macro-list)
+  (puthash "zval_interned_str" t macro-list)
+
+  ;; download Yacc if not available
   (unless (file-exists-p php-yacc-file)
     (message "Downloading PHP Yacc grammar..")
     (url-copy-file php-yacc-url php-yacc-file t t)
@@ -75,7 +90,8 @@
        wisent-destination
        header
        "phps-mode-parser--"
-       terminal-replacements)
+       terminal-replacements
+       macro-list)
     (display-warning
      'warning
      "Missing emacs-wisent-grammar-converter!"))

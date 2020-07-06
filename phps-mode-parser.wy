@@ -38,7 +38,7 @@
 ;;; Code:
 
 %package phps-mode
-%provide phps-mode-wy
+%provide phps-mode-parser
 
 %languagemode phps-mode
 
@@ -323,7 +323,7 @@
 
 
 start:
-    top_statement_list (let ((r)) (CG 'phps-mode-parser--ast $1) r)
+    top_statement_list (let ((r)) (phps-mode-parser--cg 'phps-mode-parser--ast $1) r)
     ;
 
 reserved_non_modifiers:
@@ -419,7 +419,7 @@ top_statement_list:
 
 namespace_name:
     T_STRING (let ((r)) (setq r $1) r)
-    | namespace_name T_NS_SEPARATOR T_STRING (let ((r)) (setq r (ZEND_AST_APPEND_STR $1 $3)) r)
+    | namespace_name T_NS_SEPARATOR T_STRING (let ((r)) (setq r (phps-mode-parser--zend_ast_append_str $1 $3)) r)
     ;
 
 name:
@@ -434,10 +434,10 @@ top_statement:
     | class_declaration_statement (let ((r)) (setq r $1) r)
     | trait_declaration_statement (let ((r)) (setq r $1) r)
     | interface_declaration_statement (let ((r)) (setq r $1) r)
-    | T_HALT_COMPILER OPEN_PARENTHESIS CLOSE_PARENTHESIS SEMICOLON (let ((r)) (setq r (ZEND_AST_CREATE 'phps-mode-parser--ZEND_AST_HALT_COMPILER (ZEND_AST_CREATE_ZVAL_FROM_LONG (ZEND_GET_SCANNED_FILE_OFFSET))))(ZEND_STOP_LEXING) r)
-    | T_NAMESPACE namespace_name SEMICOLON (let ((r)) (setq r (ZEND_AST_CREATE 'phps-mode-parser--ZEND_AST_NAMESPACE $2 nil))(RESET_DOC_COMMENT) r)
-    | T_NAMESPACE namespace_name (let ((r)) (RESET_DOC_COMMENT) r) OPEN_CURLY_BRACKET top_statement_list CLOSE_CURLY_BRACKET (let ((r)) (setq r (ZEND_AST_CREATE 'phps-mode-parser--ZEND_AST_NAMESPACE $2 $5)) r)
-    | T_NAMESPACE (let ((r)) (RESET_DOC_COMMENT) r) OPEN_CURLY_BRACKET top_statement_list CLOSE_CURLY_BRACKET (let ((r)) (setq r (ZEND_AST_CREATE 'phps-mode-parser--ZEND_AST_NAMESPACE nil $4)) r)
+    | T_HALT_COMPILER OPEN_PARENTHESIS CLOSE_PARENTHESIS SEMICOLON (let ((r)) (setq r (ZEND_AST_CREATE 'phps-mode-parser--ZEND_AST_HALT_COMPILER (phps-mode-parser--zend_ast_create_zval_from_long (phps-mode-parser--zend_get_scanned_file_offset))))(phps-mode-parser--zend_stop_lexing) r)
+    | T_NAMESPACE namespace_name SEMICOLON (let ((r)) (setq r (ZEND_AST_CREATE 'phps-mode-parser--ZEND_AST_NAMESPACE $2 nil))(phps-mode-parser--reset_doc_comment) r)
+    | T_NAMESPACE namespace_name (let ((r)) (phps-mode-parser--reset_doc_comment) r) OPEN_CURLY_BRACKET top_statement_list CLOSE_CURLY_BRACKET (let ((r)) (setq r (ZEND_AST_CREATE 'phps-mode-parser--ZEND_AST_NAMESPACE $2 $5)) r)
+    | T_NAMESPACE (let ((r)) (phps-mode-parser--reset_doc_comment) r) OPEN_CURLY_BRACKET top_statement_list CLOSE_CURLY_BRACKET (let ((r)) (setq r (ZEND_AST_CREATE 'phps-mode-parser--ZEND_AST_NAMESPACE nil $4)) r)
     | T_USE mixed_group_use_declaration SEMICOLON (let ((r)) (setq r $2) r)
     | T_USE use_type group_use_declaration SEMICOLON (let ((r)) (setq r $3)(semantic-tag-put-attribute r 'attr $2) r)
     | T_USE use_declarations SEMICOLON (let ((r)) (setq r $2)(semantic-tag-put-attribute r 'attr 'phps-mode-parser--ZEND_SYMBOL_CLASS) r)
@@ -511,7 +511,7 @@ inner_statement:
     | class_declaration_statement (let ((r)) (setq r $1) r)
     | trait_declaration_statement (let ((r)) (setq r $1) r)
     | interface_declaration_statement (let ((r)) (setq r $1) r)
-    | T_HALT_COMPILER OPEN_PARENTHESIS CLOSE_PARENTHESIS SEMICOLON (let ((r)) (setq r nil)(ZEND_THROW_EXCEPTION phps-mode-parser--zend_ce_compile_error "__HALT_COMPILER() can only be used from the outermost scope" 0)(setq r 'phps-mode-parser--YYERROR) r)
+    | T_HALT_COMPILER OPEN_PARENTHESIS CLOSE_PARENTHESIS SEMICOLON (let ((r)) (setq r nil)(phps-mode-parser--zend_throw_exception phps-mode-parser--zend_ce_compile_error "__HALT_COMPILER() can only be used from the outermost scope" 0)(setq r 'phps-mode-parser--YYERROR) r)
     ;
 
 statement:
@@ -533,7 +533,7 @@ statement:
     | T_UNSET OPEN_PARENTHESIS unset_variables possible_comma CLOSE_PARENTHESIS SEMICOLON (let ((r)) (setq r $3) r)
     | T_FOREACH OPEN_PARENTHESIS expr T_AS foreach_variable CLOSE_PARENTHESIS foreach_statement (let ((r)) (setq r (ZEND_AST_CREATE 'phps-mode-parser--ZEND_AST_FOREACH $3 $5 nil $7)) r)
     | T_FOREACH OPEN_PARENTHESIS expr T_AS foreach_variable T_DOUBLE_ARROW foreach_variable CLOSE_PARENTHESIS foreach_statement (let ((r)) (setq r (ZEND_AST_CREATE 'phps-mode-parser--ZEND_AST_FOREACH $3 $7 $5 $9)) r)
-    | T_DECLARE OPEN_PARENTHESIS const_list CLOSE_PARENTHESIS (let ((r)) (if (not (ZEND_HANDLE_ENCODING_DECLARATION $3)) (setq r 'phps-mode-parser--YYERROR)) r) declare_statement (let ((r)) (setq r (ZEND_AST_CREATE 'phps-mode-parser--ZEND_AST_DECLARE $3 $6)) r)
+    | T_DECLARE OPEN_PARENTHESIS const_list CLOSE_PARENTHESIS (let ((r)) (if (not (phps-mode-parser--zend_handle_encoding_declaration $3)) (setq r 'phps-mode-parser--YYERROR)) r) declare_statement (let ((r)) (setq r (ZEND_AST_CREATE 'phps-mode-parser--ZEND_AST_DECLARE $3 $6)) r)
     | SEMICOLON ;; empty statement (let ((r)) (setq r nil) r)
     | T_TRY OPEN_CURLY_BRACKET inner_statement_list CLOSE_CURLY_BRACKET catch_list finally_statement (let ((r)) (setq r (ZEND_AST_CREATE 'phps-mode-parser--ZEND_AST_TRY $3 $5 $6)) r)
     | T_GOTO T_STRING SEMICOLON (let ((r)) (setq r (ZEND_AST_CREATE 'phps-mode-parser--ZEND_AST_GOTO $2)) r)
@@ -570,7 +570,7 @@ unset_variable:
     ;
 
 function_declaration_statement:
-    function returns_ref T_STRING backup_doc_comment OPEN_PARENTHESIS parameter_list CLOSE_PARENTHESIS return_type backup_fn_flags OPEN_CURLY_BRACKET inner_statement_list CLOSE_CURLY_BRACKET backup_fn_flags (let ((r)) (setq r (ZEND_AST_CREATE_DECL 'phps-mode-parser--ZEND_AST_FUNC_DECL (logior $2 $13) $1 $4 (ZEND_AST_GET_STR $3) $6 nil $11 $8))(CG 'phps-mode-parser--extra_fn_flags $9) r)
+    function returns_ref T_STRING backup_doc_comment OPEN_PARENTHESIS parameter_list CLOSE_PARENTHESIS return_type backup_fn_flags OPEN_CURLY_BRACKET inner_statement_list CLOSE_CURLY_BRACKET backup_fn_flags (let ((r)) (setq r (phps-mode-parser--zend_ast_create_decl 'phps-mode-parser--ZEND_AST_FUNC_DECL (logior $2 $13) $1 $4 (phps-mode-parser--zend_ast_get_str $3) $6 nil $11 $8))(phps-mode-parser--cg 'phps-mode-parser--extra_fn_flags $9) r)
     ;
 
 is_reference:
@@ -584,13 +584,13 @@ is_variadic:
     ;
 
 class_declaration_statement:
-    class_modifiers T_CLASS (let ((r)) (setq r (CG phps-mode-parser--zend_lineno)) r) T_STRING extends_from implements_list backup_doc_comment OPEN_CURLY_BRACKET class_statement_list CLOSE_CURLY_BRACKET (let ((r)) (setq r (ZEND_AST_CREATE_DECL 'phps-mode-parser--ZEND_AST_CLASS $1 $3 $7 (ZEND_AST_GET_STR $4) $5 $6 $9 nil)) r)
-    | T_CLASS (let ((r)) (setq r (CG phps-mode-parser--zend_lineno)) r) T_STRING extends_from implements_list backup_doc_comment OPEN_CURLY_BRACKET class_statement_list CLOSE_CURLY_BRACKET (let ((r)) (setq r (ZEND_AST_CREATE_DECL 'phps-mode-parser--ZEND_AST_CLASS 0 $2 $6 (ZEND_AST_GET_STR $3) $4 $5 $8 nil)) r)
+    class_modifiers T_CLASS (let ((r)) (setq r (phps-mode-parser--cg phps-mode-parser--zend_lineno)) r) T_STRING extends_from implements_list backup_doc_comment OPEN_CURLY_BRACKET class_statement_list CLOSE_CURLY_BRACKET (let ((r)) (setq r (phps-mode-parser--zend_ast_create_decl 'phps-mode-parser--ZEND_AST_CLASS $1 $3 $7 (phps-mode-parser--zend_ast_get_str $4) $5 $6 $9 nil)) r)
+    | T_CLASS (let ((r)) (setq r (phps-mode-parser--cg phps-mode-parser--zend_lineno)) r) T_STRING extends_from implements_list backup_doc_comment OPEN_CURLY_BRACKET class_statement_list CLOSE_CURLY_BRACKET (let ((r)) (setq r (phps-mode-parser--zend_ast_create_decl 'phps-mode-parser--ZEND_AST_CLASS 0 $2 $6 (phps-mode-parser--zend_ast_get_str $3) $4 $5 $8 nil)) r)
     ;
 
 class_modifiers:
     class_modifier (let ((r)) (setq r $1) r)
-    | class_modifiers class_modifier (let ((r)) (setq r (ZEND_ADD_CLASS_MODIFIER $1 $2))(if (not r) (setq r 'phps-mode-parser--YYERROR)) r)
+    | class_modifiers class_modifier (let ((r)) (setq r (phps-mode-parser--zend_add_class_modifier $1 $2))(if (not r) (setq r 'phps-mode-parser--YYERROR)) r)
     ;
 
 class_modifier:
@@ -599,11 +599,11 @@ class_modifier:
     ;
 
 trait_declaration_statement:
-    T_TRAIT (let ((r)) (setq r (CG phps-mode-parser--zend_lineno)) r) T_STRING backup_doc_comment OPEN_CURLY_BRACKET class_statement_list CLOSE_CURLY_BRACKET (let ((r)) (setq r (ZEND_AST_CREATE_DECL 'phps-mode-parser--ZEND_AST_CLASS 'phps-mode-parser--ZEND_ACC_TRAIT $2 $4 (ZEND_AST_GET_STR $3) nil nil $6 nil)) r)
+    T_TRAIT (let ((r)) (setq r (phps-mode-parser--cg phps-mode-parser--zend_lineno)) r) T_STRING backup_doc_comment OPEN_CURLY_BRACKET class_statement_list CLOSE_CURLY_BRACKET (let ((r)) (setq r (phps-mode-parser--zend_ast_create_decl 'phps-mode-parser--ZEND_AST_CLASS 'phps-mode-parser--ZEND_ACC_TRAIT $2 $4 (phps-mode-parser--zend_ast_get_str $3) nil nil $6 nil)) r)
     ;
 
 interface_declaration_statement:
-    T_INTERFACE (let ((r)) (setq r (CG phps-mode-parser--zend_lineno)) r) T_STRING interface_extends_list backup_doc_comment OPEN_CURLY_BRACKET class_statement_list CLOSE_CURLY_BRACKET (let ((r)) (setq r (ZEND_AST_CREATE_DECL 'phps-mode-parser--ZEND_AST_CLASS 'phps-mode-parser--ZEND_ACC_INTERFACE $2 $5 (ZEND_AST_GET_STR $3) nil $4 $7 nil)) r)
+    T_INTERFACE (let ((r)) (setq r (phps-mode-parser--cg phps-mode-parser--zend_lineno)) r) T_STRING interface_extends_list backup_doc_comment OPEN_CURLY_BRACKET class_statement_list CLOSE_CURLY_BRACKET (let ((r)) (setq r (phps-mode-parser--zend_ast_create_decl 'phps-mode-parser--ZEND_AST_CLASS 'phps-mode-parser--ZEND_ACC_INTERFACE $2 $5 (phps-mode-parser--zend_ast_get_str $3) nil $4 $7 nil)) r)
     ;
 
 extends_from:
@@ -787,7 +787,7 @@ class_statement:
     variable_modifiers optional_type_without_static property_list SEMICOLON (let ((r)) (setq r (ZEND_AST_CREATE 'phps-mode-parser--ZEND_AST_PROP_GROUP $2 $3))(semantic-tag-put-attribute r 'attr $1) r)
     | method_modifiers T_CONST class_const_list SEMICOLON (let ((r)) (setq r $3)(semantic-tag-put-attribute r 'attr $1) r)
     | T_USE class_name_list trait_adaptations (let ((r)) (setq r (ZEND_AST_CREATE 'phps-mode-parser--ZEND_AST_USE_TRAIT $2 $3)) r)
-    | method_modifiers function returns_ref identifier backup_doc_comment OPEN_PARENTHESIS parameter_list CLOSE_PARENTHESIS return_type backup_fn_flags method_body backup_fn_flags (let ((r)) (setq r (ZEND_AST_CREATE_DECL 'phps-mode-parser--ZEND_AST_METHOD (logior $3 (logior $1 $12)) $2 $5 (ZEND_AST_GET_STR $4) $7 nil $11 $9))(CG 'phps-mode-parser--extra_fn_flags $10) r)
+    | method_modifiers function returns_ref identifier backup_doc_comment OPEN_PARENTHESIS parameter_list CLOSE_PARENTHESIS return_type backup_fn_flags method_body backup_fn_flags (let ((r)) (setq r (phps-mode-parser--zend_ast_create_decl 'phps-mode-parser--ZEND_AST_METHOD (logior $3 (logior $1 $12)) $2 $5 (phps-mode-parser--zend_ast_get_str $4) $7 nil $11 $9))(phps-mode-parser--cg 'phps-mode-parser--extra_fn_flags $10) r)
     ;
 
 class_name_list:
@@ -848,7 +848,7 @@ method_modifiers:
 
 non_empty_member_modifiers:
     member_modifier (let ((r)) (setq r $1) r)
-    | non_empty_member_modifiers member_modifier (let ((r)) (setq r (ZEND_ADD_MEMBER_MODIFIER $1 $2))(if (not r) (setq r 'phps-mode-parser--YYERROR)) r)
+    | non_empty_member_modifiers member_modifier (let ((r)) (setq r (phps-mode-parser--zend_add_member_modifier $1 $2))(if (not r) (setq r 'phps-mode-parser--YYERROR)) r)
     ;
 
 member_modifier:
@@ -866,8 +866,8 @@ property_list:
     ;
 
 property:
-    T_VARIABLE backup_doc_comment (let ((r)) (setq r (ZEND_AST_CREATE 'phps-mode-parser--ZEND_AST_PROP_ELEM $1 nil (if $2 (ZEND_AST_CREATE_ZVAL_FROM_STR $2) nil))) r)
-    | T_VARIABLE ASSIGN expr backup_doc_comment (let ((r)) (setq r (ZEND_AST_CREATE 'phps-mode-parser--ZEND_AST_PROP_ELEM $1 $3 (if $4 (ZEND_AST_CREATE_ZVAL_FROM_STR $4) nil))) r)
+    T_VARIABLE backup_doc_comment (let ((r)) (setq r (ZEND_AST_CREATE 'phps-mode-parser--ZEND_AST_PROP_ELEM $1 nil (if $2 (phps-mode-parser--zend_ast_create_zval_from_str $2) nil))) r)
+    | T_VARIABLE ASSIGN expr backup_doc_comment (let ((r)) (setq r (ZEND_AST_CREATE 'phps-mode-parser--ZEND_AST_PROP_ELEM $1 $3 (if $4 (phps-mode-parser--zend_ast_create_zval_from_str $4) nil))) r)
     ;
 
 class_const_list:
@@ -876,11 +876,11 @@ class_const_list:
     ;
 
 class_const_decl:
-    identifier ASSIGN expr backup_doc_comment (let ((r)) (setq r (ZEND_AST_CREATE 'phps-mode-parser--ZEND_AST_CONST_ELEM $1 $3 (if $4 (ZEND_AST_CREATE_ZVAL_FROM_STR $4) nil))) r)
+    identifier ASSIGN expr backup_doc_comment (let ((r)) (setq r (ZEND_AST_CREATE 'phps-mode-parser--ZEND_AST_CONST_ELEM $1 $3 (if $4 (phps-mode-parser--zend_ast_create_zval_from_str $4) nil))) r)
     ;
 
 const_decl:
-    T_STRING ASSIGN expr backup_doc_comment (let ((r)) (setq r (ZEND_AST_CREATE 'phps-mode-parser--ZEND_AST_CONST_ELEM $1 $3 (if $4 (ZEND_AST_CREATE_ZVAL_FROM_STR $4) nil))) r)
+    T_STRING ASSIGN expr backup_doc_comment (let ((r)) (setq r (ZEND_AST_CREATE 'phps-mode-parser--ZEND_AST_CONST_ELEM $1 $3 (if $4 (phps-mode-parser--zend_ast_create_zval_from_str $4) nil))) r)
     ;
 
 echo_expr_list:
@@ -903,7 +903,7 @@ non_empty_for_exprs:
     ;
 
 anonymous_class:
-    T_CLASS (let ((r)) (setq r (CG phps-mode-parser--zend_lineno)) r) ctor_arguments extends_from implements_list backup_doc_comment OPEN_CURLY_BRACKET class_statement_list CLOSE_CURLY_BRACKET (let ((r)(decl)) (setq phps-mode-parser--decl (ZEND_AST_CREATE_DECL 'phps-mode-parser--ZEND_AST_CLASS 'phps-mode-parser--ZEND_ACC_ANON_CLASS $2 $6 nil $4 $5 $8 nil))(setq r (ZEND_AST_CREATE 'phps-mode-parser--ZEND_AST_NEW phps-mode-parser--decl $3)) r)
+    T_CLASS (let ((r)) (setq r (phps-mode-parser--cg phps-mode-parser--zend_lineno)) r) ctor_arguments extends_from implements_list backup_doc_comment OPEN_CURLY_BRACKET class_statement_list CLOSE_CURLY_BRACKET (let ((r)(decl)) (setq phps-mode-parser--decl (phps-mode-parser--zend_ast_create_decl 'phps-mode-parser--ZEND_AST_CLASS 'phps-mode-parser--ZEND_ACC_ANON_CLASS $2 $6 nil $4 $5 $8 nil))(setq r (ZEND_AST_CREATE 'phps-mode-parser--ZEND_AST_NEW phps-mode-parser--decl $3)) r)
     ;
 
 new_expr:
@@ -984,38 +984,38 @@ expr:
     | scalar (let ((r)) (setq r $1) r)
     | BACKTICK backticks_expr BACKTICK (let ((r)) (setq r (ZEND_AST_CREATE 'phps-mode-parser--ZEND_AST_SHELL_EXEC $2)) r)
     | T_PRINT expr (let ((r)) (setq r (ZEND_AST_CREATE 'phps-mode-parser--ZEND_AST_PRINT $2)) r)
-    | T_YIELD (let ((r)) (setq r (ZEND_AST_CREATE 'phps-mode-parser--ZEND_AST_YIELD nil nil))(CG 'phps-mode-parser--extra_fn_flags (logior (PHPS-MODE-PARSER--CG 'phps-mode-parser--extra_fn_flags) 'phps-mode-parser--ZEND_ACC_GENERATOR)) r)
-    | T_YIELD expr (let ((r)) (setq r (ZEND_AST_CREATE 'phps-mode-parser--ZEND_AST_YIELD $2 nil))(CG 'phps-mode-parser--extra_fn_flags (logior (PHPS-MODE-PARSER--CG 'phps-mode-parser--extra_fn_flags) 'phps-mode-parser--ZEND_ACC_GENERATOR)) r)
-    | T_YIELD expr T_DOUBLE_ARROW expr (let ((r)) (setq r (ZEND_AST_CREATE 'phps-mode-parser--ZEND_AST_YIELD $4 $2))(CG 'phps-mode-parser--extra_fn_flags (logior (PHPS-MODE-PARSER--CG 'phps-mode-parser--extra_fn_flags) 'phps-mode-parser--ZEND_ACC_GENERATOR)) r)
-    | T_YIELD_FROM expr (let ((r)) (setq r (ZEND_AST_CREATE 'phps-mode-parser--ZEND_AST_YIELD_FROM $2))(CG 'phps-mode-parser--extra_fn_flags (logior (PHPS-MODE-PARSER--CG 'phps-mode-parser--extra_fn_flags) 'phps-mode-parser--ZEND_ACC_GENERATOR)) r)
+    | T_YIELD (let ((r)) (setq r (ZEND_AST_CREATE 'phps-mode-parser--ZEND_AST_YIELD nil nil))(phps-mode-parser--cg 'phps-mode-parser--extra_fn_flags (logior (phps-mode-parser--cg 'phps-mode-parser--extra_fn_flags) 'phps-mode-parser--ZEND_ACC_GENERATOR)) r)
+    | T_YIELD expr (let ((r)) (setq r (ZEND_AST_CREATE 'phps-mode-parser--ZEND_AST_YIELD $2 nil))(phps-mode-parser--cg 'phps-mode-parser--extra_fn_flags (logior (phps-mode-parser--cg 'phps-mode-parser--extra_fn_flags) 'phps-mode-parser--ZEND_ACC_GENERATOR)) r)
+    | T_YIELD expr T_DOUBLE_ARROW expr (let ((r)) (setq r (ZEND_AST_CREATE 'phps-mode-parser--ZEND_AST_YIELD $4 $2))(phps-mode-parser--cg 'phps-mode-parser--extra_fn_flags (logior (phps-mode-parser--cg 'phps-mode-parser--extra_fn_flags) 'phps-mode-parser--ZEND_ACC_GENERATOR)) r)
+    | T_YIELD_FROM expr (let ((r)) (setq r (ZEND_AST_CREATE 'phps-mode-parser--ZEND_AST_YIELD_FROM $2))(phps-mode-parser--cg 'phps-mode-parser--extra_fn_flags (logior (phps-mode-parser--cg 'phps-mode-parser--extra_fn_flags) 'phps-mode-parser--ZEND_ACC_GENERATOR)) r)
     | T_THROW expr (let ((r)) (setq r (ZEND_AST_CREATE 'phps-mode-parser--ZEND_AST_THROW $2)) r)
     | inline_function (let ((r)) (setq r $1) r)
     | T_STATIC inline_function (let ((r)) (setq r $2)(semantic-tag-put-attribute r 'flags (logior (semantic-tag-get-attribute r 'flags) 'phps-mode-parser--ZEND_ACC_STATIC)) r)
     ;
 
 inline_function:
-    function returns_ref backup_doc_comment OPEN_PARENTHESIS parameter_list CLOSE_PARENTHESIS lexical_vars return_type backup_fn_flags OPEN_CURLY_BRACKET inner_statement_list CLOSE_CURLY_BRACKET backup_fn_flags (let ((r)) (setq r (ZEND_AST_CREATE_DECL 'phps-mode-parser--ZEND_AST_CLOSURE (logior $2 $13) $1 $3 (ZEND_STRING_INIT "{closure}" (- (SIZEOF "{closure}") 1) 0) $5 $7 $11 $8))(CG 'phps-mode-parser--extra_fn_flags $9) r)
-    | fn returns_ref OPEN_PARENTHESIS parameter_list CLOSE_PARENTHESIS return_type backup_doc_comment T_DOUBLE_ARROW backup_fn_flags backup_lex_pos expr backup_fn_flags (let ((r)) (setq r (ZEND_AST_CREATE_DECL 'phps-mode-parser--ZEND_AST_ARROW_FUNC (logior $2 $12) $1 $7 (ZEND_STRING_INIT "{closure}" (- (SIZEOF "{closure}") 1) 0) $4 nil (ZEND_AST_CREATE 'phps-mode-parser--ZEND_AST_RETURN $11) $6))(semantic-tag-put-attribute r 'lex_pos $10)(CG 'phps-mode-parser--extra_fn_flags $9) r)
+    function returns_ref backup_doc_comment OPEN_PARENTHESIS parameter_list CLOSE_PARENTHESIS lexical_vars return_type backup_fn_flags OPEN_CURLY_BRACKET inner_statement_list CLOSE_CURLY_BRACKET backup_fn_flags (let ((r)) (setq r (phps-mode-parser--zend_ast_create_decl 'phps-mode-parser--ZEND_AST_CLOSURE (logior $2 $13) $1 $3 (phps-mode-parser--zend_string_init "{closure}" (- (phps-mode-parser--sizeof "{closure}") 1) 0) $5 $7 $11 $8))(phps-mode-parser--cg 'phps-mode-parser--extra_fn_flags $9) r)
+    | fn returns_ref OPEN_PARENTHESIS parameter_list CLOSE_PARENTHESIS return_type backup_doc_comment T_DOUBLE_ARROW backup_fn_flags backup_lex_pos expr backup_fn_flags (let ((r)) (setq r (phps-mode-parser--zend_ast_create_decl 'phps-mode-parser--ZEND_AST_ARROW_FUNC (logior $2 $12) $1 $7 (phps-mode-parser--zend_string_init "{closure}" (- (phps-mode-parser--sizeof "{closure}") 1) 0) $4 nil (ZEND_AST_CREATE 'phps-mode-parser--ZEND_AST_RETURN $11) $6))(semantic-tag-put-attribute r 'lex_pos $10)(phps-mode-parser--cg 'phps-mode-parser--extra_fn_flags $9) r)
     ;
 
 fn:
-    T_FN (let ((r)) (setq r (CG phps-mode-parser--zend_lineno)) r)
+    T_FN (let ((r)) (setq r (phps-mode-parser--cg phps-mode-parser--zend_lineno)) r)
     ;
 
 function:
-    T_FUNCTION (let ((r)) (setq r (CG phps-mode-parser--zend_lineno)) r)
+    T_FUNCTION (let ((r)) (setq r (phps-mode-parser--cg phps-mode-parser--zend_lineno)) r)
     ;
 
 backup_doc_comment:
-    %empty (let ((r)) (setq r (CG phps-mode-parser--doc_comment))(CG 'phps-mode-parser--doc_comment nil) r)
+    %empty (let ((r)) (setq r (phps-mode-parser--cg phps-mode-parser--doc_comment))(phps-mode-parser--cg 'phps-mode-parser--doc_comment nil) r)
     ;
 
 backup_fn_flags:
-    %prec PREC_ARROW_FUNCTION %empty (let ((r)) (setq r (CG phps-mode-parser--extra_fn_flags))(CG 'phps-mode-parser--extra_fn_flags 0) r)
+    %prec PREC_ARROW_FUNCTION %empty (let ((r)) (setq r (phps-mode-parser--cg phps-mode-parser--extra_fn_flags))(phps-mode-parser--cg 'phps-mode-parser--extra_fn_flags 0) r)
     ;
 
 backup_lex_pos:
-    %empty (let ((r)) (setq r (LANG_SCNG phps-mode-parser--yy_text)) r)
+    %empty (let ((r)) (setq r (phps-mode-parser--lang_scng phps-mode-parser--yy_text)) r)
     ;
 
 returns_ref:
@@ -1046,7 +1046,7 @@ function_call:
     ;
 
 class_name:
-    T_STATIC (let ((r)(zv)) (ZVAL_INTERNED_STR (lambda(return) (setq zv return)) (ZSTR_KNOWN 'phps-mode-parser--ZEND_STR_STATIC))(setq r (ZEND_AST_CREATE_ZVAL_EX zv 'phps-mode-parser--ZEND_NAME_NOT_FQ)) r)
+    T_STATIC (let ((r)(zv)) (phps-mode-parser--zval_interned_str (lambda(return) (setq zv return)) (phps-mode-parser--zstr_known 'phps-mode-parser--ZEND_STR_STATIC))(setq r (phps-mode-parser--zend_ast_create_zval_ex zv 'phps-mode-parser--ZEND_NAME_NOT_FQ)) r)
     | name (let ((r)) (setq r $1) r)
     ;
 
@@ -1062,7 +1062,7 @@ exit_expr:
     ;
 
 backticks_expr:
-    %empty (let ((r)) (setq r (ZEND_AST_CREATE_ZVAL_FROM_STR (ZSTR_EMPTY_ALLOC))) r)
+    %empty (let ((r)) (setq r (phps-mode-parser--zend_ast_create_zval_from_str (phps-mode-parser--zstr_empty_alloc))) r)
     | T_ENCAPSED_AND_WHITESPACE (let ((r)) (setq r $1) r)
     | encaps_list (let ((r)) (setq r $1) r)
     ;
@@ -1083,7 +1083,7 @@ scalar:
     T_LNUMBER (let ((r)) (setq r $1) r)
     | T_DNUMBER (let ((r)) (setq r $1) r)
     | T_START_HEREDOC T_ENCAPSED_AND_WHITESPACE T_END_HEREDOC (let ((r)) (setq r $2) r)
-    | T_START_HEREDOC T_END_HEREDOC (let ((r)) (setq r (ZEND_AST_CREATE_ZVAL_FROM_STR (ZSTR_EMPTY_ALLOC))) r)
+    | T_START_HEREDOC T_END_HEREDOC (let ((r)) (setq r (phps-mode-parser--zend_ast_create_zval_from_str (phps-mode-parser--zstr_empty_alloc))) r)
     | T_START_HEREDOC encaps_list T_END_HEREDOC (let ((r)) (setq r $2) r)
     | dereferencable_scalar (let ((r)) (setq r $1) r)
     | constant (let ((r)) (setq r $1) r)
