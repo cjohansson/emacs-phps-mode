@@ -4,7 +4,7 @@ ifdef emacs
 endif
 EMACS_CMD := $(EMACS) -Q -batch -L . -L test/
 
-EL  := admin/phps-mode-automation.el phps-mode-flymake.el phps-mode-lex-analyzer.el phps-mode-lexer.el phps-mode-macros.el phps-mode-syntax-table.el  phps-mode-parser-grammar-macro.el phps-mode.el test/phps-mode-test.el test/phps-mode-test-lex-analyzer.el test/phps-mode-test-integration.el test/phps-mode-test-lexer.el test/phps-mode-test-parser.el test/phps-mode-test-syntax-table.el
+EL  := admin/phps-mode-automation.el phps-mode-flymake.el phps-mode-lex-analyzer.el phps-mode-lexer.el phps-mode-macros.el phps-mode-syntax-table.el  phps-mode-parser-grammar-macro.el phps-mode.el test/phps-mode-test.el test/phps-mode-test-lex-analyzer.el test/phps-mode-test-integration.el test/phps-mode-test-lexer.el test/phps-mode-test-parser-custom.el test/phps-mode-test-syntax-table.el
 ELC := $(EL:.el=.elc)
 
 .PHONY: clean
@@ -16,7 +16,7 @@ compile:
 	$(EMACS_CMD) -f batch-byte-compile $(EL)
 
 .PHONY: tests
-tests: test-integration test-lexer test-lex-analyzer test-parser test-syntax-table
+tests: test-integration test-lexer test-lex-analyzer test-parser-custom test-syntax-table
 
 .PHONY: test-integration
 test-integration:
@@ -35,9 +35,9 @@ test-lexer:
 benchmark-lexer:
 	$(EMACS_CMD) -l test/phps-mode-test-lexer.el -f "phps-mode-test-lexer-benchmark"
 
-.PHONY: test-parser
-test-parser:
-	$(EMACS_CMD) -l test/phps-mode-test-parser.el
+.PHONY: test-parser-custom
+test-parser-custom:
+	$(EMACS_CMD) -l test/phps-mode-test-parser-custom.el
 
 .PHONY: test-syntax-table
 test-syntax-table:
