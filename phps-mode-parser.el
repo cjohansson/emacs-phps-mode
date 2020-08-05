@@ -3,7 +3,7 @@
 ;; Copyright (C) 2018-2020  Free Software Foundation, Inc.
 
 ;; Author: Christian Johansson <christianjohansson@Christians-MacBook-Air.local>
-;; Created: 2020-07-06 09:05:25+0200
+;; Created: 2020-08-05 16:11:49+0200
 ;; Keywords: syntax
 ;; X-RCS: $Id$
 
@@ -41,11 +41,11 @@
 
 ;;; Declarations
 ;;
-(eval-and-compile (defconst phps-mode--expected-conflicts
+(eval-and-compile (defconst phps-mode-parser--expected-conflicts
                     nil
                     "The number of expected shift/reduce conflicts in this grammar."))
 
-(defconst phps-mode--keyword-table
+(defconst phps-mode-parser--keyword-table
   (semantic-lex-make-keyword-table
    '(("include (T_INCLUDE)" . T_INCLUDE)
      ("include_once (T_INCLUDE_ONCE)" . T_INCLUDE_ONCE)
@@ -177,7 +177,7 @@
    'nil)
   "Table of language keywords.")
 
-(defconst phps-mode--token-table
+(defconst phps-mode-parser--token-table
   (semantic-lex-make-type-table
    '(("<no-type>"
       (T_ERROR)
@@ -265,7 +265,7 @@
      ("punctuation" :declared t)))
   "Table of lexical tokens.")
 
-(defconst phps-mode--parse-table
+(defconst phps-mode-parser--parse-table
   (progn
     (eval-when-compile
       (require 'semantic/wisent/comp))
@@ -718,7 +718,7 @@
          (let
              ((r))
            (setq r nil)
-           (phps-mode-parser--zend_throw_exception phps-mode-parser--zend_ce_compile_error "__HALT_COMPILER() can only be used from the outermost scope" 0)
+           (phps-mode-parser--zend_throw_exception 'phps-mode-parser--zend_ce_compile_error "__HALT_COMPILER() can only be used from the outermost scope" 0)
            (setq r 'phps-mode-parser--YYERROR)
            r)))
        (statement
@@ -1935,7 +1935,7 @@
                  (phps-mode-parser--zend_ast_create_decl 'phps-mode-parser--ZEND_AST_CLASS 'phps-mode-parser--ZEND_ACC_ANON_CLASS $2 $6 nil $4 $5 $8 nil))
            (setq r
                  (wisent-raw-tag
-                  (semantic-tag 'phps-mode-parser--ZEND_AST_NEW phps-mode-parser--decl $3)))
+                  (semantic-tag 'phps-mode-parser--ZEND_AST_NEW 'phps-mode-parser--decl $3)))
            r)))
        (new_expr
         ((T_NEW class_name_reference ctor_arguments)
@@ -2565,14 +2565,14 @@
           (let
               ((r))
             (setq r
-                  (phps-mode-parser--cg phps-mode-parser--zend_lineno))
+                  (phps-mode-parser--cg 'phps-mode-parser--zend_lineno))
             r))
        (backup_doc_comment
         ((%empty)
          (let
              ((r))
            (setq r
-                 (phps-mode-parser--cg phps-mode-parser--doc_comment))
+                 (phps-mode-parser--cg 'phps-mode-parser--doc_comment))
            (phps-mode-parser--cg 'phps-mode-parser--doc_comment nil)
            r)))
        (backup_fn_flags
@@ -2589,7 +2589,7 @@
          (let
              ((r))
            (setq r
-                 (phps-mode-parser--lang_scng phps-mode-parser--yy_text))
+                 (phps-mode-parser--lang_scng 'phps-mode-parser--yy_text))
            r)))
        (returns_ref
         ((%empty)
@@ -2676,8 +2676,8 @@
               (zv))
            (phps-mode-parser--zval_interned_str
             (lambda
-              (return)
-              (setq zv return))
+              (ret)
+              (setq zv ret))
             (phps-mode-parser--zstr_known 'phps-mode-parser--ZEND_STR_STATIC))
            (setq r
                  (phps-mode-parser--zend_ast_create_zval_ex zv 'phps-mode-parser--ZEND_NAME_NOT_FQ))
@@ -3389,15 +3389,15 @@
      '(start)))
   "Parser table.")
 
-(defun phps-mode--install-parser ()
+(defun phps-mode-parser--install-parser ()
   "Setup the Semantic Parser."
   (semantic-install-function-overrides
    '((semantic-parse-stream . wisent-parse-stream)))
   (setq semantic-parser-name "LALR"
-        semantic--parse-table phps-mode--parse-table
+        semantic--parse-table phps-mode-parser--parse-table
         semantic-debug-parser-source "phps-mode-parser.wy"
-        semantic-flex-keywords-obarray phps-mode--keyword-table
-        semantic-lex-types-obarray phps-mode--token-table)
+        semantic-flex-keywords-obarray phps-mode-parser--keyword-table
+        semantic-lex-types-obarray phps-mode-parser--token-table)
   ;; Collect unmatched syntax lexical tokens
   (add-hook 'wisent-discarding-token-functions
             'wisent-collect-unmatched-syntax nil t))
@@ -3405,7 +3405,7 @@
 
 ;;; Analyzers
 ;;
-(define-lex-string-type-analyzer phps-mode--<punctuation>-string-analyzer
+(define-lex-string-type-analyzer phps-mode-parser--<punctuation>-string-analyzer
   "string analyzer for <punctuation> tokens."
   "\\(\\s.\\|\\s$\\|\\s'\\)+"
   '((UNARY . "~")

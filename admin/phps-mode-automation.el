@@ -89,7 +89,7 @@
        php-yacc-file
        wisent-destination
        header
-       "phps-mode-parser--"
+       "phps-mode-parser-grammar-macro--"
        terminal-replacements
        macro-list)
     (display-warning
