@@ -27,20 +27,44 @@
 
 (require 'ert)
 (require 'phps-mode)
-(require 'phps-mode-test)
+
+(defmacro phps-mode-test-parser-custom--with-buffer (tokens buffer-string state)
+  "Create a buffer containing BUFFER-STRING and run `phps-mode-parser-custom--parse-tokens' with TOKENS and STATE."
+  `(let ((test-buffer (generate-new-buffer "*test*")))
+     (switch-to-buffer test-buffer)
+     (insert ,buffer-string)
+     (goto-char 0)
+     (let ((ret
+            (phps-mode-parser-custom--parse-tokens
+             tokens
+             test-buffer
+             state)))
+       (kill-buffer)
+       ret)))
 
 (defun phps-mode-test-parser-custom--open ()
   "Test start entry-point."
   (message "-- Running tests for open entry-point... --\n")
 
   (let ((ret
-         (phps-mode-parser-custom--parse-tokens
-          '((T_OPEN_TAG 1 . 7) (T_VARIABLE 7 . 11) ("=" 11 . 12) (T_LNUMBER 12 . 13) (";" 13 . 14) (T_EXIT 15 . 19) (T_VARIABLE 20 . 24) (";" 24 . 25) (";" 26 . 28) (T_CLOSE_TAG 26 . 28))
+         (phps-mode-test-parser-custom--with-buffer
+          '((T_OPEN_TAG 1 . 7))
+          "<?php\t"
           nil)))
     (should
      (equal
       ret
-      (list nil t))))
+      (list (list '(T_OPEN_TAG 1 . 7)) 0))))
+
+  (let ((ret
+         (phps-mode-test-parser-custom--with-buffer
+          '((T_FINAL 1 . 5))
+          "final"
+          nil)))
+    (should
+     (equal
+      ret
+      (list nil 1))))
 
   (message "\n-- Ran tests for open entry-point. --"))
 

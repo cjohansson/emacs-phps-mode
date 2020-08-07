@@ -29,36 +29,69 @@
 (defconst phps-mode-parser-custom--start-state 'open
   "The default start state for parser.")
 
-(defun phps-mode-parser-custom--consume-token (tokens buffer state)
-  "Try to consume TOKENS from BUFFER in STATE."
-  (let ((consumed nil)
-        (rules nil))
+(defvar phps-mode-parser-custom--ast nil
+  "The current ast of parser.")
+
+(defvar phps-mode-parser-custom--state nil
+  "The current state of parser.")
+
+(defvar phps-mode-parser-custom--tokens nil
+  "The current stack of tokens.")
+
+(defmacro phps-mode-parser--rule-grammar (name &rest body)
+  "Return evaluated BODY if state match NAME."
+  `(when (= state ,name)
+     ;; TODO Check if head of TOKENS match rule here, if so evaluate body
+     ;; TODO If rule contains other rules, recursively evaluate them
+     (let ((ret ,body))
+       (when ret
+         (setq consumed t)))))
+
+(defun phps-mode-parser-custom--consume-token (tokens buffer ast state)
+  "Try to consume TOKENS from BUFFER and build AST in STATE."
+  (let ((consumed nil))
+
+    (phps-mode-parser--rule-grammar
+     'open
+
+     '(T_OPEN_TAG
+       (set state 'start)
+       (push 'T_OPEN_TAG ast))
+
+     '(T_OPEN_TAG_WITH_ECHO
+       (set state 'start)
+       (push 'T_OPEN_TAG_WITH_ECHO ast)))
 
     ;; TODO 1. Use macro to add all grammars here. Only apply macro logic if state matches grammar.
     
     consumed))
 
-(defmacro phps-mode-parser--rule-grammar (name &rest body)
-  "Generate code that modified consumed if state matches NAME."
-  (when (= state name)
-    (let ((ret 
-    ))
-
 (defun phps-mode-parser-custom--parse-tokens (tokens buffer &optional state)
-  "Parse TOKENS from BUFFER, optionally start at STATE.  Return parsed abstract syntax tree and err signal."
+  "Parse TOKENS from BUFFER, optionally start at STATE. Return abstract-syntax-tree and err signal."
+  (setq
+   phps-mode-parser-custom--tokens
+   tokens)
+  (setq
+   phps-mode-parser-custom--ast
+   nil)
   (unless state
     (setq
      state
      phps-mode-parser-custom--start-state))
+  (setq
+   phps-mode-parser-custom--state
+   state)
   (let ((ast)
         (err nil))
     (while (and
-            tokens
+            phps-mode-parser-custom--tokens
             (not err))
-      (let ((consume (phps-mode-parser-custom--consume-token
-                      tokens
-                      buffer
-                      state)))
+      (let ((consume
+             (phps-mode-parser-custom--consume-token
+              'phps-mode-parser-custom--tokens
+              buffer
+              'phps-mode-parser-custom--ast
+              'phps-mode-parser-custom--state)))
         (if consume
             (push consume ast)
           (setq
