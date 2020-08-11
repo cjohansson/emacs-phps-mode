@@ -38,36 +38,57 @@
 (defvar phps-mode-parser-custom--tokens nil
   "The current stack of tokens.")
 
-(defmacro phps-mode-parser--rule-grammar (name &rest body)
-  "Return evaluated BODY if state match NAME."
+(defun phps-mode-parser--block-grammar (name rules)
+  "Return evaluated RULES if state match NAME."
   `(when (= state ,name)
      ;; TODO Check if head of TOKENS match rule here, if so evaluate body
      ;; TODO If rule contains other rules, recursively evaluate them
-     (let ((ret ,body))
-       (when ret
-         (setq consumed t)))))
+
+     (dolist (rule rules)
+       (let ((grammar (car rule))
+             (body (cdr rule)))
+         (when
+             (phps-mode-parser-custom--tokens-satisfy-grammar-p
+              tokens
+              grammar)
+           (eval body))))))
+
+;; TODO Should support references to other grammar as well
+(defun phps-mode-parser-custom--tokens-satisfy-grammar-p (tokens-symbol grammar)
+  "Return t if TOKENS-SYMBOL match GRAMMAR otherwise nil."
+  (let ((tokens (symbol-value tokens-symbol))
+        (matches t))
+    (while (and grammar matches)
+      (let ((letter (pop grammar))
+            (head-token (pop tokens)))
+        (message "Comparing letter '%s' with head-token '%s'" letter head-token)
+        (unless
+            (equal
+             (car head-token) letter)
+          (setq matches nil))))
+    matches))
 
 (defun phps-mode-parser-custom--consume-token (tokens buffer ast state)
   "Try to consume TOKENS from BUFFER and build AST in STATE."
   (let ((consumed nil))
 
-    (phps-mode-parser--rule-grammar
+    (phps-mode-parser--block-grammar
      'open
 
-     '(T_OPEN_TAG
-       (set state 'start)
-       (push 'T_OPEN_TAG ast))
+     '((T_OPEN_TAG
+        (set state 'start)
+        (push 'T_OPEN_TAG ast))
 
-     '(T_OPEN_TAG_WITH_ECHO
-       (set state 'start)
-       (push 'T_OPEN_TAG_WITH_ECHO ast)))
+       (T_OPEN_TAG_WITH_ECHO
+        (set state 'start)
+        (push 'T_OPEN_TAG_WITH_ECHO ast))))
 
     ;; TODO 1. Use macro to add all grammars here. Only apply macro logic if state matches grammar.
     
     consumed))
 
 (defun phps-mode-parser-custom--parse-tokens (tokens buffer &optional state)
-  "Parse TOKENS from BUFFER, optionally start at STATE. Return abstract-syntax-tree and err signal."
+  "Parse TOKENS from BUFFER, optionally start at STATE.  Return abstract-syntax-tree and err signal."
   (setq
    phps-mode-parser-custom--tokens
    tokens)
@@ -101,4 +122,4 @@
 
 (provide 'phps-mode-parser-custom)
 
-;;; phps-mode-lexer.el ends here 
+;;; phps-mode-parser-custom.el ends here

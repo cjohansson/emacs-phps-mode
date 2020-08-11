@@ -68,11 +68,54 @@
 
   (message "\n-- Ran tests for open entry-point. --"))
 
+(defun phps-mode-test-parser-custom--tokens-satisfy-grammar-p ()
+  "Run test for `phps-mode-parser-custom--tokens-satisfy-grammar-p'."
+  (message "\n-- Run tests for tokens-satisfy-grammar-p. --")
+
+  (setq tokens (list '(T_OPEN_TAG 1 . 7)))
+  (should
+   (equal
+    (phps-mode-parser-custom--tokens-satisfy-grammar-p
+     'tokens
+     '(T_OPEN_TAG))
+    t))
+
+  (setq tokens (list '(T_OPEN_TAG 1 . 7)))
+  (should
+   (equal
+    (phps-mode-parser-custom--tokens-satisfy-grammar-p
+     'tokens
+     '(T_OPEN_TAG_WITH_ECHO))
+    nil))
+
+  (setq tokens (list
+                '(T_OPEN_TAG_WITH_ECHO 1 . 7)
+                '(T_CLOSE_TAG 8 . 10)))
+  (should
+   (equal
+    (phps-mode-parser-custom--tokens-satisfy-grammar-p
+     'tokens
+     '(T_OPEN_TAG_WITH_ECHO T_CLOSE_TAG))
+    t))
+
+  (setq tokens (list
+                '(T_OPEN_TAG_WITH_ECHO 1 . 7)
+                '(T_ECHO 8 . 12)))
+  (should
+   (equal
+    (phps-mode-parser-custom--tokens-satisfy-grammar-p
+     'tokens
+     '(T_OPEN_TAG_WITH_ECHO T_CLOSE_TAG))
+    nil))
+
+  (message "\n-- Ran tests for tokens-satisfy-grammar-p. --"))
+
 (defun phps-mode-test-parser-custom ()
   "Run test for custom parser."
   (message "-- Running all tests for custom parser... --\n")
   ;; (setq debug-on-error t)
-  (phps-mode-test-parser-custom--open)
+  (phps-mode-test-parser-custom--tokens-satisfy-grammar-p)
+  ;; (phps-mode-test-parser-custom--open)
   (message "\n-- Ran all tests for custom parser. --"))
 
 (phps-mode-test-parser-custom)
