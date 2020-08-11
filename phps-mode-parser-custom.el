@@ -54,7 +54,6 @@
               grammar)
            (eval body))))))
 
-;; TODO Should support references to other grammar as well in GRAMMAR have a hash-list with all other rules
 (defun phps-mode-parser-custom--tokens-satisfy-rule-p (tokens rule grammar)
   "Return t if TOKENS match RULE from GRAMMAR otherwise nil."
   (let ((matches t))
@@ -63,13 +62,17 @@
             (head-token nil))
         (if
             (gethash letter grammar)
-            (let ((recurisve-rule (gethash letter grammar)))
+            (let ((recursive-rule (gethash letter grammar)))
               (message "Letter '%s' matches rule" letter)
-              (unless
-                  (phps-mode-parser-custom--tokens-satisfy-rule-p
-                   tokens
-                   (car recurisve-rule)
-                   grammar)
+              (if-let
+                  ((recursive-tokens
+                    (phps-mode-parser-custom--tokens-satisfy-rule-p
+                     tokens
+                     (car recursive-rule)
+                     grammar)))
+                  (if (equal recursive-tokens t)
+                      (setq tokens nil)
+                    (setq tokens recursive-tokens))
                 (setq matches nil)))
           (setq head-token (pop tokens))
           (message "Comparing letter '%s' with head-token '%s'" letter head-token)
@@ -77,7 +80,11 @@
               (equal
                (car head-token) letter)
             (setq matches nil)))))
-    matches))
+    (if (and
+         matches
+         tokens)
+        tokens
+      matches)))
 
 (defun phps-mode-parser-custom--consume-token (tokens buffer ast state)
   "Try to consume TOKENS from BUFFER and build AST in STATE."
