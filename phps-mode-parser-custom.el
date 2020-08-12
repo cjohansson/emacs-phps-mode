@@ -38,44 +38,93 @@
 (defvar phps-mode-parser-custom--tokens nil
   "The current stack of tokens.")
 
-(defun phps-mode-parser--block-grammar (name block grammar)
-  "Return evaluated BLOCK if state match NAME, from GRAMMAR."
-  `(when (= state ,name)
-     ;; TODO Check if head of TOKENS match rule here, if so evaluate body
-     ;; TODO If rule contains other rules, recursively evaluate them
+(defvar phps-mode-parser-custom--tokens-for-evaluation nil
+  "Current stack of tokens to evaluate.")
 
-     (dolist (rule block)
-       (let ((rule-grammar (car rule))
-             (body (cdr rule)))
-         (when
-             (phps-mode-parser-custom--tokens-satisfy-rule-p
-              tokens
-              rule-grammar
-              grammar)
-           (eval body))))))
+(defun phps-mode-parser--block-grammar (name grammar)
+  "Return evaluated rule NAME from GRAMMAR."
+  (let ((block (gethash name grammar)))
+    (if block
+        (let ((response nil)
+              (looking t))
+          (while (and block looking)
+            (let ((rule (pop block)))
+              (when
+                  (phps-mode-parser-custom--tokens-satisfy-rule
+                   tokens
+                   rule
+                   grammar)
+                (setq
+                 response
+                 (phps-mode-parser-custom--evalute-rule
+                  tokens
+                  rule
+                  grammar))
+                (setq looking nil))))
+          response)
+      (signal 'error (list (format "Could not find rule '%s' in grammar!" name))))))
 
-(defun phps-mode-parser-custom--tokens-satisfy-rule-p (tokens rule grammar)
-  "Return t if TOKENS match RULE from GRAMMAR otherwise nil."
-  (let ((matches t))
-    (while (and rule matches)
-      (let ((letter (pop rule))
+(defun phps-mode-parser-custom--evalute-rule (rule grammar)
+  "Evaluate TOKENS in RULE from GRAMMAR, return result."
+  ;; Gather all matching rules as arguments to logic evaluation
+  (let ((rule-grammar (car rule))
+        (rule-logic (car (cdr rule)))
+        (arguments nil)
+        (response))
+
+    ;; Gather arguments from buffer
+    (while rule-grammar
+      (let ((letter (pop rule-grammar))
             (head-token nil))
         (if
             (gethash letter grammar)
             (let ((recursive-rule (gethash letter grammar)))
-              (message "Letter '%s' matches rule" letter)
+              (push
+               (phps-mode-parser-custom--evalute-rule
+                recursive-rule
+                grammar)
+               arguments))
+          (setq
+           head-token
+           (pop phps-mode-parser-custom--tokens-for-evaluation))
+          (push
+           (buffer-substring-no-properties
+            (car (cdr head-token))
+            (cdr (cdr head-token)))
+           arguments))))
+
+    ;; Evaluate body with arguments and save response
+    (setq
+     response
+     (funcall
+      rule-logic
+      arguments))
+    response))
+
+(defun phps-mode-parser-custom--tokens-satisfy-rule (tokens rule grammar)
+  "Return t if TOKENS match RULE from GRAMMAR otherwise nil."
+  (let ((matches t)
+        (rule-grammar (car rule)))
+    (while (and rule-grammar matches)
+      (let ((letter (pop rule-grammar))
+            (head-token nil))
+        (if
+            (gethash letter grammar)
+            (let ((recursive-rule (gethash letter grammar))
+                  (recursive-tokens))
+              ;; (message "Letter '%s' matches rule" letter)
               (if-let
-                  ((recursive-tokens
-                    (phps-mode-parser-custom--tokens-satisfy-rule-p
-                     tokens
-                     (car recursive-rule)
-                     grammar)))
+                  (recursive-tokens
+                   (phps-mode-parser-custom--tokens-satisfy-rule
+                    tokens
+                    recursive-rule
+                    grammar))
                   (if (equal recursive-tokens t)
                       (setq tokens nil)
                     (setq tokens recursive-tokens))
                 (setq matches nil)))
           (setq head-token (pop tokens))
-          (message "Comparing letter '%s' with head-token '%s'" letter head-token)
+          ;; (message "Comparing letter '%s' with head-token '%s'" letter head-token)
           (unless
               (equal
                (car head-token) letter)

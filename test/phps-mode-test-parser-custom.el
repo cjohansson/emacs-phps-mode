@@ -68,9 +68,38 @@
 
   (message "\n-- Ran tests for open entry-point. --"))
 
-(defun phps-mode-test-parser-custom--tokens-satisfy-rule-p ()
-  "Run test for `phps-mode-parser-custom--tokens-satisfy-rule-p'."
-  (message "\n-- Run tests for tokens-satisfy-rule-p. --")
+(defun phps-mode-test-parser-custom--evalute-rule ()
+  "Run test for `phps-mode-parser-custom--evalute-rule'."
+  (message "\n-- Run tests for evalute-rule. --")
+
+  (let ((grammar (make-hash-table :test 'equal)))
+    (puthash
+     'close
+     (list
+      (list 'T_CLOSE_TAG)
+      (lambda()))
+     grammar)
+
+    (with-temp-buffer
+      (insert "?>")
+      (setq
+       phps-mode-parser-custom--tokens-for-evaluation
+       (list '(T_OPEN_TAG 1 . 3)))
+      (should
+       (equal
+        (phps-mode-parser-custom--evalute-rule
+         (list
+          (list 'T_CLOSE_TAG)
+          (lambda(arguments) (list 'CLOSE)))
+         grammar)
+        (list 'CLOSE)
+        )))
+
+    (message "\n-- Ran tests for evalute-rule. --")))
+
+(defun phps-mode-test-parser-custom--tokens-satisfy-rule ()
+  "Run test for `phps-mode-parser-custom--tokens-satisfy-rule'."
+  (message "\n-- Run tests for tokens-satisfy-rule. --")
 
   (let ((grammar (make-hash-table :test 'equal)))
 
@@ -83,88 +112,89 @@
 
     (should
      (equal
-      (phps-mode-parser-custom--tokens-satisfy-rule-p
+      (phps-mode-parser-custom--tokens-satisfy-rule
        (list '(T_OPEN_TAG 1 . 7))
-       (list 'T_OPEN_TAG)
+       (list (list 'T_OPEN_TAG) (lambda()))
        grammar)
       t))
 
     (should
      (equal
-      (phps-mode-parser-custom--tokens-satisfy-rule-p
+      (phps-mode-parser-custom--tokens-satisfy-rule
        (list '(T_OPEN_TAG 1 . 7))
-       (list 'T_OPEN_TAG_WITH_ECHO)
+       (list (list 'T_OPEN_TAG_WITH_ECHO) (lambda()))
        grammar)
       nil))
 
     (should
      (equal
-      (phps-mode-parser-custom--tokens-satisfy-rule-p
+      (phps-mode-parser-custom--tokens-satisfy-rule
        (list
         '(T_OPEN_TAG_WITH_ECHO 1 . 7)
         '(T_CLOSE_TAG 8 . 10))
-       (list 'T_OPEN_TAG_WITH_ECHO 'T_CLOSE_TAG)
+       (list (list 'T_OPEN_TAG_WITH_ECHO 'T_CLOSE_TAG) (lambda()))
        grammar)
       t))
 
     (should
      (equal
-      (phps-mode-parser-custom--tokens-satisfy-rule-p
+      (phps-mode-parser-custom--tokens-satisfy-rule
        (list
         '(T_OPEN_TAG_WITH_ECHO 1 . 7)
         '(T_ECHO 8 . 12))
-       (list 'T_OPEN_TAG_WITH_ECHO 'T_CLOSE_TAG)
+       (list (list 'T_OPEN_TAG_WITH_ECHO 'T_CLOSE_TAG) (lambda()))
        grammar)
       nil))
 
     (should
      (equal
-      (phps-mode-parser-custom--tokens-satisfy-rule-p
+      (phps-mode-parser-custom--tokens-satisfy-rule
        (list
         '(T_OPEN_TAG_WITH_ECHO 1 . 7)
         '("{" 8 . 12))
-       (list 'T_OPEN_TAG_WITH_ECHO "{")
+       (list (list 'T_OPEN_TAG_WITH_ECHO "{") (lambda()))
        grammar)
       t))
 
     (should
      (equal
-      (phps-mode-parser-custom--tokens-satisfy-rule-p
+      (phps-mode-parser-custom--tokens-satisfy-rule
        (list
         '(T_OPEN_TAG_WITH_ECHO 1 . 7)
         '(T_CLOSE_TAG 8 . 10))
-       (list 'T_OPEN_TAG_WITH_ECHO 'close)
+       (list (list 'T_OPEN_TAG_WITH_ECHO 'close) (lambda()))
        grammar)
       t))
 
     (should
      (equal
-      (phps-mode-parser-custom--tokens-satisfy-rule-p
+      (phps-mode-parser-custom--tokens-satisfy-rule
        (list
         '(T_OPEN_TAG_WITH_ECHO 1 . 7)
         '(T_ECHO 8 . 10))
-       (list 'T_OPEN_TAG_WITH_ECHO 'close)
+       (list (list 'T_OPEN_TAG_WITH_ECHO 'close) (lambda()))
        grammar)
       nil))
 
     (should
      (equal
-      (phps-mode-parser-custom--tokens-satisfy-rule-p
+      (phps-mode-parser-custom--tokens-satisfy-rule
        (list
         '(T_OPEN_TAG_WITH_ECHO 1 . 7)
         '(T_CLOSE_TAG 8 . 10)
         '(T_ECHO 11 . 14))
-       (list 'T_OPEN_TAG_WITH_ECHO 'close 'T_ECHO)
+       (list (list 'T_OPEN_TAG_WITH_ECHO 'close 'T_ECHO) (lambda()))
        grammar)
       t))
 
-    (message "\n-- Ran tests for tokens-satisfy-ruke-p. --")))
+    (message "\n-- Ran tests for tokens-satisfy-rule. --")))
 
 (defun phps-mode-test-parser-custom ()
   "Run test for custom parser."
   (message "-- Running all tests for custom parser... --\n")
   ;; (setq debug-on-error t)
-  (phps-mode-test-parser-custom--tokens-satisfy-rule-p)
+  (phps-mode-test-parser-custom--tokens-satisfy-rule)
+  (phps-mode-test-parser-custom--evalute-rule)
   ;; (phps-mode-test-parser-custom--open)
   (message "\n-- Ran all tests for custom parser. --"))
 
