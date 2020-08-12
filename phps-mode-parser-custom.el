@@ -32,168 +32,137 @@
 (defvar phps-mode-parser-custom--ast nil
   "The current ast of parser.")
 
+(defvar phps-mode-parser-custom--grammar nil
+  "The current grammar.")
+
 (defvar phps-mode-parser-custom--state nil
   "The current state of parser.")
 
 (defvar phps-mode-parser-custom--tokens nil
   "The current stack of tokens.")
 
-(defvar phps-mode-parser-custom--tokens-for-evaluation nil
-  "Current stack of tokens to evaluate.")
-
-(defun phps-mode-parser--block-grammar (name grammar)
-  "Return evaluated rule NAME from GRAMMAR."
-  (let ((block (gethash name grammar)))
+(defun phps-mode-parser--parse-state (name)
+  "Return evaluated rule NAME."
+  (let ((block
+            (gethash
+             name
+             phps-mode-parser-custom--grammar)))
     (if block
         (let ((response nil)
               (looking t))
           (while (and block looking)
             (let ((rule (pop block)))
-              (when
-                  (phps-mode-parser-custom--tokens-satisfy-rule
-                   tokens
-                   rule
-                   grammar)
-                (setq
-                 response
-                 (phps-mode-parser-custom--evalute-rule
-                  tokens
-                  rule
-                  grammar))
-                (setq looking nil))))
+              (let ((parsed-rule
+                     (phps-mode-parser-custom--tokens-parse-state
+                      phps-mode-parser-custom--tokens
+                      rule)))
+                (when parsed-rule
+                  (setq
+                   phps-mode-parser-custom--tokens
+                   (nth
+                    0
+                    parsed-rule))
+                  (setq
+                   response
+                   (nth
+                    1
+                    parsed-rule))
+                  (setq looking nil)))))
           response)
       (signal 'error (list (format "Could not find rule '%s' in grammar!" name))))))
 
-(defun phps-mode-parser-custom--evalute-rule (rule grammar)
-  "Evaluate TOKENS in RULE from GRAMMAR, return result."
-  ;; Gather all matching rules as arguments to logic evaluation
-  (let ((rule-grammar (car rule))
-        (rule-logic (car (cdr rule)))
-        (arguments nil)
-        (response))
+(defun phps-mode-parser-custom--parse-state (state &optional tokens-arg)
+  "Return remaining tokens and evaluated body if tokens match a rule in STATE of grammar, otherwise nil.  Use TOKENS-ARG if specified."
+  (let ((block (gethash state phps-mode-parser-custom--grammar))
+        (tokens))
+    (if tokens-arg
+        (if (symbolp tokens-arg)
+            (setq tokens (symbol-value tokens-arg))
+          (setq tokens tokens-arg))
+      (setq tokens (symbol-value 'phps-mode-parser-custom--tokens)))
+    (if block
+        (let ((looking t)
+              (rule nil))
+          (setq rule (pop block))
+          (while (and rule looking)
+            (let ((arguments nil)
+                  (matches t)
+                  (response nil)
+                  (rule-grammar (car rule))
+                  (rule-logic (car (cdr rule))))
 
-    ;; Gather arguments from buffer
-    (while rule-grammar
-      (let ((letter (pop rule-grammar))
-            (head-token nil))
-        (if
-            (gethash letter grammar)
-            (let ((recursive-rule (gethash letter grammar)))
-              (push
-               (phps-mode-parser-custom--evalute-rule
-                recursive-rule
-                grammar)
-               arguments))
-          (setq
-           head-token
-           (pop phps-mode-parser-custom--tokens-for-evaluation))
-          (push
-           (buffer-substring-no-properties
-            (car (cdr head-token))
-            (cdr (cdr head-token)))
-           arguments))))
+              ;; Iterate all letters of grammar, check if the match and build list of arguments
+              (while (and rule-grammar matches)
+                (let ((letter (pop rule-grammar))
+                      (head-token nil))
 
-    ;; Reverse order of arguments
-    (setq
-     arguments
-     (nreverse
-      arguments))
+                  ;; Check if letter is a reference to recursive rules or a token
+                  (if (gethash letter phps-mode-parser-custom--grammar)
+                      (let ((recursive-match
+                             (phps-mode-parser-custom--parse-state
+                              tokens
+                              letter)))
 
-    ;; Evaluate body with arguments and save response
-    (setq
-     response
-     (funcall
-      rule-logic
-      arguments))
-    response))
+                        ;; On match set response as argument and update remaining tokens
+                        (if recursive-match
+                            (progn
+                              (setq
+                               tokens
+                               (nth 0 recursive-match))
+                              (push
+                               (nth 1 recursive-match)
+                               arguments))
 
-(defun phps-mode-parser-custom--tokens-satisfy-rule (tokens rule grammar)
-  "Return t if TOKENS match RULE from GRAMMAR otherwise nil."
-  (let ((matches t)
-        (rule-grammar (car rule)))
-    (while (and rule-grammar matches)
-      (let ((letter (pop rule-grammar))
-            (head-token nil))
-        (if
-            (gethash letter grammar)
-            (let ((recursive-rule (gethash letter grammar))
-                  (recursive-tokens))
-              ;; (message "Letter '%s' matches rule" letter)
-              (if-let
-                  (recursive-tokens
-                   (phps-mode-parser-custom--tokens-satisfy-rule
-                    tokens
-                    recursive-rule
-                    grammar))
-                  (if (equal recursive-tokens t)
-                      (setq tokens nil)
-                    (setq tokens recursive-tokens))
-                (setq matches nil)))
-          (setq head-token (pop tokens))
-          ;; (message "Comparing letter '%s' with head-token '%s'" letter head-token)
-          (unless
-              (equal
-               (car head-token) letter)
-            (setq matches nil)))))
-    (if (and
-         matches
-         tokens)
-        tokens
-      matches)))
+                        ;; No recursive match means this rule does not match
+                          (setq
+                           matches
+                           nil)))
 
-(defun phps-mode-parser-custom--consume-token (tokens buffer ast state)
-  "Try to consume TOKENS from BUFFER and build AST in STATE."
-  (let ((consumed nil))
+                    (setq head-token (pop tokens))
+                    ;; (message "Comparing letter '%s' with head-token '%s'" letter head-token)
+                    (if (equal (car head-token) letter)
+                        (push (buffer-substring-no-properties (car (cdr head-token)) (cdr (cdr head-token))) arguments)
+                      (setq matches nil)))))
 
-    (phps-mode-parser--block-grammar
-     'open
+              (when arguments
+                ;; Reverse order of arguments
+                (setq arguments (nreverse arguments)))
 
-     '('(T_OPEN_TAG)
-       (set state 'start)
-       (lambda()
-         (push 'T_OPEN_TAG ast)))
+              (if matches
+                  (progn
+                    (setq
+                     response
+                     (funcall
+                      rule-logic
+                      arguments))
+                    (list
+                     tokens
+                     response))
+                nil))
+            (setq rule (pop block))))
+      (signal 'error (list (format "Could not find state '%s' in grammar!" state))))))
 
-     '('(T_OPEN_TAG_WITH_ECHO)
-       (lambda()
-         (set state 'start)
-         (push 'T_OPEN_TAG_WITH_ECHO ast)))
-
-     ;; TODO 1. Use macro to add all grammars here. Only apply macro logic if state matches grammar.
-     
-     consumed)))
-
-(defun phps-mode-parser-custom--parse-tokens (tokens buffer &optional state)
+(defun phps-mode-parser-custom--parse (tokens &optional buffer state)
   "Parse TOKENS from BUFFER, optionally start at STATE.  Return abstract-syntax-tree and err signal."
-  (setq
-   phps-mode-parser-custom--tokens
-   tokens)
-  (setq
-   phps-mode-parser-custom--ast
-   nil)
+  (setq phps-mode-parser-custom--tokens tokens)
+  (setq phps-mode-parser-custom--ast nil)
   (unless state
-    (setq
-     state
-     phps-mode-parser-custom--start-state))
-  (setq
-   phps-mode-parser-custom--state
-   state)
-  (let ((ast)
-        (err nil))
-    (while (and
-            phps-mode-parser-custom--tokens
-            (not err))
-      (let ((consume
-             (phps-mode-parser-custom--consume-token
-              'phps-mode-parser-custom--tokens
-              buffer
-              'phps-mode-parser-custom--ast
-              'phps-mode-parser-custom--state)))
-        (if consume
-            (push consume ast)
-          (setq
-           err
-           (format "Failed to parse at state: %s, tokens: %s" state tokens)))))
-    (list ast err)))
+    (setq state phps-mode-parser-custom--start-state))
+  (unless phps-mode-parser-custom--grammar
+    (signal 'error (list "Missing defined grammar!")))
+  (unless buffer
+    (setq buffer (current-buffer)))
+  (with-current-buffer buffer
+    (let ((ast)
+          (err nil))
+      (while (and
+              phps-mode-parser-custom--tokens
+              (not err))
+        (let ((consume (phps-mode-parser--parse-state state)))
+          (if consume
+              (push consume ast)
+            (setq err (format "Failed to parse at state: %s, tokens: %s" state phps-mode-parser-custom--tokens)))))
+      (list ast err))))
 
 (provide 'phps-mode-parser-custom)
 
