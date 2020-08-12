@@ -93,6 +93,12 @@
             (cdr (cdr head-token)))
            arguments))))
 
+    ;; Reverse order of arguments
+    (setq
+     arguments
+     (nreverse
+      arguments))
+
     ;; Evaluate body with arguments and save response
     (setq
      response

@@ -77,14 +77,15 @@
      'close
      (list
       (list 'T_CLOSE_TAG)
-      (lambda()))
+      (lambda(arguments) (list 'CLOSE)))
      grammar)
 
+    ;; Simple evaluation
     (with-temp-buffer
       (insert "?>")
       (setq
        phps-mode-parser-custom--tokens-for-evaluation
-       (list '(T_OPEN_TAG 1 . 3)))
+       (list '(T_CLOSE_TAG 1 . 3)))
       (should
        (equal
         (phps-mode-parser-custom--evalute-rule
@@ -92,8 +93,22 @@
           (list 'T_CLOSE_TAG)
           (lambda(arguments) (list 'CLOSE)))
          grammar)
-        (list 'CLOSE)
-        )))
+        (list 'CLOSE))))
+
+    ;; Recursive evaluation
+    (with-temp-buffer
+      (insert "<?php ?>")
+      (setq
+       phps-mode-parser-custom--tokens-for-evaluation
+       (list '(T_OPEN_TAG 1 . 6) '(T_CLOSE_TAG 7 . 8)))
+      (should
+       (equal
+        (phps-mode-parser-custom--evalute-rule
+         (list
+          (list 'T_OPEN_TAG 'close)
+          (lambda(arguments)(list 'OPEN 'CLOSE)))
+         grammar)
+        (list 'OPEN 'CLOSE))))
 
     (message "\n-- Ran tests for evalute-rule. --")))
 
