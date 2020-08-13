@@ -32,85 +32,43 @@
   "Test `phps-mode-parser-custom--parse'."
   (message "-- Running tests for parse... --\n")
 
-  (let ((grammar (make-hash-table :test 'equal)))
-    (puthash
-     'open
-     (list
-      (list
-       (list 'T_OPEN_TAG)
-       (lambda(arguments) (list 'OPEN)))
-      (list
-       (list 'T_OPEN_TAG_WITH_ECHO)
-       (lambda(arguments) (list 'OPEN 'ECHO))))
-     grammar)
-    (puthash
-     'close
-     (list
-      (list
-       (list 'T_CLOSE_TAG)
-       (lambda(arguments) (list 'CLOSE))))
-     grammar)
+  (setq phps-mode-parser-custom--grammar (make-hash-table :test 'equal))
 
-    (setq
-     phps-mode-parser-custom--grammar
-     grammar)
+  ;; Setup grammar
+  (puthash
+   'initial
+   (list
+    (list
+     (list 'T_CLOSE_TAG)
+     (lambda(a) (setq phps-mode-parser-custom--state 'open)(list 'CLOSE)))
+    (list
+     (list ";")
+     (lambda(a) (list 'SEMICOLON))))
+   phps-mode-parser-custom--grammar)
 
-    (with-temp-buffer
-      (insert "<?php ?>")
-      (should
-       (equal
-        (phps-mode-parser-custom--parse-tokens
-         (list '(T_OPEN_TAG 1 . 7) '(";" 7 . 9) '(T_CLOSE_TAG 7 . 9))
-         (current-buffer))
-        (list 'OPEN 'CLOSE))))
+  (puthash
+   'open
+   (list
+    (list
+     (list 'T_OPEN_TAG)
+     (lambda(a) (setq phps-mode-parser-custom--state 'initial)(list 'OPEN)))
+    (list
+     (list 'T_OPEN_TAG_WITH_ECHO)
+     (lambda(a) (setq phps-mode-parser-custom--state 'echo)(list 'OPEN 'ECHO)))
+    (list
+     (list 'T_INLINE_HTML)
+     (lambda(a) (list a))))
+   phps-mode-parser-custom--grammar)
 
-    )(message "\n-- Ran tests for parse. --"))
+  (with-temp-buffer
+    (insert "<?php ?>random")
+    (setq phps-mode-parser-custom--tokens (list '(T_OPEN_TAG 1 . 7) '(";" 7 . 9) '(T_CLOSE_TAG 7 . 9) '(T_INLINE_HTML 9 . 15)))
+    (setq phps-mode-parser-custom--state 'open)
+    (should (equal (phps-mode-parser-custom--parse) (list (list (list '(OPEN)) (list '(SEMICOLON)) (list '(CLOSE)) (list (list '("random")))) nil))))
+  (message "Passed test 1")
 
-(defun phps-mode-test-parser-custom--parse-state-2 ()
-  "Run test for `phps-mode-parser-custom--parse-state'."
-  (message "\n-- Run tests for parse-state. --")
 
-  (let ((grammar (make-hash-table :test 'equal)))
-
-    (puthash
-     'close
-     (list
-      (list
-       (list 'T_CLOSE_TAG)
-       (lambda(arguments) (list 'CLOSE))))
-     grammar)
-
-    ;; Simple evaluation
-    (with-temp-buffer
-      (insert "?>")
-      (setq
-       phps-mode-parser-custom--tokens
-       (list '(T_CLOSE_TAG 1 . 3)))
-      (should
-       (equal
-        (phps-mode-parser-custom--evaluate-rule
-         (list
-          (list 'T_CLOSE_TAG)
-          (lambda(arguments) (list 'CLOSE)))
-         grammar)
-        (list 'CLOSE))))
-
-    ;; Recursive evaluation
-    (with-temp-buffer
-      (insert "<?php ?>")
-      (setq
-       phps-mode-parser-custom--tokens
-       (list '(T_OPEN_TAG 1 . 6) '(T_CLOSE_TAG 7 . 8)))
-      (should
-       (equal
-        (phps-mode-parser-custom--evaluate-rule
-         (list
-          (list 'T_OPEN_TAG 'close)
-          (lambda(arguments)(list 'OPEN 'CLOSE)))
-         grammar)
-        (list 'OPEN 'CLOSE))))
-
-    (message "\n-- Ran tests for parse-state. --")))
+  (message "\n-- Ran tests for parse. --"))
 
 (defun phps-mode-test-parser-custom--parse-state ()
   "Run test for `phps-mode-parser-custom--parse-state'."
@@ -174,8 +132,7 @@
   (message "-- Running all tests for custom parser... --\n")
   ;; (setq debug-on-error t)
   (phps-mode-test-parser-custom--parse-state)
-  ;; (phps-mode-test-parser-custom--parse)
-  ;; (phps-mode-test-parser-custom--open)
+  (phps-mode-test-parser-custom--parse)
   (message "\n-- Ran all tests for custom parser. --"))
 
 (phps-mode-test-parser-custom)
