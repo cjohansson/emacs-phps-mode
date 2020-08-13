@@ -114,7 +114,7 @@
 
 (defun phps-mode-test-parser-custom--parse-state ()
   "Run test for `phps-mode-parser-custom--parse-state'."
-  (message "\n-- Run tests for parse-state. --")
+  (message "\n-- Run tests for parse-state. --\n")
   (setq phps-mode-parser-custom--grammar (make-hash-table :test 'equal))
 
   ;; Setup grammar
@@ -166,62 +166,6 @@
     (setq phps-mode-parser-custom--tokens (list '(T_OPEN_TAG_WITH_ECHO 1 . 3)))
     (should (equal (phps-mode-parser-custom--parse-state 'open) (list nil (list 'OPEN 'ECHO)))))
   (message "Passed test 4")
-
-  (with-temp-buffer
-    (insert "<?= echo")
-    (setq phps-mode-parser-custom--tokens
-          (list
-           '(T_OPEN_TAG_WITH_ECHO 1 . 7)
-           '(T_ECHO 8 . 13)))
-    (should
-     (equal
-      (phps-mode-parser-custom--parse-state 'open)
-      (list 'OPEN 'ECHO 'ECHO))))
-
-  (with-temp-buffer
-    (insert "<?= {")
-    (setq phps-mode-parser-custom--tokens
-          (list
-           '(T_OPEN_TAG_WITH_ECHO 1 . 7)
-           '("{" 8 . 12)))
-    (should
-     (equal
-      (phps-mode-parser-custom--parse-state 'open)
-      (list 'OPEN 'ECHO "{"))))
-
-  (with-temp-buffer
-    (insert "<?= ?>")
-    (setq phps-mode-parser-custom--tokens
-          (list
-           '(T_OPEN_TAG_WITH_ECHO 1 . 3)
-           '(T_CLOSE_TAG 5 . 7)))
-    (should
-     (equal
-      (phps-mode-parser-custom--tokens-satisfy-rule 'open)
-      (list 'OPEN 'ECHO 'CLOSE))))
-
-  (with-temp-buffer
-    (insert "<?= ?>")
-    (setq phps-mode-parser-custom--tokens
-          (list
-           '(T_OPEN_TAG_WITH_ECHO 1 . 7)
-           '(T_STRING 10 . 15)))
-    (should
-     (equal
-      (phps-mode-parser-custom--tokens-satisfy-rule 'open)
-      (list 'OPEN 'ECHO "random"))))
-
-  (with-temp-buffer
-    (insert "<?= ?> echo")
-    (setq phps-mode-parser-custom--tokens
-          (list
-           '(T_OPEN_TAG_WITH_ECHO 1 . 7)
-           '(T_CLOSE_TAG 8 . 10)
-           '(T_ECHO 11 . 14)))
-    (should
-     (equal
-      (phps-mode-parser-custom--tokens-satisfy-rule 'open)
-      (list 'OPEN 'ECHO 'CLOSE 'ECHO))))
 
   (message "\n-- Ran tests for parse-state. --"))
 

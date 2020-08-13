@@ -86,7 +86,7 @@
         (let ((looking t)
               (rule nil)
               (ret nil))
-          (message "Parsing block '%s'" block)
+          ;; (message "Parsing block '%s'" block)
           (setq rule (pop block))
           (while (and rule looking)
             ;; Reset token stack
@@ -97,22 +97,22 @@
                   (rule-grammar (car rule))
                   (rule-logic (car (cdr rule))))
 
-              (message "Rule-grammar: '%s'" rule-grammar)
-              (message "Rule-logic: '%s'" rule-logic)
+              ;; (message "Rule-grammar: '%s'" rule-grammar)
+              ;; (message "Rule-logic: '%s'" rule-logic)
 
               ;; Iterate all letters of grammar, check if the match and build list of arguments
               (while (and rule-grammar matches)
                 (let ((letter (pop rule-grammar))
                       (head-token nil))
 
-                  (message "Checking letter '%s'" letter)
-                  (message "Does it match a recursive rule?")
+                  ;; (message "Checking letter '%s'" letter)
+                  ;; (message "Does it match a recursive rule?")
 
                   ;; Check if letter is a reference to recursive rules or a token
                   (if (gethash letter phps-mode-parser-custom--grammar)
                       (let ((recursive-match (phps-mode-parser-custom--parse-state letter)))
 
-                        (message "Found matching recursive rule '%s'" letter)
+                        ;; (message "Found matching recursive rule '%s'" letter)
 
                         ;; On match set response as argument and update remaining tokens
                         (if recursive-match
@@ -129,16 +129,16 @@
                            matches
                            nil)))
 
-                    (message "Did not find matching recursive rule")
+                    ;; (message "Did not find matching recursive rule")
 
                     (setq head-token (pop tokens))
 
-                    (message "Comparing letter '%s' with head-token '%s'" letter head-token)
+                    ;; (message "Comparing letter '%s' with head-token '%s'" letter head-token)
                     (if (equal (car head-token) letter)
                         (progn
-                          (message "Letter matches token")
+                          ;; (message "Letter matches token")
                           (push (buffer-substring-no-properties (car (cdr head-token)) (cdr (cdr head-token))) arguments))
-                      (message "Letter does not match token")
+                      ;; (message "Letter does not match token")
                       (setq matches nil)))))
 
               (when arguments
@@ -147,12 +147,13 @@
 
               (if matches
                   (progn
-                    (message "All letters matched tokens")
-                    (message "Arguments: '%s'" arguments)
+                    ;; (message "All letters matched tokens")
+                    ;; (message "Arguments: '%s'" arguments)
                     (setq looking nil)
                     (setq response (funcall rule-logic arguments))
                     (setq ret (list tokens response)))
-                (message "All letters did not match tokens"))
+                ;; (message "All letters did not match tokens")
+                )
               (setq rule (pop block))))
           ret)
       (signal 'error (list (format "Could not find state '%s' in grammar!" state))))))
