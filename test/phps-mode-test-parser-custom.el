@@ -115,106 +115,115 @@
 (defun phps-mode-test-parser-custom--parse-state ()
   "Run test for `phps-mode-parser-custom--parse-state'."
   (message "\n-- Run tests for parse-state. --")
+  (setq phps-mode-parser-custom--grammar (make-hash-table :test 'equal))
 
-  (let ((grammar (make-hash-table :test 'equal)))
+  ;; Setup grammar
+  (puthash
+   'close
+   (list
+    (list
+     (list 'T_CLOSE_TAG)
+     (lambda(a) (list 'CLOSE))))
+   phps-mode-parser-custom--grammar)
 
-    ;; Setup grammar
-    (puthash
-     'close
-     (list
-      (list
-       (list 'T_CLOSE_TAG)
-       (lambda() (list 'CLOSE))))
-     grammar)
+  (puthash
+   'open
+   (list
+    (list
+     (list 'T_OPEN_TAG)
+     (lambda(a) (list 'OPEN)))
+    (list
+     (list 'T_OPEN_TAG_WITH_ECHO)
+     (lambda(a) (list 'OPEN 'ECHO))))
+   phps-mode-parser-custom--grammar)
 
-    (puthash
-     'open
-     (list
-      (list
-       (list 'T_OPEN_TAG)
-       (lambda() (list 'OPEN)))
-      (list
-       (list 'T_OPEN_TAG_WITH_ECHO)
-       (lambda() (list 'OPEN 'ECHO))))
-     grammar)
+  (with-temp-buffer
+    (insert "?>")
+    (setq phps-mode-parser-custom--tokens (list '(T_OPEN_TAG 1 . 7)))
+    (should (equal (phps-mode-parser-custom--parse-state 'close) nil)))
+  (message "Passed test 1")
 
-    (setq phps-mode-parser-custom--grammar grammar)
+  (with-temp-buffer
+    (insert "?>")
+    (setq phps-mode-parser-custom--tokens (list '(T_CLOSE_TAG 1 . 3)))
+    (should (equal (phps-mode-parser-custom--parse-state 'close) (list nil (list 'CLOSE)))))
+  (message "Passed test 2")
 
-    (with-temp-buffer
-      (insert "?>")
-      (setq phps-mode-parser-custom--tokens (list '(T_OPEN_TAG 1 . 7)))
-      (should (equal (phps-mode-parser-custom--parse-state 'close) nil)))
+  (with-temp-buffer
+    (insert "<?php")
+    (setq phps-mode-parser-custom--tokens (list '(T_OPEN_TAG 1 . 5)))
+    (should (equal (phps-mode-parser-custom--parse-state 'close) nil)))
+  (message "Passed test 2")
 
-    (with-temp-buffer
-      (insert "<?php")
-      (setq phps-mode-parser-custom--tokens (list '(T_OPEN_TAG 1 . 7)))
-      (should (equal (phps-mode-parser-custom--parse-state 'close) nil)))
+  (with-temp-buffer
+    (insert "<?php")
+    (setq phps-mode-parser-custom--tokens (list '(T_OPEN_TAG 1 . 5)))
+    (should (equal (phps-mode-parser-custom--parse-state 'open) (list nil (list 'OPEN)))))
+  (message "Passed test 3")
 
-    (with-temp-buffer
-      (insert "<?= ?>")
-      (setq phps-mode-parser-custom--tokens
-            (list
-             '(T_OPEN_TAG_WITH_ECHO 1 . 4)
-             '(T_CLOSE_TAG 6 . 8)))
-      (should (equal (phps-mode-parser-custom--parse-state 'open) (list 'OPEN 'ECHO 'CLOSE))))
+  (with-temp-buffer
+    (insert "<?= ?>")
+    (setq phps-mode-parser-custom--tokens (list '(T_OPEN_TAG_WITH_ECHO 1 . 3)))
+    (should (equal (phps-mode-parser-custom--parse-state 'open) (list nil (list 'OPEN 'ECHO)))))
+  (message "Passed test 4")
 
-    (with-temp-buffer
-      (insert "<?= echo")
-      (setq phps-mode-parser-custom--tokens
-            (list
-             '(T_OPEN_TAG_WITH_ECHO 1 . 7)
-             '(T_ECHO 8 . 13)))
-      (should
-       (equal
-        (phps-mode-parser-custom--parse-state 'open)
-        (list 'OPEN 'ECHO 'ECHO))))
+  (with-temp-buffer
+    (insert "<?= echo")
+    (setq phps-mode-parser-custom--tokens
+          (list
+           '(T_OPEN_TAG_WITH_ECHO 1 . 7)
+           '(T_ECHO 8 . 13)))
+    (should
+     (equal
+      (phps-mode-parser-custom--parse-state 'open)
+      (list 'OPEN 'ECHO 'ECHO))))
 
-    (with-temp-buffer
-      (insert "<?= {")
-      (setq phps-mode-parser-custom--tokens
-            (list
-             '(T_OPEN_TAG_WITH_ECHO 1 . 7)
-             '("{" 8 . 12)))
-      (should
-       (equal
-        (phps-mode-parser-custom--parse-state 'open)
-        (list 'OPEN 'ECHO "{"))))
+  (with-temp-buffer
+    (insert "<?= {")
+    (setq phps-mode-parser-custom--tokens
+          (list
+           '(T_OPEN_TAG_WITH_ECHO 1 . 7)
+           '("{" 8 . 12)))
+    (should
+     (equal
+      (phps-mode-parser-custom--parse-state 'open)
+      (list 'OPEN 'ECHO "{"))))
 
-    (with-temp-buffer
-      (insert "<?= ?>")
-      (setq phps-mode-parser-custom--tokens
-            (list
-             '(T_OPEN_TAG_WITH_ECHO 1 . 3)
-             '(T_CLOSE_TAG 5 . 7)))
-      (should
-       (equal
-        (phps-mode-parser-custom--tokens-satisfy-rule 'open)
-        (list 'OPEN 'ECHO 'CLOSE))))
+  (with-temp-buffer
+    (insert "<?= ?>")
+    (setq phps-mode-parser-custom--tokens
+          (list
+           '(T_OPEN_TAG_WITH_ECHO 1 . 3)
+           '(T_CLOSE_TAG 5 . 7)))
+    (should
+     (equal
+      (phps-mode-parser-custom--tokens-satisfy-rule 'open)
+      (list 'OPEN 'ECHO 'CLOSE))))
 
-    (with-temp-buffer
-      (insert "<?= ?>")
-      (setq phps-mode-parser-custom--tokens
-            (list
-             '(T_OPEN_TAG_WITH_ECHO 1 . 7)
-             '(T_STRING 10 . 15)))
-      (should
-       (equal
-        (phps-mode-parser-custom--tokens-satisfy-rule 'open)
-        (list 'OPEN 'ECHO "random"))))
+  (with-temp-buffer
+    (insert "<?= ?>")
+    (setq phps-mode-parser-custom--tokens
+          (list
+           '(T_OPEN_TAG_WITH_ECHO 1 . 7)
+           '(T_STRING 10 . 15)))
+    (should
+     (equal
+      (phps-mode-parser-custom--tokens-satisfy-rule 'open)
+      (list 'OPEN 'ECHO "random"))))
 
-    (with-temp-buffer
-      (insert "<?= ?> echo")
-      (setq phps-mode-parser-custom--tokens
-            (list
-             '(T_OPEN_TAG_WITH_ECHO 1 . 7)
-             '(T_CLOSE_TAG 8 . 10)
-             '(T_ECHO 11 . 14)))
-      (should
-       (equal
-        (phps-mode-parser-custom--tokens-satisfy-rule 'open)
-        (list 'OPEN 'ECHO 'CLOSE 'ECHO))))
+  (with-temp-buffer
+    (insert "<?= ?> echo")
+    (setq phps-mode-parser-custom--tokens
+          (list
+           '(T_OPEN_TAG_WITH_ECHO 1 . 7)
+           '(T_CLOSE_TAG 8 . 10)
+           '(T_ECHO 11 . 14)))
+    (should
+     (equal
+      (phps-mode-parser-custom--tokens-satisfy-rule 'open)
+      (list 'OPEN 'ECHO 'CLOSE 'ECHO))))
 
-    (message "\n-- Ran tests for parse-state. --")))
+  (message "\n-- Ran tests for parse-state. --"))
 
 (defun phps-mode-test-parser-custom ()
   "Run test for custom parser."
