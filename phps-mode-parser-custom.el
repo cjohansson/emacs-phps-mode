@@ -41,38 +41,12 @@
 (defvar phps-mode-parser-custom--tokens nil
   "The current stack of tokens.")
 
-(defun phps-mode-parser--parse-state (name)
-  "Return evaluated rule NAME."
-  (let ((block
-            (gethash
-             name
-             phps-mode-parser-custom--grammar)))
-    (if block
-        (let ((response nil)
-              (looking t))
-          (while (and block looking)
-            (let ((rule (pop block)))
-              (let ((parsed-rule
-                     (phps-mode-parser-custom--tokens-parse-state
-                      phps-mode-parser-custom--tokens
-                      rule)))
-                (when parsed-rule
-                  (setq
-                   phps-mode-parser-custom--tokens
-                   (nth
-                    0
-                    parsed-rule))
-                  (setq
-                   response
-                   (nth
-                    1
-                    parsed-rule))
-                  (setq looking nil)))))
-          response)
-      (signal 'error (list (format "Could not find rule '%s' in grammar!" name))))))
 
-(defun phps-mode-parser-custom--parse-state (state &optional tokens-arg)
+
+(defun phps-mode-parser-custom--parse-state (&optional state tokens-arg)
   "Return remaining tokens and evaluated body if tokens match a rule in STATE of grammar, otherwise nil.  Use TOKENS-ARG if specified."
+  (unless state
+    (setq state phps-mode-parser-custom--state))
   (let ((block (gethash state phps-mode-parser-custom--grammar))
         (tokens)
         (initial-tokens))
@@ -158,26 +132,31 @@
           ret)
       (signal 'error (list (format "Could not find state '%s' in grammar!" state))))))
 
-(defun phps-mode-parser-custom--parse (tokens &optional buffer state)
-  "Parse TOKENS from BUFFER, optionally start at STATE.  Return abstract-syntax-tree and err signal."
-  (setq phps-mode-parser-custom--tokens tokens)
-  (setq phps-mode-parser-custom--ast nil)
-  (unless state
-    (setq state phps-mode-parser-custom--start-state))
-  (unless phps-mode-parser-custom--grammar
-    (signal 'error (list "Missing defined grammar!")))
+(defun phps-mode-parser-custom--parse (&optional tokens buffer state grammar)
+  "Parse TOKENS from BUFFER, optionally start at STATE in GRAMMAR.  Return abstract-syntax-tree and err signal."
   (unless buffer
     (setq buffer (current-buffer)))
   (with-current-buffer buffer
+    (setq phps-mode-parser-custom--ast nil)
+    (when tokens
+      (setq phps-mode-parser-custom--tokens tokens))
+    (when state
+      (setq phps-mode-parser-custom--state state))
+    (unless phps-mode-parser-custom--state
+      (setq phps-mode-parser-custom--state phps-mode-parser-custom--start-state))
+    (when grammar
+      (setq phps-mode-parser-custom--grammar grammar))
+    (unless phps-mode-parser-custom--grammar
+      (signal 'error (list "Missing defined grammar!")))
     (let ((ast)
           (err nil))
       (while (and
               phps-mode-parser-custom--tokens
               (not err))
-        (let ((consume (phps-mode-parser--parse-state state)))
+        (let ((consume (phps-mode-parser--parse-state)))
           (if consume
               (push consume ast)
-            (setq err (format "Failed to parse at state: %s, tokens: %s" state phps-mode-parser-custom--tokens)))))
+            (setq err (format "Failed to parse at state: %s, tokens: %s" phps-mode-parser-custom--state phps-mode-parser-custom--tokens)))))
       (list ast err))))
 
 (provide 'phps-mode-parser-custom)
