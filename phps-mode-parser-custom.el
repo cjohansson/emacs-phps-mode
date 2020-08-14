@@ -26,22 +26,17 @@
 
 ;;; Code:
 
+(require 'phps-mode-parser-custom-grammar)
+
 ;; Variables and constants:
 
-(defconst phps-mode-parser-custom--start-state 'open
-  "The default start state for parser.")
+
 
 (defvar-local phps-mode-parser-custom--ast nil
   "The current ast of parser.")
 
 (defvar-local phps-mode-parser-custom--error nil
   "The current error of parser.")
-
-(defvar phps-mode-parser-custom--grammar nil
-  "The current grammar.")
-
-(defvar-local phps-mode-parser-custom--state nil
-  "The current state of parser.")
 
 (defvar-local phps-mode-parser-custom--tokens nil
   "The current stack of tokens.")
@@ -52,8 +47,8 @@
 (defun phps-mode-parser-custom--parse-state (&optional state tokens-arg)
   "Return remaining tokens and evaluated body if tokens match a rule in STATE of grammar, otherwise nil.  Use TOKENS-ARG if specified."
   (unless state
-    (setq state phps-mode-parser-custom--state))
-  (let ((block (gethash state phps-mode-parser-custom--grammar))
+    (setq state phps-mode-parser-custom-grammar--state))
+  (let ((block (gethash state phps-mode-parser-custom-grammar))
         (tokens)
         (initial-tokens))
     (if tokens-arg
@@ -89,7 +84,7 @@
                   ;; (message "Does it match a recursive rule?")
 
                   ;; Check if letter is a reference to recursive rules or a token
-                  (if (gethash letter phps-mode-parser-custom--grammar)
+                  (if (gethash letter phps-mode-parser-custom-grammar)
                       (let ((recursive-match (phps-mode-parser-custom--parse-state letter)))
 
                         ;; (message "Found matching recursive rule '%s'" letter)
@@ -138,8 +133,8 @@
           ret)
       (signal 'error (list (format "Could not find state '%s' in grammar!" state))))))
 
-(defun phps-mode-parser-custom--parse (&optional tokens buffer state grammar)
-  "Parse TOKENS from BUFFER, optionally start at STATE in GRAMMAR.  Return abstract-syntax-tree and err signal."
+(defun phps-mode-parser-custom--parse (&optional tokens buffer state state-history grammar)
+  "Parse TOKENS from BUFFER, optionally start at STATE with STATE-HISTORY in GRAMMAR.  Return abstract-syntax-tree and err signal."
   (unless buffer
     (setq buffer (current-buffer)))
   (with-current-buffer buffer
@@ -147,27 +142,31 @@
     (setq phps-mode-parser-custom--error nil)
     (when tokens
       (setq phps-mode-parser-custom--tokens tokens))
+    (unless phps-mode-parser-custom--tokens
+      (signal 'error (list "Missing defined tokens!")))
     (when state
-      (setq phps-mode-parser-custom--state state))
-    (unless phps-mode-parser-custom--state
-      (setq phps-mode-parser-custom--state phps-mode-parser-custom--start-state))
+      (setq phps-mode-parser-custom-grammar--state state))
+    (when state-history
+      (setq phps-mode-parser-custom-grammar--state-history state-history))
+    (unless phps-mode-parser-custom-grammar--state
+      (setq phps-mode-parser-custom-grammar--state phps-mode-parser-custom-grammar--start-state))
     (when grammar
-      (setq phps-mode-parser-custom--grammar grammar))
-    (unless phps-mode-parser-custom--grammar
+      (setq phps-mode-parser-custom-grammar grammar))
+    (unless phps-mode-parser-custom-grammar
       (signal 'error (list "Missing defined grammar!")))
     (let ((ast))
       (while (and
               phps-mode-parser-custom--tokens
               (not phps-mode-parser-custom--error))
-        (let ((old-state phps-mode-parser-custom--state))
+        (let ((_old-state phps-mode-parser-custom-grammar--state))
           (let ((consume (phps-mode-parser-custom--parse-state)))
             (if consume
                 (let ((response-tokens (car consume))
                       (response-ast (cdr consume)))
-                  ;; (message "Successfully parsed grammar at state: '%s', new-state: '%s', response: '%s'" old-state phps-mode-parser-custom--state consume)
+                  ;; (message "Successfully parsed grammar at state: '%s', new-state: '%s', response: '%s'" _old-state phps-mode-parser-custom-grammar--state consume)
                   (setq phps-mode-parser-custom--tokens response-tokens)
                   (push response-ast ast))
-              (setq phps-mode-parser-custom--error (format "Failed to parse at state: %s, tokens: %s" phps-mode-parser-custom--state phps-mode-parser-custom--tokens))))))
+              (setq phps-mode-parser-custom--error (list phps-mode-parser-custom-grammar--state phps-mode-parser-custom--tokens))))))
       (when ast
         (setq ast (nreverse ast))
         (setq phps-mode-parser-custom--ast ast)))
