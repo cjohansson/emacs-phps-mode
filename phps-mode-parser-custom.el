@@ -72,64 +72,73 @@
                   (rule-grammar (car rule))
                   (rule-logic (car (cdr rule))))
 
-              ;; (message "Rule-grammar: '%s'" rule-grammar)
-              ;; (message "Rule-logic: '%s'" rule-logic)
+              ;; Empty rule only matches empty tokens
+              (if (equal rule-grammar (list nil))
+                  (if (equal tokens nil)
+                      (progn
+                        (setq looking nil)
+                        (setq response (funcall rule-logic arguments))
+                        (setq ret (list tokens response)))
+                    (setq matches nil))
 
-              ;; Iterate all letters of grammar, check if the match and build list of arguments
-              (while (and rule-grammar matches)
-                (let ((letter (pop rule-grammar))
-                      (head-token nil))
+                ;; (message "Rule-grammar: '%s'" rule-grammar)
+                ;; (message "Rule-logic: '%s'" rule-logic)
 
-                  ;; (message "Checking letter '%s'" letter)
-                  ;; (message "Does it match a recursive rule?")
+                ;; Iterate all letters of grammar, check if the match and build list of arguments
+                (while (and rule-grammar matches)
+                  (let ((letter (pop rule-grammar))
+                        (head-token nil))
 
-                  ;; Check if letter is a reference to recursive rules or a token
-                  (if (gethash letter phps-mode-parser-custom-grammar)
-                      (let ((recursive-match (phps-mode-parser-custom--parse-state letter)))
+                    ;; (message "Checking letter '%s'" letter)
+                    ;; (message "Does it match a recursive rule?")
 
-                        ;; (message "Found matching recursive rule '%s'" letter)
+                    ;; Check if letter is a reference to recursive rules or a token
+                    (if (gethash letter phps-mode-parser-custom-grammar)
+                        (let ((recursive-match (phps-mode-parser-custom--parse-state letter)))
 
-                        ;; On match set response as argument and update remaining tokens
-                        (if recursive-match
-                            (progn
-                              (setq
-                               tokens
-                               (nth 0 recursive-match))
-                              (push
-                               (nth 1 recursive-match)
-                               arguments))
+                          ;; (message "Found matching recursive rule '%s'" letter)
 
-                          ;; No recursive match means this rule does not match
-                          (setq
-                           matches
-                           nil)))
+                          ;; On match set response as argument and update remaining tokens
+                          (if recursive-match
+                              (progn
+                                (setq
+                                 tokens
+                                 (nth 0 recursive-match))
+                                (push
+                                 (nth 1 recursive-match)
+                                 arguments))
 
-                    ;; (message "Did not find matching recursive rule")
+                            ;; No recursive match means this rule does not match
+                            (setq
+                             matches
+                             nil)))
 
-                    (setq head-token (pop tokens))
+                      ;; (message "Did not find matching recursive rule")
 
-                    ;; (message "Comparing letter '%s' with head-token '%s'" letter head-token)
-                    (if (equal (car head-token) letter)
-                        (progn
-                          ;; (message "Letter matches token")
-                          (push (buffer-substring-no-properties (car (cdr head-token)) (cdr (cdr head-token))) arguments))
-                      ;; (message "Letter does not match token")
-                      (setq matches nil)))))
+                      (setq head-token (pop tokens))
 
-              (when arguments
-                ;; Reverse order of arguments
-                (setq arguments (nreverse arguments)))
+                      ;; (message "Comparing letter '%s' with head-token '%s'" letter head-token)
+                      (if (equal (car head-token) letter)
+                          (progn
+                            ;; (message "Letter matches token")
+                            (push (buffer-substring-no-properties (car (cdr head-token)) (cdr (cdr head-token))) arguments))
+                        ;; (message "Letter does not match token")
+                        (setq matches nil)))))
 
-              (if matches
-                  (progn
-                    ;; (message "All letters matched tokens")
-                    ;; (message "Arguments: '%s'" arguments)
-                    (setq looking nil)
-                    (setq response (funcall rule-logic arguments))
-                    (setq ret (list tokens response)))
-                ;; (message "All letters did not match tokens")
-                )
-              (setq rule (pop block))))
+                (when arguments
+                  ;; Reverse order of arguments
+                  (setq arguments (nreverse arguments)))
+
+                (if matches
+                    (progn
+                      ;; (message "All letters matched tokens")
+                      ;; (message "Arguments: '%s'" arguments)
+                      (setq looking nil)
+                      (setq response (funcall rule-logic arguments))
+                      (setq ret (list tokens response)))
+                  ;; (message "All letters did not match tokens")
+                  )
+                (setq rule (pop block)))))
           ret)
       (signal 'error (list (format "Could not find state '%s' in grammar!" state))))))
 

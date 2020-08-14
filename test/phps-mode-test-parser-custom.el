@@ -85,6 +85,12 @@
 
   ;; Setup grammar
   (puthash
+   'empty
+   (list
+    (list (list nil) (lambda(_a) nil)))
+   phps-mode-parser-custom-grammar)
+
+  (puthash
    'close
    (list
     (list
@@ -132,6 +138,11 @@
     (setq phps-mode-parser-custom--tokens (list '(T_OPEN_TAG_WITH_ECHO 1 . 3)))
     (should (equal (phps-mode-parser-custom--parse-state 'open) (list nil (list 'OPEN 'ECHO)))))
   (message "Passed test 4")
+
+  (with-temp-buffer
+    (setq phps-mode-parser-custom--tokens nil)
+    (should (equal (phps-mode-parser-custom--parse-state 'empty) (list nil nil))))
+  (message "Passed test 5")
 
   (message "\n-- Ran tests for parse-state. --"))
 
