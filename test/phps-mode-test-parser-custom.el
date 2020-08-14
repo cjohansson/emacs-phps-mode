@@ -32,6 +32,8 @@
   "Test `phps-mode-parser-custom--parse'."
   (message "-- Running tests for parse... --\n")
 
+  ;; TODO Redo these tests to use official grammar
+
 
   (setq phps-mode-parser-custom-grammar (make-hash-table :test 'equal))
 
@@ -81,68 +83,21 @@
 (defun phps-mode-test-parser-custom--parse-state ()
   "Run test for `phps-mode-parser-custom--parse-state'."
   (message "\n-- Run tests for parse-state. --\n")
-  (setq phps-mode-parser-custom-grammar (make-hash-table :test 'equal))
-
-  ;; Setup grammar
-  (puthash
-   'empty
-   (list
-    (list (list nil) (lambda(_a) nil)))
-   phps-mode-parser-custom-grammar)
-
-  (puthash
-   'close
-   (list
-    (list
-     (list 'T_CLOSE_TAG)
-     (lambda(a) (list 'CLOSE))))
-   phps-mode-parser-custom-grammar)
-
-  (puthash
-   'open
-   (list
-    (list
-     (list 'T_OPEN_TAG)
-     (lambda(a) (list 'OPEN)))
-    (list
-     (list 'T_OPEN_TAG_WITH_ECHO)
-     (lambda(a) (list 'OPEN 'ECHO))))
-   phps-mode-parser-custom-grammar)
-
-  (with-temp-buffer
-    (insert "?>")
-    (setq phps-mode-parser-custom--tokens (list '(T_OPEN_TAG 1 . 7)))
-    (should (equal (phps-mode-parser-custom--parse-state 'close) nil)))
-  (message "Passed test 1")
-
-  (with-temp-buffer
-    (insert "?>")
-    (setq phps-mode-parser-custom--tokens (list '(T_CLOSE_TAG 1 . 3)))
-    (should (equal (phps-mode-parser-custom--parse-state 'close) (list nil (list 'CLOSE)))))
-  (message "Passed test 2")
 
   (with-temp-buffer
     (insert "<?php")
     (setq phps-mode-parser-custom--tokens (list '(T_OPEN_TAG 1 . 5)))
-    (should (equal (phps-mode-parser-custom--parse-state 'close) nil)))
-  (message "Passed test 2")
+    (should (equal (phps-mode-parser-custom--parse-state 'use_type) nil)))
+  (message "Passed test - no matching tokens")
 
   (with-temp-buffer
-    (insert "<?php")
-    (setq phps-mode-parser-custom--tokens (list '(T_OPEN_TAG 1 . 5)))
-    (should (equal (phps-mode-parser-custom--parse-state 'open) (list nil (list 'OPEN)))))
-  (message "Passed test 3")
+    (insert "function")
+    (setq phps-mode-parser-custom--tokens (list '(T_FUNCTION 1 . 9)))
+    (should (equal (phps-mode-parser-custom--parse-state 'use_type) (list nil (list 'phps-mode-parser--ZEND_SYMBOL_FUNCTION)))))
+  (message "Passed test - all matching tokens")
 
-  (with-temp-buffer
-    (insert "<?= ?>")
-    (setq phps-mode-parser-custom--tokens (list '(T_OPEN_TAG_WITH_ECHO 1 . 3)))
-    (should (equal (phps-mode-parser-custom--parse-state 'open) (list nil (list 'OPEN 'ECHO)))))
-  (message "Passed test 4")
+  ;; TODO Make more state-based tests here
 
-  (with-temp-buffer
-    (setq phps-mode-parser-custom--tokens nil)
-    (should (equal (phps-mode-parser-custom--parse-state 'empty) (list nil nil))))
-  (message "Passed test 5")
 
   (message "\n-- Ran tests for parse-state. --"))
 
@@ -151,7 +106,7 @@
   (message "-- Running all tests for custom parser... --\n")
   ;; (setq debug-on-error t)
   (phps-mode-test-parser-custom--parse-state)
-  (phps-mode-test-parser-custom--parse)
+  ;; (phps-mode-test-parser-custom--parse)
   (message "\n-- Ran all tests for custom parser. --"))
 
 (phps-mode-test-parser-custom)

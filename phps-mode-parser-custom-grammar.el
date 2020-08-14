@@ -49,14 +49,12 @@
 ;; Setup grammar
 (setq phps-mode-parser-custom-grammar (make-hash-table :test 'equal))
 
-;; %empty:
 (puthash
  'empty
  (list
   (list (list nil) (lambda() nil)))
  phps-mode-parser-custom-grammar)
 
-;; start:
 (puthash
  'start
  (list
@@ -65,7 +63,6 @@
    (lambda(a) a)))
  phps-mode-parser-custom-grammar)
 
-;; reserved_non_modifiers:
 (puthash
  'reserved_non_modifiers
  (list
@@ -140,7 +137,6 @@
   )
  phps-mode-parser-custom-grammar)
 
-;; semi_reserved:
 (puthash
  'semi_reserved
  (list
@@ -154,10 +150,38 @@
   )
  phps-mode-parser-custom-grammar)
 
-;; TODO Was here
+(puthash
+ 'identifier
+ (list
+  (list (list 'T_STRING) (lambda(a) a))
+  (list (list 'semi_reserved) (lambda(a) a))
+  )
+ phps-mode-parser-custom-grammar)
 
+(puthash
+ 'top_statement_list
+ (list
+  (list (list 'top_statement_list 'top_statement) (lambda(a) a))
+  (list (list 'semi_reserved) (lambda(a) (list 'zval a)))
+  )
+ phps-mode-parser-custom-grammar)
 
-;; top_statement:
+(puthash
+ 'namespace_name
+ (list
+  (list (list 'T_STRING) (lambda(a) a))
+  (list (list 'namespace_name 'T_NS_SEPARATOR 'T_STRING) (lambda(a _b c) (list (concat a c))))
+  )
+ phps-mode-parser-custom-grammar)
+
+(puthash
+ 'name
+ (list
+  (list (list 'namespace_name) (lambda(a) (list 'attr 'phps-mode-parser--ZEND_NAME_NOT_FQ a)))
+  (list (list 'T_NAMESPACE 'T_NS_SEPARATOR 'namespace_name) (lambda(_a _b c) (list (list 'attr 'phps-mode-parser--ZEND_NAME_FQ c))))
+  )
+  phps-mode-parser-custom-grammar)
+
 (puthash
  'top_statement
  (list
@@ -202,6 +226,13 @@
    (list 'T_CONST 'const_list ";")
    (lambda(_a b _c) b))
   )
+ phps-mode-parser-custom-grammar)
+
+(puthash
+ 'use_type
+ (list
+  (list (list 'T_FUNCTION) (lambda(_a) (list 'phps-mode-parser--ZEND_SYMBOL_FUNCTION)))
+  (list (list 'T_CONST) (lambda(_a) (list 'phps-mode-parser--ZEND_SYMBOL_CONST))))
  phps-mode-parser-custom-grammar)
 
 
