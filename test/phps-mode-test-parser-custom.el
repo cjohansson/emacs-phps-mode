@@ -44,21 +44,21 @@
     (insert "<?php")
     (setq phps-mode-parser-custom--tokens (list '(T_OPEN_TAG 1 . 5)))
     (should (equal (phps-mode-parser-custom--parse-state 'use_type) nil)))
-  (message "Passed test - no matching tokens")
+  (message "Passed test - no matching tokens\n")
 
   (with-temp-buffer
     (insert "function")
     (setq phps-mode-parser-custom--tokens (list '(T_FUNCTION 1 . 9)))
     (should (equal (phps-mode-parser-custom--parse-state 'use_type) (list nil (list 'phps-mode-parser--ZEND_SYMBOL_FUNCTION)))))
-  (message "Passed test - all matching tokens")
+  (message "Passed test - all matching tokens\n")
 
   (with-temp-buffer
     (insert "Random")
     (setq phps-mode-parser-custom--tokens (list '(T_STRING 1 . 7)))
     (setq phps-mode-parser-custom-grammar--state 'name)
     (should (equal (phps-mode-parser-custom--parse-state 'name) (list nil '(attr phps-mode-parser--ZEND_NAME_NOT_FQ (("Random")))))))
-  (message "Passed test - matching all tokens from name state")
-
+  (message "Passed test - matching all tokens from name state\n")
+  
   (with-temp-buffer
     (insert "<?php Random;\n\nRandom\\Stuff\\Here();")
     (setq phps-mode-parser-custom--tokens (list '(T_STRING 16 . 22) '(T_NS_SEPARATOR 22 . 23) '(T_STRING 23 . 28) '(T_NS_SEPARATOR 28 . 29) '(T_STRING 29 . 33)))
