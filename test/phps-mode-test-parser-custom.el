@@ -32,50 +32,6 @@
   "Test `phps-mode-parser-custom--parse'."
   (message "-- Running tests for parse... --\n")
 
-  ;; TODO Redo these tests to use official grammar
-
-
-  (setq phps-mode-parser-custom-grammar (make-hash-table :test 'equal))
-
-  ;; Setup grammar
-  (puthash
-   'initial
-   (list
-    (list
-     (list 'T_CLOSE_TAG)
-     (lambda(a) (phps-mode-parser-custom-grammar--set-state 'open)(list 'CLOSE)))
-    (list
-     (list ";")
-     (lambda(a) (list 'SEMICOLON))))
-   phps-mode-parser-custom-grammar)
-
-  (puthash
-   'open
-   (list
-    (list
-     (list 'T_OPEN_TAG)
-     (lambda(a) (phps-mode-parser-custom-grammar--set-state 'initial)(list 'OPEN)))
-    (list
-     (list 'T_OPEN_TAG_WITH_ECHO)
-     (lambda(a) (phps-mode-parser-custom-grammar--set-state 'echo)(list 'OPEN 'ECHO)))
-    (list
-     (list 'T_INLINE_HTML)
-     (lambda(a) (list a))))
-   phps-mode-parser-custom-grammar)
-
-  (with-temp-buffer
-    (insert "<?php ?>random")
-    (setq phps-mode-parser-custom--tokens (list '(T_OPEN_TAG 1 . 7) '(";" 7 . 9) '(T_CLOSE_TAG 7 . 9) '(T_INLINE_HTML 9 . 15)))
-    (setq phps-mode-parser-custom-grammar--state 'open)
-    (should (equal (phps-mode-parser-custom--parse) (list (list (list '(OPEN)) (list '(SEMICOLON)) (list '(CLOSE)) (list (list '("random")))) nil))))
-  (message "Passed test 1")
-
-  (with-temp-buffer
-    (insert "<?php ?>random")
-    (setq phps-mode-parser-custom--tokens (list '(T_OPEN_TAG 1 . 7) '(";" 7 . 9) '(T_CLOSE_TAG 7 . 9) '(T_ECHO 9 . 13)))
-    (setq phps-mode-parser-custom-grammar--state 'open)
-    (should (equal (phps-mode-parser-custom--parse) (list (list (list '(OPEN)) (list '(SEMICOLON)) (list '(CLOSE))) (list 'open (list '(T_ECHO 9 . 13)))))))
-  (message "Passed test 2")
 
 
   (message "\n-- Ran tests for parse. --"))
@@ -95,6 +51,20 @@
     (setq phps-mode-parser-custom--tokens (list '(T_FUNCTION 1 . 9)))
     (should (equal (phps-mode-parser-custom--parse-state 'use_type) (list nil (list 'phps-mode-parser--ZEND_SYMBOL_FUNCTION)))))
   (message "Passed test - all matching tokens")
+
+  (with-temp-buffer
+    (insert "Random")
+    (setq phps-mode-parser-custom--tokens (list '(T_STRING 1 . 7)))
+    (setq phps-mode-parser-custom-grammar--state 'name)
+    (should (equal (phps-mode-parser-custom--parse-state 'name) (list nil '(attr phps-mode-parser--ZEND_NAME_NOT_FQ (("Random")))))))
+  (message "Passed test - matching all tokens from name state")
+
+  (with-temp-buffer
+    (insert "<?php Random;\n\nRandom\\Stuff\\Here();")
+    (setq phps-mode-parser-custom--tokens (list '(T_STRING 16 . 22) '(T_NS_SEPARATOR 22 . 23) '(T_STRING 23 . 28) '(T_NS_SEPARATOR 28 . 29) '(T_STRING 29 . 33)))
+    (setq phps-mode-parser-custom-grammar--state 'name)
+    (should (equal (phps-mode-parser-custom--parse-state 'name) (list nil '(attr phps-mode-parser--ZEND_NAME_NOT_FQ (("Random")))))))
+  (message "Passed test - matching all tokens from recursive state")
 
   ;; TODO Make more state-based tests here
 
