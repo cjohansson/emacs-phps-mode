@@ -56,7 +56,7 @@
     (insert "Random")
     (setq phps-mode-parser-custom--tokens (list '(T_STRING 1 . 7)))
     (setq phps-mode-parser-custom-grammar--state 'name)
-    (should (equal (phps-mode-parser-custom--parse-state 'name) (list nil '(attr phps-mode-parser--ZEND_NAME_NOT_FQ (("Random")))))))
+    (should (equal (phps-mode-parser-custom--parse-state 'name) (list nil '(attr phps-mode-parser--ZEND_NAME_NOT_FQ "Random")))))
   (message "Passed test - matching all tokens from name state\n")
   
   (with-temp-buffer
