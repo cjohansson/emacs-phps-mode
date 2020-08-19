@@ -27,6 +27,7 @@
 
 (require 'ert)
 (require 'phps-mode)
+(require 'phps-mode-test)
 
 (defun phps-mode-test-parser-custom--parse ()
   "Test `phps-mode-parser-custom--parse'."
@@ -79,10 +80,22 @@
 
   (message "\n-- Ran tests for parse-state. --"))
 
+(defun phps-mode-tester-parser-custom--generate-parser-table ()
+  "Test this."
+  (message "\n-- Run tests for generate-parser-table. --\n")
+
+  (should
+   (equal
+    (phps-mode-test--hash-to-list (phps-mode-parser-custom--generate-parser-table) t)
+    nil))
+
+  (message "\n-- Ran tests for generate-parser-table. --"))
+
 (defun phps-mode-test-parser-custom ()
   "Run test for custom parser."
   (message "-- Running all tests for custom parser... --\n")
   ;; (setq debug-on-error t)
+  (phps-mode-tester-parser-custom--generate-parser-table)
   (phps-mode-test-parser-custom--parse-state)
   ;; (phps-mode-test-parser-custom--parse)
   (message "\n-- Ran all tests for custom parser. --"))

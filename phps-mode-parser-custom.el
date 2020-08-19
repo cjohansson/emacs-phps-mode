@@ -41,8 +41,41 @@
 (defvar-local phps-mode-parser-custom--tokens nil
   "The current stack of tokens.")
 
+(defvar phps-mode-parser-custom--parser-table nil
+  "The LR(1) parser-table for grammar.")
+
 
 ;; Functions:
+
+(defun phps-mode-parser-custom--generate-parser-table (&optional grammar start)
+  "Generate parser-table for GRAMMAR starting at START."
+  (unless grammar
+    (setq grammar phps-mode-parser-custom-grammar))
+  (unless start
+    (setq start phps-mode-parser-custom-grammar--start-state))
+  (let ((state-queue (list start))
+        (parser-table (make-hash-table :test 'equal))
+        (state-name)
+        (parsed-states (make-hash-table :test 'equal)))
+    (setq state-name (pop state-queue))
+    (while state-name
+      (let ((state (gethash state-name grammar)))
+        (dolist (state-block state)
+          (let ((state-patterns (car state-block))
+                (state-logic (cdr state-block))
+                (state-action 'shift))
+            (when state-logic
+              (setq state-action 'reduce))
+            (puthash state-patterns (list state-action state-name) parser-table)
+            (dolist (state-pattern state-patterns)
+              (when (and
+                     (not (equal state-pattern state-name))
+                     (gethash state-pattern grammar)
+                     (not (gethash state-pattern parsed-states)))
+                (push state-pattern state-queue))))))
+      (puthash state-name t parsed-states)
+      (setq state-name (pop state-queue)))
+    parser-table))
 
 (defun phps-mode-parser-custom--parse-state (&optional state tokens-arg)
   "Return remaining tokens and evaluated body if tokens match a rule in STATE of grammar, otherwise nil.  Use TOKENS-ARG if specified."

@@ -105,7 +105,7 @@
      (when ,title
        (message "\nPassed tests for '%s'\n" ,title))))
 
-(defun phps-mode-test--hash-to-list (hash-table)
+(defun phps-mode-test--hash-to-list (hash-table &optional unsorted)
   "Return a list that represent the HASH-TABLE.  Each element is a list: (list key value)."
   (let (result)
     (if (hash-table-p hash-table)
@@ -114,7 +114,9 @@
            (lambda (k v)
              (push (list k v) result))
            hash-table)
-          (sort (nreverse result) (lambda (a b) (< (car a) (car b)))))
+          (unless unsorted
+            (sort (nreverse result) (lambda (a b) (< (car a) (car b)))))
+          result)
       nil)))
 
 (transient-mark-mode t)
