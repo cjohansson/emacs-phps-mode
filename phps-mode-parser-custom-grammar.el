@@ -174,9 +174,10 @@
  'name
  (list
   (list (list 'namespace_name) (lambda(a) (list 'attr 'phps-mode-parser--ZEND_NAME_NOT_FQ (car (car a)))))
-  (list (list 'T_NAMESPACE 'T_NS_SEPARATOR 'namespace_name) (lambda(_a _b c) (list (list 'attr 'phps-mode-parser--ZEND_NAME_FQ c))))
+  (list (list 'T_NAMESPACE 'T_NS_SEPARATOR 'namespace_name (lambda(_a _b c) (list 'attr 'phps-mode-parser--ZEND_NAME_RELATIVE c))))
+  (list (list 'T_NS_SEPARATOR 'namespace_name) (lambda(_a b) (list 'attr 'phps-mode-parser--ZEND_NAME_FQ b)))
   )
-  phps-mode-parser-custom-grammar)
+ phps-mode-parser-custom-grammar)
 
 (puthash
  'top_statement

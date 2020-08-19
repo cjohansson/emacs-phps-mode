@@ -61,10 +61,18 @@
   
   (with-temp-buffer
     (insert "<?php Random;\n\nRandom\\Stuff\\Here();")
+    (setq phps-mode-parser-custom--tokens (list '(T_NS_SEPARATOR 22 . 23) '(T_STRING 23 . 28)))
+    (setq phps-mode-parser-custom-grammar--state 'name)
+    (should (equal (phps-mode-parser-custom--parse-state 'name) (list nil '(attr phps-mode-parser--ZEND_NAME_FQ (("Random")))))))
+  (message "Passed test - matching all tokens from name state 2")
+
+  (with-temp-buffer
+    (insert "<?php Random;\n\nRandom\\Stuff\\Here();")
     (setq phps-mode-parser-custom--tokens (list '(T_STRING 16 . 22) '(T_NS_SEPARATOR 22 . 23) '(T_STRING 23 . 28) '(T_NS_SEPARATOR 28 . 29) '(T_STRING 29 . 33)))
     (setq phps-mode-parser-custom-grammar--state 'name)
     (should (equal (phps-mode-parser-custom--parse-state 'name) (list nil '(attr phps-mode-parser--ZEND_NAME_NOT_FQ (("Random")))))))
   (message "Passed test - matching all tokens from recursive state")
+
 
   ;; TODO Make more state-based tests here
 
