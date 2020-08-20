@@ -41,20 +41,58 @@
 (defvar-local phps-mode-parser-custom--tokens nil
   "The current stack of tokens.")
 
-(defvar phps-mode-parser-custom--parser-table nil
-  "The LR(1) parser-table for grammar.")
+(defvar phps-mode-parser-custom--parser-action-table nil
+  "The LR(1) parser action-table for grammar.")
+
+(defvar phps-mode-parser-custom--parser-goto-table nil
+  "The LR(1) parser goto-table for grammar.")
 
 
 ;; Functions:
 
-(defun phps-mode-parser-custom--generate-parser-table (&optional grammar start)
+(defun phps-mode-parser-custom--lr-parse (unscanned state parser-table)
+  "Parse UNSCANNED at STATE in PARSER-TABLE."
+  (let ((parse-tree)
+        (parse-stack)
+        (step 0)
+        (look-ahead)
+        (parse-action))
+    (setq look-ahead (car (car unscanned)))
+    (while look-ahead
+      (setq parse-stack (car parse-tree))
+      (message "Parse-state: '%s'" state)
+      (message "Parse-stack: '%s'" parse-stack)
+      (message "Look-ahead: '%s'" look-ahead)
+      (message "Unscanned: '%s'" unscanned)
+      (setq parse-action nil)
+      (when parse-stack
+        (when (gethash (list state parse-stack) parser-table)
+          (setq parse-action 'reduce)
+          (pop parse-tree)
+          (push (list (gethash (list state parse-stack) parser-table)) parse-tree)
+          (push nil parse-tree)
+          (setq state (gethash (list state parse-stack) parser-table) parse-tree)
+          (message "Action: 'reduce '%s' -> '%s'" parse-stack (gethash parse-stack parser-table))))
+      (unless parse-action
+        (push look-ahead parse-stack)
+        (pop unscanned)
+        (message "Action: 'shift '%s'" look-ahead)
+        (pop parse-tree)
+        (push parse-stack parse-tree))
+      (message "Parse-tree: '%s'\n" parse-tree)
+      (setq look-ahead (car (car unscanned))))
+    parse-tree))
+
+;; TODO Use tree-structure to store relationships between states
+(defun phps-mode-parser-custom--generate-parser (&optional grammar start)
   "Generate parser-table for GRAMMAR starting at START."
   (unless grammar
     (setq grammar phps-mode-parser-custom-grammar))
   (unless start
     (setq start phps-mode-parser-custom-grammar--start-state))
   (let ((state-queue (list start))
-        (parser-table (make-hash-table :test 'equal))
+        (action-table (make-hash-table :test 'equal))
+        (goto-table (make-hash-table :test 'equal))
         (state-name)
         (parsed-states (make-hash-table :test 'equal)))
     (setq state-name (pop state-queue))
@@ -62,20 +100,40 @@
       (let ((state (gethash state-name grammar)))
         (dolist (state-block state)
           (let ((state-patterns (car state-block))
-                (state-logic (cdr state-block))
-                (state-action 'shift))
-            (when state-logic
-              (setq state-action 'reduce))
-            (puthash state-patterns (list state-action state-name) parser-table)
-            (dolist (state-pattern state-patterns)
-              (when (and
-                     (not (equal state-pattern state-name))
-                     (gethash state-pattern grammar)
-                     (not (gethash state-pattern parsed-states)))
-                (push state-pattern state-queue))))))
+                (state-logic (cdr state-block)))
+            (let ((match-patterns (nreverse state-patterns)))
+              (message "Reduction: '%s' -> '%s'" match-patterns state-name)
+              (puthash (list state-name match-patterns) state-name action-table)
+              (dolist (state-pattern state-patterns)
+                (when (gethash state-pattern grammar)
+                  (let ((state-connections nil)
+                        (has-link))
+                    (when (gethash state-pattern goto-table)
+                      (setq state-connections (gethash state-pattern goto-table)))
+
+                    ;; Check if relationship is already saved
+                    (dolist (connection state-connections)
+                      (when (equal connection state-name)
+                        (setq has-link t)))
+
+                    ;; Save new relationship
+                    (unless has-link
+                      (push state-name state-connections)
+                      (message "Relationship: '%s' -> '%s'" state-pattern state-name))
+
+                    (puthash state-pattern state-connections goto-table))
+                  (when (and (not (equal state-pattern state-name))
+                             (not (gethash state-pattern parsed-states)))
+                    (message "State: '%s'" state-pattern)
+                    (push state-pattern state-queue))))))))
+
+      ;; Mark state as parsed
       (puthash state-name t parsed-states)
+
+      ;; Process next state in queue
       (setq state-name (pop state-queue)))
-    parser-table))
+    (setq phps-mode-parser-custom--parser-goto-table goto-table)
+    (setq phps-mode-parser-custom--parser-action-table action-table)))
 
 (defun phps-mode-parser-custom--parse-state (&optional state tokens-arg)
   "Return remaining tokens and evaluated body if tokens match a rule in STATE of grammar, otherwise nil.  Use TOKENS-ARG if specified."

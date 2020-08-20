@@ -84,10 +84,19 @@
   "Test this."
   (message "\n-- Run tests for generate-parser-table. --\n")
 
+  (phps-mode-parser-custom--generate-parser)
+
+  ;; (message "Parse-table: '%s'" parser-table)
+    
   (should
    (equal
-    (phps-mode-test--hash-to-list (phps-mode-parser-custom--generate-parser-table) t)
-    nil))
+    (phps-mode-parser-custom--lr-parse
+     (list '(T_STRING 16 . 22) '(T_NS_SEPARATOR 22 . 23) '(T_STRING 23 . 28) '(T_NS_SEPARATOR 28 . 29) '(T_STRING 29 . 33))
+     'name
+     phps-mode-parser-custom--parser-action-table
+     phps-mode-parser-custom--parser-goto-table)
+    'name
+    ))
 
   (message "\n-- Ran tests for generate-parser-table. --"))
 
