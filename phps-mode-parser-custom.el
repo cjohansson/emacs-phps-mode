@@ -80,7 +80,9 @@
         (let ((goto-states))
 
           (if state
-              (setq goto-states (gethash state goto-table))
+              (progn
+                (setq goto-states (gethash state goto-table))
+                (push state goto-states))
             (setq goto-states leaf-states))
 
           (message "Looking for reduction in goto-states: '%s'" goto-states)
@@ -129,43 +131,47 @@
         (leaf-states))
     (setq state-name (pop state-queue))
     (while state-name
+      (message "State: '%s'" state-name)
       (let ((is-leaf t))
         (let ((state (gethash state-name grammar)))
           (dolist (state-block state)
-            (let ((state-patterns (car state-block))
+            (let ((state-patterns (nreverse (car state-block)))
                   (state-logic (cdr state-block)))
-              (let ((match-patterns (nreverse state-patterns)))
-                (message "Reduction: '%s' -> '%s'" match-patterns state-name)
-                (puthash (list state-name match-patterns) state-name action-table)
-                (dolist (state-pattern state-patterns)
+              (message "Reduction: '%s' -> '%s'" state-patterns state-name)
+              (puthash (list state-name state-patterns) state-name action-table)
+              (message "State-patterns: '%s'" state-patterns)
+              (dolist (state-pattern state-patterns)
 
-                  ;; Does rule contain a branch?
-                  (when (gethash state-pattern grammar)
+                ;; Does rule contain a branch?
+                (if (gethash state-pattern grammar)
+                    (progn
+                      (message "Branch: '%s'" state-pattern)
 
-                    ;; This state is not a leaf
-                    (when is-leaf
-                      (setq is-leaf nil))
+                      ;; This state is not a leaf
+                      (when is-leaf
+                        (setq is-leaf nil))
 
-                    (let ((state-connections nil)
-                          (has-link))
-                      (when (gethash state-pattern goto-table)
-                        (setq state-connections (gethash state-pattern goto-table)))
+                      (let ((state-connections nil)
+                            (has-link))
+                        (when (gethash state-pattern goto-table)
+                          (setq state-connections (gethash state-pattern goto-table)))
 
-                      ;; Check if relationship is already saved
-                      (dolist (connection state-connections)
-                        (when (equal connection state-name)
-                          (setq has-link t)))
+                        ;; Check if relationship is already saved
+                        (dolist (connection state-connections)
+                          (when (equal connection state-name)
+                            (message "Relation ship already exists '%s'" state-name)
+                            (setq has-link t)))
 
-                      ;; Save new relationship
-                      (unless has-link
-                        (push state-name state-connections)
-                        (message "Relationship: '%s' -> '%s'" state-pattern state-name))
+                        ;; Save new relationship
+                        (unless has-link
+                          (push state-name state-connections)
+                          (message "Relationship: '%s' -> '%s'" state-pattern state-name))
 
-                      (puthash state-pattern state-connections goto-table))
-                    (when (and (not (equal state-pattern state-name))
-                               (not (gethash state-pattern parsed-states)))
-                      (message "State: '%s'" state-pattern)
-                      (push state-pattern state-queue))))))))
+                        (puthash state-pattern state-connections goto-table))
+                      (when (and (not (equal state-pattern state-name))
+                                 (not (gethash state-pattern parsed-states)))
+                        (push state-pattern state-queue)))
+                  (message "Leaf: '%s'" state-pattern))))))
 
         (when is-leaf
           (message "Leaf: '%s'" state-name)

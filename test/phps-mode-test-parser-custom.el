@@ -47,12 +47,12 @@
   (should
    (equal
     (phps-mode-parser-custom--parse
-     (list '(T_HALT_COMPILER 10 . 15) '("(" 15 . 16) '(")" 17 . 18) '(";" 19 . 20))
+     (list '(T_HALT_COMPILER 10 . 15) '("(" 15 . 16) '(")" 17 . 18) '(";" 19 . 20) '("$"))
      nil
      nil
      nil
-     'statement)
-    (list '(";" T_CONSTANT_ENCAPSED_STRING) '(reserved_non_modifiers))
+     'top_statement)
+    (list '("$") '(top_statement))
     ))
 
   (message "\n-- Ran tests for generate-parser-table. --"))

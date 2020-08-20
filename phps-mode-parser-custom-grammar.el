@@ -281,6 +281,19 @@
   )
  phps-mode-parser-custom-grammar)
 
+(puthash
+ 'inner_statement
+ (list
+  (list (list 'statement) (lambda(_a)))
+  (list (list 'function_declaration_statement) (lambda(_a)))
+  (list (list 'class_declaration_statement) (lambda(_a)))
+  (list (list 'trait_declaration_statement) (lambda(_a)))
+  (list (list 'interface_declaration_statement) (lambda(_a)))
+  (list (list 'T_HALT_COMPILER "(" ")" ";") (lambda(_a _b _c _d)))
+  )
+ phps-mode-parser-custom-grammar)
+
+
 
 (puthash
  'dereferencable_scalar:
