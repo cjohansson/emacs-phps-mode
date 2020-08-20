@@ -65,9 +65,13 @@
         (parse-stack)
         (step 0)
         (look-ahead)
-        (parse-action))
+        (parse-action)
+        (continue t))
     (setq look-ahead (car (car unscanned)))
-    (while look-ahead
+    (while continue
+      (unless look-ahead
+        (setq continue nil))
+
       (setq parse-stack (car parse-tree))
       (message "Parse-state: '%s'" state)
       (message "Parse-stack: '%s'" parse-stack)
@@ -80,9 +84,7 @@
         (let ((goto-states))
 
           (if state
-              (progn
-                (setq goto-states (gethash state goto-table))
-                (push state goto-states))
+              (setq goto-states (gethash state goto-table))
             (setq goto-states leaf-states))
 
           (message "Looking for reduction in goto-states: '%s'" goto-states)
@@ -107,12 +109,13 @@
                     (message "Action: 'reduce '%s' -> '%s'" parse-stack action)))
                 (setq goto-state (pop goto-states)))))))
 
-      (unless parse-action
+      (when (and (not parse-action) continue)
         (push look-ahead parse-stack)
         (pop unscanned)
         (message "Action: 'shift '%s'" look-ahead)
         (pop parse-tree)
         (push parse-stack parse-tree))
+
       (message "Parse-tree: '%s'\n" parse-tree)
       (setq look-ahead (car (car unscanned))))
     parse-tree))

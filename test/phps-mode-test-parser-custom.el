@@ -44,17 +44,6 @@
     (list '(";" T_CONSTANT_ENCAPSED_STRING) '(reserved_non_modifiers))
     ))
 
-  (should
-   (equal
-    (phps-mode-parser-custom--parse
-     (list '(T_HALT_COMPILER 10 . 15) '("(" 15 . 16) '(")" 17 . 18) '(";" 19 . 20) '("$"))
-     nil
-     nil
-     nil
-     'top_statement)
-    (list '("$") '(top_statement))
-    ))
-
   (message "\n-- Ran tests for generate-parser-table. --"))
 
 (defun phps-mode-test-parser-custom ()
