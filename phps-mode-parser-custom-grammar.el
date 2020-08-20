@@ -257,7 +257,29 @@
   (list (list 'unprefixed_use_declaration) (lambda (_a))))
  phps-mode-parser-custom-grammar)
 
+(puthash
+ 'use_declaration
+ (list
+  (list (list 'unprefixed_use_declaration) (lambda(_a)))
+  (list (list 'T_NS_SEPARATOR 'unprefixed_use_declaration) (lambda(_a _b)))
+  )
+ phps-mode-parser-custom-grammar)
 
+(puthash
+ 'const_list
+ (list
+  (list (list 'const_list "," 'const_decl) (lambda(_a _b _c)))
+  (list (list 'const_decl) (lambda(_a)))
+  )
+ phps-mode-parser-custom-grammar)
+
+(puthash
+ 'inner_statement_list
+ (list
+  (list (list 'inner_statement_list 'inner_statement) (lambda(_a _b)))
+  (list (list 'empty)(lambda(_a)))
+  )
+ phps-mode-parser-custom-grammar)
 
 
 (puthash

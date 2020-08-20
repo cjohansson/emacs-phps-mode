@@ -53,8 +53,8 @@
 
 ;; Functions:
 
-(defun phps-mode-parser-custom--parse (unscanned &optional leaf-states action-table goto-table)
-  "Parse UNSCANNED in LEAF-STATES, use parser ACTION-TABLE and GOTO-TABLE."
+(defun phps-mode-parser-custom--parse (unscanned &optional leaf-states action-table goto-table state)
+  "Parse UNSCANNED in LEAF-STATES, use parser ACTION-TABLE and GOTO-TABLE in STATE."
   (unless leaf-states
     (setq leaf-states phps-mode-parser-custom--parser-leaf-states))
   (unless action-table
@@ -65,8 +65,7 @@
         (parse-stack)
         (step 0)
         (look-ahead)
-        (parse-action)
-        (state))
+        (parse-action))
     (setq look-ahead (car (car unscanned)))
     (while look-ahead
       (setq parse-stack (car parse-tree))
