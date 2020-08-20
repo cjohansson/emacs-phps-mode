@@ -293,10 +293,38 @@
   )
  phps-mode-parser-custom-grammar)
 
+(puthash
+ 'statement
+ (list
+  (list (list "{" 'inner_statement_list "}") (lambda(_a _b _c)))
+  (list (list 'if_stmt) (lambda(_a)))
+  (list (list 'alt_if_stmt) (lambda(_a)))
+  (list (list 'T_WHILE "(" 'expr ")" 'while_statement) (lambda(_a _b _c _d _e)))
+  (list (list 'T_DO 'statement 'T_WHILE "(" 'expr ")" ";") (lambda(_a _b _c _d _e _f _g)))
+  (list (list 'T_FOR "(" 'for_exprs ";" 'for_exprs ";" 'for_exprs ")" 'for_statement) (lambda(_a _b _c _d _e _f _g _h _i)))
+  (list (list 'T_SWITCH "(" 'expr ")" 'switch_case_list) (lambda(_a)))
+  (list (list 'T_BREAK 'optional_expr ";") (lambda(_a)))
+  (list (list 'T_CONTINUE 'optional_expr ";") (lambda(_a)))
+  (list (list 'T_RETURN 'optional_expr ";") (lambda(_a)))
+  (list (list 'T_GLOBAL 'global_var_list ";") (lambda(_a)))
+  (list (list 'T_STATIC 'static_var_list ";") (lambda(_a)))
+  (list (list 'T_ECHO 'echo_expr_list ";") (lambda(_a)))
+  (list (list 'T_INLINE_HTML) (lambda(_a)))
+  (list (list 'expr ";") (lambda(_a)))
+  (list (list 'T_UNSET "(" 'unset_variables 'possible_comma ")" ";") (lambda(_a)))
+  (list (list 'T_FOREACH "(" 'expr 'T_AS 'foreach_variable ")" 'foreach_statement) (lambda(_a)))
+  (list (list 'T_FOREACH "(" 'expr 'T_AS 'foreach_variable 'T_DOUBLE_ARROW 'foreach_variable ")" 'foreach_statement) (lambda(_a)))
+  (list (list 'T_DECLARE "(" 'const_list ")") (lambda(_a)))
+  (list (list ";"))
+  (list (list 'T_TRY "{" 'inner_statement_list "}" 'catch_list 'finally_statement) (lambda(_a)))
+  (list (list 'T_GOTO 'T_STRING ";") (lambda(_a)))
+  (list (list 'T_STRING ",") (lambda(_a)))
+  )
+ phps-mode-parser-custom-grammar)
 
 
 (puthash
- 'dereferencable_scalar:
+ 'dereferencable_scalar
  (list
   (list (list 'T_ARRAY "(" 'array_pair_list ")") (lambda(_a _b _c _d)))
   (list (list "{" 'array_pair_list "}") (lambda (_a _b _c)))
