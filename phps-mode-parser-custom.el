@@ -53,13 +53,20 @@
 
 ;; Functions:
 
-(defun phps-mode-parser-custom--lr-parse (unscanned state parser-table)
-  "Parse UNSCANNED at STATE in PARSER-TABLE."
+(defun phps-mode-parser-custom--lr-parse (unscanned &optional leaf-states action-table goto-table)
+  "Parse UNSCANNED in LEAF-STATES, use parser ACTION-TABLE and GOTO-TABLE."
+  (unless leaf-states
+    (setq leaf-states phps-mode-parser-custom--parser-leaf-states))
+  (unless action-table
+    (setq action-table phps-mode-parser-custom--parser-action-table))
+  (unless goto-table
+    (setq goto-table phps-mode-parser-custom--parser-goto-table))
   (let ((parse-tree)
         (parse-stack)
         (step 0)
         (look-ahead)
-        (parse-action))
+        (parse-action)
+        (state))
     (setq look-ahead (car (car unscanned)))
     (while look-ahead
       (setq parse-stack (car parse-tree))
@@ -68,14 +75,37 @@
       (message "Look-ahead: '%s'" look-ahead)
       (message "Unscanned: '%s'" unscanned)
       (setq parse-action nil)
+
+      ;; If we have a parse-stack, match it to state-patterns
       (when parse-stack
-        (when (gethash (list state parse-stack) parser-table)
-          (setq parse-action 'reduce)
-          (pop parse-tree)
-          (push (list (gethash (list state parse-stack) parser-table)) parse-tree)
-          (push nil parse-tree)
-          (setq state (gethash (list state parse-stack) parser-table) parse-tree)
-          (message "Action: 'reduce '%s' -> '%s'" parse-stack (gethash parse-stack parser-table))))
+        (let ((goto-states))
+
+          (if state
+              (setq goto-states (gethash state goto-table))
+            (setq goto-states leaf-states))
+
+          (message "Looking for reduction in goto-states: '%s'" goto-states)
+          (when goto-states
+            (let ((goto-state)
+                  (searching-reduction t))
+              (setq goto-state (pop goto-states))
+
+              ;; Search all goto-states for reduction
+              (while (and
+                      goto-state
+                      searching-reduction)
+                (message "Looking for reductions in goto-state: '%s'" goto-state)
+                (when (gethash (list goto-state parse-stack) action-table)
+                  (let ((action (gethash (list goto-state parse-stack) action-table)))
+                    (setq searching-reduction nil)
+                    (setq parse-action 'reduce)
+                    (pop parse-tree)
+                    (push (list action) parse-tree)
+                    (push nil parse-tree)
+                    (setq state action)
+                    (message "Action: 'reduce '%s' -> '%s'" parse-stack action)))
+                (setq goto-state (pop goto-states)))))))
+
       (unless parse-action
         (push look-ahead parse-stack)
         (pop unscanned)

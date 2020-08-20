@@ -86,16 +86,13 @@
 
   (phps-mode-parser-custom--generate-parser)
 
-  ;; (message "Parse-table: '%s'" parser-table)
+  (message "Generated parser.\n")
     
   (should
    (equal
     (phps-mode-parser-custom--lr-parse
-     (list '(T_STRING 16 . 22) '(T_NS_SEPARATOR 22 . 23) '(T_STRING 23 . 28) '(T_NS_SEPARATOR 28 . 29) '(T_STRING 29 . 33))
-     'name
-     phps-mode-parser-custom--parser-action-table
-     phps-mode-parser-custom--parser-goto-table)
-    'name
+     (list '(T_ECHO 7 . 11) '(T_CONSTANT_ENCAPSED_STRING 12 . 22) '(";" 22 . 23)))
+    (list '(";" T_CONSTANT_ENCAPSED_STRING) '(reserved_non_modifiers))
     ))
 
   (message "\n-- Ran tests for generate-parser-table. --"))
