@@ -222,6 +222,53 @@
   (list (list 'T_CONST) (lambda(_a) (list 'phps-mode-parser--ZEND_SYMBOL_CONST))))
  phps-mode-parser-custom-grammar)
 
+(puthash
+ 'group_use_declaration:
+ (list
+  (list (list 'namespace_name 'T_NS_SEPARATOR "{" 'unprefixed_use_declarations 'possible_comma "}") (lambda (_a _b _c _d _e _f)))
+  (list (list 'T_NS_SEPARATOR 'namespace_name 'T_NS_SEPARATOR "{" 'unprefixed_use_declarations 'possible_comma "}") (lambda (_a _b _c _d _e _f _g _h))))
+ phps-mode-parser-custom-grammar)
+
+(puthash
+ 'mixed_group_use_declaration:
+ (list
+  (list (list 'namespace_name 'T_NS_SEPARATOR "{" 'inline_use_declarations 'possible_comma "}") (lambda(_a _b _c _d _e _f)))
+  (list (list 'T_NS_SEPARATOR 'namespace_name 'T_NS_SEPARATOR "{" 'inline_use_declarations 'possible_comma "}") (lambda(_a _b _c _d _e _f _g _h))))
+ phps-mode-parser-custom-grammar)
+
+(puthash
+ 'possible_comma
+ (list
+  (list (list 'empty))
+  (list (list ",")))
+ phps-mode-parser-custom-grammar)
+
+(puthash
+ 'inline_use_declarations
+ (list
+  (list (list 'inline_use_declarations "," 'inline_use_declaration)(lambda(_a _b _c)))
+  (list (list 'inline_use_declaration) (lambda (_a))))
+ phps-mode-parser-custom-grammar)
+
+(puthash
+ 'unprefixed_use_declarations
+ (list
+  (list (list 'unprefixed_use_declarations "," 'unprefixed_use_declaration) (lambda(_a _b _c)))
+  (list (list 'unprefixed_use_declaration) (lambda (_a))))
+ phps-mode-parser-custom-grammar)
+
+
+
+
+(puthash
+ 'dereferencable_scalar:
+ (list
+  (list (list 'T_ARRAY "(" 'array_pair_list ")") (lambda(_a _b _c _d)))
+  (list (list "{" 'array_pair_list "}") (lambda (_a _b _c)))
+  (list (list 'T_CONSTANT_ENCAPSED_STRING) (lambda (_a)))
+  (list (list "\"" 'encaps_list "\"") (lambda (_a _b _c))))
+ phps-mode-parser-custom-grammar)
+
 
 
 
