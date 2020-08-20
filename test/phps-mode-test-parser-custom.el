@@ -44,6 +44,13 @@
     (list '(";" T_CONSTANT_ENCAPSED_STRING) '(reserved_non_modifiers))
     ))
 
+  (should
+   (equal
+    (phps-mode-parser-custom--parse
+     (list '(T_FUNCTION 7 . 11)))
+     (list '(use_type))
+    ))
+
   (message "\n-- Ran tests for generate-parser-table. --"))
 
 (defun phps-mode-test-parser-custom ()

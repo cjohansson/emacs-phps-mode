@@ -104,7 +104,8 @@
                     (setq parse-action 'reduce)
                     (pop parse-tree)
                     (push (list action) parse-tree)
-                    (push nil parse-tree)
+                    (when continue
+                      (push nil parse-tree))
                     (setq state action)
                     (message "Action: 'reduce '%s' -> '%s'" parse-stack action)))
                 (setq goto-state (pop goto-states)))))))
@@ -148,7 +149,7 @@
                 ;; Does rule contain a branch?
                 (if (gethash state-pattern grammar)
                     (progn
-                      (message "Branch: '%s'" state-pattern)
+                      (message "Branch-pattern: '%s'" state-pattern)
 
                       ;; This state is not a leaf
                       (when is-leaf
@@ -174,10 +175,10 @@
                       (when (and (not (equal state-pattern state-name))
                                  (not (gethash state-pattern parsed-states)))
                         (push state-pattern state-queue)))
-                  (message "Leaf: '%s'" state-pattern))))))
+                  (message "Leaf-pattern: '%s'" state-pattern))))))
 
         (when is-leaf
-          (message "Leaf: '%s'" state-name)
+          (message "Leaf-state: '%s'" state-name)
           (push state-name leaf-states))
 
         ;; Mark state as parsed
