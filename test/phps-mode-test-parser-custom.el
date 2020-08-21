@@ -41,14 +41,30 @@
    (equal
     (phps-mode-parser-custom--parse
      (list '(T_ECHO 7 . 11) '(T_CONSTANT_ENCAPSED_STRING 12 . 22) '(";" 22 . 23)))
-    (list '(";" T_CONSTANT_ENCAPSED_STRING) '(reserved_non_modifiers))
+    '(";" T_CONSTANT_ENCAPSED_STRING reserved_non_modifiers)
     ))
 
   (should
    (equal
     (phps-mode-parser-custom--parse
      (list '(T_FUNCTION 7 . 11)))
-     (list '(use_type))
+    '(use_type)
+    ))
+
+  (should
+   (equal
+    (phps-mode-parser-custom--parse
+     (list '(T_HALT_COMPILER 7 . 11) '("(" 12 . 13) '(")" 14 . 15) '(";" 16 . 17))
+     'top_statement)
+    '(top_statement)
+    ))
+
+  (should
+   (equal
+    (phps-mode-parser-custom--parse
+     (list '(T_HALT_COMPILER 7 . 11) '("(" 12 . 13) '(")" 14 . 15))
+     'top_statement)
+    '(")" "(" T_HALT_COMPILER)
     ))
 
   (message "\n-- Ran tests for generate-parser-table. --"))

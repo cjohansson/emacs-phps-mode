@@ -53,7 +53,7 @@
 
 ;; Functions:
 
-(defun phps-mode-parser-custom--parse (unscanned &optional leaf-states action-table goto-table state)
+(defun phps-mode-parser-custom--parse (unscanned &optional state leaf-states action-table goto-table)
   "Parse UNSCANNED in LEAF-STATES, use parser ACTION-TABLE and GOTO-TABLE in STATE."
   (unless leaf-states
     (setq leaf-states phps-mode-parser-custom--parser-leaf-states))
@@ -61,8 +61,7 @@
     (setq action-table phps-mode-parser-custom--parser-action-table))
   (unless goto-table
     (setq goto-table phps-mode-parser-custom--parser-goto-table))
-  (let ((parse-tree)
-        (parse-stack)
+  (let ((parse-stack)
         (step 0)
         (look-ahead)
         (parse-action)
@@ -72,7 +71,6 @@
       (unless look-ahead
         (setq continue nil))
 
-      (setq parse-stack (car parse-tree))
       (message "Parse-state: '%s'" state)
       (message "Parse-stack: '%s'" parse-stack)
       (message "Look-ahead: '%s'" look-ahead)
@@ -102,24 +100,18 @@
                   (let ((action (gethash (list goto-state parse-stack) action-table)))
                     (setq searching-reduction nil)
                     (setq parse-action 'reduce)
-                    (pop parse-tree)
-                    (push (list action) parse-tree)
-                    (when continue
-                      (push nil parse-tree))
-                    (setq state action)
-                    (message "Action: 'reduce '%s' -> '%s'" parse-stack action)))
+                    (message "Action: reduce '%s' -> '%s'" parse-stack action)
+                    (setq parse-stack (list action))
+                    (setq state action)))
                 (setq goto-state (pop goto-states)))))))
 
       (when (and (not parse-action) continue)
         (push look-ahead parse-stack)
         (pop unscanned)
-        (message "Action: 'shift '%s'" look-ahead)
-        (pop parse-tree)
-        (push parse-stack parse-tree))
+        (message "Action: 'shift '%s'" look-ahead))
 
-      (message "Parse-tree: '%s'\n" parse-tree)
       (setq look-ahead (car (car unscanned))))
-    parse-tree))
+    parse-stack))
 
 (defun phps-mode-parser-custom--generate-parser (&optional grammar start)
   "Generate action-table, goto-table and leaf states for GRAMMAR starting at START."
@@ -136,6 +128,7 @@
     (setq state-name (pop state-queue))
     (while state-name
       (message "State: '%s'" state-name)
+      (puthash state-name (list state-name) goto-table)
       (let ((is-leaf t))
         (let ((state (gethash state-name grammar)))
           (dolist (state-block state)
@@ -155,8 +148,8 @@
                       (when is-leaf
                         (setq is-leaf nil))
 
-                      (let ((state-connections nil)
-                            (has-link))
+                      (let ((state-connections)
+                             (has-link))
                         (when (gethash state-pattern goto-table)
                           (setq state-connections (gethash state-pattern goto-table)))
 

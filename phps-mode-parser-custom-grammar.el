@@ -322,6 +322,55 @@
   )
  phps-mode-parser-custom-grammar)
 
+(puthash
+ 'catch_list
+ (list
+  (list (list 'empty) (lambda(_a)))
+  (list (list 'catch_list 'T_CATCH "(" 'catch_name_list 'optional_variable ")" "{" 'inner_statement_list "}") (lambda(_a)))
+  )
+ phps-mode-parser-custom-grammar)
+
+(puthash
+ 'catch_name_list
+ (list
+  (list (list 'class_name) (lambda(_a)))
+  (list (list 'catch_name_list "|" 'class_name) (lambda(_a)))
+  )
+phps-mode-parser-custom-grammar)
+
+(puthash
+ 'optional_variable
+ (list
+  (list (list 'empty) (lambda(_a)))
+  (list (list 'T_VARIABLE) (lambda(_a)))
+  )
+ phps-mode-parser-custom-grammar)
+
+(puthash
+ 'finally_statement
+ (list
+  (list (list 'empty) (lambda(_a)))
+  (list (list 'T_FINALLY "{" 'inner_statement_list "}") (lambda(_a)))
+  )
+ phps-mode-parser-custom-grammar)
+
+(puthash
+ 'unset_variables
+ (list
+  (list (list 'unset_variable) (lambda(_a)))
+  (list (list 'unset_variables "," 'unset_variable) (lambda(_a)))
+  )
+ phps-mode-parser-custom-grammar)
+
+(puthash
+ 'unset_variable
+ (list
+  (list (list 'variable) (lambda(_a)))
+  )
+ phps-mode-parser-custom-grammar)
+
+
+
 
 (puthash
  'dereferencable_scalar
