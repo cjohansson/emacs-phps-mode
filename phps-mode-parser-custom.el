@@ -68,8 +68,6 @@
         (continue t))
     (setq look-ahead (car (car unscanned)))
     (while continue
-      (unless look-ahead
-        (setq continue nil))
 
       (message "Parse-state: '%s'" state)
       (message "Parse-stack: '%s'" parse-stack)
@@ -96,24 +94,80 @@
                       goto-state
                       searching-reduction)
                 (message "Looking for reductions in goto-state: '%s'" goto-state)
-                (when (gethash (list goto-state parse-stack) action-table)
-                  (let ((action (gethash (list goto-state parse-stack) action-table)))
-                    (setq searching-reduction nil)
-                    (setq parse-action 'reduce)
-                    (message "Action: reduce '%s' -> '%s'" parse-stack action)
-                    (setq parse-stack (list action))
-                    (setq state action)))
-                (setq goto-state (pop goto-states)))))))
+                (let ((reductions (gethash goto-state action-table))
+                      (reduction)
+                      (reduction-search)
+                      (reduction-length))
+
+                  (when reductions
+                    (message "Found reductions: '%s'" reductions)
+
+                    ;; Iterate all possible reductions in state
+                    (setq reduction (pop reductions))
+                    (while (and searching-reduction reduction)
+                      (setq reduction-length 0)
+                      (setq reduction-search t)
+
+                      (if (< (length parse-stack) (length reduction))
+                          (progn
+                            (message "Reduction is longer than parse stack, ignore")
+                            (setq reduction-search nil))
+                        (message "Comparing parse-stack: '%s' with reduction: '%s'" parse-stack reduction)
+                        ;; Iterate all parts of pattern and compare with stack
+                        (setq reduction-subpattern (pop reduction))
+
+                        ;; Empty pattern is no match
+                        (unless reduction-subpattern
+                          (setq reduction-search nil))
+
+                        (while (and
+                                reduction-subpattern
+                                reduction-search)
+                          (setq reduction-length (1+ reduction-length))
+
+                          (if (equal
+                               (nth (1- reduction-length) parse-stack)
+                               reduction-subpattern)
+                              (message "Sub-pattern '%s' did match '%s'" reduction-subpattern (nth (1- reduction-length) parse-stack))
+                            (message "Sub-pattern '%s' did not match '%s'" reduction-subpattern (nth (1- reduction-length) parse-stack))
+                            (setq reduction-search nil))
+
+                          (setq reduction-subpattern (pop reduction)))
+
+                        ;; When we find a reduction, stop parent loop
+                        (when reduction-search
+                          (setq searching-reduction nil)))
+
+                      (setq reduction (pop reductions)))
+
+                    (if reduction-search
+                        (progn
+                          (setq parse-action 'reduce)
+                          (message "Action: reduction of length: %s -> '%s'" reduction-length goto-state)
+                          (let ((popped-parse-stack))
+                            (while (> reduction-length 0)
+                              (push (pop parse-stack) popped-parse-stack)
+                              (setq reduction-length (1- reduction-length)))
+                            (push goto-state parse-stack)
+                            (setq state goto-state)
+                            (message "Popped-parse-stack: '%s'" popped-parse-stack)
+                            (message "New-parse-stack: '%s'" parse-stack)
+                            (message "New-state: '%s'" state)))
+                      (message "Failed to find reduction."))
+
+                    (setq goto-state (pop goto-states)))))))))
 
       (when (and (not parse-action) continue)
-        (push look-ahead parse-stack)
-        (pop unscanned)
-        (message "Action: 'shift '%s'" look-ahead))
+        (if look-ahead
+            (progn
+              (push look-ahead parse-stack)
+              (pop unscanned)
+              (message "Action: 'shift '%s'" look-ahead))
+          (setq continue nil)))
 
       (setq look-ahead (car (car unscanned))))
     parse-stack))
 
-;; TODO Index at state, use list for patterns
 (defun phps-mode-parser-custom--generate-parser (&optional grammar start)
   "Generate action-table, goto-table and leaf states for GRAMMAR starting at START."
   (unless grammar
@@ -128,72 +182,73 @@
         (leaf-states))
     (setq state-name (pop state-queue))
     (while state-name
-      (message "State: '%s'" state-name)
+      (unless (gethash state-name parsed-states)
+        (message "State: '%s'" state-name)
 
-      ;; A state pattern is always reducible to itself
-      (puthash state-name (list state-name) goto-table)
+        ;; A state pattern is always reducible to itself
+        (puthash state-name (list state-name) goto-table)
 
-      (let ((is-leaf t))
-        (let ((state (gethash state-name grammar)))
+        (let ((is-leaf t))
+          (let ((state (gethash state-name grammar)))
 
-          ;; Iterate all grammar blocks in state
-          (dolist (state-block state)
-            (let ((state-patterns (nreverse (car state-block)))
-                  (state-logic (cdr state-block)))
-              (message "Reduction: '%s' -> '%s'" state-patterns state-name)
+            ;; Iterate all grammar blocks in state
+            (dolist (state-block state)
+              (let ((state-patterns (nreverse (car state-block)))
+                    (state-logic (cdr state-block)))
+                (message "Reduction: '%s' -> '%s'" state-patterns state-name)
 
-              (let ((existing-patterns (gethash state-name action-table)))
-                (if existing-patterns
-                    (push state-patterns existing-patterns)
-                  (setq existing-patterns (list state-patterns)))
-                (puthash state-name existing-patterns action-table)
-                (message "State-action-table: '%s'" existing-patterns))
+                (let ((existing-patterns (gethash state-name action-table)))
+                  (if existing-patterns
+                      (push state-patterns existing-patterns)
+                    (setq existing-patterns (list state-patterns)))
+                  (puthash state-name existing-patterns action-table)
+                  (message "State-action-table: '%s'" existing-patterns))
 
-              ;; Iterate all patterns in grammar block
-              (dolist (state-pattern state-patterns)
+                ;; Iterate all patterns in grammar block
+                (dolist (state-pattern state-patterns)
 
-                ;; Does rule contain a branch?
-                (if (and
-                     (not (equal state-pattern state-name))
-                     (gethash state-pattern grammar))
-                    (progn
-                      (message "Branch-pattern: '%s'" state-pattern)
+                  ;; Does rule contain a branch?
+                  (if (and
+                       (not (equal state-pattern state-name))
+                       (gethash state-pattern grammar))
+                      (progn
+                        (message "Branch-pattern: '%s'" state-pattern)
 
-                      ;; This state is not a leaf
-                      (when is-leaf
-                        (setq is-leaf nil))
+                        ;; This state is not a leaf
+                        (when is-leaf
+                          (setq is-leaf nil))
 
-                      (let ((state-connections)
-                             (has-link))
-                        (when (gethash state-pattern goto-table)
-                          (setq state-connections (gethash state-pattern goto-table)))
+                        (let ((state-connections)
+                              (has-link))
+                          (when (gethash state-pattern goto-table)
+                            (setq state-connections (gethash state-pattern goto-table)))
 
-                        ;; Check if relationship is already saved
-                        (dolist (connection state-connections)
-                          (when (equal connection state-name)
-                            (message "Relation ship already exists '%s'" state-name)
-                            (setq has-link t)))
+                          ;; Check if relationship is already saved
+                          (dolist (connection state-connections)
+                            (when (equal connection state-name)
+                              (message "Relation ship already exists '%s'" state-name)
+                              (setq has-link t)))
 
-                        ;; Save new relationship
-                        (unless has-link
-                          (push state-name state-connections)
-                          (message "Relationship: '%s' -> '%s'" state-pattern state-name))
+                          ;; Save new relationship
+                          (unless has-link
+                            (push state-name state-connections)
+                            (message "Relationship: '%s' -> '%s'" state-pattern state-name))
 
-                        (puthash state-pattern state-connections goto-table))
-                      (when (and (not (equal state-pattern state-name))
-                                 (not (gethash state-pattern parsed-states)))
-                        (push state-pattern state-queue)))
-                  (message "Leaf-pattern: '%s'" state-pattern))))))
+                          (puthash state-pattern state-connections goto-table))
+                        (when (and (not (equal state-pattern state-name))
+                                   (not (gethash state-pattern parsed-states)))
+                          (push state-pattern state-queue)))
+                    (message "Leaf-pattern: '%s'" state-pattern))))))
 
-        (when is-leaf
-          (message "Leaf-state: '%s'" state-name)
-          (push state-name leaf-states))
+          (when is-leaf
+            (message "Leaf-state: '%s'" state-name)
+            (push state-name leaf-states))
 
-        ;; Mark state as parsed
-        (puthash state-name t parsed-states)
+          ;; Mark state as parsed
+          (puthash state-name t parsed-states)))
 
-        ;; Process next state in queue
-        (setq state-name (pop state-queue))))
+      ;; Process next state in queue
+      (setq state-name (pop state-queue)))
     (setq phps-mode-parser-custom--parser-leaf-states leaf-states)
     (setq phps-mode-parser-custom--parser-goto-table goto-table)
     (setq phps-mode-parser-custom--parser-action-table action-table)))
