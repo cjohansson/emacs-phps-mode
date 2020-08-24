@@ -113,6 +113,7 @@
       (setq look-ahead (car (car unscanned))))
     parse-stack))
 
+;; TODO Index at state, use list for patterns
 (defun phps-mode-parser-custom--generate-parser (&optional grammar start)
   "Generate action-table, goto-table and leaf states for GRAMMAR starting at START."
   (unless grammar
@@ -128,19 +129,33 @@
     (setq state-name (pop state-queue))
     (while state-name
       (message "State: '%s'" state-name)
+
+      ;; A state pattern is always reducible to itself
       (puthash state-name (list state-name) goto-table)
+
       (let ((is-leaf t))
         (let ((state (gethash state-name grammar)))
+
+          ;; Iterate all grammar blocks in state
           (dolist (state-block state)
             (let ((state-patterns (nreverse (car state-block)))
                   (state-logic (cdr state-block)))
               (message "Reduction: '%s' -> '%s'" state-patterns state-name)
-              (puthash (list state-name state-patterns) state-name action-table)
-              (message "State-patterns: '%s'" state-patterns)
+
+              (let ((existing-patterns (gethash state-name action-table)))
+                (if existing-patterns
+                    (push state-patterns existing-patterns)
+                  (setq existing-patterns (list state-patterns)))
+                (puthash state-name existing-patterns action-table)
+                (message "State-action-table: '%s'" existing-patterns))
+
+              ;; Iterate all patterns in grammar block
               (dolist (state-pattern state-patterns)
 
                 ;; Does rule contain a branch?
-                (if (gethash state-pattern grammar)
+                (if (and
+                     (not (equal state-pattern state-name))
+                     (gethash state-pattern grammar))
                     (progn
                       (message "Branch-pattern: '%s'" state-pattern)
 
