@@ -261,7 +261,8 @@
                      (message "Leaf-pattern: '%s'" state-pattern)))))))
 
           (when is-leaf
-            (message "Leaf-state: '%s'" state-name)
+            (phps-mode-debug-message
+             (message "Leaf-state: '%s'" state-name))
             (push state-name leaf-states))
 
           ;; Mark state as parsed

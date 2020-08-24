@@ -56,6 +56,15 @@
   (should
    (equal
     (phps-mode-parser-custom--parse
+     (list '(T_STRING 1 . 10) '(T_NS_SEPARATOR 11 . 12) '(T_STRING 13 . 16) '(T_NS_SEPARATOR 17 . 18))
+     'namespace_name)
+    '(T_NS_SEPARATOR namespace_name)))
+  (message "Passed recursive semi-parse of namespace-name")
+
+  
+  (should
+   (equal
+    (phps-mode-parser-custom--parse
      (list '(T_ECHO 7 . 11) '(T_CONSTANT_ENCAPSED_STRING 12 . 22) '(";" 22 . 23)))
     '(";" T_CONSTANT_ENCAPSED_STRING reserved_non_modifiers)
     ))
