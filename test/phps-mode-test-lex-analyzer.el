@@ -261,7 +261,7 @@
 
   (phps-mode-test--with-buffer
    "<?php\nif ($shippingMethod->id ===\n        \\MyClass::METHOD_ID\n    ) {\n"
-   "Multi-linte if statement testing equality in two lines"
+   "Multi-line if statement testing equality in two lines"
    (phps-mode-test-lex-analyzer--alternative-indentation-whole-buffer)
    (let ((buffer-contents (buffer-substring-no-properties (point-min) (point-max))))
      (should (equal

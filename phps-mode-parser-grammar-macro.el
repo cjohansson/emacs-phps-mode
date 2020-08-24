@@ -49,7 +49,7 @@
   `(wisent-raw-tag
     (semantic-tag ,symbol 'ZEND_AST_CAST :subject ,subject)))
 
-(defun phps-mode-parser-grammar-macro-ZEND_AST_CREATE_EX (symbol operator &optional subject subject2 subject3)
+(defun phps-mode-parser-grammar-macro-ZEND_AST_CREATE_EX (symbol operator &optional subject subject2 _subject3)
   "Create stuff."
   (let ((attributes `(:operator ,operator)))
     (when subject
@@ -63,9 +63,9 @@
   `(wisent-raw-tag
     (semantic-tag ,subject 'ZEND_AST_LIST_RTRIM)))
 
-(defun phps-mode-parser-grammar-macro-ZEND_AST_CREATE_LIST (size type &rest elements)
+(defun phps-mode-parser-grammar-macro-ZEND_AST_CREATE_LIST (size type &rest _elements)
   `(wisent-raw-tag
-    (semantic-tag "" ,type :elements @elements :size ,size)))
+    (semantic-tag "" ,type :elements @_elements :size ,size)))
 
 (defun phps-mode-parser-grammar-macro-ZEND_AST_LIST_ADD (array new-element)
   `(wisent-raw-tag
@@ -81,7 +81,7 @@
 (defun phps-mode-parser-grammar-macro-ZVAL_INTERNED_STR (callback string)
   "Convert string to symbol."
   `(let ((symbol ',string))
-     (funcall callback symbol)))
+     (funcall ,callback symbol)))
 
 (defun phps-mode-parser-grammar-macro-ZEND_AST_CREATE_ZVAL_EX (subject symbol)
   `(wisent-raw-tag

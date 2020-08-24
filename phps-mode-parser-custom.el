@@ -69,10 +69,11 @@
     (setq look-ahead (car (car unscanned)))
     (while continue
 
-      (message "Parse-state: '%s'" state)
-      (message "Parse-stack: '%s'" parse-stack)
-      (message "Look-ahead: '%s'" look-ahead)
-      (message "Unscanned: '%s'" unscanned)
+      (phps-mode-debug-message
+       (message "Parse-state: '%s'" state)
+       (message "Parse-stack: '%s'" parse-stack)
+       (message "Look-ahead: '%s'" look-ahead)
+       (message "Unscanned: '%s'" unscanned))
       (setq parse-action nil)
 
       ;; If we have a parse-stack, match it to state-patterns
@@ -83,7 +84,9 @@
               (setq goto-states (gethash state goto-table))
             (setq goto-states leaf-states))
 
-          (message "Looking for reduction in goto-states: '%s'" goto-states)
+          (phps-mode-debug-message
+           (message "Looking for reduction in goto-states: '%s'" goto-states))
+
           (when goto-states
             (let ((goto-state)
                   (searching-reduction t))
@@ -93,14 +96,16 @@
               (while (and
                       goto-state
                       searching-reduction)
-                (message "Looking for reductions in goto-state: '%s'" goto-state)
+                (phps-mode-debug-message
+                 (message "Looking for reductions in goto-state: '%s'" goto-state))
                 (let ((reductions (gethash goto-state action-table))
                       (reduction)
                       (reduction-search)
                       (reduction-length))
 
                   (when reductions
-                    (message "Found reductions: '%s'" reductions)
+                    (phps-mode-debug-message
+                     (message "Found reductions: '%s'" reductions))
 
                     ;; Iterate all possible reductions in state
                     (setq reduction (pop reductions))
@@ -110,9 +115,11 @@
 
                       (if (< (length parse-stack) (length reduction))
                           (progn
-                            (message "Reduction is longer than parse stack, ignore")
+                            (phps-mode-debug-message
+                             (message "Reduction is longer than parse stack, ignore"))
                             (setq reduction-search nil))
-                        (message "Comparing parse-stack: '%s' with reduction: '%s'" parse-stack reduction)
+                        (phps-mode-debug-message
+                         (message "Comparing parse-stack: '%s' with reduction: '%s'" parse-stack reduction))
                         ;; Iterate all parts of pattern and compare with stack
                         (setq reduction-subpattern (pop reduction))
 
@@ -128,8 +135,10 @@
                           (if (equal
                                (nth (1- reduction-length) parse-stack)
                                reduction-subpattern)
-                              (message "Sub-pattern '%s' did match '%s'" reduction-subpattern (nth (1- reduction-length) parse-stack))
-                            (message "Sub-pattern '%s' did not match '%s'" reduction-subpattern (nth (1- reduction-length) parse-stack))
+                              (phps-mode-debug-message
+                               (message "Sub-pattern '%s' did match '%s'" reduction-subpattern (nth (1- reduction-length) parse-stack)))
+                            (phps-mode-debug-message
+                             (message "Sub-pattern '%s' did not match '%s'" reduction-subpattern (nth (1- reduction-length) parse-stack)))
                             (setq reduction-search nil))
 
                           (setq reduction-subpattern (pop reduction)))
@@ -143,17 +152,20 @@
                     (if reduction-search
                         (progn
                           (setq parse-action 'reduce)
-                          (message "Action: reduction of length: %s -> '%s'" reduction-length goto-state)
+                          (phps-mode-debug-message
+                           (message "Action: reduction of length: %s -> '%s'" reduction-length goto-state))
                           (let ((popped-parse-stack))
                             (while (> reduction-length 0)
                               (push (pop parse-stack) popped-parse-stack)
                               (setq reduction-length (1- reduction-length)))
                             (push goto-state parse-stack)
                             (setq state goto-state)
-                            (message "Popped-parse-stack: '%s'" popped-parse-stack)
-                            (message "New-parse-stack: '%s'" parse-stack)
-                            (message "New-state: '%s'" state)))
-                      (message "Failed to find reduction."))
+                            (phps-mode-debug-message
+                             (message "Popped-parse-stack: '%s'" popped-parse-stack)
+                             (message "New-parse-stack: '%s'" parse-stack)
+                             (message "New-state: '%s'" state))))
+                      (phps-mode-debug-message
+                       (message "Failed to find reduction.")))
 
                     (setq goto-state (pop goto-states)))))))))
 
@@ -162,7 +174,8 @@
             (progn
               (push look-ahead parse-stack)
               (pop unscanned)
-              (message "Action: 'shift '%s'" look-ahead))
+              (phps-mode-debug-message
+               (message "Action: 'shift '%s'" look-ahead)))
           (setq continue nil)))
 
       (setq look-ahead (car (car unscanned))))
@@ -183,7 +196,8 @@
     (setq state-name (pop state-queue))
     (while state-name
       (unless (gethash state-name parsed-states)
-        (message "State: '%s'" state-name)
+        (phps-mode-debug-message
+         (message "State: '%s'" state-name))
 
         ;; A state pattern is always reducible to itself
         (puthash state-name (list state-name) goto-table)
@@ -195,14 +209,16 @@
             (dolist (state-block state)
               (let ((state-patterns (nreverse (car state-block)))
                     (state-logic (cdr state-block)))
-                (message "Reduction: '%s' -> '%s'" state-patterns state-name)
+                (phps-mode-debug-message
+                 (message "Reduction: '%s' -> '%s'" state-patterns state-name))
 
                 (let ((existing-patterns (gethash state-name action-table)))
                   (if existing-patterns
                       (push state-patterns existing-patterns)
                     (setq existing-patterns (list state-patterns)))
                   (puthash state-name existing-patterns action-table)
-                  (message "State-action-table: '%s'" existing-patterns))
+                  (phps-mode-debug-message
+                   (message "State-action-table: '%s'" existing-patterns)))
 
                 ;; Iterate all patterns in grammar block
                 (dolist (state-pattern state-patterns)
@@ -212,7 +228,8 @@
                        (not (equal state-pattern state-name))
                        (gethash state-pattern grammar))
                       (progn
-                        (message "Branch-pattern: '%s'" state-pattern)
+                        (phps-mode-debug-message
+                         (message "Branch-pattern: '%s'" state-pattern))
 
                         ;; This state is not a leaf
                         (when is-leaf
@@ -226,19 +243,22 @@
                           ;; Check if relationship is already saved
                           (dolist (connection state-connections)
                             (when (equal connection state-name)
-                              (message "Relation ship already exists '%s'" state-name)
+                              (phps-mode-debug-message
+                               (message "Relation ship already exists '%s'" state-name))
                               (setq has-link t)))
 
                           ;; Save new relationship
                           (unless has-link
                             (push state-name state-connections)
-                            (message "Relationship: '%s' -> '%s'" state-pattern state-name))
+                            (phps-mode-debug-message
+                             (message "Relationship: '%s' -> '%s'" state-pattern state-name)))
 
                           (puthash state-pattern state-connections goto-table))
                         (when (and (not (equal state-pattern state-name))
                                    (not (gethash state-pattern parsed-states)))
                           (push state-pattern state-queue)))
-                    (message "Leaf-pattern: '%s'" state-pattern))))))
+                    (phps-mode-debug-message
+                     (message "Leaf-pattern: '%s'" state-pattern)))))))
 
           (when is-leaf
             (message "Leaf-state: '%s'" state-name)
