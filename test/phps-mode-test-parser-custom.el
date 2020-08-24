@@ -36,7 +36,23 @@
   (phps-mode-parser-custom--generate-parser)
 
   (message "Generated parser.\n")
-    
+
+  (should
+   (equal
+    (phps-mode-parser-custom--parse
+     (list '(T_STRING 1 . 10))
+     'namespace_name)
+    '(namespace_name)))
+  (message "Passed non-recursive parse of namespace-name")
+
+  (should
+   (equal
+    (phps-mode-parser-custom--parse
+     (list '(T_STRING 1 . 10) '(T_NS_SEPARATOR 11 . 12) '(T_STRING 13 . 16) '(T_NS_SEPARATOR 17 . 18) '(T_STRING 19 . 29))
+     'namespace_name)
+    '(namespace_name)))
+  (message "Passed recursive parse of namespace-name")
+
   (should
    (equal
     (phps-mode-parser-custom--parse
