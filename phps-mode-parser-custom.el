@@ -98,19 +98,25 @@
                       goto-state
                       searching-reduction)
                 (phps-mode-debug-message
-                 (message "Looking for reductions in goto-state: '%s'" goto-state))
-                (let ((reductions (gethash goto-state action-table))
+                 (message "Looking for actions in goto-state: '%s'" goto-state))
+                (let ((actions (gethash goto-state action-table))
+                      (action)
                       (reduction)
+                      (logic)
                       (reduction-search)
                       (reduction-length))
 
-                  (when reductions
+                  (when actions
                     (phps-mode-debug-message
-                     (message "Found reductions: '%s'" reductions))
+                     (message "Found actions: '%s'" actions))
 
                     ;; Iterate all possible reductions in state
-                    (setq reduction (pop reductions))
-                    (while (and searching-reduction reduction)
+                    (setq action (pop actions))
+                    (while (and searching-reduction action)
+                      (setq reduction (car action))
+                      (setq logic (car (car (cdr action))))
+                      (phps-mode-debug-message
+                       (message "Logic: %s" logic))
                       (setq reduction-length 0)
                       (setq reduction-search t)
 
@@ -148,7 +154,7 @@
                         (when reduction-search
                           (setq searching-reduction nil)))
 
-                      (setq reduction (pop reductions)))
+                      (setq action (pop actions)))
 
                     (if reduction-search
                         (progn
@@ -175,6 +181,14 @@
 
                               (push (pop parse-stack) popped-parse-stack)
                               (setq reduction-length (1- reduction-length)))
+
+                            ;; If reduction has logic attached, call logic with popped-parse-tree as argument
+                            (when logic
+                              (let ((arguments (nreverse popped-parse-tree)))
+                                (phps-mode-debug-message
+                                 (message "Calling '%s' with arguments: '%s'" logic arguments))
+                                (funcall logic (nreverse popped-parse-tree))))
+
                             (push goto-state parse-stack)
                             (push `(,goto-state ,popped-parse-tree-start . ,popped-parse-tree-end) parse-tree)
                             (setq state goto-state)
@@ -233,8 +247,8 @@
 
                 (let ((existing-patterns (gethash state-name action-table)))
                   (if existing-patterns
-                      (push state-patterns existing-patterns)
-                    (setq existing-patterns (list state-patterns)))
+                      (push (list state-patterns state-logic) existing-patterns)
+                    (setq existing-patterns (list (list state-patterns state-logic))))
                   (puthash state-name existing-patterns action-table)
                   (phps-mode-debug-message
                    (message "State-action-table: '%s'" existing-patterns)))

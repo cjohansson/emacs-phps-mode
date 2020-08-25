@@ -166,7 +166,7 @@
  'namespace_name
  (list
   (list (list 'T_STRING))
-  (list (list 'namespace_name 'T_NS_SEPARATOR 'T_STRING) (lambda(a _b c) (list (concat a c))))
+  (list (list 'namespace_name 'T_NS_SEPARATOR 'T_STRING) (lambda(a) (message "NAMESPACE-%s" a)))
   )
  phps-mode-parser-custom-grammar)
 
