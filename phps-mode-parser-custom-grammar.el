@@ -322,6 +322,65 @@
  (list (list 'class_modifier))
  (list (list 'class_modifiers 'class_modifier)))
 
+(phps-mode-paser-custom-grammar--block
+ 'class_modifier
+ (list (list 'T_ABSTRACT))
+ (list (list 'T_FINAL)))
+
+(phps-mode-paser-custom-grammar--block
+ 'trait_declaration_statement
+ (list (list 'T_TRAIT 'T_STRING 'backup_doc_comment "{" 'class_statement_list "}")))
+
+(phps-mode-paser-custom-grammar--block
+ 'interface_declaration_statement
+ (list (list 'T_INTERFACE 'T_STRING 'interface_extends_list 'backup_doc_comment "{" 'class_statement_list "}")))
+
+(phps-mode-paser-custom-grammar--block
+ 'extends_from
+ (list (list 'empty))
+ (list (list 'T_EXTENDS 'class_name)))
+
+(phps-mode-paser-custom-grammar--block
+ 'interface_extends_list
+ (list (list 'empty))
+ (list (list 'T_EXTENDS 'class_name_list)))
+
+(phps-mode-paser-custom-grammar--block
+ 'implements_list
+ (list (list 'empty))
+ (list (list 'T_IMPLEMENTS 'class_name_list)))
+
+(phps-mode-paser-custom-grammar--block
+ 'foreach_variable
+ (list (list 'variable))
+ (list (list "&" 'variable))
+ (list (list 'T_LIST "(" 'array_pair_list ")"))
+ (list (list "{" 'array_pair_list "}")))
+
+(phps-mode-paser-custom-grammar--block
+ 'for_statement
+ (list (list 'statement))
+ (list (list "," 'inner_statement_list 'T_ENDFOR ";")))
+
+(phps-mode-paser-custom-grammar--block
+ 'foreach_statement
+ (list (list 'statement))
+ (list (list "," 'inner_statement_list 'T_ENDFOREACH ";")))
+
+(phps-mode-paser-custom-grammar--block
+ 'declare_statement
+ (list (list 'statement))
+ (list (list "," 'inner_statement_list 'T_ENDDECLARE ";")))
+
+(phps-mode-paser-custom-grammar--block
+ 'switch_case_list
+ (list (list "{" 'case_list "}"))
+ (list (list "{" ";" 'case_list "}"))
+ (list (list "," 'case_list 'T_ENDSWITCH ";"))
+ (list (list ":" ";" 'case_list 'T_ENDSWITCH ";")))
+
+
+
 
 
 (phps-mode-paser-custom-grammar--block
