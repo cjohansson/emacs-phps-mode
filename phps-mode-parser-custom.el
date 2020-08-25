@@ -62,6 +62,7 @@
   (unless goto-table
     (setq goto-table phps-mode-parser-custom--parser-goto-table))
   (let ((parse-stack)
+        (parse-tree)
         (step 0)
         (look-ahead)
         (parse-action)
@@ -116,7 +117,7 @@
                       (if (< (length parse-stack) (length reduction))
                           (progn
                             (phps-mode-debug-message
-                             (message "Reduction is longer than parse stack, ignore"))
+                             (message "Reduction is longer than parse stack, ignoring"))
                             (setq reduction-search nil))
                         (phps-mode-debug-message
                          (message "Comparing parse-stack: '%s' with reduction: '%s'" parse-stack reduction))
@@ -154,11 +155,28 @@
                           (setq parse-action 'reduce)
                           (phps-mode-debug-message
                            (message "Action: reduction of length: %s -> '%s'" reduction-length goto-state))
-                          (let ((popped-parse-stack))
+                          (let ((popped-parse-stack)
+                                (popped-parse-tree)
+                                (popped-parse-tree-start)
+                                (popped-parse-tree-end)
+                                (popped-token))
                             (while (> reduction-length 0)
+                              ;; Save min and max point in buffer
+                              (let ((popped-token (pop parse-tree)))
+                                (when (or
+                                       (not popped-parse-tree-end)
+                                       (> (cdr (cdr popped-token)) popped-parse-tree-end))
+                                  (setq popped-parse-tree-end (cdr (cdr popped-token))))
+                                (when (or
+                                       (not popped-parse-tree-start)
+                                       (< (car (cdr popped-token)) popped-parse-tree-start))
+                                  (setq popped-parse-tree-start (car (cdr popped-token))))
+                                (push popped-token popped-parse-tree))
+
                               (push (pop parse-stack) popped-parse-stack)
                               (setq reduction-length (1- reduction-length)))
                             (push goto-state parse-stack)
+                            (push `(,goto-state ,popped-parse-tree-start . ,popped-parse-tree-end) parse-tree)
                             (setq state goto-state)
                             (phps-mode-debug-message
                              (message "Popped-parse-stack: '%s'" popped-parse-stack)
@@ -173,13 +191,14 @@
         (if look-ahead
             (progn
               (push look-ahead parse-stack)
+              (push (car unscanned) parse-tree)
               (pop unscanned)
               (phps-mode-debug-message
                (message "Action: 'shift '%s'" look-ahead)))
           (setq continue nil)))
 
       (setq look-ahead (car (car unscanned))))
-    parse-stack))
+    (nreverse parse-tree)))
 
 (defun phps-mode-parser-custom--generate-parser (&optional grammar start)
   "Generate action-table, goto-table and leaf states for GRAMMAR starting at START."

@@ -42,7 +42,7 @@
     (phps-mode-parser-custom--parse
      (list '(T_STRING 1 . 10))
      'namespace_name)
-    '(namespace_name)))
+    (list '(namespace_name  1 . 10))))
   (message "Passed non-recursive parse of namespace-name")
 
   (should
@@ -50,7 +50,7 @@
     (phps-mode-parser-custom--parse
      (list '(T_STRING 1 . 10) '(T_NS_SEPARATOR 11 . 12) '(T_STRING 13 . 16) '(T_NS_SEPARATOR 17 . 18) '(T_STRING 19 . 29))
      'namespace_name)
-    '(namespace_name)))
+    (list '(namespace_name  1 . 29))))
   (message "Passed recursive parse of namespace-name")
 
   (should
@@ -58,39 +58,36 @@
     (phps-mode-parser-custom--parse
      (list '(T_STRING 1 . 10) '(T_NS_SEPARATOR 11 . 12) '(T_STRING 13 . 16) '(T_NS_SEPARATOR 17 . 18))
      'namespace_name)
-    '(T_NS_SEPARATOR namespace_name)))
+    (list '(namespace_name 1 . 16) '(T_NS_SEPARATOR 17 . 18))))
   (message "Passed recursive semi-parse of namespace-name")
 
-  
   (should
    (equal
     (phps-mode-parser-custom--parse
      (list '(T_ECHO 7 . 11) '(T_CONSTANT_ENCAPSED_STRING 12 . 22) '(";" 22 . 23)))
-    '(";" T_CONSTANT_ENCAPSED_STRING reserved_non_modifiers)
-    ))
+    (list '(reserved_non_modifiers 7 . 11) '(T_CONSTANT_ENCAPSED_STRING 12 . 22) '(";" 22 . 23))))
 
   (should
    (equal
     (phps-mode-parser-custom--parse
      (list '(T_FUNCTION 7 . 11)))
-    '(use_type)
-    ))
+    (list '(use_type 7 . 11))))
 
   (should
    (equal
     (phps-mode-parser-custom--parse
      (list '(T_HALT_COMPILER 7 . 11) '("(" 12 . 13) '(")" 14 . 15) '(";" 16 . 17))
      'top_statement)
-    '(top_statement)
-    ))
+    (list '(top_statement 7 . 17))))
+  (message "Passed full top_statement")
 
   (should
    (equal
     (phps-mode-parser-custom--parse
      (list '(T_HALT_COMPILER 7 . 11) '("(" 12 . 13) '(")" 14 . 15))
      'top_statement)
-    '(")" "(" T_HALT_COMPILER)
-    ))
+    (list '(T_HALT_COMPILER 7 . 11) '("(" 12 . 13) '(")" 14 . 15))))
+  (message "Passed incomplete top_statement")
 
   (message "\n-- Ran tests for generate-parser-table. --"))
 

@@ -369,8 +369,43 @@ phps-mode-parser-custom-grammar)
   )
  phps-mode-parser-custom-grammar)
 
+(puthash
+ 'function_declaration_statement
+ (list
+  (list (list 'function 'returns_ref 'T_STRING 'backup_doc_comment "(" 'parameter_list ")" 'return_type 'backup_fn_flags "{" 'inner_statement_list "}" 'backup_fn_flags)))
+ phps-mode-parser-custom-grammar)
 
+(puthash
+ 'is_reference:
+ (list
+  (list (list 'empty))
+  (list (list 'BITWISE_AND))
+  )
+ phps-mode-parser-custom-grammar)
 
+(puthash
+ 'is_variadic
+ (list
+  (list (list 'empty))
+  (list (list 'T_ELLIPSIS))
+  )
+ phps-mode-parser-custom-grammar)
+
+(puthash
+ 'class_declaration_statement
+ (list
+  (list (list 'class_modifiers 'T_CLASS 'T_STRING 'extends_from 'implements_list 'backup_doc_comment "{" 'class_statement_list "}"))
+  (list (list 'T_CLASS 'T_STRING 'extends_from 'implements_list 'backup_doc_comment "{" 'class_statement_list "}"))
+  )
+ phps-mode-parser-custom-grammar)
+
+(puthash
+ 'class_modifiers
+ (list
+  (list (list 'class_modifier))
+  (list (list 'class_modifiers 'class_modifier))
+  )
+ phps-mode-parser-custom-grammar)
 
 (puthash
  'dereferencable_scalar
