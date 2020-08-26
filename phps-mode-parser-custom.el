@@ -82,7 +82,7 @@
         (let ((goto-states))
 
           (if state
-              (setq goto-states (gethash state goto-table))
+              (setq goto-states (reverse (gethash state goto-table)))
             (setq goto-states leaf-states))
 
           (phps-mode-debug-message

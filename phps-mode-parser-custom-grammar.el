@@ -460,6 +460,138 @@
  (list (list "?" 'type_without_static))
  (list (list 'union_type_without_static)))
 
+(phps-mode-paser-custom-grammar--block
+ 'type_without_static
+ (list (list 'T_ARRAY))
+ (list (list 'T_CALLABLE))
+ (list (list 'name)))
+
+(phps-mode-paser-custom-grammar--block
+ 'union_type_without_static
+ (list (list 'type_without_static "|" 'type_without_static))
+ (list (list 'union_type_without_static "|" 'type_without_static)))
+
+(phps-mode-paser-custom-grammar--block
+ 'return_type
+ (list (list 'empty))
+ (list (list ":" 'type_expr)))
+
+(phps-mode-paser-custom-grammar--block
+ 'argument_list
+ (list (list "(" ")"))
+ (list (list "(" 'non_empty_argument_list 'possible_comma ")")))
+
+(phps-mode-paser-custom-grammar--block
+ 'non_empty_argument_list
+ (list (list 'argument))
+ (list (list 'non_empty_argument_list "," 'argument)))
+
+(phps-mode-paser-custom-grammar--block
+ 'argument
+ (list (list 'expr))
+ (list 'T_ELLIPSIS 'expr))
+
+(phps-mode-paser-custom-grammar--block
+ 'global_var_list
+ (list (list 'global_var_list "," 'global_var))
+ (list (list 'global_var)))
+
+(phps-mode-paser-custom-grammar--block
+ 'global_var
+ (list (list 'simple_variable)))
+
+(phps-mode-paser-custom-grammar--block
+ 'static_var_list
+ (list (list 'static_var_list "," 'static_var))
+ (list (list 'static_var)))
+
+(phps-mode-paser-custom-grammar--block
+ 'static_var
+ (list (list 'T_VARIABLE))
+ (list (list 'T_VARIABLE "=" 'expr)))
+
+(phps-mode-paser-custom-grammar--block
+ 'class_statement_list
+ (list (list 'class_statement_list 'class_statement))
+ (list (list 'empty)))
+
+(phps-mode-paser-custom-grammar--block
+ 'class_statement
+ (list (list 'variable_modifiers 'optional_type_without_static 'property_list ","))
+ (list (list 'method_modifiers 'T_CONST 'class_const_list ";"))
+ (list (list 'T_USE 'class_name_list 'trait_adaptations))
+ (list (list 'method_modifiers 'function 'returns_ref 'identifier 'backup_doc_comment "(" 'parameter_list ")"
+             'return_type 'backup_fn_flags 'method_body 'backup_fn_flags)))
+
+(phps-mode-paser-custom-grammar--block
+ 'class_name_list
+ (list (list 'class_name))
+ (list (list 'class_name_list "," 'class_name)))
+
+(phps-mode-paser-custom-grammar--block
+ 'trait_adaptations
+ (list (list ";"))
+ (list (list "{" "}"))
+ (list (list "{" 'trait_adaptation_list "}")))
+
+(phps-mode-paser-custom-grammar--block
+ 'trait_adaptation_list
+ (list (list 'trait_adaptation))
+ (list (list 'trait_adaptation_list 'trait_adaptation)))
+
+(phps-mode-paser-custom-grammar--block
+ 'trait_adaptation
+ (list (list 'trait_precedence))
+ (list (list 'trait_alias ";")))
+
+(phps-mode-paser-custom-grammar--block
+ 'trait_precedence
+ (list (list 'absolute_trait_method_reference 'T_INSTEADOF 'class_name_list)))
+
+(phps-mode-paser-custom-grammar--block
+ 'trait_alias
+ (list (list 'trait_method_reference 'T_AS 'T_STRING))
+ (list (list 'trait_method_reference 'T_AS 'reserved_non_modifiers))
+ (list (list 'trait_method_reference 'T_AS 'member_modifier 'identifier))
+ (list (list 'trait_method_reference 'T_AS 'member_modifier)))
+
+(phps-mode-paser-custom-grammar--block
+ 'trait_method_reference
+ (list (list 'identifier))
+ (list (list 'absolute_trait_method_reference)))
+
+(phps-mode-paser-custom-grammar--block
+ 'absolute_trait_method_reference
+ (list (list 'class_name 'T_PAAMAYIM_NEKUDOTAYIM 'identifier)))
+
+(phps-mode-paser-custom-grammar--block
+ 'method_body
+ (list (list ";")) ;; abstract method
+ (list (list "{" 'inner_statement_list "}")))
+
+(phps-mode-paser-custom-grammar--block
+ 'variable_modifiers
+ (list (list 'non_empty_member_modifiers))
+ (list (list 'T_VAR)))
+
+(phps-mode-paser-custom-grammar--block
+ 'method_modifiers
+ (list (list 'empty))
+ (list (list 'non_empty_member_modifiers)))
+
+(phps-mode-paser-custom-grammar--block
+ 'non_empty_member_modifiers
+ (list (list 'member_modifier))
+ (list (list 'non_empty_member_modifiers 'member_modifier)))
+
+(phps-mode-paser-custom-grammar--block
+ 'member_modifier
+ (list (list 'T_PUBLIC))
+ (list (list 'T_PROTECTED))
+ (list (list 'T_PRIVATE))
+ (list (list 'T_STATIC))
+ (list (list 'T_ABSTRACT))
+ (list (list 'T_FINAL)))
 
 
 
