@@ -379,6 +379,86 @@
  (list (list "," 'case_list 'T_ENDSWITCH ";"))
  (list (list ":" ";" 'case_list 'T_ENDSWITCH ";")))
 
+(phps-mode-paser-custom-grammar--block
+ 'case_list
+ (list (list 'empty))
+ (list (list 'case_list 'T_CASE 'expr 'case_separator 'inner_statement_list))
+ (list (list 'case_list 'T_DEFAULT 'case_separator 'inner_statement_list)))
+
+(phps-mode-paser-custom-grammar--block
+ 'case_separator
+ (list (list ":"))
+ (list (list ";")))
+
+(phps-mode-paser-custom-grammar--block
+ 'while_statement
+ (list (list 'statement))
+ (list (list ":" 'inner_statement_list 'T_ENDWHILE ";")))
+
+(phps-mode-paser-custom-grammar--block
+ 'if_stmt_without_else
+ (list (list 'T_IF "(" 'expr ")" 'statement))
+ (list (list 'if_stmt_without_else 'T_ELSEIF "(" 'expr ")" 'statement)))
+
+(phps-mode-paser-custom-grammar--block
+ 'if_stmt
+ (list (list 'if_stmt_without_else 'T_NOELSE))
+ (list (list 'if_stmt_without_else 'T_ELSE 'statement)))
+
+(phps-mode-paser-custom-grammar--block
+ 'alt_if_stmt_without_else
+ (list (list 'T_IF "(" 'expr ")" ":" 'inner_statement_list))
+ (list (list 'alt_if_stmt_without_else 'T_ELSEIF "(" 'expr ")" ":" 'inner_statement_list)))
+
+(phps-mode-paser-custom-grammar--block
+ 'alt_if_stmt
+ (list (list 'alt_if_stmt_without_else 'T_ENDIF ";"))
+ (list (list 'alt_if_stmt_without_else 'T_ELSE ":" 'inner_statement_list 'T_ENDIF ";")))
+
+(phps-mode-paser-custom-grammar--block
+ 'parameter_list
+ (list (list 'non_empty_parameter_list 'possible_comma))
+ (list (list 'empty)))
+
+(phps-mode-paser-custom-grammar--block
+ 'non_empty_parameter_list
+ (list (list 'parameter))
+ (list (list 'non_empty_parameter_list "," 'parameter)))
+
+(phps-mode-paser-custom-grammar--block
+ 'parameter
+ (list (list 'optional_type_without_static 'is_reference 'is_variadic 'T_VARIABLE))
+ (list (list 'optional_type_without_static 'is_reference 'is_variadic 'T_VARIABLE "=" 'expr)))
+
+(phps-mode-paser-custom-grammar--block
+ 'optional_type_without_static
+ (list (list 'empty))
+ (list (list 'type_expr_without_static)))
+
+(phps-mode-paser-custom-grammar--block
+ 'type_expr
+ (list (list 'type))
+ (list (list "?" 'type))
+ (list (list 'union_type)))
+
+(phps-mode-paser-custom-grammar--block
+ 'type
+ (list (list 'type_without_static))
+ (list (list 'T_STATIC)))
+
+(phps-mode-paser-custom-grammar--block
+ 'union_type
+ (list (list 'type "|" 'type))
+ (list (list 'union_type "|" 'type)))
+
+;; Duplicate the type rules without "static"
+;; to avoid conflicts with "static" modifier for properties.
+
+(phps-mode-paser-custom-grammar--block
+ 'type_expr_without_static
+ (list (list 'type_without_static))
+ (list (list "?" 'type_without_static))
+ (list (list 'union_type_without_static)))
 
 
 
