@@ -489,7 +489,7 @@
 (phps-mode-paser-custom-grammar--block
  'argument
  (list (list 'expr))
- (list 'T_ELLIPSIS 'expr))
+ (list (list 'T_ELLIPSIS 'expr)))
 
 (phps-mode-paser-custom-grammar--block
  'global_var_list
@@ -803,223 +803,173 @@
  (list (list 'T_CONSTANT_ENCAPSED_STRING) (lambda (_a)))
  (list (list "\"" 'encaps_list "\"") (lambda (_a _b _c))))
 
-scalar:
-		T_LNUMBER 	{ $$ = $1; }
-	|	T_DNUMBER 	{ $$ = $1; }
-	|	T_START_HEREDOC T_ENCAPSED_AND_WHITESPACE T_END_HEREDOC { $$ = $2; }
-	|	T_START_HEREDOC T_END_HEREDOC
-			{ $$ = zend_ast_create_zval_from_str(ZSTR_EMPTY_ALLOC()); }
-	|	T_START_HEREDOC encaps_list T_END_HEREDOC { $$ = $2; }
-	|	dereferencable_scalar	{ $$ = $1; }
-	|	constant				{ $$ = $1; }
-	|	class_constant			{ $$ = $1; }
-;
+(phps-mode-paser-custom-grammar--block
+ 'scalar
+ (list (list 'T_LNUMBER))
+ (list (list 'T_DNUMBER))
+ (list (list 'T_START_HEREDOC 'T_ENCAPSED_AND_WHITESPACE 'T_END_HEREDOC))
+ (list (list 'T_START_HEREDOC 'T_END_HEREDOC))
+ (list (list 'T_START_HEREDOC 'encaps_list 'T_END_HEREDOC))
+ (list (list 'dereferencable_scalar))
+ (list (list 'constant))
+ (list (list 'class_constant)))
 
-constant:
-		name		{ $$ = zend_ast_create(ZEND_AST_CONST, $1); }
-	|	T_LINE 		{ $$ = zend_ast_create_ex(ZEND_AST_MAGIC_CONST, T_LINE); }
-	|	T_FILE 		{ $$ = zend_ast_create_ex(ZEND_AST_MAGIC_CONST, T_FILE); }
-	|	T_DIR   	{ $$ = zend_ast_create_ex(ZEND_AST_MAGIC_CONST, T_DIR); }
-	|	T_TRAIT_C	{ $$ = zend_ast_create_ex(ZEND_AST_MAGIC_CONST, T_TRAIT_C); }
-	|	T_METHOD_C	{ $$ = zend_ast_create_ex(ZEND_AST_MAGIC_CONST, T_METHOD_C); }
-	|	T_FUNC_C	{ $$ = zend_ast_create_ex(ZEND_AST_MAGIC_CONST, T_FUNC_C); }
-	|	T_NS_C		{ $$ = zend_ast_create_ex(ZEND_AST_MAGIC_CONST, T_NS_C); }
-	|	T_CLASS_C	{ $$ = zend_ast_create_ex(ZEND_AST_MAGIC_CONST, T_CLASS_C); }
-;
+(phps-mode-paser-custom-grammar--block
+ 'constant
+ (list (list 'name))
+ (list (list 'T_LINE))
+ (list (list 'T_FILE))
+ (list (list 'T_DIR))
+ (list (list 'T_TRAIT_C))
+ (list (list 'T_METHOD_C))
+ (list (list 'T_FUNC_C))
+ (list (list 'T_NS_C))
+ (list (list 'T_CLASS_C)))
 
-class_constant:
-		class_name T_PAAMAYIM_NEKUDOTAYIM identifier
-			{ $$ = zend_ast_create_class_const_or_name($1, $3); }
-	|	variable_class_name T_PAAMAYIM_NEKUDOTAYIM identifier
-			{ $$ = zend_ast_create_class_const_or_name($1, $3); }
-;
+(phps-mode-paser-custom-grammar--block
+ 'class_constant
+ (list (list 'class_name 'T_PAAMAYIM_NEKUDOTAYIM 'identifier))
+ (list (list 'variable_class_name 'T_PAAMAYIM_NEKUDOTAYIM 'identifier)))
 
-optional_expr:
-		%empty	{ $$ = NULL; }
-	|	expr		{ $$ = $1; }
-;
+(phps-mode-paser-custom-grammar--block
+ 'optional_expr
+ (list (list 'empty))
+ (list (list 'expr)))
 
-variable_class_name:
-		fully_dereferencable { $$ = $1; }
-;
+(phps-mode-paser-custom-grammar--block
+ 'variable_class_name
+ (list (list 'fully_dereferencable)))
 
-fully_dereferencable:
-		variable				{ $$ = $1; }
-	|	'(' expr ')'			{ $$ = $2; }
-	|	dereferencable_scalar	{ $$ = $1; }
-	|	class_constant			{ $$ = $1; }
-;
+(phps-mode-paser-custom-grammar--block
+ 'fully_dereferencable
+ (list (list 'variable))
+ (list (list "(" 'expr ")"))
+ (list (list 'dereferencable_scalar))
+ (list (list 'class_constant)))
 
-array_object_dereferencable:
-		fully_dereferencable	{ $$ = $1; }
-	|	constant				{ $$ = $1; }
-;
+(phps-mode-paser-custom-grammar--block
+ 'array_object_dereferencable
+ (list (list 'fully_dereferencable))
+ (list (list 'constant)))
 
-callable_expr:
-		callable_variable		{ $$ = $1; }
-	|	'(' expr ')'			{ $$ = $2; }
-	|	dereferencable_scalar	{ $$ = $1; }
-;
+(phps-mode-paser-custom-grammar--block
+ 'callable_expr
+ (list (list 'callable_variable))
+ (list (list "(" 'expr ")"))
+ (list (list 'dereferencable_scalar)))
 
-callable_variable:
-		simple_variable
-			{ $$ = zend_ast_create(ZEND_AST_VAR, $1); }
-	|	array_object_dereferencable '[' optional_expr ']'
-			{ $$ = zend_ast_create(ZEND_AST_DIM, $1, $3); }
-	|	array_object_dereferencable '{' expr '}'
-			{ $$ = zend_ast_create_ex(ZEND_AST_DIM, ZEND_DIM_ALTERNATIVE_SYNTAX, $1, $3); }
-	|	array_object_dereferencable T_OBJECT_OPERATOR property_name argument_list
-			{ $$ = zend_ast_create(ZEND_AST_METHOD_CALL, $1, $3, $4); }
-	|	function_call { $$ = $1; }
-;
+(phps-mode-paser-custom-grammar--block
+ 'callable_variable
+ (list (list 'simple_variable))
+ (list (list 'array_object_dereferencable "[" 'optional_expr "]"))
+ (list (list 'array_object_dereferencable "{" 'expr "}"))
+ (list (list 'array_object_dereferencable 'T_OBJECT_OPERATOR 'property_name 'argument_list))
+ (list (list 'function_call)))
 
-variable:
-		callable_variable
-			{ $$ = $1; }
-	|	static_member
-			{ $$ = $1; }
-	|	array_object_dereferencable T_OBJECT_OPERATOR property_name
-			{ $$ = zend_ast_create(ZEND_AST_PROP, $1, $3); }
-;
+(phps-mode-paser-custom-grammar--block
+ 'variable
+ (list (list 'callable_variable))
+ (list (list 'static_member))
+ (list (list 'array_object_dereferencable 'T_OBJECT_OPERATOR 'property_name)))
 
-simple_variable:
-		T_VARIABLE			{ $$ = $1; }
-	|	'$' '{' expr '}'	{ $$ = $3; }
-	|	'$' simple_variable	{ $$ = zend_ast_create(ZEND_AST_VAR, $2); }
-;
+(phps-mode-paser-custom-grammar--block
+ 'simple_variable
+ (list (list 'T_VARIABLE))
+ (list (list "$" "{" 'expr "}"))
+ (list (list "$" 'simple_variable)))
 
-static_member:
-		class_name T_PAAMAYIM_NEKUDOTAYIM simple_variable
-			{ $$ = zend_ast_create(ZEND_AST_STATIC_PROP, $1, $3); }
-	|	variable_class_name T_PAAMAYIM_NEKUDOTAYIM simple_variable
-			{ $$ = zend_ast_create(ZEND_AST_STATIC_PROP, $1, $3); }
-;
+(phps-mode-paser-custom-grammar--block
+ 'static_member
+ (list (list 'class_name 'T_PAAMAYIM_NEKUDOTAYIM 'simple_variable))
+ (list (list 'variable_class_name 'T_PAAMAYIM_NEKUDOTAYIM 'simple_variable)))
 
-new_variable:
-		simple_variable
-			{ $$ = zend_ast_create(ZEND_AST_VAR, $1); }
-	|	new_variable '[' optional_expr ']'
-			{ $$ = zend_ast_create(ZEND_AST_DIM, $1, $3); }
-	|	new_variable '{' expr '}'
-			{ $$ = zend_ast_create_ex(ZEND_AST_DIM, ZEND_DIM_ALTERNATIVE_SYNTAX, $1, $3); }
-	|	new_variable T_OBJECT_OPERATOR property_name
-			{ $$ = zend_ast_create(ZEND_AST_PROP, $1, $3); }
-	|	class_name T_PAAMAYIM_NEKUDOTAYIM simple_variable
-			{ $$ = zend_ast_create(ZEND_AST_STATIC_PROP, $1, $3); }
-	|	new_variable T_PAAMAYIM_NEKUDOTAYIM simple_variable
-			{ $$ = zend_ast_create(ZEND_AST_STATIC_PROP, $1, $3); }
-;
+(phps-mode-paser-custom-grammar--block
+ 'new_variable
+ (list (list 'simple_variable))
+ (list (list 'new_variable "[" 'optional_expr "]"))
+ (list (list 'new_variable "{" 'expr "}"))
+ (list (list 'new_variable 'T_OBJECT_OPERATOR 'property_name))
+ (list (list 'class_name 'T_PAAMAYIM_NEKUDOTAYIM 'simple_variable))
+ (list (list 'new_variable 'T_PAAMAYIM_NEKUDOTAYIM 'simple_variable)))
 
-member_name:
-		identifier { $$ = $1; }
-	|	'{' expr '}'	{ $$ = $2; }
-	|	simple_variable	{ $$ = zend_ast_create(ZEND_AST_VAR, $1); }
-;
+(phps-mode-paser-custom-grammar--block
+ 'member_name
+ (list (list 'identifier))
+ (list (list "{" 'expr "}"))
+ (list (list 'simple_variable)))
 
-property_name:
-		T_STRING { $$ = $1; }
-	|	'{' expr '}'	{ $$ = $2; }
-	|	simple_variable	{ $$ = zend_ast_create(ZEND_AST_VAR, $1); }
-;
+(phps-mode-paser-custom-grammar--block
+ 'property_name
+ (list (list 'T_STRING))
+ (list (list "{" 'expr "}"))
+ (list (list 'simple_variable)))
 
-array_pair_list:
-		non_empty_array_pair_list
-			{ /* allow single trailing comma */ $$ = zend_ast_list_rtrim($1); }
-;
+(phps-mode-paser-custom-grammar--block
+ 'array_pair_list
+ (list (list 'non_empty_array_pair_list)))
 
-possible_array_pair:
-		%empty { $$ = NULL; }
-	|	array_pair  { $$ = $1; }
-;
+(phps-mode-paser-custom-grammar--block
+ 'possible_array_pair
+ (list (list 'empty))
+ (list (list 'array_pair)))
 
-non_empty_array_pair_list:
-		non_empty_array_pair_list ',' possible_array_pair
-			{ $$ = zend_ast_list_add($1, $3); }
-	|	possible_array_pair
-			{ $$ = zend_ast_create_list(1, ZEND_AST_ARRAY, $1); }
-;
+(phps-mode-paser-custom-grammar--block
+ 'non_empty_array_pair_list
+ (list (list 'non_empty_array_pair_list "," 'possible_array_pair))
+ (list (list 'possible_array_pair)))
 
-array_pair:
-		expr T_DOUBLE_ARROW expr
-			{ $$ = zend_ast_create(ZEND_AST_ARRAY_ELEM, $3, $1); }
-	|	expr
-			{ $$ = zend_ast_create(ZEND_AST_ARRAY_ELEM, $1, NULL); }
-	|	expr T_DOUBLE_ARROW '&' variable
-			{ $$ = zend_ast_create_ex(ZEND_AST_ARRAY_ELEM, 1, $4, $1); }
-	|	'&' variable
-			{ $$ = zend_ast_create_ex(ZEND_AST_ARRAY_ELEM, 1, $2, NULL); }
-	|	T_ELLIPSIS expr
-			{ $$ = zend_ast_create(ZEND_AST_UNPACK, $2); }
-	|	expr T_DOUBLE_ARROW T_LIST '(' array_pair_list ')'
-			{ $5->attr = ZEND_ARRAY_SYNTAX_LIST;
-			  $$ = zend_ast_create(ZEND_AST_ARRAY_ELEM, $5, $1); }
-	|	T_LIST '(' array_pair_list ')'
-			{ $3->attr = ZEND_ARRAY_SYNTAX_LIST;
-			  $$ = zend_ast_create(ZEND_AST_ARRAY_ELEM, $3, NULL); }
-;
+(phps-mode-paser-custom-grammar--block
+ 'array_pair
+ (list (list 'expr 'T_DOUBLE_ARROW 'expr))
+ (list (list 'expr))
+ (list (list 'expr 'T_DOUBLE_ARROW "&" 'variable))
+ (list (list "&" 'variable))
+ (list (list 'T_ELLIPSIS 'expr))
+ (list (list 'expr 'T_DOUBLE_ARROW 'T_LIST "(" 'array_pair_list ")"))
+ (list (list 'T_LIST "(" 'array_pair_list ")")))
 
-encaps_list:
-		encaps_list encaps_var
-			{ $$ = zend_ast_list_add($1, $2); }
-	|	encaps_list T_ENCAPSED_AND_WHITESPACE
-			{ $$ = zend_ast_list_add($1, $2); }
-	|	encaps_var
-			{ $$ = zend_ast_create_list(1, ZEND_AST_ENCAPS_LIST, $1); }
-	|	T_ENCAPSED_AND_WHITESPACE encaps_var
-			{ $$ = zend_ast_create_list(2, ZEND_AST_ENCAPS_LIST, $1, $2); }
-;
+(phps-mode-paser-custom-grammar--block
+ 'encaps_list
+ (list (list 'encaps_list 'encaps_var))
+ (list (list 'encaps_list 'T_ENCAPSED_AND_WHITESPACE))
+ (list (list 'encaps_var))
+ (list (list 'T_ENCAPSED_AND_WHITESPACE 'encaps_var)))
 
-encaps_var:
-		T_VARIABLE
-			{ $$ = zend_ast_create(ZEND_AST_VAR, $1); }
-	|	T_VARIABLE '[' encaps_var_offset ']'
-			{ $$ = zend_ast_create(ZEND_AST_DIM,
-			      zend_ast_create(ZEND_AST_VAR, $1), $3); }
-	|	T_VARIABLE T_OBJECT_OPERATOR T_STRING
-			{ $$ = zend_ast_create(ZEND_AST_PROP,
-			      zend_ast_create(ZEND_AST_VAR, $1), $3); }
-	|	T_DOLLAR_OPEN_CURLY_BRACES expr '}'
-			{ $$ = zend_ast_create(ZEND_AST_VAR, $2); }
-	|	T_DOLLAR_OPEN_CURLY_BRACES T_STRING_VARNAME '}'
-			{ $$ = zend_ast_create(ZEND_AST_VAR, $2); }
-	|	T_DOLLAR_OPEN_CURLY_BRACES T_STRING_VARNAME '[' expr ']' '}'
-			{ $$ = zend_ast_create(ZEND_AST_DIM,
-			      zend_ast_create(ZEND_AST_VAR, $2), $4); }
-	|	T_CURLY_OPEN variable '}' { $$ = $2; }
-;
+(phps-mode-paser-custom-grammar--block
+ 'encaps_var
+ (list (list 'T_VARIABLE))
+ (list (list 'T_VARIABLE "[" 'encaps_var_offset "]"))
+ (list (list 'T_VARIABLE 'T_OBJECT_OPERATOR 'T_STRING))
+ (list (list 'T_DOLLAR_OPEN_CURLY_BRACES 'expr "}"))
+ (list (list 'T_DOLLAR_OPEN_CURLY_BRACES 'T_STRING_VARNAME "}"))
+ (list (list 'T_DOLLAR_OPEN_CURLY_BRACES 'T_STRING_VARNAME "[" 'expr "]" "}"))
+ (list (list 'T_CURLY_OPEN 'variable "}")))
 
-encaps_var_offset:
-		T_STRING			{ $$ = $1; }
-	|	T_NUM_STRING		{ $$ = $1; }
-	|	'-' T_NUM_STRING 	{ $$ = zend_negate_num_string($2); }
-	|	T_VARIABLE			{ $$ = zend_ast_create(ZEND_AST_VAR, $1); }
-;
+(phps-mode-paser-custom-grammar--block
+ 'encaps_var_offset
+ (list (list 'T_STRING))
+ (list (list 'T_NUM_STRING))
+ (list (list "-" 'T_NUM_STRING))
+ (list (list 'T_VARIABLE)))
 
+(phps-mode-paser-custom-grammar--block
+ 'internal_functions_in_yacc
+ (list (list 'T_ISSET "(" 'isset_variables 'possible_comma ")"))
+ (list (list 'T_EMPTY "(" 'expr ")"))
+ (list (list 'T_INCLUDE 'expr))
+ (list (list 'T_INCLUDE_ONCE 'expr))
+ (list (list 'T_EVAL "(" 'expr ")"))
+ (list (list 'T_REQUIRE 'expr))
+ (list (list 'T_REQUIRE_ONCE 'expr)))
 
-internal_functions_in_yacc:
-		T_ISSET '(' isset_variables possible_comma ')' { $$ = $3; }
-	|	T_EMPTY '(' expr ')' { $$ = zend_ast_create(ZEND_AST_EMPTY, $3); }
-	|	T_INCLUDE expr
-			{ $$ = zend_ast_create_ex(ZEND_AST_INCLUDE_OR_EVAL, ZEND_INCLUDE, $2); }
-	|	T_INCLUDE_ONCE expr
-			{ $$ = zend_ast_create_ex(ZEND_AST_INCLUDE_OR_EVAL, ZEND_INCLUDE_ONCE, $2); }
-	|	T_EVAL '(' expr ')'
-			{ $$ = zend_ast_create_ex(ZEND_AST_INCLUDE_OR_EVAL, ZEND_EVAL, $3); }
-	|	T_REQUIRE expr
-			{ $$ = zend_ast_create_ex(ZEND_AST_INCLUDE_OR_EVAL, ZEND_REQUIRE, $2); }
-	|	T_REQUIRE_ONCE expr
-			{ $$ = zend_ast_create_ex(ZEND_AST_INCLUDE_OR_EVAL, ZEND_REQUIRE_ONCE, $2); }
-;
+(phps-mode-paser-custom-grammar--block
+ 'isset_variables
+ (list (list 'isset_variable))
+ (list (list 'isset_variables "," 'isset_variable)))
 
-isset_variables:
-		isset_variable { $$ = $1; }
-	|	isset_variables ',' isset_variable
-			{ $$ = zend_ast_create(ZEND_AST_AND, $1, $3); }
-;
-
-isset_variable:
-		expr { $$ = zend_ast_create(ZEND_AST_ISSET, $1); }
-;
+(phps-mode-paser-custom-grammar--block
+ 'isset_variable
+ (list (list 'expr)))
 
 
 (provide 'phps-mode-parser-custom-grammar)
