@@ -53,8 +53,10 @@
 
 ;; Functions:
 
-(defun phps-mode-parser-custom--parse (unscanned &optional state leaf-states action-table goto-table)
+(defun phps-mode-parser-custom--parse (&optional unscanned state leaf-states action-table goto-table)
   "Parse UNSCANNED in LEAF-STATES, use parser ACTION-TABLE and GOTO-TABLE in STATE."
+  (unless unscanned
+    (setq unscanned phps-mode-lex-analyzer--tokens))
   (unless leaf-states
     (setq leaf-states phps-mode-parser-custom--parser-leaf-states))
   (unless action-table
@@ -171,14 +173,14 @@
                             (while (> reduction-length 0)
                               ;; Save min and max point in buffer
                               (let ((popped-token (pop parse-tree)))
-                                (when (or
-                                       (not popped-parse-tree-end)
-                                       (> (cdr (cdr popped-token)) popped-parse-tree-end))
-                                  (setq popped-parse-tree-end (cdr (cdr popped-token))))
-                                (when (or
-                                       (not popped-parse-tree-start)
-                                       (< (car (cdr popped-token)) popped-parse-tree-start))
-                                  (setq popped-parse-tree-start (car (cdr popped-token))))
+                                ;; (when (or
+                                ;;        (not popped-parse-tree-end)
+                                ;;        (> (cdr (cdr popped-token)) popped-parse-tree-end))
+                                ;;   (setq popped-parse-tree-end (cdr (cdr popped-token))))
+                                ;; (when (or
+                                ;;        (not popped-parse-tree-start)
+                                ;;        (< (car (cdr popped-token)) popped-parse-tree-start))
+                                ;;   (setq popped-parse-tree-start (car (cdr popped-token))))
                                 (push popped-token popped-parse-tree))
 
                               (push (pop parse-stack) popped-parse-stack)
@@ -192,7 +194,7 @@
                                 (funcall logic (nreverse popped-parse-tree))))
 
                             (push goto-state parse-stack)
-                            (push `(,goto-state ,popped-parse-tree-start . ,popped-parse-tree-end) parse-tree)
+                            (push `(,goto-state ,popped-parse-tree) parse-tree)
                             (setq state goto-state)
                             (phps-mode-debug-message
                              (message "Popped-parse-stack: '%s'" popped-parse-stack)
