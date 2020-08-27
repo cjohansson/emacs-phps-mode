@@ -593,6 +593,139 @@
  (list (list 'T_ABSTRACT))
  (list (list 'T_FINAL)))
 
+(phps-mode-paser-custom-grammar--block
+ 'property_list
+ (list (list 'property_list "," 'property))
+ (list (list 'property)))
+
+(phps-mode-paser-custom-grammar--block
+ 'class_const_list
+ (list (list 'class_const_list "," 'class_const_decl))
+ (list (list 'class_const_decl)))
+
+(phps-mode-paser-custom-grammar--block
+ 'class_const_decl
+ (list (list 'identifier "=" 'expr 'backup_doc_comment)))
+
+(phps-mode-paser-custom-grammar--block
+ 'const_decl
+ (list (list 'T_STRING "=" 'expr 'backup_doc_comment)))
+
+(phps-mode-paser-custom-grammar--block
+ 'echo_expr_list
+ (list (list 'echo_expr_list "," 'echo_expr))
+ (list (list 'echo_expr)))
+
+(phps-mode-paser-custom-grammar--block
+ 'for_exprs
+ (list (list 'empty))
+ (list (list 'non_empty_for_exprs)))
+
+(phps-mode-paser-custom-grammar--block
+ 'non_empty_for_exprs
+ (list (list 'non_empty_for_exprs "," 'expr))
+ (list (list 'expr)))
+
+(phps-mode-paser-custom-grammar--block
+ 'anonymous_class
+ (list (list 'T_CLASS 'ctor_arguments 'extends_from 'implements_list 'backup_doc_comment "{" 'class_statement_list "}")))
+
+(phps-mode-paser-custom-grammar--block
+ 'new_expr
+ (list (list 'T_NEW 'class_name_reference 'ctor_arguments))
+ (list (list 'T_NEW 'anonymous_class)))
+
+(phps-mode-paser-custom-grammar--block
+ 'expr
+ (list (list 'variable))
+ (list (list 'T_LIST "(" 'array_pair_list ")" "=" 'expr))
+ (list (list "[" 'array_pair_list "]" "=" 'expr))
+ (list (list 'variable "=" 'expr))
+ (list (list 'variable "=" "&" 'variable))
+ (list (list 'T_CLONE 'expr))
+ (list (list 'variable 'T_PLUS_EQUAL 'expr))
+ (list (list 'variable 'T_MINUS_EQUAL 'expr))
+ (list (list 'variable 'T_MUL_EQUAL 'expr))
+ (list (list 'variable 'T_POW_EQUAL 'expr))
+ (list (list 'variable 'T_DIV_EQUAL 'expr))
+ (list (list 'variable 'T_CONCAT_EQUAL 'expr))
+ (list (list 'variable 'T_MOD_EQUAL 'expr))
+ (list (list 'variable 'T_AND_EQUAL 'expr))
+ (list (list 'variable 'T_OR_EQUAL 'expr))
+ (list (list 'variable 'T_XOR_EQUAL 'expr))
+ (list (list 'variable 'T_SL_EQUAL 'expr))
+ (list (list 'variable 'T_SR_EQUAL 'expr))
+ (list (list 'variable 'T_COALESCE_EQUAL 'expr))
+ (list (list 'variable 'T_INC))
+ (list (list 'T_INC 'variable))
+ (list (list 'variable 'T_DEC))
+ (list (list 'T_DEC 'variable))
+ (list (list 'expr 'T_BOOLEAN_OR 'expr))
+ (list (list 'expr 'T_BOOLEAN_AND 'expr))
+ (list (list 'expr 'T_LOGICAL_OR 'expr))
+ (list (list 'expr 'T_LOGICAL_AND 'expr))
+ (list (list 'expr 'T_LOGICAL_XOR 'expr))
+ (list (list 'expr "|" 'expr))
+ (list (list 'expr "&" 'expr))
+ (list (list 'expr "^" 'expr))
+ (list (list 'expr "." 'expr))
+ (list (list 'expr "+" 'expr))
+ (list (list 'expr "-" 'expr))
+ (list (list 'expr "*" 'expr))
+ (list (list 'expr 'T_POW 'expr))
+ (list (list 'expr "/" 'expr))
+ (list (list 'expr "%" 'expr))
+ (list (list 'expr 'T_SL 'expr))
+ (list (list 'expr 'T_SR 'expr))
+ (list (list "+" 'expr "~"))
+ (list (list "-" 'expr "~"))
+ (list (list "!" 'expr))
+ (list (list "~" 'expr))
+ (list (list 'expr 'T_IS_IDENTICAL 'expr))
+ (list (list 'expr 'T_IS_NOT_IDENTICAL 'expr))
+ (list (list 'expr 'T_IS_EQUAL 'expr))
+ (list (list 'expr 'T_IS_NOT_EQUAL 'expr))
+ (list (list 'expr "<" 'expr))
+ (list (list 'expr 'T_IS_SMALLER_OR_EQUAL 'expr))
+ (list (list 'expr ">" 'expr))
+ (list (list 'expr 'T_IS_GREATER_OR_EQUAL 'expr))
+ (list (list 'expr 'T_SPACESHIP 'expr))
+ (list (list 'expr 'T_INSTANCEOF 'class_name_reference))
+ (list (list "(" 'expr ")"))
+ (list (list 'new_expr))
+ (list (list 'expr "?" 'expr ":" 'expr))
+ (list (list 'expr "?" ":" 'expr))
+ (list (list 'expr 'T_COALESCE 'expr))
+ (list (list 'internal_functions_in_yacc))
+ (list (list 'T_INT_CAST 'expr))
+ (list (list 'T_DOUBLE_CAST 'expr))
+ (list (list 'T_STRING_CAST 'expr))
+ (list (list 'T_ARRAY_CAST 'expr))
+ (list (list 'T_OBJECT_CAST 'expr))
+ (list (list 'T_BOOL_CAST 'expr))
+ (list (list 'T_UNSET_CAST 'expr))
+ (list (list 'T_EXIT 'exit_expr))
+ (list (list "@" 'expr))
+ (list (list 'scalar))
+ (list (list "`" 'backticks_expr "`"))
+ (list (list 'T_PRINT 'expr))
+ (list (list 'T_YIELD))
+ (list (list 'T_YIELD 'expr))
+ (list (list 'T_YIELD 'expr 'T_DOUBLE_ARROW 'expr))
+ (list (list 'T_YIELD_FROM 'expr))
+ (list (list 'T_THROW 'expr))
+ (list (list 'inline_function))
+ (list (list 'T_STATIC 'inline_function)))
+
+
+
+
+
+
+
+
+
+
 
 
 (phps-mode-paser-custom-grammar--block
