@@ -49,9 +49,9 @@
 ;; Setup grammar
 (setq phps-mode-parser-custom-grammar (make-hash-table :test 'equal))
 
-(phps-mode-paser-custom-grammar--block 'empty (list (list nil)))
-
-(phps-mode-paser-custom-grammar--block 'start (list (list 'top_statement_list)))
+(phps-mode-paser-custom-grammar--block
+ 'start
+ (list (list 'top_statement_list)))
 
 (phps-mode-paser-custom-grammar--block
  'reserved_non_modifiers
@@ -142,18 +142,18 @@
 (phps-mode-paser-custom-grammar--block
  'top_statement_list
  (list (list 'top_statement_list 'top_statement))
- (list (list 'semi_reserved) (lambda(a) (list 'zval a))))
+ (list (list '%empty)))
 
 (phps-mode-paser-custom-grammar--block
  'namespace_name
  (list (list 'T_STRING))
- (list (list 'namespace_name 'T_NS_SEPARATOR 'T_STRING) (lambda(a) (message "NAMESPACE-%s" a))))
+ (list (list 'namespace_name 'T_NS_SEPARATOR 'T_STRING)))
 
 (phps-mode-paser-custom-grammar--block
  'name
- (list (list 'namespace_name) (lambda(a) (list 'attr 'phps-mode-parser--ZEND_NAME_NOT_FQ (car (car a)))))
- (list (list 'T_NAMESPACE 'T_NS_SEPARATOR 'namespace_name (lambda(_a _b c) (list 'attr 'phps-mode-parser--ZEND_NAME_RELATIVE c))))
- (list (list 'T_NS_SEPARATOR 'namespace_name) (lambda(_a b) (list 'attr 'phps-mode-parser--ZEND_NAME_FQ b))))
+ (list (list 'namespace_name))
+ (list (list 'T_NAMESPACE 'T_NS_SEPARATOR 'namespace_name))
+ (list (list 'T_NS_SEPARATOR 'namespace_name)))
 
 (phps-mode-paser-custom-grammar--block
  'top_statement
@@ -162,141 +162,123 @@
  (list (list 'class_declaration_statement))
  (list (list 'trait_declaration_statement))
  (list (list 'interface_declaration_statement))
- (list
-  (list 'T_HALT_COMPILER "(" ")" ";")
-  (lambda(_a) (list 'phps-mode-parser--ZEND_AST_HALT_COMPILER (point))))
- (list
-  (list 'T_NAMESPACE 'namespace_name ";")
-  (lambda(_a b _c) (list 'phps-mode-parser--ZEND_AST_NAMESPACE b)))
- (list
-  (list 'T_NAMESPACE 'namespace_name "{" 'top_statement_list "}")
-  (lambda(_a b _c d _e)
-    (list (list 'phps-mode-parser--ZEND_AST_NAMESPACE b) d)))
- (list
-  (list 'T_NAMESPACE "{" 'top_statement_list "}")
-  (lambda(_a _b c _d) (list 'phps-mode-parser--ZEND_AST_NAMESPACE c)))
- (list
-  (list 'T_USE 'mixed_group_use_declaration ";")
-  (lambda(_a b _c) b))
- (list
-  (list 'T_USE 'use_type 'group_use_declaration ";")
-  (lambda(_a b c _d) (list 'attr b c)))
- (list
-  (list 'T_USE 'use_declarations ";")
-  (lambda(_a b _c) (list 'attr b 'phps-mode-parser--ZEND_SYMBOL_CLASS)))
- (list
-  (list 'T_CONST 'const_list ";")
-  (lambda(_a b _c) b)))
+ (list (list 'T_HALT_COMPILER "(" ")" ";"))
+ (list (list 'T_NAMESPACE 'namespace_name ";"))
+ (list (list 'T_NAMESPACE 'namespace_name "{" 'top_statement_list "}"))
+ (list (list 'T_NAMESPACE "{" 'top_statement_list "}"))
+ (list (list 'T_USE 'mixed_group_use_declaration ";"))
+ (list (list 'T_USE 'use_type 'group_use_declaration ";"))
+ (list (list 'T_USE 'use_declarations ";"))
+ (list (list 'T_CONST 'const_list ";")))
 
 (phps-mode-paser-custom-grammar--block
  'use_type
- (list (list 'T_FUNCTION) (lambda(_a) (list 'phps-mode-parser--ZEND_SYMBOL_FUNCTION)))
- (list (list 'T_CONST) (lambda(_a) (list 'phps-mode-parser--ZEND_SYMBOL_CONST))))
+ (list (list 'T_FUNCTION))
+ (list (list 'T_CONST)))
 
 (phps-mode-paser-custom-grammar--block
- 'group_use_declaration:
- (list (list 'namespace_name 'T_NS_SEPARATOR "{" 'unprefixed_use_declarations 'possible_comma "}") (lambda (_a _b _c _d _e _f)))
- (list (list 'T_NS_SEPARATOR 'namespace_name 'T_NS_SEPARATOR "{" 'unprefixed_use_declarations 'possible_comma "}") (lambda (_a _b _c _d _e _f _g _h))))
+ 'group_use_declaration
+ (list (list 'namespace_name 'T_NS_SEPARATOR "{" 'unprefixed_use_declarations 'possible_comma "}"))
+ (list (list 'T_NS_SEPARATOR 'namespace_name 'T_NS_SEPARATOR "{" 'unprefixed_use_declarations 'possible_comma "}")))
 
 (phps-mode-paser-custom-grammar--block
  'mixed_group_use_declaration:
- (list (list 'namespace_name 'T_NS_SEPARATOR "{" 'inline_use_declarations 'possible_comma "}") (lambda(_a _b _c _d _e _f)))
- (list (list 'T_NS_SEPARATOR 'namespace_name 'T_NS_SEPARATOR "{" 'inline_use_declarations 'possible_comma "}") (lambda(_a _b _c _d _e _f _g _h))))
+ (list (list 'namespace_name 'T_NS_SEPARATOR "{" 'inline_use_declarations 'possible_comma "}"))
+ (list (list 'T_NS_SEPARATOR 'namespace_name 'T_NS_SEPARATOR "{" 'inline_use_declarations 'possible_comma "}")))
 
 (phps-mode-paser-custom-grammar--block
  'possible_comma
- (list (list 'empty))
+ (list (list '%empty))
  (list (list ",")))
 
 (phps-mode-paser-custom-grammar--block
  'inline_use_declarations
- (list
-  (list (list 'inline_use_declarations "," 'inline_use_declaration)(lambda(_a _b _c)))
-  (list (list 'inline_use_declaration) (lambda (_a)))))
+ (list (list 'inline_use_declarations "," 'inline_use_declaration))
+ (list (list 'inline_use_declaration)))
 
 (phps-mode-paser-custom-grammar--block
  'unprefixed_use_declarations
- (list (list 'unprefixed_use_declarations "," 'unprefixed_use_declaration) (lambda(_a _b _c)))
- (list (list 'unprefixed_use_declaration) (lambda (_a))))
+ (list (list 'unprefixed_use_declarations "," 'unprefixed_use_declaration))
+ (list (list 'unprefixed_use_declaration)))
 
 (phps-mode-paser-custom-grammar--block
  'use_declaration
- (list (list 'unprefixed_use_declaration) (lambda(_a)))
- (list (list 'T_NS_SEPARATOR 'unprefixed_use_declaration) (lambda(_a _b))))
+ (list (list 'unprefixed_use_declaration))
+ (list (list 'T_NS_SEPARATOR 'unprefixed_use_declaration)))
 
 (phps-mode-paser-custom-grammar--block
  'const_list
- (list (list 'const_list "," 'const_decl) (lambda(_a _b _c)))
- (list (list 'const_decl) (lambda(_a))))
+ (list (list 'const_list "," 'const_decl))
+ (list (list 'const_decl)))
 
 (phps-mode-paser-custom-grammar--block
  'inner_statement_list
- (list (list 'inner_statement_list 'inner_statement) (lambda(_a _b)))
- (list (list 'empty)(lambda(_a))))
+ (list (list 'inner_statement_list 'inner_statement))
+ (list (list '%empty)))
 
 (phps-mode-paser-custom-grammar--block
  'inner_statement
- (list (list 'statement) (lambda(_a)))
- (list (list 'function_declaration_statement) (lambda(_a)))
- (list (list 'class_declaration_statement) (lambda(_a)))
- (list (list 'trait_declaration_statement) (lambda(_a)))
- (list (list 'interface_declaration_statement) (lambda(_a)))
- (list (list 'T_HALT_COMPILER "(" ")" ";") (lambda(_a _b _c _d))))
+ (list (list 'statement))
+ (list (list 'function_declaration_statement))
+ (list (list 'class_declaration_statement))
+ (list (list 'trait_declaration_statement))
+ (list (list 'interface_declaration_statement))
+ (list (list 'T_HALT_COMPILER "(" ")" ";")))
 
 (phps-mode-paser-custom-grammar--block
  'statement
- (list (list "{" 'inner_statement_list "}") (lambda(_a _b _c)))
- (list (list 'if_stmt) (lambda(_a)))
- (list (list 'alt_if_stmt) (lambda(_a)))
- (list (list 'T_WHILE "(" 'expr ")" 'while_statement) (lambda(_a _b _c _d _e)))
- (list (list 'T_DO 'statement 'T_WHILE "(" 'expr ")" ";") (lambda(_a _b _c _d _e _f _g)))
- (list (list 'T_FOR "(" 'for_exprs ";" 'for_exprs ";" 'for_exprs ")" 'for_statement) (lambda(_a _b _c _d _e _f _g _h _i)))
- (list (list 'T_SWITCH "(" 'expr ")" 'switch_case_list) (lambda(_a)))
- (list (list 'T_BREAK 'optional_expr ";") (lambda(_a)))
- (list (list 'T_CONTINUE 'optional_expr ";") (lambda(_a)))
- (list (list 'T_RETURN 'optional_expr ";") (lambda(_a)))
- (list (list 'T_GLOBAL 'global_var_list ";") (lambda(_a)))
- (list (list 'T_STATIC 'static_var_list ";") (lambda(_a)))
- (list (list 'T_ECHO 'echo_expr_list ";") (lambda(_a)))
- (list (list 'T_INLINE_HTML) (lambda(_a)))
- (list (list 'expr ";") (lambda(_a)))
- (list (list 'T_UNSET "(" 'unset_variables 'possible_comma ")" ";") (lambda(_a)))
- (list (list 'T_FOREACH "(" 'expr 'T_AS 'foreach_variable ")" 'foreach_statement) (lambda(_a)))
- (list (list 'T_FOREACH "(" 'expr 'T_AS 'foreach_variable 'T_DOUBLE_ARROW 'foreach_variable ")" 'foreach_statement) (lambda(_a)))
- (list (list 'T_DECLARE "(" 'const_list ")") (lambda(_a)))
+ (list (list "{" 'inner_statement_list "}"))
+ (list (list 'if_stmt))
+ (list (list 'alt_if_stmt))
+ (list (list 'T_WHILE "(" 'expr ")" 'while_statement))
+ (list (list 'T_DO 'statement 'T_WHILE "(" 'expr ")" ";"))
+ (list (list 'T_FOR "(" 'for_exprs ";" 'for_exprs ";" 'for_exprs ")" 'for_statement))
+ (list (list 'T_SWITCH "(" 'expr ")" 'switch_case_list))
+ (list (list 'T_BREAK 'optional_expr ";"))
+ (list (list 'T_CONTINUE 'optional_expr ";"))
+ (list (list 'T_RETURN 'optional_expr ";"))
+ (list (list 'T_GLOBAL 'global_var_list ";"))
+ (list (list 'T_STATIC 'static_var_list ";"))
+ (list (list 'T_ECHO 'echo_expr_list ";"))
+ (list (list 'T_INLINE_HTML))
+ (list (list 'expr ";"))
+ (list (list 'T_UNSET "(" 'unset_variables 'possible_comma ")" ";"))
+ (list (list 'T_FOREACH "(" 'expr 'T_AS 'foreach_variable ")" 'foreach_statement))
+ (list (list 'T_FOREACH "(" 'expr 'T_AS 'foreach_variable 'T_DOUBLE_ARROW 'foreach_variable ")" 'foreach_statement))
+ (list (list 'T_DECLARE "(" 'const_list ")"))
  (list (list ";"))
- (list (list 'T_TRY "{" 'inner_statement_list "}" 'catch_list 'finally_statement) (lambda(_a)))
- (list (list 'T_GOTO 'T_STRING ";") (lambda(_a)))
- (list (list 'T_STRING ",") (lambda(_a))))
+ (list (list 'T_TRY "{" 'inner_statement_list "}" 'catch_list 'finally_statement))
+ (list (list 'T_GOTO 'T_STRING ";"))
+ (list (list 'T_STRING ",")))
 
 (phps-mode-paser-custom-grammar--block
  'catch_list
- (list (list 'empty) (lambda(_a)))
- (list (list 'catch_list 'T_CATCH "(" 'catch_name_list 'optional_variable ")" "{" 'inner_statement_list "}") (lambda(_a))))
+ (list (list '%empty))
+ (list (list 'catch_list 'T_CATCH "(" 'catch_name_list 'optional_variable ")" "{" 'inner_statement_list "}")))
 
 (phps-mode-paser-custom-grammar--block
  'catch_name_list
- (list (list 'class_name) (lambda(_a)))
- (list (list 'catch_name_list "|" 'class_name) (lambda(_a))))
+ (list (list 'class_name))
+ (list (list 'catch_name_list "|" 'class_name)))
 
 (phps-mode-paser-custom-grammar--block
  'optional_variable
- (list (list 'empty) (lambda(_a)))
- (list (list 'T_VARIABLE) (lambda(_a))))
+ (list (list '%empty))
+ (list (list 'T_VARIABLE)))
 
 (phps-mode-paser-custom-grammar--block
  'finally_statement
- (list (list 'empty) (lambda(_a)))
- (list (list 'T_FINALLY "{" 'inner_statement_list "}") (lambda(_a))))
+ (list (list '%empty))
+ (list (list 'T_FINALLY "{" 'inner_statement_list "}")))
 
 (phps-mode-paser-custom-grammar--block
  'unset_variables
- (list (list 'unset_variable) (lambda(_a)))
- (list (list 'unset_variables "," 'unset_variable) (lambda(_a))))
+ (list (list 'unset_variable))
+ (list (list 'unset_variables "," 'unset_variable)))
 
 (phps-mode-paser-custom-grammar--block
  'unset_variable
- (list (list 'variable) (lambda(_a))))
+ (list (list 'variable)))
 
 (phps-mode-paser-custom-grammar--block
  'function_declaration_statement
@@ -304,12 +286,12 @@
 
 (phps-mode-paser-custom-grammar--block
  'is_reference:
- (list (list 'empty))
+ (list (list '%empty))
  (list (list 'BITWISE_AND)))
 
 (phps-mode-paser-custom-grammar--block
  'is_variadic
- (list (list 'empty))
+ (list (list '%empty))
  (list (list 'T_ELLIPSIS)))
 
 (phps-mode-paser-custom-grammar--block
@@ -337,17 +319,17 @@
 
 (phps-mode-paser-custom-grammar--block
  'extends_from
- (list (list 'empty))
+ (list (list '%empty))
  (list (list 'T_EXTENDS 'class_name)))
 
 (phps-mode-paser-custom-grammar--block
  'interface_extends_list
- (list (list 'empty))
+ (list (list '%empty))
  (list (list 'T_EXTENDS 'class_name_list)))
 
 (phps-mode-paser-custom-grammar--block
  'implements_list
- (list (list 'empty))
+ (list (list '%empty))
  (list (list 'T_IMPLEMENTS 'class_name_list)))
 
 (phps-mode-paser-custom-grammar--block
@@ -381,7 +363,7 @@
 
 (phps-mode-paser-custom-grammar--block
  'case_list
- (list (list 'empty))
+ (list (list '%empty))
  (list (list 'case_list 'T_CASE 'expr 'case_separator 'inner_statement_list))
  (list (list 'case_list 'T_DEFAULT 'case_separator 'inner_statement_list)))
 
@@ -418,7 +400,7 @@
 (phps-mode-paser-custom-grammar--block
  'parameter_list
  (list (list 'non_empty_parameter_list 'possible_comma))
- (list (list 'empty)))
+ (list (list '%empty)))
 
 (phps-mode-paser-custom-grammar--block
  'non_empty_parameter_list
@@ -432,7 +414,7 @@
 
 (phps-mode-paser-custom-grammar--block
  'optional_type_without_static
- (list (list 'empty))
+ (list (list '%empty))
  (list (list 'type_expr_without_static)))
 
 (phps-mode-paser-custom-grammar--block
@@ -473,7 +455,7 @@
 
 (phps-mode-paser-custom-grammar--block
  'return_type
- (list (list 'empty))
+ (list (list '%empty))
  (list (list ":" 'type_expr)))
 
 (phps-mode-paser-custom-grammar--block
@@ -513,7 +495,7 @@
 (phps-mode-paser-custom-grammar--block
  'class_statement_list
  (list (list 'class_statement_list 'class_statement))
- (list (list 'empty)))
+ (list (list '%empty)))
 
 (phps-mode-paser-custom-grammar--block
  'class_statement
@@ -576,7 +558,7 @@
 
 (phps-mode-paser-custom-grammar--block
  'method_modifiers
- (list (list 'empty))
+ (list (list '%empty))
  (list (list 'non_empty_member_modifiers)))
 
 (phps-mode-paser-custom-grammar--block
@@ -618,7 +600,7 @@
 
 (phps-mode-paser-custom-grammar--block
  'for_exprs
- (list (list 'empty))
+ (list (list '%empty))
  (list (list 'non_empty_for_exprs)))
 
 (phps-mode-paser-custom-grammar--block
@@ -732,24 +714,24 @@
 
 (phps-mode-paser-custom-grammar--block
  'backup_doc_comment
- (list (list 'empty)))
+ (list (list '%empty)))
 
 (phps-mode-paser-custom-grammar--block
  'backup_fn_flags
- (list (list 'PREC_ARROW_FUNCTION 'empty)))
+ (list (list 'PREC_ARROW_FUNCTION '%empty)))
 
 (phps-mode-paser-custom-grammar--block
  'backup_lex_pos
- (list (list 'empty)))
+ (list (list '%empty)))
 
 (phps-mode-paser-custom-grammar--block
  'returns_ref
- (list (list 'empty))
+ (list (list '%empty))
  (list (list "&")))
 
 (phps-mode-paser-custom-grammar--block
  'lexical_vars
- (list (list 'empty))
+ (list (list '%empty))
  (list (list 'T_USE "(" 'lexical_var_list ")")))
 
 (phps-mode-paser-custom-grammar--block
@@ -782,26 +764,26 @@
 
 (phps-mode-paser-custom-grammar--block
  'exit_expr
- (list (list 'empty))
+ (list (list '%empty))
  (list (list "(" 'optional_expr ")")))
 
 (phps-mode-paser-custom-grammar--block
  'backticks_expr
- (list (list 'empty))
+ (list (list '%empty))
  (list (list 'T_ENCAPSED_AND_WHITESPACE))
  (list (list 'encaps_list)))
 
 (phps-mode-paser-custom-grammar--block
  'ctor_arguments
- (list (list 'empty))
+ (list (list '%empty))
  (list (list 'argument_list)))
 
 (phps-mode-paser-custom-grammar--block
  'dereferencable_scalar
- (list (list 'T_ARRAY "(" 'array_pair_list ")") (lambda(_a _b _c _d)))
- (list (list "{" 'array_pair_list "}") (lambda (_a _b _c)))
- (list (list 'T_CONSTANT_ENCAPSED_STRING) (lambda (_a)))
- (list (list "\"" 'encaps_list "\"") (lambda (_a _b _c))))
+ (list (list 'T_ARRAY "(" 'array_pair_list ")"))
+ (list (list "{" 'array_pair_list "}"))
+ (list (list 'T_CONSTANT_ENCAPSED_STRING))
+ (list (list "\"" 'encaps_list "\"")))
 
 (phps-mode-paser-custom-grammar--block
  'scalar
@@ -833,7 +815,7 @@
 
 (phps-mode-paser-custom-grammar--block
  'optional_expr
- (list (list 'empty))
+ (list (list '%empty))
  (list (list 'expr)))
 
 (phps-mode-paser-custom-grammar--block
@@ -910,7 +892,7 @@
 
 (phps-mode-paser-custom-grammar--block
  'possible_array_pair
- (list (list 'empty))
+ (list (list '%empty))
  (list (list 'array_pair)))
 
 (phps-mode-paser-custom-grammar--block
