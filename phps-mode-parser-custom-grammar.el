@@ -182,7 +182,7 @@
  (list (list 'T_NS_SEPARATOR 'namespace_name 'T_NS_SEPARATOR "{" 'unprefixed_use_declarations 'possible_comma "}")))
 
 (phps-mode-paser-custom-grammar--block
- 'mixed_group_use_declaration:
+ 'mixed_group_use_declaration
  (list (list 'namespace_name 'T_NS_SEPARATOR "{" 'inline_use_declarations 'possible_comma "}"))
  (list (list 'T_NS_SEPARATOR 'namespace_name 'T_NS_SEPARATOR "{" 'inline_use_declarations 'possible_comma "}")))
 
@@ -285,7 +285,7 @@
  (list (list 'function 'returns_ref 'T_STRING 'backup_doc_comment "(" 'parameter_list ")" 'return_type 'backup_fn_flags "{" 'inner_statement_list "}" 'backup_fn_flags)))
 
 (phps-mode-paser-custom-grammar--block
- 'is_reference:
+ 'is_reference
  (list (list '%empty))
  (list (list 'BITWISE_AND)))
 

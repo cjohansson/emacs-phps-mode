@@ -50,7 +50,7 @@
     (phps-mode-parser-custom--parse
      (list '(T_STRING 1 . 10) '(T_NS_SEPARATOR 11 . 12) '(T_STRING 13 . 16) '(T_NS_SEPARATOR 17 . 18) '(T_STRING 19 . 29))
      'namespace_name)
-    (list '(namespace_name ((namespace_name ((namespace_name ((T_STRING 1 . 10))))))))))
+    (list '(namespace_name ((namespace_name ((namespace_name ((T_STRING 1 . 10))) (T_NS_SEPARATOR 11 . 12) (T_STRING 13 . 16))) (T_NS_SEPARATOR 17 . 18) (T_STRING 19 . 29))))))
   (message "Passed recursive parse of namespace-name")
 
   (should
@@ -58,7 +58,7 @@
     (phps-mode-parser-custom--parse
      (list '(T_STRING 1 . 10) '(T_NS_SEPARATOR 11 . 12) '(T_STRING 13 . 16) '(T_NS_SEPARATOR 17 . 18))
      'namespace_name)
-    (list '(namespace_name ((namespace_name ((T_STRING 1 . 10))))) '(T_NS_SEPARATOR 17 . 18))))
+    (list '(namespace_name ((namespace_name ((T_STRING 1 . 10))) (T_NS_SEPARATOR 11 . 12) (T_STRING 13 . 16))) '(T_NS_SEPARATOR 17 . 18))))
   (message "Passed recursive semi-parse of namespace-name")
 
   (should
@@ -78,7 +78,7 @@
     (phps-mode-parser-custom--parse
      (list '(T_HALT_COMPILER 7 . 11) '("(" 12 . 13) '(")" 14 . 15) '(";" 16 . 17))
      'top_statement)
-    (list '(top_statement ((T_HALT_COMPILER 7 . 11))))))
+    (list '(top_statement ((T_HALT_COMPILER 7 . 11) ("(" 12 . 13) (")" 14 . 15) (";" 16 . 17))))))
   (message "Passed full top_statement")
 
   (should
