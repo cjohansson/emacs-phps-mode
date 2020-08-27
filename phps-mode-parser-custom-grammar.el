@@ -717,16 +717,84 @@
  (list (list 'inline_function))
  (list (list 'T_STATIC 'inline_function)))
 
+(phps-mode-paser-custom-grammar--block
+ 'inline_function
+ (list (list 'function 'returns_ref 'backup_doc_comment "(" 'parameter_list ")" 'lexical_vars 'return_type 'backup_fn_flags "{" 'inner_statement_list "}" 'backup_fn_flags))
+ (list (list 'fn 'returns_ref "(" 'parameter_list ")" 'return_type 'backup_doc_comment 'T_DOUBLE_ARROW 'backup_fn_flags 'backup_lex_pos 'expr 'backup_fn_flags)))
 
+(phps-mode-paser-custom-grammar--block
+ 'fn
+ (list (list 'T_FN)))
 
+(phps-mode-paser-custom-grammar--block
+ 'function
+ (list (list 'T_FUNCTION)))
 
+(phps-mode-paser-custom-grammar--block
+ 'backup_doc_comment
+ (list (list 'empty)))
 
+(phps-mode-paser-custom-grammar--block
+ 'backup_fn_flags
+ (list (list 'PREC_ARROW_FUNCTION 'empty)))
 
+(phps-mode-paser-custom-grammar--block
+ 'backup_lex_pos
+ (list (list 'empty)))
 
+(phps-mode-paser-custom-grammar--block
+ 'returns_ref
+ (list (list 'empty))
+ (list (list "&")))
 
+(phps-mode-paser-custom-grammar--block
+ 'lexical_vars
+ (list (list 'empty))
+ (list (list 'T_USE "(" 'lexical_var_list ")")))
 
+(phps-mode-paser-custom-grammar--block
+ 'lexical_var_list
+ (list (list 'lexical_var_list "," 'lexical_var))
+ (list (list 'lexical_var)))
 
+(phps-mode-paser-custom-grammar--block
+ 'lexical_var
+ (list (list 'T_VARIABLE))
+ (list (list "&" 'T_VARIABLE)))
 
+(phps-mode-paser-custom-grammar--block
+ 'function_call
+ (list (list 'name 'argument_list))
+ (list (list 'class_name 'T_PAAMAYIM_NEKUDOTAYIM 'member_name 'argument_list))
+ (list (list 'variable_class_name 'T_PAAMAYIM_NEKUDOTAYIM 'member_name 'argument_list))
+ (list (list 'callable_expr 'argument_list)))
+
+(phps-mode-paser-custom-grammar--block
+ 'class_name
+ (list (list 'T_STATIC))
+ (list (list 'name)))
+
+(phps-mode-paser-custom-grammar--block
+ 'class_name_reference
+ (list (list 'class_name))
+ (list (list 'new_variable))
+ (list (list "(" 'expr ")")))
+
+(phps-mode-paser-custom-grammar--block
+ 'exit_expr
+ (list (list 'empty))
+ (list (list "(" 'optional_expr ")")))
+
+(phps-mode-paser-custom-grammar--block
+ 'backticks_expr
+ (list (list 'empty))
+ (list (list 'T_ENCAPSED_AND_WHITESPACE))
+ (list (list 'encaps_list)))
+
+(phps-mode-paser-custom-grammar--block
+ 'ctor_arguments
+ (list (list 'empty))
+ (list (list 'argument_list)))
 
 (phps-mode-paser-custom-grammar--block
  'dereferencable_scalar
@@ -735,7 +803,223 @@
  (list (list 'T_CONSTANT_ENCAPSED_STRING) (lambda (_a)))
  (list (list "\"" 'encaps_list "\"") (lambda (_a _b _c))))
 
+scalar:
+		T_LNUMBER 	{ $$ = $1; }
+	|	T_DNUMBER 	{ $$ = $1; }
+	|	T_START_HEREDOC T_ENCAPSED_AND_WHITESPACE T_END_HEREDOC { $$ = $2; }
+	|	T_START_HEREDOC T_END_HEREDOC
+			{ $$ = zend_ast_create_zval_from_str(ZSTR_EMPTY_ALLOC()); }
+	|	T_START_HEREDOC encaps_list T_END_HEREDOC { $$ = $2; }
+	|	dereferencable_scalar	{ $$ = $1; }
+	|	constant				{ $$ = $1; }
+	|	class_constant			{ $$ = $1; }
+;
 
+constant:
+		name		{ $$ = zend_ast_create(ZEND_AST_CONST, $1); }
+	|	T_LINE 		{ $$ = zend_ast_create_ex(ZEND_AST_MAGIC_CONST, T_LINE); }
+	|	T_FILE 		{ $$ = zend_ast_create_ex(ZEND_AST_MAGIC_CONST, T_FILE); }
+	|	T_DIR   	{ $$ = zend_ast_create_ex(ZEND_AST_MAGIC_CONST, T_DIR); }
+	|	T_TRAIT_C	{ $$ = zend_ast_create_ex(ZEND_AST_MAGIC_CONST, T_TRAIT_C); }
+	|	T_METHOD_C	{ $$ = zend_ast_create_ex(ZEND_AST_MAGIC_CONST, T_METHOD_C); }
+	|	T_FUNC_C	{ $$ = zend_ast_create_ex(ZEND_AST_MAGIC_CONST, T_FUNC_C); }
+	|	T_NS_C		{ $$ = zend_ast_create_ex(ZEND_AST_MAGIC_CONST, T_NS_C); }
+	|	T_CLASS_C	{ $$ = zend_ast_create_ex(ZEND_AST_MAGIC_CONST, T_CLASS_C); }
+;
+
+class_constant:
+		class_name T_PAAMAYIM_NEKUDOTAYIM identifier
+			{ $$ = zend_ast_create_class_const_or_name($1, $3); }
+	|	variable_class_name T_PAAMAYIM_NEKUDOTAYIM identifier
+			{ $$ = zend_ast_create_class_const_or_name($1, $3); }
+;
+
+optional_expr:
+		%empty	{ $$ = NULL; }
+	|	expr		{ $$ = $1; }
+;
+
+variable_class_name:
+		fully_dereferencable { $$ = $1; }
+;
+
+fully_dereferencable:
+		variable				{ $$ = $1; }
+	|	'(' expr ')'			{ $$ = $2; }
+	|	dereferencable_scalar	{ $$ = $1; }
+	|	class_constant			{ $$ = $1; }
+;
+
+array_object_dereferencable:
+		fully_dereferencable	{ $$ = $1; }
+	|	constant				{ $$ = $1; }
+;
+
+callable_expr:
+		callable_variable		{ $$ = $1; }
+	|	'(' expr ')'			{ $$ = $2; }
+	|	dereferencable_scalar	{ $$ = $1; }
+;
+
+callable_variable:
+		simple_variable
+			{ $$ = zend_ast_create(ZEND_AST_VAR, $1); }
+	|	array_object_dereferencable '[' optional_expr ']'
+			{ $$ = zend_ast_create(ZEND_AST_DIM, $1, $3); }
+	|	array_object_dereferencable '{' expr '}'
+			{ $$ = zend_ast_create_ex(ZEND_AST_DIM, ZEND_DIM_ALTERNATIVE_SYNTAX, $1, $3); }
+	|	array_object_dereferencable T_OBJECT_OPERATOR property_name argument_list
+			{ $$ = zend_ast_create(ZEND_AST_METHOD_CALL, $1, $3, $4); }
+	|	function_call { $$ = $1; }
+;
+
+variable:
+		callable_variable
+			{ $$ = $1; }
+	|	static_member
+			{ $$ = $1; }
+	|	array_object_dereferencable T_OBJECT_OPERATOR property_name
+			{ $$ = zend_ast_create(ZEND_AST_PROP, $1, $3); }
+;
+
+simple_variable:
+		T_VARIABLE			{ $$ = $1; }
+	|	'$' '{' expr '}'	{ $$ = $3; }
+	|	'$' simple_variable	{ $$ = zend_ast_create(ZEND_AST_VAR, $2); }
+;
+
+static_member:
+		class_name T_PAAMAYIM_NEKUDOTAYIM simple_variable
+			{ $$ = zend_ast_create(ZEND_AST_STATIC_PROP, $1, $3); }
+	|	variable_class_name T_PAAMAYIM_NEKUDOTAYIM simple_variable
+			{ $$ = zend_ast_create(ZEND_AST_STATIC_PROP, $1, $3); }
+;
+
+new_variable:
+		simple_variable
+			{ $$ = zend_ast_create(ZEND_AST_VAR, $1); }
+	|	new_variable '[' optional_expr ']'
+			{ $$ = zend_ast_create(ZEND_AST_DIM, $1, $3); }
+	|	new_variable '{' expr '}'
+			{ $$ = zend_ast_create_ex(ZEND_AST_DIM, ZEND_DIM_ALTERNATIVE_SYNTAX, $1, $3); }
+	|	new_variable T_OBJECT_OPERATOR property_name
+			{ $$ = zend_ast_create(ZEND_AST_PROP, $1, $3); }
+	|	class_name T_PAAMAYIM_NEKUDOTAYIM simple_variable
+			{ $$ = zend_ast_create(ZEND_AST_STATIC_PROP, $1, $3); }
+	|	new_variable T_PAAMAYIM_NEKUDOTAYIM simple_variable
+			{ $$ = zend_ast_create(ZEND_AST_STATIC_PROP, $1, $3); }
+;
+
+member_name:
+		identifier { $$ = $1; }
+	|	'{' expr '}'	{ $$ = $2; }
+	|	simple_variable	{ $$ = zend_ast_create(ZEND_AST_VAR, $1); }
+;
+
+property_name:
+		T_STRING { $$ = $1; }
+	|	'{' expr '}'	{ $$ = $2; }
+	|	simple_variable	{ $$ = zend_ast_create(ZEND_AST_VAR, $1); }
+;
+
+array_pair_list:
+		non_empty_array_pair_list
+			{ /* allow single trailing comma */ $$ = zend_ast_list_rtrim($1); }
+;
+
+possible_array_pair:
+		%empty { $$ = NULL; }
+	|	array_pair  { $$ = $1; }
+;
+
+non_empty_array_pair_list:
+		non_empty_array_pair_list ',' possible_array_pair
+			{ $$ = zend_ast_list_add($1, $3); }
+	|	possible_array_pair
+			{ $$ = zend_ast_create_list(1, ZEND_AST_ARRAY, $1); }
+;
+
+array_pair:
+		expr T_DOUBLE_ARROW expr
+			{ $$ = zend_ast_create(ZEND_AST_ARRAY_ELEM, $3, $1); }
+	|	expr
+			{ $$ = zend_ast_create(ZEND_AST_ARRAY_ELEM, $1, NULL); }
+	|	expr T_DOUBLE_ARROW '&' variable
+			{ $$ = zend_ast_create_ex(ZEND_AST_ARRAY_ELEM, 1, $4, $1); }
+	|	'&' variable
+			{ $$ = zend_ast_create_ex(ZEND_AST_ARRAY_ELEM, 1, $2, NULL); }
+	|	T_ELLIPSIS expr
+			{ $$ = zend_ast_create(ZEND_AST_UNPACK, $2); }
+	|	expr T_DOUBLE_ARROW T_LIST '(' array_pair_list ')'
+			{ $5->attr = ZEND_ARRAY_SYNTAX_LIST;
+			  $$ = zend_ast_create(ZEND_AST_ARRAY_ELEM, $5, $1); }
+	|	T_LIST '(' array_pair_list ')'
+			{ $3->attr = ZEND_ARRAY_SYNTAX_LIST;
+			  $$ = zend_ast_create(ZEND_AST_ARRAY_ELEM, $3, NULL); }
+;
+
+encaps_list:
+		encaps_list encaps_var
+			{ $$ = zend_ast_list_add($1, $2); }
+	|	encaps_list T_ENCAPSED_AND_WHITESPACE
+			{ $$ = zend_ast_list_add($1, $2); }
+	|	encaps_var
+			{ $$ = zend_ast_create_list(1, ZEND_AST_ENCAPS_LIST, $1); }
+	|	T_ENCAPSED_AND_WHITESPACE encaps_var
+			{ $$ = zend_ast_create_list(2, ZEND_AST_ENCAPS_LIST, $1, $2); }
+;
+
+encaps_var:
+		T_VARIABLE
+			{ $$ = zend_ast_create(ZEND_AST_VAR, $1); }
+	|	T_VARIABLE '[' encaps_var_offset ']'
+			{ $$ = zend_ast_create(ZEND_AST_DIM,
+			      zend_ast_create(ZEND_AST_VAR, $1), $3); }
+	|	T_VARIABLE T_OBJECT_OPERATOR T_STRING
+			{ $$ = zend_ast_create(ZEND_AST_PROP,
+			      zend_ast_create(ZEND_AST_VAR, $1), $3); }
+	|	T_DOLLAR_OPEN_CURLY_BRACES expr '}'
+			{ $$ = zend_ast_create(ZEND_AST_VAR, $2); }
+	|	T_DOLLAR_OPEN_CURLY_BRACES T_STRING_VARNAME '}'
+			{ $$ = zend_ast_create(ZEND_AST_VAR, $2); }
+	|	T_DOLLAR_OPEN_CURLY_BRACES T_STRING_VARNAME '[' expr ']' '}'
+			{ $$ = zend_ast_create(ZEND_AST_DIM,
+			      zend_ast_create(ZEND_AST_VAR, $2), $4); }
+	|	T_CURLY_OPEN variable '}' { $$ = $2; }
+;
+
+encaps_var_offset:
+		T_STRING			{ $$ = $1; }
+	|	T_NUM_STRING		{ $$ = $1; }
+	|	'-' T_NUM_STRING 	{ $$ = zend_negate_num_string($2); }
+	|	T_VARIABLE			{ $$ = zend_ast_create(ZEND_AST_VAR, $1); }
+;
+
+
+internal_functions_in_yacc:
+		T_ISSET '(' isset_variables possible_comma ')' { $$ = $3; }
+	|	T_EMPTY '(' expr ')' { $$ = zend_ast_create(ZEND_AST_EMPTY, $3); }
+	|	T_INCLUDE expr
+			{ $$ = zend_ast_create_ex(ZEND_AST_INCLUDE_OR_EVAL, ZEND_INCLUDE, $2); }
+	|	T_INCLUDE_ONCE expr
+			{ $$ = zend_ast_create_ex(ZEND_AST_INCLUDE_OR_EVAL, ZEND_INCLUDE_ONCE, $2); }
+	|	T_EVAL '(' expr ')'
+			{ $$ = zend_ast_create_ex(ZEND_AST_INCLUDE_OR_EVAL, ZEND_EVAL, $3); }
+	|	T_REQUIRE expr
+			{ $$ = zend_ast_create_ex(ZEND_AST_INCLUDE_OR_EVAL, ZEND_REQUIRE, $2); }
+	|	T_REQUIRE_ONCE expr
+			{ $$ = zend_ast_create_ex(ZEND_AST_INCLUDE_OR_EVAL, ZEND_REQUIRE_ONCE, $2); }
+;
+
+isset_variables:
+		isset_variable { $$ = $1; }
+	|	isset_variables ',' isset_variable
+			{ $$ = zend_ast_create(ZEND_AST_AND, $1, $3); }
+;
+
+isset_variable:
+		expr { $$ = zend_ast_create(ZEND_AST_ISSET, $1); }
+;
 
 
 (provide 'phps-mode-parser-custom-grammar)
