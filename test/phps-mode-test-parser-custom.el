@@ -40,6 +40,22 @@
   (should
    (equal
     (phps-mode-parser-custom--parse
+     (list '("," 1 . 2))
+     'possible_comma)
+    (list '(possible_comma (("," 1 . 2))))))
+  (message "Passed empty test 1")
+
+  (should
+   (equal
+    (phps-mode-parser-custom--parse
+     (list '(T_STRING 1 . 10))
+     'possible_comma)
+    (list '(possible_comma) '(T_STRING 1 . 10))))
+  (message "Passed empty test 2")
+  
+  (should
+   (equal
+    (phps-mode-parser-custom--parse
      (list '(T_STRING 1 . 10))
      'namespace_name)
     (list '(namespace_name ((T_STRING 1 . 10))))))
@@ -106,6 +122,15 @@
     (equal
      (phps-mode-parser-custom--parse)
      (list '(T_INLINE_HTML 1 . 39) '(T_OPEN_TAG 39 . 45) '(reserved_non_modifiers ((T_EXIT 47 . 51))) '(";" 51 . 53) '(T_CLOSE_TAG 51 . 53) '(T_INLINE_HTML 53 . 78) '(T_OPEN_TAG 78 . 84) '(reserved_non_modifiers ((T_EXIT 84 . 88))) '(";" 89 . 91) '(T_CLOSE_TAG 89 . 91)))))
+
+  (phps-mode-test--with-buffer
+   "<?php\nclass foo\n{\n    public $foo;\n    public $bar;\n\n    function __construct()\n    {\n        $this->foo = 'Foo';\n        $this->bar = array('Bar1', 'Bar2', 'Bar3');\n    }\n}\n\n$foo = new foo();\n$name = 'MyName';\n\necho <<<'EOT'\nMy name is \"$name\". I am printing some $foo->foo.\nNow, I am printing some {$foo->bar[1]}.\nThis should not print a capital 'A': \x41\nEOT;\n?>\n"
+   "Example #8 Nowdoc string quoting example with variables"
+   (message "Parse: '%s'" (phps-mode-parser-custom--parse))
+   (should
+    (equal
+     (phps-mode-parser-custom--parse)
+     nil)))
 
   (message "\n-- Ran tests for generate-parser-table. --"))
 

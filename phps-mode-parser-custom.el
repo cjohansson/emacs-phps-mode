@@ -68,7 +68,8 @@
         (step 0)
         (look-ahead)
         (parse-action)
-        (continue t))
+        (continue t)
+        (last-reduction-state))
     (setq look-ahead (car (car unscanned)))
     (while continue
 
@@ -86,7 +87,7 @@
           (if state
               (if unscanned
                   (setq goto-states (list state))
-                (setq goto-states (gethash state goto-table)))
+                (setq goto-states (reverse (gethash state goto-table))))
             (setq goto-states leaf-states))
 
           (phps-mode-debug-message
@@ -108,7 +109,8 @@
                       (reduction)
                       (logic)
                       (reduction-search)
-                      (reduction-length))
+                      (reduction-length)
+                      (empty-count))
 
                   (when actions
                     (phps-mode-debug-message
@@ -124,24 +126,28 @@
                       (setq reduction-length 0)
                       (setq reduction-search t)
 
-                      (if (< (length parse-stack) (length reduction))
-                          (progn
-                            (phps-mode-debug-message
-                             (message "Reduction is longer than parse stack, ignoring"))
-                            (setq reduction-search nil))
-                        (phps-mode-debug-message
-                         (message "Comparing parse-stack: '%s' with reduction: '%s'" parse-stack reduction))
-                        ;; Iterate all parts of pattern and compare with stack
-                        (setq reduction-subpattern (pop reduction))
+                      (phps-mode-debug-message
+                       (message "Comparing parse-stack: '%s' with reduction: '%s'" parse-stack reduction))
+                      ;; Iterate all parts of pattern and compare with stack
+                      (setq reduction-subpattern (pop reduction))
 
-                        ;; Empty pattern is no match
-                        (unless reduction-subpattern
-                          (setq reduction-search nil))
+                      ;; Empty pattern is no match
+                      (unless reduction-subpattern
+                        (setq reduction-search nil))
 
-                        (while (and
-                                reduction-subpattern
-                                reduction-search)
-                          (setq reduction-length (1+ reduction-length))
+                      (setq empty-count 0)
+                      (while (and
+                              (>= (length parse-stack) reduction-length)
+                              reduction-subpattern
+                              reduction-search)
+                        (setq reduction-length (1+ reduction-length))
+                        (if (and
+                             (equal reduction-subpattern '%empty)
+                             (not (equal goto-state last-reduction-state)))
+                            (progn
+                              (setq empty-count (1+ empty-count))
+                              (phps-mode-debug-message
+                               (message "Skipping empty sub-pattern")))
 
                           (if (equal
                                (nth (1- reduction-length) parse-stack)
@@ -150,19 +156,20 @@
                                (message "Sub-pattern '%s' did match '%s'" reduction-subpattern (nth (1- reduction-length) parse-stack)))
                             (phps-mode-debug-message
                              (message "Sub-pattern '%s' did not match '%s'" reduction-subpattern (nth (1- reduction-length) parse-stack)))
-                            (setq reduction-search nil))
+                            (setq reduction-search nil)))
 
-                          (setq reduction-subpattern (pop reduction)))
+                        (setq reduction-subpattern (pop reduction)))
 
-                        ;; When we find a reduction, stop parent loop
-                        (when reduction-search
-                          (setq searching-reduction nil)))
+                      ;; When we find a reduction, stop parent loop
+                      (when reduction-search
+                        (setq searching-reduction nil))
 
                       (setq action (pop actions)))
 
                     (if reduction-search
                         (progn
                           (setq parse-action 'reduce)
+                          ;; (setq reduction-length (- reduction-length empty-count))
                           (phps-mode-debug-message
                            (message "Action: reduction of length: %s -> '%s'" reduction-length goto-state))
                           (let ((popped-parse-stack)
@@ -194,12 +201,27 @@
                                 (funcall logic (nreverse popped-parse-tree))))
 
                             (push goto-state parse-stack)
-                            (push `(,goto-state ,popped-parse-tree) parse-tree)
+
+                            (if (and popped-parse-tree
+                                     (equal empty-count 0))
+                                (push `(,goto-state ,popped-parse-tree) parse-tree)
+                              (push `(,goto-state) parse-tree))
+
+                            (while (> empty-count 0)
+                              (setq empty-count (1- empty-count))
+                              (push (pop popped-parse-stack) parse-stack)
+                              (push (pop popped-parse-tree) parse-tree))
+                            
                             (setq state goto-state)
+                            (setq last-reduction-state goto-state)
+
                             (phps-mode-debug-message
                              (message "Popped-parse-stack: '%s'" popped-parse-stack)
                              (message "New-parse-stack: '%s'" parse-stack)
-                             (message "New-state: '%s'" state))))
+                             (message "New-state: '%s'" state))
+
+
+                            ))
                       (phps-mode-debug-message
                        (message "Failed to find reduction.")))
 
@@ -218,6 +240,7 @@
       (setq look-ahead (car (car unscanned))))
     (nreverse parse-tree)))
 
+;; TODO Need to create a action-table and goto-table
 (defun phps-mode-parser-custom--generate-parser (&optional grammar start)
   "Generate action-table, goto-table and leaf states for GRAMMAR starting at START."
   (unless grammar
@@ -227,14 +250,13 @@
   (let ((state-queue (list start))
         (action-table (make-hash-table :test 'equal))
         (goto-table (make-hash-table :test 'equal))
-        (state-name)
         (parsed-states (make-hash-table :test 'equal))
+        (state-name)
         (leaf-states))
     (setq state-name (pop state-queue))
     (while state-name
       (unless (gethash state-name parsed-states)
-        (phps-mode-debug-message
-         (message "State: '%s'" state-name))
+        (phps-mode-debug-message (message "State: '%s'" state-name))
 
         ;; A state pattern is always reducible to itself
         (puthash state-name (list state-name) goto-table)
@@ -307,6 +329,7 @@
 
       ;; Process next state in queue
       (setq state-name (pop state-queue)))
+    (message "Leaf states: '%s'" leaf-states)
     (setq phps-mode-parser-custom--parser-leaf-states leaf-states)
     (setq phps-mode-parser-custom--parser-goto-table goto-table)
     (setq phps-mode-parser-custom--parser-action-table action-table)))
