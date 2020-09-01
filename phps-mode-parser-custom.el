@@ -264,10 +264,12 @@
         ;; (phps-mode-debug-message (message "State: '%s'" state-name))
 
         (let ((is-leaf t))
-          (let ((state (gethash state-name grammar)))
+          (let ((state (gethash state-name grammar))
+                (prefix))
 
             ;; Iterate all grammar blocks in state
             (dolist (state-block state)
+              (setq prefix nil)
               (let ((state-patterns (car state-block))
                     (state-logic (cdr state-block)))
 
@@ -280,8 +282,6 @@
                        (not (equal state-pattern state-name))
                        (gethash state-pattern grammar))
                       (progn
-                        (phps-mode-debug-message)
-
                         ;; This state is not a leaf
                         (when is-leaf (setq is-leaf nil))
 
@@ -292,15 +292,15 @@
 
                           ;; Check if relationship is already saved
                           (dolist (connection state-connections)
-                            (when (equal connection state-name)
+                            (when (equal (car connection) state-name)
                               (setq has-link t)))
 
                           ;; Save new relationship
                           (unless has-link
-                            (phps-mode-debug-message
-                             ;; (message "'%s' -> '%s'" state-name state-pattern)
-                             )
-                            (push state-name state-connections))
+                            (if prefix
+                                (phps-mode-debug-message (message "'%s' -> %s '%s'" state-name (reverse prefix) state-pattern))
+                              (phps-mode-debug-message (message "'%s' -> '%s'" state-name state-pattern)))
+                            (push (list state-name (reverse prefix)) state-connections))
 
                           (puthash state-pattern state-connections state-graph))
                         (when (and (not (equal state-pattern state-name))
@@ -310,7 +310,9 @@
                      (unless (or (equal state-pattern state-name)
                                  (equal state-pattern '%empty))
                        ;; (message "Leaf-pattern: '%s'" state-pattern)
-                       )))))))
+                       )))
+
+                  (push state-pattern prefix)))))
 
           (when is-leaf
             (phps-mode-debug-message
