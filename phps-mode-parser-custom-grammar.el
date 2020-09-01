@@ -202,6 +202,21 @@
  (list (list 'unprefixed_use_declaration)))
 
 (phps-mode-paser-custom-grammar--block
+ 'use_declarations
+ (list (list 'use_declarations "," 'use_declaration))
+ (list (list 'use_declaration)))
+
+(phps-mode-paser-custom-grammar--block
+ 'inline_use_declaration
+ (list (list 'unprefixed_use_declaration))
+ (list (list 'use_type 'unprefixed_use_declaration)))
+
+(phps-mode-paser-custom-grammar--block
+ 'unprefixed_use_declaration
+ (list (list 'namespace_name))
+ (list (list 'namespace_name 'T_AS 'T_STRING)))
+
+(phps-mode-paser-custom-grammar--block
  'use_declaration
  (list (list 'unprefixed_use_declaration))
  (list (list 'T_NS_SEPARATOR 'unprefixed_use_declaration)))
