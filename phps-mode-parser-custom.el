@@ -240,6 +240,7 @@
       (setq look-ahead (car (car unscanned))))
     (nreverse parse-tree)))
 
+;; TODO Need to create a tree were pattern order is preserved
 ;; TODO Need to create a action-table and goto-table
 (defun phps-mode-parser-custom--generate-parser (&optional grammar start)
   "Generate action-table, goto-table and leaf states for GRAMMAR starting at START."
@@ -249,79 +250,72 @@
     (setq start phps-mode-parser-custom-grammar--start-state))
   (let ((state-queue (list start))
         (action-table (make-hash-table :test 'equal))
-        (goto-table (make-hash-table :test 'equal))
+        (state-graph (make-hash-table :test 'equal))
         (parsed-states (make-hash-table :test 'equal))
         (state-name)
         (leaf-states))
+
+    ;; Build top-down graph of grammar
+    (phps-mode-debug-message
+     (message "Building top-down graph of grammar..\n"))
     (setq state-name (pop state-queue))
     (while state-name
       (unless (gethash state-name parsed-states)
-        (phps-mode-debug-message (message "State: '%s'" state-name))
-
-        ;; A state pattern is always reducible to itself
-        (puthash state-name (list state-name) goto-table)
+        ;; (phps-mode-debug-message (message "State: '%s'" state-name))
 
         (let ((is-leaf t))
           (let ((state (gethash state-name grammar)))
 
             ;; Iterate all grammar blocks in state
             (dolist (state-block state)
-              (let ((state-patterns (nreverse (car state-block)))
+              (let ((state-patterns (car state-block))
                     (state-logic (cdr state-block)))
-                (phps-mode-debug-message
-                 (message "Reduction: '%s' -> '%s'" state-patterns state-name))
-
-                (let ((existing-patterns (gethash state-name action-table)))
-                  (if existing-patterns
-                      (push (list state-patterns state-logic) existing-patterns)
-                    (setq existing-patterns (list (list state-patterns state-logic))))
-                  (puthash state-name existing-patterns action-table)
-                  (phps-mode-debug-message
-                   (message "State-action-table: '%s'" existing-patterns)))
 
                 ;; Iterate all patterns in grammar block
                 (dolist (state-pattern state-patterns)
 
                   ;; Does rule contain a branch?
                   (if (and
+                       (not (equal state-pattern '%empty))
                        (not (equal state-pattern state-name))
                        (gethash state-pattern grammar))
                       (progn
-                        (phps-mode-debug-message
-                         (message "Branch-pattern: '%s'" state-pattern))
+                        (phps-mode-debug-message)
 
                         ;; This state is not a leaf
-                        (when is-leaf
-                          (setq is-leaf nil))
+                        (when is-leaf (setq is-leaf nil))
 
                         (let ((state-connections)
                               (has-link))
-                          (when (gethash state-pattern goto-table)
-                            (setq state-connections (gethash state-pattern goto-table)))
+                          (when (gethash state-pattern state-graph)
+                            (setq state-connections (gethash state-pattern state-graph)))
 
                           ;; Check if relationship is already saved
                           (dolist (connection state-connections)
                             (when (equal connection state-name)
-                              (phps-mode-debug-message
-                               (message "Relation ship already exists '%s'" state-name))
                               (setq has-link t)))
 
                           ;; Save new relationship
                           (unless has-link
-                            (push state-name state-connections)
                             (phps-mode-debug-message
-                             (message "Relationship: '%s' -> '%s'" state-pattern state-name)))
+                             ;; (message "'%s' -> '%s'" state-name state-pattern)
+                             )
+                            (push state-name state-connections))
 
-                          (puthash state-pattern state-connections goto-table))
+                          (puthash state-pattern state-connections state-graph))
                         (when (and (not (equal state-pattern state-name))
                                    (not (gethash state-pattern parsed-states)))
                           (push state-pattern state-queue)))
                     (phps-mode-debug-message
-                     (message "Leaf-pattern: '%s'" state-pattern)))))))
+                     (unless (or (equal state-pattern state-name)
+                                 (equal state-pattern '%empty))
+                       ;; (message "Leaf-pattern: '%s'" state-pattern)
+                       )))))))
 
           (when is-leaf
             (phps-mode-debug-message
-             (message "Leaf-state: '%s'" state-name))
+             ;; (message "Leaf-state: '%s'" state-name)
+             )
             (push state-name leaf-states))
 
           ;; Mark state as parsed
@@ -329,10 +323,44 @@
 
       ;; Process next state in queue
       (setq state-name (pop state-queue)))
+    (setq leaf-states (nreverse leaf-states))
     (message "Leaf states: '%s'" leaf-states)
-    (setq phps-mode-parser-custom--parser-leaf-states leaf-states)
-    (setq phps-mode-parser-custom--parser-goto-table goto-table)
-    (setq phps-mode-parser-custom--parser-action-table action-table)))
+
+    ;; (message "Grammar-graph: %s" state-graph)
+
+    (phps-mode-debug-message
+     (message "Building bottom-up goto and action-table.."))
+
+    ;; Construct grammar entry point
+    (let ((states leaf-states)
+          (state-name)
+          (state)
+          (parents)
+          (path)
+          (paths))
+      (while leaf-states
+        (setq state-name (pop leaf-states))
+        (setq path (phps-mode-parser-custom--get-path state-name state-graph))
+        (when path
+          (push path paths)))
+      (message "Paths: %s" paths))))
+
+(defun phps-mode-parser-custom--get-path (state graph &optional processed)
+  "Get recursive path from STATE in GRAPH, skip PROCESSED states."
+  (unless processed
+    (setq processed (make-hash-table :test 'equal)))
+  (unless (gethash state processed)
+    (let ((parents (gethash state graph))
+          (path)
+          (paths))
+      (puthash state t processed)
+      (when parents
+        (progn
+          ;; (message "Parents: %s -> %s" state parents)
+          (dolist (parent parents)
+            (setq path (phps-mode-parser-custom--get-path parent graph processed))
+            (push `(,parent . ,path) paths))
+          `(,state ,paths))))))
 
 (provide 'phps-mode-parser-custom)
 
