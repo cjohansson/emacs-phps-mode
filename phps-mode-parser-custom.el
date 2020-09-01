@@ -248,20 +248,24 @@
     (setq grammar phps-mode-parser-custom-grammar))
   (unless start
     (setq start phps-mode-parser-custom-grammar--start-state))
-  (let ((state-queue (list start))
+  (let ((state-queue (list (list start nil)))
         (action-table (make-hash-table :test 'equal))
         (state-graph (make-hash-table :test 'equal))
         (parsed-states (make-hash-table :test 'equal))
+        (state)
         (state-name)
+        (state-prefix)
         (leaf-states))
 
     ;; Build top-down graph of grammar
     (phps-mode-debug-message
      (message "Building top-down graph of grammar..\n"))
-    (setq state-name (pop state-queue))
+    (setq state (pop state-queue))
+    (setq state-name (car state))
+    (setq state-prefix (car (cdr state)))
     (while state-name
       (unless (gethash state-name parsed-states)
-        ;; (phps-mode-debug-message (message "State: '%s'" state-name))
+        ;; (phps-mode-debug-message (message "State: '%s', prefix: '%s'" state-name state-prefix))
 
         (let ((is-leaf t))
           (let ((state (gethash state-name grammar))
@@ -305,7 +309,8 @@
                           (puthash state-pattern state-connections state-graph))
                         (when (and (not (equal state-pattern state-name))
                                    (not (gethash state-pattern parsed-states)))
-                          (push state-pattern state-queue)))
+                          ;; (phps-mode-debug-message (message "Added-to-state-queue: %s %s" (reverse prefix) state-pattern))
+                          (push (list state-pattern (reverse prefix)) state-queue)))
                     (phps-mode-debug-message
                      (unless (or (equal state-pattern state-name)
                                  (equal state-pattern '%empty))
@@ -314,7 +319,9 @@
 
                   (push state-pattern prefix)))))
 
-          (when is-leaf
+          (when (and
+                 is-leaf
+                 (not state-prefix))
             (phps-mode-debug-message
              ;; (message "Leaf-state: '%s'" state-name)
              )
@@ -324,7 +331,10 @@
           (puthash state-name t parsed-states)))
 
       ;; Process next state in queue
-      (setq state-name (pop state-queue)))
+      (setq state (pop state-queue))
+      (setq state-name (car state))
+      (setq state-prefix (car (cdr state))))
+
     (setq leaf-states (nreverse leaf-states))
     (message "Leaf states: '%s'" leaf-states)
 
