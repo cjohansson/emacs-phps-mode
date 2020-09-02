@@ -298,7 +298,7 @@
 
                           ;; Check if relationship is already saved
                           (dolist (connection state-connections)
-                            (when (equal (car connection) state-name)
+                            (when (equal connection (list state-name (reverse prefix)))
                               (setq has-link t)))
 
                           ;; Save new relationship
@@ -306,9 +306,9 @@
                             (if prefix
                                 (phps-mode-debug-message (message "'%s' -> %s '%s'" state-name (reverse prefix) state-pattern))
                               (phps-mode-debug-message (message "'%s' -> '%s'" state-name state-pattern)))
-                            (push (list state-name (reverse prefix)) state-connections))
+                            (push (list state-name (reverse prefix)) state-connections)
+                            (puthash state-pattern state-connections state-graph)))
 
-                          (puthash state-pattern state-connections state-graph))
                         (when (and (not (equal state-pattern state-name))
                                    (not (gethash state-pattern parsed-states)))
                           ;; (phps-mode-debug-message (message "Added-to-state-queue: %s %s" (reverse prefix) state-pattern))
@@ -356,8 +356,8 @@
                   (setq next-state (concat state (symbol-name leaf-state))))
                 (puthash (list state state-pattern) next-state shift-table)
                 (if next-state
-                    (message "Shift: look-a-head(1): '%s' in state: '%s' -> state: '%s'" state-pattern state next-state)
-                  (message "Shift: look-a-head(1): '%s' in state: '%s'" state-pattern state))
+                    (message "Shift: look-ahead(1): '%s' in state: '%s' -> state: '%s'" state-pattern state next-state)
+                  (message "Shift: look-ahead(1): '%s' in state: '%s'" state-pattern state))
                 (when next-state
                   (setq state next-state))
                 (setq pattern-index (1+ pattern-index))))
@@ -369,6 +369,28 @@
 
     (message "\n")
 
+    ;; TODO Traverse up the three from the leaves and build shift and reduction tables
+    (let ((state-queue)
+          (state))
+
+      ;; Build list of next-level states to build shift- and reduction-tables for
+      (dolist (leaf-state leaf-states)
+        (let ((parents (gethash leaf-state state-graph)))
+          (dolist (parent parents)
+            (let ((parent-state (car parent))
+                  (parent-prefix (car (cdr parent))))
+              (if parent-prefix
+                  (message "Parent: '%s' to %s %s" parent-state parent-prefix leaf-state)
+                (message "Parent: '%s' to %s" parent-state leaf-state))
+              (unless parent-prefix
+                (push parent-state state-queue))))))
+
+      ;; Iterate all states from level 2 and build shift- and reduction-tables for them
+      (setq state (pop state-queue))
+      (while state-queue
+        (setq state (pop state-queue))))
+
+    (message "\n")
     (phps-mode-debug-message
      (message "Building bottom-up goto and action-table.."))
 
