@@ -249,7 +249,9 @@
   (unless start
     (setq start phps-mode-parser-custom-grammar--start-state))
   (let ((state-queue (list (list start nil)))
-        (action-table (make-hash-table :test 'equal))
+        (shift-table (make-hash-table :test 'equal))
+        (reduction-table (make-hash-table :test 'equal))
+        (goto-table (make-hash-table :test 'equal))
         (state-graph (make-hash-table :test 'equal))
         (parsed-states (make-hash-table :test 'equal))
         (state)
@@ -337,8 +339,35 @@
 
     (setq leaf-states (nreverse leaf-states))
     (message "Leaf states: '%s'" leaf-states)
+    (message "\n")
+
+    (dolist (leaf-state leaf-states)
+      (let ((state-blocks (gethash leaf-state grammar)))
+        (dolist (state-block state-blocks)
+          (let* ((state-patterns (car state-block))
+                (state-logic (cdr state-block))
+                (state "0")
+                (pattern-index 1)
+                (pattern-count (length state-patterns)))
+
+            (dolist (state-pattern state-patterns)
+              (let ((next-state))
+                (when (< pattern-index pattern-count)
+                  (setq next-state (concat state (symbol-name leaf-state))))
+                (puthash (list state state-pattern) next-state shift-table)
+                (if next-state
+                    (message "Shift: look-a-head(1): '%s' in state: '%s' -> state: '%s'" state-pattern state next-state)
+                  (message "Shift: look-a-head(1): '%s' in state: '%s'" state-pattern state))
+                (when next-state
+                  (setq state next-state))
+                (setq pattern-index (1+ pattern-index))))
+
+            (message "Reduction: stack: '%s' in state '%s' -> '%s'" state-patterns state leaf-state)
+            (puthash (list state state-patterns) leaf-state reduction-table)))))
 
     ;; (message "Grammar-graph: %s" state-graph)
+
+    (message "\n")
 
     (phps-mode-debug-message
      (message "Building bottom-up goto and action-table.."))
