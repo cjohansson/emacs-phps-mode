@@ -212,6 +212,7 @@
       (setq look-ahead (car (car unscanned))))
     (nreverse parse-tree)))
 
+;; TODO Need to re-design entry-point in grammar
 (defun phps-mode-parser-custom--generate-parser (&optional grammar start)
   "Generate action-table, goto-table and leaf states for GRAMMAR starting at START."
   (unless grammar
@@ -238,9 +239,9 @@
     (setq state-look-ahead (car (cdr (cdr state))))
     (while state-name
       (unless (gethash state-name parsed-states)
-        ;; (phps-mode-debug-message (message "State: '%s', prefix: '%s', look-ahead: '%s'" state-name state-prefix state-look-ahead))
+        (phps-mode-debug-message (message "State: '%s', prefix: '%s', look-ahead: '%s'" state-name state-prefix state-look-ahead))
 
-        (let ((is-leaf t))
+        (let ((is-leaf nil))
           (let ((state (gethash state-name grammar))
                 (prefix))
 
@@ -252,7 +253,8 @@
                     (state-pattern)
                     (look-ahead)
                     (right-hand-side)
-                    (remaining))
+                    (remaining)
+                    (is-first-letter t))
 
                 ;; Iterate all patterns in grammar block
                 (setq state-pattern (pop state-patterns))
@@ -264,10 +266,12 @@
                        (not (equal state-pattern '%empty))
                        (gethash state-pattern grammar))
                       (progn
-                        ;; This state is not a leaf
-                        (when is-leaf (setq is-leaf nil))
                         (setq remaining state-patterns)
                         (setq right-hand-side (reverse prefix))
+
+                        ;; When pattern starts with intermediate which isn't itself it's not a leaf
+                        (when (and is-first-letter
+                                   (setq is-leaf nil)))
 
                         ;; If look-ahead is a intermediate set it to nil
                         (when look-ahead
@@ -294,21 +298,21 @@
                                    (not (gethash state-pattern parsed-states)))
                           ;; (phps-mode-debug-message (message "Added-to-state-queue: %s %s" right-hand-side state-pattern))
                           (push (list right-hand-side state-pattern look-ahead) state-queue)))
-                    (phps-mode-debug-message
-                     (unless (or (equal state-pattern state-name)
-                                 (equal state-pattern '%empty))
-                       ;; (message "Leaf-pattern: '%s'" state-pattern)
-                       )))
+                    (unless (equal state-pattern '%empty)
+                      (setq is-leaf t)))
 
-                  (push state-pattern prefix)
+                  ;; Avoid listing recursive grammar as having prefix
+                  (unless (equal state-pattern state-name)
+                    (push state-pattern prefix))
+
                   (setq state-pattern (pop state-patterns))
-                  (setq look-ahead (car state-patterns))))))
+                  (setq look-ahead (car state-patterns))
+                  (setq is-first-letter nil)))))
 
-          (when (and
-                 is-leaf
+          (when (and is-leaf
                  (not state-prefix))
             (phps-mode-debug-message
-             ;; (message "Leaf-state: '%s'" state-name)
+             (message "Leaf-state: '%s'" state-name)
              )
             (push state-name leaf-states))
 
