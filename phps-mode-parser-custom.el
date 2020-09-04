@@ -89,7 +89,84 @@
       (setq parse-action nil)
 
       (if state
-          (error (format "Do something with state '%s' here" state))
+          (let ((found-shift-action nil)
+                (found-reduce-action nil)
+                (valid-shifts))
+
+            ;; Get state action-table
+            (let* ((state-action-table (gethash state action-table))
+                   (state-action-status (gethash potential-shift-stack state-action-table)))
+
+              ;; (message "Found-state-action-table: '%s'" state-action-table)
+              (if state-action-status
+                  (progn
+                    (when (equal state-action-status t)
+                      (setq found-reduce-action leaf-state))
+                    (setq found-shift-action t))
+                (when (gethash shift-stack state-action-table)
+                  (push (gethash shift-stack state-action-table) valid-shifts))))
+
+            (if found-shift-action
+                (let ((popped-token (pop unscanned)))
+
+                  ;; Shift token
+                  (push (car popped-token) parse-stack)
+                  (push popped-token parse-tree)
+
+                  ;; Did we shift a entire rule? Then reduce stack and change state
+                  (when found-reduce-action
+                    (error (format "Should do a partial reduce action here '%s' -> '%s'" parse-stack found-reduce-action))
+                    (message "Shifted entire entry-point pattern: '%s' -> '%s'" parse-stack found-reduce-action)
+                    (setq parse-stack (list found-reduce-action))
+                    (setq parse-tree `(,found-reduce-action . ,parse-tree))
+                    (setq state found-reduce-action)))
+
+              (let ((gotos (gethash state goto-table))
+                    (searching-reduction t)
+                    (goto)
+                    (goto-lhs)
+                    (goto-state)
+                    (goto-look-ahead)
+                    (goto-rhs)
+                    (state-lhs))
+                (message "Found no shift action, valid shifts: '%s'" valid-shifts)
+
+                (setq goto (pop gotos))
+                (while (and searching-reduction goto)
+                  (setq goto-lhs (car goto))
+                  (setq goto-state (car (cdr goto)))
+                  (setq goto-look-ahead (car (cdr (cdr goto))))
+                  (setq goto-rhs (car (cdr (cdr goto))))
+                  (message "Goto: LHS: '%s', state: '%s', look-ahead: '%s', RHS: '%s'" goto-lhs goto-state goto-look-ahead goto-rhs)
+
+                  ;; Is pattern look-ahead empty or does it match current look-ahead?
+                  (when (or (not goto-look-ahead)
+                            (equal look-ahead goto-look-ahead))
+                    (message "State look-ahead matches goto look-ahead or goto look-ahead is empty")
+
+                    ;; If GOTO has a left-hand-side build a state left-hand-side if possible
+                    (when (and goto-lhs
+                               (>= (length parse-stack) (length goto-lhs)))
+                      (let ((remaining (length goto-lhs)))
+                        (while (> remaining 0)
+                          (push (nth remaining parse-stack) state-lhs))))
+                    (message "State-LHS: '%s'" state-lhs)
+
+                    ;; Is pattern left-hard side empty or does it match state left-hand-side?
+                    (when (or (not goto-lhs)
+                              (equal state-lhs goto-lhs))
+                      (message "State LHS matches goto LHS or goto LHS is empty")
+                      (setq found-reduce-action t)
+                      (setq searching-reduction nil)))
+                  (setq goto (pop gotos)))
+
+                (if found-reduce-action
+                    (progn
+                      (message "Moving to new state: '%s'" goto-state)
+                      (setq state goto-state))
+                  (error (format "Unexpected state! State: '%s' Parse Stack: '%s'" state parse-stack))
+                  ))))
+
         ;; We are at the entry-point
         (let ((found-shift-action nil)
               (found-reduce-action nil)
@@ -129,28 +206,7 @@
                   (setq parse-tree `(,found-reduce-action . ,parse-tree))
                   (setq state found-reduce-action)))
 
-            (if parse-stack
-                (let ((gotos)
-                      (goto)
-                      (leaf-state)
-                      (leaf-states-stack leaf-states)
-                      (looking-for-reduction t))
-                  (setq leaf-state (pop leaf-states-stack))
-                  (while (and leaf-state looking-for-reduction)
-                    (setq gotos (gethash leaf-state goto-table))
-                    (setq goto (pop gotos))
-                    (while (and goto looking-for-reduction)
-
-                      (let ((reduction-look-ahead (car (cdr (cdr goto)))))
-                        (if (equal look-ahead reduction-look-ahead)
-                            (error (format "Found matching reduction '%s'" goto)
-                                   )
-                          (message "Not matching reduction '%s'" goto)))
-
-                      (setq goto (pop gotos)))
-                    (setq leaf-state (pop leaf-states-stack)))
-                  (error "Must implement search for reduction here!"))
-              (error (format "Syntax error! Unexpected token '%s'. Expecting any of '%s'" look-ahead valid-shifts))))))
+            (error (format "Syntax error! Unexpected token '%s'. Expecting any of '%s'" look-ahead valid-shifts)))))
 
       (message "\n")
       (setq look-ahead (car (car unscanned))))
