@@ -242,32 +242,35 @@
 
 ;; TODO Need to create a tree were pattern order is preserved
 ;; TODO Need to create a action-table and goto-table
+;; TODO Need to store prefix and one look-ahead for each possible reduction
 (defun phps-mode-parser-custom--generate-parser (&optional grammar start)
   "Generate action-table, goto-table and leaf states for GRAMMAR starting at START."
   (unless grammar
     (setq grammar phps-mode-parser-custom-grammar))
   (unless start
     (setq start phps-mode-parser-custom-grammar--start-state))
-  (let ((state-queue (list (list start nil)))
+  (let ((state-queue (list (list nil start nil)))
         (shift-table (make-hash-table :test 'equal))
         (reduction-table (make-hash-table :test 'equal))
         (goto-table (make-hash-table :test 'equal))
         (state-graph (make-hash-table :test 'equal))
         (parsed-states (make-hash-table :test 'equal))
         (state)
-        (state-name)
         (state-prefix)
+        (state-name)
+        (state-look-ahead)
         (leaf-states))
 
     ;; Build top-down graph of grammar
     (phps-mode-debug-message
      (message "Building top-down graph of grammar..\n"))
     (setq state (pop state-queue))
-    (setq state-name (car state))
-    (setq state-prefix (car (cdr state)))
+    (setq state-prefix (car state))
+    (setq state-name (car (cdr state)))
+    (setq state-look-ahead (car (cdr (cdr state))))
     (while state-name
       (unless (gethash state-name parsed-states)
-        ;; (phps-mode-debug-message (message "State: '%s', prefix: '%s'" state-name state-prefix))
+        (phps-mode-debug-message (message "State: '%s', prefix: '%s', look-ahead: '%s'" state-name state-prefix state-look-ahead))
 
         (let ((is-leaf t))
           (let ((state (gethash state-name grammar))
@@ -277,49 +280,59 @@
             (dolist (state-block state)
               (setq prefix nil)
               (let ((state-patterns (car state-block))
-                    (state-logic (cdr state-block)))
+                    (state-logic (cdr state-block))
+                    (state-pattern)
+                    (look-ahead)
+                    (right-hand-side))
 
                 ;; Iterate all patterns in grammar block
-                (dolist (state-pattern state-patterns)
+                (setq state-pattern (pop state-patterns))
+                (setq look-ahead (car state-patterns))
+                (while state-pattern
 
                   ;; Does rule contain a branch?
                   (if (and
                        (not (equal state-pattern '%empty))
-                       (not (equal state-pattern state-name))
                        (gethash state-pattern grammar))
                       (progn
                         ;; This state is not a leaf
                         (when is-leaf (setq is-leaf nil))
+                        (setq right-hand-side (reverse prefix))
+
+                        ;; If look-ahead is a intermediate set it to nil
+                        (when look-ahead
+                          (when (gethash look-ahead grammar)
+                            (setq look-ahead nil)))
 
                         (let ((state-connections)
                               (has-link))
                           (when (gethash state-pattern state-graph)
                             (setq state-connections (gethash state-pattern state-graph)))
 
-                          ;; Check if relationship is already saved
+                          ;; Check if relationship (directed connected nodes with right-hand-side) is already saved
                           (dolist (connection state-connections)
-                            (when (equal connection (list state-name (reverse prefix)))
+                            (when (equal connection (list right-hand-side state-name look-ahead))
                               (setq has-link t)))
 
                           ;; Save new relationship
                           (unless has-link
-                            (if prefix
-                                (phps-mode-debug-message (message "'%s' -> %s '%s'" state-name (reverse prefix) state-pattern))
-                              (phps-mode-debug-message (message "'%s' -> '%s'" state-name state-pattern)))
-                            (push (list state-name (reverse prefix)) state-connections)
+                            (phps-mode-debug-message (message "'%s' -> %s '%s' %s" state-name right-hand-side state-pattern look-ahead))
+                            (push (list right-hand-side state-name look-ahead) state-connections)
                             (puthash state-pattern state-connections state-graph)))
 
                         (when (and (not (equal state-pattern state-name))
                                    (not (gethash state-pattern parsed-states)))
-                          ;; (phps-mode-debug-message (message "Added-to-state-queue: %s %s" (reverse prefix) state-pattern))
-                          (push (list state-pattern (reverse prefix)) state-queue)))
+                          ;; (phps-mode-debug-message (message "Added-to-state-queue: %s %s" right-hand-side state-pattern))
+                          (push (list right-hand-side state-pattern look-ahead) state-queue)))
                     (phps-mode-debug-message
                      (unless (or (equal state-pattern state-name)
                                  (equal state-pattern '%empty))
                        ;; (message "Leaf-pattern: '%s'" state-pattern)
                        )))
 
-                  (push state-pattern prefix)))))
+                  (push state-pattern prefix)
+                  (setq state-pattern (pop state-patterns))
+                  (setq look-ahead (car state-patterns))))))
 
           (when (and
                  is-leaf
@@ -334,8 +347,9 @@
 
       ;; Process next state in queue
       (setq state (pop state-queue))
-      (setq state-name (car state))
-      (setq state-prefix (car (cdr state))))
+      (setq state-prefix (car state))
+      (setq state-name (car (cdr state)))
+      (setq state-look-ahead (car (cdr (cdr state)))))
 
     (setq leaf-states (nreverse leaf-states))
     (message "Leaf states: '%s'" leaf-states)
