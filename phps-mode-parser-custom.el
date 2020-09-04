@@ -284,7 +284,8 @@
                     (state-logic (cdr state-block))
                     (state-pattern)
                     (look-ahead)
-                    (right-hand-side))
+                    (right-hand-side)
+                    (remaining))
 
                 ;; Iterate all patterns in grammar block
                 (setq state-pattern (pop state-patterns))
@@ -298,6 +299,7 @@
                       (progn
                         ;; This state is not a leaf
                         (when is-leaf (setq is-leaf nil))
+                        (setq remaining state-patterns)
                         (setq right-hand-side (reverse prefix))
 
                         ;; If look-ahead is a intermediate set it to nil
@@ -312,13 +314,13 @@
 
                           ;; Check if relationship (directed connected nodes with right-hand-side) is already saved
                           (dolist (connection state-connections)
-                            (when (equal connection (list right-hand-side state-name look-ahead))
+                            (when (equal connection (list right-hand-side state-name look-ahead remaining))
                               (setq has-link t)))
 
                           ;; Save new relationship
                           (unless has-link
-                            (phps-mode-debug-message (message "'%s' -> %s '%s' %s" state-name right-hand-side state-pattern look-ahead))
-                            (push (list right-hand-side state-name look-ahead) state-connections)
+                            (phps-mode-debug-message (message "'%s' -> %s '%s' %s %s" state-name right-hand-side state-pattern look-ahead remaining))
+                            (push (list right-hand-side state-name look-ahead remaining) state-connections)
                             (puthash state-pattern state-connections state-graph)))
 
                         (when (and (not (equal state-pattern state-name))
