@@ -81,6 +81,7 @@
       (phps-mode-debug-message
        (message "State: '%s'" state)
        (message "Parse-stack: '%s'" parse-stack)
+       (message "Parse-tree: '%s'" parse-tree)
        (message "Look-ahead: '%s'" look-ahead)
        (message "Potential-shift-stack: '%s'" potential-shift-stack)
        (message "Unscanned: '%s'" unscanned))
@@ -91,6 +92,7 @@
           (error (format "Do something with state '%s' here" state))
         ;; We are at the entry-point
         (let ((found-shift-action nil)
+              (found-reduce-action nil)
               (leaf-state)
               (leaf-states-stack leaf-states)
               (valid-shifts))
@@ -100,10 +102,13 @@
                   (not found-shift-action))
 
             ;; Get state action-table
-            (let ((state-action-table (gethash leaf-state action-table)))
+            (let* ((state-action-table (gethash leaf-state action-table))
+                   (state-action-status (gethash potential-shift-stack state-action-table)))
               ;; (message "Found-state-action-table: '%s'" state-action-table)
-              (if (gethash potential-shift-stack state-action-table)
+              (if state-action-status
                   (progn
+                    (when (equal state-action-status t)
+                      (setq found-reduce-action leaf-state))
                     (setq found-shift-action t))
                 (when (gethash shift-stack state-action-table)
                   (push (gethash shift-stack state-action-table) valid-shifts))))
@@ -112,12 +117,40 @@
 
           (if found-shift-action
               (let ((popped-token (pop unscanned)))
+
+                ;; Shift token
                 (push (car popped-token) parse-stack)
-                (push popped-token parse-tree))
+                (push popped-token parse-tree)
+
+                ;; Did we shift a entire rule? Then reduce stack and change state
+                (when found-reduce-action
+                  (message "Shifted entire entry-point pattern: '%s' -> '%s'" parse-stack found-reduce-action)
+                  (setq parse-stack (list found-reduce-action))
+                  (setq parse-tree `(,found-reduce-action . ,parse-tree))
+                  (setq state found-reduce-action)))
+
             (if parse-stack
-                (error "Must implement search for reduction here!")
-              (error (format "Syntax error! Unexpected token '%s'. Expecting any of '%s'" look-ahead valid-shifts)))
-            )))
+                (let ((gotos)
+                      (goto)
+                      (leaf-state)
+                      (leaf-states-stack leaf-states)
+                      (looking-for-reduction t))
+                  (setq leaf-state (pop leaf-states-stack))
+                  (while (and leaf-state looking-for-reduction)
+                    (setq gotos (gethash leaf-state goto-table))
+                    (setq goto (pop gotos))
+                    (while (and goto looking-for-reduction)
+
+                      (let ((reduction-look-ahead (car (cdr (cdr goto)))))
+                        (if (equal look-ahead reduction-look-ahead)
+                            (error (format "Found matching reduction '%s'" goto)
+                                   )
+                          (message "Not matching reduction '%s'" goto)))
+
+                      (setq goto (pop gotos)))
+                    (setq leaf-state (pop leaf-states-stack)))
+                  (error "Must implement search for reduction here!"))
+              (error (format "Syntax error! Unexpected token '%s'. Expecting any of '%s'" look-ahead valid-shifts))))))
 
       (message "\n")
       (setq look-ahead (car (car unscanned))))
@@ -132,8 +165,6 @@
   (let ((state-queue (list (list nil start nil)))
         (state-list)
         (shift-table (make-hash-table :test 'equal))
-        (reduction-table (make-hash-table :test 'equal))
-        (goto-table (make-hash-table :test 'equal))
         (state-graph (make-hash-table :test 'equal))
         (parsed-states (make-hash-table :test 'equal))
         (state)
@@ -276,7 +307,7 @@
         (puthash state state-blocks-action-table shift-table)))
 
     (setq phps-mode-parser-custom--parser-action-table shift-table)
-    (setq phps-mode-parser-custom--parser-goto-table goto-table)
+    (setq phps-mode-parser-custom--parser-goto-table state-graph)
     (setq phps-mode-parser-custom--parser-leaf-states leaf-states)))
 
 (provide 'phps-mode-parser-custom)
