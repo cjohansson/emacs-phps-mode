@@ -37,6 +37,15 @@
 
   (message "Generated parser.\n")
 
+  (phps-mode-test--with-buffer
+   "<?php\nswitch (myRandomCondition()) {\ncase 'Something here':\necho 'Something else here';\n}\n"
+   "Switch case PHP"
+   ;; (message "Parse: '%s'" (phps-mode-parser-custom--parse))
+   (should
+    (equal
+     (phps-mode-parser-custom--parse)
+     (list '(T_OPEN_TAG 1 . 7) '(reserved_non_modifiers ((T_SWITCH 7 . 13))) '("(" 14 . 15) '(T_STRING 15 . 32) '("(" 32 . 33) '(")" 33 . 34) '(")" 34 . 35) '("{" 36 . 37) '(reserved_non_modifiers ((T_CASE 38 . 42))) '(T_CONSTANT_ENCAPSED_STRING 43 . 59) '(":" 59 . 60) '(reserved_non_modifiers ((T_ECHO 61 . 65))) '(T_CONSTANT_ENCAPSED_STRING 66 . 87) '(";" 87 . 88) '("}" 89 . 90)))))
+
   (should
    (equal
     (phps-mode-parser-custom--parse

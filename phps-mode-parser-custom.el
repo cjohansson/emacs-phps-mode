@@ -69,174 +69,52 @@
         (look-ahead)
         (parse-action)
         (continue t)
-        (last-reduction-state))
+        (last-reduction-state)
+        (shift-stack)
+        (potential-shift-stack))
     (setq look-ahead (car (car unscanned)))
     (while continue
+      (setq potential-shift-stack shift-stack)
+      (push look-ahead potential-shift-stack)
 
       (phps-mode-debug-message
-       (message "Parse-state: '%s'" state)
+       (message "State: '%s'" state)
        (message "Parse-stack: '%s'" parse-stack)
+       (message "Potential-shift-stack: '%s'" potential-shift-stack)
        (message "Look-ahead: '%s'" look-ahead)
        (message "Unscanned: '%s'" unscanned))
       (setq parse-action nil)
 
-      ;; If we have a parse-stack, match it to state-patterns
-      (when parse-stack
-        (let ((goto-states))
+      (if state
+          (message "Do something with state '%s' here" state)
+        ;; We are at the entry-point
+        (let ((found-shift-action nil)
+              (leaf-state)
+              (leaf-states-stack leaf-states)
+              (valid-shifts))
+          (setq leaf-state (pop leaf-states-stack))
+          (while (and
+                  leaf-state
+                  (not found-shift-action))
 
-          (if state
-              (if unscanned
-                  (setq goto-states (list state))
-                (setq goto-states (reverse (gethash state goto-table))))
-            (setq goto-states leaf-states))
+            ;; Get state action-table
+            (let ((state-action-table (gethash leaf-state action-table)))
+              ;; (message "Found-state-action-table: '%s'" state-action-table)
+              (if (gethash potential-shift-stack state-action-table)
+                  (progn
+                    (message "Found shift action")
+                    (setq found-shift-action t))
+                (when (gethash shift-stack state-action-table)
+                  (push (gethash shift-stack state-action-table) valid-shifts))))
 
-          (phps-mode-debug-message
-           (message "Looking for reduction in goto-states: '%s'" goto-states))
+            (setq leaf-state (pop leaf-states-stack)))
 
-          (when goto-states
-            (let ((goto-state)
-                  (searching-reduction t))
-              (setq goto-state (pop goto-states))
-
-              ;; Search all goto-states for reduction
-              (while (and
-                      goto-state
-                      searching-reduction)
-                (phps-mode-debug-message
-                 (message "Looking for actions in goto-state: '%s'" goto-state))
-                (let ((actions (gethash goto-state action-table))
-                      (action)
-                      (reduction)
-                      (logic)
-                      (reduction-search)
-                      (reduction-length)
-                      (empty-count))
-
-                  (when actions
-                    (phps-mode-debug-message
-                     (message "Found actions: '%s'" actions))
-
-                    ;; Iterate all possible reductions in state
-                    (setq action (pop actions))
-                    (while (and searching-reduction action)
-                      (setq reduction (car action))
-                      (setq logic (car (car (cdr action))))
-                      (phps-mode-debug-message
-                       (message "Logic: %s" logic))
-                      (setq reduction-length 0)
-                      (setq reduction-search t)
-
-                      (phps-mode-debug-message
-                       (message "Comparing parse-stack: '%s' with reduction: '%s'" parse-stack reduction))
-                      ;; Iterate all parts of pattern and compare with stack
-                      (setq reduction-subpattern (pop reduction))
-
-                      ;; Empty pattern is no match
-                      (unless reduction-subpattern
-                        (setq reduction-search nil))
-
-                      (setq empty-count 0)
-                      (while (and
-                              (>= (length parse-stack) reduction-length)
-                              reduction-subpattern
-                              reduction-search)
-                        (setq reduction-length (1+ reduction-length))
-                        (if (and
-                             (equal reduction-subpattern '%empty)
-                             (not (equal goto-state last-reduction-state)))
-                            (progn
-                              (setq empty-count (1+ empty-count))
-                              (phps-mode-debug-message
-                               (message "Skipping empty sub-pattern")))
-
-                          (if (equal
-                               (nth (1- reduction-length) parse-stack)
-                               reduction-subpattern)
-                              (phps-mode-debug-message
-                               (message "Sub-pattern '%s' did match '%s'" reduction-subpattern (nth (1- reduction-length) parse-stack)))
-                            (phps-mode-debug-message
-                             (message "Sub-pattern '%s' did not match '%s'" reduction-subpattern (nth (1- reduction-length) parse-stack)))
-                            (setq reduction-search nil)))
-
-                        (setq reduction-subpattern (pop reduction)))
-
-                      ;; When we find a reduction, stop parent loop
-                      (when reduction-search
-                        (setq searching-reduction nil))
-
-                      (setq action (pop actions)))
-
-                    (if reduction-search
-                        (progn
-                          (setq parse-action 'reduce)
-                          ;; (setq reduction-length (- reduction-length empty-count))
-                          (phps-mode-debug-message
-                           (message "Action: reduction of length: %s -> '%s'" reduction-length goto-state))
-                          (let ((popped-parse-stack)
-                                (popped-parse-tree)
-                                (popped-parse-tree-start)
-                                (popped-parse-tree-end)
-                                (popped-token))
-                            (while (> reduction-length 0)
-                              ;; Save min and max point in buffer
-                              (let ((popped-token (pop parse-tree)))
-                                ;; (when (or
-                                ;;        (not popped-parse-tree-end)
-                                ;;        (> (cdr (cdr popped-token)) popped-parse-tree-end))
-                                ;;   (setq popped-parse-tree-end (cdr (cdr popped-token))))
-                                ;; (when (or
-                                ;;        (not popped-parse-tree-start)
-                                ;;        (< (car (cdr popped-token)) popped-parse-tree-start))
-                                ;;   (setq popped-parse-tree-start (car (cdr popped-token))))
-                                (push popped-token popped-parse-tree))
-
-                              (push (pop parse-stack) popped-parse-stack)
-                              (setq reduction-length (1- reduction-length)))
-
-                            ;; If reduction has logic attached, call logic with popped-parse-tree as argument
-                            (when logic
-                              (let ((arguments (nreverse popped-parse-tree)))
-                                (phps-mode-debug-message
-                                 (message "Calling '%s' with arguments: '%s'" logic arguments))
-                                (funcall logic (nreverse popped-parse-tree))))
-
-                            (push goto-state parse-stack)
-
-                            (if (and popped-parse-tree
-                                     (equal empty-count 0))
-                                (push `(,goto-state ,popped-parse-tree) parse-tree)
-                              (push `(,goto-state) parse-tree))
-
-                            (while (> empty-count 0)
-                              (setq empty-count (1- empty-count))
-                              (push (pop popped-parse-stack) parse-stack)
-                              (push (pop popped-parse-tree) parse-tree))
-                            
-                            (setq state goto-state)
-                            (setq last-reduction-state goto-state)
-
-                            (phps-mode-debug-message
-                             (message "Popped-parse-stack: '%s'" popped-parse-stack)
-                             (message "New-parse-stack: '%s'" parse-stack)
-                             (message "New-state: '%s'" state))
-
-
-                            ))
-                      (phps-mode-debug-message
-                       (message "Failed to find reduction.")))
-
-                    (setq goto-state (pop goto-states)))))))))
-
-      (when (and (not parse-action) continue)
-        (if look-ahead
-            (progn
-              (push look-ahead parse-stack)
-              (push (car unscanned) parse-tree)
-              (pop unscanned)
-              (phps-mode-debug-message
-               (message "Action: 'shift '%s'" look-ahead)))
-          (setq continue nil)))
-
+          (unless found-shift-action
+            (if parse-stack
+                (message "Look for reduction here")
+              (error (format "Syntax error! Unexpected token '%s'. Expecting any of '%s'" look-ahead valid-shifts)))
+          )))
+      
       (setq look-ahead (car (car unscanned))))
     (nreverse parse-tree)))
 
@@ -378,18 +256,17 @@
               (unless (gethash state-patterns-ack state-blocks-action-table)
                 (puthash state-patterns-ack t state-blocks-action-table))
 
-              ;; Save list of possible unique shift-reductions one level up for easier debugging on syntax errors
-              (when state-patterns-ack-old
-                (let ((old-pattern-list (gethash state-patterns-ack-old state-blocks-action-table))
-                      (already-exists t))
-                  (if (equal old-pattern-list t)
-                      (setq old-pattern-list nil)
-                    (dolist (old-item old-pattern-list)
-                      (when (equal old-item state-pattern)
-                        (setq already-exists t))))
-                  (unless already-exists
-                    (push state-pattern old-pattern-list)
-                    (puthash state-patterns-ack-old old-pattern-list state-blocks-action-table))))
+              (let ((old-pattern-list (gethash state-patterns-ack-old state-blocks-action-table))
+                    (already-exists nil))
+                (if (equal old-pattern-list t)
+                    (setq old-pattern-list nil)
+                  (dolist (old-item old-pattern-list)
+                    (when (equal old-item state-pattern)
+                      (setq already-exists t))))
+                (unless already-exists
+                  (push state-pattern old-pattern-list)
+                  (puthash state-patterns-ack-old old-pattern-list state-blocks-action-table)))
+
               (setq state-patterns-ack-old state-patterns-ack))))
         (puthash state state-blocks-action-table shift-table)))
 
