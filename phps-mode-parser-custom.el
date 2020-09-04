@@ -250,6 +250,7 @@
   (unless start
     (setq start phps-mode-parser-custom-grammar--start-state))
   (let ((state-queue (list (list nil start nil)))
+        (state-list)
         (shift-table (make-hash-table :test 'equal))
         (reduction-table (make-hash-table :test 'equal))
         (goto-table (make-hash-table :test 'equal))
@@ -261,16 +262,16 @@
         (state-look-ahead)
         (leaf-states))
 
-    ;; Build top-down graph of grammar
+    ;; Build top-down directed acyclic graph (dag) of grammar
     (phps-mode-debug-message
-     (message "Building top-down graph of grammar..\n"))
+     (message "Building top-down directed acyclic graph (dag) of grammar starting at '%s'..\n" start))
     (setq state (pop state-queue))
     (setq state-prefix (car state))
     (setq state-name (car (cdr state)))
     (setq state-look-ahead (car (cdr (cdr state))))
     (while state-name
       (unless (gethash state-name parsed-states)
-        (phps-mode-debug-message (message "State: '%s', prefix: '%s', look-ahead: '%s'" state-name state-prefix state-look-ahead))
+        ;; (phps-mode-debug-message (message "State: '%s', prefix: '%s', look-ahead: '%s'" state-name state-prefix state-look-ahead))
 
         (let ((is-leaf t))
           (let ((state (gethash state-name grammar))
@@ -343,7 +344,8 @@
             (push state-name leaf-states))
 
           ;; Mark state as parsed
-          (puthash state-name t parsed-states)))
+          (puthash state-name t parsed-states)
+          (push state-name state-list)))
 
       ;; Process next state in queue
       (setq state (pop state-queue))
@@ -352,17 +354,50 @@
       (setq state-look-ahead (car (cdr (cdr state)))))
 
     (setq leaf-states (nreverse leaf-states))
-    (message "Leaf states: '%s'" leaf-states)
-    (message "\n")
 
+    (phps-mode-debug-message
+     (message "\nGrammar entry points: '%s'\n" leaf-states))
+
+    (phps-mode-debug-message
+     (message "\nState-list: '%s'\n" state-list))
+
+    ;; Iterate all states and create action-table for each state shift in every pattern
+    (dolist (state state-list)
+      (let ((state-blocks (gethash state grammar))
+            (state-blocks-action-table (make-hash-table :test 'equal)))
+        (dolist (state-block state-blocks)
+          (let* ((state-patterns (car state-block))
+                 (state-patterns-ack)
+                 (state-patterns-ack-old)
+                 (state-logic (cdr state-block))
+                 (pattern-index 1)
+                 (pattern-count (length state-patterns)))
+            (dolist (state-pattern state-patterns)
+              (push state-pattern state-patterns-ack)
+
+              ;; Save shift action here
+              (unless (gethash state-patterns-ack state-blocks-action-table)
+                (puthash state-patterns-ack t state-blocks-action-table))
+
+              ;; Save list of possible shift-reductions one level up for easier debugging on syntax errors
+              (when state-patterns-ack-old
+                (let ((old-pattern-list (gethash state-patterns-ack-old state-blocks-action-table)))
+                  (when (equal old-pattern-list t)
+                    (setq old-pattern-list nil))
+                  (push state-pattern old-pattern-list)
+                  (puthash state-patterns-ack-old old-pattern-list state-blocks-action-table)))
+              (setq state-patterns-ack-old state-patterns-ack))))
+        (puthash state state-blocks-action-table shift-table)))
+
+    ;; Build action-table containing all possible shift actions in all states of every pattern of grammar
     (dolist (leaf-state leaf-states)
       (let ((state-blocks (gethash leaf-state grammar)))
         (dolist (state-block state-blocks)
           (let* ((state-patterns (car state-block))
-                (state-logic (cdr state-block))
-                (state "0")
-                (pattern-index 1)
-                (pattern-count (length state-patterns)))
+                 (state-logic (cdr state-block))
+                 (state "0")
+                 (pattern-index 1)
+                 (pattern-count (length state-patterns)))
 
             (dolist (state-pattern state-patterns)
               (let ((next-state))
@@ -377,67 +412,7 @@
                 (setq pattern-index (1+ pattern-index))))
 
             (message "Reduction: stack: '%s' in state '%s' -> '%s'" state-patterns state leaf-state)
-            (puthash (list state state-patterns) leaf-state reduction-table)))))
-
-    ;; (message "Grammar-graph: %s" state-graph)
-
-    (message "\n")
-
-    ;; TODO Traverse up the three from the leaves and build shift and reduction tables
-    (let ((state-queue)
-          (state))
-
-      ;; Build list of next-level states to build shift- and reduction-tables for
-      (dolist (leaf-state leaf-states)
-        (let ((parents (gethash leaf-state state-graph)))
-          (dolist (parent parents)
-            (let ((parent-state (car parent))
-                  (parent-prefix (car (cdr parent))))
-              (if parent-prefix
-                  (message "Parent: '%s' to %s %s" parent-state parent-prefix leaf-state)
-                (message "Parent: '%s' to %s" parent-state leaf-state))
-              (unless parent-prefix
-                (push parent-state state-queue))))))
-
-      ;; Iterate all states from level 2 and build shift- and reduction-tables for them
-      (setq state (pop state-queue))
-      (while state-queue
-        (setq state (pop state-queue))))
-
-    (message "\n")
-    (phps-mode-debug-message
-     (message "Building bottom-up goto and action-table.."))
-
-    ;; Construct grammar entry point
-    (let ((states leaf-states)
-          (state-name)
-          (state)
-          (parents)
-          (path)
-          (paths))
-      (while leaf-states
-        (setq state-name (pop leaf-states))
-        (setq path (phps-mode-parser-custom--get-path state-name state-graph))
-        (when path
-          (push path paths)))
-      (message "Paths: %s" paths))))
-
-(defun phps-mode-parser-custom--get-path (state graph &optional processed)
-  "Get recursive path from STATE in GRAPH, skip PROCESSED states."
-  (unless processed
-    (setq processed (make-hash-table :test 'equal)))
-  (unless (gethash state processed)
-    (let ((parents (gethash state graph))
-          (path)
-          (paths))
-      (puthash state t processed)
-      (when parents
-        (progn
-          ;; (message "Parents: %s -> %s" state parents)
-          (dolist (parent parents)
-            (setq path (phps-mode-parser-custom--get-path parent graph processed))
-            (push `(,parent . ,path) paths))
-          `(,state ,paths))))))
+            (puthash (list state state-patterns) leaf-state reduction-table)))))))
 
 (provide 'phps-mode-parser-custom)
 
