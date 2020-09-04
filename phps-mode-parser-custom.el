@@ -240,9 +240,6 @@
       (setq look-ahead (car (car unscanned))))
     (nreverse parse-tree)))
 
-;; TODO Need to create a tree were pattern order is preserved
-;; TODO Need to create a action-table and goto-table
-;; TODO Need to store prefix and one look-ahead for each possible reduction
 (defun phps-mode-parser-custom--generate-parser (&optional grammar start)
   "Generate action-table, goto-table and leaf states for GRAMMAR starting at START."
   (unless grammar
@@ -396,30 +393,9 @@
               (setq state-patterns-ack-old state-patterns-ack))))
         (puthash state state-blocks-action-table shift-table)))
 
-    ;; Build action-table containing all possible shift actions in all states of every pattern of grammar
-    (dolist (leaf-state leaf-states)
-      (let ((state-blocks (gethash leaf-state grammar)))
-        (dolist (state-block state-blocks)
-          (let* ((state-patterns (car state-block))
-                 (state-logic (cdr state-block))
-                 (state "0")
-                 (pattern-index 1)
-                 (pattern-count (length state-patterns)))
-
-            (dolist (state-pattern state-patterns)
-              (let ((next-state))
-                (when (< pattern-index pattern-count)
-                  (setq next-state (concat state (symbol-name leaf-state))))
-                (puthash (list state state-pattern) next-state shift-table)
-                (if next-state
-                    (message "Shift: look-ahead(1): '%s' in state: '%s' -> state: '%s'" state-pattern state next-state)
-                  (message "Shift: look-ahead(1): '%s' in state: '%s'" state-pattern state))
-                (when next-state
-                  (setq state next-state))
-                (setq pattern-index (1+ pattern-index))))
-
-            (message "Reduction: stack: '%s' in state '%s' -> '%s'" state-patterns state leaf-state)
-            (puthash (list state state-patterns) leaf-state reduction-table)))))))
+    (setq phps-mode-parser-custom--parser-action-table shift-table)
+    (setq phps-mode-parser-custom--parser-goto-table goto-table)
+    (setq phps-mode-parser-custom--parser-leaf-states leaf-states)))
 
 (provide 'phps-mode-parser-custom)
 
