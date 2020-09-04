@@ -379,13 +379,18 @@
               (unless (gethash state-patterns-ack state-blocks-action-table)
                 (puthash state-patterns-ack t state-blocks-action-table))
 
-              ;; Save list of possible shift-reductions one level up for easier debugging on syntax errors
+              ;; Save list of possible unique shift-reductions one level up for easier debugging on syntax errors
               (when state-patterns-ack-old
-                (let ((old-pattern-list (gethash state-patterns-ack-old state-blocks-action-table)))
-                  (when (equal old-pattern-list t)
-                    (setq old-pattern-list nil))
-                  (push state-pattern old-pattern-list)
-                  (puthash state-patterns-ack-old old-pattern-list state-blocks-action-table)))
+                (let ((old-pattern-list (gethash state-patterns-ack-old state-blocks-action-table))
+                      (already-exists t))
+                  (if (equal old-pattern-list t)
+                      (setq old-pattern-list nil)
+                    (dolist (old-item old-pattern-list)
+                      (when (equal old-item state-pattern)
+                        (setq already-exists t))))
+                  (unless already-exists
+                    (push state-pattern old-pattern-list)
+                    (puthash state-patterns-ack-old old-pattern-list state-blocks-action-table))))
               (setq state-patterns-ack-old state-patterns-ack))))
         (puthash state state-blocks-action-table shift-table)))
 
