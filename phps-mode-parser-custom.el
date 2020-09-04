@@ -74,19 +74,21 @@
         (potential-shift-stack))
     (setq look-ahead (car (car unscanned)))
     (while continue
-      (setq potential-shift-stack shift-stack)
+      (setq potential-shift-stack parse-stack)
       (push look-ahead potential-shift-stack)
+      (setq potential-shift-stack (reverse potential-shift-stack))
 
       (phps-mode-debug-message
        (message "State: '%s'" state)
        (message "Parse-stack: '%s'" parse-stack)
-       (message "Potential-shift-stack: '%s'" potential-shift-stack)
        (message "Look-ahead: '%s'" look-ahead)
+       (message "Potential-shift-stack: '%s'" potential-shift-stack)
        (message "Unscanned: '%s'" unscanned))
+
       (setq parse-action nil)
 
       (if state
-          (message "Do something with state '%s' here" state)
+          (error (format "Do something with state '%s' here" state))
         ;; We are at the entry-point
         (let ((found-shift-action nil)
               (leaf-state)
@@ -102,19 +104,22 @@
               ;; (message "Found-state-action-table: '%s'" state-action-table)
               (if (gethash potential-shift-stack state-action-table)
                   (progn
-                    (message "Found shift action")
                     (setq found-shift-action t))
                 (when (gethash shift-stack state-action-table)
                   (push (gethash shift-stack state-action-table) valid-shifts))))
 
             (setq leaf-state (pop leaf-states-stack)))
 
-          (unless found-shift-action
+          (if found-shift-action
+              (let ((popped-token (pop unscanned)))
+                (push (car popped-token) parse-stack)
+                (push popped-token parse-tree))
             (if parse-stack
-                (message "Look for reduction here")
+                (error "Must implement search for reduction here!")
               (error (format "Syntax error! Unexpected token '%s'. Expecting any of '%s'" look-ahead valid-shifts)))
-          )))
-      
+            )))
+
+      (message "\n")
       (setq look-ahead (car (car unscanned))))
     (nreverse parse-tree)))
 
