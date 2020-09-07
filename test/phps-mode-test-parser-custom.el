@@ -146,6 +146,16 @@
 
   (message "\n-- Ran tests for generate-parser-table. --"))
 
+;; (phps-mode-test--with-buffer
+;;  "<?php\nclass foo\n{\n    public $foo;\n    public $bar;\n\n    function __construct()\n    {\n        $this->foo = 'Foo';\n        $this->bar = array('Bar1', 'Bar2', 'Bar3');\n    }\n}\n\n$foo = new foo();\n$name = 'MyName';\n\necho <<<'EOT'\nMy name is \"$name\". I am printing some $foo->foo.\nNow, I am printing some {$foo->bar[1]}.\nThis should not print a capital 'A': \x41\nEOT;\n?>\n"
+;;  "Example #8 Nowdoc string quoting example with variables"
+;;  (require 'phps-mode-parser)
+;;  (phps-mode-parser--install-parser)
+;;  (require 'semantic/db-mode)
+;;  (semanticdb-semantic-init-hook-fcn)
+;;  (semantic-clear-toplevel-cache)
+;;  (message "Tags: '%s'" (semantic-analyze-current-context)))
+
 (defun phps-mode-test-parser-custom ()
   "Run test for custom parser."
   (message "-- Running all tests for custom parser... --\n")

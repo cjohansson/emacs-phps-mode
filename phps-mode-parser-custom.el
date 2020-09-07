@@ -224,6 +224,10 @@
         (shift-table (make-hash-table :test 'equal))
         (state-graph (make-hash-table :test 'equal))
         (parsed-states (make-hash-table :test 'equal))
+        (terminals-found (make-hash-table :test 'equal))
+        (terminals)
+        (nonterminals-found (make-hash-table :test 'equal))
+        (nonterminals)
         (state)
         (state-prefix)
         (state-name)
@@ -254,6 +258,7 @@
                     (look-ahead)
                     (right-hand-side)
                     (remaining)
+                    (is-terminal)
                     (is-first-letter t))
 
                 ;; Iterate all patterns in grammar block
@@ -261,10 +266,22 @@
                 (setq look-ahead (car state-patterns))
                 (while state-pattern
 
+                  ;; Build list of unique terminals and nonterminals
+                  (if (gethash state-pattern grammar)
+                      (progn
+                        (setq is-terminal nil)
+                        (unless (gethash state-pattern nonterminals-found)
+                          (push state-pattern nonterminals)
+                          (puthash state-pattern t nonterminals-found)))
+                    (setq is-terminal t)
+                    (unless (gethash state-pattern terminals-found)
+                      (push state-pattern terminals)
+                      (puthash state-pattern t terminals-found)))
+
                   ;; Does rule contain a branch?
                   (if (and
                        (not (equal state-pattern '%empty))
-                       (gethash state-pattern grammar))
+                       (not is-terminal))
                       (progn
                         (setq remaining state-patterns)
                         (setq right-hand-side (reverse prefix))
@@ -327,6 +344,10 @@
       (setq state-look-ahead (car (cdr (cdr state)))))
 
     (setq leaf-states (nreverse leaf-states))
+
+    (phps-mode-debug-message
+     (message "\nTerminals: %s\n" terminals)
+     (message "\nNonterminals: %s\n" nonterminals))
 
     (phps-mode-debug-message
      (message "\nGrammar entry points: '%s'\n" leaf-states))
