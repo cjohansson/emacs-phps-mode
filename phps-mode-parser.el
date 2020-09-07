@@ -1,9 +1,9 @@
-;;; phps-mode-parser.el --- Generated parser support file -*- lexical-binding: t -*-
+;;; phps-mode-parser.el --- Generated parser support file
 
 ;; Copyright (C) 2018-2020  Free Software Foundation, Inc.
 
 ;; Author: Christian Johansson <christianjohansson@Christians-MacBook-Air.local>
-;; Created: 2020-08-05 16:11:49+0200
+;; Created: 2020-09-07 07:16:47+0200
 ;; Keywords: syntax
 ;; X-RCS: $Id$
 
@@ -294,7 +294,7 @@
         ((top_statement_list)
          (let
              ((r))
-           (phps-mode-parser--cg 'phps-mode-parser--ast $1)
+           (phps-mode-parser-grammar-macro--cg 'phps-mode-parser-grammar-macro--ast $1)
            r)))
        (reserved_non_modifiers
         ((T_INCLUDE))
@@ -383,25 +383,25 @@
          (let
              ((r)
               (zv))
-           "$1"
+           (phps-mode-parser-grammar-macro--zend_lex_tstring
+            (lambda
+              (return)
+              (setq zv return)))
            (setq r
-                 (wisent-raw-tag
-                  (semantic-tag zv 'ZEND_AST_ZVAL)))
+                 (phps-mode-parser-grammar-macro--zend_ast_create_zval zv))
            r)))
        (top_statement_list
         ((top_statement_list top_statement)
          (let
              ((r))
            (setq r
-                 (wisent-raw-tag
-                  (semantic-tag $1 'ZEND_AST_LIST_ADD :new-element $2)))
+                 (phps-mode-parser-grammar-macro--zend_ast_list_add $1 $2))
            r))
         ((%empty)
          (let
              ((r))
            (setq r
-                 (wisent-raw-tag
-                  (semantic-tag "" 'phps-mode-parser--ZEND_AST_STMT_LIST :elements @elements :size 0)))
+                 (phps-mode-parser-grammar-macro--zend_ast_create_list 0 'phps-mode-parser-grammar-macro--ZEND_AST_STMT_LIST))
            r)))
        (namespace_name
         ((T_STRING)
@@ -413,26 +413,26 @@
          (let
              ((r))
            (setq r
-                 (phps-mode-parser--zend_ast_append_str $1 $3))
+                 (phps-mode-parser-grammar-macro--zend_ast_append_str $1 $3))
            r)))
        (name
         ((namespace_name)
          (let
              ((r))
            (setq r $1)
-           (semantic-tag-put-attribute r 'attr 'phps-mode-parser--ZEND_NAME_NOT_FQ)
+           (semantic-tag-put-attribute r 'attr 'phps-mode-parser-grammar-macro--ZEND_NAME_NOT_FQ)
            r))
         ((T_NAMESPACE T_NS_SEPARATOR namespace_name)
          (let
              ((r))
            (setq r $3)
-           (semantic-tag-put-attribute r 'attr 'phps-mode-parser--ZEND_NAME_RELATIVE)
+           (semantic-tag-put-attribute r 'attr 'phps-mode-parser-grammar-macro--ZEND_NAME_RELATIVE)
            r))
         ((T_NS_SEPARATOR namespace_name)
          (let
              ((r))
            (setq r $2)
-           (semantic-tag-put-attribute r 'attr 'phps-mode-parser--ZEND_NAME_FQ)
+           (semantic-tag-put-attribute r 'attr 'phps-mode-parser-grammar-macro--ZEND_NAME_FQ)
            r)))
        (top_statement
         ((statement)
@@ -460,72 +460,68 @@
              ((r))
            (setq r $1)
            r))
-        ((T_HALT_COMPILER OPEN_PARENTHESIS CLOSE_PARENTHESIS SEMICOLON)
+        ((T_HALT_COMPILER 40 41 59)
          (let
              ((r))
            (setq r
-                 (wisent-raw-tag
-                  (semantic-tag 'phps-mode-parser--ZEND_AST_HALT_COMPILER
-                                (phps-mode-parser--zend_ast_create_zval_from_long
-                                 (phps-mode-parser--zend_get_scanned_file_offset)))))
-           (phps-mode-parser--zend_stop_lexing)
+                 (phps-mode-parser-grammar-macro--zend_ast_create 'phps-mode-parser-grammar-macro--ZEND_AST_HALT_COMPILER
+                                                                  (phps-mode-parser-grammar-macro--zend_ast_create_zval_from_long
+                                                                   (phps-mode-parser-grammar-macro--zend_get_scanned_file_offset))))
+           (phps-mode-parser-grammar-macro--zend_stop_lexing)
            r))
-        ((T_NAMESPACE namespace_name SEMICOLON)
+        ((T_NAMESPACE namespace_name 59)
          (let
              ((r))
            (setq r
-                 (wisent-raw-tag
-                  (semantic-tag 'phps-mode-parser--ZEND_AST_NAMESPACE $2 nil)))
-           (phps-mode-parser--reset_doc_comment)
+                 (phps-mode-parser-grammar-macro--zend_ast_create 'phps-mode-parser-grammar-macro--ZEND_AST_NAMESPACE $2 nil))
+           (phps-mode-parser-grammar-macro--reset_doc_comment)
            r))
         ((T_NAMESPACE namespace_name
                       (let
                           ((r))
-                        (phps-mode-parser--reset_doc_comment)
+                        (phps-mode-parser-grammar-macro--reset_doc_comment)
                         r)
-                      OPEN_CURLY_BRACKET top_statement_list CLOSE_CURLY_BRACKET)
+                      123 top_statement_list 125)
          (let
              ((r))
            (setq r
-                 (wisent-raw-tag
-                  (semantic-tag 'phps-mode-parser--ZEND_AST_NAMESPACE $2 $5)))
+                 (phps-mode-parser-grammar-macro--zend_ast_create 'phps-mode-parser-grammar-macro--ZEND_AST_NAMESPACE $2 $5))
            r))
         ((T_NAMESPACE
           (let
               ((r))
-            (phps-mode-parser--reset_doc_comment)
+            (phps-mode-parser-grammar-macro--reset_doc_comment)
             r)
-          OPEN_CURLY_BRACKET top_statement_list CLOSE_CURLY_BRACKET)
+          123 top_statement_list 125)
          (let
              ((r))
            (setq r
-                 (wisent-raw-tag
-                  (semantic-tag 'phps-mode-parser--ZEND_AST_NAMESPACE nil $4)))
+                 (phps-mode-parser-grammar-macro--zend_ast_create 'phps-mode-parser-grammar-macro--ZEND_AST_NAMESPACE nil $4))
            r))
-        ((T_USE mixed_group_use_declaration SEMICOLON)
+        ((T_USE mixed_group_use_declaration 59)
          (let
              ((r))
            (setq r $2)
            r))
-        ((T_USE use_type group_use_declaration SEMICOLON)
+        ((T_USE use_type group_use_declaration 59)
          (let
              ((r))
            (setq r $3)
            (semantic-tag-put-attribute r 'attr $2)
            r))
-        ((T_USE use_declarations SEMICOLON)
+        ((T_USE use_declarations 59)
          (let
              ((r))
            (setq r $2)
-           (semantic-tag-put-attribute r 'attr 'phps-mode-parser--ZEND_SYMBOL_CLASS)
+           (semantic-tag-put-attribute r 'attr 'phps-mode-parser-grammar-macro--ZEND_SYMBOL_CLASS)
            r))
-        ((T_USE use_type use_declarations SEMICOLON)
+        ((T_USE use_type use_declarations 59)
          (let
              ((r))
            (setq r $3)
            (semantic-tag-put-attribute r 'attr $2)
            r))
-        ((T_CONST const_list SEMICOLON)
+        ((T_CONST const_list 59)
          (let
              ((r))
            (setq r $2)
@@ -534,97 +530,87 @@
         ((T_FUNCTION)
          (let
              ((r))
-           (setq r 'phps-mode-parser--ZEND_SYMBOL_FUNCTION)
+           (setq r 'phps-mode-parser-grammar-macro--ZEND_SYMBOL_FUNCTION)
            r))
         ((T_CONST)
          (let
              ((r))
-           (setq r 'phps-mode-parser--ZEND_SYMBOL_CONST)
+           (setq r 'phps-mode-parser-grammar-macro--ZEND_SYMBOL_CONST)
            r)))
        (group_use_declaration
-        ((namespace_name T_NS_SEPARATOR OPEN_CURLY_BRACKET unprefixed_use_declarations possible_comma CLOSE_CURLY_BRACKET)
+        ((namespace_name T_NS_SEPARATOR 123 unprefixed_use_declarations possible_comma 125)
          (let
              ((r))
            (setq r
-                 (wisent-raw-tag
-                  (semantic-tag 'phps-mode-parser--ZEND_AST_GROUP_USE $1 $4)))
+                 (phps-mode-parser-grammar-macro--zend_ast_create 'phps-mode-parser-grammar-macro--ZEND_AST_GROUP_USE $1 $4))
            r))
-        ((T_NS_SEPARATOR namespace_name T_NS_SEPARATOR OPEN_CURLY_BRACKET unprefixed_use_declarations possible_comma CLOSE_CURLY_BRACKET)
+        ((T_NS_SEPARATOR namespace_name T_NS_SEPARATOR 123 unprefixed_use_declarations possible_comma 125)
          (let
              ((r))
            (setq r
-                 (wisent-raw-tag
-                  (semantic-tag 'phps-mode-parser--ZEND_AST_GROUP_USE $2 $5)))
+                 (phps-mode-parser-grammar-macro--zend_ast_create 'phps-mode-parser-grammar-macro--ZEND_AST_GROUP_USE $2 $5))
            r)))
        (mixed_group_use_declaration
-        ((namespace_name T_NS_SEPARATOR OPEN_CURLY_BRACKET inline_use_declarations possible_comma CLOSE_CURLY_BRACKET)
+        ((namespace_name T_NS_SEPARATOR 123 inline_use_declarations possible_comma 125)
          (let
              ((r))
            (setq r
-                 (wisent-raw-tag
-                  (semantic-tag 'phps-mode-parser--ZEND_AST_GROUP_USE $1 $4)))
+                 (phps-mode-parser-grammar-macro--zend_ast_create 'phps-mode-parser-grammar-macro--ZEND_AST_GROUP_USE $1 $4))
            r))
-        ((T_NS_SEPARATOR namespace_name T_NS_SEPARATOR OPEN_CURLY_BRACKET inline_use_declarations possible_comma CLOSE_CURLY_BRACKET)
+        ((T_NS_SEPARATOR namespace_name T_NS_SEPARATOR 123 inline_use_declarations possible_comma 125)
          (let
              ((r))
            (setq r
-                 (wisent-raw-tag
-                  (semantic-tag 'phps-mode-parser--ZEND_AST_GROUP_USE $2 $5)))
+                 (phps-mode-parser-grammar-macro--zend_ast_create 'phps-mode-parser-grammar-macro--ZEND_AST_GROUP_USE $2 $5))
            r)))
        (possible_comma
         ((%empty))
-        ((COMMA)))
+        ((44)))
        (inline_use_declarations
-        ((inline_use_declarations COMMA inline_use_declaration)
+        ((inline_use_declarations 44 inline_use_declaration)
          (let
              ((r))
            (setq r
-                 (wisent-raw-tag
-                  (semantic-tag $1 'ZEND_AST_LIST_ADD :new-element $3)))
+                 (phps-mode-parser-grammar-macro--zend_ast_list_add $1 $3))
            r))
         ((inline_use_declaration)
          (let
              ((r))
            (setq r
-                 (wisent-raw-tag
-                  (semantic-tag "" 'phps-mode-parser--ZEND_AST_USE :elements @elements :size 1)))
+                 (phps-mode-parser-grammar-macro--zend_ast_create_list 1 'phps-mode-parser-grammar-macro--ZEND_AST_USE $1))
            r)))
        (unprefixed_use_declarations
-        ((unprefixed_use_declarations COMMA unprefixed_use_declaration)
+        ((unprefixed_use_declarations 44 unprefixed_use_declaration)
          (let
              ((r))
            (setq r
-                 (wisent-raw-tag
-                  (semantic-tag $1 'ZEND_AST_LIST_ADD :new-element $3)))
+                 (phps-mode-parser-grammar-macro--zend_ast_list_add $1 $3))
            r))
         ((unprefixed_use_declaration)
          (let
              ((r))
            (setq r
-                 (wisent-raw-tag
-                  (semantic-tag "" 'phps-mode-parser--ZEND_AST_USE :elements @elements :size 1)))
+                 (phps-mode-parser-grammar-macro--zend_ast_create_list 1 'phps-mode-parser-grammar-macro--ZEND_AST_USE $1))
            r)))
        (use_declarations
-        ((use_declarations COMMA use_declaration)
+        ((use_declarations 44 use_declaration)
          (let
              ((r))
            (setq r
-                 (wisent-raw-tag
-                  (semantic-tag $1 'ZEND_AST_LIST_ADD :new-element $3)))
+                 (phps-mode-parser-grammar-macro--zend_ast_list_add $1 $3))
            r))
         ((use_declaration)
          (let
              ((r))
            (setq r
-                 (wisent-raw-tag
-                  (semantic-tag "" 'phps-mode-parser--ZEND_AST_USE :elements @elements :size 1)))
+                 (phps-mode-parser-grammar-macro--zend_ast_create_list 1 'phps-mode-parser-grammar-macro--ZEND_AST_USE $1))
            r)))
        (inline_use_declaration
         ((unprefixed_use_declaration)
          (let
              ((r))
            (setq r $1)
-           (semantic-tag-put-attribute r 'attr 'phps-mode-parser--ZEND_SYMBOL_CLASS)
+           (semantic-tag-put-attribute r 'attr 'phps-mode-parser-grammar-macro--ZEND_SYMBOL_CLASS)
            r))
         ((use_type unprefixed_use_declaration)
          (let
@@ -637,15 +623,13 @@
          (let
              ((r))
            (setq r
-                 (wisent-raw-tag
-                  (semantic-tag 'phps-mode-parser--ZEND_AST_USE_ELEM $1 nil)))
+                 (phps-mode-parser-grammar-macro--zend_ast_create 'phps-mode-parser-grammar-macro--ZEND_AST_USE_ELEM $1 nil))
            r))
         ((namespace_name T_AS T_STRING)
          (let
              ((r))
            (setq r
-                 (wisent-raw-tag
-                  (semantic-tag 'phps-mode-parser--ZEND_AST_USE_ELEM $1 $3)))
+                 (phps-mode-parser-grammar-macro--zend_ast_create 'phps-mode-parser-grammar-macro--ZEND_AST_USE_ELEM $1 $3))
            r)))
        (use_declaration
         ((unprefixed_use_declaration)
@@ -659,34 +643,30 @@
            (setq r $2)
            r)))
        (const_list
-        ((const_list COMMA const_decl)
+        ((const_list 44 const_decl)
          (let
              ((r))
            (setq r
-                 (wisent-raw-tag
-                  (semantic-tag $1 'ZEND_AST_LIST_ADD :new-element $3)))
+                 (phps-mode-parser-grammar-macro--zend_ast_list_add $1 $3))
            r))
         ((const_decl)
          (let
              ((r))
            (setq r
-                 (wisent-raw-tag
-                  (semantic-tag "" 'phps-mode-parser--ZEND_AST_CONST_DECL :elements @elements :size 1)))
+                 (phps-mode-parser-grammar-macro--zend_ast_create_list 1 'phps-mode-parser-grammar-macro--ZEND_AST_CONST_DECL $1))
            r)))
        (inner_statement_list
         ((inner_statement_list inner_statement)
          (let
              ((r))
            (setq r
-                 (wisent-raw-tag
-                  (semantic-tag $1 'ZEND_AST_LIST_ADD :new-element $2)))
+                 (phps-mode-parser-grammar-macro--zend_ast_list_add $1 $2))
            r))
         ((%empty)
          (let
              ((r))
            (setq r
-                 (wisent-raw-tag
-                  (semantic-tag "" 'phps-mode-parser--ZEND_AST_STMT_LIST :elements @elements :size 0)))
+                 (phps-mode-parser-grammar-macro--zend_ast_create_list 0 'phps-mode-parser-grammar-macro--ZEND_AST_STMT_LIST))
            r)))
        (inner_statement
         ((statement)
@@ -714,15 +694,15 @@
              ((r))
            (setq r $1)
            r))
-        ((T_HALT_COMPILER OPEN_PARENTHESIS CLOSE_PARENTHESIS SEMICOLON)
+        ((T_HALT_COMPILER 40 41 59)
          (let
              ((r))
            (setq r nil)
-           (phps-mode-parser--zend_throw_exception 'phps-mode-parser--zend_ce_compile_error "__HALT_COMPILER() can only be used from the outermost scope" 0)
-           (setq r 'phps-mode-parser--YYERROR)
+           (phps-mode-parser-grammar-macro--zend_throw_exception phps-mode-parser-grammar-macro--zend_ce_compile_error "__HALT_COMPILER() can only be used from the outermost scope" 0)
+           (setq r 'phps-mode-parser-grammar-macro--YYERROR)
            r)))
        (statement
-        ((OPEN_CURLY_BRACKET inner_statement_list CLOSE_CURLY_BRACKET)
+        ((123 inner_statement_list 125)
          (let
              ((r))
            (setq r $2)
@@ -737,66 +717,59 @@
              ((r))
            (setq r $1)
            r))
-        ((T_WHILE OPEN_PARENTHESIS expr CLOSE_PARENTHESIS while_statement)
+        ((T_WHILE 40 expr 41 while_statement)
          (let
              ((r))
            (setq r
-                 (wisent-raw-tag
-                  (semantic-tag 'phps-mode-parser--ZEND_AST_WHILE $3 $5)))
+                 (phps-mode-parser-grammar-macro--zend_ast_create 'phps-mode-parser-grammar-macro--ZEND_AST_WHILE $3 $5))
            r))
-        ((T_DO statement T_WHILE OPEN_PARENTHESIS expr CLOSE_PARENTHESIS SEMICOLON)
+        ((T_DO statement T_WHILE 40 expr 41 59)
          (let
              ((r))
            (setq r
-                 (wisent-raw-tag
-                  (semantic-tag 'phps-mode-parser--ZEND_AST_DO_WHILE $2 $5)))
+                 (phps-mode-parser-grammar-macro--zend_ast_create 'phps-mode-parser-grammar-macro--ZEND_AST_DO_WHILE $2 $5))
            r))
-        ((T_FOR OPEN_PARENTHESIS for_exprs SEMICOLON for_exprs SEMICOLON for_exprs CLOSE_PARENTHESIS for_statement)
+        ((T_FOR 40 for_exprs 59 for_exprs 59 for_exprs 41 for_statement)
          (let
              ((r))
            (setq r
-                 (wisent-raw-tag
-                  (semantic-tag 'phps-mode-parser--ZEND_AST_FOR $3 $5 $7 $9)))
+                 (phps-mode-parser-grammar-macro--zend_ast_create 'phps-mode-parser-grammar-macro--ZEND_AST_FOR $3 $5 $7 $9))
            r))
-        ((T_SWITCH OPEN_PARENTHESIS expr CLOSE_PARENTHESIS switch_case_list)
+        ((T_SWITCH 40 expr 41 switch_case_list)
          (let
              ((r))
            (setq r
-                 (wisent-raw-tag
-                  (semantic-tag 'phps-mode-parser--ZEND_AST_SWITCH $3 $5)))
+                 (phps-mode-parser-grammar-macro--zend_ast_create 'phps-mode-parser-grammar-macro--ZEND_AST_SWITCH $3 $5))
            r))
-        ((T_BREAK optional_expr SEMICOLON)
+        ((T_BREAK optional_expr 59)
          (let
              ((r))
            (setq r
-                 (wisent-raw-tag
-                  (semantic-tag 'phps-mode-parser--ZEND_AST_BREAK $2)))
+                 (phps-mode-parser-grammar-macro--zend_ast_create 'phps-mode-parser-grammar-macro--ZEND_AST_BREAK $2))
            r))
-        ((T_CONTINUE optional_expr SEMICOLON)
+        ((T_CONTINUE optional_expr 59)
          (let
              ((r))
            (setq r
-                 (wisent-raw-tag
-                  (semantic-tag 'phps-mode-parser--ZEND_AST_CONTINUE $2)))
+                 (phps-mode-parser-grammar-macro--zend_ast_create 'phps-mode-parser-grammar-macro--ZEND_AST_CONTINUE $2))
            r))
-        ((T_RETURN optional_expr SEMICOLON)
+        ((T_RETURN optional_expr 59)
          (let
              ((r))
            (setq r
-                 (wisent-raw-tag
-                  (semantic-tag 'phps-mode-parser--ZEND_AST_RETURN $2)))
+                 (phps-mode-parser-grammar-macro--zend_ast_create 'phps-mode-parser-grammar-macro--ZEND_AST_RETURN $2))
            r))
-        ((T_GLOBAL global_var_list SEMICOLON)
+        ((T_GLOBAL global_var_list 59)
          (let
              ((r))
            (setq r $2)
            r))
-        ((T_STATIC static_var_list SEMICOLON)
+        ((T_STATIC static_var_list 59)
          (let
              ((r))
            (setq r $2)
            r))
-        ((T_ECHO echo_expr_list SEMICOLON)
+        ((T_ECHO echo_expr_list 59)
          (let
              ((r))
            (setq r $2)
@@ -805,101 +778,89 @@
          (let
              ((r))
            (setq r
-                 (wisent-raw-tag
-                  (semantic-tag 'phps-mode-parser--ZEND_AST_ECHO $1)))
+                 (phps-mode-parser-grammar-macro--zend_ast_create 'phps-mode-parser-grammar-macro--ZEND_AST_ECHO $1))
            r))
-        ((expr SEMICOLON)
+        ((expr 59)
          (let
              ((r))
            (setq r $1)
            r))
-        ((T_UNSET OPEN_PARENTHESIS unset_variables possible_comma CLOSE_PARENTHESIS SEMICOLON)
+        ((T_UNSET 40 unset_variables possible_comma 41 59)
          (let
              ((r))
            (setq r $3)
            r))
-        ((T_FOREACH OPEN_PARENTHESIS expr T_AS foreach_variable CLOSE_PARENTHESIS foreach_statement)
+        ((T_FOREACH 40 expr T_AS foreach_variable 41 foreach_statement)
          (let
              ((r))
            (setq r
-                 (wisent-raw-tag
-                  (semantic-tag 'phps-mode-parser--ZEND_AST_FOREACH $3 $5 nil $7)))
+                 (phps-mode-parser-grammar-macro--zend_ast_create 'phps-mode-parser-grammar-macro--ZEND_AST_FOREACH $3 $5 nil $7))
            r))
-        ((T_FOREACH OPEN_PARENTHESIS expr T_AS foreach_variable T_DOUBLE_ARROW foreach_variable CLOSE_PARENTHESIS foreach_statement)
+        ((T_FOREACH 40 expr T_AS foreach_variable T_DOUBLE_ARROW foreach_variable 41 foreach_statement)
          (let
              ((r))
            (setq r
-                 (wisent-raw-tag
-                  (semantic-tag 'phps-mode-parser--ZEND_AST_FOREACH $3 $7 $5 $9)))
+                 (phps-mode-parser-grammar-macro--zend_ast_create 'phps-mode-parser-grammar-macro--ZEND_AST_FOREACH $3 $7 $5 $9))
            r))
-        ((T_DECLARE OPEN_PARENTHESIS const_list CLOSE_PARENTHESIS
+        ((T_DECLARE 40 const_list 41
                     (let
                         ((r))
                       (if
                           (not
-                           (phps-mode-parser--zend_handle_encoding_declaration $3))
-                          (setq r 'phps-mode-parser--YYERROR))
+                           (phps-mode-parser-grammar-macro--zend_handle_encoding_declaration $3))
+                          (setq r 'phps-mode-parser-grammar-macro--YYERROR))
                       r)
                     declare_statement)
          (let
              ((r))
            (setq r
-                 (wisent-raw-tag
-                  (semantic-tag 'phps-mode-parser--ZEND_AST_DECLARE $3 $6)))
+                 (phps-mode-parser-grammar-macro--zend_ast_create 'phps-mode-parser-grammar-macro--ZEND_AST_DECLARE $3 $6))
            r))
-        ((SEMICOLON))
-        ((T_TRY OPEN_CURLY_BRACKET inner_statement_list CLOSE_CURLY_BRACKET catch_list finally_statement)
+        ((59))
+        ((T_TRY 123 inner_statement_list 125 catch_list finally_statement)
          (let
              ((r))
            (setq r
-                 (wisent-raw-tag
-                  (semantic-tag 'phps-mode-parser--ZEND_AST_TRY $3 $5 $6)))
+                 (phps-mode-parser-grammar-macro--zend_ast_create 'phps-mode-parser-grammar-macro--ZEND_AST_TRY $3 $5 $6))
            r))
-        ((T_GOTO T_STRING SEMICOLON)
+        ((T_GOTO T_STRING 59)
          (let
              ((r))
            (setq r
-                 (wisent-raw-tag
-                  (semantic-tag 'phps-mode-parser--ZEND_AST_GOTO $2)))
+                 (phps-mode-parser-grammar-macro--zend_ast_create 'phps-mode-parser-grammar-macro--ZEND_AST_GOTO $2))
            r))
-        ((T_STRING COLON)
+        ((T_STRING 58)
          (let
              ((r))
            (setq r
-                 (wisent-raw-tag
-                  (semantic-tag 'phps-mode-parser--ZEND_AST_LABEL $1)))
+                 (phps-mode-parser-grammar-macro--zend_ast_create 'phps-mode-parser-grammar-macro--ZEND_AST_LABEL $1))
            r)))
        (catch_list
         ((%empty)
          (let
              ((r))
            (setq r
-                 (wisent-raw-tag
-                  (semantic-tag "" 'phps-mode-parser--ZEND_AST_CATCH_LIST :elements @elements :size 0)))
+                 (phps-mode-parser-grammar-macro--zend_ast_create_list 0 'phps-mode-parser-grammar-macro--ZEND_AST_CATCH_LIST))
            r))
-        ((catch_list T_CATCH OPEN_PARENTHESIS catch_name_list optional_variable CLOSE_PARENTHESIS OPEN_CURLY_BRACKET inner_statement_list CLOSE_CURLY_BRACKET)
+        ((catch_list T_CATCH 40 catch_name_list optional_variable 41 123 inner_statement_list 125)
          (let
              ((r))
            (setq r
-                 (wisent-raw-tag
-                  (semantic-tag $1 'ZEND_AST_LIST_ADD :new-element
-                                (wisent-raw-tag
-                                 (semantic-tag 'phps-mode-parser--ZEND_AST_CATCH $4 $5 $8)))))
+                 (phps-mode-parser-grammar-macro--zend_ast_list_add $1
+                                                                    (phps-mode-parser-grammar-macro--zend_ast_create 'phps-mode-parser-grammar-macro--ZEND_AST_CATCH $4 $5 $8)))
            r)))
        (catch_name_list
         ((class_name)
          (let
              ((r))
            (setq r
-                 (wisent-raw-tag
-                  (semantic-tag "" 'phps-mode-parser--ZEND_AST_NAME_LIST :elements @elements :size 1)))
+                 (phps-mode-parser-grammar-macro--zend_ast_create_list 1 'phps-mode-parser-grammar-macro--ZEND_AST_NAME_LIST $1))
            r))
-        ((catch_name_list BITWISE_OR class_name)
+        ((catch_name_list 124 class_name)
          (let
              ((r))
            (setq r
-                 (wisent-raw-tag
-                  (semantic-tag $1 'ZEND_AST_LIST_ADD :new-element $3)))
+                 (phps-mode-parser-grammar-macro--zend_ast_list_add $1 $3))
            r)))
        (optional_variable
         ((%empty)
@@ -918,7 +879,7 @@
              ((r))
            (setq r nil)
            r))
-        ((T_FINALLY OPEN_CURLY_BRACKET inner_statement_list CLOSE_CURLY_BRACKET)
+        ((T_FINALLY 123 inner_statement_list 125)
          (let
              ((r))
            (setq r $3)
@@ -928,35 +889,32 @@
          (let
              ((r))
            (setq r
-                 (wisent-raw-tag
-                  (semantic-tag "" 'phps-mode-parser--ZEND_AST_STMT_LIST :elements @elements :size 1)))
+                 (phps-mode-parser-grammar-macro--zend_ast_create_list 1 'phps-mode-parser-grammar-macro--ZEND_AST_STMT_LIST $1))
            r))
-        ((unset_variables COMMA unset_variable)
+        ((unset_variables 44 unset_variable)
          (let
              ((r))
            (setq r
-                 (wisent-raw-tag
-                  (semantic-tag $1 'ZEND_AST_LIST_ADD :new-element $3)))
+                 (phps-mode-parser-grammar-macro--zend_ast_list_add $1 $3))
            r)))
        (unset_variable
         ((variable)
          (let
              ((r))
            (setq r
-                 (wisent-raw-tag
-                  (semantic-tag 'phps-mode-parser--ZEND_AST_UNSET $1)))
+                 (phps-mode-parser-grammar-macro--zend_ast_create 'phps-mode-parser-grammar-macro--ZEND_AST_UNSET $1))
            r)))
        (function_declaration_statement
-        ((function returns_ref T_STRING backup_doc_comment OPEN_PARENTHESIS parameter_list CLOSE_PARENTHESIS return_type backup_fn_flags OPEN_CURLY_BRACKET inner_statement_list CLOSE_CURLY_BRACKET backup_fn_flags)
+        ((function returns_ref T_STRING backup_doc_comment 40 parameter_list 41 return_type backup_fn_flags 123 inner_statement_list 125 backup_fn_flags)
          (let
              ((r))
            (setq r
-                 (phps-mode-parser--zend_ast_create_decl 'phps-mode-parser--ZEND_AST_FUNC_DECL
-                                                         (logior $2 $13)
-                                                         $1 $4
-                                                         (phps-mode-parser--zend_ast_get_str $3)
-                                                         $6 nil $11 $8))
-           (phps-mode-parser--cg 'phps-mode-parser--extra_fn_flags $9)
+                 (phps-mode-parser-grammar-macro--zend_ast_create_decl 'phps-mode-parser-grammar-macro--ZEND_AST_FUNC_DECL
+                                                                       (logior $2 $13)
+                                                                       $1 $4
+                                                                       (phps-mode-parser-grammar-macro--zend_ast_get_str $3)
+                                                                       $6 nil $11 $8))
+           (phps-mode-parser-grammar-macro--cg 'phps-mode-parser-grammar-macro--extra_fn_flags $9)
            r)))
        (is_reference
         ((%empty)
@@ -964,10 +922,10 @@
              ((r))
            (setq r 0)
            r))
-        ((BITWISE_AND)
+        ((38)
          (let
              ((r))
-           (setq r 'phps-mode-parser--ZEND_PARAM_REF)
+           (setq r 'phps-mode-parser-grammar-macro--ZEND_PARAM_REF)
            r)))
        (is_variadic
         ((%empty)
@@ -978,36 +936,36 @@
         ((T_ELLIPSIS)
          (let
              ((r))
-           (setq r 'phps-mode-parser--ZEND_PARAM_VARIADIC)
+           (setq r 'phps-mode-parser-grammar-macro--ZEND_PARAM_VARIADIC)
            r)))
        (class_declaration_statement
         ((class_modifiers T_CLASS
                           (let
                               ((r))
                             (setq r
-                                  (phps-mode-parser--cg phps-mode-parser--zend_lineno))
+                                  (phps-mode-parser-grammar-macro--cg phps-mode-parser-grammar-macro--zend_lineno))
                             r)
-                          T_STRING extends_from implements_list backup_doc_comment OPEN_CURLY_BRACKET class_statement_list CLOSE_CURLY_BRACKET)
+                          T_STRING extends_from implements_list backup_doc_comment 123 class_statement_list 125)
          (let
              ((r))
            (setq r
-                 (phps-mode-parser--zend_ast_create_decl 'phps-mode-parser--ZEND_AST_CLASS $1 $3 $7
-                                                         (phps-mode-parser--zend_ast_get_str $4)
-                                                         $5 $6 $9 nil))
+                 (phps-mode-parser-grammar-macro--zend_ast_create_decl 'phps-mode-parser-grammar-macro--ZEND_AST_CLASS $1 $3 $7
+                                                                       (phps-mode-parser-grammar-macro--zend_ast_get_str $4)
+                                                                       $5 $6 $9 nil))
            r))
         ((T_CLASS
           (let
               ((r))
             (setq r
-                  (phps-mode-parser--cg phps-mode-parser--zend_lineno))
+                  (phps-mode-parser-grammar-macro--cg phps-mode-parser-grammar-macro--zend_lineno))
             r)
-          T_STRING extends_from implements_list backup_doc_comment OPEN_CURLY_BRACKET class_statement_list CLOSE_CURLY_BRACKET)
+          T_STRING extends_from implements_list backup_doc_comment 123 class_statement_list 125)
          (let
              ((r))
            (setq r
-                 (phps-mode-parser--zend_ast_create_decl 'phps-mode-parser--ZEND_AST_CLASS 0 $2 $6
-                                                         (phps-mode-parser--zend_ast_get_str $3)
-                                                         $4 $5 $8 nil))
+                 (phps-mode-parser-grammar-macro--zend_ast_create_decl 'phps-mode-parser-grammar-macro--ZEND_AST_CLASS 0 $2 $6
+                                                                       (phps-mode-parser-grammar-macro--zend_ast_get_str $3)
+                                                                       $4 $5 $8 nil))
            r)))
        (class_modifiers
         ((class_modifier)
@@ -1019,51 +977,51 @@
          (let
              ((r))
            (setq r
-                 (phps-mode-parser--zend_add_class_modifier $1 $2))
+                 (phps-mode-parser-grammar-macro--zend_add_class_modifier $1 $2))
            (if
                (not r)
-               (setq r 'phps-mode-parser--YYERROR))
+               (setq r 'phps-mode-parser-grammar-macro--YYERROR))
            r)))
        (class_modifier
         ((T_ABSTRACT)
          (let
              ((r))
-           (setq r 'phps-mode-parser--ZEND_ACC_EXPLICIT_ABSTRACT_CLASS)
+           (setq r 'phps-mode-parser-grammar-macro--ZEND_ACC_EXPLICIT_ABSTRACT_CLASS)
            r))
         ((T_FINAL)
          (let
              ((r))
-           (setq r 'phps-mode-parser--ZEND_ACC_FINAL)
+           (setq r 'phps-mode-parser-grammar-macro--ZEND_ACC_FINAL)
            r)))
        (trait_declaration_statement
         ((T_TRAIT
           (let
               ((r))
             (setq r
-                  (phps-mode-parser--cg phps-mode-parser--zend_lineno))
+                  (phps-mode-parser-grammar-macro--cg phps-mode-parser-grammar-macro--zend_lineno))
             r)
-          T_STRING backup_doc_comment OPEN_CURLY_BRACKET class_statement_list CLOSE_CURLY_BRACKET)
+          T_STRING backup_doc_comment 123 class_statement_list 125)
          (let
              ((r))
            (setq r
-                 (phps-mode-parser--zend_ast_create_decl 'phps-mode-parser--ZEND_AST_CLASS 'phps-mode-parser--ZEND_ACC_TRAIT $2 $4
-                                                         (phps-mode-parser--zend_ast_get_str $3)
-                                                         nil nil $6 nil))
+                 (phps-mode-parser-grammar-macro--zend_ast_create_decl 'phps-mode-parser-grammar-macro--ZEND_AST_CLASS 'phps-mode-parser-grammar-macro--ZEND_ACC_TRAIT $2 $4
+                                                                       (phps-mode-parser-grammar-macro--zend_ast_get_str $3)
+                                                                       nil nil $6 nil))
            r)))
        (interface_declaration_statement
         ((T_INTERFACE
           (let
               ((r))
             (setq r
-                  (phps-mode-parser--cg phps-mode-parser--zend_lineno))
+                  (phps-mode-parser-grammar-macro--cg phps-mode-parser-grammar-macro--zend_lineno))
             r)
-          T_STRING interface_extends_list backup_doc_comment OPEN_CURLY_BRACKET class_statement_list CLOSE_CURLY_BRACKET)
+          T_STRING interface_extends_list backup_doc_comment 123 class_statement_list 125)
          (let
              ((r))
            (setq r
-                 (phps-mode-parser--zend_ast_create_decl 'phps-mode-parser--ZEND_AST_CLASS 'phps-mode-parser--ZEND_ACC_INTERFACE $2 $5
-                                                         (phps-mode-parser--zend_ast_get_str $3)
-                                                         nil $4 $7 nil))
+                 (phps-mode-parser-grammar-macro--zend_ast_create_decl 'phps-mode-parser-grammar-macro--ZEND_AST_CLASS 'phps-mode-parser-grammar-macro--ZEND_ACC_INTERFACE $2 $5
+                                                                       (phps-mode-parser-grammar-macro--zend_ast_get_str $3)
+                                                                       nil $4 $7 nil))
            r)))
        (extends_from
         ((%empty)
@@ -1104,24 +1062,23 @@
              ((r))
            (setq r $1)
            r))
-        ((BITWISE_AND variable)
+        ((38 variable)
          (let
              ((r))
            (setq r
-                 (wisent-raw-tag
-                  (semantic-tag 'phps-mode-parser--ZEND_AST_REF $2)))
+                 (phps-mode-parser-grammar-macro--zend_ast_create 'phps-mode-parser-grammar-macro--ZEND_AST_REF $2))
            r))
-        ((T_LIST OPEN_PARENTHESIS array_pair_list CLOSE_PARENTHESIS)
+        ((T_LIST 40 array_pair_list 41)
          (let
              ((r))
            (setq r $3)
-           (semantic-tag-put-attribute r 'attr 'phps-mode-parser--ZEND_ARRAY_SYNTAX_LIST)
+           (semantic-tag-put-attribute r 'attr 'phps-mode-parser-grammar-macro--ZEND_ARRAY_SYNTAX_LIST)
            r))
-        ((OPEN_SQUARE_BRACKET array_pair_list CLOSE_SQUARE_BRACKET)
+        ((91 array_pair_list 93)
          (let
              ((r))
            (setq r $2)
-           (semantic-tag-put-attribute r 'attr 'phps-mode-parser--ZEND_ARRAY_SYNTAX_SHORT)
+           (semantic-tag-put-attribute r 'attr 'phps-mode-parser-grammar-macro--ZEND_ARRAY_SYNTAX_SHORT)
            r)))
        (for_statement
         ((statement)
@@ -1129,7 +1086,7 @@
              ((r))
            (setq r $1)
            r))
-        ((COLON inner_statement_list T_ENDFOR SEMICOLON)
+        ((58 inner_statement_list T_ENDFOR 59)
          (let
              ((r))
            (setq r $2)
@@ -1140,7 +1097,7 @@
              ((r))
            (setq r $1)
            r))
-        ((COLON inner_statement_list T_ENDFOREACH SEMICOLON)
+        ((58 inner_statement_list T_ENDFOREACH 59)
          (let
              ((r))
            (setq r $2)
@@ -1151,28 +1108,28 @@
              ((r))
            (setq r $1)
            r))
-        ((COLON inner_statement_list T_ENDDECLARE SEMICOLON)
+        ((58 inner_statement_list T_ENDDECLARE 59)
          (let
              ((r))
            (setq r $2)
            r)))
        (switch_case_list
-        ((OPEN_CURLY_BRACKET case_list CLOSE_CURLY_BRACKET)
+        ((123 case_list 125)
          (let
              ((r))
            (setq r $2)
            r))
-        ((OPEN_CURLY_BRACKET SEMICOLON case_list CLOSE_CURLY_BRACKET)
+        ((123 59 case_list 125)
          (let
              ((r))
            (setq r $3)
            r))
-        ((COLON case_list T_ENDSWITCH SEMICOLON)
+        ((58 case_list T_ENDSWITCH 59)
          (let
              ((r))
            (setq r $2)
            r))
-        ((COLON SEMICOLON case_list T_ENDSWITCH SEMICOLON)
+        ((58 59 case_list T_ENDSWITCH 59)
          (let
              ((r))
            (setq r $3)
@@ -1182,57 +1139,50 @@
          (let
              ((r))
            (setq r
-                 (wisent-raw-tag
-                  (semantic-tag "" 'phps-mode-parser--ZEND_AST_SWITCH_LIST :elements @elements :size 0)))
+                 (phps-mode-parser-grammar-macro--zend_ast_create_list 0 'phps-mode-parser-grammar-macro--ZEND_AST_SWITCH_LIST))
            r))
         ((case_list T_CASE expr case_separator inner_statement_list)
          (let
              ((r))
            (setq r
-                 (wisent-raw-tag
-                  (semantic-tag $1 'ZEND_AST_LIST_ADD :new-element
-                                (wisent-raw-tag
-                                 (semantic-tag 'phps-mode-parser--ZEND_AST_SWITCH_CASE $3 $5)))))
+                 (phps-mode-parser-grammar-macro--zend_ast_list_add $1
+                                                                    (phps-mode-parser-grammar-macro--zend_ast_create 'phps-mode-parser-grammar-macro--ZEND_AST_SWITCH_CASE $3 $5)))
            r))
         ((case_list T_DEFAULT case_separator inner_statement_list)
          (let
              ((r))
            (setq r
-                 (wisent-raw-tag
-                  (semantic-tag $1 'ZEND_AST_LIST_ADD :new-element
-                                (wisent-raw-tag
-                                 (semantic-tag 'phps-mode-parser--ZEND_AST_SWITCH_CASE nil $4)))))
+                 (phps-mode-parser-grammar-macro--zend_ast_list_add $1
+                                                                    (phps-mode-parser-grammar-macro--zend_ast_create 'phps-mode-parser-grammar-macro--ZEND_AST_SWITCH_CASE nil $4)))
            r)))
        (case_separator
-        ((COLON))
-        ((SEMICOLON)))
+        ((58))
+        ((59)))
        (while_statement
         ((statement)
          (let
              ((r))
            (setq r $1)
            r))
-        ((COLON inner_statement_list T_ENDWHILE SEMICOLON)
+        ((58 inner_statement_list T_ENDWHILE 59)
          (let
              ((r))
            (setq r $2)
            r)))
        (if_stmt_without_else
-        ((T_IF OPEN_PARENTHESIS expr CLOSE_PARENTHESIS statement)
+        ((T_IF 40 expr 41 statement)
          (let
              ((r))
            (setq r
-                 (wisent-raw-tag
-                  (semantic-tag "" 'phps-mode-parser--ZEND_AST_IF :elements @elements :size 1)))
+                 (phps-mode-parser-grammar-macro--zend_ast_create_list 1 'phps-mode-parser-grammar-macro--ZEND_AST_IF
+                                                                       (phps-mode-parser-grammar-macro--zend_ast_create 'phps-mode-parser-grammar-macro--ZEND_AST_IF_ELEM $3 $5)))
            r))
-        ((if_stmt_without_else T_ELSEIF OPEN_PARENTHESIS expr CLOSE_PARENTHESIS statement)
+        ((if_stmt_without_else T_ELSEIF 40 expr 41 statement)
          (let
              ((r))
            (setq r
-                 (wisent-raw-tag
-                  (semantic-tag $1 'ZEND_AST_LIST_ADD :new-element
-                                (wisent-raw-tag
-                                 (semantic-tag 'phps-mode-parser--ZEND_AST_IF_ELEM $4 $6)))))
+                 (phps-mode-parser-grammar-macro--zend_ast_list_add $1
+                                                                    (phps-mode-parser-grammar-macro--zend_ast_create 'phps-mode-parser-grammar-macro--ZEND_AST_IF_ELEM $4 $6)))
            r)))
        (if_stmt
         ((if_stmt_without_else)
@@ -1245,42 +1195,36 @@
          (let
              ((r))
            (setq r
-                 (wisent-raw-tag
-                  (semantic-tag $1 'ZEND_AST_LIST_ADD :new-element
-                                (wisent-raw-tag
-                                 (semantic-tag 'phps-mode-parser--ZEND_AST_IF_ELEM nil $3)))))
+                 (phps-mode-parser-grammar-macro--zend_ast_list_add $1
+                                                                    (phps-mode-parser-grammar-macro--zend_ast_create 'phps-mode-parser-grammar-macro--ZEND_AST_IF_ELEM nil $3)))
            r)))
        (alt_if_stmt_without_else
-        ((T_IF OPEN_PARENTHESIS expr CLOSE_PARENTHESIS COLON inner_statement_list)
+        ((T_IF 40 expr 41 58 inner_statement_list)
          (let
              ((r))
            (setq r
-                 (wisent-raw-tag
-                  (semantic-tag "" 'phps-mode-parser--ZEND_AST_IF :elements @elements :size 1)))
+                 (phps-mode-parser-grammar-macro--zend_ast_create_list 1 'phps-mode-parser-grammar-macro--ZEND_AST_IF
+                                                                       (phps-mode-parser-grammar-macro--zend_ast_create 'phps-mode-parser-grammar-macro--ZEND_AST_IF_ELEM $3 $6)))
            r))
-        ((alt_if_stmt_without_else T_ELSEIF OPEN_PARENTHESIS expr CLOSE_PARENTHESIS COLON inner_statement_list)
+        ((alt_if_stmt_without_else T_ELSEIF 40 expr 41 58 inner_statement_list)
          (let
              ((r))
            (setq r
-                 (wisent-raw-tag
-                  (semantic-tag $1 'ZEND_AST_LIST_ADD :new-element
-                                (wisent-raw-tag
-                                 (semantic-tag 'phps-mode-parser--ZEND_AST_IF_ELEM $4 $7)))))
+                 (phps-mode-parser-grammar-macro--zend_ast_list_add $1
+                                                                    (phps-mode-parser-grammar-macro--zend_ast_create 'phps-mode-parser-grammar-macro--ZEND_AST_IF_ELEM $4 $7)))
            r)))
        (alt_if_stmt
-        ((alt_if_stmt_without_else T_ENDIF SEMICOLON)
+        ((alt_if_stmt_without_else T_ENDIF 59)
          (let
              ((r))
            (setq r $1)
            r))
-        ((alt_if_stmt_without_else T_ELSE COLON inner_statement_list T_ENDIF SEMICOLON)
+        ((alt_if_stmt_without_else T_ELSE 58 inner_statement_list T_ENDIF 59)
          (let
              ((r))
            (setq r
-                 (wisent-raw-tag
-                  (semantic-tag $1 'ZEND_AST_LIST_ADD :new-element
-                                (wisent-raw-tag
-                                 (semantic-tag 'phps-mode-parser--ZEND_AST_IF_ELEM nil $4)))))
+                 (phps-mode-parser-grammar-macro--zend_ast_list_add $1
+                                                                    (phps-mode-parser-grammar-macro--zend_ast_create 'phps-mode-parser-grammar-macro--ZEND_AST_IF_ELEM nil $4)))
            r)))
        (parameter_list
         ((non_empty_parameter_list possible_comma)
@@ -1292,42 +1236,37 @@
          (let
              ((r))
            (setq r
-                 (wisent-raw-tag
-                  (semantic-tag "" 'phps-mode-parser--ZEND_AST_PARAM_LIST :elements @elements :size 0)))
+                 (phps-mode-parser-grammar-macro--zend_ast_create_list 0 'phps-mode-parser-grammar-macro--ZEND_AST_PARAM_LIST))
            r)))
        (non_empty_parameter_list
         ((parameter)
          (let
              ((r))
            (setq r
-                 (wisent-raw-tag
-                  (semantic-tag "" 'phps-mode-parser--ZEND_AST_PARAM_LIST :elements @elements :size 1)))
+                 (phps-mode-parser-grammar-macro--zend_ast_create_list 1 'phps-mode-parser-grammar-macro--ZEND_AST_PARAM_LIST $1))
            r))
-        ((non_empty_parameter_list COMMA parameter)
+        ((non_empty_parameter_list 44 parameter)
          (let
              ((r))
            (setq r
-                 (wisent-raw-tag
-                  (semantic-tag $1 'ZEND_AST_LIST_ADD :new-element $3)))
+                 (phps-mode-parser-grammar-macro--zend_ast_list_add $1 $3))
            r)))
        (parameter
         ((optional_type_without_static is_reference is_variadic T_VARIABLE)
          (let
              ((r))
            (setq r
-                 (wisent-raw-tag
-                  (semantic-tag 'phps-mode-parser--ZEND_AST_PARAM 'ZEND_AST_EX :operator
-                                (logior $2 $3)
-                                :subject $1 :subject2 $4)))
+                 (phps-mode-parser-grammar-macro--zend_ast_create_ex 'phps-mode-parser-grammar-macro--ZEND_AST_PARAM
+                                                                     (logior $2 $3)
+                                                                     $1 $4 nil))
            r))
-        ((optional_type_without_static is_reference is_variadic T_VARIABLE ASSIGN expr)
+        ((optional_type_without_static is_reference is_variadic T_VARIABLE 61 expr)
          (let
              ((r))
            (setq r
-                 (wisent-raw-tag
-                  (semantic-tag 'phps-mode-parser--ZEND_AST_PARAM 'ZEND_AST_EX :operator
-                                (logior $2 $3)
-                                :subject $1 :subject2 $4)))
+                 (phps-mode-parser-grammar-macro--zend_ast_create_ex 'phps-mode-parser-grammar-macro--ZEND_AST_PARAM
+                                                                     (logior $2 $3)
+                                                                     $1 $4 $6))
            r)))
        (optional_type_without_static
         ((%empty)
@@ -1346,14 +1285,14 @@
              ((r))
            (setq r $1)
            r))
-        ((QUESTION_MARK type)
+        ((63 type)
          (let
              ((r))
            (setq r $2)
            (semantic-tag-put-attribute r 'attr
                                        (logior
                                         (semantic-tag-get-attribute r 'attr)
-                                        'phps-mode-parser--ZEND_TYPE_NULLABLE))
+                                        'phps-mode-parser-grammar-macro--ZEND_TYPE_NULLABLE))
            r))
         ((union_type)
          (let
@@ -1370,23 +1309,20 @@
          (let
              ((r))
            (setq r
-                 (wisent-raw-tag
-                  (semantic-tag 'phps-mode-parser--ZEND_AST_TYPE 'ZEND_AST_EX :operator 'phps-mode-parser--IS_STATIC)))
+                 (phps-mode-parser-grammar-macro--zend_ast_create_ex 'phps-mode-parser-grammar-macro--ZEND_AST_TYPE 'phps-mode-parser-grammar-macro--IS_STATIC))
            r)))
        (union_type
-        ((type BITWISE_OR type)
+        ((type 124 type)
          (let
              ((r))
            (setq r
-                 (wisent-raw-tag
-                  (semantic-tag "" 'phps-mode-parser--ZEND_AST_TYPE_UNION :elements @elements :size 2)))
+                 (phps-mode-parser-grammar-macro--zend_ast_create_list 2 'phps-mode-parser-grammar-macro--ZEND_AST_TYPE_UNION $1 $3))
            r))
-        ((union_type BITWISE_OR type)
+        ((union_type 124 type)
          (let
              ((r))
            (setq r
-                 (wisent-raw-tag
-                  (semantic-tag $1 'ZEND_AST_LIST_ADD :new-element $3)))
+                 (phps-mode-parser-grammar-macro--zend_ast_list_add $1 $3))
            r)))
        (type_expr_without_static
         ((type_without_static)
@@ -1394,14 +1330,14 @@
              ((r))
            (setq r $1)
            r))
-        ((QUESTION_MARK type_without_static)
+        ((63 type_without_static)
          (let
              ((r))
            (setq r $2)
            (semantic-tag-put-attribute r 'attr
                                        (logior
                                         (semantic-tag-get-attribute r 'attr)
-                                        'phps-mode-parser--ZEND_TYPE_NULLABLE))
+                                        'phps-mode-parser-grammar-macro--ZEND_TYPE_NULLABLE))
            r))
         ((union_type_without_static)
          (let
@@ -1413,15 +1349,13 @@
          (let
              ((r))
            (setq r
-                 (wisent-raw-tag
-                  (semantic-tag 'phps-mode-parser--ZEND_AST_TYPE 'ZEND_AST_EX :operator 'phps-mode-parser--IS_ARRAY)))
+                 (phps-mode-parser-grammar-macro--zend_ast_create_ex 'phps-mode-parser-grammar-macro--ZEND_AST_TYPE 'phps-mode-parser-grammar-macro--IS_ARRAY))
            r))
         ((T_CALLABLE)
          (let
              ((r))
            (setq r
-                 (wisent-raw-tag
-                  (semantic-tag 'phps-mode-parser--ZEND_AST_TYPE 'ZEND_AST_EX :operator 'phps-mode-parser--IS_CALLABLE)))
+                 (phps-mode-parser-grammar-macro--zend_ast_create_ex 'phps-mode-parser-grammar-macro--ZEND_AST_TYPE 'phps-mode-parser-grammar-macro--IS_CALLABLE))
            r))
         ((name)
          (let
@@ -1429,19 +1363,17 @@
            (setq r $1)
            r)))
        (union_type_without_static
-        ((type_without_static BITWISE_OR type_without_static)
+        ((type_without_static 124 type_without_static)
          (let
              ((r))
            (setq r
-                 (wisent-raw-tag
-                  (semantic-tag "" 'phps-mode-parser--ZEND_AST_TYPE_UNION :elements @elements :size 2)))
+                 (phps-mode-parser-grammar-macro--zend_ast_create_list 2 'phps-mode-parser-grammar-macro--ZEND_AST_TYPE_UNION $1 $3))
            r))
-        ((union_type_without_static BITWISE_OR type_without_static)
+        ((union_type_without_static 124 type_without_static)
          (let
              ((r))
            (setq r
-                 (wisent-raw-tag
-                  (semantic-tag $1 'ZEND_AST_LIST_ADD :new-element $3)))
+                 (phps-mode-parser-grammar-macro--zend_ast_list_add $1 $3))
            r)))
        (return_type
         ((%empty)
@@ -1449,20 +1381,19 @@
              ((r))
            (setq r nil)
            r))
-        ((COLON type_expr)
+        ((58 type_expr)
          (let
              ((r))
            (setq r $2)
            r)))
        (argument_list
-        ((OPEN_PARENTHESIS CLOSE_PARENTHESIS)
+        ((40 41)
          (let
              ((r))
            (setq r
-                 (wisent-raw-tag
-                  (semantic-tag "" 'phps-mode-parser--ZEND_AST_ARG_LIST :elements @elements :size 0)))
+                 (phps-mode-parser-grammar-macro--zend_ast_create_list 0 'phps-mode-parser-grammar-macro--ZEND_AST_ARG_LIST))
            r))
-        ((OPEN_PARENTHESIS non_empty_argument_list possible_comma CLOSE_PARENTHESIS)
+        ((40 non_empty_argument_list possible_comma 41)
          (let
              ((r))
            (setq r $2)
@@ -1472,15 +1403,13 @@
          (let
              ((r))
            (setq r
-                 (wisent-raw-tag
-                  (semantic-tag "" 'phps-mode-parser--ZEND_AST_ARG_LIST :elements @elements :size 1)))
+                 (phps-mode-parser-grammar-macro--zend_ast_create_list 1 'phps-mode-parser-grammar-macro--ZEND_AST_ARG_LIST $1))
            r))
-        ((non_empty_argument_list COMMA argument)
+        ((non_empty_argument_list 44 argument)
          (let
              ((r))
            (setq r
-                 (wisent-raw-tag
-                  (semantic-tag $1 'ZEND_AST_LIST_ADD :new-element $3)))
+                 (phps-mode-parser-grammar-macro--zend_ast_list_add $1 $3))
            r)))
        (argument
         ((expr)
@@ -1492,89 +1421,77 @@
          (let
              ((r))
            (setq r
-                 (wisent-raw-tag
-                  (semantic-tag 'phps-mode-parser--ZEND_AST_UNPACK $2)))
+                 (phps-mode-parser-grammar-macro--zend_ast_create 'phps-mode-parser-grammar-macro--ZEND_AST_UNPACK $2))
            r)))
        (global_var_list
-        ((global_var_list COMMA global_var)
+        ((global_var_list 44 global_var)
          (let
              ((r))
            (setq r
-                 (wisent-raw-tag
-                  (semantic-tag $1 'ZEND_AST_LIST_ADD :new-element $3)))
+                 (phps-mode-parser-grammar-macro--zend_ast_list_add $1 $3))
            r))
         ((global_var)
          (let
              ((r))
            (setq r
-                 (wisent-raw-tag
-                  (semantic-tag "" 'phps-mode-parser--ZEND_AST_STMT_LIST :elements @elements :size 1)))
+                 (phps-mode-parser-grammar-macro--zend_ast_create_list 1 'phps-mode-parser-grammar-macro--ZEND_AST_STMT_LIST $1))
            r)))
        (global_var
         ((simple_variable)
          (let
              ((r))
            (setq r
-                 (wisent-raw-tag
-                  (semantic-tag 'phps-mode-parser--ZEND_AST_GLOBAL
-                                (wisent-raw-tag
-                                 (semantic-tag 'phps-mode-parser--ZEND_AST_VAR $1)))))
+                 (phps-mode-parser-grammar-macro--zend_ast_create 'phps-mode-parser-grammar-macro--ZEND_AST_GLOBAL
+                                                                  (phps-mode-parser-grammar-macro--zend_ast_create 'phps-mode-parser-grammar-macro--ZEND_AST_VAR $1)))
            r)))
        (static_var_list
-        ((static_var_list COMMA static_var)
+        ((static_var_list 44 static_var)
          (let
              ((r))
            (setq r
-                 (wisent-raw-tag
-                  (semantic-tag $1 'ZEND_AST_LIST_ADD :new-element $3)))
+                 (phps-mode-parser-grammar-macro--zend_ast_list_add $1 $3))
            r))
         ((static_var)
          (let
              ((r))
            (setq r
-                 (wisent-raw-tag
-                  (semantic-tag "" 'phps-mode-parser--ZEND_AST_STMT_LIST :elements @elements :size 1)))
+                 (phps-mode-parser-grammar-macro--zend_ast_create_list 1 'phps-mode-parser-grammar-macro--ZEND_AST_STMT_LIST $1))
            r)))
        (static_var
         ((T_VARIABLE)
          (let
              ((r))
            (setq r
-                 (wisent-raw-tag
-                  (semantic-tag 'phps-mode-parser--ZEND_AST_STATIC $1 nil)))
+                 (phps-mode-parser-grammar-macro--zend_ast_create 'phps-mode-parser-grammar-macro--ZEND_AST_STATIC $1 nil))
            r))
-        ((T_VARIABLE ASSIGN expr)
+        ((T_VARIABLE 61 expr)
          (let
              ((r))
            (setq r
-                 (wisent-raw-tag
-                  (semantic-tag 'phps-mode-parser--ZEND_AST_STATIC $1 $3)))
+                 (phps-mode-parser-grammar-macro--zend_ast_create 'phps-mode-parser-grammar-macro--ZEND_AST_STATIC $1 $3))
            r)))
        (class_statement_list
         ((class_statement_list class_statement)
          (let
              ((r))
            (setq r
-                 (wisent-raw-tag
-                  (semantic-tag $1 'ZEND_AST_LIST_ADD :new-element $2)))
+                 (phps-mode-parser-grammar-macro--zend_ast_list_add $1 $2))
            r))
         ((%empty)
          (let
              ((r))
            (setq r
-                 (wisent-raw-tag
-                  (semantic-tag "" 'phps-mode-parser--ZEND_AST_STMT_LIST :elements @elements :size 0)))
+                 (phps-mode-parser-grammar-macro--zend_ast_create_list 0 'phps-mode-parser-grammar-macro--ZEND_AST_STMT_LIST))
            r)))
        (class_statement
-        ((variable_modifiers optional_type_without_static property_list SEMICOLON)
+        ((variable_modifiers optional_type_without_static property_list 59)
          (let
              ((r))
            (setq r
-                 (wisent-raw-tag
-                  (semantic-tag 'phps-mode-parser--ZEND_AST_PROP_GROUP $2 $3)))
+                 (phps-mode-parser-grammar-macro--zend_ast_create 'phps-mode-parser-grammar-macro--ZEND_AST_PROP_GROUP $2 $3))
            (semantic-tag-put-attribute r 'attr $1)
            r))
-        ((method_modifiers T_CONST class_const_list SEMICOLON)
+        ((method_modifiers T_CONST class_const_list 59)
          (let
              ((r))
            (setq r $3)
@@ -1584,48 +1501,45 @@
          (let
              ((r))
            (setq r
-                 (wisent-raw-tag
-                  (semantic-tag 'phps-mode-parser--ZEND_AST_USE_TRAIT $2 $3)))
+                 (phps-mode-parser-grammar-macro--zend_ast_create 'phps-mode-parser-grammar-macro--ZEND_AST_USE_TRAIT $2 $3))
            r))
-        ((method_modifiers function returns_ref identifier backup_doc_comment OPEN_PARENTHESIS parameter_list CLOSE_PARENTHESIS return_type backup_fn_flags method_body backup_fn_flags)
+        ((method_modifiers function returns_ref identifier backup_doc_comment 40 parameter_list 41 return_type backup_fn_flags method_body backup_fn_flags)
          (let
              ((r))
            (setq r
-                 (phps-mode-parser--zend_ast_create_decl 'phps-mode-parser--ZEND_AST_METHOD
-                                                         (logior $3
-                                                                 (logior $1 $12))
-                                                         $2 $5
-                                                         (phps-mode-parser--zend_ast_get_str $4)
-                                                         $7 nil $11 $9))
-           (phps-mode-parser--cg 'phps-mode-parser--extra_fn_flags $10)
+                 (phps-mode-parser-grammar-macro--zend_ast_create_decl 'phps-mode-parser-grammar-macro--ZEND_AST_METHOD
+                                                                       (logior $3
+                                                                               (logior $1 $12))
+                                                                       $2 $5
+                                                                       (phps-mode-parser-grammar-macro--zend_ast_get_str $4)
+                                                                       $7 nil $11 $9))
+           (phps-mode-parser-grammar-macro--cg 'phps-mode-parser-grammar-macro--extra_fn_flags $10)
            r)))
        (class_name_list
         ((class_name)
          (let
              ((r))
            (setq r
-                 (wisent-raw-tag
-                  (semantic-tag "" 'phps-mode-parser--ZEND_AST_NAME_LIST :elements @elements :size 1)))
+                 (phps-mode-parser-grammar-macro--zend_ast_create_list 1 'phps-mode-parser-grammar-macro--ZEND_AST_NAME_LIST $1))
            r))
-        ((class_name_list COMMA class_name)
+        ((class_name_list 44 class_name)
          (let
              ((r))
            (setq r
-                 (wisent-raw-tag
-                  (semantic-tag $1 'ZEND_AST_LIST_ADD :new-element $3)))
+                 (phps-mode-parser-grammar-macro--zend_ast_list_add $1 $3))
            r)))
        (trait_adaptations
-        ((SEMICOLON)
+        ((59)
          (let
              ((r))
            (setq r nil)
            r))
-        ((OPEN_CURLY_BRACKET CLOSE_CURLY_BRACKET)
+        ((123 125)
          (let
              ((r))
            (setq r nil)
            r))
-        ((OPEN_CURLY_BRACKET trait_adaptation_list CLOSE_CURLY_BRACKET)
+        ((123 trait_adaptation_list 125)
          (let
              ((r))
            (setq r $2)
@@ -1635,23 +1549,21 @@
          (let
              ((r))
            (setq r
-                 (wisent-raw-tag
-                  (semantic-tag "" 'phps-mode-parser--ZEND_AST_TRAIT_ADAPTATIONS :elements @elements :size 1)))
+                 (phps-mode-parser-grammar-macro--zend_ast_create_list 1 'phps-mode-parser-grammar-macro--ZEND_AST_TRAIT_ADAPTATIONS $1))
            r))
         ((trait_adaptation_list trait_adaptation)
          (let
              ((r))
            (setq r
-                 (wisent-raw-tag
-                  (semantic-tag $1 'ZEND_AST_LIST_ADD :new-element $2)))
+                 (phps-mode-parser-grammar-macro--zend_ast_list_add $1 $2))
            r)))
        (trait_adaptation
-        ((trait_precedence SEMICOLON)
+        ((trait_precedence 59)
          (let
              ((r))
            (setq r $1)
            r))
-        ((trait_alias SEMICOLON)
+        ((trait_alias 59)
          (let
              ((r))
            (setq r $1)
@@ -1661,49 +1573,45 @@
          (let
              ((r))
            (setq r
-                 (wisent-raw-tag
-                  (semantic-tag 'phps-mode-parser--ZEND_AST_TRAIT_PRECEDENCE $1 $3)))
+                 (phps-mode-parser-grammar-macro--zend_ast_create 'phps-mode-parser-grammar-macro--ZEND_AST_TRAIT_PRECEDENCE $1 $3))
            r)))
        (trait_alias
         ((trait_method_reference T_AS T_STRING)
          (let
              ((r))
            (setq r
-                 (wisent-raw-tag
-                  (semantic-tag 'phps-mode-parser--ZEND_AST_TRAIT_ALIAS $1 $3)))
+                 (phps-mode-parser-grammar-macro--zend_ast_create 'phps-mode-parser-grammar-macro--ZEND_AST_TRAIT_ALIAS $1 $3))
            r))
         ((trait_method_reference T_AS reserved_non_modifiers)
          (let
              ((r)
               (zv))
-           "$1"
+           (phps-mode-parser-grammar-macro--zend_lex_tstring
+            (lambda
+              (return)
+              (setq zv return)))
            (setq r
-                 (wisent-raw-tag
-                  (semantic-tag 'phps-mode-parser--ZEND_AST_TRAIT_ALIAS $1
-                                (wisent-raw-tag
-                                 (semantic-tag zv 'ZEND_AST_ZVAL)))))
+                 (phps-mode-parser-grammar-macro--zend_ast_create 'phps-mode-parser-grammar-macro--ZEND_AST_TRAIT_ALIAS $1
+                                                                  (phps-mode-parser-grammar-macro--zend_ast_create_zval zv)))
            r))
         ((trait_method_reference T_AS member_modifier identifier)
          (let
              ((r))
            (setq r
-                 (wisent-raw-tag
-                  (semantic-tag 'phps-mode-parser--ZEND_AST_TRAIT_ALIAS 'ZEND_AST_EX :operator $3 :subject $1 :subject2 $4)))
+                 (phps-mode-parser-grammar-macro--zend_ast_create_ex 'phps-mode-parser-grammar-macro--ZEND_AST_TRAIT_ALIAS $3 $1 $4))
            r))
         ((trait_method_reference T_AS member_modifier)
          (let
              ((r))
            (setq r
-                 (wisent-raw-tag
-                  (semantic-tag 'phps-mode-parser--ZEND_AST_TRAIT_ALIAS 'ZEND_AST_EX :operator $3 :subject $1)))
+                 (phps-mode-parser-grammar-macro--zend_ast_create_ex 'phps-mode-parser-grammar-macro--ZEND_AST_TRAIT_ALIAS $3 $1 nil))
            r)))
        (trait_method_reference
         ((identifier)
          (let
              ((r))
            (setq r
-                 (wisent-raw-tag
-                  (semantic-tag 'phps-mode-parser--ZEND_AST_METHOD_REFERENCE nil $1)))
+                 (phps-mode-parser-grammar-macro--zend_ast_create 'phps-mode-parser-grammar-macro--ZEND_AST_METHOD_REFERENCE nil $1))
            r))
         ((absolute_trait_method_reference)
          (let
@@ -1715,12 +1623,11 @@
          (let
              ((r))
            (setq r
-                 (wisent-raw-tag
-                  (semantic-tag 'phps-mode-parser--ZEND_AST_METHOD_REFERENCE $1 $3)))
+                 (phps-mode-parser-grammar-macro--zend_ast_create 'phps-mode-parser-grammar-macro--ZEND_AST_METHOD_REFERENCE $1 $3))
            r)))
        (method_body
-        ((SEMICOLON))
-        ((OPEN_CURLY_BRACKET inner_statement_list CLOSE_CURLY_BRACKET)
+        ((59))
+        ((123 inner_statement_list 125)
          (let
              ((r))
            (setq r $2)
@@ -1734,13 +1641,13 @@
         ((T_VAR)
          (let
              ((r))
-           (setq r 'phps-mode-parser--ZEND_ACC_PUBLIC)
+           (setq r 'phps-mode-parser-grammar-macro--ZEND_ACC_PUBLIC)
            r)))
        (method_modifiers
         ((%empty)
          (let
              ((r))
-           (setq r 'phps-mode-parser--ZEND_ACC_PUBLIC)
+           (setq r 'phps-mode-parser-grammar-macro--ZEND_ACC_PUBLIC)
            r))
         ((non_empty_member_modifiers)
          (let
@@ -1748,9 +1655,9 @@
            (setq r $1)
            (if
                (not
-                (logand r 'phps-mode-parser--ZEND_ACC_PPP_MASK))
+                (logand r 'phps-mode-parser-grammar-macro--ZEND_ACC_PPP_MASK))
                (setq r
-                     (logior r 'phps-mode-parser--ZEND_ACC_PUBLIC)))
+                     (logior r 'phps-mode-parser-grammar-macro--ZEND_ACC_PUBLIC)))
            r)))
        (non_empty_member_modifiers
         ((member_modifier)
@@ -1762,137 +1669,126 @@
          (let
              ((r))
            (setq r
-                 (phps-mode-parser--zend_add_member_modifier $1 $2))
+                 (phps-mode-parser-grammar-macro--zend_add_member_modifier $1 $2))
            (if
                (not r)
-               (setq r 'phps-mode-parser--YYERROR))
+               (setq r 'phps-mode-parser-grammar-macro--YYERROR))
            r)))
        (member_modifier
         ((T_PUBLIC)
          (let
              ((r))
-           (setq r 'phps-mode-parser--ZEND_ACC_PUBLIC)
+           (setq r 'phps-mode-parser-grammar-macro--ZEND_ACC_PUBLIC)
            r))
         ((T_PROTECTED)
          (let
              ((r))
-           (setq r 'phps-mode-parser--ZEND_ACC_PROTECTED)
+           (setq r 'phps-mode-parser-grammar-macro--ZEND_ACC_PROTECTED)
            r))
         ((T_PRIVATE)
          (let
              ((r))
-           (setq r 'phps-mode-parser--ZEND_ACC_PRIVATE)
+           (setq r 'phps-mode-parser-grammar-macro--ZEND_ACC_PRIVATE)
            r))
         ((T_STATIC)
          (let
              ((r))
-           (setq r 'phps-mode-parser--ZEND_ACC_STATIC)
+           (setq r 'phps-mode-parser-grammar-macro--ZEND_ACC_STATIC)
            r))
         ((T_ABSTRACT)
          (let
              ((r))
-           (setq r 'phps-mode-parser--ZEND_ACC_ABSTRACT)
+           (setq r 'phps-mode-parser-grammar-macro--ZEND_ACC_ABSTRACT)
            r))
         ((T_FINAL)
          (let
              ((r))
-           (setq r 'phps-mode-parser--ZEND_ACC_FINAL)
+           (setq r 'phps-mode-parser-grammar-macro--ZEND_ACC_FINAL)
            r)))
        (property_list
-        ((property_list COMMA property)
+        ((property_list 44 property)
          (let
              ((r))
            (setq r
-                 (wisent-raw-tag
-                  (semantic-tag $1 'ZEND_AST_LIST_ADD :new-element $3)))
+                 (phps-mode-parser-grammar-macro--zend_ast_list_add $1 $3))
            r))
         ((property)
          (let
              ((r))
            (setq r
-                 (wisent-raw-tag
-                  (semantic-tag "" 'phps-mode-parser--ZEND_AST_PROP_DECL :elements @elements :size 1)))
+                 (phps-mode-parser-grammar-macro--zend_ast_create_list 1 'phps-mode-parser-grammar-macro--ZEND_AST_PROP_DECL $1))
            r)))
        (property
         ((T_VARIABLE backup_doc_comment)
          (let
              ((r))
            (setq r
-                 (wisent-raw-tag
-                  (semantic-tag 'phps-mode-parser--ZEND_AST_PROP_ELEM $1 nil
-                                (if $2
-                                    (phps-mode-parser--zend_ast_create_zval_from_str $2)
-                                  nil))))
+                 (phps-mode-parser-grammar-macro--zend_ast_create 'phps-mode-parser-grammar-macro--ZEND_AST_PROP_ELEM $1 nil
+                                                                  (if $2
+                                                                      (phps-mode-parser-grammar-macro--zend_ast_create_zval_from_str $2)
+                                                                    nil)))
            r))
-        ((T_VARIABLE ASSIGN expr backup_doc_comment)
+        ((T_VARIABLE 61 expr backup_doc_comment)
          (let
              ((r))
            (setq r
-                 (wisent-raw-tag
-                  (semantic-tag 'phps-mode-parser--ZEND_AST_PROP_ELEM $1 $3
-                                (if $4
-                                    (phps-mode-parser--zend_ast_create_zval_from_str $4)
-                                  nil))))
+                 (phps-mode-parser-grammar-macro--zend_ast_create 'phps-mode-parser-grammar-macro--ZEND_AST_PROP_ELEM $1 $3
+                                                                  (if $4
+                                                                      (phps-mode-parser-grammar-macro--zend_ast_create_zval_from_str $4)
+                                                                    nil)))
            r)))
        (class_const_list
-        ((class_const_list COMMA class_const_decl)
+        ((class_const_list 44 class_const_decl)
          (let
              ((r))
            (setq r
-                 (wisent-raw-tag
-                  (semantic-tag $1 'ZEND_AST_LIST_ADD :new-element $3)))
+                 (phps-mode-parser-grammar-macro--zend_ast_list_add $1 $3))
            r))
         ((class_const_decl)
          (let
              ((r))
            (setq r
-                 (wisent-raw-tag
-                  (semantic-tag "" 'phps-mode-parser--ZEND_AST_CLASS_CONST_DECL :elements @elements :size 1)))
+                 (phps-mode-parser-grammar-macro--zend_ast_create_list 1 'phps-mode-parser-grammar-macro--ZEND_AST_CLASS_CONST_DECL $1))
            r)))
        (class_const_decl
-        ((identifier ASSIGN expr backup_doc_comment)
+        ((identifier 61 expr backup_doc_comment)
          (let
              ((r))
            (setq r
-                 (wisent-raw-tag
-                  (semantic-tag 'phps-mode-parser--ZEND_AST_CONST_ELEM $1 $3
-                                (if $4
-                                    (phps-mode-parser--zend_ast_create_zval_from_str $4)
-                                  nil))))
+                 (phps-mode-parser-grammar-macro--zend_ast_create 'phps-mode-parser-grammar-macro--ZEND_AST_CONST_ELEM $1 $3
+                                                                  (if $4
+                                                                      (phps-mode-parser-grammar-macro--zend_ast_create_zval_from_str $4)
+                                                                    nil)))
            r)))
        (const_decl
-        ((T_STRING ASSIGN expr backup_doc_comment)
+        ((T_STRING 61 expr backup_doc_comment)
          (let
              ((r))
            (setq r
-                 (wisent-raw-tag
-                  (semantic-tag 'phps-mode-parser--ZEND_AST_CONST_ELEM $1 $3
-                                (if $4
-                                    (phps-mode-parser--zend_ast_create_zval_from_str $4)
-                                  nil))))
+                 (phps-mode-parser-grammar-macro--zend_ast_create 'phps-mode-parser-grammar-macro--ZEND_AST_CONST_ELEM $1 $3
+                                                                  (if $4
+                                                                      (phps-mode-parser-grammar-macro--zend_ast_create_zval_from_str $4)
+                                                                    nil)))
            r)))
        (echo_expr_list
-        ((echo_expr_list COMMA echo_expr)
+        ((echo_expr_list 44 echo_expr)
          (let
              ((r))
            (setq r
-                 (wisent-raw-tag
-                  (semantic-tag $1 'ZEND_AST_LIST_ADD :new-element $3)))
+                 (phps-mode-parser-grammar-macro--zend_ast_list_add $1 $3))
            r))
         ((echo_expr)
          (let
              ((r))
            (setq r
-                 (wisent-raw-tag
-                  (semantic-tag "" 'phps-mode-parser--ZEND_AST_STMT_LIST :elements @elements :size 1)))
+                 (phps-mode-parser-grammar-macro--zend_ast_create_list 1 'phps-mode-parser-grammar-macro--ZEND_AST_STMT_LIST $1))
            r)))
        (echo_expr
         ((expr)
          (let
              ((r))
            (setq r
-                 (wisent-raw-tag
-                  (semantic-tag 'phps-mode-parser--ZEND_AST_ECHO $1)))
+                 (phps-mode-parser-grammar-macro--zend_ast_create 'phps-mode-parser-grammar-macro--ZEND_AST_ECHO $1))
            r)))
        (for_exprs
         ((%empty)
@@ -1906,44 +1802,40 @@
            (setq r $1)
            r)))
        (non_empty_for_exprs
-        ((non_empty_for_exprs COMMA expr)
+        ((non_empty_for_exprs 44 expr)
          (let
              ((r))
            (setq r
-                 (wisent-raw-tag
-                  (semantic-tag $1 'ZEND_AST_LIST_ADD :new-element $3)))
+                 (phps-mode-parser-grammar-macro--zend_ast_list_add $1 $3))
            r))
         ((expr)
          (let
              ((r))
            (setq r
-                 (wisent-raw-tag
-                  (semantic-tag "" 'phps-mode-parser--ZEND_AST_EXPR_LIST :elements @elements :size 1)))
+                 (phps-mode-parser-grammar-macro--zend_ast_create_list 1 'phps-mode-parser-grammar-macro--ZEND_AST_EXPR_LIST $1))
            r)))
        (anonymous_class
         ((T_CLASS
           (let
               ((r))
             (setq r
-                  (phps-mode-parser--cg phps-mode-parser--zend_lineno))
+                  (phps-mode-parser-grammar-macro--cg phps-mode-parser-grammar-macro--zend_lineno))
             r)
-          ctor_arguments extends_from implements_list backup_doc_comment OPEN_CURLY_BRACKET class_statement_list CLOSE_CURLY_BRACKET)
+          ctor_arguments extends_from implements_list backup_doc_comment 123 class_statement_list 125)
          (let
              ((r)
               (decl))
-           (setq phps-mode-parser--decl
-                 (phps-mode-parser--zend_ast_create_decl 'phps-mode-parser--ZEND_AST_CLASS 'phps-mode-parser--ZEND_ACC_ANON_CLASS $2 $6 nil $4 $5 $8 nil))
+           (setq phps-mode-parser-grammar-macro--decl
+                 (phps-mode-parser-grammar-macro--zend_ast_create_decl 'phps-mode-parser-grammar-macro--ZEND_AST_CLASS 'phps-mode-parser-grammar-macro--ZEND_ACC_ANON_CLASS $2 $6 nil $4 $5 $8 nil))
            (setq r
-                 (wisent-raw-tag
-                  (semantic-tag 'phps-mode-parser--ZEND_AST_NEW 'phps-mode-parser--decl $3)))
+                 (phps-mode-parser-grammar-macro--zend_ast_create 'phps-mode-parser-grammar-macro--ZEND_AST_NEW phps-mode-parser-grammar-macro--decl $3))
            r)))
        (new_expr
         ((T_NEW class_name_reference ctor_arguments)
          (let
              ((r))
            (setq r
-                 (wisent-raw-tag
-                  (semantic-tag 'phps-mode-parser--ZEND_AST_NEW $2 $3)))
+                 (phps-mode-parser-grammar-macro--zend_ast_create 'phps-mode-parser-grammar-macro--ZEND_AST_NEW $2 $3))
            r))
         ((T_NEW anonymous_class)
          (let
@@ -1956,416 +1848,360 @@
              ((r))
            (setq r $1)
            r))
-        ((T_LIST OPEN_PARENTHESIS array_pair_list CLOSE_PARENTHESIS ASSIGN expr)
+        ((T_LIST 40 array_pair_list 41 61 expr)
          (let
              ((r))
-           (semantic-tag-put-attribute $3 'attr 'phps-mode-parser--ZEND_ARRAY_SYNTAX_LIST)
+           (semantic-tag-put-attribute $3 'attr 'phps-mode-parser-grammar-macro--ZEND_ARRAY_SYNTAX_LIST)
            (setq r
-                 (wisent-raw-tag
-                  (semantic-tag 'phps-mode-parser--ZEND_AST_ASSIGN $3 $6)))
+                 (phps-mode-parser-grammar-macro--zend_ast_create 'phps-mode-parser-grammar-macro--ZEND_AST_ASSIGN $3 $6))
            r))
-        ((OPEN_SQUARE_BRACKET array_pair_list CLOSE_SQUARE_BRACKET ASSIGN expr)
+        ((91 array_pair_list 93 61 expr)
          (let
              ((r))
-           (semantic-tag-put-attribute $2 'attr 'phps-mode-parser--ZEND_ARRAY_SYNTAX_SHORT)
+           (semantic-tag-put-attribute $2 'attr 'phps-mode-parser-grammar-macro--ZEND_ARRAY_SYNTAX_SHORT)
            (setq r
-                 (wisent-raw-tag
-                  (semantic-tag 'phps-mode-parser--ZEND_AST_ASSIGN $2 $5)))
+                 (phps-mode-parser-grammar-macro--zend_ast_create 'phps-mode-parser-grammar-macro--ZEND_AST_ASSIGN $2 $5))
            r))
-        ((variable ASSIGN expr)
+        ((variable 61 expr)
          (let
              ((r))
            (setq r
-                 (wisent-raw-tag
-                  (semantic-tag 'phps-mode-parser--ZEND_AST_ASSIGN $1 $3)))
+                 (phps-mode-parser-grammar-macro--zend_ast_create 'phps-mode-parser-grammar-macro--ZEND_AST_ASSIGN $1 $3))
            r))
-        ((variable ASSIGN BITWISE_AND variable)
+        ((variable 61 38 variable)
          (let
              ((r))
            (setq r
-                 (wisent-raw-tag
-                  (semantic-tag 'phps-mode-parser--ZEND_AST_ASSIGN_REF $1 $4)))
+                 (phps-mode-parser-grammar-macro--zend_ast_create 'phps-mode-parser-grammar-macro--ZEND_AST_ASSIGN_REF $1 $4))
            r))
         ((T_CLONE expr)
          (let
              ((r))
            (setq r
-                 (wisent-raw-tag
-                  (semantic-tag 'phps-mode-parser--ZEND_AST_CLONE $2)))
+                 (phps-mode-parser-grammar-macro--zend_ast_create 'phps-mode-parser-grammar-macro--ZEND_AST_CLONE $2))
            r))
         ((variable T_PLUS_EQUAL expr)
          (let
              ((r))
            (setq r
-                 (wisent-raw-tag
-                  (semantic-tag 'phps-mode-parser--ZEND_ADD 'ZEND_AST_ASSIGN_OP :object $3 :subject $1)))
+                 (phps-mode-parser-grammar-macro--zend_ast_create_assign_op 'phps-mode-parser-grammar-macro--ZEND_ADD $1 $3))
            r))
         ((variable T_MINUS_EQUAL expr)
          (let
              ((r))
            (setq r
-                 (wisent-raw-tag
-                  (semantic-tag 'phps-mode-parser--ZEND_SUB 'ZEND_AST_ASSIGN_OP :object $3 :subject $1)))
+                 (phps-mode-parser-grammar-macro--zend_ast_create_assign_op 'phps-mode-parser-grammar-macro--ZEND_SUB $1 $3))
            r))
         ((variable T_MUL_EQUAL expr)
          (let
              ((r))
            (setq r
-                 (wisent-raw-tag
-                  (semantic-tag 'phps-mode-parser--ZEND_MUL 'ZEND_AST_ASSIGN_OP :object $3 :subject $1)))
+                 (phps-mode-parser-grammar-macro--zend_ast_create_assign_op 'phps-mode-parser-grammar-macro--ZEND_MUL $1 $3))
            r))
         ((variable T_POW_EQUAL expr)
          (let
              ((r))
            (setq r
-                 (wisent-raw-tag
-                  (semantic-tag 'phps-mode-parser--ZEND_POW 'ZEND_AST_ASSIGN_OP :object $3 :subject $1)))
+                 (phps-mode-parser-grammar-macro--zend_ast_create_assign_op 'phps-mode-parser-grammar-macro--ZEND_POW $1 $3))
            r))
         ((variable T_DIV_EQUAL expr)
          (let
              ((r))
            (setq r
-                 (wisent-raw-tag
-                  (semantic-tag 'phps-mode-parser--ZEND_DIV 'ZEND_AST_ASSIGN_OP :object $3 :subject $1)))
+                 (phps-mode-parser-grammar-macro--zend_ast_create_assign_op 'phps-mode-parser-grammar-macro--ZEND_DIV $1 $3))
            r))
         ((variable T_CONCAT_EQUAL expr)
          (let
              ((r))
            (setq r
-                 (wisent-raw-tag
-                  (semantic-tag 'phps-mode-parser--ZEND_CONCAT 'ZEND_AST_ASSIGN_OP :object $3 :subject $1)))
+                 (phps-mode-parser-grammar-macro--zend_ast_create_assign_op 'phps-mode-parser-grammar-macro--ZEND_CONCAT $1 $3))
            r))
         ((variable T_MOD_EQUAL expr)
          (let
              ((r))
            (setq r
-                 (wisent-raw-tag
-                  (semantic-tag 'phps-mode-parser--ZEND_MOD 'ZEND_AST_ASSIGN_OP :object $3 :subject $1)))
+                 (phps-mode-parser-grammar-macro--zend_ast_create_assign_op 'phps-mode-parser-grammar-macro--ZEND_MOD $1 $3))
            r))
         ((variable T_AND_EQUAL expr)
          (let
              ((r))
            (setq r
-                 (wisent-raw-tag
-                  (semantic-tag 'phps-mode-parser--ZEND_BW_AND 'ZEND_AST_ASSIGN_OP :object $3 :subject $1)))
+                 (phps-mode-parser-grammar-macro--zend_ast_create_assign_op 'phps-mode-parser-grammar-macro--ZEND_BW_AND $1 $3))
            r))
         ((variable T_OR_EQUAL expr)
          (let
              ((r))
            (setq r
-                 (wisent-raw-tag
-                  (semantic-tag 'phps-mode-parser--ZEND_BW_OR 'ZEND_AST_ASSIGN_OP :object $3 :subject $1)))
+                 (phps-mode-parser-grammar-macro--zend_ast_create_assign_op 'phps-mode-parser-grammar-macro--ZEND_BW_OR $1 $3))
            r))
         ((variable T_XOR_EQUAL expr)
          (let
              ((r))
            (setq r
-                 (wisent-raw-tag
-                  (semantic-tag 'phps-mode-parser--ZEND_BW_XOR 'ZEND_AST_ASSIGN_OP :object $3 :subject $1)))
+                 (phps-mode-parser-grammar-macro--zend_ast_create_assign_op 'phps-mode-parser-grammar-macro--ZEND_BW_XOR $1 $3))
            r))
         ((variable T_SL_EQUAL expr)
          (let
              ((r))
            (setq r
-                 (wisent-raw-tag
-                  (semantic-tag 'phps-mode-parser--ZEND_SL 'ZEND_AST_ASSIGN_OP :object $3 :subject $1)))
+                 (phps-mode-parser-grammar-macro--zend_ast_create_assign_op 'phps-mode-parser-grammar-macro--ZEND_SL $1 $3))
            r))
         ((variable T_SR_EQUAL expr)
          (let
              ((r))
            (setq r
-                 (wisent-raw-tag
-                  (semantic-tag 'phps-mode-parser--ZEND_SR 'ZEND_AST_ASSIGN_OP :object $3 :subject $1)))
+                 (phps-mode-parser-grammar-macro--zend_ast_create_assign_op 'phps-mode-parser-grammar-macro--ZEND_SR $1 $3))
            r))
         ((variable T_COALESCE_EQUAL expr)
          (let
              ((r))
            (setq r
-                 (wisent-raw-tag
-                  (semantic-tag 'phps-mode-parser--ZEND_AST_ASSIGN_COALESCE $1 $3)))
+                 (phps-mode-parser-grammar-macro--zend_ast_create 'phps-mode-parser-grammar-macro--ZEND_AST_ASSIGN_COALESCE $1 $3))
            r))
         ((variable T_INC)
          (let
              ((r))
            (setq r
-                 (wisent-raw-tag
-                  (semantic-tag 'phps-mode-parser--ZEND_AST_POST_INC $1)))
+                 (phps-mode-parser-grammar-macro--zend_ast_create 'phps-mode-parser-grammar-macro--ZEND_AST_POST_INC $1))
            r))
         ((T_INC variable)
          (let
              ((r))
            (setq r
-                 (wisent-raw-tag
-                  (semantic-tag 'phps-mode-parser--ZEND_AST_PRE_INC $2)))
+                 (phps-mode-parser-grammar-macro--zend_ast_create 'phps-mode-parser-grammar-macro--ZEND_AST_PRE_INC $2))
            r))
         ((variable T_DEC)
          (let
              ((r))
            (setq r
-                 (wisent-raw-tag
-                  (semantic-tag 'phps-mode-parser--ZEND_AST_POST_DEC $1)))
+                 (phps-mode-parser-grammar-macro--zend_ast_create 'phps-mode-parser-grammar-macro--ZEND_AST_POST_DEC $1))
            r))
         ((T_DEC variable)
          (let
              ((r))
            (setq r
-                 (wisent-raw-tag
-                  (semantic-tag 'phps-mode-parser--ZEND_AST_PRE_DEC $2)))
+                 (phps-mode-parser-grammar-macro--zend_ast_create 'phps-mode-parser-grammar-macro--ZEND_AST_PRE_DEC $2))
            r))
         ((expr T_BOOLEAN_OR expr)
          (let
              ((r))
            (setq r
-                 (wisent-raw-tag
-                  (semantic-tag 'phps-mode-parser--ZEND_AST_OR $1 $3)))
+                 (phps-mode-parser-grammar-macro--zend_ast_create 'phps-mode-parser-grammar-macro--ZEND_AST_OR $1 $3))
            r))
         ((expr T_BOOLEAN_AND expr)
          (let
              ((r))
            (setq r
-                 (wisent-raw-tag
-                  (semantic-tag 'phps-mode-parser--ZEND_AST_AND $1 $3)))
+                 (phps-mode-parser-grammar-macro--zend_ast_create 'phps-mode-parser-grammar-macro--ZEND_AST_AND $1 $3))
            r))
         ((expr T_LOGICAL_OR expr)
          (let
              ((r))
            (setq r
-                 (wisent-raw-tag
-                  (semantic-tag 'phps-mode-parser--ZEND_AST_OR $1 $3)))
+                 (phps-mode-parser-grammar-macro--zend_ast_create 'phps-mode-parser-grammar-macro--ZEND_AST_OR $1 $3))
            r))
         ((expr T_LOGICAL_AND expr)
          (let
              ((r))
            (setq r
-                 (wisent-raw-tag
-                  (semantic-tag 'phps-mode-parser--ZEND_AST_AND $1 $3)))
+                 (phps-mode-parser-grammar-macro--zend_ast_create 'phps-mode-parser-grammar-macro--ZEND_AST_AND $1 $3))
            r))
         ((expr T_LOGICAL_XOR expr)
          (let
              ((r))
            (setq r
-                 (wisent-raw-tag
-                  (semantic-tag 'phps-mode-parser--ZEND_BOOL_XOR 'ZEND_AST_BINARY_OP :object $3 :subject $1)))
+                 (phps-mode-parser-grammar-macro--zend_ast_create_binary_op 'phps-mode-parser-grammar-macro--ZEND_BOOL_XOR $1 $3))
            r))
-        ((expr BITWISE_OR expr)
+        ((expr 124 expr)
          (let
              ((r))
            (setq r
-                 (wisent-raw-tag
-                  (semantic-tag 'phps-mode-parser--ZEND_BW_OR 'ZEND_AST_BINARY_OP :object $3 :subject $1)))
+                 (phps-mode-parser-grammar-macro--zend_ast_create_binary_op 'phps-mode-parser-grammar-macro--ZEND_BW_OR $1 $3))
            r))
-        ((expr BITWISE_AND expr)
+        ((expr 38 expr)
          (let
              ((r))
            (setq r
-                 (wisent-raw-tag
-                  (semantic-tag 'phps-mode-parser--ZEND_BW_AND 'ZEND_AST_BINARY_OP :object $3 :subject $1)))
+                 (phps-mode-parser-grammar-macro--zend_ast_create_binary_op 'phps-mode-parser-grammar-macro--ZEND_BW_AND $1 $3))
            r))
-        ((expr POW expr)
+        ((expr 94 expr)
          (let
              ((r))
            (setq r
-                 (wisent-raw-tag
-                  (semantic-tag 'phps-mode-parser--ZEND_BW_XOR 'ZEND_AST_BINARY_OP :object $3 :subject $1)))
+                 (phps-mode-parser-grammar-macro--zend_ast_create_binary_op 'phps-mode-parser-grammar-macro--ZEND_BW_XOR $1 $3))
            r))
-        ((expr DOT expr)
+        ((expr 46 expr)
          (let
              ((r))
            (setq r
-                 (wisent-raw-tag
-                  (semantic-tag 'phps-mode-parser--ZEND_CONCAT 'ZEND_AST_BINARY_OP :object $3 :subject $1)))
+                 (phps-mode-parser-grammar-macro--zend_ast_create_binary_op 'phps-mode-parser-grammar-macro--ZEND_CONCAT $1 $3))
            r))
-        ((expr ADDITION expr)
+        ((expr 43 expr)
          (let
              ((r))
            (setq r
-                 (wisent-raw-tag
-                  (semantic-tag 'phps-mode-parser--ZEND_ADD 'ZEND_AST_BINARY_OP :object $3 :subject $1)))
+                 (phps-mode-parser-grammar-macro--zend_ast_create_binary_op 'phps-mode-parser-grammar-macro--ZEND_ADD $1 $3))
            r))
-        ((expr SUBTRACTION expr)
+        ((expr 45 expr)
          (let
              ((r))
            (setq r
-                 (wisent-raw-tag
-                  (semantic-tag 'phps-mode-parser--ZEND_SUB 'ZEND_AST_BINARY_OP :object $3 :subject $1)))
+                 (phps-mode-parser-grammar-macro--zend_ast_create_binary_op 'phps-mode-parser-grammar-macro--ZEND_SUB $1 $3))
            r))
-        ((expr MULTIPLICATION expr)
+        ((expr 42 expr)
          (let
              ((r))
            (setq r
-                 (wisent-raw-tag
-                  (semantic-tag 'phps-mode-parser--ZEND_MUL 'ZEND_AST_BINARY_OP :object $3 :subject $1)))
+                 (phps-mode-parser-grammar-macro--zend_ast_create_binary_op 'phps-mode-parser-grammar-macro--ZEND_MUL $1 $3))
            r))
         ((expr T_POW expr)
          (let
              ((r))
            (setq r
-                 (wisent-raw-tag
-                  (semantic-tag 'phps-mode-parser--ZEND_POW 'ZEND_AST_BINARY_OP :object $3 :subject $1)))
+                 (phps-mode-parser-grammar-macro--zend_ast_create_binary_op 'phps-mode-parser-grammar-macro--ZEND_POW $1 $3))
            r))
-        ((expr DIVISION expr)
+        ((expr 47 expr)
          (let
              ((r))
            (setq r
-                 (wisent-raw-tag
-                  (semantic-tag 'phps-mode-parser--ZEND_DIV 'ZEND_AST_BINARY_OP :object $3 :subject $1)))
+                 (phps-mode-parser-grammar-macro--zend_ast_create_binary_op 'phps-mode-parser-grammar-macro--ZEND_DIV $1 $3))
            r))
-        ((expr MODULO expr)
+        ((expr 37 expr)
          (let
              ((r))
            (setq r
-                 (wisent-raw-tag
-                  (semantic-tag 'phps-mode-parser--ZEND_MOD 'ZEND_AST_BINARY_OP :object $3 :subject $1)))
+                 (phps-mode-parser-grammar-macro--zend_ast_create_binary_op 'phps-mode-parser-grammar-macro--ZEND_MOD $1 $3))
            r))
         ((expr T_SL expr)
          (let
              ((r))
            (setq r
-                 (wisent-raw-tag
-                  (semantic-tag 'phps-mode-parser--ZEND_SL 'ZEND_AST_BINARY_OP :object $3 :subject $1)))
+                 (phps-mode-parser-grammar-macro--zend_ast_create_binary_op 'phps-mode-parser-grammar-macro--ZEND_SL $1 $3))
            r))
         ((expr T_SR expr)
          (let
              ((r))
            (setq r
-                 (wisent-raw-tag
-                  (semantic-tag 'phps-mode-parser--ZEND_SR 'ZEND_AST_BINARY_OP :object $3 :subject $1)))
+                 (phps-mode-parser-grammar-macro--zend_ast_create_binary_op 'phps-mode-parser-grammar-macro--ZEND_SR $1 $3))
            r))
-        ((ADDITION expr)
-         [UNARY]
+        ((43 expr)
+         [126]
          (let
              ((r))
            (setq r
-                 (wisent-raw-tag
-                  (semantic-tag 'phps-mode-parser--ZEND_AST_UNARY_PLUS $2)))
+                 (phps-mode-parser-grammar-macro--zend_ast_create 'phps-mode-parser-grammar-macro--ZEND_AST_UNARY_PLUS $2))
            r))
-        ((SUBTRACTION expr)
-         [UNARY]
+        ((45 expr)
+         [126]
          (let
              ((r))
            (setq r
-                 (wisent-raw-tag
-                  (semantic-tag 'phps-mode-parser--ZEND_AST_UNARY_MINUS $2)))
+                 (phps-mode-parser-grammar-macro--zend_ast_create 'phps-mode-parser-grammar-macro--ZEND_AST_UNARY_MINUS $2))
            r))
-        ((NEGATION expr)
+        ((33 expr)
          (let
              ((r))
            (setq r
-                 (wisent-raw-tag
-                  (semantic-tag 'phps-mode-parser--ZEND_AST_UNARY_OP 'ZEND_AST_EX :operator 'phps-mode-parser--ZEND_BOOL_NOT :subject $2)))
+                 (phps-mode-parser-grammar-macro--zend_ast_create_ex 'phps-mode-parser-grammar-macro--ZEND_AST_UNARY_OP 'phps-mode-parser-grammar-macro--ZEND_BOOL_NOT $2))
            r))
-        ((UNARY expr)
+        ((126 expr)
          (let
              ((r))
            (setq r
-                 (wisent-raw-tag
-                  (semantic-tag 'phps-mode-parser--ZEND_AST_UNARY_OP 'ZEND_AST_EX :operator 'phps-mode-parser--ZEND_BW_NOT :subject $2)))
+                 (phps-mode-parser-grammar-macro--zend_ast_create_ex 'phps-mode-parser-grammar-macro--ZEND_AST_UNARY_OP 'phps-mode-parser-grammar-macro--ZEND_BW_NOT $2))
            r))
         ((expr T_IS_IDENTICAL expr)
          (let
              ((r))
            (setq r
-                 (wisent-raw-tag
-                  (semantic-tag 'phps-mode-parser--ZEND_IS_IDENTICAL 'ZEND_AST_BINARY_OP :object $3 :subject $1)))
+                 (phps-mode-parser-grammar-macro--zend_ast_create_binary_op 'phps-mode-parser-grammar-macro--ZEND_IS_IDENTICAL $1 $3))
            r))
         ((expr T_IS_NOT_IDENTICAL expr)
          (let
              ((r))
            (setq r
-                 (wisent-raw-tag
-                  (semantic-tag 'phps-mode-parser--ZEND_IS_NOT_IDENTICAL 'ZEND_AST_BINARY_OP :object $3 :subject $1)))
+                 (phps-mode-parser-grammar-macro--zend_ast_create_binary_op 'phps-mode-parser-grammar-macro--ZEND_IS_NOT_IDENTICAL $1 $3))
            r))
         ((expr T_IS_EQUAL expr)
          (let
              ((r))
            (setq r
-                 (wisent-raw-tag
-                  (semantic-tag 'phps-mode-parser--ZEND_IS_EQUAL 'ZEND_AST_BINARY_OP :object $3 :subject $1)))
+                 (phps-mode-parser-grammar-macro--zend_ast_create_binary_op 'phps-mode-parser-grammar-macro--ZEND_IS_EQUAL $1 $3))
            r))
         ((expr T_IS_NOT_EQUAL expr)
          (let
              ((r))
            (setq r
-                 (wisent-raw-tag
-                  (semantic-tag 'phps-mode-parser--ZEND_IS_NOT_EQUAL 'ZEND_AST_BINARY_OP :object $3 :subject $1)))
+                 (phps-mode-parser-grammar-macro--zend_ast_create_binary_op 'phps-mode-parser-grammar-macro--ZEND_IS_NOT_EQUAL $1 $3))
            r))
-        ((expr LESSER_THAN expr)
+        ((expr 60 expr)
          (let
              ((r))
            (setq r
-                 (wisent-raw-tag
-                  (semantic-tag 'phps-mode-parser--ZEND_IS_SMALLER 'ZEND_AST_BINARY_OP :object $3 :subject $1)))
+                 (phps-mode-parser-grammar-macro--zend_ast_create_binary_op 'phps-mode-parser-grammar-macro--ZEND_IS_SMALLER $1 $3))
            r))
         ((expr T_IS_SMALLER_OR_EQUAL expr)
          (let
              ((r))
            (setq r
-                 (wisent-raw-tag
-                  (semantic-tag 'phps-mode-parser--ZEND_IS_SMALLER_OR_EQUAL 'ZEND_AST_BINARY_OP :object $3 :subject $1)))
+                 (phps-mode-parser-grammar-macro--zend_ast_create_binary_op 'phps-mode-parser-grammar-macro--ZEND_IS_SMALLER_OR_EQUAL $1 $3))
            r))
-        ((expr GREATER_THAN expr)
+        ((expr 62 expr)
          (let
              ((r))
            (setq r
-                 (wisent-raw-tag
-                  (semantic-tag 'phps-mode-parser--ZEND_AST_GREATER $1 $3)))
+                 (phps-mode-parser-grammar-macro--zend_ast_create 'phps-mode-parser-grammar-macro--ZEND_AST_GREATER $1 $3))
            r))
         ((expr T_IS_GREATER_OR_EQUAL expr)
          (let
              ((r))
            (setq r
-                 (wisent-raw-tag
-                  (semantic-tag 'phps-mode-parser--ZEND_AST_GREATER_EQUAL $1 $3)))
+                 (phps-mode-parser-grammar-macro--zend_ast_create 'phps-mode-parser-grammar-macro--ZEND_AST_GREATER_EQUAL $1 $3))
            r))
         ((expr T_SPACESHIP expr)
          (let
              ((r))
            (setq r
-                 (wisent-raw-tag
-                  (semantic-tag 'phps-mode-parser--ZEND_SPACESHIP 'ZEND_AST_BINARY_OP :object $3 :subject $1)))
+                 (phps-mode-parser-grammar-macro--zend_ast_create_binary_op 'phps-mode-parser-grammar-macro--ZEND_SPACESHIP $1 $3))
            r))
         ((expr T_INSTANCEOF class_name_reference)
          (let
              ((r))
            (setq r
-                 (wisent-raw-tag
-                  (semantic-tag 'phps-mode-parser--ZEND_AST_INSTANCEOF $1 $3)))
+                 (phps-mode-parser-grammar-macro--zend_ast_create 'phps-mode-parser-grammar-macro--ZEND_AST_INSTANCEOF $1 $3))
            r))
-        ((OPEN_PARENTHESIS expr CLOSE_PARENTHESIS)
+        ((40 expr 41)
          (let
              ((r))
            (setq r $2)
            (if
                (equal
                 (semantic-tag-get-attribute r 'kind)
-                'phps-mode-parser--ZEND_AST_CONDITIONAL)
-               (semantic-tag-put-attribute r 'attr 'phps-mode-parser--ZEND_PARENTHESIZED_CONDITIONAL))
+                'phps-mode-parser-grammar-macro--ZEND_AST_CONDITIONAL)
+               (semantic-tag-put-attribute r 'attr 'phps-mode-parser-grammar-macro--ZEND_PARENTHESIZED_CONDITIONAL))
            r))
         ((new_expr)
          (let
              ((r))
            (setq r $1)
            r))
-        ((expr QUESTION_MARK expr COLON expr)
+        ((expr 63 expr 58 expr)
          (let
              ((r))
            (setq r
-                 (wisent-raw-tag
-                  (semantic-tag 'phps-mode-parser--ZEND_AST_CONDITIONAL $1 $3 $5)))
+                 (phps-mode-parser-grammar-macro--zend_ast_create 'phps-mode-parser-grammar-macro--ZEND_AST_CONDITIONAL $1 $3 $5))
            r))
-        ((expr QUESTION_MARK COLON expr)
+        ((expr 63 58 expr)
          (let
              ((r))
            (setq r
-                 (wisent-raw-tag
-                  (semantic-tag 'phps-mode-parser--ZEND_AST_CONDITIONAL $1 nil $4)))
+                 (phps-mode-parser-grammar-macro--zend_ast_create 'phps-mode-parser-grammar-macro--ZEND_AST_CONDITIONAL $1 nil $4))
            r))
         ((expr T_COALESCE expr)
          (let
              ((r))
            (setq r
-                 (wisent-raw-tag
-                  (semantic-tag 'phps-mode-parser--ZEND_AST_COALESCE $1 $3)))
+                 (phps-mode-parser-grammar-macro--zend_ast_create 'phps-mode-parser-grammar-macro--ZEND_AST_COALESCE $1 $3))
            r))
         ((internal_functions_in_yacc)
          (let
@@ -2376,134 +2212,118 @@
          (let
              ((r))
            (setq r
-                 (wisent-raw-tag
-                  (semantic-tag 'phps-mode-parser--IS_LONG 'ZEND_AST_CAST :subject $2)))
+                 (phps-mode-parser-grammar-macro--zend_ast_create_cast 'phps-mode-parser-grammar-macro--IS_LONG $2))
            r))
         ((T_DOUBLE_CAST expr)
          (let
              ((r))
            (setq r
-                 (wisent-raw-tag
-                  (semantic-tag 'phps-mode-parser--IS_DOUBLE 'ZEND_AST_CAST :subject $2)))
+                 (phps-mode-parser-grammar-macro--zend_ast_create_cast 'phps-mode-parser-grammar-macro--IS_DOUBLE $2))
            r))
         ((T_STRING_CAST expr)
          (let
              ((r))
            (setq r
-                 (wisent-raw-tag
-                  (semantic-tag 'phps-mode-parser--IS_STRING 'ZEND_AST_CAST :subject $2)))
+                 (phps-mode-parser-grammar-macro--zend_ast_create_cast 'phps-mode-parser-grammar-macro--IS_STRING $2))
            r))
         ((T_ARRAY_CAST expr)
          (let
              ((r))
            (setq r
-                 (wisent-raw-tag
-                  (semantic-tag 'phps-mode-parser--IS_ARRAY 'ZEND_AST_CAST :subject $2)))
+                 (phps-mode-parser-grammar-macro--zend_ast_create_cast 'phps-mode-parser-grammar-macro--IS_ARRAY $2))
            r))
         ((T_OBJECT_CAST expr)
          (let
              ((r))
            (setq r
-                 (wisent-raw-tag
-                  (semantic-tag 'phps-mode-parser--IS_OBJECT 'ZEND_AST_CAST :subject $2)))
+                 (phps-mode-parser-grammar-macro--zend_ast_create_cast 'phps-mode-parser-grammar-macro--IS_OBJECT $2))
            r))
         ((T_BOOL_CAST expr)
          (let
              ((r))
            (setq r
-                 (wisent-raw-tag
-                  (semantic-tag 'phps-mode-parser--_IS_BOOL 'ZEND_AST_CAST :subject $2)))
+                 (phps-mode-parser-grammar-macro--zend_ast_create_cast 'phps-mode-parser-grammar-macro--_IS_BOOL $2))
            r))
         ((T_UNSET_CAST expr)
          (let
              ((r))
            (setq r
-                 (wisent-raw-tag
-                  (semantic-tag 'phps-mode-parser--IS_NULL 'ZEND_AST_CAST :subject $2)))
+                 (phps-mode-parser-grammar-macro--zend_ast_create_cast 'phps-mode-parser-grammar-macro--IS_NULL $2))
            r))
         ((T_EXIT exit_expr)
          (let
              ((r))
            (setq r
-                 (wisent-raw-tag
-                  (semantic-tag 'phps-mode-parser--ZEND_AST_EXIT $2)))
+                 (phps-mode-parser-grammar-macro--zend_ast_create 'phps-mode-parser-grammar-macro--ZEND_AST_EXIT $2))
            r))
-        ((AT expr)
+        ((64 expr)
          (let
              ((r))
            (setq r
-                 (wisent-raw-tag
-                  (semantic-tag 'phps-mode-parser--ZEND_AST_SILENCE $2)))
+                 (phps-mode-parser-grammar-macro--zend_ast_create 'phps-mode-parser-grammar-macro--ZEND_AST_SILENCE $2))
            r))
         ((scalar)
          (let
              ((r))
            (setq r $1)
            r))
-        ((BACKTICK backticks_expr BACKTICK)
+        ((96 backticks_expr 96)
          (let
              ((r))
            (setq r
-                 (wisent-raw-tag
-                  (semantic-tag 'phps-mode-parser--ZEND_AST_SHELL_EXEC $2)))
+                 (phps-mode-parser-grammar-macro--zend_ast_create 'phps-mode-parser-grammar-macro--ZEND_AST_SHELL_EXEC $2))
            r))
         ((T_PRINT expr)
          (let
              ((r))
            (setq r
-                 (wisent-raw-tag
-                  (semantic-tag 'phps-mode-parser--ZEND_AST_PRINT $2)))
+                 (phps-mode-parser-grammar-macro--zend_ast_create 'phps-mode-parser-grammar-macro--ZEND_AST_PRINT $2))
            r))
         ((T_YIELD)
          (let
              ((r))
            (setq r
-                 (wisent-raw-tag
-                  (semantic-tag 'phps-mode-parser--ZEND_AST_YIELD nil nil)))
-           (phps-mode-parser--cg 'phps-mode-parser--extra_fn_flags
-                                 (logior
-                                  (phps-mode-parser--cg 'phps-mode-parser--extra_fn_flags)
-                                  'phps-mode-parser--ZEND_ACC_GENERATOR))
+                 (phps-mode-parser-grammar-macro--zend_ast_create 'phps-mode-parser-grammar-macro--ZEND_AST_YIELD nil nil))
+           (phps-mode-parser-grammar-macro--cg 'phps-mode-parser-grammar-macro--extra_fn_flags
+                                               (logior
+                                                (phps-mode-parser-grammar-macro--cg 'phps-mode-parser-grammar-macro--extra_fn_flags)
+                                                'phps-mode-parser-grammar-macro--ZEND_ACC_GENERATOR))
            r))
         ((T_YIELD expr)
          (let
              ((r))
            (setq r
-                 (wisent-raw-tag
-                  (semantic-tag 'phps-mode-parser--ZEND_AST_YIELD $2 nil)))
-           (phps-mode-parser--cg 'phps-mode-parser--extra_fn_flags
-                                 (logior
-                                  (phps-mode-parser--cg 'phps-mode-parser--extra_fn_flags)
-                                  'phps-mode-parser--ZEND_ACC_GENERATOR))
+                 (phps-mode-parser-grammar-macro--zend_ast_create 'phps-mode-parser-grammar-macro--ZEND_AST_YIELD $2 nil))
+           (phps-mode-parser-grammar-macro--cg 'phps-mode-parser-grammar-macro--extra_fn_flags
+                                               (logior
+                                                (phps-mode-parser-grammar-macro--cg 'phps-mode-parser-grammar-macro--extra_fn_flags)
+                                                'phps-mode-parser-grammar-macro--ZEND_ACC_GENERATOR))
            r))
         ((T_YIELD expr T_DOUBLE_ARROW expr)
          (let
              ((r))
            (setq r
-                 (wisent-raw-tag
-                  (semantic-tag 'phps-mode-parser--ZEND_AST_YIELD $4 $2)))
-           (phps-mode-parser--cg 'phps-mode-parser--extra_fn_flags
-                                 (logior
-                                  (phps-mode-parser--cg 'phps-mode-parser--extra_fn_flags)
-                                  'phps-mode-parser--ZEND_ACC_GENERATOR))
+                 (phps-mode-parser-grammar-macro--zend_ast_create 'phps-mode-parser-grammar-macro--ZEND_AST_YIELD $4 $2))
+           (phps-mode-parser-grammar-macro--cg 'phps-mode-parser-grammar-macro--extra_fn_flags
+                                               (logior
+                                                (phps-mode-parser-grammar-macro--cg 'phps-mode-parser-grammar-macro--extra_fn_flags)
+                                                'phps-mode-parser-grammar-macro--ZEND_ACC_GENERATOR))
            r))
         ((T_YIELD_FROM expr)
          (let
              ((r))
            (setq r
-                 (wisent-raw-tag
-                  (semantic-tag 'phps-mode-parser--ZEND_AST_YIELD_FROM $2)))
-           (phps-mode-parser--cg 'phps-mode-parser--extra_fn_flags
-                                 (logior
-                                  (phps-mode-parser--cg 'phps-mode-parser--extra_fn_flags)
-                                  'phps-mode-parser--ZEND_ACC_GENERATOR))
+                 (phps-mode-parser-grammar-macro--zend_ast_create 'phps-mode-parser-grammar-macro--ZEND_AST_YIELD_FROM $2))
+           (phps-mode-parser-grammar-macro--cg 'phps-mode-parser-grammar-macro--extra_fn_flags
+                                               (logior
+                                                (phps-mode-parser-grammar-macro--cg 'phps-mode-parser-grammar-macro--extra_fn_flags)
+                                                'phps-mode-parser-grammar-macro--ZEND_ACC_GENERATOR))
            r))
         ((T_THROW expr)
          (let
              ((r))
            (setq r
-                 (wisent-raw-tag
-                  (semantic-tag 'phps-mode-parser--ZEND_AST_THROW $2)))
+                 (phps-mode-parser-grammar-macro--zend_ast_create 'phps-mode-parser-grammar-macro--ZEND_AST_THROW $2))
            r))
         ((inline_function)
          (let
@@ -2517,63 +2337,62 @@
            (semantic-tag-put-attribute r 'flags
                                        (logior
                                         (semantic-tag-get-attribute r 'flags)
-                                        'phps-mode-parser--ZEND_ACC_STATIC))
+                                        'phps-mode-parser-grammar-macro--ZEND_ACC_STATIC))
            r)))
        (inline_function
-        ((function returns_ref backup_doc_comment OPEN_PARENTHESIS parameter_list CLOSE_PARENTHESIS lexical_vars return_type backup_fn_flags OPEN_CURLY_BRACKET inner_statement_list CLOSE_CURLY_BRACKET backup_fn_flags)
+        ((function returns_ref backup_doc_comment 40 parameter_list 41 lexical_vars return_type backup_fn_flags 123 inner_statement_list 125 backup_fn_flags)
          (let
              ((r))
            (setq r
-                 (phps-mode-parser--zend_ast_create_decl 'phps-mode-parser--ZEND_AST_CLOSURE
-                                                         (logior $2 $13)
-                                                         $1 $3
-                                                         (phps-mode-parser--zend_string_init "{closure}"
-                                                                                             (-
-                                                                                              (phps-mode-parser--sizeof "{closure}")
-                                                                                              1)
-                                                                                             0)
-                                                         $5 $7 $11 $8))
-           (phps-mode-parser--cg 'phps-mode-parser--extra_fn_flags $9)
+                 (phps-mode-parser-grammar-macro--zend_ast_create_decl 'phps-mode-parser-grammar-macro--ZEND_AST_CLOSURE
+                                                                       (logior $2 $13)
+                                                                       $1 $3
+                                                                       (phps-mode-parser-grammar-macro--zend_string_init "{closure}"
+                                                                                                                         (-
+                                                                                                                          (phps-mode-parser-grammar-macro--sizeof "{closure}")
+                                                                                                                          1)
+                                                                                                                         0)
+                                                                       $5 $7 $11 $8))
+           (phps-mode-parser-grammar-macro--cg 'phps-mode-parser-grammar-macro--extra_fn_flags $9)
            r))
-        ((fn returns_ref OPEN_PARENTHESIS parameter_list CLOSE_PARENTHESIS return_type backup_doc_comment T_DOUBLE_ARROW backup_fn_flags backup_lex_pos expr backup_fn_flags)
+        ((fn returns_ref 40 parameter_list 41 return_type backup_doc_comment T_DOUBLE_ARROW backup_fn_flags backup_lex_pos expr backup_fn_flags)
          (let
              ((r))
            (setq r
-                 (phps-mode-parser--zend_ast_create_decl 'phps-mode-parser--ZEND_AST_ARROW_FUNC
-                                                         (logior $2 $12)
-                                                         $1 $7
-                                                         (phps-mode-parser--zend_string_init "{closure}"
-                                                                                             (-
-                                                                                              (phps-mode-parser--sizeof "{closure}")
-                                                                                              1)
-                                                                                             0)
-                                                         $4 nil
-                                                         (wisent-raw-tag
-                                                          (semantic-tag 'phps-mode-parser--ZEND_AST_RETURN $11))
-                                                         $6))
+                 (phps-mode-parser-grammar-macro--zend_ast_create_decl 'phps-mode-parser-grammar-macro--ZEND_AST_ARROW_FUNC
+                                                                       (logior $2 $12)
+                                                                       $1 $7
+                                                                       (phps-mode-parser-grammar-macro--zend_string_init "{closure}"
+                                                                                                                         (-
+                                                                                                                          (phps-mode-parser-grammar-macro--sizeof "{closure}")
+                                                                                                                          1)
+                                                                                                                         0)
+                                                                       $4 nil
+                                                                       (phps-mode-parser-grammar-macro--zend_ast_create 'phps-mode-parser-grammar-macro--ZEND_AST_RETURN $11)
+                                                                       $6))
            (semantic-tag-put-attribute r 'lex_pos $10)
-           (phps-mode-parser--cg 'phps-mode-parser--extra_fn_flags $9)
+           (phps-mode-parser-grammar-macro--cg 'phps-mode-parser-grammar-macro--extra_fn_flags $9)
            r)))
        (fn
         ((T_FN)
          (let
              ((r))
            (setq r
-                 (phps-mode-parser--cg phps-mode-parser--zend_lineno))
+                 (phps-mode-parser-grammar-macro--cg phps-mode-parser-grammar-macro--zend_lineno))
            r)))
        #'((T_FUNCTION)
           (let
               ((r))
             (setq r
-                  (phps-mode-parser--cg 'phps-mode-parser--zend_lineno))
+                  (phps-mode-parser-grammar-macro--cg phps-mode-parser-grammar-macro--zend_lineno))
             r))
        (backup_doc_comment
         ((%empty)
          (let
              ((r))
            (setq r
-                 (phps-mode-parser--cg 'phps-mode-parser--doc_comment))
-           (phps-mode-parser--cg 'phps-mode-parser--doc_comment nil)
+                 (phps-mode-parser-grammar-macro--cg phps-mode-parser-grammar-macro--doc_comment))
+           (phps-mode-parser-grammar-macro--cg 'phps-mode-parser-grammar-macro--doc_comment nil)
            r)))
        (backup_fn_flags
         ((%empty)
@@ -2581,15 +2400,15 @@
          (let
              ((r))
            (setq r
-                 (phps-mode-parser--cg phps-mode-parser--extra_fn_flags))
-           (phps-mode-parser--cg 'phps-mode-parser--extra_fn_flags 0)
+                 (phps-mode-parser-grammar-macro--cg phps-mode-parser-grammar-macro--extra_fn_flags))
+           (phps-mode-parser-grammar-macro--cg 'phps-mode-parser-grammar-macro--extra_fn_flags 0)
            r)))
        (backup_lex_pos
         ((%empty)
          (let
              ((r))
            (setq r
-                 (phps-mode-parser--lang_scng 'phps-mode-parser--yy_text))
+                 (phps-mode-parser-grammar-macro--lang_scng phps-mode-parser-grammar-macro--yy_text))
            r)))
        (returns_ref
         ((%empty)
@@ -2597,10 +2416,10 @@
              ((r))
            (setq r 0)
            r))
-        ((BITWISE_AND)
+        ((38)
          (let
              ((r))
-           (setq r 'phps-mode-parser--ZEND_ACC_RETURN_REFERENCE)
+           (setq r 'phps-mode-parser-grammar-macro--ZEND_ACC_RETURN_REFERENCE)
            r)))
        (lexical_vars
         ((%empty)
@@ -2608,25 +2427,23 @@
              ((r))
            (setq r nil)
            r))
-        ((T_USE OPEN_PARENTHESIS lexical_var_list CLOSE_PARENTHESIS)
+        ((T_USE 40 lexical_var_list 41)
          (let
              ((r))
            (setq r $3)
            r)))
        (lexical_var_list
-        ((lexical_var_list COMMA lexical_var)
+        ((lexical_var_list 44 lexical_var)
          (let
              ((r))
            (setq r
-                 (wisent-raw-tag
-                  (semantic-tag $1 'ZEND_AST_LIST_ADD :new-element $3)))
+                 (phps-mode-parser-grammar-macro--zend_ast_list_add $1 $3))
            r))
         ((lexical_var)
          (let
              ((r))
            (setq r
-                 (wisent-raw-tag
-                  (semantic-tag "" 'phps-mode-parser--ZEND_AST_CLOSURE_USES :elements @elements :size 1)))
+                 (phps-mode-parser-grammar-macro--zend_ast_create_list 1 'phps-mode-parser-grammar-macro--ZEND_AST_CLOSURE_USES $1))
            r)))
        (lexical_var
         ((T_VARIABLE)
@@ -2634,53 +2451,49 @@
              ((r))
            (setq r $1)
            r))
-        ((BITWISE_AND T_VARIABLE)
+        ((38 T_VARIABLE)
          (let
              ((r))
            (setq r $2)
-           (semantic-tag-put-attribute r 'attr 'phps-mode-parser--ZEND_BIND_REF)
+           (semantic-tag-put-attribute r 'attr 'phps-mode-parser-grammar-macro--ZEND_BIND_REF)
            r)))
        (function_call
         ((name argument_list)
          (let
              ((r))
            (setq r
-                 (wisent-raw-tag
-                  (semantic-tag 'phps-mode-parser--ZEND_AST_CALL $1 $2)))
+                 (phps-mode-parser-grammar-macro--zend_ast_create 'phps-mode-parser-grammar-macro--ZEND_AST_CALL $1 $2))
            r))
         ((class_name T_PAAMAYIM_NEKUDOTAYIM member_name argument_list)
          (let
              ((r))
            (setq r
-                 (wisent-raw-tag
-                  (semantic-tag 'phps-mode-parser--ZEND_AST_STATIC_CALL $1 $3 $4)))
+                 (phps-mode-parser-grammar-macro--zend_ast_create 'phps-mode-parser-grammar-macro--ZEND_AST_STATIC_CALL $1 $3 $4))
            r))
         ((variable_class_name T_PAAMAYIM_NEKUDOTAYIM member_name argument_list)
          (let
              ((r))
            (setq r
-                 (wisent-raw-tag
-                  (semantic-tag 'phps-mode-parser--ZEND_AST_STATIC_CALL $1 $3 $4)))
+                 (phps-mode-parser-grammar-macro--zend_ast_create 'phps-mode-parser-grammar-macro--ZEND_AST_STATIC_CALL $1 $3 $4))
            r))
         ((callable_expr argument_list)
          (let
              ((r))
            (setq r
-                 (wisent-raw-tag
-                  (semantic-tag 'phps-mode-parser--ZEND_AST_CALL $1 $2)))
+                 (phps-mode-parser-grammar-macro--zend_ast_create 'phps-mode-parser-grammar-macro--ZEND_AST_CALL $1 $2))
            r)))
        (class_name
         ((T_STATIC)
          (let
              ((r)
               (zv))
-           (phps-mode-parser--zval_interned_str
+           (phps-mode-parser-grammar-macro--zval_interned_str
             (lambda
-              (ret)
-              (setq zv ret))
-            (phps-mode-parser--zstr_known 'phps-mode-parser--ZEND_STR_STATIC))
+              (return)
+              (setq zv return))
+            (phps-mode-parser-grammar-macro--zstr_known 'phps-mode-parser-grammar-macro--ZEND_STR_STATIC))
            (setq r
-                 (phps-mode-parser--zend_ast_create_zval_ex zv 'phps-mode-parser--ZEND_NAME_NOT_FQ))
+                 (phps-mode-parser-grammar-macro--zend_ast_create_zval_ex zv 'phps-mode-parser-grammar-macro--ZEND_NAME_NOT_FQ))
            r))
         ((name)
          (let
@@ -2698,7 +2511,7 @@
              ((r))
            (setq r $1)
            r))
-        ((OPEN_PARENTHESIS expr CLOSE_PARENTHESIS)
+        ((40 expr 41)
          (let
              ((r))
            (setq r $2)
@@ -2709,7 +2522,7 @@
              ((r))
            (setq r nil)
            r))
-        ((OPEN_PARENTHESIS optional_expr CLOSE_PARENTHESIS)
+        ((40 optional_expr 41)
          (let
              ((r))
            (setq r $2)
@@ -2719,8 +2532,8 @@
          (let
              ((r))
            (setq r
-                 (phps-mode-parser--zend_ast_create_zval_from_str
-                  (phps-mode-parser--zstr_empty_alloc)))
+                 (phps-mode-parser-grammar-macro--zend_ast_create_zval_from_str
+                  (phps-mode-parser-grammar-macro--zstr_empty_alloc)))
            r))
         ((T_ENCAPSED_AND_WHITESPACE)
          (let
@@ -2737,8 +2550,7 @@
          (let
              ((r))
            (setq r
-                 (wisent-raw-tag
-                  (semantic-tag "" 'phps-mode-parser--ZEND_AST_ARG_LIST :elements @elements :size 0)))
+                 (phps-mode-parser-grammar-macro--zend_ast_create_list 0 'phps-mode-parser-grammar-macro--ZEND_AST_ARG_LIST))
            r))
         ((argument_list)
          (let
@@ -2746,24 +2558,24 @@
            (setq r $1)
            r)))
        (dereferencable_scalar
-        ((T_ARRAY OPEN_PARENTHESIS array_pair_list CLOSE_PARENTHESIS)
+        ((T_ARRAY 40 array_pair_list 41)
          (let
              ((r))
            (setq r $3)
-           (semantic-tag-put-attribute r 'attr 'phps-mode-parser--ZEND_ARRAY_SYNTAX_LONG)
+           (semantic-tag-put-attribute r 'attr 'phps-mode-parser-grammar-macro--ZEND_ARRAY_SYNTAX_LONG)
            r))
-        ((OPEN_SQUARE_BRACKET array_pair_list CLOSE_SQUARE_BRACKET)
+        ((91 array_pair_list 93)
          (let
              ((r))
            (setq r $2)
-           (semantic-tag-put-attribute r 'attr 'phps-mode-parser--ZEND_ARRAY_SYNTAX_SHORT)
+           (semantic-tag-put-attribute r 'attr 'phps-mode-parser-grammar-macro--ZEND_ARRAY_SYNTAX_SHORT)
            r))
         ((T_CONSTANT_ENCAPSED_STRING)
          (let
              ((r))
            (setq r $1)
            r))
-        ((DOUBLE_QUOTE encaps_list DOUBLE_QUOTE)
+        ((34 encaps_list 34)
          (let
              ((r))
            (setq r $2)
@@ -2788,8 +2600,8 @@
          (let
              ((r))
            (setq r
-                 (phps-mode-parser--zend_ast_create_zval_from_str
-                  (phps-mode-parser--zstr_empty_alloc)))
+                 (phps-mode-parser-grammar-macro--zend_ast_create_zval_from_str
+                  (phps-mode-parser-grammar-macro--zstr_empty_alloc)))
            r))
         ((T_START_HEREDOC encaps_list T_END_HEREDOC)
          (let
@@ -2816,79 +2628,68 @@
          (let
              ((r))
            (setq r
-                 (wisent-raw-tag
-                  (semantic-tag 'phps-mode-parser--ZEND_AST_CONST $1)))
+                 (phps-mode-parser-grammar-macro--zend_ast_create 'phps-mode-parser-grammar-macro--ZEND_AST_CONST $1))
            r))
         ((T_LINE)
          (let
              ((r))
            (setq r
-                 (wisent-raw-tag
-                  (semantic-tag 'phps-mode-parser--ZEND_AST_MAGIC_CONST 'ZEND_AST_EX :operator 'phps-mode-parser--T_LINE)))
+                 (phps-mode-parser-grammar-macro--zend_ast_create_ex 'phps-mode-parser-grammar-macro--ZEND_AST_MAGIC_CONST 'phps-mode-parser-grammar-macro--T_LINE))
            r))
         ((T_FILE)
          (let
              ((r))
            (setq r
-                 (wisent-raw-tag
-                  (semantic-tag 'phps-mode-parser--ZEND_AST_MAGIC_CONST 'ZEND_AST_EX :operator 'phps-mode-parser--T_FILE)))
+                 (phps-mode-parser-grammar-macro--zend_ast_create_ex 'phps-mode-parser-grammar-macro--ZEND_AST_MAGIC_CONST 'phps-mode-parser-grammar-macro--T_FILE))
            r))
         ((T_DIR)
          (let
              ((r))
            (setq r
-                 (wisent-raw-tag
-                  (semantic-tag 'phps-mode-parser--ZEND_AST_MAGIC_CONST 'ZEND_AST_EX :operator 'phps-mode-parser--T_DIR)))
+                 (phps-mode-parser-grammar-macro--zend_ast_create_ex 'phps-mode-parser-grammar-macro--ZEND_AST_MAGIC_CONST 'phps-mode-parser-grammar-macro--T_DIR))
            r))
         ((T_TRAIT_C)
          (let
              ((r))
            (setq r
-                 (wisent-raw-tag
-                  (semantic-tag 'phps-mode-parser--ZEND_AST_MAGIC_CONST 'ZEND_AST_EX :operator 'phps-mode-parser--T_TRAIT_C)))
+                 (phps-mode-parser-grammar-macro--zend_ast_create_ex 'phps-mode-parser-grammar-macro--ZEND_AST_MAGIC_CONST 'phps-mode-parser-grammar-macro--T_TRAIT_C))
            r))
         ((T_METHOD_C)
          (let
              ((r))
            (setq r
-                 (wisent-raw-tag
-                  (semantic-tag 'phps-mode-parser--ZEND_AST_MAGIC_CONST 'ZEND_AST_EX :operator 'phps-mode-parser--T_METHOD_C)))
+                 (phps-mode-parser-grammar-macro--zend_ast_create_ex 'phps-mode-parser-grammar-macro--ZEND_AST_MAGIC_CONST 'phps-mode-parser-grammar-macro--T_METHOD_C))
            r))
         ((T_FUNC_C)
          (let
              ((r))
            (setq r
-                 (wisent-raw-tag
-                  (semantic-tag 'phps-mode-parser--ZEND_AST_MAGIC_CONST 'ZEND_AST_EX :operator 'phps-mode-parser--T_FUNC_C)))
+                 (phps-mode-parser-grammar-macro--zend_ast_create_ex 'phps-mode-parser-grammar-macro--ZEND_AST_MAGIC_CONST 'phps-mode-parser-grammar-macro--T_FUNC_C))
            r))
         ((T_NS_C)
          (let
              ((r))
            (setq r
-                 (wisent-raw-tag
-                  (semantic-tag 'phps-mode-parser--ZEND_AST_MAGIC_CONST 'ZEND_AST_EX :operator 'phps-mode-parser--T_NS_C)))
+                 (phps-mode-parser-grammar-macro--zend_ast_create_ex 'phps-mode-parser-grammar-macro--ZEND_AST_MAGIC_CONST 'phps-mode-parser-grammar-macro--T_NS_C))
            r))
         ((T_CLASS_C)
          (let
              ((r))
            (setq r
-                 (wisent-raw-tag
-                  (semantic-tag 'phps-mode-parser--ZEND_AST_MAGIC_CONST 'ZEND_AST_EX :operator 'phps-mode-parser--T_CLASS_C)))
+                 (phps-mode-parser-grammar-macro--zend_ast_create_ex 'phps-mode-parser-grammar-macro--ZEND_AST_MAGIC_CONST 'phps-mode-parser-grammar-macro--T_CLASS_C))
            r)))
        (class_constant
         ((class_name T_PAAMAYIM_NEKUDOTAYIM identifier)
          (let
              ((r))
            (setq r
-                 (wisent-raw-tag
-                  (semantic-tag $1 'ZEND_AST_CLASS_CONST_OR_NAME :member $3)))
+                 (phps-mode-parser-grammar-macro--zend_ast_create_class_const_or_name $1 $3))
            r))
         ((variable_class_name T_PAAMAYIM_NEKUDOTAYIM identifier)
          (let
              ((r))
            (setq r
-                 (wisent-raw-tag
-                  (semantic-tag $1 'ZEND_AST_CLASS_CONST_OR_NAME :member $3)))
+                 (phps-mode-parser-grammar-macro--zend_ast_create_class_const_or_name $1 $3))
            r)))
        (optional_expr
         ((%empty)
@@ -2913,7 +2714,7 @@
              ((r))
            (setq r $1)
            r))
-        ((OPEN_PARENTHESIS expr CLOSE_PARENTHESIS)
+        ((40 expr 41)
          (let
              ((r))
            (setq r $2)
@@ -2945,7 +2746,7 @@
              ((r))
            (setq r $1)
            r))
-        ((OPEN_PARENTHESIS expr CLOSE_PARENTHESIS)
+        ((40 expr 41)
          (let
              ((r))
            (setq r $2)
@@ -2960,29 +2761,25 @@
          (let
              ((r))
            (setq r
-                 (wisent-raw-tag
-                  (semantic-tag 'phps-mode-parser--ZEND_AST_VAR $1)))
+                 (phps-mode-parser-grammar-macro--zend_ast_create 'phps-mode-parser-grammar-macro--ZEND_AST_VAR $1))
            r))
-        ((array_object_dereferencable OPEN_SQUARE_BRACKET optional_expr CLOSE_SQUARE_BRACKET)
+        ((array_object_dereferencable 91 optional_expr 93)
          (let
              ((r))
            (setq r
-                 (wisent-raw-tag
-                  (semantic-tag 'phps-mode-parser--ZEND_AST_DIM $1 $3)))
+                 (phps-mode-parser-grammar-macro--zend_ast_create 'phps-mode-parser-grammar-macro--ZEND_AST_DIM $1 $3))
            r))
-        ((array_object_dereferencable OPEN_CURLY_BRACKET expr CLOSE_CURLY_BRACKET)
+        ((array_object_dereferencable 123 expr 125)
          (let
              ((r))
            (setq r
-                 (wisent-raw-tag
-                  (semantic-tag 'phps-mode-parser--ZEND_AST_DIM 'ZEND_AST_EX :operator 'phps-mode-parser--ZEND_DIM_ALTERNATIVE_SYNTAX :subject $1 :subject2 $3)))
+                 (phps-mode-parser-grammar-macro--zend_ast_create_ex 'phps-mode-parser-grammar-macro--ZEND_AST_DIM 'phps-mode-parser-grammar-macro--ZEND_DIM_ALTERNATIVE_SYNTAX $1 $3))
            r))
         ((array_object_dereferencable T_OBJECT_OPERATOR property_name argument_list)
          (let
              ((r))
            (setq r
-                 (wisent-raw-tag
-                  (semantic-tag 'phps-mode-parser--ZEND_AST_METHOD_CALL $1 $3 $4)))
+                 (phps-mode-parser-grammar-macro--zend_ast_create 'phps-mode-parser-grammar-macro--ZEND_AST_METHOD_CALL $1 $3 $4))
            r))
         ((function_call)
          (let
@@ -3004,8 +2801,7 @@
          (let
              ((r))
            (setq r
-                 (wisent-raw-tag
-                  (semantic-tag 'phps-mode-parser--ZEND_AST_PROP $1 $3)))
+                 (phps-mode-parser-grammar-macro--zend_ast_create 'phps-mode-parser-grammar-macro--ZEND_AST_PROP $1 $3))
            r)))
        (simple_variable
         ((T_VARIABLE)
@@ -3013,75 +2809,66 @@
              ((r))
            (setq r $1)
            r))
-        ((DOLLAR_SIGN OPEN_CURLY_BRACKET expr CLOSE_CURLY_BRACKET)
+        ((36 123 expr 125)
          (let
              ((r))
            (setq r $3)
            r))
-        ((DOLLAR_SIGN simple_variable)
+        ((36 simple_variable)
          (let
              ((r))
            (setq r
-                 (wisent-raw-tag
-                  (semantic-tag 'phps-mode-parser--ZEND_AST_VAR $2)))
+                 (phps-mode-parser-grammar-macro--zend_ast_create 'phps-mode-parser-grammar-macro--ZEND_AST_VAR $2))
            r)))
        (static_member
         ((class_name T_PAAMAYIM_NEKUDOTAYIM simple_variable)
          (let
              ((r))
            (setq r
-                 (wisent-raw-tag
-                  (semantic-tag 'phps-mode-parser--ZEND_AST_STATIC_PROP $1 $3)))
+                 (phps-mode-parser-grammar-macro--zend_ast_create 'phps-mode-parser-grammar-macro--ZEND_AST_STATIC_PROP $1 $3))
            r))
         ((variable_class_name T_PAAMAYIM_NEKUDOTAYIM simple_variable)
          (let
              ((r))
            (setq r
-                 (wisent-raw-tag
-                  (semantic-tag 'phps-mode-parser--ZEND_AST_STATIC_PROP $1 $3)))
+                 (phps-mode-parser-grammar-macro--zend_ast_create 'phps-mode-parser-grammar-macro--ZEND_AST_STATIC_PROP $1 $3))
            r)))
        (new_variable
         ((simple_variable)
          (let
              ((r))
            (setq r
-                 (wisent-raw-tag
-                  (semantic-tag 'phps-mode-parser--ZEND_AST_VAR $1)))
+                 (phps-mode-parser-grammar-macro--zend_ast_create 'phps-mode-parser-grammar-macro--ZEND_AST_VAR $1))
            r))
-        ((new_variable OPEN_SQUARE_BRACKET optional_expr CLOSE_SQUARE_BRACKET)
+        ((new_variable 91 optional_expr 93)
          (let
              ((r))
            (setq r
-                 (wisent-raw-tag
-                  (semantic-tag 'phps-mode-parser--ZEND_AST_DIM $1 $3)))
+                 (phps-mode-parser-grammar-macro--zend_ast_create 'phps-mode-parser-grammar-macro--ZEND_AST_DIM $1 $3))
            r))
-        ((new_variable OPEN_CURLY_BRACKET expr CLOSE_CURLY_BRACKET)
+        ((new_variable 123 expr 125)
          (let
              ((r))
            (setq r
-                 (wisent-raw-tag
-                  (semantic-tag 'phps-mode-parser--ZEND_AST_DIM 'ZEND_AST_EX :operator 'phps-mode-parser--ZEND_DIM_ALTERNATIVE_SYNTAX :subject $1 :subject2 $3)))
+                 (phps-mode-parser-grammar-macro--zend_ast_create_ex 'phps-mode-parser-grammar-macro--ZEND_AST_DIM 'phps-mode-parser-grammar-macro--ZEND_DIM_ALTERNATIVE_SYNTAX $1 $3))
            r))
         ((new_variable T_OBJECT_OPERATOR property_name)
          (let
              ((r))
            (setq r
-                 (wisent-raw-tag
-                  (semantic-tag 'phps-mode-parser--ZEND_AST_PROP $1 $3)))
+                 (phps-mode-parser-grammar-macro--zend_ast_create 'phps-mode-parser-grammar-macro--ZEND_AST_PROP $1 $3))
            r))
         ((class_name T_PAAMAYIM_NEKUDOTAYIM simple_variable)
          (let
              ((r))
            (setq r
-                 (wisent-raw-tag
-                  (semantic-tag 'phps-mode-parser--ZEND_AST_STATIC_PROP $1 $3)))
+                 (phps-mode-parser-grammar-macro--zend_ast_create 'phps-mode-parser-grammar-macro--ZEND_AST_STATIC_PROP $1 $3))
            r))
         ((new_variable T_PAAMAYIM_NEKUDOTAYIM simple_variable)
          (let
              ((r))
            (setq r
-                 (wisent-raw-tag
-                  (semantic-tag 'phps-mode-parser--ZEND_AST_STATIC_PROP $1 $3)))
+                 (phps-mode-parser-grammar-macro--zend_ast_create 'phps-mode-parser-grammar-macro--ZEND_AST_STATIC_PROP $1 $3))
            r)))
        (member_name
         ((identifier)
@@ -3089,7 +2876,7 @@
              ((r))
            (setq r $1)
            r))
-        ((OPEN_CURLY_BRACKET expr CLOSE_CURLY_BRACKET)
+        ((123 expr 125)
          (let
              ((r))
            (setq r $2)
@@ -3098,8 +2885,7 @@
          (let
              ((r))
            (setq r
-                 (wisent-raw-tag
-                  (semantic-tag 'phps-mode-parser--ZEND_AST_VAR $1)))
+                 (phps-mode-parser-grammar-macro--zend_ast_create 'phps-mode-parser-grammar-macro--ZEND_AST_VAR $1))
            r)))
        (property_name
         ((T_STRING)
@@ -3107,7 +2893,7 @@
              ((r))
            (setq r $1)
            r))
-        ((OPEN_CURLY_BRACKET expr CLOSE_CURLY_BRACKET)
+        ((123 expr 125)
          (let
              ((r))
            (setq r $2)
@@ -3116,16 +2902,14 @@
          (let
              ((r))
            (setq r
-                 (wisent-raw-tag
-                  (semantic-tag 'phps-mode-parser--ZEND_AST_VAR $1)))
+                 (phps-mode-parser-grammar-macro--zend_ast_create 'phps-mode-parser-grammar-macro--ZEND_AST_VAR $1))
            r)))
        (array_pair_list
         ((non_empty_array_pair_list)
          (let
              ((r))
            (setq r
-                 (wisent-raw-tag
-                  (semantic-tag $1 'ZEND_AST_LIST_RTRIM)))
+                 (phps-mode-parser-grammar-macro--zend_ast_list_rtrim $1))
            r)))
        (possible_array_pair
         ((%empty)
@@ -3139,154 +2923,132 @@
            (setq r $1)
            r)))
        (non_empty_array_pair_list
-        ((non_empty_array_pair_list COMMA possible_array_pair)
+        ((non_empty_array_pair_list 44 possible_array_pair)
          (let
              ((r))
            (setq r
-                 (wisent-raw-tag
-                  (semantic-tag $1 'ZEND_AST_LIST_ADD :new-element $3)))
+                 (phps-mode-parser-grammar-macro--zend_ast_list_add $1 $3))
            r))
         ((possible_array_pair)
          (let
              ((r))
            (setq r
-                 (wisent-raw-tag
-                  (semantic-tag "" 'phps-mode-parser--ZEND_AST_ARRAY :elements @elements :size 1)))
+                 (phps-mode-parser-grammar-macro--zend_ast_create_list 1 'phps-mode-parser-grammar-macro--ZEND_AST_ARRAY $1))
            r)))
        (array_pair
         ((expr T_DOUBLE_ARROW expr)
          (let
              ((r))
            (setq r
-                 (wisent-raw-tag
-                  (semantic-tag 'phps-mode-parser--ZEND_AST_ARRAY_ELEM $3 $1)))
+                 (phps-mode-parser-grammar-macro--zend_ast_create 'phps-mode-parser-grammar-macro--ZEND_AST_ARRAY_ELEM $3 $1))
            r))
         ((expr)
          (let
              ((r))
            (setq r
-                 (wisent-raw-tag
-                  (semantic-tag 'phps-mode-parser--ZEND_AST_ARRAY_ELEM $1 nil)))
+                 (phps-mode-parser-grammar-macro--zend_ast_create 'phps-mode-parser-grammar-macro--ZEND_AST_ARRAY_ELEM $1 nil))
            r))
-        ((expr T_DOUBLE_ARROW BITWISE_AND variable)
+        ((expr T_DOUBLE_ARROW 38 variable)
          (let
              ((r))
            (setq r
-                 (wisent-raw-tag
-                  (semantic-tag 'phps-mode-parser--ZEND_AST_ARRAY_ELEM 'ZEND_AST_EX :operator 1 :subject $4 :subject2 $1)))
+                 (phps-mode-parser-grammar-macro--zend_ast_create_ex 'phps-mode-parser-grammar-macro--ZEND_AST_ARRAY_ELEM 1 $4 $1))
            r))
-        ((BITWISE_AND variable)
+        ((38 variable)
          (let
              ((r))
            (setq r
-                 (wisent-raw-tag
-                  (semantic-tag 'phps-mode-parser--ZEND_AST_ARRAY_ELEM 'ZEND_AST_EX :operator 1 :subject $2)))
+                 (phps-mode-parser-grammar-macro--zend_ast_create_ex 'phps-mode-parser-grammar-macro--ZEND_AST_ARRAY_ELEM 1 $2 nil))
            r))
         ((T_ELLIPSIS expr)
          (let
              ((r))
            (setq r
-                 (wisent-raw-tag
-                  (semantic-tag 'phps-mode-parser--ZEND_AST_UNPACK $2)))
+                 (phps-mode-parser-grammar-macro--zend_ast_create 'phps-mode-parser-grammar-macro--ZEND_AST_UNPACK $2))
            r))
-        ((expr T_DOUBLE_ARROW T_LIST OPEN_PARENTHESIS array_pair_list CLOSE_PARENTHESIS)
+        ((expr T_DOUBLE_ARROW T_LIST 40 array_pair_list 41)
          (let
              ((r))
-           (semantic-tag-put-attribute $5 'attr 'phps-mode-parser--ZEND_ARRAY_SYNTAX_LIST)
+           (semantic-tag-put-attribute $5 'attr 'phps-mode-parser-grammar-macro--ZEND_ARRAY_SYNTAX_LIST)
            (setq r
-                 (wisent-raw-tag
-                  (semantic-tag 'phps-mode-parser--ZEND_AST_ARRAY_ELEM $5 $1)))
+                 (phps-mode-parser-grammar-macro--zend_ast_create 'phps-mode-parser-grammar-macro--ZEND_AST_ARRAY_ELEM $5 $1))
            r))
-        ((T_LIST OPEN_PARENTHESIS array_pair_list CLOSE_PARENTHESIS)
+        ((T_LIST 40 array_pair_list 41)
          (let
              ((r))
-           (semantic-tag-put-attribute $3 'attr 'phps-mode-parser--ZEND_ARRAY_SYNTAX_LIST)
+           (semantic-tag-put-attribute $3 'attr 'phps-mode-parser-grammar-macro--ZEND_ARRAY_SYNTAX_LIST)
            (setq r
-                 (wisent-raw-tag
-                  (semantic-tag 'phps-mode-parser--ZEND_AST_ARRAY_ELEM $3 nil)))
+                 (phps-mode-parser-grammar-macro--zend_ast_create 'phps-mode-parser-grammar-macro--ZEND_AST_ARRAY_ELEM $3 nil))
            r)))
        (encaps_list
         ((encaps_list encaps_var)
          (let
              ((r))
            (setq r
-                 (wisent-raw-tag
-                  (semantic-tag $1 'ZEND_AST_LIST_ADD :new-element $2)))
+                 (phps-mode-parser-grammar-macro--zend_ast_list_add $1 $2))
            r))
         ((encaps_list T_ENCAPSED_AND_WHITESPACE)
          (let
              ((r))
            (setq r
-                 (wisent-raw-tag
-                  (semantic-tag $1 'ZEND_AST_LIST_ADD :new-element $2)))
+                 (phps-mode-parser-grammar-macro--zend_ast_list_add $1 $2))
            r))
         ((encaps_var)
          (let
              ((r))
            (setq r
-                 (wisent-raw-tag
-                  (semantic-tag "" 'phps-mode-parser--ZEND_AST_ENCAPS_LIST :elements @elements :size 1)))
+                 (phps-mode-parser-grammar-macro--zend_ast_create_list 1 'phps-mode-parser-grammar-macro--ZEND_AST_ENCAPS_LIST $1))
            r))
         ((T_ENCAPSED_AND_WHITESPACE encaps_var)
          (let
              ((r))
            (setq r
-                 (wisent-raw-tag
-                  (semantic-tag "" 'phps-mode-parser--ZEND_AST_ENCAPS_LIST :elements @elements :size 2)))
+                 (phps-mode-parser-grammar-macro--zend_ast_create_list 2 'phps-mode-parser-grammar-macro--ZEND_AST_ENCAPS_LIST $1 $2))
            r)))
        (encaps_var
         ((T_VARIABLE)
          (let
              ((r))
            (setq r
-                 (wisent-raw-tag
-                  (semantic-tag 'phps-mode-parser--ZEND_AST_VAR $1)))
+                 (phps-mode-parser-grammar-macro--zend_ast_create 'phps-mode-parser-grammar-macro--ZEND_AST_VAR $1))
            r))
-        ((T_VARIABLE OPEN_SQUARE_BRACKET encaps_var_offset CLOSE_SQUARE_BRACKET)
+        ((T_VARIABLE 91 encaps_var_offset 93)
          (let
              ((r))
            (setq r
-                 (wisent-raw-tag
-                  (semantic-tag 'phps-mode-parser--ZEND_AST_DIM
-                                (wisent-raw-tag
-                                 (semantic-tag 'phps-mode-parser--ZEND_AST_VAR $1))
-                                $3)))
+                 (phps-mode-parser-grammar-macro--zend_ast_create 'phps-mode-parser-grammar-macro--ZEND_AST_DIM
+                                                                  (phps-mode-parser-grammar-macro--zend_ast_create 'phps-mode-parser-grammar-macro--ZEND_AST_VAR $1)
+                                                                  $3))
            r))
         ((T_VARIABLE T_OBJECT_OPERATOR T_STRING)
          (let
              ((r))
            (setq r
-                 (wisent-raw-tag
-                  (semantic-tag 'phps-mode-parser--ZEND_AST_PROP
-                                (wisent-raw-tag
-                                 (semantic-tag 'phps-mode-parser--ZEND_AST_VAR $1))
-                                $3)))
+                 (phps-mode-parser-grammar-macro--zend_ast_create 'phps-mode-parser-grammar-macro--ZEND_AST_PROP
+                                                                  (phps-mode-parser-grammar-macro--zend_ast_create 'phps-mode-parser-grammar-macro--ZEND_AST_VAR $1)
+                                                                  $3))
            r))
-        ((T_DOLLAR_OPEN_CURLY_BRACES expr CLOSE_CURLY_BRACKET)
+        ((T_DOLLAR_OPEN_CURLY_BRACES expr 125)
          (let
              ((r))
            (setq r
-                 (wisent-raw-tag
-                  (semantic-tag 'phps-mode-parser--ZEND_AST_VAR $2)))
+                 (phps-mode-parser-grammar-macro--zend_ast_create 'phps-mode-parser-grammar-macro--ZEND_AST_VAR $2))
            r))
-        ((T_DOLLAR_OPEN_CURLY_BRACES T_STRING_VARNAME CLOSE_CURLY_BRACKET)
+        ((T_DOLLAR_OPEN_CURLY_BRACES T_STRING_VARNAME 125)
          (let
              ((r))
            (setq r
-                 (wisent-raw-tag
-                  (semantic-tag 'phps-mode-parser--ZEND_AST_VAR $2)))
+                 (phps-mode-parser-grammar-macro--zend_ast_create 'phps-mode-parser-grammar-macro--ZEND_AST_VAR $2))
            r))
-        ((T_DOLLAR_OPEN_CURLY_BRACES T_STRING_VARNAME OPEN_SQUARE_BRACKET expr CLOSE_SQUARE_BRACKET CLOSE_CURLY_BRACKET)
+        ((T_DOLLAR_OPEN_CURLY_BRACES T_STRING_VARNAME 91 expr 93 125)
          (let
              ((r))
            (setq r
-                 (wisent-raw-tag
-                  (semantic-tag 'phps-mode-parser--ZEND_AST_DIM
-                                (wisent-raw-tag
-                                 (semantic-tag 'phps-mode-parser--ZEND_AST_VAR $2))
-                                $4)))
+                 (phps-mode-parser-grammar-macro--zend_ast_create 'phps-mode-parser-grammar-macro--ZEND_AST_DIM
+                                                                  (phps-mode-parser-grammar-macro--zend_ast_create 'phps-mode-parser-grammar-macro--ZEND_AST_VAR $2)
+                                                                  $4))
            r))
-        ((T_CURLY_OPEN variable CLOSE_CURLY_BRACKET)
+        ((T_CURLY_OPEN variable 125)
          (let
              ((r))
            (setq r $2)
@@ -3302,68 +3064,59 @@
              ((r))
            (setq r $1)
            r))
-        ((SUBTRACTION T_NUM_STRING)
+        ((45 T_NUM_STRING)
          (let
              ((r))
            (setq r
-                 (*
-                  (string-to-number $2)
-                  -1))
+                 (phps-mode-parser-grammar-macro--zend_negate_num_string $2))
            r))
         ((T_VARIABLE)
          (let
              ((r))
            (setq r
-                 (wisent-raw-tag
-                  (semantic-tag 'phps-mode-parser--ZEND_AST_VAR $1)))
+                 (phps-mode-parser-grammar-macro--zend_ast_create 'phps-mode-parser-grammar-macro--ZEND_AST_VAR $1))
            r)))
        (internal_functions_in_yacc
-        ((T_ISSET OPEN_PARENTHESIS isset_variables possible_comma CLOSE_PARENTHESIS)
+        ((T_ISSET 40 isset_variables possible_comma 41)
          (let
              ((r))
            (setq r $3)
            r))
-        ((T_EMPTY OPEN_PARENTHESIS expr CLOSE_PARENTHESIS)
+        ((T_EMPTY 40 expr 41)
          (let
              ((r))
            (setq r
-                 (wisent-raw-tag
-                  (semantic-tag 'phps-mode-parser--ZEND_AST_EMPTY $3)))
+                 (phps-mode-parser-grammar-macro--zend_ast_create 'phps-mode-parser-grammar-macro--ZEND_AST_EMPTY $3))
            r))
         ((T_INCLUDE expr)
          (let
              ((r))
            (setq r
-                 (wisent-raw-tag
-                  (semantic-tag 'phps-mode-parser--ZEND_AST_INCLUDE_OR_EVAL 'ZEND_AST_EX :operator 'phps-mode-parser--ZEND_INCLUDE :subject $2)))
+                 (phps-mode-parser-grammar-macro--zend_ast_create_ex 'phps-mode-parser-grammar-macro--ZEND_AST_INCLUDE_OR_EVAL 'phps-mode-parser-grammar-macro--ZEND_INCLUDE $2))
            r))
         ((T_INCLUDE_ONCE expr)
          (let
              ((r))
            (setq r
-                 (wisent-raw-tag
-                  (semantic-tag 'phps-mode-parser--ZEND_AST_INCLUDE_OR_EVAL 'ZEND_AST_EX :operator 'phps-mode-parser--ZEND_INCLUDE_ONCE :subject $2)))
+                 (phps-mode-parser-grammar-macro--zend_ast_create_ex 'phps-mode-parser-grammar-macro--ZEND_AST_INCLUDE_OR_EVAL 'phps-mode-parser-grammar-macro--ZEND_INCLUDE_ONCE $2))
            r))
-        ((T_EVAL OPEN_PARENTHESIS expr CLOSE_PARENTHESIS)
+        ((T_EVAL 40 expr 41)
          (let
              ((r))
            (setq r
-                 (wisent-raw-tag
-                  (semantic-tag 'phps-mode-parser--ZEND_AST_INCLUDE_OR_EVAL 'ZEND_AST_EX :operator 'phps-mode-parser--ZEND_EVAL :subject $3)))
+                 (phps-mode-parser-grammar-macro--zend_ast_create_ex 'phps-mode-parser-grammar-macro--ZEND_AST_INCLUDE_OR_EVAL 'phps-mode-parser-grammar-macro--ZEND_EVAL $3))
            r))
         ((T_REQUIRE expr)
          (let
              ((r))
            (setq r
-                 (wisent-raw-tag
-                  (semantic-tag 'phps-mode-parser--ZEND_AST_INCLUDE_OR_EVAL 'ZEND_AST_EX :operator 'phps-mode-parser--ZEND_REQUIRE :subject $2)))
+                 (phps-mode-parser-grammar-macro--zend_ast_create_ex 'phps-mode-parser-grammar-macro--ZEND_AST_INCLUDE_OR_EVAL 'phps-mode-parser-grammar-macro--ZEND_REQUIRE $2))
            r))
         ((T_REQUIRE_ONCE expr)
          (let
              ((r))
            (setq r
-                 (wisent-raw-tag
-                  (semantic-tag 'phps-mode-parser--ZEND_AST_INCLUDE_OR_EVAL 'ZEND_AST_EX :operator 'phps-mode-parser--ZEND_REQUIRE_ONCE :subject $2)))
+                 (phps-mode-parser-grammar-macro--zend_ast_create_ex 'phps-mode-parser-grammar-macro--ZEND_AST_INCLUDE_OR_EVAL 'phps-mode-parser-grammar-macro--ZEND_REQUIRE_ONCE $2))
            r)))
        (isset_variables
         ((isset_variable)
@@ -3371,20 +3124,18 @@
              ((r))
            (setq r $1)
            r))
-        ((isset_variables COMMA isset_variable)
+        ((isset_variables 44 isset_variable)
          (let
              ((r))
            (setq r
-                 (wisent-raw-tag
-                  (semantic-tag 'phps-mode-parser--ZEND_AST_AND $1 $3)))
+                 (phps-mode-parser-grammar-macro--zend_ast_create 'phps-mode-parser-grammar-macro--ZEND_AST_AND $1 $3))
            r)))
        (isset_variable
         ((expr)
          (let
              ((r))
            (setq r
-                 (wisent-raw-tag
-                  (semantic-tag 'phps-mode-parser--ZEND_AST_ISSET $1)))
+                 (phps-mode-parser-grammar-macro--zend_ast_create 'phps-mode-parser-grammar-macro--ZEND_AST_ISSET $1))
            r))))
      '(start)))
   "Parser table.")
