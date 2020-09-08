@@ -231,8 +231,7 @@
         (state)
         (state-prefix)
         (state-name)
-        (state-look-ahead)
-        (leaf-states))
+        (state-look-ahead))
 
     ;; Build top-down directed acyclic graph (dag) of grammar
     (phps-mode-debug-message
@@ -245,97 +244,93 @@
       (unless (gethash state-name parsed-states)
         (phps-mode-debug-message (message "State: '%s', prefix: '%s', look-ahead: '%s'" state-name state-prefix state-look-ahead))
 
-        (let ((is-leaf nil))
-          (let ((state (gethash state-name grammar))
-                (prefix))
+        (let ((state (gethash state-name grammar))
+              (prefix))
 
-            ;; Iterate all grammar blocks in state
-            (dolist (state-block state)
-              (setq prefix nil)
-              (let ((state-patterns (car state-block))
-                    (state-logic (cdr state-block))
-                    (state-pattern)
-                    (look-ahead)
-                    (right-hand-side)
-                    (remaining)
-                    (is-terminal)
-                    (is-first-letter t))
+          ;; Iterate all grammar blocks in state
+          (dolist (state-block state)
+            (setq prefix nil)
+            (let ((state-patterns (car state-block))
+                  (state-logic (cdr state-block))
+                  (state-pattern)
+                  (look-ahead)
+                  (right-hand-side)
+                  (remaining)
+                  (is-terminal)
+                  (is-first-letter t))
 
-                ;; Iterate all patterns in grammar block
+              ;; Iterate all patterns in grammar block
+              (setq state-pattern (pop state-patterns))
+              (setq look-ahead (car state-patterns))
+              (while state-pattern
+
+                ;; Build list of unique terminals and nonterminals
+                (if (gethash state-pattern grammar)
+                    (progn
+                      (setq is-terminal nil)
+                      (unless (gethash state-pattern nonterminals-found)
+                        (push state-pattern nonterminals)
+                        (puthash state-pattern t nonterminals-found)))
+                  (setq is-terminal t)
+                  (unless (gethash state-pattern terminals-found)
+                    (push state-pattern terminals)
+                    (puthash state-pattern t terminals-found)))
+
+                ;; Does rule contain a branch?
+                (if (and
+                     (not (equal state-pattern '%empty))
+                     (not is-terminal))
+                    (progn
+                      (setq remaining state-patterns)
+                      (setq right-hand-side (reverse prefix))
+
+                      ;; If look-ahead is a intermediate set it to nil
+                      (when look-ahead
+                        (when (gethash look-ahead grammar)
+                          (setq look-ahead nil)))
+
+                      (let ((state-connections)
+                            (has-link))
+                        (when (gethash state-pattern state-graph)
+                          (setq state-connections (gethash state-pattern state-graph)))
+
+                        ;; Check if relationship (directed connected nodes with right-hand-side) is already saved
+                        (dolist (connection state-connections)
+                          (when (equal connection (list right-hand-side state-name look-ahead remaining))
+                            (setq has-link t)))
+
+                        ;; Save new relationship
+                        (unless has-link
+                          (phps-mode-debug-message (message "'%s' -> %s '%s' %s %s" state-name right-hand-side state-pattern look-ahead remaining))
+                          (push (list right-hand-side state-name look-ahead remaining) state-connections)
+                          (puthash state-pattern state-connections state-graph)))
+
+                      (when (and (not (equal state-pattern state-name))
+                                 (not (gethash state-pattern parsed-states)))
+                        ;; (phps-mode-debug-message (message "Added-to-state-queue: %s %s" right-hand-side state-pattern))
+                        (push (list right-hand-side state-pattern look-ahead) state-queue)))
+
+                  (unless (equal state-pattern '%empty)
+                    (setq is-leaf t)))
+
+                ;; Avoid listing recursive grammar as having prefix
+                (unless (equal state-pattern state-name)
+                  (push state-pattern prefix))
+
                 (setq state-pattern (pop state-patterns))
                 (setq look-ahead (car state-patterns))
-                (while state-pattern
+                (setq is-first-letter nil)))))
 
-                  ;; Build list of unique terminals and nonterminals
-                  (if (gethash state-pattern grammar)
-                      (progn
-                        (setq is-terminal nil)
-                        (unless (gethash state-pattern nonterminals-found)
-                          (push state-pattern nonterminals)
-                          (puthash state-pattern t nonterminals-found)))
-                    (setq is-terminal t)
-                    (unless (gethash state-pattern terminals-found)
-                      (push state-pattern terminals)
-                      (puthash state-pattern t terminals-found)))
+        (when (and is-leaf
+                   (not state-prefix))
+          (phps-mode-debug-message
+           (message "Leaf-state: '%s'" state-name)
+           )
+          (push state-name leaf-states))
 
-                  ;; Does rule contain a branch?
-                  (if (and
-                       (not (equal state-pattern '%empty))
-                       (not is-terminal))
-                      (progn
-                        (setq remaining state-patterns)
-                        (setq right-hand-side (reverse prefix))
-
-                        ;; When pattern starts with intermediate which isn't itself it's not a leaf
-                        (when (and is-first-letter
-                                   (setq is-leaf nil)))
-
-                        ;; If look-ahead is a intermediate set it to nil
-                        (when look-ahead
-                          (when (gethash look-ahead grammar)
-                            (setq look-ahead nil)))
-
-                        (let ((state-connections)
-                              (has-link))
-                          (when (gethash state-pattern state-graph)
-                            (setq state-connections (gethash state-pattern state-graph)))
-
-                          ;; Check if relationship (directed connected nodes with right-hand-side) is already saved
-                          (dolist (connection state-connections)
-                            (when (equal connection (list right-hand-side state-name look-ahead remaining))
-                              (setq has-link t)))
-
-                          ;; Save new relationship
-                          (unless has-link
-                            (phps-mode-debug-message (message "'%s' -> %s '%s' %s %s" state-name right-hand-side state-pattern look-ahead remaining))
-                            (push (list right-hand-side state-name look-ahead remaining) state-connections)
-                            (puthash state-pattern state-connections state-graph)))
-
-                        (when (and (not (equal state-pattern state-name))
-                                   (not (gethash state-pattern parsed-states)))
-                          ;; (phps-mode-debug-message (message "Added-to-state-queue: %s %s" right-hand-side state-pattern))
-                          (push (list right-hand-side state-pattern look-ahead) state-queue)))
-                    (unless (equal state-pattern '%empty)
-                      (setq is-leaf t)))
-
-                  ;; Avoid listing recursive grammar as having prefix
-                  (unless (equal state-pattern state-name)
-                    (push state-pattern prefix))
-
-                  (setq state-pattern (pop state-patterns))
-                  (setq look-ahead (car state-patterns))
-                  (setq is-first-letter nil)))))
-
-          (when (and is-leaf
-                 (not state-prefix))
-            (phps-mode-debug-message
-             (message "Leaf-state: '%s'" state-name)
-             )
-            (push state-name leaf-states))
-
-          ;; Mark state as parsed
-          (puthash state-name t parsed-states)
-          (push state-name state-list)))
+        ;; Mark state as parsed
+        (puthash state-name t parsed-states)
+        (push state-name state-list))
 
       ;; Process next state in queue
       (setq state (pop state-queue))
@@ -347,7 +342,7 @@
 
     (phps-mode-debug-message
      (message "\nTerminals: %s\n" terminals)
-     (message "\nNonterminals: %s\n" nonterminals))
+     (message "\nNonterminals: %s\n" nonterminals)
 
     (phps-mode-debug-message
      (message "\nGrammar entry points: '%s'\n" leaf-states))
