@@ -68,6 +68,9 @@
 (defvar-local phps-mode-lex-analyzer--lines-indent nil
   "The indentation of each line in buffer, nil if none.")
 
+(defvar-local phps-mode-lex-analyzer--bookkeeping nil
+  "Bookkeeping of all variables in tokens.")
+
 (defvar-local phps-mode-lex-analyzer--tokens nil
   "Latest tokens.")
 
@@ -93,6 +96,7 @@
 (defun phps-mode-lex-analyzer--reset-local-variables ()
   "Reset local variables."
   (setq phps-mode-lex-analyzer--allow-after-change-p t)
+  (setq phps-mode-lex-analyzer--bookkeeping nil)
   (setq phps-mode-lex-analyzer--change-min nil)
   (setq phps-mode-lex-analyzer--idle-timer nil)
   (setq phps-mode-lex-analyzer--lines-indent nil)
@@ -703,7 +707,7 @@
       log)))
 
 (defun phps-mode-lex-analyzer--process-current-buffer (&optional force)
-  "Process current buffer, generate indentations and Imenu, trigger incremental lexer if we have change."
+  "Process current buffer, generate indentations and Imenu, trigger incremental lexer if we have change.  FORCE processes without change."
   (interactive)
   (phps-mode-debug-message (message "Process current buffer"))
   (when phps-mode-lex-analyzer--idle-timer
@@ -725,7 +729,8 @@
                  (point-max)))))
           (phps-mode-debug-message (message "Processed result: %s" processed))
           (setq phps-mode-lex-analyzer--imenu (nth 0 processed))
-          (setq phps-mode-lex-analyzer--lines-indent (nth 1 processed)))
+          (setq phps-mode-lex-analyzer--lines-indent (nth 1 processed))
+          (setq phps-mode-lex-analyzer--bookkeeping (nth 2 processed)))
         (phps-mode-lex-analyzer--reset-imenu)
         (setq phps-mode-lex-analyzer--processed-buffer-p t))
     (phps-mode-debug-message
@@ -784,6 +789,11 @@
   "Return lines indent, process buffer if not done already."
   (phps-mode-lex-analyzer--process-current-buffer)
   phps-mode-lex-analyzer--lines-indent)
+
+(defun phps-mode-lex-analyzer--get-bookkeeping ()
+  "Return bookkeeping, process buffer if not done already."
+  (phps-mode-lex-analyzer--process-current-buffer)
+  phps-mode-lex-analyzer--bookkeeping)
 
 (defun phps-mode-lex-analyzer--get-imenu ()
   "Return Imenu, process buffer if not done already."
@@ -922,8 +932,12 @@ SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
         (setq start end)))
     (list (nreverse line-indents) indent tag-level curly-bracket-level square-bracket-level round-bracket-level)))
 
-(defun phps-mode-lex-analyzer--process-tokens-in-string (tokens string)
-  "Generate indexes for imenu and indentation for TOKENS and STRING one pass.  Complexity: O(n)."
+(defun phps-mode-lex-analyzer--process-tokens-in-string (tokens string &optional namespace)
+  "Generate indexes for imenu and indentation for TOKENS and STRING with optional NAMESPACE one pass.  Complexity: O(n)."
+  (unless namespace
+    (if buffer-file-name
+        (setq namespace (concat default-directory "/" buffer-file-name))
+      (setq namespace (concat "*" (buffer-name) "*"))))
   (if tokens
       (progn
         (phps-mode-debug-message
@@ -1014,7 +1028,8 @@ SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
               (imenu-in-function-name nil)
               (imenu-in-function-index nil)
               (imenu-nesting-level 0)
-              (incremental-line-number 1))
+              (incremental-line-number 1)
+              (bookkeeping (make-hash-table :test 'equal)))
 
           (push `(END_PARSE ,(length string) . ,(length string)) tokens)
 
@@ -1073,6 +1088,41 @@ SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
               ;; `next-token' is current token
               ;; `previous-token' is maybe two tokens back
               (when token
+
+                ;; BOOKKEEPING LOGIC
+                (when (equal token 'T_VARIABLE)
+                  (let ((bookkeeping-namespace namespace)
+                        (bookkeeping-index (list (1- token-start) (1- token-end))))
+                    ;; Build name-space
+                    (when imenu-in-namespace-name
+                      (setq bookkeeping-namespace (concat bookkeeping-namespace " namespace " imenu-in-namespace-name)))
+                    (when imenu-in-class-name
+                      (setq bookkeeping-namespace (concat bookkeeping-namespace " class " imenu-in-class-name)))
+                    (when imenu-in-function-name
+                      (setq bookkeeping-namespace (concat bookkeeping-namespace " function " imenu-in-function-name)))
+                    (setq bookkeeping-namespace (concat bookkeeping-namespace " id " (substring string (1- token-start) (1- token-end))))
+
+                    ;; Variable assignment stand-alone or in function argument
+                    (when (or
+                           (and first-token-on-line
+                                (string= next-token "="))
+                           imenu-in-function-declaration)
+                      ;; (gethash bookkeeping-namespace bookkeeping) ;; TODO Spot shadowing
+                      (message "Bookkeeping-stand-alone: '%s'" bookkeeping-namespace)
+                      (puthash bookkeeping-namespace t bookkeeping))
+
+                    ;; Variable as function argument
+                    (when imenu-in-function-declaration
+                      )
+
+                    (if (gethash bookkeeping-namespace bookkeeping)
+                        (progn
+                          (message "Bookkeeping-hit: %s" bookkeeping-index)
+                          (puthash bookkeeping-index t bookkeeping))
+                      (message "Bookkeeping-miss: %s" bookkeeping-index)
+                      (puthash bookkeeping-index nil bookkeeping))
+
+                    ))
 
 
                 ;; IMENU LOGIC
@@ -1972,7 +2022,7 @@ SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
               (setq token-start-line-number next-token-start-line-number)
               (setq token-end-line-number next-token-end-line-number)
               (setq token-number (1+ token-number))))
-          (list (nreverse imenu-index) line-indents)))
+          (list (nreverse imenu-index) line-indents bookkeeping)))
     (list nil nil)))
 
 (defun phps-mode-lex-analyzer--indent-line ()

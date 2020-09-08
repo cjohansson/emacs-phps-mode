@@ -1351,6 +1351,26 @@
   )
 
 
+(defun phps-mode-test-lex-analyzer--bookkeeping ()
+  "Test the bookkeeping."
+
+  (phps-mode-test--with-buffer
+   "<?php\n\n$var = 'abc';\n\nif ($var2) {\n    echo 'This never happens';\n}\nif ($var) {\n    echo 'This happens';\n}"
+   "Bookkeeping in root level variable assignments."
+   (should (equal
+            (phps-mode-test--hash-to-list (phps-mode-lex-analyzer--get-bookkeeping) t)
+
+            (list (list "*test* id $var" t) (list (list 7 11) t) (list (list 26 31) nil) (list (list 72 76) t)))))
+
+  (phps-mode-test--with-buffer
+   "<?php\n\n$var = 'abc';\n\nif ($var) {\n    echo 'This never happens';\n}\nif ($var2) {\n    echo 'This happens';\n}"
+   "Bookkeeping in root level variable assignments 2."
+   (should (equal
+            (phps-mode-test--hash-to-list (phps-mode-lex-analyzer--get-bookkeeping) t)
+
+             (list (list "*test* id $var" t) (list (list 7 11) t) (list (list 26 30) t) (list (list 71 76) nil)))))
+
+  )
 
 (defun phps-mode-test-lex-analyzer ()
   "Run test for functions."
@@ -1371,7 +1391,8 @@
   (phps-mode-test-lex-analyzer--imenu)
   (phps-mode-test-lex-analyzer--get-moved-imenu)
   (phps-mode-test-lex-analyzer--comment-uncomment-region)
-  (phps-mode-test-lex-analyzer--move-lines-indent))
+  (phps-mode-test-lex-analyzer--move-lines-indent)
+  (phps-mode-test-lex-analyzer--bookkeeping))
 
 (phps-mode-test-lex-analyzer)
 
