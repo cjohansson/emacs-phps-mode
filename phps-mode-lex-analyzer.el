@@ -1101,28 +1101,31 @@ SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
                     (when imenu-in-function-name
                       (setq bookkeeping-namespace (concat bookkeeping-namespace " function " imenu-in-function-name)))
                     (setq bookkeeping-namespace (concat bookkeeping-namespace " id " (substring string (1- token-start) (1- token-end))))
+                    (phps-mode-debug-message
+                     (message "Bookkeeping-namespace: '%s'" bookkeeping-namespace))
 
                     ;; Variable assignment stand-alone or in function argument
-                    (when (or
-                           (and first-token-on-line
-                                (string= next-token "="))
-                           imenu-in-function-declaration)
+                    (when (and first-token-on-line
+                               (string= next-token "="))
                       ;; (gethash bookkeeping-namespace bookkeeping) ;; TODO Spot shadowing
-                      (message "Bookkeeping-stand-alone: '%s'" bookkeeping-namespace)
+                      (phps-mode-debug-message
+                       (message "Bookkeeping-stand-alone: '%s'" bookkeeping-namespace))
                       (puthash bookkeeping-namespace t bookkeeping))
 
                     ;; Variable as function argument
                     (when imenu-in-function-declaration
-                      )
+                      (phps-mode-debug-message
+                       (message "Bookkeeping-function-argument: '%s'" bookkeeping-namespace))
+                      (puthash bookkeeping-namespace t bookkeeping))
 
                     (if (gethash bookkeeping-namespace bookkeeping)
                         (progn
-                          (message "Bookkeeping-hit: %s" bookkeeping-index)
+                          (phps-mode-debug-message
+                           (message "Bookkeeping-hit: %s" bookkeeping-index))
                           (puthash bookkeeping-index t bookkeeping))
-                      (message "Bookkeeping-miss: %s" bookkeeping-index)
-                      (puthash bookkeeping-index nil bookkeeping))
-
-                    ))
+                      (phps-mode-debug-message
+                       (message "Bookkeeping-miss: %s" bookkeeping-index))
+                      (puthash bookkeeping-index nil bookkeeping))))
 
 
                 ;; IMENU LOGIC
