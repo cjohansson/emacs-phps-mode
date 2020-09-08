@@ -1025,6 +1025,7 @@ SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
               (imenu-open-class-level nil)
               (imenu-in-class-name nil)
               (imenu-in-function-declaration nil)
+              (imenu-open-function-level nil)
               (imenu-in-function-name nil)
               (imenu-in-function-index nil)
               (imenu-nesting-level 0)
@@ -1157,6 +1158,11 @@ SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
                         (push `(,imenu-in-class-name . ,imenu-add-list) imenu-index)))
                     (setq imenu-in-class-name nil))
 
+                  (when (and imenu-open-function-level
+                             (= imenu-open-function-level imenu-nesting-level)
+                             imenu-in-function-name)
+                    (setq imenu-in-function-name nil))
+
                   (setq imenu-nesting-level (1- imenu-nesting-level))))
 
                 (cond
@@ -1205,7 +1211,7 @@ SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
                         (if imenu-in-namespace-name
                             (push `(,imenu-in-function-name . ,imenu-in-function-index) imenu-namespace-index)
                           (push `(,imenu-in-function-name . ,imenu-in-function-index) imenu-index))))
-                    (setq imenu-in-function-name nil)
+                    (setq imenu-open-function-level imenu-nesting-level)
                     (setq imenu-in-function-declaration nil))
 
                    ((and (equal token 'T_STRING)

@@ -1373,9 +1373,10 @@
   (phps-mode-test--with-buffer
    "<?php\n\n$var2 = 4;\n\nfunction myFunction($var)\n{\n    $var3 = 3\n    if ($var) {\n        echo 'Hit';\n    }\n    if ($var2) {\n        echo 'Miss';\n    }\n    if ($var3) {\n        echo 'Hit';\n    }\n}\n\nfunction myFunction2($abc)\n{\n    if ($var) {\n        echo 'Miss';\n    }\n    if ($abc) {\n        echo 'Hit';\n    }\n}\n\nif ($var) {\n    echo 'Miss';\n}\nif ($var2) {\n    echo 'Hit';\n}"
    "Bookkeeping in function level with variable assignments."
+   ;; (message "Bookkeeping: '%s'" (phps-mode-test--hash-to-list (phps-mode-lex-analyzer--get-bookkeeping) t))
    (should (equal
             (phps-mode-test--hash-to-list (phps-mode-lex-analyzer--get-bookkeeping) t)
-            (list (list "*test* id $var2" t) (list (list 7 12) t) (list "*test* function myFunction id $var" t) (list (list 39 43) t) (list "*test* id $var3" t) (list (list 51 56) t) (list (list 69 73) t) (list (list 111 116) nil) (list (list 155 160) t) (list "*test* function myFunction2 id $abc" t) (list (list 214 218) t) (list (list 230 234) nil) (list (list 273 277) t) (list (list 314 318) nil) (list (list 345 350) t)))))
+            (list (list "*test* id $var2" t) (list (list 7 12) t) (list "*test* function myFunction id $var" t) (list (list 39 43) t) (list "*test* function myFunction id $var3" t) (list (list 51 56) t) (list (list 69 73) t) (list (list 111 116) nil) (list (list 155 160) t) (list "*test* function myFunction2 id $abc" t) (list (list 214 218) t) (list (list 230 234) nil) (list (list 273 277) t) (list (list 314 318) nil) (list (list 345 350) t)))))
   
   )
 
