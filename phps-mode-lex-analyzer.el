@@ -1094,8 +1094,10 @@ SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
                 (when (equal token 'T_VARIABLE)
                   (let ((bookkeeping-namespace namespace)
                         (bookkeeping-index (list (1- token-start) (1- token-end))))
+
                     ;; Build name-space
-                    (when imenu-in-namespace-name
+                    (when (and imenu-in-namespace-name
+                               (or imenu-in-class-name imenu-in-function-name))
                       (setq bookkeeping-namespace (concat bookkeeping-namespace " namespace " imenu-in-namespace-name)))
                     (when imenu-in-class-name
                       (setq bookkeeping-namespace (concat bookkeeping-namespace " class " imenu-in-class-name)))
