@@ -1019,6 +1019,8 @@ SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
               (in-return-curly-bracket-level nil)
               (in-return-level 0)
               (previous-token nil)
+              (previous2-token nil)
+              (previous3-token nil)
               (token nil)
               (token-start nil)
               (token-end nil)
@@ -1121,7 +1123,8 @@ SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
                 (when (equal token 'T_VARIABLE)
                   (let ((bookkeeping-namespace namespace)
                         (bookkeeping-index (list token-start token-end))
-                        (bookkeeping-variable-name (substring string (1- token-start) (1- token-end))))
+                        (bookkeeping-variable-name (substring string (1- token-start) (1- token-end)))
+                        (bookkeeping-in-assignment nil))
 
                     ;; Build name-space
                     (when (and imenu-in-namespace-name
@@ -1142,26 +1145,59 @@ SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
                     (phps-mode-debug-message
                      (message "Bookkeeping-namespace: '%s'" bookkeeping-namespace))
 
-                    ;; Variable assignment stand-alone or in function argument
-                    (when (or
-                           (and first-token-on-line
-                                (string= next-token "="))
-                           imenu-in-function-declaration
-                           (and
-                            imenu-in-class-name
-                            (not imenu-in-function-name)
-                            (or
-                             (equal previous-token 'T_STATIC)
-                             (equal previous-token 'T_PRIVATE)
-                             (equal previous-token 'T_PROTECTED)
-                             (equal previous-token 'T_PUBLIC)
-                             (equal previous-token 'T_VAR))))
+                    ;; Support foreach as $key, for ($i = 0), if ($a = ), while ($a = ) and do-while ($a)assignments here
+                    (when (and
+                           (string= previous-token "(")
+                           (string= next-token "=")
+                           (or (equal previous2-token 'T_IF)
+                               (equal previous2-token 'T_ELSEIF)
+                               (equal previous2-token 'T_WHILE)
+                               (equal previous2-token 'T_FOR)
+                               (equal previous2-token 'T_FOREACH)))
+                      (setq bookkeeping-in-assignment t))
+
+                    ;; Support foreach as $key => value
+                    (when (and
+                           (equal previous3-token 'T_AS)
+                           (equal previous2-token 'T_VARIABLE)
+                           (equal previous-token 'T_DOUBLE_ARROW)
+                           (string= next-token ")"))
+                      (setq bookkeeping-in-assignment t))
+
+                    ;; Stand-alone variable assignment
+                    (when (and first-token-on-line
+                               (string= next-token "="))
+                      (setq bookkeeping-in-assignment t))
+
+                    ;; Naming of value
+                    (when (equal previous-token 'T_AS)
+                      (setq bookkeeping-in-assignment t))
+
+                    ;; In function arguments
+                    (when imenu-in-function-declaration
+                      (setq bookkeeping-in-assignment t))
+
+                    ;; Class variables
+                    (when (and
+                           imenu-in-class-name
+                           (not imenu-in-function-name)
+                           (or
+                            (equal previous-token 'T_STATIC)
+                            (equal previous-token 'T_PRIVATE)
+                            (equal previous-token 'T_PROTECTED)
+                            (equal previous-token 'T_PUBLIC)
+                            (equal previous-token 'T_VAR)))
+                      (setq bookkeeping-in-assignment t))
+
+                    ;; Do we have a assignment?
+                    (when bookkeeping-in-assignment
                       (let ((declarations (gethash bookkeeping-namespace bookkeeping)))
+                        ;; Track number of times this variable is defined
                         (unless declarations
                           (setq declarations 0))
                         (setq declarations (1+ declarations))
                         (phps-mode-debug-message
-                         (message "Bookkeeping-stand-alone: '%s'" bookkeeping-namespace))
+                         (message "Bookkeeping-assignment: '%s'" bookkeeping-namespace))
                         (puthash bookkeeping-namespace declarations bookkeeping)))
 
                     (if (gethash bookkeeping-namespace bookkeeping)
@@ -2073,6 +2109,8 @@ SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
                     (setq tuning-level 0))))
 
               ;; Update current token
+              (setq previous3-token previous2-token)
+              (setq previous2-token previous-token)
               (setq previous-token token)
               (setq token next-token)
               (setq token-start next-token-start)

@@ -1400,17 +1400,15 @@
   (phps-mode-test--with-buffer
    "<?php\n\n// Conditional assignments\n\n$items = array(1, 2, 3);\nforeach ($items as $item) {\n    if ($item) {\n        echo 'Hit';\n    }\n}\nforeach ($items as $key => $value) {\n    if ($key || $value) {\n        echo 'Hit';\n    }\n}\nfor ($i = 0; $i < count($items); $i++) {\n    if ($i) {\n        echo 'Hit';\n    }\n}\nif ($a = 123) {\n    if ($a) {\n        echo 'Hit';\n    }\n}\nwhile ($b = 123) {\n    if ($a) {\n        echo 'Hit';\n    }\n}\ndo {\n    echo 'Hit';\n} while ($c = 456);\n"
    "Conditional assignments"
-   (message "Bookkeeping: '%s'" (phps-mode-test--hash-to-list (phps-mode-lex-analyzer--get-bookkeeping) t))
    (should (equal
             (phps-mode-test--hash-to-list (phps-mode-lex-analyzer--get-bookkeeping) t)
-            (list (list "$_COOKIE" t) (list "$_GET" t) (list "$_GLOBALS" t) (list "$_POST" t) (list "$_REQUEST" t) (list "$_SERVER" t) (list "$_SESSION" t) (list "*test* id $items" 1) (list (list 36 42) t) (list (list 70 76) t) (list "*test* id $item" 1) (list (list 80 85) t) (list (list 97 102) t) (list (list 143 149) t) (list "*test* id $key" 1) (list (list 153 157) t) (list "*test* id $value" 1) (list (list 161 167) t) (list (list 179 183) t) (list (list 187 193) t) (list "*test* id $i" 1) (list (list 230 232) t) (list (list 238 240) t) (list (list 249 255) t) (list (list 258 260) nil) (list (list 274 276) t) (list "*test* id $a" 1) (list (list 312 314) t) (list (list 332 334) t) (list "*test* id $b" 1) (list (list 373 375) t) (list (list 393 395) t) (list "*test* id $c" 1) (list (list 457 459) t)))))
+            (list (list "$_COOKIE" t) (list "$_GET" t) (list "$_GLOBALS" t) (list "$_POST" t) (list "$_REQUEST" t) (list "$_SERVER" t) (list "$_SESSION" t) (list "*test* id $items" 1) (list (list 36 42) t) (list (list 70 76) t) (list "*test* id $item" 1) (list (list 80 85) t) (list (list 97 102) t) (list (list 143 149) t) (list "*test* id $key" 1) (list (list 153 157) t) (list "*test* id $value" 1) (list (list 161 167) t) (list (list 179 183) t) (list (list 187 193) t) (list "*test* id $i" 1) (list (list 230 232) t) (list (list 238 240) t) (list (list 249 255) t) (list (list 258 260) t) (list (list 274 276) t) (list "*test* id $a" 1) (list (list 312 314) t) (list (list 332 334) t) (list "*test* id $b" 1) (list (list 373 375) t) (list (list 393 395) t) (list "*test* id $c" 1) (list (list 457 459) t)))))
 
   )
 
 (defun phps-mode-test-lex-analyzer ()
   "Run test for functions."
   ;; (setq debug-on-error t)
-  (phps-mode-test-lex-analyzer--bookkeeping)
   (phps-mode-test-lex-analyzer--process-changes)
   (phps-mode-test-lex-analyzer--alternative-indentation)
   (phps-mode-test-lex-analyzer--move-lines-indent)
@@ -1427,7 +1425,8 @@
   (phps-mode-test-lex-analyzer--imenu)
   (phps-mode-test-lex-analyzer--get-moved-imenu)
   (phps-mode-test-lex-analyzer--comment-uncomment-region)
-  (phps-mode-test-lex-analyzer--move-lines-indent))
+  (phps-mode-test-lex-analyzer--move-lines-indent)
+  (phps-mode-test-lex-analyzer--bookkeeping))
 
 (phps-mode-test-lex-analyzer)
 
