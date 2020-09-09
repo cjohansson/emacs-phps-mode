@@ -408,6 +408,9 @@
                  (error-message (nth 1 result))
                  (error-start (nth 2 result))
                  (error-end (nth 3 result)))
+
+             (phps-mode-lex-analyzer--reset-local-variables)
+
              (when error-message
                (if (equal error-type 'phps-lexer-error)
                    (progn
@@ -504,6 +507,9 @@
                  (error-message (nth 1 result))
                  (error-start (nth 2 result))
                  (error-end (nth 3 result)))
+
+             (phps-mode-lex-analyzer--reset-local-variables)
+
              (when error-message
                (if (equal error-type 'phps-lexer-error)
                    (progn
