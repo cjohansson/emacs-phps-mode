@@ -128,7 +128,7 @@
     (cond
 
      ((equal token-name 'T_VARIABLE)
-      (let ((bookkeeping-index (list (1- start) (1- end))))
+      (let ((bookkeeping-index (list start end)))
         (if (gethash bookkeeping-index phps-mode-lex-analyzer--bookkeeping)
             (list 'font-lock-face 'font-lock-variable-name-face)
           (list 'font-lock-face 'font-lock-warning-face))))
@@ -368,8 +368,7 @@
               (processed-result
                (phps-mode-lex-analyzer--process-tokens-in-string
                 (nth 0 lex-result)
-                buffer-contents
-                buffer-name)))
+                buffer-contents)))
          (list lex-result processed-result)))
 
      (lambda(result)
@@ -1051,6 +1050,15 @@ SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
               (incremental-line-number 1)
               (bookkeeping (make-hash-table :test 'equal)))
 
+          ;; Super-globals
+          (puthash "$_COOKIE" t bookkeeping)
+          (puthash "$_GET" t bookkeeping)
+          (puthash "$_GLOBALS" t bookkeeping)
+          (puthash "$_POST" t bookkeeping)
+          (puthash "$_REQUEST" t bookkeeping)
+          (puthash "$_SERVER" t bookkeeping)
+          (puthash "$_SESSION" t bookkeeping)
+
           (push `(END_PARSE ,(length string) . ,(length string)) tokens)
 
           ;; Iterate through all buffer tokens from beginning to end
@@ -1112,7 +1120,8 @@ SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
                 ;; BOOKKEEPING LOGIC
                 (when (equal token 'T_VARIABLE)
                   (let ((bookkeeping-namespace namespace)
-                        (bookkeeping-index (list (1- token-start) (1- token-end))))
+                        (bookkeeping-index (list token-start token-end))
+                        (bookkeeping-variable-name (substring string (1- token-start) (1- token-end))))
 
                     ;; Build name-space
                     (when (and imenu-in-namespace-name
@@ -1122,7 +1131,7 @@ SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
                       (setq bookkeeping-namespace (concat bookkeeping-namespace " class " imenu-in-class-name)))
                     (when imenu-in-function-name
                       (setq bookkeeping-namespace (concat bookkeeping-namespace " function " imenu-in-function-name)))
-                    (setq bookkeeping-namespace (concat bookkeeping-namespace " id " (substring string (1- token-start) (1- token-end))))
+                    (setq bookkeeping-namespace (concat bookkeeping-namespace " id " bookkeeping-variable-name))
                     (phps-mode-debug-message
                      (message "Bookkeeping-namespace: '%s'" bookkeeping-namespace))
 
@@ -1145,9 +1154,13 @@ SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
                           (phps-mode-debug-message
                            (message "Bookkeeping-hit: %s" bookkeeping-index))
                           (puthash bookkeeping-index t bookkeeping))
-                      (phps-mode-debug-message
-                       (message "Bookkeeping-miss: %s" bookkeeping-index))
-                      (puthash bookkeeping-index nil bookkeeping))))
+
+                      ;; Check super-globals
+                      (if (gethash bookkeeping-variable-name bookkeeping)
+                          (puthash bookkeeping-index t bookkeeping)
+                        (phps-mode-debug-message
+                         (message "Bookkeeping-miss: %s" bookkeeping-index))
+                        (puthash bookkeeping-index nil bookkeeping)))))
 
 
                 ;; IMENU LOGIC

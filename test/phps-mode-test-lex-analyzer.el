@@ -1359,24 +1359,21 @@
    "Bookkeeping in root level variable assignments #1."
    (should (equal
             (phps-mode-test--hash-to-list (phps-mode-lex-analyzer--get-bookkeeping) t)
-
-            (list (list "*test* id $var" t) (list (list 7 11) t) (list (list 26 31) nil) (list (list 72 76) t)))))
+            (list (list "$_COOKIE" t) (list "$_GET" t) (list "$_GLOBALS" t) (list "$_POST" t) (list "$_REQUEST" t) (list "$_SERVER" t) (list "$_SESSION" t) (list "*test* id $var" t) (list (list 8 12) t) (list (list 27 32) nil) (list (list 73 77) t)))))
 
   (phps-mode-test--with-buffer
    "<?php\n\n$var = 'abc';\n\nif ($var) {\n    echo 'This never happens';\n}\nif ($var2) {\n    echo 'This happens';\n}"
    "Bookkeeping in root level variable assignments #2."
    (should (equal
             (phps-mode-test--hash-to-list (phps-mode-lex-analyzer--get-bookkeeping) t)
-
-            (list (list "*test* id $var" t) (list (list 7 11) t) (list (list 26 30) t) (list (list 71 76) nil)))))
+            (list (list "$_COOKIE" t) (list "$_GET" t) (list "$_GLOBALS" t) (list "$_POST" t) (list "$_REQUEST" t) (list "$_SERVER" t) (list "$_SESSION" t) (list "*test* id $var" t) (list (list 8 12) t) (list (list 27 31) t) (list (list 72 77) nil)))))
 
   (phps-mode-test--with-buffer
    "<?php\n\n$var2 = 4;\n\nfunction myFunction($var)\n{\n    $var3 = 3\n    if ($var) {\n        echo 'Hit';\n    }\n    if ($var2) {\n        echo 'Miss';\n    }\n    if ($var3) {\n        echo 'Hit';\n    }\n}\n\nfunction myFunction2($abc)\n{\n    if ($var) {\n        echo 'Miss';\n    }\n    if ($abc) {\n        echo 'Hit';\n    }\n}\n\nif ($var) {\n    echo 'Miss';\n}\nif ($var2) {\n    echo 'Hit';\n}"
    "Bookkeeping in function level with variable assignments."
-   ;; (message "Bookkeeping: '%s'" (phps-mode-test--hash-to-list (phps-mode-lex-analyzer--get-bookkeeping) t))
    (should (equal
             (phps-mode-test--hash-to-list (phps-mode-lex-analyzer--get-bookkeeping) t)
-            (list (list "*test* id $var2" t) (list (list 7 12) t) (list "*test* function myFunction id $var" t) (list (list 39 43) t) (list "*test* function myFunction id $var3" t) (list (list 51 56) t) (list (list 69 73) t) (list (list 111 116) nil) (list (list 155 160) t) (list "*test* function myFunction2 id $abc" t) (list (list 214 218) t) (list (list 230 234) nil) (list (list 273 277) t) (list (list 314 318) nil) (list (list 345 350) t)))))
+            (list (list "$_COOKIE" t) (list "$_GET" t) (list "$_GLOBALS" t) (list "$_POST" t) (list "$_REQUEST" t) (list "$_SERVER" t) (list "$_SESSION" t) (list "*test* id $var2" t) (list (list 8 13) t) (list "*test* function myFunction id $var" t) (list (list 40 44) t) (list "*test* function myFunction id $var3" t) (list (list 52 57) t) (list (list 70 74) t) (list (list 112 117) nil) (list (list 156 161) t) (list "*test* function myFunction2 id $abc" t) (list (list 215 219) t) (list (list 231 235) nil) (list (list 274 278) t) (list (list 315 319) nil) (list (list 346 351) t)))))
 
   (phps-mode-test--with-buffer
    "<?php\n\nnamespace myNamespaceA {\n    $var = 123;\n    class myClassA {\n        private $var2 = 123;\n        function myFunctionA($var3) {\n            $var4 = 123;\n            if ($var) {\n                echo 'Miss';\n            }\n            if ($var2) {\n                echo 'Miss';\n            }\n            if ($var3) {\n                echo 'Hit';\n            }\n            if ($var4) {\n                echo 'Hit';\n            }\n        }\n\n        function myFunctionB($var5)\n        {\n            $var6 = 123;\n            if ($var) {\n                echo 'Miss';\n            }\n            if ($var2) {\n                echo 'Miss';\n            }\n            if ($var3) {\n                echo 'Miss';\n            }\n            if ($var4) {\n                echo 'Miss';\n            }\n            if ($var5) {\n                echo 'Hit';\n            }\n            if ($var6) {\n                echo 'Hit';\n            }\n        }\n    }\n\n    if ($var) {\n        echo 'Hit';\n    }\n    if ($var2) {\n        echo 'Miss';\n    }\n    if ($var3) {\n        echo 'Miss';\n    }\n    if ($var4) {\n        echo 'Miss';\n    }\n    if ($var5) {\n        echo 'Miss';\n    }\n    if ($var6) {\n        echo 'Miss';\n    }\n}\n\nnamespace myNamespaceB {\n    $var7 = 123;\n    class myClassB {\n        private $var8 = 123;\n        function myFunctionA($var10) {\n            $var9 = 123;\n            if ($var) {\n                echo 'Miss';\n            }\n            if ($var2) {\n                echo 'Miss';\n            }\n            if ($var3) {\n                echo 'Miss';\n            }\n            if ($var4) {\n                echo 'Miss';\n            }\n            if ($var5) {\n                echo 'Miss';\n            }\n            if ($var6) {\n                echo 'Miss';\n            }\n            if ($var7) {\n                echo 'Miss';\n            }\n            if ($var8) {\n                echo 'Miss';\n            }\n            if ($var9) {\n                echo 'Hit';\n            }\n            if ($var10) {\n                echo 'Hit';\n            }\n        }\n\n        function myFunctionB($var12)\n        {\n            $var11 = 123;\n            if ($var) {\n                echo 'Miss';\n            }\n            if ($var2) {\n                echo 'Miss';\n            }\n            if ($var3) {\n                echo 'Miss';\n            }\n            if ($var4) {\n                echo 'Miss';\n            }\n            if ($var5) {\n                echo 'Hit';\n            }\n            if ($var6) {\n                echo 'Hit';\n            }\n            if ($var7) {\n                echo 'Miss';\n            }\n            if ($var8) {\n                echo 'Miss';\n            }\n            if ($var9) {\n                echo 'Miss';\n            }\n            if ($var10) {\n                echo 'Miss';\n            }\n            if ($var11) {\n                echo 'Hit';\n            }\n            if ($var12) {\n                echo 'Hit';\n            }\n        }\n    }\n\n    if ($var) {\n        echo 'Hit';\n    }\n    if ($var2) {\n        echo 'Miss';\n    }\n    if ($var3) {\n        echo 'Miss';\n    }\n    if ($var4) {\n        echo 'Miss';\n    }\n    if ($var5) {\n        echo 'Miss';\n    }\n    if ($var6) {\n        echo 'Miss';\n    }\n    if ($var7) {\n        echo 'Hit';\n    }\n}\n"
@@ -1384,34 +1381,37 @@
    ;; (message "Bookkeeping: '%s'" (phps-mode-test--hash-to-list (phps-mode-lex-analyzer--get-bookkeeping) t))
    (should (equal
             (phps-mode-test--hash-to-list (phps-mode-lex-analyzer--get-bookkeeping) t)
-            (list (list "*test* id $var" t) (list (list 36 40) t) (list (list 85 90) nil) (list "*test* namespace myNamespaceA class myClassA function myFunctionA id $var3" t) (list (list 127 132) t) (list "*test* namespace myNamespaceA class myClassA function myFunctionA id $var4" t) (list (list 148 153) t) (list (list 177 181) nil) (list (list 244 249) nil) (list (list 312 317) t) (list (list 379 384) t) (list "*test* namespace myNamespaceA class myClassA function myFunctionB id $var5" t) (list (list 470 475) t) (list "*test* namespace myNamespaceA class myClassA function myFunctionB id $var6" t) (list (list 499 504) t) (list (list 528 532) nil) (list (list 595 600) nil) (list (list 663 668) nil) (list (list 731 736) nil) (list (list 799 804) t) (list (list 866 871) t) (list (list 942 946) t) (list (list 984 989) nil) (list (list 1028 1033) nil) (list (list 1072 1077) nil) (list (list 1116 1121) nil) (list (list 1160 1165) nil) (list "*test* id $var7" t) (list (list 1228 1233) t) (list (list 1278 1283) nil) (list "*test* namespace myNamespaceB class myClassB function myFunctionA id $var10" t) (list (list 1320 1326) t) (list "*test* namespace myNamespaceB class myClassB function myFunctionA id $var9" t) (list (list 1342 1347) t) (list (list 1371 1375) nil) (list (list 1438 1443) nil) (list (list 1506 1511) nil) (list (list 1574 1579) nil) (list (list 1642 1647) nil) (list (list 1710 1715) nil) (list (list 1778 1783) nil) (list (list 1846 1851) nil) (list (list 1914 1919) t) (list (list 1981 1987) t) (list "*test* namespace myNamespaceB class myClassB function myFunctionB id $var12" t) (list (list 2073 2079) t) (list "*test* namespace myNamespaceB class myClassB function myFunctionB id $var11" t) (list (list 2103 2109) t) (list (list 2133 2137) nil) (list (list 2200 2205) nil) (list (list 2268 2273) nil) (list (list 2336 2341) nil) (list (list 2404 2409) nil) (list (list 2471 2476) nil) (list (list 2538 2543) nil) (list (list 2606 2611) nil) (list (list 2674 2679) nil) (list (list 2742 2748) nil) (list (list 2811 2817) t) (list (list 2879 2885) t) (list (list 2956 2960) t) (list (list 2998 3003) nil) (list (list 3042 3047) nil) (list (list 3086 3091) nil) (list (list 3130 3135) nil) (list (list 3174 3179) nil) (list (list 3218 3223) t)))))
-
-  (phps-mode-test--with-buffer
-   "<?php\n\n// Conditional assignments\n\n$items = array(1, 2, 3);\nforeach ($items as $item) {\n    if ($item) {\n        echo 'Hit';\n    }\n}\nforeach ($items as $key => $value) {\n    if ($key || $value) {\n        echo 'Hit';\n    }\n}\nfor ($i = 0; $i < count($items); $i++) {\n    if ($i) {\n        echo 'Hit';\n    }\n}\nif ($a = 123) {\n    if ($a) {\n        echo 'Hit';\n    }\n}\nwhile ($a = 123) {\n    if ($a) {\n        echo 'Hit';\n    }\n}\ndo {\n    echo 'Hit';\n} while ($a = 456);\n"
-   "Conditional assignments"
-   (should (equal
-            (phps-mode-test--hash-to-list (phps-mode-lex-analyzer--get-bookkeeping) t)
-            t)))
+            (list (list "$_COOKIE" t) (list "$_GET" t) (list "$_GLOBALS" t) (list "$_POST" t) (list "$_REQUEST" t) (list "$_SERVER" t) (list "$_SESSION" t) (list "*test* id $var" t) (list (list 37 41) t) (list (list 86 91) nil) (list "*test* namespace myNamespaceA class myClassA function myFunctionA id $var3" t) (list (list 128 133) t) (list "*test* namespace myNamespaceA class myClassA function myFunctionA id $var4" t) (list (list 149 154) t) (list (list 178 182) nil) (list (list 245 250) nil) (list (list 313 318) t) (list (list 380 385) t) (list "*test* namespace myNamespaceA class myClassA function myFunctionB id $var5" t) (list (list 471 476) t) (list "*test* namespace myNamespaceA class myClassA function myFunctionB id $var6" t) (list (list 500 505) t) (list (list 529 533) nil) (list (list 596 601) nil) (list (list 664 669) nil) (list (list 732 737) nil) (list (list 800 805) t) (list (list 867 872) t) (list (list 943 947) t) (list (list 985 990) nil) (list (list 1029 1034) nil) (list (list 1073 1078) nil) (list (list 1117 1122) nil) (list (list 1161 1166) nil) (list "*test* id $var7" t) (list (list 1229 1234) t) (list (list 1279 1284) nil) (list "*test* namespace myNamespaceB class myClassB function myFunctionA id $var10" t) (list (list 1321 1327) t) (list "*test* namespace myNamespaceB class myClassB function myFunctionA id $var9" t) (list (list 1343 1348) t) (list (list 1372 1376) nil) (list (list 1439 1444) nil) (list (list 1507 1512) nil) (list (list 1575 1580) nil) (list (list 1643 1648) nil) (list (list 1711 1716) nil) (list (list 1779 1784) nil) (list (list 1847 1852) nil) (list (list 1915 1920) t) (list (list 1982 1988) t) (list "*test* namespace myNamespaceB class myClassB function myFunctionB id $var12" t) (list (list 2074 2080) t) (list "*test* namespace myNamespaceB class myClassB function myFunctionB id $var11" t) (list (list 2104 2110) t) (list (list 2134 2138) nil) (list (list 2201 2206) nil) (list (list 2269 2274) nil) (list (list 2337 2342) nil) (list (list 2405 2410) nil) (list (list 2472 2477) nil) (list (list 2539 2544) nil) (list (list 2607 2612) nil) (list (list 2675 2680) nil) (list (list 2743 2749) nil) (list (list 2812 2818) t) (list (list 2880 2886) t) (list (list 2957 2961) t) (list (list 2999 3004) nil) (list (list 3043 3048) nil) (list (list 3087 3092) nil) (list (list 3131 3136) nil) (list (list 3175 3180) nil) (list (list 3219 3224) t)))))
 
   (phps-mode-test--with-buffer
    "<?php\n\n// Super-globals\n\nif ($_GET) {\n    echo 'Hit';\n}\nif ($_POST) {\n    echo 'Hit';\n}\nif ($_COOKIE) {\n    echo 'Hit';\n}\nif ($_SESSION) {\n    echo 'Hit';\n}\nif ($_REQUEST) {\n    echo 'Hit';\n}\nif ($_GLOBALS) {\n    echo 'Hit';\n}\nif ($_SERVER) {\n    echo 'Hit';\n}\n"
    "Super-globals"
    (should (equal
             (phps-mode-test--hash-to-list (phps-mode-lex-analyzer--get-bookkeeping) t)
-            t)))
+            (list (list "$_COOKIE" t) (list "$_GET" t) (list "$_GLOBALS" t) (list "$_POST" t) (list "$_REQUEST" t) (list "$_SERVER" t) (list "$_SESSION" t) (list (list 30 35) t) (list (list 61 67) t) (list (list 93 101) t) (list (list 127 136) t) (list (list 162 171) t) (list (list 197 206) t) (list (list 232 240) t)))))
 
   (phps-mode-test--with-buffer
    "<?php\n\n// Class properties\n\nclass myParent {}\n\nclass myClass extends myParent {\n    private $var1 = 123;\n    protected static $var2;\n    public $var3;\n    var $var4;\n    function __construct() {\n        if ($this) {\n            echo 'Hit';\n        }\n        if ($this->var1) {\n            echo 'Hit';\n        }\n        if (self::$var2) {\n            echo 'Hit';\n        }\n        if ($this->var3) {\n            echo 'Hit';\n        }\n        if ($this->var4) {\n            echo 'Hit';\n        }\n        if ($this->var5) {\n            echo 'Miss';\n        }\n        if (parent) {\n            echo 'Hit';\n        }\n    }\n}\n\nif ($this) {\n    echo 'Miss';\n}\nif (self) {\n    echo 'Miss';\n}\nif (parent) {\n    echo 'Miss';\n}"
    "Class properties"
+   ;; (message "Bookkeeping: '%s'" (phps-mode-test--hash-to-list (phps-mode-lex-analyzer--get-bookkeeping) t))
    (should (equal
             (phps-mode-test--hash-to-list (phps-mode-lex-analyzer--get-bookkeeping) t)
-            t)))
+            (list (list "$_COOKIE" t) (list "$_GET" t) (list "$_GLOBALS" t) (list "$_POST" t) (list "$_REQUEST" t) (list "$_SERVER" t) (list "$_SESSION" t) (list (list "*test* class myClass id $var1" t) (list 93 98) t) (list "*test* class myClass id $var2" t) (list (list 127 132) t) (list "*test* class myClass id $var3" t) (list (list 145 150) t) (list "*test* class myClass id $var4" t) (list (list 160 165) t) (list (list 208 213) t) (list (list 263 268) t) (list (list 330 335) t) (list (list 385 390) t) (list (list 446 451) t) (list (list 507 512) t) (list (list 626 631) nil)))))
+
+  (phps-mode-test--with-buffer
+   "<?php\n\n// Conditional assignments\n\n$items = array(1, 2, 3);\nforeach ($items as $item) {\n    if ($item) {\n        echo 'Hit';\n    }\n}\nforeach ($items as $key => $value) {\n    if ($key || $value) {\n        echo 'Hit';\n    }\n}\nfor ($i = 0; $i < count($items); $i++) {\n    if ($i) {\n        echo 'Hit';\n    }\n}\nif ($a = 123) {\n    if ($a) {\n        echo 'Hit';\n    }\n}\nwhile ($b = 123) {\n    if ($a) {\n        echo 'Hit';\n    }\n}\ndo {\n    echo 'Hit';\n} while ($c = 456);\n"
+   "Conditional assignments"
+   (message "Bookkeeping: '%s'" (phps-mode-test--hash-to-list (phps-mode-lex-analyzer--get-bookkeeping) t))
+   (should (equal
+            (phps-mode-test--hash-to-list (phps-mode-lex-analyzer--get-bookkeeping) t)
+            (list (list "$_COOKIE" t) (list "$_GET" t) (list "$_GLOBALS" t) (list "$_POST" t) (list "$_REQUEST" t) (list "$_SERVER" t) (list "$_SESSION" t) (list "*test* id $items" t) (list (list 36 42) t) (list (list 70 76) t) (list "*test* id $item" t) (list (list 80 85) t) (list (list 97 102) t) (list (list 143 149) t) (list "*test* id $key" t) (list (list 153 157) t) (list "*test* id $value" t) (list (list 161 167) t) (list (list 179 183) t) (list (list 187 193) t) (list "*test* id $i" t) (list (list 230 232) t) (list (list 238 240) t) (list (list 249 255) t) (list (list 258 260) nil) (list (list 274 276) t) (list "*test* id $a" t) (list (list 312 314) t) (list (list 332 334) t) (list "*test* id $b" t) (list (list 373 375) t) (list (list 393 395) t) (list "*test* id $c" t) (list (list 457 459) t)))))
 
   )
 
 (defun phps-mode-test-lex-analyzer ()
   "Run test for functions."
   ;; (setq debug-on-error t)
+  (phps-mode-test-lex-analyzer--bookkeeping)
   (phps-mode-test-lex-analyzer--process-changes)
   (phps-mode-test-lex-analyzer--alternative-indentation)
   (phps-mode-test-lex-analyzer--move-lines-indent)
@@ -1428,8 +1428,7 @@
   (phps-mode-test-lex-analyzer--imenu)
   (phps-mode-test-lex-analyzer--get-moved-imenu)
   (phps-mode-test-lex-analyzer--comment-uncomment-region)
-  (phps-mode-test-lex-analyzer--move-lines-indent)
-  (phps-mode-test-lex-analyzer--bookkeeping))
+  (phps-mode-test-lex-analyzer--move-lines-indent))
 
 (phps-mode-test-lex-analyzer)
 
