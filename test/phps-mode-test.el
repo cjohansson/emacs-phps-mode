@@ -53,7 +53,6 @@
      (phps-mode)
      ,@change
      (phps-mode-lex-analyzer--process-changes test-buffer-incremental)
-     (phps-mode-lex-analyzer--process-current-buffer)
      (setq incremental-states phps-mode-lex-analyzer--states)
      (setq incremental-tokens phps-mode-lex-analyzer--tokens)
      (setq incremental-imenu phps-mode-lex-analyzer--imenu)
@@ -68,7 +67,6 @@
      (phps-mode-debug-message
        (message "\nTesting initial buffer '%s':\n'%s'\n" ,title incremental-buffer))
      (phps-mode)
-     (phps-mode-lex-analyzer--process-current-buffer)
      (setq initial-states phps-mode-lex-analyzer--states)
      (setq initial-tokens phps-mode-lex-analyzer--tokens)
      (setq initial-imenu phps-mode-lex-analyzer--imenu)

@@ -98,15 +98,15 @@
   (setq phps-mode-lex-analyzer--allow-after-change-p t)
   (setq phps-mode-lex-analyzer--bookkeeping nil)
   (setq phps-mode-lex-analyzer--change-min nil)
-  (setq phps-mode-lex-analyzer--idle-timer nil)
-  (setq phps-mode-lex-analyzer--lines-indent nil)
-  (setq phps-mode-lex-analyzer--imenu nil)
   (setq phps-mode-lex-analyzer--heredoc-label-stack nil)
+  (setq phps-mode-lex-analyzer--idle-timer nil)
+  (setq phps-mode-lex-analyzer--imenu nil)
+  (setq phps-mode-lex-analyzer--lines-indent nil)
   (setq phps-mode-lex-analyzer--processed-buffer-p nil)
-  (setq phps-mode-lex-analyzer--tokens nil)
   (setq phps-mode-lex-analyzer--state nil)
+  (setq phps-mode-lex-analyzer--state-stack nil)
   (setq phps-mode-lex-analyzer--states nil)
-  (setq phps-mode-lex-analyzer--state-stack nil))
+  (setq phps-mode-lex-analyzer--tokens nil))
 
 (defun phps-mode-lex-analyzer--set-region-syntax-color (start end properties)
   "Do syntax coloring for region START to END with PROPERTIES."
@@ -390,6 +390,7 @@
              (setq phps-mode-lex-analyzer--imenu (nth 0 processed-result))
              (setq phps-mode-lex-analyzer--lines-indent (nth 1 processed-result))
              (setq phps-mode-lex-analyzer--bookkeeping (nth 2 processed-result))
+             (phps-mode-lex-analyzer--reset-imenu)
 
              ;; Apply syntax color on tokens
              (dolist (token phps-mode-lex-analyzer--tokens)
@@ -480,6 +481,7 @@
              (setq phps-mode-lex-analyzer--imenu (nth 0 processed-result))
              (setq phps-mode-lex-analyzer--lines-indent (nth 1 processed-result))
              (setq phps-mode-lex-analyzer--bookkeeping (nth 2 processed-result))
+             (phps-mode-lex-analyzer--reset-imenu)
 
              ;; Apply syntax color on tokens
              (dolist (token phps-mode-lex-analyzer--tokens)
