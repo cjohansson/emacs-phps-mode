@@ -35,12 +35,14 @@
          (incremental-imenu nil)
          (incremental-indent nil)
          (incremental-buffer nil)
+         (incremental-bookkeeping nil)
          (test-buffer-initial (generate-new-buffer "test-initial"))
          (initial-states nil)
          (initial-tokens nil)
          (initial-imenu nil)
          (initial-indent nil)
-         (initial-buffer nil))
+         (initial-buffer nil)
+         (initial-bookkeeping nil))
 
      ;; Setup incremental buffer
      (switch-to-buffer test-buffer-incremental)
@@ -57,6 +59,7 @@
      (setq incremental-imenu phps-mode-lex-analyzer--imenu)
      (setq incremental-indent (phps-mode-test--hash-to-list phps-mode-lex-analyzer--lines-indent))
      (setq incremental-buffer (buffer-substring (point-min) (point-max)))
+     (setq incremental-bookkeeping (phps-mode-test--hash-to-list phps-mode-lex-analyzer--bookkeeping t))
 
      ;; Setup incremental buffer
      (switch-to-buffer test-buffer-initial)
@@ -71,6 +74,7 @@
      (setq initial-imenu phps-mode-lex-analyzer--imenu)
      (setq initial-indent (phps-mode-test--hash-to-list phps-mode-lex-analyzer--lines-indent))
      (setq initial-buffer (buffer-substring (point-min) (point-max)))
+     (setq initial-bookkeeping (phps-mode-test--hash-to-list phps-mode-lex-analyzer--bookkeeping t))
 
      ;; Run tests
      (phps-mode-debug-message
@@ -84,6 +88,7 @@
      ;; (message "Incremental indent: %s\n" incremental-indent)
      (should (equal initial-indent incremental-indent))
      (should (equal initial-imenu incremental-imenu))
+     (should (equal initial-bookkeeping incremental-bookkeeping))
 
      (kill-buffer test-buffer-incremental)
      (kill-buffer test-buffer-initial)

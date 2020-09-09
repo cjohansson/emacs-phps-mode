@@ -439,48 +439,61 @@
     (when force-synchronous
       (setq async nil))
     (phps-mode-serial-commands
+
      buffer-name
-     (lambda() (phps-mode-lex-analyzer--lex-string
-                buffer-contents
-                incremental-start-new-buffer
-                point-max
-                head-states
-                incremental-state
-                incremental-state-stack
-                incremental-heredoc-label
-                incremental-heredoc-label-stack
-                head-tokens))
+
+     (lambda()
+       (let* ((lex-result (phps-mode-lex-analyzer--lex-string
+                           buffer-contents
+                           incremental-start-new-buffer
+                           point-max
+                           head-states
+                           incremental-state
+                           incremental-state-stack
+                           incremental-heredoc-label
+                           incremental-heredoc-label-stack
+                           head-tokens))
+              (processed-result
+               (phps-mode-lex-analyzer--process-tokens-in-string
+                (nth 0 lex-result)
+                buffer-contents)))
+         (list lex-result processed-result)))
 
      (lambda(result)
        (when (get-buffer buffer-name)
          (with-current-buffer buffer-name
+           (let ((lex-result (nth 0 result))
+                 (processed-result (nth 1 result)))
 
-           (phps-mode-debug-message
-            (message "Incrementally-lexed-string: %s" result))
+             (phps-mode-debug-message
+              (message "Incrementally-lexed-string: %s" result))
 
-           (setq phps-mode-lex-analyzer--tokens (nth 0 result))
-           (setq phps-mode-lex-analyzer--states (nth 1 result))
-           (setq phps-mode-lex-analyzer--state (nth 2 result))
-           (setq phps-mode-lex-analyzer--state-stack (nth 3 result))
-           (setq phps-mode-lex-analyzer--heredoc-label (nth 4 result))
-           (setq phps-mode-lex-analyzer--heredoc-label-stack (nth 5 result))
+             (setq phps-mode-lex-analyzer--tokens (nth 0 lex-result))
+             (setq phps-mode-lex-analyzer--states (nth 1 lex-result))
+             (setq phps-mode-lex-analyzer--state (nth 2 lex-result))
+             (setq phps-mode-lex-analyzer--state-stack (nth 3 lex-result))
+             (setq phps-mode-lex-analyzer--heredoc-label (nth 4 lex-result))
+             (setq phps-mode-lex-analyzer--heredoc-label-stack (nth 5 lex-result))
 
-           (setq phps-mode-lex-analyzer--processed-buffer-p nil)
-           (phps-mode-lex-analyzer--reset-imenu)
+             ;; Save processed result
+             (setq phps-mode-lex-analyzer--processed-buffer-p t)
+             (setq phps-mode-lex-analyzer--imenu (nth 0 processed-result))
+             (setq phps-mode-lex-analyzer--lines-indent (nth 1 processed-result))
+             (setq phps-mode-lex-analyzer--bookkeeping (nth 2 processed-result))
 
-           ;; Apply syntax color on tokens
-           (dolist (token phps-mode-lex-analyzer--tokens)
-             (let ((start (car (cdr token)))
-                   (end (cdr (cdr token))))
+             ;; Apply syntax color on tokens
+             (dolist (token phps-mode-lex-analyzer--tokens)
+               (let ((start (car (cdr token)))
+                     (end (cdr (cdr token))))
 
-               ;; Apply syntax color on token
-               (let ((token-syntax-color (phps-mode-lex-analyzer--get-token-syntax-color token)))
-                 (if token-syntax-color
-                     (phps-mode-lex-analyzer--set-region-syntax-color start end token-syntax-color)
-                   (phps-mode-lex-analyzer--clear-region-syntax-color start end)))))
+                 ;; Apply syntax color on token
+                 (let ((token-syntax-color (phps-mode-lex-analyzer--get-token-syntax-color token)))
+                   (if token-syntax-color
+                       (phps-mode-lex-analyzer--set-region-syntax-color start end token-syntax-color)
+                     (phps-mode-lex-analyzer--clear-region-syntax-color start end)))))
 
-           (phps-mode-debug-message
-            (message "Incremental tokens: %s" phps-mode-lex-analyzer--tokens)))))
+             (phps-mode-debug-message
+              (message "Incremental tokens: %s" phps-mode-lex-analyzer--tokens))))))
 
      (lambda(result)
        (when (get-buffer buffer-name)
@@ -577,7 +590,7 @@
   (setq phps-mode-lex-analyzer--change-min nil))
 
 (defun phps-mode-lex-analyzer--process-changes (&optional buffer force-synchronous)
-  "Run incremental lexer on BUFFER.  Return list of performed operations."
+  "Run incremental lexer on BUFFER.  Return list of performed operations.  Optionally do it FORCE-SYNCHRONOUS."
   (unless buffer
     (setq buffer (current-buffer)))
   (phps-mode-debug-message
@@ -677,11 +690,9 @@
                           (phps-mode-debug-message
                            (message "Found head states"))
 
-
                           (push (list 'INCREMENTAL-LEX incremental-start-new-buffer) log)
 
                           ;; Do partial lex from previous-token-end to change-stop
-
 
                           (phps-mode-lex-analyzer--incremental-lex-string
                            (buffer-name)
@@ -953,9 +964,7 @@ SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
 (defun phps-mode-lex-analyzer--process-tokens-in-string (tokens string &optional namespace)
   "Generate indexes for imenu and indentation for TOKENS and STRING with optional NAMESPACE one pass.  Complexity: O(n)."
   (unless namespace
-    (if buffer-file-name
-        (setq namespace (concat default-directory "/" buffer-file-name))
-      (setq namespace (concat "*" (buffer-name) "*"))))
+    (setq namespace ""))
   (if tokens
       (progn
         (phps-mode-debug-message
