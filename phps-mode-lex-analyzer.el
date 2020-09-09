@@ -68,6 +68,9 @@
 (defvar-local phps-mode-lex-analyzer--lines-indent nil
   "The indentation of each line in buffer, nil if none.")
 
+(defvar-local phps-mode-lex-analyzer--bookkeeping nil
+  "Bookkeeping of all variables in tokens.")
+
 (defvar-local phps-mode-lex-analyzer--tokens nil
   "Latest tokens.")
 
@@ -93,16 +96,17 @@
 (defun phps-mode-lex-analyzer--reset-local-variables ()
   "Reset local variables."
   (setq phps-mode-lex-analyzer--allow-after-change-p t)
+  (setq phps-mode-lex-analyzer--bookkeeping nil)
   (setq phps-mode-lex-analyzer--change-min nil)
-  (setq phps-mode-lex-analyzer--idle-timer nil)
-  (setq phps-mode-lex-analyzer--lines-indent nil)
-  (setq phps-mode-lex-analyzer--imenu nil)
   (setq phps-mode-lex-analyzer--heredoc-label-stack nil)
+  (setq phps-mode-lex-analyzer--idle-timer nil)
+  (setq phps-mode-lex-analyzer--imenu nil)
+  (setq phps-mode-lex-analyzer--lines-indent nil)
   (setq phps-mode-lex-analyzer--processed-buffer-p nil)
-  (setq phps-mode-lex-analyzer--tokens nil)
   (setq phps-mode-lex-analyzer--state nil)
+  (setq phps-mode-lex-analyzer--state-stack nil)
   (setq phps-mode-lex-analyzer--states nil)
-  (setq phps-mode-lex-analyzer--state-stack nil))
+  (setq phps-mode-lex-analyzer--tokens nil))
 
 (defun phps-mode-lex-analyzer--set-region-syntax-color (start end properties)
   "Do syntax coloring for region START to END with PROPERTIES."
@@ -116,171 +120,179 @@
   "Return syntax color for TOKEN."
   ;; Syntax coloring
   ;; see https://www.gnu.org/software/emacs/manual/html_node/elisp/Faces-for-Font-Lock.html#Faces-for-Font-Lock
-  ;; (message "Color token %s %s %s" token start end)
-  (cond
+  (let ((start (car (cdr token)))
+        (end (cdr (cdr token)))
+        (token-name (car token)))
 
-   ((or
-     (string= token 'T_VARIABLE)
-     (string= token 'T_STRING_VARNAME))
-    (list 'font-lock-face 'font-lock-variable-name-face))
+    ;; (message "Color token %s %s %s" token-name start end)
+    (cond
 
-   ((string= token 'T_COMMENT)
-    (list 'font-lock-face 'font-lock-comment-face))
+     ((equal token-name 'T_VARIABLE)
+      (let ((bookkeeping-index (list start end)))
+        (if (gethash bookkeeping-index phps-mode-lex-analyzer--bookkeeping)
+            (list 'font-lock-face 'font-lock-variable-name-face)
+          (list 'font-lock-face 'font-lock-warning-face))))
 
-   ((string= token 'T_DOC_COMMENT)
-    (list 'font-lock-face 'font-lock-doc-face))
+     ((equal token-name 'T_STRING_VARNAME)
+      (list 'font-lock-face 'font-lock-variable-name-face))
 
-   ((string= token 'T_INLINE_HTML)
-    ;; NOTE T_INLINE_HTML is missing by purpose here to distinguish those areas from other entities
-    nil)
+     ((equal token-name 'T_COMMENT)
+      (list 'font-lock-face 'font-lock-comment-face))
 
-   ((or
-     (string= token 'T_STRING)
-     (string= token 'T_CONSTANT_ENCAPSED_STRING)
-     (string= token 'T_ENCAPSED_AND_WHITESPACE)
-     (string= token 'T_NUM_STRING)
-     (string= token 'T_DNUMBER)
-     (string= token 'T_LNUMBER))
-    (list 'font-lock-face 'font-lock-string-face))
+     ((equal token-name 'T_DOC_COMMENT)
+      (list 'font-lock-face 'font-lock-doc-face))
 
-   ((or
-     (string= token 'T_DOLLAR_OPEN_CURLY_BRACES)
-     (string= token 'T_CURLY_OPEN)
-     (string= token 'T_OBJECT_OPERATOR)
-     (string= token 'T_PAAMAYIM_NEKUDOTAYIM)
-     (string= token 'T_NS_SEPARATOR)
-     (string= token 'T_EXIT)
-     (string= token 'T_DIE)
-     (string= token 'T_RETURN)
-     (string= token 'T_YIELD_FROM)
-     (string= token 'T_YIELD)
-     (string= token 'T_TRY)
-     (string= token 'T_CATCH)
-     (string= token 'T_FINALLY)
-     (string= token 'T_THROW)
-     (string= token 'T_IF)
-     (string= token 'T_ELSEIF)
-     (string= token 'T_ENDIF)
-     (string= token 'T_ELSE)
-     (string= token 'T_WHILE)
-     (string= token 'T_ENDWHILE)
-     (string= token 'T_DO)
-     (string= token 'T_FUNCTION)
-     (string= token 'T_FN)
-     (string= token 'T_CONST)
-     (string= token 'T_FOREACH)
-     (string= token 'T_ENDFOREACH)
-     (string= token 'T_FOR)
-     (string= token 'T_ENDFOR)
-     (string= token 'T_DECLARE)
-     (string= token 'T_ENDDECLARE)
-     (string= token 'T_INSTANCEOF)
-     (string= token 'T_AS)
-     (string= token 'T_SWITCH)
-     (string= token 'T_ENDSWITCH)
-     (string= token 'T_CASE)
-     (string= token 'T_DEFAULT)
-     (string= token 'T_BREAK)
-     (string= token 'T_CONTINUE)
-     (string= token 'T_GOTO)
-     (string= token 'T_ECHO)
-     (string= token 'T_PRINT)
-     (string= token 'T_CLASS)
-     (string= token 'T_INTERFACE)
-     (string= token 'T_TRAIT)
-     (string= token 'T_EXTENDS)
-     (string= token 'T_IMPLEMENTS)
-     (string= token 'T_NEW)
-     (string= token 'T_CLONE)
-     (string= token 'T_VAR)
-     (string= token 'T_EVAL)
-     (string= token 'T_INCLUDE_ONCE)
-     (string= token 'T_INCLUDE)
-     (string= token 'T_REQUIRE_ONCE)
-     (string= token 'T_REQUIRE)
-     (string= token 'T_NAMESPACE)
-     (string= token 'T_USE)
-     (string= token 'T_INSTEADOF)
-     (string= token 'T_GLOBAL)
-     (string= token 'T_ISSET)
-     (string= token 'T_EMPTY)
-     (string= token 'T_HALT_COMPILER)
-     (string= token 'T_STATIC)
-     (string= token 'T_ABSTRACT)
-     (string= token 'T_FINAL)
-     (string= token 'T_PRIVATE)
-     (string= token 'T_PROTECTED)
-     (string= token 'T_PUBLIC)
-     (string= token 'T_UNSET)
-     (string= token 'T_LIST)
-     (string= token 'T_ARRAY)
-     (string= token 'T_CALLABLE)
-     )
-    (list 'font-lock-face 'font-lock-keyword-face))
+     ((equal token-name 'T_INLINE_HTML)
+      ;; NOTE T_INLINE_HTML is missing by purpose here to distinguish those areas from other entities
+      nil)
 
-   ((or
-     (string= token 'T_OPEN_TAG)
-     (string= token 'T_OPEN_TAG_WITH_ECHO)
-     (string= token 'T_CLOSE_TAG)
-     (string= token 'T_START_HEREDOC)
-     (string= token 'T_END_HEREDOC)
-     (string= token 'T_ELLIPSIS)
-     (string= token 'T_COALESCE)
-     (string= token 'T_DOUBLE_ARROW)
-     (string= token 'T_INC)
-     (string= token 'T_DEC)
-     (string= token 'T_IS_IDENTICAL)
-     (string= token 'T_IS_NOT_IDENTICAL)
-     (string= token 'T_IS_EQUAL)
-     (string= token 'T_IS_NOT_EQUAL)
-     (string= token 'T_SPACESHIP)
-     (string= token 'T_IS_SMALLER_OR_EQUAL)
-     (string= token 'T_IS_GREATER_OR_EQUAL)
-     (string= token 'T_PLUS_EQUAL)
-     (string= token 'T_MINUS_EQUAL)
-     (string= token 'T_MUL_EQUAL)
-     (string= token 'T_POW_EQUAL)
-     (string= token 'T_POW)
-     (string= token 'T_DIV_EQUAL)
-     (string= token 'T_CONCAT_EQUAL)
-     (string= token 'T_MOD_EQUAL)
-     (string= token 'T_SL_EQUAL)
-     (string= token 'T_SR_EQUAL)
-     (string= token 'T_AND_EQUAL)
-     (string= token 'T_OR_EQUAL)
-     (string= token 'T_XOR_EQUAL)
-     (string= token 'T_COALESCE_EQUAL)
-     (string= token 'T_BOOLEAN_OR)
-     (string= token 'T_BOOLEAN_AND)
-     (string= token 'T_BOOLEAN_XOR)
-     (string= token 'T_LOGICAL_XOR)
-     (string= token 'T_LOGICAL_OR)
-     (string= token 'T_LOGICAL_AND)
-     (string= token 'T_SL)
-     (string= token 'T_SR)
-     (string= token 'T_CLASS_C)
-     (string= token 'T_TRAIT_C)
-     (string= token 'T_FUNC_C)
-     (string= token 'T_METHOD_C)
-     (string= token 'T_LINE)
-     (string= token 'T_FILE)
-     (string= token 'T_DIR)
-     (string= token 'T_NS_C)
-     (string= token 'T_INT_CAST)
-     (string= token 'T_DOUBLE_CAST)
-     (string= token 'T_STRING_CAST)
-     (string= token 'T_ARRAY_CAST)
-     (string= token 'T_OBJECT_CAST)
-     (string= token 'T_BOOL_CAST)
-     (string= token 'T_UNSET_CAST)
-     )
-    (list 'font-lock-face 'font-lock-constant-face))
+     ((or
+       (equal token-name 'T_STRING)
+       (equal token-name 'T_CONSTANT_ENCAPSED_STRING)
+       (equal token-name 'T_ENCAPSED_AND_WHITESPACE)
+       (equal token-name 'T_NUM_STRING)
+       (equal token-name 'T_DNUMBER)
+       (equal token-name 'T_LNUMBER))
+      (list 'font-lock-face 'font-lock-string-face))
 
-   ((string= token 'T_ERROR)
-    ;; NOTE This token is artificial and not PHP native
-    (list 'font-lock-face 'font-lock-warning-face))
+     ((or
+       (equal token-name 'T_DOLLAR_OPEN_CURLY_BRACES)
+       (equal token-name 'T_CURLY_OPEN)
+       (equal token-name 'T_OBJECT_OPERATOR)
+       (equal token-name 'T_PAAMAYIM_NEKUDOTAYIM)
+       (equal token-name 'T_NS_SEPARATOR)
+       (equal token-name 'T_EXIT)
+       (equal token-name 'T_DIE)
+       (equal token-name 'T_RETURN)
+       (equal token-name 'T_YIELD_FROM)
+       (equal token-name 'T_YIELD)
+       (equal token-name 'T_TRY)
+       (equal token-name 'T_CATCH)
+       (equal token-name 'T_FINALLY)
+       (equal token-name 'T_THROW)
+       (equal token-name 'T_IF)
+       (equal token-name 'T_ELSEIF)
+       (equal token-name 'T_ENDIF)
+       (equal token-name 'T_ELSE)
+       (equal token-name 'T_WHILE)
+       (equal token-name 'T_ENDWHILE)
+       (equal token-name 'T_DO)
+       (equal token-name 'T_FUNCTION)
+       (equal token-name 'T_FN)
+       (equal token-name 'T_CONST)
+       (equal token-name 'T_FOREACH)
+       (equal token-name 'T_ENDFOREACH)
+       (equal token-name 'T_FOR)
+       (equal token-name 'T_ENDFOR)
+       (equal token-name 'T_DECLARE)
+       (equal token-name 'T_ENDDECLARE)
+       (equal token-name 'T_INSTANCEOF)
+       (equal token-name 'T_AS)
+       (equal token-name 'T_SWITCH)
+       (equal token-name 'T_ENDSWITCH)
+       (equal token-name 'T_CASE)
+       (equal token-name 'T_DEFAULT)
+       (equal token-name 'T_BREAK)
+       (equal token-name 'T_CONTINUE)
+       (equal token-name 'T_GOTO)
+       (equal token-name 'T_ECHO)
+       (equal token-name 'T_PRINT)
+       (equal token-name 'T_CLASS)
+       (equal token-name 'T_INTERFACE)
+       (equal token-name 'T_TRAIT)
+       (equal token-name 'T_EXTENDS)
+       (equal token-name 'T_IMPLEMENTS)
+       (equal token-name 'T_NEW)
+       (equal token-name 'T_CLONE)
+       (equal token-name 'T_VAR)
+       (equal token-name 'T_EVAL)
+       (equal token-name 'T_INCLUDE_ONCE)
+       (equal token-name 'T_INCLUDE)
+       (equal token-name 'T_REQUIRE_ONCE)
+       (equal token-name 'T_REQUIRE)
+       (equal token-name 'T_NAMESPACE)
+       (equal token-name 'T_USE)
+       (equal token-name 'T_INSTEADOF)
+       (equal token-name 'T_GLOBAL)
+       (equal token-name 'T_ISSET)
+       (equal token-name 'T_EMPTY)
+       (equal token-name 'T_HALT_COMPILER)
+       (equal token-name 'T_STATIC)
+       (equal token-name 'T_ABSTRACT)
+       (equal token-name 'T_FINAL)
+       (equal token-name 'T_PRIVATE)
+       (equal token-name 'T_PROTECTED)
+       (equal token-name 'T_PUBLIC)
+       (equal token-name 'T_UNSET)
+       (equal token-name 'T_LIST)
+       (equal token-name 'T_ARRAY)
+       (equal token-name 'T_CALLABLE)
+       )
+      (list 'font-lock-face 'font-lock-keyword-face))
 
-   (t (list 'font-lock-face 'font-lock-constant-face))))
+     ((or
+       (equal token-name 'T_OPEN_TAG)
+       (equal token-name 'T_OPEN_TAG_WITH_ECHO)
+       (equal token-name 'T_CLOSE_TAG)
+       (equal token-name 'T_START_HEREDOC)
+       (equal token-name 'T_END_HEREDOC)
+       (equal token-name 'T_ELLIPSIS)
+       (equal token-name 'T_COALESCE)
+       (equal token-name 'T_DOUBLE_ARROW)
+       (equal token-name 'T_INC)
+       (equal token-name 'T_DEC)
+       (equal token-name 'T_IS_IDENTICAL)
+       (equal token-name 'T_IS_NOT_IDENTICAL)
+       (equal token-name 'T_IS_EQUAL)
+       (equal token-name 'T_IS_NOT_EQUAL)
+       (equal token-name 'T_SPACESHIP)
+       (equal token-name 'T_IS_SMALLER_OR_EQUAL)
+       (equal token-name 'T_IS_GREATER_OR_EQUAL)
+       (equal token-name 'T_PLUS_EQUAL)
+       (equal token-name 'T_MINUS_EQUAL)
+       (equal token-name 'T_MUL_EQUAL)
+       (equal token-name 'T_POW_EQUAL)
+       (equal token-name 'T_POW)
+       (equal token-name 'T_DIV_EQUAL)
+       (equal token-name 'T_CONCAT_EQUAL)
+       (equal token-name 'T_MOD_EQUAL)
+       (equal token-name 'T_SL_EQUAL)
+       (equal token-name 'T_SR_EQUAL)
+       (equal token-name 'T_AND_EQUAL)
+       (equal token-name 'T_OR_EQUAL)
+       (equal token-name 'T_XOR_EQUAL)
+       (equal token-name 'T_COALESCE_EQUAL)
+       (equal token-name 'T_BOOLEAN_OR)
+       (equal token-name 'T_BOOLEAN_AND)
+       (equal token-name 'T_BOOLEAN_XOR)
+       (equal token-name 'T_LOGICAL_XOR)
+       (equal token-name 'T_LOGICAL_OR)
+       (equal token-name 'T_LOGICAL_AND)
+       (equal token-name 'T_SL)
+       (equal token-name 'T_SR)
+       (equal token-name 'T_CLASS_C)
+       (equal token-name 'T_TRAIT_C)
+       (equal token-name 'T_FUNC_C)
+       (equal token-name 'T_METHOD_C)
+       (equal token-name 'T_LINE)
+       (equal token-name 'T_FILE)
+       (equal token-name 'T_DIR)
+       (equal token-name 'T_NS_C)
+       (equal token-name 'T_INT_CAST)
+       (equal token-name 'T_DOUBLE_CAST)
+       (equal token-name 'T_STRING_CAST)
+       (equal token-name 'T_ARRAY_CAST)
+       (equal token-name 'T_OBJECT_CAST)
+       (equal token-name 'T_BOOL_CAST)
+       (equal token-name 'T_UNSET_CAST)
+       )
+      (list 'font-lock-face 'font-lock-constant-face))
+
+     ((equal token-name 'T_ERROR)
+      ;; NOTE This token-name is artificial and not PHP native
+      (list 'font-lock-face 'font-lock-warning-face))
+
+     (t (list 'font-lock-face 'font-lock-constant-face)))))
 
 
 ;; LEXERS
@@ -307,7 +319,7 @@
 
               ;; Apply syntax color on token
               (let ((token-syntax-color
-                     (phps-mode-lex-analyzer--get-token-syntax-color token-name)))
+                     (phps-mode-lex-analyzer--get-token-syntax-color token)))
                 (if token-syntax-color
                     (phps-mode-lex-analyzer--set-region-syntax-color start end token-syntax-color)
                   (phps-mode-lex-analyzer--clear-region-syntax-color start end)))
@@ -334,7 +346,7 @@
   (phps-mode-lexer--re2c))
 
 (defun phps-mode-lex-analyzer--re2c-run (&optional force-synchronous)
-  "Run lexer."
+  "Run lexer, optionally FORCE-SYNCHRONOUS."
   (interactive)
   (require 'phps-mode-macros)
   (phps-mode-debug-message (message "Lexer run"))
@@ -349,33 +361,45 @@
       (setq async nil))
     (phps-mode-serial-commands
      buffer-name
+
      (lambda()
-       (phps-mode-lex-analyzer--lex-string buffer-contents))
+       (let* ((lex-result
+               (phps-mode-lex-analyzer--lex-string buffer-contents))
+              (processed-result
+               (phps-mode-lex-analyzer--process-tokens-in-string
+                (nth 0 lex-result)
+                buffer-contents)))
+         (list lex-result processed-result)))
 
      (lambda(result)
        (when (get-buffer buffer-name)
          (with-current-buffer buffer-name
+           (let ((lex-result (nth 0 result))
+                 (processed-result (nth 1 result)))
 
-           ;; Move variables into this buffers local variables
-           (setq phps-mode-lex-analyzer--processed-buffer-p nil)
-           (setq phps-mode-lex-analyzer--tokens (nth 0 result))
-           (setq phps-mode-lex-analyzer--states (nth 1 result))
-           (setq phps-mode-lex-analyzer--state (nth 2 result))
-           (setq phps-mode-lex-analyzer--state-stack (nth 3 result))
-           (setq phps-mode-lex-analyzer--heredoc-label (nth 4 result))
-           (setq phps-mode-lex-analyzer--heredoc-label-stack (nth 5 result))
+             ;; Move variables into this buffers local variables
+             (setq phps-mode-lex-analyzer--tokens (nth 0 lex-result))
+             (setq phps-mode-lex-analyzer--states (nth 1 lex-result))
+             (setq phps-mode-lex-analyzer--state (nth 2 lex-result))
+             (setq phps-mode-lex-analyzer--state-stack (nth 3 lex-result))
+             (setq phps-mode-lex-analyzer--heredoc-label (nth 4 lex-result))
+             (setq phps-mode-lex-analyzer--heredoc-label-stack (nth 5 lex-result))
 
-           (phps-mode-lex-analyzer--reset-imenu)
+             ;; Save processed result
+             (setq phps-mode-lex-analyzer--processed-buffer-p t)
+             (setq phps-mode-lex-analyzer--imenu (nth 0 processed-result))
+             (setq phps-mode-lex-analyzer--lines-indent (nth 1 processed-result))
+             (setq phps-mode-lex-analyzer--bookkeeping (nth 2 processed-result))
+             (phps-mode-lex-analyzer--reset-imenu)
 
-           ;; Apply syntax color on tokens
-           (dolist (token phps-mode-lex-analyzer--tokens)
-             (let ((start (car (cdr token)))
-                   (end (cdr (cdr token)))
-                   (token-name (car token)))
-               (let ((token-syntax-color (phps-mode-lex-analyzer--get-token-syntax-color token-name)))
-                 (if token-syntax-color
-                     (phps-mode-lex-analyzer--set-region-syntax-color start end token-syntax-color)
-                   (phps-mode-lex-analyzer--clear-region-syntax-color start end))))))))
+             ;; Apply syntax color on tokens
+             (dolist (token phps-mode-lex-analyzer--tokens)
+               (let ((start (car (cdr token)))
+                     (end (cdr (cdr token))))
+                 (let ((token-syntax-color (phps-mode-lex-analyzer--get-token-syntax-color token)))
+                   (if token-syntax-color
+                       (phps-mode-lex-analyzer--set-region-syntax-color start end token-syntax-color)
+                     (phps-mode-lex-analyzer--clear-region-syntax-color start end)))))))))
 
      (lambda(result)
        (when (get-buffer buffer-name)
@@ -384,6 +408,9 @@
                  (error-message (nth 1 result))
                  (error-start (nth 2 result))
                  (error-end (nth 3 result)))
+
+             (phps-mode-lex-analyzer--reset-local-variables)
+
              (when error-message
                (if (equal error-type 'phps-lexer-error)
                    (progn
@@ -416,49 +443,62 @@
     (when force-synchronous
       (setq async nil))
     (phps-mode-serial-commands
+
      buffer-name
-     (lambda() (phps-mode-lex-analyzer--lex-string
-                buffer-contents
-                incremental-start-new-buffer
-                point-max
-                head-states
-                incremental-state
-                incremental-state-stack
-                incremental-heredoc-label
-                incremental-heredoc-label-stack
-                head-tokens))
+
+     (lambda()
+       (let* ((lex-result (phps-mode-lex-analyzer--lex-string
+                           buffer-contents
+                           incremental-start-new-buffer
+                           point-max
+                           head-states
+                           incremental-state
+                           incremental-state-stack
+                           incremental-heredoc-label
+                           incremental-heredoc-label-stack
+                           head-tokens))
+              (processed-result
+               (phps-mode-lex-analyzer--process-tokens-in-string
+                (nth 0 lex-result)
+                buffer-contents)))
+         (list lex-result processed-result)))
 
      (lambda(result)
        (when (get-buffer buffer-name)
          (with-current-buffer buffer-name
+           (let ((lex-result (nth 0 result))
+                 (processed-result (nth 1 result)))
 
-           (phps-mode-debug-message
-            (message "Incrementally-lexed-string: %s" result))
+             (phps-mode-debug-message
+              (message "Incrementally-lexed-string: %s" result))
 
-           (setq phps-mode-lex-analyzer--tokens (nth 0 result))
-           (setq phps-mode-lex-analyzer--states (nth 1 result))
-           (setq phps-mode-lex-analyzer--state (nth 2 result))
-           (setq phps-mode-lex-analyzer--state-stack (nth 3 result))
-           (setq phps-mode-lex-analyzer--heredoc-label (nth 4 result))
-           (setq phps-mode-lex-analyzer--heredoc-label-stack (nth 5 result))
+             (setq phps-mode-lex-analyzer--tokens (nth 0 lex-result))
+             (setq phps-mode-lex-analyzer--states (nth 1 lex-result))
+             (setq phps-mode-lex-analyzer--state (nth 2 lex-result))
+             (setq phps-mode-lex-analyzer--state-stack (nth 3 lex-result))
+             (setq phps-mode-lex-analyzer--heredoc-label (nth 4 lex-result))
+             (setq phps-mode-lex-analyzer--heredoc-label-stack (nth 5 lex-result))
 
-           (setq phps-mode-lex-analyzer--processed-buffer-p nil)
-           (phps-mode-lex-analyzer--reset-imenu)
+             ;; Save processed result
+             (setq phps-mode-lex-analyzer--processed-buffer-p t)
+             (setq phps-mode-lex-analyzer--imenu (nth 0 processed-result))
+             (setq phps-mode-lex-analyzer--lines-indent (nth 1 processed-result))
+             (setq phps-mode-lex-analyzer--bookkeeping (nth 2 processed-result))
+             (phps-mode-lex-analyzer--reset-imenu)
 
-           ;; Apply syntax color on tokens
-           (dolist (token phps-mode-lex-analyzer--tokens)
-             (let ((start (car (cdr token)))
-                   (end (cdr (cdr token)))
-                   (token-name (car token)))
+             ;; Apply syntax color on tokens
+             (dolist (token phps-mode-lex-analyzer--tokens)
+               (let ((start (car (cdr token)))
+                     (end (cdr (cdr token))))
 
-               ;; Apply syntax color on token
-               (let ((token-syntax-color (phps-mode-lex-analyzer--get-token-syntax-color token-name)))
-                 (if token-syntax-color
-                     (phps-mode-lex-analyzer--set-region-syntax-color start end token-syntax-color)
-                   (phps-mode-lex-analyzer--clear-region-syntax-color start end)))))
+                 ;; Apply syntax color on token
+                 (let ((token-syntax-color (phps-mode-lex-analyzer--get-token-syntax-color token)))
+                   (if token-syntax-color
+                       (phps-mode-lex-analyzer--set-region-syntax-color start end token-syntax-color)
+                     (phps-mode-lex-analyzer--clear-region-syntax-color start end)))))
 
-           (phps-mode-debug-message
-            (message "Incremental tokens: %s" phps-mode-lex-analyzer--tokens)))))
+             (phps-mode-debug-message
+              (message "Incremental tokens: %s" phps-mode-lex-analyzer--tokens))))))
 
      (lambda(result)
        (when (get-buffer buffer-name)
@@ -467,6 +507,9 @@
                  (error-message (nth 1 result))
                  (error-start (nth 2 result))
                  (error-end (nth 3 result)))
+
+             (phps-mode-lex-analyzer--reset-local-variables)
+
              (when error-message
                (if (equal error-type 'phps-lexer-error)
                    (progn
@@ -555,7 +598,7 @@
   (setq phps-mode-lex-analyzer--change-min nil))
 
 (defun phps-mode-lex-analyzer--process-changes (&optional buffer force-synchronous)
-  "Run incremental lexer on BUFFER.  Return list of performed operations."
+  "Run incremental lexer on BUFFER.  Return list of performed operations.  Optionally do it FORCE-SYNCHRONOUS."
   (unless buffer
     (setq buffer (current-buffer)))
   (phps-mode-debug-message
@@ -655,11 +698,9 @@
                           (phps-mode-debug-message
                            (message "Found head states"))
 
-
                           (push (list 'INCREMENTAL-LEX incremental-start-new-buffer) log)
 
                           ;; Do partial lex from previous-token-end to change-stop
-
 
                           (phps-mode-lex-analyzer--incremental-lex-string
                            (buffer-name)
@@ -703,7 +744,7 @@
       log)))
 
 (defun phps-mode-lex-analyzer--process-current-buffer (&optional force)
-  "Process current buffer, generate indentations and Imenu, trigger incremental lexer if we have change."
+  "Process current buffer, generate indentations and Imenu, trigger incremental lexer if we have change.  FORCE processes without change."
   (interactive)
   (phps-mode-debug-message (message "Process current buffer"))
   (when phps-mode-lex-analyzer--idle-timer
@@ -725,7 +766,8 @@
                  (point-max)))))
           (phps-mode-debug-message (message "Processed result: %s" processed))
           (setq phps-mode-lex-analyzer--imenu (nth 0 processed))
-          (setq phps-mode-lex-analyzer--lines-indent (nth 1 processed)))
+          (setq phps-mode-lex-analyzer--lines-indent (nth 1 processed))
+          (setq phps-mode-lex-analyzer--bookkeeping (nth 2 processed)))
         (phps-mode-lex-analyzer--reset-imenu)
         (setq phps-mode-lex-analyzer--processed-buffer-p t))
     (phps-mode-debug-message
@@ -784,6 +826,11 @@
   "Return lines indent, process buffer if not done already."
   (phps-mode-lex-analyzer--process-current-buffer)
   phps-mode-lex-analyzer--lines-indent)
+
+(defun phps-mode-lex-analyzer--get-bookkeeping ()
+  "Return bookkeeping, process buffer if not done already."
+  (phps-mode-lex-analyzer--process-current-buffer)
+  phps-mode-lex-analyzer--bookkeeping)
 
 (defun phps-mode-lex-analyzer--get-imenu ()
   "Return Imenu, process buffer if not done already."
@@ -922,8 +969,10 @@ SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
         (setq start end)))
     (list (nreverse line-indents) indent tag-level curly-bracket-level square-bracket-level round-bracket-level)))
 
-(defun phps-mode-lex-analyzer--process-tokens-in-string (tokens string)
-  "Generate indexes for imenu and indentation for TOKENS and STRING one pass.  Complexity: O(n)."
+(defun phps-mode-lex-analyzer--process-tokens-in-string (tokens string &optional namespace)
+  "Generate indexes for imenu and indentation for TOKENS and STRING with optional NAMESPACE one pass.  Complexity: O(n)."
+  (unless namespace
+    (setq namespace ""))
   (if tokens
       (progn
         (phps-mode-debug-message
@@ -987,6 +1036,8 @@ SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
               (in-return-curly-bracket-level nil)
               (in-return-level 0)
               (previous-token nil)
+              (previous2-token nil)
+              (previous3-token nil)
               (token nil)
               (token-start nil)
               (token-end nil)
@@ -1011,10 +1062,21 @@ SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
               (imenu-open-class-level nil)
               (imenu-in-class-name nil)
               (imenu-in-function-declaration nil)
+              (imenu-open-function-level nil)
               (imenu-in-function-name nil)
               (imenu-in-function-index nil)
               (imenu-nesting-level 0)
-              (incremental-line-number 1))
+              (incremental-line-number 1)
+              (bookkeeping (make-hash-table :test 'equal)))
+
+          ;; Super-globals
+          (puthash "$_COOKIE" t bookkeeping)
+          (puthash "$_GET" t bookkeeping)
+          (puthash "$_GLOBALS" t bookkeeping)
+          (puthash "$_POST" t bookkeeping)
+          (puthash "$_REQUEST" t bookkeeping)
+          (puthash "$_SERVER" t bookkeeping)
+          (puthash "$_SESSION" t bookkeeping)
 
           (push `(END_PARSE ,(length string) . ,(length string)) tokens)
 
@@ -1074,6 +1136,100 @@ SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
               ;; `previous-token' is maybe two tokens back
               (when token
 
+                ;; BOOKKEEPING LOGIC
+                (when (equal token 'T_VARIABLE)
+                  (let ((bookkeeping-namespace namespace)
+                        (bookkeeping-index (list token-start token-end))
+                        (bookkeeping-variable-name (substring string (1- token-start) (1- token-end)))
+                        (bookkeeping-in-assignment nil))
+
+                    ;; Build name-space
+                    (when (and imenu-in-namespace-name
+                               (or imenu-in-class-name imenu-in-function-name))
+                      (setq bookkeeping-namespace (concat bookkeeping-namespace " namespace " imenu-in-namespace-name)))
+                    (when imenu-in-class-name
+                      (setq bookkeeping-namespace (concat bookkeeping-namespace " class " imenu-in-class-name)))
+                    (when imenu-in-function-name
+                      (setq bookkeeping-namespace (concat bookkeeping-namespace " function " imenu-in-function-name))
+
+                      ;; Add $this special variable in class function scope
+                      (when imenu-in-class-name
+                        (let ((bookkeeping-method-this (concat bookkeeping-namespace " id $this")))
+                          (unless (gethash bookkeeping-method-this bookkeeping)
+                            (puthash bookkeeping-method-this t bookkeeping)))))
+
+                    (setq bookkeeping-namespace (concat bookkeeping-namespace " id " bookkeeping-variable-name))
+                    (phps-mode-debug-message
+                     (message "Bookkeeping-namespace: '%s'" bookkeeping-namespace))
+
+                    ;; Support foreach as $key, for ($i = 0), if ($a = ), while ($a = ) and do-while ($a)assignments here
+                    (when (and
+                           (string= previous-token "(")
+                           (string= next-token "=")
+                           (or (equal previous2-token 'T_IF)
+                               (equal previous2-token 'T_ELSEIF)
+                               (equal previous2-token 'T_WHILE)
+                               (equal previous2-token 'T_FOR)
+                               (equal previous2-token 'T_FOREACH)))
+                      (setq bookkeeping-in-assignment t))
+
+                    ;; Support foreach as $key => value
+                    (when (and
+                           (equal previous3-token 'T_AS)
+                           (equal previous2-token 'T_VARIABLE)
+                           (equal previous-token 'T_DOUBLE_ARROW)
+                           (string= next-token ")"))
+                      (setq bookkeeping-in-assignment t))
+
+                    ;; Stand-alone variable assignment
+                    (when (and first-token-on-line
+                               (string= next-token "="))
+                      (setq bookkeeping-in-assignment t))
+
+                    ;; Naming of value
+                    (when (equal previous-token 'T_AS)
+                      (setq bookkeeping-in-assignment t))
+
+                    ;; In function arguments
+                    (when imenu-in-function-declaration
+                      (setq bookkeeping-in-assignment t))
+
+                    ;; Class variables
+                    (when (and
+                           imenu-in-class-name
+                           (not imenu-in-function-name)
+                           (or
+                            (equal previous-token 'T_STATIC)
+                            (equal previous-token 'T_PRIVATE)
+                            (equal previous-token 'T_PROTECTED)
+                            (equal previous-token 'T_PUBLIC)
+                            (equal previous-token 'T_VAR)))
+                      (setq bookkeeping-in-assignment t))
+
+                    ;; Do we have a assignment?
+                    (when bookkeeping-in-assignment
+                      (let ((declarations (gethash bookkeeping-namespace bookkeeping)))
+                        ;; Track number of times this variable is defined
+                        (unless declarations
+                          (setq declarations 0))
+                        (setq declarations (1+ declarations))
+                        (phps-mode-debug-message
+                         (message "Bookkeeping-assignment: '%s'" bookkeeping-namespace))
+                        (puthash bookkeeping-namespace declarations bookkeeping)))
+
+                    (if (gethash bookkeeping-namespace bookkeeping)
+                        (progn
+                          (phps-mode-debug-message
+                           (message "Bookkeeping-hit: %s" bookkeeping-index))
+                          (puthash bookkeeping-index t bookkeeping))
+
+                      ;; Check super-globals
+                      (if (gethash bookkeeping-variable-name bookkeeping)
+                          (puthash bookkeeping-index t bookkeeping)
+                        (phps-mode-debug-message
+                         (message "Bookkeeping-miss: %s" bookkeeping-index))
+                        (puthash bookkeeping-index nil bookkeeping)))))
+
 
                 ;; IMENU LOGIC
 
@@ -1103,6 +1259,11 @@ SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
                           (push `(,imenu-in-class-name . ,imenu-add-list) imenu-namespace-index)
                         (push `(,imenu-in-class-name . ,imenu-add-list) imenu-index)))
                     (setq imenu-in-class-name nil))
+
+                  (when (and imenu-open-function-level
+                             (= imenu-open-function-level imenu-nesting-level)
+                             imenu-in-function-name)
+                    (setq imenu-in-function-name nil))
 
                   (setq imenu-nesting-level (1- imenu-nesting-level))))
 
@@ -1152,7 +1313,7 @@ SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
                         (if imenu-in-namespace-name
                             (push `(,imenu-in-function-name . ,imenu-in-function-index) imenu-namespace-index)
                           (push `(,imenu-in-function-name . ,imenu-in-function-index) imenu-index))))
-                    (setq imenu-in-function-name nil)
+                    (setq imenu-open-function-level imenu-nesting-level)
                     (setq imenu-in-function-declaration nil))
 
                    ((and (equal token 'T_STRING)
@@ -1965,6 +2126,8 @@ SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
                     (setq tuning-level 0))))
 
               ;; Update current token
+              (setq previous3-token previous2-token)
+              (setq previous2-token previous-token)
               (setq previous-token token)
               (setq token next-token)
               (setq token-start next-token-start)
@@ -1972,7 +2135,7 @@ SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
               (setq token-start-line-number next-token-start-line-number)
               (setq token-end-line-number next-token-end-line-number)
               (setq token-number (1+ token-number))))
-          (list (nreverse imenu-index) line-indents)))
+          (list (nreverse imenu-index) line-indents bookkeeping)))
     (list nil nil)))
 
 (defun phps-mode-lex-analyzer--indent-line ()
