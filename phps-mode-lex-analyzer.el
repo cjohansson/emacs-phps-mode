@@ -1130,24 +1130,39 @@ SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
                     (when imenu-in-class-name
                       (setq bookkeeping-namespace (concat bookkeeping-namespace " class " imenu-in-class-name)))
                     (when imenu-in-function-name
-                      (setq bookkeeping-namespace (concat bookkeeping-namespace " function " imenu-in-function-name)))
+                      (setq bookkeeping-namespace (concat bookkeeping-namespace " function " imenu-in-function-name))
+
+                      ;; Add $this special variable in class function scope
+                      (when imenu-in-class-name
+                        (let ((bookkeeping-method-this (concat bookkeeping-namespace " id $this")))
+                          (unless (gethash bookkeeping-method-this bookkeeping)
+                            (puthash bookkeeping-method-this t bookkeeping)))))
+
                     (setq bookkeeping-namespace (concat bookkeeping-namespace " id " bookkeeping-variable-name))
                     (phps-mode-debug-message
                      (message "Bookkeeping-namespace: '%s'" bookkeeping-namespace))
 
                     ;; Variable assignment stand-alone or in function argument
-                    (when (and first-token-on-line
-                               (string= next-token "="))
-                      ;; (gethash bookkeeping-namespace bookkeeping) ;; TODO Spot shadowing
-                      (phps-mode-debug-message
-                       (message "Bookkeeping-stand-alone: '%s'" bookkeeping-namespace))
-                      (puthash bookkeeping-namespace t bookkeeping))
-
-                    ;; Variable as function argument
-                    (when imenu-in-function-declaration
-                      (phps-mode-debug-message
-                       (message "Bookkeeping-function-argument: '%s'" bookkeeping-namespace))
-                      (puthash bookkeeping-namespace t bookkeeping))
+                    (when (or
+                           (and first-token-on-line
+                                (string= next-token "="))
+                           imenu-in-function-declaration
+                           (and
+                            imenu-in-class-name
+                            (not imenu-in-function-name)
+                            (or
+                             (equal previous-token 'T_STATIC)
+                             (equal previous-token 'T_PRIVATE)
+                             (equal previous-token 'T_PROTECTED)
+                             (equal previous-token 'T_PUBLIC)
+                             (equal previous-token 'T_VAR))))
+                      (let ((declarations (gethash bookkeeping-namespace bookkeeping)))
+                        (unless declarations
+                          (setq declarations 0))
+                        (setq declarations (1+ declarations))
+                        (phps-mode-debug-message
+                         (message "Bookkeeping-stand-alone: '%s'" bookkeeping-namespace))
+                        (puthash bookkeeping-namespace declarations bookkeeping)))
 
                     (if (gethash bookkeeping-namespace bookkeeping)
                         (progn
