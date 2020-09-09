@@ -219,7 +219,7 @@
               "<?php\nfunction myFunction(\n    $arg = true,\n    $arg2 = false\n) {\n    \n}"
               ))))
 
-(phps-mode-test--with-buffer
+  (phps-mode-test--with-buffer
    "$random = get_post_meta(\n                $postId,\n            '_random', // TODO Here\n            true // TODO Here\n        );"
    "Line in multi-line function call"
    (phps-mode-test-lex-analyzer--alternative-indentation-whole-buffer)
@@ -1368,7 +1368,7 @@
    (should (equal
             (phps-mode-test--hash-to-list (phps-mode-lex-analyzer--get-bookkeeping) t)
 
-             (list (list "*test* id $var" t) (list (list 7 11) t) (list (list 26 30) t) (list (list 71 76) nil)))))
+            (list (list "*test* id $var" t) (list (list 7 11) t) (list (list 26 30) t) (list (list 71 76) nil)))))
 
   (phps-mode-test--with-buffer
    "<?php\n\n$var2 = 4;\n\nfunction myFunction($var)\n{\n    $var3 = 3\n    if ($var) {\n        echo 'Hit';\n    }\n    if ($var2) {\n        echo 'Miss';\n    }\n    if ($var3) {\n        echo 'Hit';\n    }\n}\n\nfunction myFunction2($abc)\n{\n    if ($var) {\n        echo 'Miss';\n    }\n    if ($abc) {\n        echo 'Hit';\n    }\n}\n\nif ($var) {\n    echo 'Miss';\n}\nif ($var2) {\n    echo 'Hit';\n}"
@@ -1386,7 +1386,27 @@
             (phps-mode-test--hash-to-list (phps-mode-lex-analyzer--get-bookkeeping) t)
             (list (list "*test* id $var" t) (list (list 36 40) t) (list (list 85 90) nil) (list "*test* namespace myNamespaceA class myClassA function myFunctionA id $var3" t) (list (list 127 132) t) (list "*test* namespace myNamespaceA class myClassA function myFunctionA id $var4" t) (list (list 148 153) t) (list (list 177 181) nil) (list (list 244 249) nil) (list (list 312 317) t) (list (list 379 384) t) (list "*test* namespace myNamespaceA class myClassA function myFunctionB id $var5" t) (list (list 470 475) t) (list "*test* namespace myNamespaceA class myClassA function myFunctionB id $var6" t) (list (list 499 504) t) (list (list 528 532) nil) (list (list 595 600) nil) (list (list 663 668) nil) (list (list 731 736) nil) (list (list 799 804) t) (list (list 866 871) t) (list (list 942 946) t) (list (list 984 989) nil) (list (list 1028 1033) nil) (list (list 1072 1077) nil) (list (list 1116 1121) nil) (list (list 1160 1165) nil) (list "*test* id $var7" t) (list (list 1228 1233) t) (list (list 1278 1283) nil) (list "*test* namespace myNamespaceB class myClassB function myFunctionA id $var10" t) (list (list 1320 1326) t) (list "*test* namespace myNamespaceB class myClassB function myFunctionA id $var9" t) (list (list 1342 1347) t) (list (list 1371 1375) nil) (list (list 1438 1443) nil) (list (list 1506 1511) nil) (list (list 1574 1579) nil) (list (list 1642 1647) nil) (list (list 1710 1715) nil) (list (list 1778 1783) nil) (list (list 1846 1851) nil) (list (list 1914 1919) t) (list (list 1981 1987) t) (list "*test* namespace myNamespaceB class myClassB function myFunctionB id $var12" t) (list (list 2073 2079) t) (list "*test* namespace myNamespaceB class myClassB function myFunctionB id $var11" t) (list (list 2103 2109) t) (list (list 2133 2137) nil) (list (list 2200 2205) nil) (list (list 2268 2273) nil) (list (list 2336 2341) nil) (list (list 2404 2409) nil) (list (list 2471 2476) nil) (list (list 2538 2543) nil) (list (list 2606 2611) nil) (list (list 2674 2679) nil) (list (list 2742 2748) nil) (list (list 2811 2817) t) (list (list 2879 2885) t) (list (list 2956 2960) t) (list (list 2998 3003) nil) (list (list 3042 3047) nil) (list (list 3086 3091) nil) (list (list 3130 3135) nil) (list (list 3174 3179) nil) (list (list 3218 3223) t)))))
 
-  
+  (phps-mode-test--with-buffer
+   "<?php\n\n// Conditional assignments\n\n$items = array(1, 2, 3);\nforeach ($items as $item) {\n    if ($item) {\n        echo 'Hit';\n    }\n}\nforeach ($items as $key => $value) {\n    if ($key || $value) {\n        echo 'Hit';\n    }\n}\nfor ($i = 0; $i < count($items); $i++) {\n    if ($i) {\n        echo 'Hit';\n    }\n}\nif ($a = 123) {\n    if ($a) {\n        echo 'Hit';\n    }\n}\nwhile ($a = 123) {\n    if ($a) {\n        echo 'Hit';\n    }\n}\ndo {\n    echo 'Hit';\n} while ($a = 456);\n"
+   "Conditional assignments"
+   (should (equal
+            (phps-mode-test--hash-to-list (phps-mode-lex-analyzer--get-bookkeeping) t)
+            t)))
+
+  (phps-mode-test--with-buffer
+   "<?php\n\n// Super-globals\n\nif ($_GET) {\n    echo 'Hit';\n}\nif ($_POST) {\n    echo 'Hit';\n}\nif ($_COOKIE) {\n    echo 'Hit';\n}\nif ($_SESSION) {\n    echo 'Hit';\n}\nif ($_REQUEST) {\n    echo 'Hit';\n}\nif ($_GLOBALS) {\n    echo 'Hit';\n}\nif ($_SERVER) {\n    echo 'Hit';\n}\n"
+   "Super-globals"
+   (should (equal
+            (phps-mode-test--hash-to-list (phps-mode-lex-analyzer--get-bookkeeping) t)
+            t)))
+
+  (phps-mode-test--with-buffer
+   "<?php\n\n// Class properties\n\nclass myParent {}\n\nclass myClass extends myParent {\n    private $var1 = 123;\n    protected static $var2;\n    public $var3;\n    var $var4;\n    function __construct() {\n        if ($this) {\n            echo 'Hit';\n        }\n        if ($this->var1) {\n            echo 'Hit';\n        }\n        if (self::$var2) {\n            echo 'Hit';\n        }\n        if ($this->var3) {\n            echo 'Hit';\n        }\n        if ($this->var4) {\n            echo 'Hit';\n        }\n        if ($this->var5) {\n            echo 'Miss';\n        }\n        if (parent) {\n            echo 'Hit';\n        }\n    }\n}\n\nif ($this) {\n    echo 'Miss';\n}\nif (self) {\n    echo 'Miss';\n}\nif (parent) {\n    echo 'Miss';\n}"
+   "Class properties"
+   (should (equal
+            (phps-mode-test--hash-to-list (phps-mode-lex-analyzer--get-bookkeeping) t)
+            t)))
+
   )
 
 (defun phps-mode-test-lex-analyzer ()
