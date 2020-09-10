@@ -137,7 +137,7 @@
       (when (and
              (equal previous-token-name 'T_OBJECT_OPERATOR)
              (equal previous2-token-name 'T_VARIABLE))
-        (setq previous2-token-contents (buffer-substring-no-properties (car (cdr previous2-token)) (cdr (cdr previous2-token))))))
+        (setq previous2-token-contents (downcase (buffer-substring-no-properties (car (cdr previous2-token)) (cdr (cdr previous2-token)))))))
 
     ;; (message "Color token %s %s %s" token-name start end)
     (cond
@@ -1196,12 +1196,17 @@ SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
                     (when imenu-in-class-name
                       (setq bookkeeping-namespace (concat bookkeeping-namespace " class " imenu-in-class-name)))
 
+                    (when (and
+                           (equal token 'T_VARIABLE)
+                           (string= (downcase bookkeeping-variable-name) "$this"))
+                      (setq bookkeeping-variable-name "$this"))
+
                     ;; self::$abc ... here
                     (when (and
                            (equal token 'T_VARIABLE)
                            (equal previous-token 'T_PAAMAYIM_NEKUDOTAYIM))
                       (let ((bookkeeping2-variable-name
-                             (substring string (1- previous2-token-start) (1- previous2-token-end))))
+                             (downcase (substring string (1- previous2-token-start) (1- previous2-token-end)))))
                         (when (string= bookkeeping2-variable-name "self")
                           ;; (message "Found self: %s::%s" bookkeeping2-variable-name bookkeeping-variable-name)
                           (setq bookkeeping-namespace (concat bookkeeping-namespace " static id " bookkeeping-variable-name))
@@ -1210,7 +1215,7 @@ SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
                     ;; $this->... here
                     (when (equal token 'T_STRING)
                       (let ((bookkeeping2-variable-name
-                             (substring string (1- previous2-token-start) (1- previous2-token-end))))
+                             (downcase (substring string (1- previous2-token-start) (1- previous2-token-end)))))
                         ;; (message "%s->%s" bookkeeping2-variable-name bookkeeping-variable-name)
                         (when (string= bookkeeping2-variable-name "$this")
                           (setq bookkeeping-namespace (concat bookkeeping-namespace " id $" bookkeeping-variable-name))
