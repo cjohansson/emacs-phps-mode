@@ -116,14 +116,28 @@
   "Clear region of syntax coloring from START to END."
   (with-silent-modifications (set-text-properties start end nil)))
 
-(defun phps-mode-lex-analyzer--get-token-syntax-color (token)
-  "Return syntax color for TOKEN."
+(defun phps-mode-lex-analyzer--get-token-syntax-color (token &optional previous-token previous2-token)
+  "Return syntax color for TOKEN and optionally PREVIOUS-TOKEN and PREVIOUS2-TOKEN."
   ;; Syntax coloring
   ;; see https://www.gnu.org/software/emacs/manual/html_node/elisp/Faces-for-Font-Lock.html#Faces-for-Font-Lock
   (let* ((start (car (cdr token)))
-        (end (cdr (cdr token)))
-        (token-name (car token))
-        (bookkeeping-index (list start end)))
+         (end (cdr (cdr token)))
+         (token-name (car token))
+         (previous-token-name)
+         (previous2-token-name)
+         (previous2-token-contents))
+
+    ;; Catch contexts like $this->abc
+    (when (and
+           (equal token-name 'T_STRING)
+           previous-token
+           previous2-token)
+      (setq previous-token-name (car previous-token))
+      (setq previous2-token-name (car previous2-token))
+      (when (and
+             (equal previous-token-name 'T_OBJECT_OPERATOR)
+             (equal previous2-token-name 'T_VARIABLE))
+        (setq previous2-token-contents (buffer-substring-no-properties (car (cdr previous2-token)) (cdr (cdr previous2-token))))))
 
     ;; (message "Color token %s %s %s" token-name start end)
     (cond
@@ -131,10 +145,13 @@
      ((or (equal token-name 'T_VARIABLE)
           (and
            (equal token-name 'T_STRING)
-           (gethash bookkeeping-index phps-mode-lex-analyzer--bookkeeping)))
-      (if (gethash bookkeeping-index phps-mode-lex-analyzer--bookkeeping)
-          (list 'font-lock-face 'font-lock-variable-name-face)
-        (list 'font-lock-face 'font-lock-warning-face)))
+           (equal previous-token-name 'T_OBJECT_OPERATOR)
+           (equal previous2-token-name 'T_VARIABLE))
+          (string= previous2-token-contents "$this"))
+      (let ((bookkeeping-index (list start end)))
+        (if (gethash bookkeeping-index phps-mode-lex-analyzer--bookkeeping)
+            (list 'font-lock-face 'font-lock-variable-name-face)
+          (list 'font-lock-face 'font-lock-warning-face))))
 
      ((equal token-name 'T_STRING_VARNAME)
       (list 'font-lock-face 'font-lock-variable-name-face))
@@ -315,20 +332,24 @@
             old-start
             phps-mode-lex-analyzer--tokens
             (point-max)))
-          (dolist (token phps-mode-lex-analyzer--tokens)
-            (let ((start (car (cdr token)))
-                  (end (cdr (cdr token)))
-                  (token-name (car token)))
+          (let ((previous-token)
+                (previous2-token))
+            (dolist (token phps-mode-lex-analyzer--tokens)
+              (let ((start (car (cdr token)))
+                    (end (cdr (cdr token)))
+                    (token-name (car token)))
 
-              ;; Apply syntax color on token
-              (let ((token-syntax-color
-                     (phps-mode-lex-analyzer--get-token-syntax-color token)))
-                (if token-syntax-color
-                    (phps-mode-lex-analyzer--set-region-syntax-color start end token-syntax-color)
-                  (phps-mode-lex-analyzer--clear-region-syntax-color start end)))
+                ;; Apply syntax color on token
+                (let ((token-syntax-color
+                       (phps-mode-lex-analyzer--get-token-syntax-color token previous-token previous2-token)))
+                  (if token-syntax-color
+                      (phps-mode-lex-analyzer--set-region-syntax-color start end token-syntax-color)
+                    (phps-mode-lex-analyzer--clear-region-syntax-color start end)))
+                (setq previous2-token previous-token)
+                (setq previous-token token)
 
-              (semantic-lex-push-token
-               (semantic-lex-token token-name start end))))
+                (semantic-lex-push-token
+                 (semantic-lex-token token-name start end)))))
 
           (setq semantic-lex-end-point (point-max)))
 
@@ -396,13 +417,17 @@
              (phps-mode-lex-analyzer--reset-imenu)
 
              ;; Apply syntax color on tokens
-             (dolist (token phps-mode-lex-analyzer--tokens)
-               (let ((start (car (cdr token)))
-                     (end (cdr (cdr token))))
-                 (let ((token-syntax-color (phps-mode-lex-analyzer--get-token-syntax-color token)))
-                   (if token-syntax-color
-                       (phps-mode-lex-analyzer--set-region-syntax-color start end token-syntax-color)
-                     (phps-mode-lex-analyzer--clear-region-syntax-color start end)))))))))
+             (let ((previous-token)
+                   (previous2-token))
+               (dolist (token phps-mode-lex-analyzer--tokens)
+                 (let ((start (car (cdr token)))
+                       (end (cdr (cdr token))))
+                   (let ((token-syntax-color (phps-mode-lex-analyzer--get-token-syntax-color token previous-token previous2-token)))
+                     (if token-syntax-color
+                         (phps-mode-lex-analyzer--set-region-syntax-color start end token-syntax-color)
+                       (phps-mode-lex-analyzer--clear-region-syntax-color start end))))
+                 (setq previous2-token previous-token)
+                 (setq previous-token token)))))))
 
      (lambda(result)
        (when (get-buffer buffer-name)
@@ -490,15 +515,19 @@
              (phps-mode-lex-analyzer--reset-imenu)
 
              ;; Apply syntax color on tokens
-             (dolist (token phps-mode-lex-analyzer--tokens)
-               (let ((start (car (cdr token)))
-                     (end (cdr (cdr token))))
+             (let ((previous-token)
+                   (previous2-token))
+               (dolist (token phps-mode-lex-analyzer--tokens)
+                 (let ((start (car (cdr token)))
+                       (end (cdr (cdr token))))
 
-                 ;; Apply syntax color on token
-                 (let ((token-syntax-color (phps-mode-lex-analyzer--get-token-syntax-color token)))
-                   (if token-syntax-color
-                       (phps-mode-lex-analyzer--set-region-syntax-color start end token-syntax-color)
-                     (phps-mode-lex-analyzer--clear-region-syntax-color start end)))))
+                   ;; Apply syntax color on token
+                   (let ((token-syntax-color (phps-mode-lex-analyzer--get-token-syntax-color token previous-token previous2-token)))
+                     (if token-syntax-color
+                         (phps-mode-lex-analyzer--set-region-syntax-color start end token-syntax-color)
+                       (phps-mode-lex-analyzer--clear-region-syntax-color start end))))
+                 (setq previous2-token previous-token)
+                 (setq previous-token token)))
 
              (phps-mode-debug-message
               (message "Incremental tokens: %s" phps-mode-lex-analyzer--tokens))))))
