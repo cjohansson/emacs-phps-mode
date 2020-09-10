@@ -1107,15 +1107,6 @@ SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
               (incremental-line-number 1)
               (bookkeeping (make-hash-table :test 'equal)))
 
-          ;; Super-globals
-          (puthash "$_COOKIE" t bookkeeping)
-          (puthash "$_GET" t bookkeeping)
-          (puthash "$_GLOBALS" t bookkeeping)
-          (puthash "$_POST" t bookkeeping)
-          (puthash "$_REQUEST" t bookkeeping)
-          (puthash "$_SERVER" t bookkeeping)
-          (puthash "$_SESSION" t bookkeeping)
-
           (push `(END_PARSE ,(length string) . ,(length string)) tokens)
 
           ;; Iterate through all buffer tokens from beginning to end
@@ -1178,7 +1169,7 @@ SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
                 (when (or
                        (equal token 'T_VARIABLE)
                        (and
-                         ;; $this->...
+                        ;; $this->...
                         (equal token 'T_STRING)
                         (equal previous-token 'T_OBJECT_OPERATOR)
                         (equal previous2-token 'T_VARIABLE)))
@@ -1187,7 +1178,21 @@ SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
                         (bookkeeping-index (list token-start token-end))
                         (bookkeeping-variable-name (substring string (1- token-start) (1- token-end)))
                         (bookkeeping-in-assignment nil)
-                        (bookkeeping-named nil))
+                        (bookkeeping-named nil)
+                        (bookkeeping-is-superglobal nil))
+
+                    ;; Flag super-globals
+                    (when (and (equal token 'T_VARIABLE)
+                               (or
+                                (equal bookkeeping-variable-name "$_COOKIE")
+                                (equal bookkeeping-variable-name "$_GET")
+                                (equal bookkeeping-variable-name "$_GLOBALS")
+                                (equal bookkeeping-variable-name "$_POST")
+                                (equal bookkeeping-variable-name "$_REQUEST")
+                                (equal bookkeeping-variable-name "$_SERVER")
+                                (equal bookkeeping-variable-name "$_SESSION")
+                                (equal bookkeeping-variable-name "$_FILES")))
+                      (setq bookkeeping-is-superglobal t))
 
                     ;; Build name-space
                     (when (and imenu-in-namespace-name
@@ -1300,15 +1305,16 @@ SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
                          (message "Bookkeeping-assignment: '%s'" bookkeeping-namespace))
                         (puthash bookkeeping-namespace declarations bookkeeping)))
 
-                    (if (gethash bookkeeping-namespace bookkeeping)
-                        (progn
-                          (phps-mode-debug-message
-                           (message "Bookkeeping-hit: %s" bookkeeping-index))
-                          (puthash bookkeeping-index t bookkeeping))
+                    (if bookkeeping-is-superglobal
+                        ;; Super-globals always hit
+                        (puthash bookkeeping-index t bookkeeping)
 
-                      ;; Check super-globals
-                      (if (gethash bookkeeping-variable-name bookkeeping)
-                          (puthash bookkeeping-index t bookkeeping)
+                      ;; Check scoped variable
+                      (if (gethash bookkeeping-namespace bookkeeping)
+                          (progn
+                            (phps-mode-debug-message
+                             (message "Bookkeeping-hit: %s" bookkeeping-index))
+                            (puthash bookkeeping-index t bookkeeping))
                         (phps-mode-debug-message
                          (message "Bookkeeping-miss: %s" bookkeeping-index))
                         (puthash bookkeeping-index nil bookkeeping)))))
