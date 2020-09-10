@@ -1,4 +1,24 @@
-;;; phps-mode-parser-grammar-macro.el
+;;; phps-mode-parser-grammar-macro.el --- Potential grammar macros for parser  -*- lexical-binding:t -*-
+
+;; Copyright (C) 2018-2020  Free Software Foundation, Inc.
+
+;; This program is free software; you can redistribute it and/or
+;; modify it under the terms of the GNU General Public License as
+;; published by the Free Software Foundation; either version 2, or (at
+;; your option) any later version.
+
+;; This program is distributed in the hope that it will be useful, but
+;; WITHOUT ANY WARRANTY; without even the implied warranty of
+;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+;; General Public License for more details.
+
+;; You should have received a copy of the GNU General Public License
+;; along with GNU Emacs.  If not, see <https://www.gnu.org/licenses/>.
+
+;;; Commentary:
+
+;;; Code:
+
 
 (require 'semantic/wisent/grammar)
 
@@ -46,7 +66,7 @@
   `(wisent-raw-tag
     (semantic-tag ,subject 'ZEND_AST_LIST_RTRIM)))
 
-(defun phps-mode-parser-grammar-macro-ZEND_AST_CREATE_LIST (size type &rest elements)
+(defun phps-mode-parser-grammar-macro-ZEND_AST_CREATE_LIST (size type &rest _elements)
   `(wisent-raw-tag
     (semantic-tag "" ,type :elements @elements :size ,size)))
 
@@ -61,7 +81,7 @@
   `(wisent-raw-tag
     (semantic-tag ,object 'ZEND_AST_CLASS_CONST_OR_NAME :member ,member)))
 
-(defun phps-mode-parser-grammar-macro-ZVAL_INTERNED_STR (callback string)
+(defun phps-mode-parser-grammar-macro-ZVAL_INTERNED_STR (_callback string)
   "Convert string to symbol."
   `(let ((symbol ',string))
      (funcall callback symbol)))
