@@ -1382,14 +1382,6 @@
             (phps-mode-test--hash-to-list (phps-mode-lex-analyzer--get-bookkeeping) t)
             (list (list "$_COOKIE" t) (list "$_GET" t) (list "$_GLOBALS" t) (list "$_POST" t) (list "$_REQUEST" t) (list "$_SERVER" t) (list "$_SESSION" t) (list (list 30 35) t) (list (list 61 67) t) (list (list 93 101) t) (list (list 127 136) t) (list (list 162 171) t) (list (list 197 206) t) (list (list 232 240) t)))))
 
-  ;; TODO Should add support for self::stuff too
-  (phps-mode-test--with-buffer
-   "<?php\n\n// Class properties\n\nclass myParent {}\n\nclass myClass extends myParent {\n    private $var1 = 123;\n    protected static $var2;\n    public $var3;\n    var $var4;\n    function __construct() {\n        if ($this) {\n            echo 'Hit';\n        }\n        if ($this->var1) {\n            echo 'Hit';\n        }\n        if (self::$var2) {\n            echo 'Hit';\n        }\n        if ($this->var3) {\n            echo 'Hit';\n        }\n        if ($this->var4) {\n            echo 'Hit';\n        }\n        if ($this->var5) {\n            echo 'Miss';\n        }\n        if (parent) {\n            echo 'Hit';\n        }\n    }\n}\n\nif ($this) {\n    echo 'Miss';\n}\nif (self) {\n    echo 'Miss';\n}\nif (parent) {\n    echo 'Miss';\n}"
-   "Class properties"
-   (should (equal
-            (phps-mode-test--hash-to-list (phps-mode-lex-analyzer--get-bookkeeping) t)
-            (list (list "$_COOKIE" t) (list "$_GET" t) (list "$_GLOBALS" t) (list "$_POST" t) (list "$_REQUEST" t) (list "$_SERVER" t) (list "$_SESSION" t) (list " class myParent id $var1" 1) (list (list 93 98) t) (list " class myParent id $var2" 1) (list (list 127 132) t) (list " class myParent id $var3" 1) (list (list 145 150) t) (list " class myParent id $var4" 1) (list (list 160 165) t) (list " class myParent function __construct id $this" t) (list (list 208 213) t) (list (list 263 268) t) (list (list 330 335) nil) (list (list 385 390) t) (list (list 446 451) t) (list (list 507 512) t) (list (list 626 631) nil)))))
-
   (phps-mode-test--with-buffer
    "<?php\n\nnamespace myNamespaceA {\n    $var = 123;\n    class myClassA {\n        private $var2 = 123;\n        function myFunctionA($var3) {\n            $var4 = 123;\n            if ($var) {\n                echo 'Miss';\n            }\n            if ($var2) {\n                echo 'Miss';\n            }\n            if ($var3) {\n                echo 'Hit';\n            }\n            if ($var4) {\n                echo 'Hit';\n            }\n        }\n\n        function myFunctionB($var5)\n        {\n            $var6 = 123;\n            if ($var) {\n                echo 'Miss';\n            }\n            if ($var2) {\n                echo 'Miss';\n            }\n            if ($var3) {\n                echo 'Miss';\n            }\n            if ($var4) {\n                echo 'Miss';\n            }\n            if ($var5) {\n                echo 'Hit';\n            }\n            if ($var6) {\n                echo 'Hit';\n            }\n        }\n    }\n\n    if ($var) {\n        echo 'Hit';\n    }\n    if ($var2) {\n        echo 'Miss';\n    }\n    if ($var3) {\n        echo 'Miss';\n    }\n    if ($var4) {\n        echo 'Miss';\n    }\n    if ($var5) {\n        echo 'Miss';\n    }\n    if ($var6) {\n        echo 'Miss';\n    }\n}\n\nnamespace myNamespaceB {\n    $var7 = 123;\n    class myClassB {\n        private $var8 = 123;\n        function myFunctionA($var10) {\n            $var9 = 123;\n            if ($var) {\n                echo 'Miss';\n            }\n            if ($var2) {\n                echo 'Miss';\n            }\n            if ($var3) {\n                echo 'Miss';\n            }\n            if ($var4) {\n                echo 'Miss';\n            }\n            if ($var5) {\n                echo 'Miss';\n            }\n            if ($var6) {\n                echo 'Miss';\n            }\n            if ($var7) {\n                echo 'Miss';\n            }\n            if ($var8) {\n                echo 'Miss';\n            }\n            if ($var9) {\n                echo 'Hit';\n            }\n            if ($var10) {\n                echo 'Hit';\n            }\n        }\n\n        function myFunctionB($var12)\n        {\n            $var11 = 123;\n            if ($var) {\n                echo 'Miss';\n            }\n            if ($var2) {\n                echo 'Miss';\n            }\n            if ($var3) {\n                echo 'Miss';\n            }\n            if ($var4) {\n                echo 'Miss';\n            }\n            if ($var5) {\n                echo 'Hit';\n            }\n            if ($var6) {\n                echo 'Hit';\n            }\n            if ($var7) {\n                echo 'Miss';\n            }\n            if ($var8) {\n                echo 'Miss';\n            }\n            if ($var9) {\n                echo 'Miss';\n            }\n            if ($var10) {\n                echo 'Miss';\n            }\n            if ($var11) {\n                echo 'Hit';\n            }\n            if ($var12) {\n                echo 'Hit';\n            }\n        }\n    }\n\n    if ($var) {\n        echo 'Hit';\n    }\n    if ($var2) {\n        echo 'Miss';\n    }\n    if ($var3) {\n        echo 'Miss';\n    }\n    if ($var4) {\n        echo 'Miss';\n    }\n    if ($var5) {\n        echo 'Miss';\n    }\n    if ($var6) {\n        echo 'Miss';\n    }\n    if ($var7) {\n        echo 'Hit';\n    }\n}\n"
    "Bookkeeping in maximum level with namespaces, classes and functions."
@@ -1404,11 +1396,34 @@
             (phps-mode-test--hash-to-list (phps-mode-lex-analyzer--get-bookkeeping) t)
             (list (list "$_COOKIE" t) (list "$_GET" t) (list "$_GLOBALS" t) (list "$_POST" t) (list "$_REQUEST" t) (list "$_SERVER" t) (list "$_SESSION" t) (list " id $items" 1) (list (list 36 42) t) (list (list 70 76) t) (list " id $item" 1) (list (list 80 85) t) (list (list 97 102) t) (list (list 143 149) t) (list " id $key" 1) (list (list 153 157) t) (list " id $value" 1) (list (list 161 167) t) (list (list 179 183) t) (list (list 187 193) t) (list " id $i" 1) (list (list 230 232) t) (list (list 238 240) t) (list (list 249 255) t) (list (list 258 260) t) (list (list 274 276) t) (list " id $a" 1) (list (list 312 314) t) (list (list 332 334) t) (list " id $b" 1) (list (list 373 375) t) (list (list 393 395) t) (list " id $c" 1) (list (list 457 459) t)))))
 
+  (phps-mode-test--with-buffer
+   "<?php\n\n// Class properties\n\nclass myParent {}\n\nclass myClass extends myParent {\n    private $var1 = 123;\n    protected static $var2;\n    public $var3;\n    var $var4;\n    function __construct() {\n        if ($this) {\n            echo 'Hit';\n        }\n        if ($this->var1) {\n            echo 'Hit';\n        }\n        if (self::$var1) {\n            echo 'Miss';\n        }\n        if (self::$var2) {\n            echo 'Hit';\n        }\n        if ($this->var3) {\n            echo 'Hit';\n        }\n        if ($this->var4) {\n            echo 'Hit';\n        }\n        if ($this->var5) {\n            echo 'Miss';\n        }\n        if (parent) {\n            echo 'Hit';\n        }\n    }\n}\n\nif ($this) {\n    echo 'Miss';\n}\nif (self) {\n    echo 'Miss';\n}\nif (parent) {\n    echo 'Miss';\n}"
+   "Class properties"
+   ;; (message "Bookkeeping: %s" (phps-mode-test--hash-to-list (phps-mode-lex-analyzer--get-bookkeeping) t))
+   (should (equal
+            (phps-mode-test--hash-to-list (phps-mode-lex-analyzer--get-bookkeeping) t)
+            (list (list "$_COOKIE" t) (list "$_GET" t) (list "$_GLOBALS" t) (list "$_POST" t) (list "$_REQUEST" t) (list "$_SERVER" t) (list "$_SESSION" t) (list " class myParent id $var1" 1) (list (list 93 98) t) (list " class myParent static id $var2" 1) (list (list 127 132) t) (list " class myParent id $var3" 1) (list (list 145 150) t) (list " class myParent id $var4" 1) (list (list 160 165) t) (list " class myParent function __construct id $this" t) (list (list 208 213) t) (list (list 263 268) t) (list (list 270 274) t) (list (list 330 335) nil) (list (list 392 397) t) (list (list 447 452) t) (list (list 454 458) t) (list (list 508 513) t) (list (list 515 519) t) (list (list 569 574) t) (list (list 576 580) nil) (list (list 688 693) nil)))))
+
+  (phps-mode-test--with-buffer
+   "<?php\n\ntry {\n    \n} catch (\Exception $e) {\n    if ($e) {\n        echo 'Hit';\n    }\n}\n\nif ($e) {\n    echo 'Miss';\n}\n"
+   "Try catch variable assignment"
+   (should (equal
+            (phps-mode-test--hash-to-list (phps-mode-lex-analyzer--get-bookkeeping) t)
+            t)))
+
+  (phps-mode-test--with-buffer
+   "$example = function ($test) {\n    if ($test) {\n        echo 'Hit';\n    }\n};\nif ($test) {\n    echo 'Miss';\n}"
+   "Anonymous function variable assignment"
+   (should (equal
+            (phps-mode-test--hash-to-list (phps-mode-lex-analyzer--get-bookkeeping) t)
+            t)))
+
   )
 
 (defun phps-mode-test-lex-analyzer ()
   "Run test for functions."
   ;; (setq debug-on-error t)
+  (phps-mode-test-lex-analyzer--bookkeeping)
   (phps-mode-test-lex-analyzer--process-changes)
   (phps-mode-test-lex-analyzer--alternative-indentation)
   (phps-mode-test-lex-analyzer--move-lines-indent)
@@ -1425,8 +1440,7 @@
   (phps-mode-test-lex-analyzer--imenu)
   (phps-mode-test-lex-analyzer--get-moved-imenu)
   (phps-mode-test-lex-analyzer--comment-uncomment-region)
-  (phps-mode-test-lex-analyzer--move-lines-indent)
-  (phps-mode-test-lex-analyzer--bookkeeping))
+  (phps-mode-test-lex-analyzer--move-lines-indent))
 
 (phps-mode-test-lex-analyzer)
 

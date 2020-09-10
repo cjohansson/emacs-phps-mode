@@ -120,18 +120,21 @@
   "Return syntax color for TOKEN."
   ;; Syntax coloring
   ;; see https://www.gnu.org/software/emacs/manual/html_node/elisp/Faces-for-Font-Lock.html#Faces-for-Font-Lock
-  (let ((start (car (cdr token)))
+  (let* ((start (car (cdr token)))
         (end (cdr (cdr token)))
-        (token-name (car token)))
+        (token-name (car token))
+        (bookkeeping-index (list start end)))
 
     ;; (message "Color token %s %s %s" token-name start end)
     (cond
 
-     ((equal token-name 'T_VARIABLE)
-      (let ((bookkeeping-index (list start end)))
-        (if (gethash bookkeeping-index phps-mode-lex-analyzer--bookkeeping)
-            (list 'font-lock-face 'font-lock-variable-name-face)
-          (list 'font-lock-face 'font-lock-warning-face))))
+     ((or (equal token-name 'T_VARIABLE)
+          (and
+           (equal token-name 'T_STRING)
+           (gethash bookkeeping-index phps-mode-lex-analyzer--bookkeeping)))
+      (if (gethash bookkeeping-index phps-mode-lex-analyzer--bookkeeping)
+          (list 'font-lock-face 'font-lock-variable-name-face)
+        (list 'font-lock-face 'font-lock-warning-face)))
 
      ((equal token-name 'T_STRING_VARNAME)
       (list 'font-lock-face 'font-lock-variable-name-face))
@@ -1036,8 +1039,14 @@ SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
               (in-return-curly-bracket-level nil)
               (in-return-level 0)
               (previous-token nil)
+              (previous-token-end nil)
+              (previous-token-start nil)
               (previous2-token nil)
+              (previous2-token-end nil)
+              (previous2-token-start nil)
               (previous3-token nil)
+              (previous3-token-end nil)
+              (previous3-token-start nil)
               (token nil)
               (token-start nil)
               (token-end nil)
@@ -1137,11 +1146,19 @@ SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
               (when token
 
                 ;; BOOKKEEPING LOGIC
-                (when (equal token 'T_VARIABLE)
+                (when (or
+                       (equal token 'T_VARIABLE)
+                       (and
+                         ;; $this->...
+                        (equal token 'T_STRING)
+                        (equal previous-token 'T_OBJECT_OPERATOR)
+                        (equal previous2-token 'T_VARIABLE)))
+
                   (let ((bookkeeping-namespace namespace)
                         (bookkeeping-index (list token-start token-end))
                         (bookkeeping-variable-name (substring string (1- token-start) (1- token-end)))
-                        (bookkeeping-in-assignment nil))
+                        (bookkeeping-in-assignment nil)
+                        (bookkeeping-named nil))
 
                     ;; Build name-space
                     (when (and imenu-in-namespace-name
@@ -1149,21 +1166,48 @@ SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
                       (setq bookkeeping-namespace (concat bookkeeping-namespace " namespace " imenu-in-namespace-name)))
                     (when imenu-in-class-name
                       (setq bookkeeping-namespace (concat bookkeeping-namespace " class " imenu-in-class-name)))
-                    (when imenu-in-function-name
-                      (setq bookkeeping-namespace (concat bookkeeping-namespace " function " imenu-in-function-name))
 
-                      ;; Add $this special variable in class function scope
-                      (when imenu-in-class-name
-                        (let ((bookkeeping-method-this (concat bookkeeping-namespace " id $this")))
-                          (unless (gethash bookkeeping-method-this bookkeeping)
-                            (puthash bookkeeping-method-this t bookkeeping)))))
+                    ;; self::$abc ... here
+                    (when (and
+                           (equal token 'T_VARIABLE)
+                           (equal previous-token 'T_PAAMAYIM_NEKUDOTAYIM))
+                      (let ((bookkeeping2-variable-name
+                             (substring string (1- previous2-token-start) (1- previous2-token-end))))
+                        (when (string= bookkeeping2-variable-name "self")
+                          ;; (message "Found self: %s::%s" bookkeeping2-variable-name bookkeeping-variable-name)
+                          (setq bookkeeping-namespace (concat bookkeeping-namespace " static id " bookkeeping-variable-name))
+                          (setq bookkeeping-named t))))
 
-                    (setq bookkeeping-namespace (concat bookkeeping-namespace " id " bookkeeping-variable-name))
+                    ;; $this->... here
+                    (when (equal token 'T_STRING)
+                      (let ((bookkeeping2-variable-name
+                             (substring string (1- previous2-token-start) (1- previous2-token-end))))
+                        ;; (message "%s->%s" bookkeeping2-variable-name bookkeeping-variable-name)
+                        (when (string= bookkeeping2-variable-name "$this")
+                          (setq bookkeeping-namespace (concat bookkeeping-namespace " id $" bookkeeping-variable-name))
+                          ;; (message "Was here: '%s" bookkeeping-namespace)
+                          (setq bookkeeping-named t))))
+
+                    (unless bookkeeping-named
+                      (when imenu-in-function-name
+                        (setq bookkeeping-namespace (concat bookkeeping-namespace " function " imenu-in-function-name))
+
+                        ;; Add $this special variable in class function scope
+                        (when imenu-in-class-name
+                          (let ((bookkeeping-method-this (concat bookkeeping-namespace " id $this")))
+                            (unless (gethash bookkeeping-method-this bookkeeping)
+                              (puthash bookkeeping-method-this t bookkeeping))))))
+
+                    (unless bookkeeping-named
+                      (when (equal previous-token 'T_STATIC)
+                        (setq bookkeeping-namespace (concat bookkeeping-namespace " static")))
+                      (setq bookkeeping-namespace (concat bookkeeping-namespace " id " bookkeeping-variable-name)))
                     (phps-mode-debug-message
                      (message "Bookkeeping-namespace: '%s'" bookkeeping-namespace))
 
                     ;; Support foreach as $key, for ($i = 0), if ($a = ), while ($a = ) and do-while ($a)assignments here
                     (when (and
+                           (equal token 'T_VARIABLE)
                            (string= previous-token "(")
                            (string= next-token "=")
                            (or (equal previous2-token 'T_IF)
@@ -1175,6 +1219,7 @@ SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
 
                     ;; Support foreach as $key => value
                     (when (and
+                           (equal token 'T_VARIABLE)
                            (equal previous3-token 'T_AS)
                            (equal previous2-token 'T_VARIABLE)
                            (equal previous-token 'T_DOUBLE_ARROW)
@@ -1182,16 +1227,20 @@ SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
                       (setq bookkeeping-in-assignment t))
 
                     ;; Stand-alone variable assignment
-                    (when (and first-token-on-line
+                    (when (and (equal token 'T_VARIABLE)
+                               first-token-on-line
                                (string= next-token "="))
                       (setq bookkeeping-in-assignment t))
 
                     ;; Naming of value
-                    (when (equal previous-token 'T_AS)
+                    (when (and
+                           (equal token 'T_VARIABLE)
+                           (equal previous-token 'T_AS))
                       (setq bookkeeping-in-assignment t))
 
                     ;; In function arguments
-                    (when imenu-in-function-declaration
+                    (when (and imenu-in-function-declaration
+                               (equal token 'T_VARIABLE))
                       (setq bookkeeping-in-assignment t))
 
                     ;; Class variables
@@ -2127,8 +2176,14 @@ SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
 
               ;; Update current token
               (setq previous3-token previous2-token)
+              (setq previous3-token-end previous2-token-end)
+              (setq previous3-token-start previous2-token-start)
               (setq previous2-token previous-token)
+              (setq previous2-token-end previous-token-end)
+              (setq previous2-token-start previous-token-start)
               (setq previous-token token)
+              (setq previous-token-end token-end)
+              (setq previous-token-start token-start)
               (setq token next-token)
               (setq token-start next-token-start)
               (setq token-end next-token-end)
