@@ -1105,6 +1105,9 @@ SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
               (imenu-in-function-index nil)
               (imenu-nesting-level 0)
               (incremental-line-number 1)
+              (in-catch-declaration)
+              (in-catch-number 0)
+              (in-catch-nesting-level)
               (bookkeeping (make-hash-table :test 'equal)))
 
           (push `(END_PARSE ,(length string) . ,(length string)) tokens)
@@ -1235,12 +1238,17 @@ SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
                         (when imenu-in-class-name
                           (let ((bookkeeping-method-this (concat bookkeeping-namespace " id $this")))
                             (unless (gethash bookkeeping-method-this bookkeeping)
-                              (puthash bookkeeping-method-this t bookkeeping))))))
+                              (puthash bookkeeping-method-this t bookkeeping)))))
+
+                      ;; Catch level
+                      (when in-catch-nesting-level
+                        (setq bookkeeping-namespace (format "%s catch %s" bookkeeping-namespace in-catch-number))))
 
                     (unless bookkeeping-named
                       (when (equal previous-token 'T_STATIC)
                         (setq bookkeeping-namespace (concat bookkeeping-namespace " static")))
                       (setq bookkeeping-namespace (concat bookkeeping-namespace " id " bookkeeping-variable-name)))
+
                     (phps-mode-debug-message
                      (message "Bookkeeping-namespace: '%s'" bookkeeping-namespace))
 
@@ -1275,6 +1283,12 @@ SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
                     (when (and
                            (equal token 'T_VARIABLE)
                            (equal previous-token 'T_AS))
+                      (setq bookkeeping-in-assignment t))
+
+                    ;; In catch declaration
+                    (when (and
+                           (equal token 'T_VARIABLE)
+                           in-catch-declaration)
                       (setq bookkeeping-in-assignment t))
 
                     ;; In function arguments
@@ -1318,6 +1332,19 @@ SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
                         (phps-mode-debug-message
                          (message "Bookkeeping-miss: %s" bookkeeping-index))
                         (puthash bookkeeping-index nil bookkeeping)))))
+
+                ;; Keep track of open catch blocks
+                (when (equal token 'T_CATCH)
+                  (setq in-catch-declaration t)
+                  (setq in-catch-number (1+ in-catch-number))
+                  (push (1+ curly-bracket-level) in-catch-nesting-level))
+                (when (and in-catch-declaration
+                           (equal token "{"))
+                  (setq in-catch-declaration nil))
+                (when (and in-catch-nesting-level
+                           (string= token "}")
+                           (equal curly-bracket-level (car in-catch-nesting-level)))
+                  (pop in-catch-nesting-level))
 
 
                 ;; IMENU LOGIC

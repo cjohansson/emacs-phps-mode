@@ -1409,11 +1409,11 @@
    "Try catch variable assignment"
    (should (equal
             (phps-mode-test--hash-to-list (phps-mode-lex-analyzer--get-bookkeeping) t)
-            t)))
+            (list (list " catch 1 id $e" 1) (list (list 38 40) t) (list (list 52 54) t) (list (list 91 93) nil)))))
 
   (phps-mode-test--with-buffer
-   "$example = function ($test) {\n    if ($test) {\n        echo 'Hit';\n    }\n};\nif ($test) {\n    echo 'Miss';\n}"
-   "Anonymous function variable assignment"
+   "<?php\n\n$example = function ($test) {\n    if ($test) {\n        echo 'Hit';\n    }\n};\n$example2 = function ($test2) use ($example) {\n    if ($test2) {\n        echo 'Hit';\n    }\n    if ($example) {\n        echo 'Hit';\n    }\n    if ($example2) {\n        echo 'Miss';\n    }\n    if ($example3) {\n        echo 'Miss';\n    }\n};\nif ($test) {\n    echo 'Miss';\n}"
+   "Anonymous function variable assignments"
    (should (equal
             (phps-mode-test--hash-to-list (phps-mode-lex-analyzer--get-bookkeeping) t)
             t)))
