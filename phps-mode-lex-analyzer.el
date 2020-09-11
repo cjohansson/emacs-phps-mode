@@ -1104,8 +1104,6 @@ SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
               (imenu-nesting-level 0)
               (incremental-line-number 1)
               (in-catch-declaration)
-              (in-catch-number 0)
-              (in-catch-nesting-level)
               (in-anonymous-function-declaration)
               (in-anonymous-function-number 0)
               (in-anonymous-function-nesting-level)
@@ -1243,11 +1241,7 @@ SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
 
                       ;; Anonymous function level
                       (when in-anonymous-function-nesting-level
-                        (setq bookkeeping-namespace (format "%s anonymous function %s" bookkeeping-namespace in-anonymous-function-number)))
-
-                      ;; Catch level
-                      (when in-catch-nesting-level
-                        (setq bookkeeping-namespace (format "%s catch %s" bookkeeping-namespace in-catch-number))))
+                        (setq bookkeeping-namespace (format "%s anonymous function %s" bookkeeping-namespace in-anonymous-function-number))))
 
                     (unless bookkeeping-named
                       (when (equal previous-token 'T_STATIC)
@@ -1345,16 +1339,10 @@ SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
 
                 ;; Keep track of open catch blocks for bookkeeping
                 (when (equal token 'T_CATCH)
-                  (setq in-catch-declaration t)
-                  (setq in-catch-number (1+ in-catch-number))
-                  (push (1+ curly-bracket-level) in-catch-nesting-level))
+                  (setq in-catch-declaration t))
                 (when (and in-catch-declaration
                            (equal token "{"))
                   (setq in-catch-declaration nil))
-                (when (and in-catch-nesting-level
-                           (string= token "}")
-                           (equal curly-bracket-level (car in-catch-nesting-level)))
-                  (pop in-catch-nesting-level))
 
                 ;; Keep track of anonymous functions for bookkeeping
                 (when (and
