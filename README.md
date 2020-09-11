@@ -28,10 +28,11 @@ This mode does not require PHP installed on your computer because it has a built
 * A interactive function that can be used interactively to format buffers `(phps-mode-format-buffer)`
 * Support for asynchronous lexer via processes (`async.el`) or threads
 * Mode-line asynchronous status
+* Bookkeeping in lexical-analysis, showing defined and undefined variables via syntax coloring
 
 ## Roadmap
 
-* 1. Wisent Parser support
+* 1. LALR(1) Parser support
 * 2. Improved token-blind indentation (alternative and inline control structures)
 * 3. Other enhancements
 

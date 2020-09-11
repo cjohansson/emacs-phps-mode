@@ -1,4 +1,4 @@
-;;; phps-mode-parser-grammar-macro.el --- ???  -*- lexical-binding:t -*-
+;;; phps-mode-parser-grammar-macro.el --- Potential grammar macros for parser  -*- lexical-binding:t -*-
 
 ;; Copyright (C) 2018-2020  Free Software Foundation, Inc.
 
@@ -15,7 +15,10 @@
 ;; You should have received a copy of the GNU General Public License
 ;; along with GNU Emacs.  If not, see <https://www.gnu.org/licenses/>.
 
+;;; Commentary:
+
 ;;; Code:
+
 
 (require 'semantic/wisent/grammar)
 
@@ -78,7 +81,7 @@
   `(wisent-raw-tag
     (semantic-tag ,object 'ZEND_AST_CLASS_CONST_OR_NAME :member ,member)))
 
-(defun phps-mode-parser-grammar-macro-ZVAL_INTERNED_STR (callback string)
+(defun phps-mode-parser-grammar-macro-ZVAL_INTERNED_STR (_callback string)
   "Convert string to symbol."
   `(let ((symbol ',string))
      (funcall ,callback symbol)))

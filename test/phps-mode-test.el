@@ -35,12 +35,14 @@
          (incremental-imenu nil)
          (incremental-indent nil)
          (incremental-buffer nil)
+         (incremental-bookkeeping nil)
          (test-buffer-initial (generate-new-buffer "test-initial"))
          (initial-states nil)
          (initial-tokens nil)
          (initial-imenu nil)
          (initial-indent nil)
-         (initial-buffer nil))
+         (initial-buffer nil)
+         (initial-bookkeeping nil))
 
      ;; Setup incremental buffer
      (switch-to-buffer test-buffer-incremental)
@@ -51,12 +53,12 @@
      (phps-mode)
      ,@change
      (phps-mode-lex-analyzer--process-changes test-buffer-incremental)
-     (phps-mode-lex-analyzer--process-current-buffer)
      (setq incremental-states phps-mode-lex-analyzer--states)
      (setq incremental-tokens phps-mode-lex-analyzer--tokens)
      (setq incremental-imenu phps-mode-lex-analyzer--imenu)
      (setq incremental-indent (phps-mode-test--hash-to-list phps-mode-lex-analyzer--lines-indent))
      (setq incremental-buffer (buffer-substring (point-min) (point-max)))
+     (setq incremental-bookkeeping (phps-mode-test--hash-to-list phps-mode-lex-analyzer--bookkeeping t))
 
      ;; Setup incremental buffer
      (switch-to-buffer test-buffer-initial)
@@ -65,12 +67,12 @@
      (phps-mode-debug-message
        (message "\nTesting initial buffer '%s':\n'%s'\n" ,title incremental-buffer))
      (phps-mode)
-     (phps-mode-lex-analyzer--process-current-buffer)
      (setq initial-states phps-mode-lex-analyzer--states)
      (setq initial-tokens phps-mode-lex-analyzer--tokens)
      (setq initial-imenu phps-mode-lex-analyzer--imenu)
      (setq initial-indent (phps-mode-test--hash-to-list phps-mode-lex-analyzer--lines-indent))
      (setq initial-buffer (buffer-substring (point-min) (point-max)))
+     (setq initial-bookkeeping (phps-mode-test--hash-to-list phps-mode-lex-analyzer--bookkeeping t))
 
      ;; Run tests
      (phps-mode-debug-message
@@ -84,6 +86,7 @@
      ;; (message "Incremental indent: %s\n" incremental-indent)
      (should (equal initial-indent incremental-indent))
      (should (equal initial-imenu incremental-imenu))
+     (should (equal initial-bookkeeping incremental-bookkeeping))
 
      (kill-buffer test-buffer-incremental)
      (kill-buffer test-buffer-initial)
@@ -105,8 +108,8 @@
      (when ,title
        (message "\nPassed tests for '%s'\n" ,title))))
 
-(defun phps-mode-test--hash-to-list (hash-table)
-  "Return a list that represent the HASH-TABLE.  Each element is a list: (list key value)."
+(defun phps-mode-test--hash-to-list (hash-table &optional un-sorted)
+  "Return a list that represent the HASH-TABLE.  Each element is a list: (list key value), optionally UN-SORTED."
   (let (result)
     (if (hash-table-p hash-table)
         (progn
@@ -114,7 +117,9 @@
            (lambda (k v)
              (push (list k v) result))
            hash-table)
-          (sort (nreverse result) (lambda (a b) (< (car a) (car b)))))
+          (if un-sorted
+              (nreverse result)
+            (sort (nreverse result) (lambda (a b) (< (car a) (car b))))))
       nil)))
 
 (transient-mark-mode t)
