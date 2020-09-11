@@ -146,8 +146,8 @@
           (and
            (equal token-name 'T_STRING)
            (equal previous-token-name 'T_OBJECT_OPERATOR)
-           (equal previous2-token-name 'T_VARIABLE))
-          (string= previous2-token-contents "$this"))
+           (equal previous2-token-name 'T_VARIABLE)
+           (string= previous2-token-contents "$this")))
       (let ((bookkeeping-index (list start end)))
         (if (gethash bookkeeping-index phps-mode-lex-analyzer--bookkeeping)
             (list 'font-lock-face 'font-lock-variable-name-face)
