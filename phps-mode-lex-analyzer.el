@@ -116,18 +116,38 @@
   "Clear region of syntax coloring from START to END."
   (with-silent-modifications (set-text-properties start end nil)))
 
-(defun phps-mode-lex-analyzer--get-token-syntax-color (token)
-  "Return syntax color for TOKEN."
+(defun phps-mode-lex-analyzer--get-token-syntax-color (token &optional previous-token previous2-token)
+  "Return syntax color for TOKEN and optionally PREVIOUS-TOKEN and PREVIOUS2-TOKEN."
   ;; Syntax coloring
   ;; see https://www.gnu.org/software/emacs/manual/html_node/elisp/Faces-for-Font-Lock.html#Faces-for-Font-Lock
-  (let ((start (car (cdr token)))
-        (end (cdr (cdr token)))
-        (token-name (car token)))
+  (let* ((start (car (cdr token)))
+         (end (cdr (cdr token)))
+         (token-name (car token))
+         (previous-token-name)
+         (previous2-token-name)
+         (previous2-token-contents))
+
+    ;; Catch contexts like $this->abc
+    (when (and
+           (equal token-name 'T_STRING)
+           previous-token
+           previous2-token)
+      (setq previous-token-name (car previous-token))
+      (setq previous2-token-name (car previous2-token))
+      (when (and
+             (equal previous-token-name 'T_OBJECT_OPERATOR)
+             (equal previous2-token-name 'T_VARIABLE))
+        (setq previous2-token-contents (downcase (buffer-substring-no-properties (car (cdr previous2-token)) (cdr (cdr previous2-token)))))))
 
     ;; (message "Color token %s %s %s" token-name start end)
     (cond
 
-     ((equal token-name 'T_VARIABLE)
+     ((or (equal token-name 'T_VARIABLE)
+          (and
+           (equal token-name 'T_STRING)
+           (equal previous-token-name 'T_OBJECT_OPERATOR)
+           (equal previous2-token-name 'T_VARIABLE)
+           (string= previous2-token-contents "$this")))
       (let ((bookkeeping-index (list start end)))
         (if (gethash bookkeeping-index phps-mode-lex-analyzer--bookkeeping)
             (list 'font-lock-face 'font-lock-variable-name-face)
@@ -312,20 +332,24 @@
             old-start
             phps-mode-lex-analyzer--tokens
             (point-max)))
-          (dolist (token phps-mode-lex-analyzer--tokens)
-            (let ((start (car (cdr token)))
-                  (end (cdr (cdr token)))
-                  (token-name (car token)))
+          (let ((previous-token)
+                (previous2-token))
+            (dolist (token phps-mode-lex-analyzer--tokens)
+              (let ((start (car (cdr token)))
+                    (end (cdr (cdr token)))
+                    (token-name (car token)))
 
-              ;; Apply syntax color on token
-              (let ((token-syntax-color
-                     (phps-mode-lex-analyzer--get-token-syntax-color token)))
-                (if token-syntax-color
-                    (phps-mode-lex-analyzer--set-region-syntax-color start end token-syntax-color)
-                  (phps-mode-lex-analyzer--clear-region-syntax-color start end)))
+                ;; Apply syntax color on token
+                (let ((token-syntax-color
+                       (phps-mode-lex-analyzer--get-token-syntax-color token previous-token previous2-token)))
+                  (if token-syntax-color
+                      (phps-mode-lex-analyzer--set-region-syntax-color start end token-syntax-color)
+                    (phps-mode-lex-analyzer--clear-region-syntax-color start end)))
+                (setq previous2-token previous-token)
+                (setq previous-token token)
 
-              (semantic-lex-push-token
-               (semantic-lex-token token-name start end))))
+                (semantic-lex-push-token
+                 (semantic-lex-token token-name start end)))))
 
           (setq semantic-lex-end-point (point-max)))
 
@@ -393,13 +417,17 @@
              (phps-mode-lex-analyzer--reset-imenu)
 
              ;; Apply syntax color on tokens
-             (dolist (token phps-mode-lex-analyzer--tokens)
-               (let ((start (car (cdr token)))
-                     (end (cdr (cdr token))))
-                 (let ((token-syntax-color (phps-mode-lex-analyzer--get-token-syntax-color token)))
-                   (if token-syntax-color
-                       (phps-mode-lex-analyzer--set-region-syntax-color start end token-syntax-color)
-                     (phps-mode-lex-analyzer--clear-region-syntax-color start end)))))))))
+             (let ((previous-token)
+                   (previous2-token))
+               (dolist (token phps-mode-lex-analyzer--tokens)
+                 (let ((start (car (cdr token)))
+                       (end (cdr (cdr token))))
+                   (let ((token-syntax-color (phps-mode-lex-analyzer--get-token-syntax-color token previous-token previous2-token)))
+                     (if token-syntax-color
+                         (phps-mode-lex-analyzer--set-region-syntax-color start end token-syntax-color)
+                       (phps-mode-lex-analyzer--clear-region-syntax-color start end))))
+                 (setq previous2-token previous-token)
+                 (setq previous-token token)))))))
 
      (lambda(result)
        (when (get-buffer buffer-name)
@@ -487,15 +515,19 @@
              (phps-mode-lex-analyzer--reset-imenu)
 
              ;; Apply syntax color on tokens
-             (dolist (token phps-mode-lex-analyzer--tokens)
-               (let ((start (car (cdr token)))
-                     (end (cdr (cdr token))))
+             (let ((previous-token)
+                   (previous2-token))
+               (dolist (token phps-mode-lex-analyzer--tokens)
+                 (let ((start (car (cdr token)))
+                       (end (cdr (cdr token))))
 
-                 ;; Apply syntax color on token
-                 (let ((token-syntax-color (phps-mode-lex-analyzer--get-token-syntax-color token)))
-                   (if token-syntax-color
-                       (phps-mode-lex-analyzer--set-region-syntax-color start end token-syntax-color)
-                     (phps-mode-lex-analyzer--clear-region-syntax-color start end)))))
+                   ;; Apply syntax color on token
+                   (let ((token-syntax-color (phps-mode-lex-analyzer--get-token-syntax-color token previous-token previous2-token)))
+                     (if token-syntax-color
+                         (phps-mode-lex-analyzer--set-region-syntax-color start end token-syntax-color)
+                       (phps-mode-lex-analyzer--clear-region-syntax-color start end))))
+                 (setq previous2-token previous-token)
+                 (setq previous-token token)))
 
              (phps-mode-debug-message
               (message "Incremental tokens: %s" phps-mode-lex-analyzer--tokens))))))
@@ -1036,7 +1068,11 @@ SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
               (in-return-curly-bracket-level nil)
               (in-return-level 0)
               (previous-token nil)
+              (previous-token-end nil)
+              (previous-token-start nil)
               (previous2-token nil)
+              (previous2-token-end nil)
+              (previous2-token-start nil)
               (previous3-token nil)
               (token nil)
               (token-start nil)
@@ -1067,16 +1103,11 @@ SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
               (imenu-in-function-index nil)
               (imenu-nesting-level 0)
               (incremental-line-number 1)
+              (in-catch-declaration)
+              (in-anonymous-function-declaration)
+              (in-anonymous-function-number 0)
+              (in-anonymous-function-nesting-level)
               (bookkeeping (make-hash-table :test 'equal)))
-
-          ;; Super-globals
-          (puthash "$_COOKIE" t bookkeeping)
-          (puthash "$_GET" t bookkeeping)
-          (puthash "$_GLOBALS" t bookkeeping)
-          (puthash "$_POST" t bookkeeping)
-          (puthash "$_REQUEST" t bookkeeping)
-          (puthash "$_SERVER" t bookkeeping)
-          (puthash "$_SESSION" t bookkeeping)
 
           (push `(END_PARSE ,(length string) . ,(length string)) tokens)
 
@@ -1137,11 +1168,33 @@ SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
               (when token
 
                 ;; BOOKKEEPING LOGIC
-                (when (equal token 'T_VARIABLE)
+                (when (or
+                       (equal token 'T_VARIABLE)
+                       (and
+                        ;; $this->...
+                        (equal token 'T_STRING)
+                        (equal previous-token 'T_OBJECT_OPERATOR)
+                        (equal previous2-token 'T_VARIABLE)))
+
                   (let ((bookkeeping-namespace namespace)
                         (bookkeeping-index (list token-start token-end))
                         (bookkeeping-variable-name (substring string (1- token-start) (1- token-end)))
-                        (bookkeeping-in-assignment nil))
+                        (bookkeeping-in-assignment nil)
+                        (bookkeeping-named nil)
+                        (bookkeeping-is-superglobal nil))
+
+                    ;; Flag super-globals
+                    (when (and (equal token 'T_VARIABLE)
+                               (or
+                                (equal bookkeeping-variable-name "$_COOKIE")
+                                (equal bookkeeping-variable-name "$_GET")
+                                (equal bookkeeping-variable-name "$_GLOBALS")
+                                (equal bookkeeping-variable-name "$_POST")
+                                (equal bookkeeping-variable-name "$_REQUEST")
+                                (equal bookkeeping-variable-name "$_SERVER")
+                                (equal bookkeeping-variable-name "$_SESSION")
+                                (equal bookkeeping-variable-name "$_FILES")))
+                      (setq bookkeeping-is-superglobal t))
 
                     ;; Build name-space
                     (when (and imenu-in-namespace-name
@@ -1149,21 +1202,58 @@ SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
                       (setq bookkeeping-namespace (concat bookkeeping-namespace " namespace " imenu-in-namespace-name)))
                     (when imenu-in-class-name
                       (setq bookkeeping-namespace (concat bookkeeping-namespace " class " imenu-in-class-name)))
-                    (when imenu-in-function-name
-                      (setq bookkeeping-namespace (concat bookkeeping-namespace " function " imenu-in-function-name))
 
-                      ;; Add $this special variable in class function scope
-                      (when imenu-in-class-name
-                        (let ((bookkeeping-method-this (concat bookkeeping-namespace " id $this")))
-                          (unless (gethash bookkeeping-method-this bookkeeping)
-                            (puthash bookkeeping-method-this t bookkeeping)))))
+                    (when (and
+                           (equal token 'T_VARIABLE)
+                           (string= (downcase bookkeeping-variable-name) "$this"))
+                      (setq bookkeeping-variable-name "$this"))
 
-                    (setq bookkeeping-namespace (concat bookkeeping-namespace " id " bookkeeping-variable-name))
+                    ;; self::$abc ... here
+                    (when (and
+                           (equal token 'T_VARIABLE)
+                           (equal previous-token 'T_PAAMAYIM_NEKUDOTAYIM))
+                      (let ((bookkeeping2-variable-name
+                             (downcase (substring string (1- previous2-token-start) (1- previous2-token-end)))))
+                        (when (string= bookkeeping2-variable-name "self")
+                          ;; (message "Found self: %s::%s" bookkeeping2-variable-name bookkeeping-variable-name)
+                          (setq bookkeeping-namespace (concat bookkeeping-namespace " static id " bookkeeping-variable-name))
+                          (setq bookkeeping-named t))))
+
+                    ;; $this->... here
+                    (when (equal token 'T_STRING)
+                      (let ((bookkeeping2-variable-name
+                             (downcase (substring string (1- previous2-token-start) (1- previous2-token-end)))))
+                        ;; (message "%s->%s" bookkeeping2-variable-name bookkeeping-variable-name)
+                        (when (string= bookkeeping2-variable-name "$this")
+                          (setq bookkeeping-namespace (concat bookkeeping-namespace " id $" bookkeeping-variable-name))
+                          ;; (message "Was here: '%s" bookkeeping-namespace)
+                          (setq bookkeeping-named t))))
+
+                    (unless bookkeeping-named
+                      (when imenu-in-function-name
+                        (setq bookkeeping-namespace (concat bookkeeping-namespace " function " imenu-in-function-name))
+
+                        ;; Add $this special variable in class function scope
+                        (when imenu-in-class-name
+                          (let ((bookkeeping-method-this (concat bookkeeping-namespace " id $this")))
+                            (unless (gethash bookkeeping-method-this bookkeeping)
+                              (puthash bookkeeping-method-this t bookkeeping)))))
+
+                      ;; Anonymous function level
+                      (when in-anonymous-function-nesting-level
+                        (setq bookkeeping-namespace (format "%s anonymous function %s" bookkeeping-namespace in-anonymous-function-number))))
+
+                    (unless bookkeeping-named
+                      (when (equal previous-token 'T_STATIC)
+                        (setq bookkeeping-namespace (concat bookkeeping-namespace " static")))
+                      (setq bookkeeping-namespace (concat bookkeeping-namespace " id " bookkeeping-variable-name)))
+
                     (phps-mode-debug-message
                      (message "Bookkeeping-namespace: '%s'" bookkeeping-namespace))
 
                     ;; Support foreach as $key, for ($i = 0), if ($a = ), while ($a = ) and do-while ($a)assignments here
                     (when (and
+                           (equal token 'T_VARIABLE)
                            (string= previous-token "(")
                            (string= next-token "=")
                            (or (equal previous2-token 'T_IF)
@@ -1175,6 +1265,7 @@ SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
 
                     ;; Support foreach as $key => value
                     (when (and
+                           (equal token 'T_VARIABLE)
                            (equal previous3-token 'T_AS)
                            (equal previous2-token 'T_VARIABLE)
                            (equal previous-token 'T_DOUBLE_ARROW)
@@ -1182,16 +1273,31 @@ SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
                       (setq bookkeeping-in-assignment t))
 
                     ;; Stand-alone variable assignment
-                    (when (and first-token-on-line
+                    (when (and (equal token 'T_VARIABLE)
+                               first-token-on-line
                                (string= next-token "="))
                       (setq bookkeeping-in-assignment t))
 
                     ;; Naming of value
-                    (when (equal previous-token 'T_AS)
+                    (when (and
+                           (equal token 'T_VARIABLE)
+                           (equal previous-token 'T_AS))
+                      (setq bookkeeping-in-assignment t))
+
+                    ;; In catch declaration
+                    (when (and
+                           (equal token 'T_VARIABLE)
+                           in-catch-declaration)
                       (setq bookkeeping-in-assignment t))
 
                     ;; In function arguments
-                    (when imenu-in-function-declaration
+                    (when (and imenu-in-function-declaration
+                               (equal token 'T_VARIABLE))
+                      (setq bookkeeping-in-assignment t))
+
+                    ;; In anonymous function arguments
+                    (when (and in-anonymous-function-declaration
+                               (equal token 'T_VARIABLE))
                       (setq bookkeeping-in-assignment t))
 
                     ;; Class variables
@@ -1217,18 +1323,41 @@ SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
                          (message "Bookkeeping-assignment: '%s'" bookkeeping-namespace))
                         (puthash bookkeeping-namespace declarations bookkeeping)))
 
-                    (if (gethash bookkeeping-namespace bookkeeping)
-                        (progn
-                          (phps-mode-debug-message
-                           (message "Bookkeeping-hit: %s" bookkeeping-index))
-                          (puthash bookkeeping-index t bookkeeping))
+                    (if bookkeeping-is-superglobal
+                        ;; Super-globals always hit
+                        (puthash bookkeeping-index t bookkeeping)
 
-                      ;; Check super-globals
-                      (if (gethash bookkeeping-variable-name bookkeeping)
-                          (puthash bookkeeping-index t bookkeeping)
+                      ;; Check scoped variable
+                      (if (gethash bookkeeping-namespace bookkeeping)
+                          (progn
+                            (phps-mode-debug-message
+                             (message "Bookkeeping-hit: %s" bookkeeping-index))
+                            (puthash bookkeeping-index t bookkeeping))
                         (phps-mode-debug-message
                          (message "Bookkeeping-miss: %s" bookkeeping-index))
                         (puthash bookkeeping-index nil bookkeeping)))))
+
+                ;; Keep track of open catch blocks for bookkeeping
+                (when (equal token 'T_CATCH)
+                  (setq in-catch-declaration t))
+                (when (and in-catch-declaration
+                           (equal token "{"))
+                  (setq in-catch-declaration nil))
+
+                ;; Keep track of anonymous functions for bookkeeping
+                (when (and
+                       (equal token 'T_FUNCTION)
+                       (string= next-token "("))
+                  (setq in-anonymous-function-declaration t)
+                  (setq in-anonymous-function-number (1+ in-anonymous-function-number))
+                  (push (1+ curly-bracket-level) in-anonymous-function-nesting-level))
+                (when (and in-anonymous-function-declaration
+                           (equal token "{"))
+                  (setq in-anonymous-function-declaration nil))
+                (when (and in-anonymous-function-nesting-level
+                           (string= token "}")
+                           (equal curly-bracket-level (car in-anonymous-function-nesting-level)))
+                  (pop in-anonymous-function-nesting-level))
 
 
                 ;; IMENU LOGIC
@@ -2128,7 +2257,11 @@ SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
               ;; Update current token
               (setq previous3-token previous2-token)
               (setq previous2-token previous-token)
+              (setq previous2-token-end previous-token-end)
+              (setq previous2-token-start previous-token-start)
               (setq previous-token token)
+              (setq previous-token-end token-end)
+              (setq previous-token-start token-start)
               (setq token next-token)
               (setq token-start next-token-start)
               (setq token-end next-token-end)
