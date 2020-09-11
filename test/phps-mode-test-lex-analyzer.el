@@ -1412,11 +1412,11 @@
             (list (list " catch 1 id $e" 1) (list (list 38 40) t) (list (list 52 54) t) (list (list 91 93) nil)))))
 
   (phps-mode-test--with-buffer
-   "<?php\n\n$example = function ($test) {\n    if ($test) {\n        echo 'Hit';\n    }\n};\n$example2 = function ($test2) use ($example) {\n    if ($test2) {\n        echo 'Hit';\n    }\n    if ($example) {\n        echo 'Hit';\n    }\n    if ($example2) {\n        echo 'Miss';\n    }\n    if ($example3) {\n        echo 'Miss';\n    }\n};\nif ($test) {\n    echo 'Miss';\n}"
+   "<?php\n\n$example = function ($test) {\n    if ($test) {\n        echo 'Hit';\n    }\n    if ($example) {\n        echo 'Miss';\n    }\n};\n$example2 = function ($test2) use ($example) {\n    if ($test2) {\n        echo 'Hit';\n    }\n    if ($example) {\n        echo 'Hit';\n    }\n    if ($example2) {\n        echo 'Miss';\n    }\n    if ($example3) {\n        echo 'Miss';\n    }\n};\nif ($test) {\n    echo 'Miss';\n}\nif ($test2) {\n    echo 'Miss';\n}"
    "Anonymous function variable assignments"
    (should (equal
             (phps-mode-test--hash-to-list (phps-mode-lex-analyzer--get-bookkeeping) t)
-            t)))
+            (list (list " id $example" 1) (list (list 8 16) t) (list " anonymous function 1 id $test" 1) (list (list 29 34) t) (list (list 46 51) t) (list (list 89 97) nil) (list " id $example2" 1) (list (list 131 140) t) (list " anonymous function 2 id $test2" 1) (list (list 153 159) t) (list " anonymous function 2 id $example" 1) (list (list 166 174) t) (list (list 186 192) t) (list (list 230 238) t) (list (list 276 285) nil) (list (list 324 333) nil) (list (list 371 376) nil) (list (list 403 409) nil)))))
 
   )
 

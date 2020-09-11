@@ -1074,8 +1074,6 @@ SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
               (previous2-token-end nil)
               (previous2-token-start nil)
               (previous3-token nil)
-              (previous3-token-end nil)
-              (previous3-token-start nil)
               (token nil)
               (token-start nil)
               (token-end nil)
@@ -1108,6 +1106,9 @@ SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
               (in-catch-declaration)
               (in-catch-number 0)
               (in-catch-nesting-level)
+              (in-anonymous-function-declaration)
+              (in-anonymous-function-number 0)
+              (in-anonymous-function-nesting-level)
               (bookkeeping (make-hash-table :test 'equal)))
 
           (push `(END_PARSE ,(length string) . ,(length string)) tokens)
@@ -1240,6 +1241,10 @@ SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
                             (unless (gethash bookkeeping-method-this bookkeeping)
                               (puthash bookkeeping-method-this t bookkeeping)))))
 
+                      ;; Anonymous function level
+                      (when in-anonymous-function-nesting-level
+                        (setq bookkeeping-namespace (format "%s anonymous function %s" bookkeeping-namespace in-anonymous-function-number)))
+
                       ;; Catch level
                       (when in-catch-nesting-level
                         (setq bookkeeping-namespace (format "%s catch %s" bookkeeping-namespace in-catch-number))))
@@ -1296,6 +1301,11 @@ SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
                                (equal token 'T_VARIABLE))
                       (setq bookkeeping-in-assignment t))
 
+                    ;; In anonymous function arguments
+                    (when (and in-anonymous-function-declaration
+                               (equal token 'T_VARIABLE))
+                      (setq bookkeeping-in-assignment t))
+
                     ;; Class variables
                     (when (and
                            imenu-in-class-name
@@ -1333,7 +1343,7 @@ SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
                          (message "Bookkeeping-miss: %s" bookkeeping-index))
                         (puthash bookkeeping-index nil bookkeeping)))))
 
-                ;; Keep track of open catch blocks
+                ;; Keep track of open catch blocks for bookkeeping
                 (when (equal token 'T_CATCH)
                   (setq in-catch-declaration t)
                   (setq in-catch-number (1+ in-catch-number))
@@ -1345,6 +1355,21 @@ SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
                            (string= token "}")
                            (equal curly-bracket-level (car in-catch-nesting-level)))
                   (pop in-catch-nesting-level))
+
+                ;; Keep track of anonymous functions for bookkeeping
+                (when (and
+                       (equal token 'T_FUNCTION)
+                       (string= next-token "("))
+                  (setq in-anonymous-function-declaration t)
+                  (setq in-anonymous-function-number (1+ in-anonymous-function-number))
+                  (push (1+ curly-bracket-level) in-anonymous-function-nesting-level))
+                (when (and in-anonymous-function-declaration
+                           (equal token "{"))
+                  (setq in-anonymous-function-declaration nil))
+                (when (and in-anonymous-function-nesting-level
+                           (string= token "}")
+                           (equal curly-bracket-level (car in-anonymous-function-nesting-level)))
+                  (pop in-anonymous-function-nesting-level))
 
 
                 ;; IMENU LOGIC
@@ -2243,8 +2268,6 @@ SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
 
               ;; Update current token
               (setq previous3-token previous2-token)
-              (setq previous3-token-end previous2-token-end)
-              (setq previous3-token-start previous2-token-start)
               (setq previous2-token previous-token)
               (setq previous2-token-end previous-token-end)
               (setq previous2-token-start previous-token-start)
