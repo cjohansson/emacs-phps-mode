@@ -858,6 +858,11 @@
    ;; (message "Indent: %s" (phps-mode-test--hash-to-list (phps-mode-lex-analyzer--get-lines-indent)))
    (should (equal '((1 (0 0)) (2 (0 0)) (3 (1 0)) (4 (2 0)) (5 (3 0)) (6 (3 0)) (7 (2 0)) (8 (3 0)) (9 (2 0)) (10 (3 0)) (11 (1 0)) (12 (1 0)) (13 (2 0)) (14 (2 0)) (15 (1 0)) (16 (0 0))) (phps-mode-test--hash-to-list (phps-mode-lex-analyzer--get-lines-indent)))))
 
+  (phps-mode-test--with-buffer
+   "<?php\n$product_path = \"${filename[0]}/${filename[1]}/\";\necho 'here';\n"
+   "Double-quoted string with multiple indexed variables in it"
+   (should (equal '((1 (0 0)) (2 (0 0)) (3 (0 0))) (phps-mode-test--hash-to-list (phps-mode-lex-analyzer--get-lines-indent)))))
+
   )
 
 (defun phps-mode-test-lex-analyzer--indent-line ()
