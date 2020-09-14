@@ -116,44 +116,29 @@
   "Clear region of syntax coloring from START to END."
   (with-silent-modifications (set-text-properties start end nil)))
 
-(defun phps-mode-lex-analyzer--get-token-syntax-color (token &optional previous-token previous2-token)
-  "Return syntax color for TOKEN and optionally PREVIOUS-TOKEN and PREVIOUS2-TOKEN."
+(defun phps-mode-lex-analyzer--get-token-syntax-color (token)
+  "Return syntax color for TOKEN."
   ;; Syntax coloring
   ;; see https://www.gnu.org/software/emacs/manual/html_node/elisp/Faces-for-Font-Lock.html#Faces-for-Font-Lock
   (let* ((start (car (cdr token)))
          (end (cdr (cdr token)))
-         (token-name (car token))
-         (previous-token-name)
-         (previous2-token-name)
-         (previous2-token-contents))
-
-    ;; Catch contexts like $this->abc
-    (when (and
-           (equal token-name 'T_STRING)
-           previous-token
-           previous2-token)
-      (setq previous-token-name (car previous-token))
-      (setq previous2-token-name (car previous2-token))
-      (when (and
-             (equal previous-token-name 'T_OBJECT_OPERATOR)
-             (equal previous2-token-name 'T_VARIABLE))
-        (setq previous2-token-contents (downcase (buffer-substring-no-properties (car (cdr previous2-token)) (cdr (cdr previous2-token)))))))
+         (bookkeeping-index (list start end))
+         (token-name (car token)))
 
     ;; (message "Color token %s %s %s" token-name start end)
     (cond
 
-     ((or (equal token-name 'T_VARIABLE)
-          (and
-           (equal token-name 'T_STRING)
-           (equal previous-token-name 'T_OBJECT_OPERATOR)
-           (equal previous2-token-name 'T_VARIABLE)
-           (string= previous2-token-contents "$this")))
-      (let ((bookkeeping-index (list start end)))
-        (if (gethash bookkeeping-index phps-mode-lex-analyzer--bookkeeping)
+     ((and (or (equal token-name 'T_VARIABLE)
+               (equal token-name 'T_STRING))
+           (gethash bookkeeping-index phps-mode-lex-analyzer--bookkeeping))
+      (let ((bookkeeping (gethash bookkeeping-index phps-mode-lex-analyzer--bookkeeping)))
+        (if (> bookkeeping 0)
             (list 'font-lock-face 'font-lock-variable-name-face)
           (list 'font-lock-face 'font-lock-warning-face))))
 
-     ((equal token-name 'T_STRING_VARNAME)
+     ((or
+       (equal token-name 'T_VARIABLE)
+       (equal token-name 'T_STRING_VARNAME))
       (list 'font-lock-face 'font-lock-variable-name-face))
 
      ((equal token-name 'T_COMMENT)
@@ -332,24 +317,20 @@
             old-start
             phps-mode-lex-analyzer--tokens
             (point-max)))
-          (let ((previous-token)
-                (previous2-token))
-            (dolist (token phps-mode-lex-analyzer--tokens)
-              (let ((start (car (cdr token)))
-                    (end (cdr (cdr token)))
-                    (token-name (car token)))
+          (dolist (token phps-mode-lex-analyzer--tokens)
+            (let ((start (car (cdr token)))
+                  (end (cdr (cdr token)))
+                  (token-name (car token)))
 
-                ;; Apply syntax color on token
-                (let ((token-syntax-color
-                       (phps-mode-lex-analyzer--get-token-syntax-color token previous-token previous2-token)))
-                  (if token-syntax-color
-                      (phps-mode-lex-analyzer--set-region-syntax-color start end token-syntax-color)
-                    (phps-mode-lex-analyzer--clear-region-syntax-color start end)))
-                (setq previous2-token previous-token)
-                (setq previous-token token)
+              ;; Apply syntax color on token
+              (let ((token-syntax-color
+                     (phps-mode-lex-analyzer--get-token-syntax-color token)))
+                (if token-syntax-color
+                    (phps-mode-lex-analyzer--set-region-syntax-color start end token-syntax-color)
+                  (phps-mode-lex-analyzer--clear-region-syntax-color start end)))
 
-                (semantic-lex-push-token
-                 (semantic-lex-token token-name start end)))))
+              (semantic-lex-push-token
+               (semantic-lex-token token-name start end))))
 
           (setq semantic-lex-end-point (point-max)))
 
@@ -417,17 +398,13 @@
              (phps-mode-lex-analyzer--reset-imenu)
 
              ;; Apply syntax color on tokens
-             (let ((previous-token)
-                   (previous2-token))
-               (dolist (token phps-mode-lex-analyzer--tokens)
-                 (let ((start (car (cdr token)))
-                       (end (cdr (cdr token))))
-                   (let ((token-syntax-color (phps-mode-lex-analyzer--get-token-syntax-color token previous-token previous2-token)))
-                     (if token-syntax-color
-                         (phps-mode-lex-analyzer--set-region-syntax-color start end token-syntax-color)
-                       (phps-mode-lex-analyzer--clear-region-syntax-color start end))))
-                 (setq previous2-token previous-token)
-                 (setq previous-token token)))))))
+             (dolist (token phps-mode-lex-analyzer--tokens)
+               (let ((start (car (cdr token)))
+                     (end (cdr (cdr token))))
+                 (let ((token-syntax-color (phps-mode-lex-analyzer--get-token-syntax-color token)))
+                   (if token-syntax-color
+                       (phps-mode-lex-analyzer--set-region-syntax-color start end token-syntax-color)
+                     (phps-mode-lex-analyzer--clear-region-syntax-color start end)))))))))
 
      (lambda(result)
        (when (get-buffer buffer-name)
@@ -515,19 +492,15 @@
              (phps-mode-lex-analyzer--reset-imenu)
 
              ;; Apply syntax color on tokens
-             (let ((previous-token)
-                   (previous2-token))
-               (dolist (token phps-mode-lex-analyzer--tokens)
-                 (let ((start (car (cdr token)))
-                       (end (cdr (cdr token))))
+             (dolist (token phps-mode-lex-analyzer--tokens)
+               (let ((start (car (cdr token)))
+                     (end (cdr (cdr token))))
 
-                   ;; Apply syntax color on token
-                   (let ((token-syntax-color (phps-mode-lex-analyzer--get-token-syntax-color token previous-token previous2-token)))
-                     (if token-syntax-color
-                         (phps-mode-lex-analyzer--set-region-syntax-color start end token-syntax-color)
-                       (phps-mode-lex-analyzer--clear-region-syntax-color start end))))
-                 (setq previous2-token previous-token)
-                 (setq previous-token token)))
+                 ;; Apply syntax color on token
+                 (let ((token-syntax-color (phps-mode-lex-analyzer--get-token-syntax-color token)))
+                   (if token-syntax-color
+                       (phps-mode-lex-analyzer--set-region-syntax-color start end token-syntax-color)
+                     (phps-mode-lex-analyzer--clear-region-syntax-color start end)))))
 
              (phps-mode-debug-message
               (message "Incremental tokens: %s" phps-mode-lex-analyzer--tokens))))))
@@ -1087,6 +1060,7 @@ SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
               (special-control-structure-started-this-line nil)
               (temp-pre-indent nil)
               (temp-post-indent nil)
+              (array-variable-declaration nil)
               (imenu-index '())
               (imenu-namespace-index '())
               (imenu-class-index '())
@@ -1174,7 +1148,10 @@ SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
                         ;; $this->...
                         (equal token 'T_STRING)
                         (equal previous-token 'T_OBJECT_OPERATOR)
-                        (equal previous2-token 'T_VARIABLE)))
+                        (equal previous2-token 'T_VARIABLE)
+                        (not (or
+                              (equal next-token "(")
+                              (equal next-token "[")))))
 
                   (let ((bookkeeping-namespace namespace)
                         (bookkeeping-index (list token-start token-end))
@@ -1237,7 +1214,7 @@ SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
                         (when imenu-in-class-name
                           (let ((bookkeeping-method-this (concat bookkeeping-namespace " id $this")))
                             (unless (gethash bookkeeping-method-this bookkeeping)
-                              (puthash bookkeeping-method-this t bookkeeping)))))
+                              (puthash bookkeeping-method-this 1 bookkeeping)))))
 
                       ;; Anonymous function level
                       (when in-anonymous-function-nesting-level
@@ -1263,12 +1240,28 @@ SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
                                (equal previous2-token 'T_FOREACH)))
                       (setq bookkeeping-in-assignment t))
 
-                    ;; Support foreach as $key => value
+                    ;; Support stuff like foreach ($items as &$key)...
+                    (when (and
+                           (equal token 'T_VARIABLE)
+                           (equal previous2-token 'T_AS)
+                           (equal previous-token "&"))
+                      (setq bookkeeping-in-assignment t))
+
+                    ;; Support foreach ($items as $key => $value)...
                     (when (and
                            (equal token 'T_VARIABLE)
                            (equal previous3-token 'T_AS)
                            (equal previous2-token 'T_VARIABLE)
                            (equal previous-token 'T_DOUBLE_ARROW)
+                           (string= next-token ")"))
+                      (setq bookkeeping-in-assignment t))
+
+                    ;; Support foreach ($items as $key => &$value)...
+                    (when (and
+                           (equal token 'T_VARIABLE)
+                           (equal previous3-token 'T_VARIABLE)
+                           (equal previous2-token 'T_DOUBLE_ARROW)
+                           (equal previous-token "&")
                            (string= next-token ")"))
                       (setq bookkeeping-in-assignment t))
 
@@ -1300,6 +1293,12 @@ SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
                                (equal token 'T_VARIABLE))
                       (setq bookkeeping-in-assignment t))
 
+                    ;; In [$abc, $def] = .. or array($abc, $def) = ...
+                    (when (and
+                           array-variable-declaration
+                           (equal token 'T_VARIABLE))
+                      (setq bookkeeping-in-assignment t))
+
                     ;; Class variables
                     (when (and
                            imenu-in-class-name
@@ -1325,17 +1324,24 @@ SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
 
                     (if bookkeeping-is-superglobal
                         ;; Super-globals always hit
-                        (puthash bookkeeping-index t bookkeeping)
+                        (puthash bookkeeping-index 1 bookkeeping)
 
                       ;; Check scoped variable
                       (if (gethash bookkeeping-namespace bookkeeping)
                           (progn
                             (phps-mode-debug-message
                              (message "Bookkeeping-hit: %s" bookkeeping-index))
-                            (puthash bookkeeping-index t bookkeeping))
+                            (puthash bookkeeping-index 1 bookkeeping))
                         (phps-mode-debug-message
                          (message "Bookkeeping-miss: %s" bookkeeping-index))
-                        (puthash bookkeeping-index nil bookkeeping)))))
+                        (puthash bookkeeping-index 0 bookkeeping)))))
+
+                ;; Keep track of array variable declaration
+                (when first-token-on-line
+                  (if (or (equal token 'T_ARRAY)
+                          (equal token "["))
+                      (setq array-variable-declaration t)
+                    (setq array-variable-declaration nil)))
 
                 ;; Keep track of open catch blocks for bookkeeping
                 (when (equal token 'T_CATCH)
