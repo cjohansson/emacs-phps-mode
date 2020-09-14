@@ -1239,12 +1239,28 @@ SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
                                (equal previous2-token 'T_FOREACH)))
                       (setq bookkeeping-in-assignment t))
 
-                    ;; Support foreach as $key => value
+                    ;; Support stuff like foreach ($items as &$key)...
+                    (when (and
+                           (equal token 'T_VARIABLE)
+                           (equal previous2-token 'T_AS)
+                           (equal previous-token "&"))
+                      (setq bookkeeping-in-assignment t))
+
+                    ;; Support foreach ($items as $key => $value)...
                     (when (and
                            (equal token 'T_VARIABLE)
                            (equal previous3-token 'T_AS)
                            (equal previous2-token 'T_VARIABLE)
                            (equal previous-token 'T_DOUBLE_ARROW)
+                           (string= next-token ")"))
+                      (setq bookkeeping-in-assignment t))
+
+                    ;; Support foreach ($items as $key => &$value)...
+                    (when (and
+                           (equal token 'T_VARIABLE)
+                           (equal previous3-token 'T_VARIABLE)
+                           (equal previous2-token 'T_DOUBLE_ARROW)
+                           (equal previous-token "&")
                            (string= next-token ")"))
                       (setq bookkeeping-in-assignment t))
 

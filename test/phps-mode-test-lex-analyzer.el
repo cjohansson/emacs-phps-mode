@@ -1427,6 +1427,14 @@
             (phps-mode-test--hash-to-list (phps-mode-lex-analyzer--get-bookkeeping) t)
             (list (list " class myClass function __construct id $this" 1) (list (list 89 94) 1) (list (list 114 119) 1)))))
 
+  (phps-mode-test--with-buffer
+   "<?php\n$items = array(1, 2, 3);\nforeach ($items as &$item) {\n    if ($item) {\n        echo 'Hit';\n    }\n}\nforeach ($items as $key => &$item2) {\n    if ($item) {\n        echo 'Hit';\n    }\n}"
+   "Foreach reference variable declaration"
+   (message "Bookkeeping: %s" (phps-mode-test--hash-to-list (phps-mode-lex-analyzer--get-bookkeeping) t))
+   (should (equal
+            (phps-mode-test--hash-to-list (phps-mode-lex-analyzer--get-bookkeeping) t)
+            (list (list " id $items" 1) (list (list 7 13) 1) (list (list 41 47) 1) (list " id $item" 1) (list (list 52 57) 1) (list (list 69 74) 1) (list (list 115 121) 1) (list " id $key" 1) (list (list 125 129) 1) (list " id $item2" 1) (list (list 134 140) 1) (list (list 152 157) 1)))))
+
   )
 
 (defun phps-mode-test-lex-analyzer ()
