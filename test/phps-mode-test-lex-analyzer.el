@@ -1430,10 +1430,16 @@
   (phps-mode-test--with-buffer
    "<?php\n$items = array(1, 2, 3);\nforeach ($items as &$item) {\n    if ($item) {\n        echo 'Hit';\n    }\n}\nforeach ($items as $key => &$item2) {\n    if ($item) {\n        echo 'Hit';\n    }\n}"
    "Foreach reference variable declaration"
-   (message "Bookkeeping: %s" (phps-mode-test--hash-to-list (phps-mode-lex-analyzer--get-bookkeeping) t))
    (should (equal
             (phps-mode-test--hash-to-list (phps-mode-lex-analyzer--get-bookkeeping) t)
             (list (list " id $items" 1) (list (list 7 13) 1) (list (list 41 47) 1) (list " id $item" 1) (list (list 52 57) 1) (list (list 69 74) 1) (list (list 115 121) 1) (list " id $key" 1) (list (list 125 129) 1) (list " id $item2" 1) (list (list 134 140) 1) (list (list 152 157) 1)))))
+
+  (phps-mode-test--with-buffer
+   "<?php\n\n[$random, $bandom] = myValues();\nif ($random) {\n    echo 'Hit';\n}\nif ($bandom) {\n    echo 'Hit';\n}\n\narray($random2, $bandom2] = myValues2();\nif ($random2) {\n    echo 'Hit';\n}\nif ($bandom3) {\n    echo 'Hit';\n}\n\n    "
+   "Variable declarations in array"
+   (should (equal
+            (phps-mode-test--hash-to-list (phps-mode-lex-analyzer--get-bookkeeping) t)
+            (list (list " id $random" 1) (list (list 9 16) 1) (list " id $bandom" 1) (list (list 18 25) 1) (list (list 45 52) 1) (list (list 78 85) 1) (list " id $random2" 1) (list (list 114 122) 1) (list " id $bandom2" 1) (list (list 124 132) 1) (list (list 153 161) 1) (list (list 187 195) 0)))))
 
   )
 

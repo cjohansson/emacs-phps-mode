@@ -1060,6 +1060,7 @@ SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
               (special-control-structure-started-this-line nil)
               (temp-pre-indent nil)
               (temp-post-indent nil)
+              (array-variable-declaration nil)
               (imenu-index '())
               (imenu-namespace-index '())
               (imenu-class-index '())
@@ -1292,6 +1293,12 @@ SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
                                (equal token 'T_VARIABLE))
                       (setq bookkeeping-in-assignment t))
 
+                    ;; In [$abc, $def] = .. or array($abc, $def) = ...
+                    (when (and
+                           array-variable-declaration
+                           (equal token 'T_VARIABLE))
+                      (setq bookkeeping-in-assignment t))
+
                     ;; Class variables
                     (when (and
                            imenu-in-class-name
@@ -1328,6 +1335,13 @@ SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
                         (phps-mode-debug-message
                          (message "Bookkeeping-miss: %s" bookkeeping-index))
                         (puthash bookkeeping-index 0 bookkeeping)))))
+
+                ;; Keep track of array variable declaration
+                (when first-token-on-line
+                  (if (or (equal token 'T_ARRAY)
+                          (equal token "["))
+                      (setq array-variable-declaration t)
+                    (setq array-variable-declaration nil)))
 
                 ;; Keep track of open catch blocks for bookkeeping
                 (when (equal token 'T_CATCH)
