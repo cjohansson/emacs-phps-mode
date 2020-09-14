@@ -1358,28 +1358,28 @@
    "<?php\n\n$var = 'abc';\n\nif ($var2) {\n    echo 'This never happens';\n}\nif ($var) {\n    echo 'This happens';\n}"
    "Bookkeeping in root level variable assignments #1."
    (should (equal
-            (phps-mode-test--hash-to-list (phps-mode-lex-analyzer--get-bookkeeping) 1)
+            (phps-mode-test--hash-to-list (phps-mode-lex-analyzer--get-bookkeeping) t)
             (list (list " id $var" 1) (list (list 8 12) 1) (list (list 27 32) 0) (list (list 73 77) 1)))))
 
   (phps-mode-test--with-buffer
    "<?php\n\n$var = 'abc';\n\nif ($var) {\n    echo 'This never happens';\n}\nif ($var2) {\n    echo 'This happens';\n}"
    "Bookkeeping in root level variable assignments #2."
    (should (equal
-            (phps-mode-test--hash-to-list (phps-mode-lex-analyzer--get-bookkeeping) 1)
+            (phps-mode-test--hash-to-list (phps-mode-lex-analyzer--get-bookkeeping) t)
             (list (list " id $var" 1) (list (list 8 12) 1) (list (list 27 31) 1) (list (list 72 77) 0)))))
 
   (phps-mode-test--with-buffer
    "<?php\n\n$var2 = 4;\n\nfunction myFunction($var)\n{\n    $var3 = 3\n    if ($var) {\n        echo 'Hit';\n    }\n    if ($var2) {\n        echo 'Miss';\n    }\n    if ($var3) {\n        echo 'Hit';\n    }\n}\n\nfunction myFunction2($abc)\n{\n    if ($var) {\n        echo 'Miss';\n    }\n    if ($abc) {\n        echo 'Hit';\n    }\n}\n\nif ($var) {\n    echo 'Miss';\n}\nif ($var2) {\n    echo 'Hit';\n}"
    "Bookkeeping in function level with variable assignments."
    (should (equal
-            (phps-mode-test--hash-to-list (phps-mode-lex-analyzer--get-bookkeeping) 1)
+            (phps-mode-test--hash-to-list (phps-mode-lex-analyzer--get-bookkeeping) t)
             (list (list " id $var2" 1) (list (list 8 13) 1) (list " function myFunction id $var" 1) (list (list 40 44) 1) (list " function myFunction id $var3" 1) (list (list 52 57) 1) (list (list 70 74) 1) (list (list 112 117) 0) (list (list 156 161) 1) (list " function myFunction2 id $abc" 1) (list (list 215 219) 1) (list (list 231 235) 0) (list (list 274 278) 1) (list (list 315 319) 0) (list (list 346 351) 1)))))
 
   (phps-mode-test--with-buffer
    "<?php\n\n// Super-globals\n\nif ($_GET) {\n    echo 'Hit';\n}\nif ($_POST) {\n    echo 'Hit';\n}\nif ($_COOKIE) {\n    echo 'Hit';\n}\nif ($_SESSION) {\n    echo 'Hit';\n}\nif ($_REQUEST) {\n    echo 'Hit';\n}\nif ($_GLOBALS) {\n    echo 'Hit';\n}\nif ($_SERVER) {\n    echo 'Hit';\n}\nif ($_FILES) {\n    echo 'Hit';\n}\n"
    "Super-globals"
    (should (equal
-            (phps-mode-test--hash-to-list (phps-mode-lex-analyzer--get-bookkeeping) 1)
+            (phps-mode-test--hash-to-list (phps-mode-lex-analyzer--get-bookkeeping) t)
             (list (list (list 30 35) 1) (list (list 61 67) 1) (list (list 93 101) 1) (list (list 127 136) 1) (list (list 162 171) 1) (list (list 197 206) 1) (list (list 232 240) 1) (list (list 266 273) 1)))))
 
   (phps-mode-test--with-buffer
@@ -1393,37 +1393,39 @@
    "<?php\n\n// Conditional assignments\n\n$items = array(1, 2, 3);\nforeach ($items as $item) {\n    if ($item) {\n        echo 'Hit';\n    }\n}\nforeach ($items as $key => $value) {\n    if ($key || $value) {\n        echo 'Hit';\n    }\n}\nfor ($i = 0; $i < count($items); $i++) {\n    if ($i) {\n        echo 'Hit';\n    }\n}\nif ($a = 123) {\n    if ($a) {\n        echo 'Hit';\n    }\n}\nwhile ($b = 123) {\n    if ($a) {\n        echo 'Hit';\n    }\n}\ndo {\n    echo 'Hit';\n} while ($c = 456);\n"
    "Conditional assignments"
    (should (equal
-            (phps-mode-test--hash-to-list (phps-mode-lex-analyzer--get-bookkeeping) 1)
+            (phps-mode-test--hash-to-list (phps-mode-lex-analyzer--get-bookkeeping) t)
             (list (list " id $items" 1) (list (list 36 42) 1) (list (list 70 76) 1) (list " id $item" 1) (list (list 80 85) 1) (list (list 97 102) 1) (list (list 143 149) 1) (list " id $key" 1) (list (list 153 157) 1) (list " id $value" 1) (list (list 161 167) 1) (list (list 179 183) 1) (list (list 187 193) 1) (list " id $i" 1) (list (list 230 232) 1) (list (list 238 240) 1) (list (list 249 255) 1) (list (list 258 260) 1) (list (list 274 276) 1) (list " id $a" 1) (list (list 312 314) 1) (list (list 332 334) 1) (list " id $b" 1) (list (list 373 375) 1) (list (list 393 395) 1) (list " id $c" 1) (list (list 457 459) 1)))))
 
   (phps-mode-test--with-buffer
    "<?php\n\n// Class properties\n\nclass myParent {}\n\nclass myClass extends myParent {\n    private $var1 = 123;\n    protected static $var2;\n    public $var3;\n    var $var4;\n    function __construct() {\n        if ($this) {\n            echo 'Hit';\n        }\n        if ($this->var1) {\n            echo 'Hit';\n        }\n        if (self::$var1) {\n            echo 'Miss';\n        }\n        if (self::$var2) {\n            echo 'Hit';\n        }\n        if ($this->var3) {\n            echo 'Hit';\n        }\n        if ($this->var4) {\n            echo 'Hit';\n        }\n        if ($this->var5) {\n            echo 'Miss';\n        }\n        if (paren1) {\n            echo 'Hit';\n        }\n    }\n}\n\nif ($this) {\n    echo 'Miss';\n}\nif (self) {\n    echo 'Miss';\n}\nif (paren1) {\n    echo 'Miss';\n}"
    "Class properties"
-   ;; (message "Bookkeeping: %s" (phps-mode-test--hash-to-list (phps-mode-lex-analyzer--get-bookkeeping) 1))
+   ;; (message "Bookkeeping: %s" (phps-mode-test--hash-to-list (phps-mode-lex-analyzer--get-bookkeeping) t))
    (should (equal
-            (phps-mode-test--hash-to-list (phps-mode-lex-analyzer--get-bookkeeping) 1)
+            (phps-mode-test--hash-to-list (phps-mode-lex-analyzer--get-bookkeeping) t)
             (list (list " class myParent id $var1" 1) (list (list 93 98) 1) (list " class myParent static id $var2" 1) (list (list 127 132) 1) (list " class myParent id $var3" 1) (list (list 145 150) 1) (list " class myParent id $var4" 1) (list (list 160 165) 1) (list " class myParent function __construct id $this" 1) (list (list 208 213) 1) (list (list 263 268) 1) (list (list 270 274) 1) (list (list 330 335) 0) (list (list 392 397) 1) (list (list 447 452) 1) (list (list 454 458) 1) (list (list 508 513) 1) (list (list 515 519) 1) (list (list 569 574) 1) (list (list 576 580) 0) (list (list 688 693) 0)))))
 
   (phps-mode-test--with-buffer
    "<?php\n\ntry {\n    \n} catch (\Exception $e) {\n    if ($e) {\n        echo 'Hit';\n    }\n}\n\nif ($e) {\n    echo 'Miss';\n}\n"
    "Try catch variable assignment"
    (should (equal
-            (phps-mode-test--hash-to-list (phps-mode-lex-analyzer--get-bookkeeping) 1)
+            (phps-mode-test--hash-to-list (phps-mode-lex-analyzer--get-bookkeeping) t)
             (list (list " id $e" 1) (list (list 38 40) 1) (list (list 52 54) 1) (list (list 91 93) 1)))))
 
   (phps-mode-test--with-buffer
-   "<?php\n\n$example = function ($test) {\n    if ($tes1) {\n        echo 'Hit';\n    }\n    if ($example) {\n        echo 'Miss';\n    }\n};\n$example2 = function ($test2) use ($example) {\n    if ($test2) {\n        echo 'Hit';\n    }\n    if ($example) {\n        echo 'Hit';\n    }\n    if ($example2) {\n        echo 'Miss';\n    }\n    if ($example3) {\n        echo 'Miss';\n    }\n};\nif ($tes1) {\n    echo 'Miss';\n}\nif ($test2) {\n    echo 'Miss';\n}"
+   "<?php\n\n$example = function ($test) {\n    if ($test) {\n        echo 'Hit';\n    }\n    if ($example) {\n        echo 'Miss';\n    }\n};\n$example2 = function ($test2) use ($example) {\n    if ($test2) {\n        echo 'Hit';\n    }\n    if ($example) {\n        echo 'Hit';\n    }\n    if ($example2) {\n        echo 'Miss';\n    }\n    if ($example3) {\n        echo 'Miss';\n    }\n};\nif ($test) {\n    echo 'Miss';\n}\nif ($test2) {\n    echo 'Miss';\n}"
    "Anonymous function variable assignments"
+   ;; (message "Bookkeeping: %s" (phps-mode-test--hash-to-list (phps-mode-lex-analyzer--get-bookkeeping) t))
    (should (equal
-            (phps-mode-test--hash-to-list (phps-mode-lex-analyzer--get-bookkeeping) 1)
+            (phps-mode-test--hash-to-list (phps-mode-lex-analyzer--get-bookkeeping) t)
             (list (list " id $example" 1) (list (list 8 16) 1) (list " anonymous function 1 id $test" 1) (list (list 29 34) 1) (list (list 46 51) 1) (list (list 89 97) 0) (list " id $example2" 1) (list (list 131 140) 1) (list " anonymous function 2 id $test2" 1) (list (list 153 159) 1) (list " anonymous function 2 id $example" 1) (list (list 166 174) 1) (list (list 186 192) 1) (list (list 230 238) 1) (list (list 276 285) 0) (list (list 324 333) 0) (list (list 371 376) 0) (list (list 403 409) 0)))))
 
   (phps-mode-test--with-buffer
-   "<?php\nclass myClass {\n    function random() {}\n    function __construct()\n    {\n        $this->random();\n    }\n}"
+   "<?php\nclass myClass {\n    function random() {}\n    function __construct()\n    {\n        $this->random();\n        $this->random['abc'] = 123;\n    }\n}"
    "Method calls should be avoied in bookkeeping"
+   ;; (message "Bookkeeping: %s" (phps-mode-test--hash-to-list (phps-mode-lex-analyzer--get-bookkeeping) t))
    (should (equal
-            (phps-mode-test--hash-to-list (phps-mode-lex-analyzer--get-bookkeeping) 1)
-            0)))
+            (phps-mode-test--hash-to-list (phps-mode-lex-analyzer--get-bookkeeping) t)
+            (list (list " class myClass function __construct id $this" 1) (list (list 89 94) 1) (list (list 114 119) 1)))))
 
   )
 

@@ -1147,7 +1147,10 @@ SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
                         ;; $this->...
                         (equal token 'T_STRING)
                         (equal previous-token 'T_OBJECT_OPERATOR)
-                        (equal previous2-token 'T_VARIABLE)))
+                        (equal previous2-token 'T_VARIABLE)
+                        (not (or
+                              (equal next-token "(")
+                              (equal next-token "[")))))
 
                   (let ((bookkeeping-namespace namespace)
                         (bookkeeping-index (list token-start token-end))
