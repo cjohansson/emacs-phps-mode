@@ -1047,7 +1047,8 @@
               phps-mode-lexer--LABEL
               "\\[")))
        (phps-mode-lexer--yy_push_state 'ST_VAR_OFFSET)
-       (phps-mode-lexer--RETURN_TOKEN 'T_VARIABLE (match-beginning 0) (match-end 0)))
+       (forward-char -1)
+       (phps-mode-lexer--RETURN_TOKEN 'T_VARIABLE (match-beginning 0) (- (match-end 0) 1)))
 
       (phps-mode-lexer--match-macro
        (and (or ST_IN_SCRIPTING ST_DOUBLE_QUOTES ST_HEREDOC ST_BACKQUOTE ST_VAR_OFFSET)

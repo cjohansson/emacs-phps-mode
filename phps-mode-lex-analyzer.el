@@ -1501,10 +1501,7 @@ SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
                 ;; Keep track of square bracket level
                 (when (string= token "[")
                   (setq square-bracket-level (1+ square-bracket-level)))
-                (when (and
-                       (string= token "]")
-                       (not in-double-quotes))
-                  ;; You can have stuff like this $var = "abc $b[test]"; and only the closing square bracket will be tokenized
+                (when (string= token "]")
                   (setq square-bracket-level (1- square-bracket-level))
                   (when first-token-on-line
                     (setq first-token-is-nesting-decrease t)))
@@ -1615,9 +1612,13 @@ SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
                 (when (or (equal token 'T_CURLY_OPEN)
                           (equal token 'T_DOLLAR_OPEN_CURLY_BRACES)
                           (string= token "{"))
-                  (setq curly-bracket-level (1+ curly-bracket-level)))
+                  (setq curly-bracket-level (1+ curly-bracket-level))
+                  (phps-mode-debug-message
+                   (message "New-curly-bracket-level: %s" curly-bracket-level)))
                 (when (string= token "}")
                   (setq curly-bracket-level (1- curly-bracket-level))
+                  (phps-mode-debug-message
+                   (message "New-curly-bracket-level: %s" curly-bracket-level))
 
                   (when (and switch-curly-stack
                              (= (1+ curly-bracket-level) (car switch-curly-stack)))
@@ -1975,6 +1976,19 @@ SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
                   in-concatenation-level
                   in-return-level
                   in-object-operator-level))
+
+                (phps-mode-debug-message
+                 (message "Nesting-end: %s from (+ %s %s %s %s %s %s %s %s %s)"
+                          nesting-end
+                          round-bracket-level
+                          square-bracket-level
+                          curly-bracket-level
+                          alternative-control-structure-level
+                          in-assignment-level
+                          in-class-declaration-level
+                          in-concatenation-level
+                          in-return-level
+                          in-object-operator-level))
 
                 ;; Keep track of whether we are inside a HEREDOC or NOWDOC
                 (when (equal token 'T_START_HEREDOC)
