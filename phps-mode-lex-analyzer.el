@@ -1081,6 +1081,7 @@ SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
               (in-anonymous-function-declaration)
               (in-anonymous-function-number 0)
               (in-anonymous-function-nesting-level)
+              (in-global-declaration nil)
               (bookkeeping (make-hash-table :test 'equal)))
 
           (push `(END_PARSE ,(length string) . ,(length string)) tokens)
@@ -1293,6 +1294,12 @@ SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
                                (equal token 'T_VARIABLE))
                       (setq bookkeeping-in-assignment t))
 
+                    ;; In global variable declaration
+                    (when (and in-global-declaration
+                               (equal token 'T_VARIABLE)
+                               imenu-in-function-name)
+                      (setq bookkeeping-in-assignment t))
+
                     ;; In [$abc, $def] = .. or array($abc, $def) = ...
                     (when (and
                            array-variable-declaration
@@ -1343,6 +1350,12 @@ SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
                       (setq array-variable-declaration t)
                     (setq array-variable-declaration nil)))
 
+                ;; Keep track of global declaration for bookkeeping
+                (when first-token-on-line
+                  (if (equal token 'T_GLOBAL)
+                      (setq in-global-declaration t)
+                    (setq in-global-declaration nil)))
+
                 ;; Keep track of open catch blocks for bookkeeping
                 (when (equal token 'T_CATCH)
                   (setq in-catch-declaration t))
@@ -1364,7 +1377,6 @@ SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
                            (string= token "}")
                            (equal curly-bracket-level (car in-anonymous-function-nesting-level)))
                   (pop in-anonymous-function-nesting-level))
-
 
                 ;; IMENU LOGIC
 

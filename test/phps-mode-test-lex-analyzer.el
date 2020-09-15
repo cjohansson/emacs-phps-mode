@@ -1446,6 +1446,13 @@
             (phps-mode-test--hash-to-list (phps-mode-lex-analyzer--get-bookkeeping) t)
             (list (list " id $random" 1) (list (list 9 16) 1) (list " id $bandom" 1) (list (list 18 25) 1) (list (list 45 52) 1) (list (list 78 85) 1) (list " id $random2" 1) (list (list 114 122) 1) (list " id $bandom2" 1) (list (list 124 132) 1) (list (list 153 161) 1) (list (list 187 195) 0)))))
 
+  (phps-mode-test--with-buffer
+   "<?php\n\n$var = 123;\n\nfunction test($abc) {\n    global $var;\n    if ($var) {\n        echo 'Hit';\n    }\n}"
+   "Global variable declaration in function"
+   (should (equal
+            (phps-mode-test--hash-to-list (phps-mode-lex-analyzer--get-bookkeeping) t)
+            (list (list " id $var" 1) (list (list 8 12) 1) (list " function test id $abc" 1) (list (list 35 39) 1) (list " function test id $var" 1) (list (list 54 58) 1) (list (list 68 72) 1)))))
+
   )
 
 (defun phps-mode-test-lex-analyzer ()
