@@ -176,7 +176,7 @@
    "Long inside array offset"
    ;; (message "Tokens: %s" phps-mode-lex-analyzer--tokens)
    (should (equal phps-mode-lex-analyzer--tokens
-                  '((T_OPEN_TAG 1 . 7) (T_ECHO 7 . 11) (T_VARIABLE 12 . 18) ("[" 18 . 19) (T_CONSTANT_ENCAPSED_STRING 19 . 24) ("]" 24 . 25) (";" 25 . 26) (T_ECHO 27 . 31) ("\"" 32 . 33) (T_ENCAPSED_AND_WHITESPACE 33 . 36) (T_VARIABLE 36 . 43) (T_NUM_STRING 43 . 45) ("]" 45 . 46) (T_CONSTANT_ENCAPSED_STRING 46 . 63) ("\"" 63 . 64) (";" 64 . 65)))))
+                  '((T_OPEN_TAG 1 . 7) (T_ECHO 7 . 11) (T_VARIABLE 12 . 18) ("[" 18 . 19) (T_CONSTANT_ENCAPSED_STRING 19 . 24) ("]" 24 . 25) (";" 25 . 26) (T_ECHO 27 . 31) ("\"" 32 . 33) (T_ENCAPSED_AND_WHITESPACE 33 . 36) (T_VARIABLE 36 . 42) ("[" 42 . 43) (T_NUM_STRING 43 . 45) ("]" 45 . 46) (T_CONSTANT_ENCAPSED_STRING 46 . 63) ("\"" 63 . 64) (";" 64 . 65)))))
 
   (phps-mode-test--with-buffer
    "<?php\n/*my comment */\n/** my doc comment */"
@@ -226,7 +226,7 @@
    "<?php echo \" Hello $variable[0], how are you?\";"
    nil
    (should (equal phps-mode-lex-analyzer--tokens
-                  '((T_OPEN_TAG 1 . 7) (T_ECHO 7 . 11) ("\"" 12 . 13) (T_ENCAPSED_AND_WHITESPACE 13 . 20) (T_VARIABLE 20 . 30) (T_NUM_STRING 30 . 31) ("]" 31 . 32) (T_CONSTANT_ENCAPSED_STRING 32 . 46) ("\"" 46 . 47) (";" 47 . 48)))))
+                  '((T_OPEN_TAG 1 . 7) (T_ECHO 7 . 11) ("\"" 12 . 13) (T_ENCAPSED_AND_WHITESPACE 13 . 20) (T_VARIABLE 20 . 29) ("[" 29 . 30) (T_NUM_STRING 30 . 31) ("]" 31 . 32) (T_CONSTANT_ENCAPSED_STRING 32 . 46) ("\"" 46 . 47) (";" 47 . 48)))))
 
   ;; HEREDOC
 
@@ -289,15 +289,16 @@
   ;; Backquotes
   (phps-mode-test--with-buffer
    "<?php `echo \"HELLO\"`;"
-   nil
+   "Backquote basic test"
    (should (equal phps-mode-lex-analyzer--tokens
                   '((T_OPEN_TAG 1 . 7) ("`" 7 . 8) (T_CONSTANT_ENCAPSED_STRING 8 . 20) ("`" 20 . 21) (";" 21 . 22)))))
 
   (phps-mode-test--with-buffer
    "<?php `echo \"HELLO $variable or {$variable2} or ${variable3} or $variable[index][0] here\"`;"
-   nil
+   "Double quoted strings with mixed variables"
+   ;; (message "Tokens: %s" phps-mode-lex-analyzer--tokens)
    (should (equal phps-mode-lex-analyzer--tokens
-                  '((T_OPEN_TAG 1 . 7) ("`" 7 . 8) (T_CONSTANT_ENCAPSED_STRING 8 . 20) (T_VARIABLE 20 . 29) (T_CONSTANT_ENCAPSED_STRING 29 . 33) (T_CURLY_OPEN 33 . 34) (T_VARIABLE 34 . 44) ("}" 44 . 45) (T_CONSTANT_ENCAPSED_STRING 45 . 49) (T_DOLLAR_OPEN_CURLY_BRACES 49 . 51) (T_STRING_VARNAME 51 . 60) ("}" 60 . 61) (T_CONSTANT_ENCAPSED_STRING 61 . 65) (T_VARIABLE 65 . 75) (T_STRING 75 . 80) ("]" 80 . 81) (T_CONSTANT_ENCAPSED_STRING 81 . 90) ("`" 90 . 91) (";" 91 . 92)))))
+                  '((T_OPEN_TAG 1 . 7) ("`" 7 . 8) (T_CONSTANT_ENCAPSED_STRING 8 . 20) (T_VARIABLE 20 . 29) (T_CONSTANT_ENCAPSED_STRING 29 . 33) (T_CURLY_OPEN 33 . 34) (T_VARIABLE 34 . 44) ("}" 44 . 45) (T_CONSTANT_ENCAPSED_STRING 45 . 49) (T_DOLLAR_OPEN_CURLY_BRACES 49 . 51) (T_STRING_VARNAME 51 . 60) ("}" 60 . 61) (T_CONSTANT_ENCAPSED_STRING 61 . 65) (T_VARIABLE 65 . 74) ("[" 74 . 75) (T_STRING 75 . 80) ("]" 80 . 81) (T_CONSTANT_ENCAPSED_STRING 81 . 90) ("`" 90 . 91) (";" 91 . 92)))))
 
   (phps-mode-test--with-buffer
    "<?php $wpdb->posts; ?>"
@@ -358,6 +359,13 @@
    "Dynamic object method"
    (should (equal phps-mode-lex-analyzer--tokens
                   '((T_OPEN_TAG 1 . 7) (T_CLASS 7 . 12) (T_STRING 13 . 20) ("{" 21 . 22) (T_FUNCTION 23 . 31) (T_STRING 32 . 42) ("(" 42 . 43) (")" 43 . 44) ("{" 45 . 46) (T_RETURN 47 . 53) (T_CONSTANT_ENCAPSED_STRING 54 . 61) (";" 61 . 62) ("}" 63 . 64) ("}" 64 . 65) (T_VARIABLE 66 . 72) ("=" 73 . 74) (T_NEW 75 . 78) (T_STRING 79 . 86) ("(" 86 . 87) (")" 87 . 88) (";" 88 . 89) (T_VARIABLE 90 . 99) ("=" 100 . 101) (T_CONSTANT_ENCAPSED_STRING 102 . 112) (";" 112 . 113) (T_ECHO 114 . 118) (T_VARIABLE 119 . 125) (T_OBJECT_OPERATOR 125 . 127) ("{" 127 . 128) ("\"" 128 . 129) (T_ENCAPSED_AND_WHITESPACE 129 . 131) (T_VARIABLE 131 . 140) ("\"" 140 . 141) ("}" 141 . 142) ("(" 142 . 143) (")" 143 . 144) (";" 144 . 145)))))
+
+  (phps-mode-test--with-buffer
+   "<?php\n$product_path = \"${filename[0]}/${filename[1]}/\";\n    echo 'here';\n"
+   "String with two dollar_open_curly_braces with indexes"
+   ;; (message "Tokens: %s" phps-mode-lex-analyzer--tokens)
+   (should (equal phps-mode-lex-analyzer--tokens
+                  '((T_OPEN_TAG 1 . 7) (T_VARIABLE 7 . 20) ("=" 21 . 22) ("\"" 23 . 24) (T_ENCAPSED_AND_WHITESPACE 24 . 24) (T_DOLLAR_OPEN_CURLY_BRACES 24 . 26) (T_STRING_VARNAME 26 . 34) ("[" 34 . 35) (T_LNUMBER 35 . 36) ("]" 36 . 37) ("}" 37 . 38) (T_CONSTANT_ENCAPSED_STRING 38 . 39) (T_DOLLAR_OPEN_CURLY_BRACES 39 . 41) (T_STRING_VARNAME 41 . 49) ("[" 49 . 50) (T_LNUMBER 50 . 51) ("]" 51 . 52) ("}" 52 . 53) (T_CONSTANT_ENCAPSED_STRING 53 . 54) ("\"" 54 . 55) (";" 55 . 56) (T_ECHO 61 . 65) (T_CONSTANT_ENCAPSED_STRING 66 . 72) (";" 72 . 73)))))
 
   )
 
