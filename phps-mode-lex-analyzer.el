@@ -1082,6 +1082,9 @@ SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
               (in-anonymous-function-number 0)
               (in-anonymous-function-nesting-level)
               (in-global-declaration nil)
+              (in-arrow-fn nil)
+              (in-arrow-fn-declaration nil)
+              (in-arrow-fn-number 0)
               (bookkeeping (make-hash-table :test 'equal)))
 
           (push `(END_PARSE ,(length string) . ,(length string)) tokens)
@@ -1155,6 +1158,7 @@ SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
                               (equal next-token "[")))))
 
                   (let ((bookkeeping-namespace namespace)
+                        (bookkeeping-alternative-namespace nil)
                         (bookkeeping-index (list token-start token-end))
                         (bookkeeping-variable-name (substring string (1- token-start) (1- token-end)))
                         (bookkeeping-in-assignment nil)
@@ -1219,12 +1223,24 @@ SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
 
                       ;; Anonymous function level
                       (when in-anonymous-function-nesting-level
-                        (setq bookkeeping-namespace (format "%s anonymous function %s" bookkeeping-namespace in-anonymous-function-number))))
+                        (setq bookkeeping-namespace (format "%s anonymous function %s" bookkeeping-namespace in-anonymous-function-number)))
+
+                      ;; In arrow function body
+                      (when in-arrow-fn
+                        (if in-arrow-fn-declaration
+                            (setq bookkeeping-namespace (format "%s arrow function %s" bookkeeping-namespace in-arrow-fn-number))
+                          (setq bookkeeping-alternative-namespace bookkeeping-namespace)
+                          (setq bookkeeping-namespace (format "%s arrow function %s" bookkeeping-namespace in-arrow-fn-number)))))
 
                     (unless bookkeeping-named
                       (when (equal previous-token 'T_STATIC)
-                        (setq bookkeeping-namespace (concat bookkeeping-namespace " static")))
-                      (setq bookkeeping-namespace (concat bookkeeping-namespace " id " bookkeeping-variable-name)))
+                        (setq bookkeeping-namespace (concat bookkeeping-namespace " static"))
+                        (when bookkeeping-alternative-namespace
+                          (setq bookkeeping-alternative-namespace (concat bookkeeping-alternative-namespace " static"))))
+
+                      (setq bookkeeping-namespace (concat bookkeeping-namespace " id " bookkeeping-variable-name))
+                      (when bookkeeping-alternative-namespace
+                        (setq bookkeeping-alternative-namespace (concat bookkeeping-alternative-namespace " id " bookkeeping-variable-name))))
 
                     (phps-mode-debug-message
                      (message "Bookkeeping-namespace: '%s'" bookkeeping-namespace))
@@ -1294,6 +1310,11 @@ SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
                                (equal token 'T_VARIABLE))
                       (setq bookkeeping-in-assignment t))
 
+                    ;; In arrow function variable declaration
+                    (when (and in-arrow-fn-declaration
+                               (equal token 'T_VARIABLE))
+                      (setq bookkeeping-in-assignment t))
+
                     ;; In global variable declaration
                     (when (and in-global-declaration
                                (equal token 'T_VARIABLE)
@@ -1339,9 +1360,15 @@ SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
                             (phps-mode-debug-message
                              (message "Bookkeeping-hit: %s" bookkeeping-index))
                             (puthash bookkeeping-index 1 bookkeeping))
-                        (phps-mode-debug-message
-                         (message "Bookkeeping-miss: %s" bookkeeping-index))
-                        (puthash bookkeeping-index 0 bookkeeping)))))
+                        (if (and bookkeeping-alternative-namespace
+                                 (gethash bookkeeping-alternative-namespace bookkeeping))
+                            (progn
+                              (phps-mode-debug-message
+                               (message "Bookkeeping-alternative-hit: %s" bookkeeping-index))
+                              (puthash bookkeeping-index 1 bookkeeping))
+                          (phps-mode-debug-message
+                           (message "Bookkeeping-miss: %s" bookkeeping-index))
+                          (puthash bookkeeping-index 0 bookkeeping))))))
 
                 ;; Keep track of array variable declaration
                 (when first-token-on-line
@@ -1377,6 +1404,22 @@ SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
                            (string= token "}")
                            (equal curly-bracket-level (car in-anonymous-function-nesting-level)))
                   (pop in-anonymous-function-nesting-level))
+
+                ;; Keep track of arrow function declaration
+                (when (equal token 'T_FN)
+                  (unless in-arrow-fn
+                    (setq in-arrow-fn-number (1+ in-arrow-fn-number)))
+                  (setq in-arrow-fn t)
+                  (setq in-arrow-fn-declaration t))
+                (when (and
+                       in-arrow-fn-declaration
+                       (equal token ")"))
+                  (setq in-arrow-fn-declaration nil))
+                (when (and
+                       in-arrow-fn
+                       (equal token ";"))
+                  (setq in-arrow-fn nil)
+                  (setq in-arrow-fn-declaration nil))
 
                 ;; IMENU LOGIC
 
