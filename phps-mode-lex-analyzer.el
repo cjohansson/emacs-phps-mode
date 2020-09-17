@@ -608,145 +608,146 @@
     (setq buffer (current-buffer)))
   (phps-mode-debug-message
    (message "Run process changes on buffer '%s'" buffer))
-  (with-current-buffer buffer
-    (let ((run-full-lexer nil)
-          (old-tokens phps-mode-lex-analyzer--tokens)
-          (old-states phps-mode-lex-analyzer--states)
-          (log '()))
+  (when (get-buffer buffer)
+    (with-current-buffer buffer
+      (let ((run-full-lexer nil)
+            (old-tokens phps-mode-lex-analyzer--tokens)
+            (old-states phps-mode-lex-analyzer--states)
+            (log '()))
 
-      (if phps-mode-lex-analyzer--change-min
-          (progn
-            (phps-mode-debug-message
-             (message "Processing change point minimum: %s" phps-mode-lex-analyzer--change-min))
-            (let ((incremental-state nil)
-                  (incremental-state-stack nil)
-                  (incremental-heredoc-label nil)
-                  (incremental-heredoc-label-stack nil)
-                  (incremental-tokens nil)
-                  (head-states '())
-                  (head-tokens '())
-                  (change-start phps-mode-lex-analyzer--change-min)
-                  (incremental-start-new-buffer phps-mode-lex-analyzer--change-min))
-
-              ;; Reset idle timer
-              (phps-mode-lex-analyzer--cancel-idle-timer)
-
-              ;; Reset buffer changes minimum index
-              (phps-mode-lex-analyzer--reset-changes)
-
-              ;; Reset tokens and states here
-              (setq phps-mode-lex-analyzer--tokens nil)
-              (setq phps-mode-lex-analyzer--states nil)
-              (setq phps-mode-lex-analyzer--state nil)
-              (setq phps-mode-lex-analyzer--state-stack nil)
-              (setq phps-mode-lex-analyzer--heredoc-label nil)
-              (setq phps-mode-lex-analyzer--heredoc-label-stack nil)
-
-              ;; NOTE Starts are inclusive while ends are exclusive buffer locations
-
-              ;; Some tokens have dynamic length and if a change occurs at token-end
-              ;; we must start the incremental process at previous token start
-
-              ;; Build list of tokens from old buffer before start of changes (head-tokens)
-
-              (catch 'quit
-                (dolist (token old-tokens)
-                  (let ((start (car (cdr token)))
-                        (end (cdr (cdr token))))
-                    (if (< end change-start)
-                        (push token head-tokens)
-                      (when (< start change-start)
-                        (phps-mode-debug-message
-                         (message "New incremental-start-new-buffer: %s" start))
-                        (setq incremental-start-new-buffer start))
-                      (throw 'quit "break")))))
-
-              (setq head-tokens (nreverse head-tokens))
+        (if phps-mode-lex-analyzer--change-min
+            (progn
               (phps-mode-debug-message
-               (message "Head tokens: %s" head-tokens)
-               (message "Incremental-start-new-buffer: %s" incremental-start-new-buffer))
+               (message "Processing change point minimum: %s" phps-mode-lex-analyzer--change-min))
+              (let ((incremental-state nil)
+                    (incremental-state-stack nil)
+                    (incremental-heredoc-label nil)
+                    (incremental-heredoc-label-stack nil)
+                    (incremental-tokens nil)
+                    (head-states '())
+                    (head-tokens '())
+                    (change-start phps-mode-lex-analyzer--change-min)
+                    (incremental-start-new-buffer phps-mode-lex-analyzer--change-min))
 
-              ;; Did we find a start for the incremental process?
-              (if head-tokens
-                  (progn
-                    (phps-mode-debug-message
-                     (message "Found head tokens"))
+                ;; Reset idle timer
+                (phps-mode-lex-analyzer--cancel-idle-timer)
 
-                    ;; TODO Change on ST_END_HEREDOC should start before it
+                ;; Reset buffer changes minimum index
+                (phps-mode-lex-analyzer--reset-changes)
 
-                    ;; In old buffer:
-                    ;; 1. Determine state (incremental-state) and state-stack (incremental-state-stack) heredoc label (incremental-heredoc-label) heredoc-label-stack (heredoc-label-stack) before incremental start
-                    ;; 2. Build list of states before incremental start (head-states)
-                    (catch 'quit
-                      (dolist (state-object (nreverse old-states))
-                        (let ((end (nth 1 state-object)))
-                          (if (< end change-start)
-                              (progn
-                                (setq incremental-state (nth 2 state-object))
-                                (setq incremental-state-stack (nth 3 state-object))
-                                (setq incremental-heredoc-label (nth 4 state-object))
-                                (setq incremental-heredoc-label-stack (nth 5 state-object))
-                                (push state-object head-states))
-                            (throw 'quit "break")))))
+                ;; Reset tokens and states here
+                (setq phps-mode-lex-analyzer--tokens nil)
+                (setq phps-mode-lex-analyzer--states nil)
+                (setq phps-mode-lex-analyzer--state nil)
+                (setq phps-mode-lex-analyzer--state-stack nil)
+                (setq phps-mode-lex-analyzer--heredoc-label nil)
+                (setq phps-mode-lex-analyzer--heredoc-label-stack nil)
 
-                    (phps-mode-debug-message
-                     (message "Head states: %s" head-states)
-                     (message "Incremental state: %s" incremental-state)
-                     (message "State stack: %s" incremental-state-stack)
-                     (message "Incremental heredoc-label: %s" incremental-heredoc-label)
-                     (message "Incremental heredoc-label-stack: %s" incremental-heredoc-label-stack))
+                ;; NOTE Starts are inclusive while ends are exclusive buffer locations
 
-                    (if (and
-                         head-states
-                         incremental-state)
-                        (progn
+                ;; Some tokens have dynamic length and if a change occurs at token-end
+                ;; we must start the incremental process at previous token start
+
+                ;; Build list of tokens from old buffer before start of changes (head-tokens)
+
+                (catch 'quit
+                  (dolist (token old-tokens)
+                    (let ((start (car (cdr token)))
+                          (end (cdr (cdr token))))
+                      (if (< end change-start)
+                          (push token head-tokens)
+                        (when (< start change-start)
                           (phps-mode-debug-message
-                           (message "Found head states"))
+                           (message "New incremental-start-new-buffer: %s" start))
+                          (setq incremental-start-new-buffer start))
+                        (throw 'quit "break")))))
 
-                          (push (list 'INCREMENTAL-LEX incremental-start-new-buffer) log)
-
-                          ;; Do partial lex from previous-token-end to change-stop
-
-                          (phps-mode-lex-analyzer--incremental-lex-string
-                           (buffer-name)
-                           (buffer-substring-no-properties (point-min) (point-max))
-                           incremental-start-new-buffer
-                           (point-max)
-                           head-states
-                           incremental-state
-                           incremental-state-stack
-                           incremental-heredoc-label
-                           incremental-heredoc-label-stack
-                           head-tokens
-                           force-synchronous)
-
-                          (phps-mode-debug-message
-                           (message "Incremental tokens: %s" incremental-tokens)))
-
-                      (push (list 'FOUND-NO-HEAD-STATES incremental-start-new-buffer) log)
-                      (phps-mode-debug-message
-                       (message "Found no head states"))
-
-                      (setq run-full-lexer t)))
-
-                (push (list 'FOUND-NO-HEAD-TOKENS incremental-start-new-buffer) log)
+                (setq head-tokens (nreverse head-tokens))
                 (phps-mode-debug-message
-                 (message "Found no head tokens"))
+                 (message "Head tokens: %s" head-tokens)
+                 (message "Incremental-start-new-buffer: %s" incremental-start-new-buffer))
 
-                (setq run-full-lexer t))))
-        (push (list 'FOUND-NO-CHANGE-POINT-MINIMUM) log)
-        (phps-mode-debug-message
-         (message "Found no change point minimum"))
+                ;; Did we find a start for the incremental process?
+                (if head-tokens
+                    (progn
+                      (phps-mode-debug-message
+                       (message "Found head tokens"))
 
-        (setq run-full-lexer t))
+                      ;; TODO Change on ST_END_HEREDOC should start before it
 
-      (when run-full-lexer
-        (push (list 'RUN-FULL-LEXER) log)
-        (phps-mode-debug-message
-         (message "Running full lexer"))
-        (phps-mode-lex-analyzer--re2c-run force-synchronous))
+                      ;; In old buffer:
+                      ;; 1. Determine state (incremental-state) and state-stack (incremental-state-stack) heredoc label (incremental-heredoc-label) heredoc-label-stack (heredoc-label-stack) before incremental start
+                      ;; 2. Build list of states before incremental start (head-states)
+                      (catch 'quit
+                        (dolist (state-object (nreverse old-states))
+                          (let ((end (nth 1 state-object)))
+                            (if (< end change-start)
+                                (progn
+                                  (setq incremental-state (nth 2 state-object))
+                                  (setq incremental-state-stack (nth 3 state-object))
+                                  (setq incremental-heredoc-label (nth 4 state-object))
+                                  (setq incremental-heredoc-label-stack (nth 5 state-object))
+                                  (push state-object head-states))
+                              (throw 'quit "break")))))
 
-      log)))
+                      (phps-mode-debug-message
+                       (message "Head states: %s" head-states)
+                       (message "Incremental state: %s" incremental-state)
+                       (message "State stack: %s" incremental-state-stack)
+                       (message "Incremental heredoc-label: %s" incremental-heredoc-label)
+                       (message "Incremental heredoc-label-stack: %s" incremental-heredoc-label-stack))
+
+                      (if (and
+                           head-states
+                           incremental-state)
+                          (progn
+                            (phps-mode-debug-message
+                             (message "Found head states"))
+
+                            (push (list 'INCREMENTAL-LEX incremental-start-new-buffer) log)
+
+                            ;; Do partial lex from previous-token-end to change-stop
+
+                            (phps-mode-lex-analyzer--incremental-lex-string
+                             (buffer-name)
+                             (buffer-substring-no-properties (point-min) (point-max))
+                             incremental-start-new-buffer
+                             (point-max)
+                             head-states
+                             incremental-state
+                             incremental-state-stack
+                             incremental-heredoc-label
+                             incremental-heredoc-label-stack
+                             head-tokens
+                             force-synchronous)
+
+                            (phps-mode-debug-message
+                             (message "Incremental tokens: %s" incremental-tokens)))
+
+                        (push (list 'FOUND-NO-HEAD-STATES incremental-start-new-buffer) log)
+                        (phps-mode-debug-message
+                         (message "Found no head states"))
+
+                        (setq run-full-lexer t)))
+
+                  (push (list 'FOUND-NO-HEAD-TOKENS incremental-start-new-buffer) log)
+                  (phps-mode-debug-message
+                   (message "Found no head tokens"))
+
+                  (setq run-full-lexer t))))
+          (push (list 'FOUND-NO-CHANGE-POINT-MINIMUM) log)
+          (phps-mode-debug-message
+           (message "Found no change point minimum"))
+
+          (setq run-full-lexer t))
+
+        (when run-full-lexer
+          (push (list 'RUN-FULL-LEXER) log)
+          (phps-mode-debug-message
+           (message "Running full lexer"))
+          (phps-mode-lex-analyzer--re2c-run force-synchronous))
+
+        log))))
 
 (defun phps-mode-lex-analyzer--process-current-buffer (&optional force)
   "Process current buffer, generate indentations and Imenu, trigger incremental lexer if we have change.  FORCE processes without change."
@@ -2815,58 +2816,59 @@ SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
   (let ((buffer (generate-new-buffer "*PHPs Lexer*")))
 
     ;; Create temporary buffer and run lexer in it
-    (with-current-buffer buffer
-      (insert contents)
+    (when (get-buffer buffer)
+      (with-current-buffer buffer
+        (insert contents)
 
-      (if tokens
-          (setq phps-mode-lexer--tokens (nreverse tokens))
-        (setq phps-mode-lexer--tokens nil))
-      (if state
-          (setq phps-mode-lexer--state state)
-        (setq phps-mode-lexer--state 'ST_INITIAL))
-      (if states
-          (setq phps-mode-lexer--states states)
-        (setq phps-mode-lexer--states nil))
-      (if state-stack
-          (setq phps-mode-lexer--state-stack state-stack)
-        (setq phps-mode-lexer--state-stack nil))
-      (if heredoc-label
-          (setq phps-mode-lexer--heredoc-label heredoc-label)
-        (setq phps-mode-lexer--heredoc-label nil))
-      (if heredoc-label-stack
-          (setq phps-mode-lexer--heredoc-label-stack heredoc-label-stack)
-        (setq phps-mode-lexer--heredoc-label-stack nil))
+        (if tokens
+            (setq phps-mode-lexer--tokens (nreverse tokens))
+          (setq phps-mode-lexer--tokens nil))
+        (if state
+            (setq phps-mode-lexer--state state)
+          (setq phps-mode-lexer--state 'ST_INITIAL))
+        (if states
+            (setq phps-mode-lexer--states states)
+          (setq phps-mode-lexer--states nil))
+        (if state-stack
+            (setq phps-mode-lexer--state-stack state-stack)
+          (setq phps-mode-lexer--state-stack nil))
+        (if heredoc-label
+            (setq phps-mode-lexer--heredoc-label heredoc-label)
+          (setq phps-mode-lexer--heredoc-label nil))
+        (if heredoc-label-stack
+            (setq phps-mode-lexer--heredoc-label-stack heredoc-label-stack)
+          (setq phps-mode-lexer--heredoc-label-stack nil))
 
-      ;; Setup lexer settings
-      (when (boundp 'phps-mode-syntax-table)
-        (setq semantic-lex-syntax-table phps-mode-syntax-table))
-      (setq semantic-lex-analyzer #'phps-mode-lex-analyzer--re2c-lex)
+        ;; Setup lexer settings
+        (when (boundp 'phps-mode-syntax-table)
+          (setq semantic-lex-syntax-table phps-mode-syntax-table))
+        (setq semantic-lex-analyzer #'phps-mode-lex-analyzer--re2c-lex)
 
-      ;; Catch errors to kill generated buffer
-      (let ((got-error t))
-        (unwind-protect
-            ;; Run lexer or incremental lexer
-            (progn
-              (if (and start end)
-                  (let ((incremental-tokens (semantic-lex start end)))
-                    (setq
-                     phps-mode-lex-analyzer--tokens
-                     (append tokens incremental-tokens)))
-                (setq
-                 phps-mode-lex-analyzer--tokens
-                 (semantic-lex-buffer)))
-              (setq got-error nil))
-          (when got-error
-            (kill-buffer))))
+        ;; Catch errors to kill generated buffer
+        (let ((got-error t))
+          (unwind-protect
+              ;; Run lexer or incremental lexer
+              (progn
+                (if (and start end)
+                    (let ((incremental-tokens (semantic-lex start end)))
+                      (setq
+                       phps-mode-lex-analyzer--tokens
+                       (append tokens incremental-tokens)))
+                  (setq
+                   phps-mode-lex-analyzer--tokens
+                   (semantic-lex-buffer)))
+                (setq got-error nil))
+            (when got-error
+              (kill-buffer))))
 
-      ;; Copy variables outside of buffer
-      (setq state phps-mode-lexer--state)
-      (setq state-stack phps-mode-lexer--state-stack)
-      (setq states phps-mode-lexer--states)
-      (setq tokens (nreverse phps-mode-lexer--tokens))
-      (setq heredoc-label phps-mode-lexer--heredoc-label)
-      (setq heredoc-label-stack phps-mode-lexer--heredoc-label-stack)
-      (kill-buffer)))
+        ;; Copy variables outside of buffer
+        (setq state phps-mode-lexer--state)
+        (setq state-stack phps-mode-lexer--state-stack)
+        (setq states phps-mode-lexer--states)
+        (setq tokens (nreverse phps-mode-lexer--tokens))
+        (setq heredoc-label phps-mode-lexer--heredoc-label)
+        (setq heredoc-label-stack phps-mode-lexer--heredoc-label-stack)
+        (kill-buffer))))
   (list tokens states state state-stack heredoc-label heredoc-label-stack))
 
 (provide 'phps-mode-lex-analyzer)
