@@ -1474,6 +1474,13 @@
             (phps-mode-test--hash-to-list (phps-mode-lex-analyzer--get-bookkeeping) t)
             (list (list " id $var" 1) (list (list 12 16) 1)))))
 
+  (phps-mode-test--with-buffer
+   "<?php\n\nif (isset($x)) {\n    if ($x) {\n        echo 'Hit';\n        if (isset($i, $u)) {\n            if ($i) {\n                echo 'Hit';\n            }\n            if ($u) {\n                echo 'Hit';\n            }\n        }\n        if ($i) {\n            echo 'Miss';\n        }\n        if ($u) {\n            echo 'Miss';\n        }\n    }\n}\nif ($x) {\n    echo 'Miss';\n}\n\nif (!empty($y)) {\n    if ($y) {\n        echo 'Hit';\n        if (!empty($k) && !empty($L)) {\n            if ($k) {\n                echo 'Hit';\n            }\n            if ($L) {\n                echo 'Hit';\n            }\n        }\n        if ($k) {\n            echo 'Miss';\n        }\n        if ($L) {\n            echo 'Miss';\n        }\n    }\n}\nif ($y) {\n    echo 'Miss';\n}\n"
+   "isset() and !empty() scoped variables."
+   (should (equal
+            (phps-mode-test--hash-to-list (phps-mode-lex-analyzer--get-bookkeeping) t)
+            (list (list " defined 1 id $x" 1) (list (list 17 19) 1) (list (list 32 34) 1) (list (list 70 72) 0) (list " defined 2 id $y" 1) (list (list 107 109) 1) (list (list 122 124) 1) (list (list 160 162) 0)))))
+
   )
 
 (defun phps-mode-test-lex-analyzer ()

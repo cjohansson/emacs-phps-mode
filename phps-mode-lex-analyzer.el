@@ -1087,6 +1087,10 @@ SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
               (in-arrow-fn-declaration nil)
               (in-arrow-fn-number 0)
               (in-conditional-declaration nil)
+              (in-defined-prop nil)
+              (in-defined-block-number 0)
+              (in-defined-block nil)
+              (in-defined-awaiting-start nil)
               (bookkeeping (make-hash-table :test 'equal)))
 
           (push `(END_PARSE ,(length string) . ,(length string)) tokens)
@@ -1237,7 +1241,13 @@ SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
                           (if in-arrow-fn-declaration
                               (setq bookkeeping-namespace (format "%s arrow function %s" bookkeeping-namespace in-arrow-fn-number))
                             (setq bookkeeping-alternative-namespace bookkeeping-namespace)
-                            (setq bookkeeping-namespace (format "%s arrow function %s" bookkeeping-namespace in-arrow-fn-number)))))
+                            (setq bookkeeping-namespace (format "%s arrow function %s" bookkeeping-namespace in-arrow-fn-number))))
+
+                        ;; Add namespace for isset / empty scope here
+                        (when in-defined-block
+                          (setq bookkeeping-namespace (format "%s defined %s" bookkeeping-namespace in-defined-block-number)))
+
+                        )
 
                       (unless bookkeeping-named
                         (when (equal previous-token 'T_STATIC)
@@ -1250,7 +1260,8 @@ SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
                           (setq bookkeeping-alternative-namespace (concat bookkeeping-alternative-namespace " id " bookkeeping-variable-name))))
 
                       (phps-mode-debug-message
-                       (message "Bookkeeping-namespace: '%s'" bookkeeping-namespace))
+                       (message "Bookkeeping-namespace: '%s'" bookkeeping-namespace)
+                       )
 
                       ;; Support for ($i = 0), if ($a = ), if (!$ = ), while ($a = ) and do {} while ($a = ) assignments here
                       (when (and
@@ -1327,6 +1338,12 @@ SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
                       (when (and
                              array-variable-declaration
                              (equal token 'T_VARIABLE))
+                        (setq bookkeeping-in-assignment t))
+
+                      ;; In isset($abc, $def) or empty($test)
+                      (when (and
+                             (equal token 'T_VARIABLE)
+                             in-defined-prop)
                         (setq bookkeeping-in-assignment t))
 
                       ;; Class variables
@@ -1437,6 +1454,31 @@ SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
                        (equal token ")")
                        (= in-conditional-declaration round-bracket-level))
                   (setq in-conditional-declaration nil))
+
+                ;; Keep track of when we are inside a defined proposition isset or !empty
+                (when (and
+                       (not in-defined-prop)
+                       (or
+                        (equal token 'T_ISSET)
+                        (and
+                         (equal token 'T_EMPTY)
+                         (string= previous-token "!"))))
+                  (setq in-defined-prop (1+ round-bracket-level))
+                  (setq in-defined-block-number (1+ in-defined-block-number))
+                  (push (+ curly-bracket-level alternative-control-structure-level 1) in-defined-block)
+                  (setq in-defined-awaiting-start t))
+                (when (and in-defined-block
+                           (not in-defined-awaiting-start)
+                           (< (+ curly-bracket-level alternative-control-structure-level) (car in-defined-block)))
+                  (pop in-defined-block))
+                (when (and in-defined-awaiting-start
+                           (equal (+ curly-bracket-level alternative-control-structure-level) (car in-defined-block)))
+                  (setq in-defined-awaiting-start nil))
+                (when (and
+                       in-defined-prop
+                       (equal token ")")
+                       (equal in-defined-prop round-bracket-level))
+                  (setq in-defined-prop nil))
 
                 ;; IMENU LOGIC
 
