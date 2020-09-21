@@ -1147,229 +1147,234 @@ SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
               (when token
 
                 ;; BOOKKEEPING LOGIC
-                (when (or
-                       (equal token 'T_VARIABLE)
-                       (and
-                        ;; $this->...
-                        (equal token 'T_STRING)
-                        (equal previous-token 'T_OBJECT_OPERATOR)
-                        (equal previous2-token 'T_VARIABLE)
-                        (not (or
-                              (equal next-token "(")
-                              (equal next-token "[")))))
+                (let ((downcased-previous2))
+                  (when (and
+                         (equal token 'T_STRING)
+                         (equal previous-token 'T_OBJECT_OPERATOR)
+                         (equal previous2-token 'T_VARIABLE))
+                    (setq downcased-previous2 (downcase (substring string (1- previous2-token-start) (1- previous2-token-end)))))
+                  (when (or
+                         (equal token 'T_VARIABLE)
+                         (and
+                          ;; $this->...
+                          (equal token 'T_STRING)
+                          (equal downcased-previous2 "$this")
+                          (not (or
+                                (equal next-token "(")
+                                (equal next-token "[")))))
 
-                  (let ((bookkeeping-namespace namespace)
-                        (bookkeeping-alternative-namespace nil)
-                        (bookkeeping-index (list token-start token-end))
-                        (bookkeeping-variable-name (substring string (1- token-start) (1- token-end)))
-                        (bookkeeping-in-assignment nil)
-                        (bookkeeping-named nil)
-                        (bookkeeping-is-superglobal nil))
+                    (let ((bookkeeping-namespace namespace)
+                          (bookkeeping-alternative-namespace nil)
+                          (bookkeeping-index (list token-start token-end))
+                          (bookkeeping-variable-name (substring string (1- token-start) (1- token-end)))
+                          (bookkeeping-in-assignment nil)
+                          (bookkeeping-named nil)
+                          (bookkeeping-is-superglobal nil))
 
-                    ;; Flag super-globals
-                    (when (and (equal token 'T_VARIABLE)
-                               (or
-                                (equal bookkeeping-variable-name "$_COOKIE")
-                                (equal bookkeeping-variable-name "$_GET")
-                                (equal bookkeeping-variable-name "$_GLOBALS")
-                                (equal bookkeeping-variable-name "$_POST")
-                                (equal bookkeeping-variable-name "$_REQUEST")
-                                (equal bookkeeping-variable-name "$_SERVER")
-                                (equal bookkeeping-variable-name "$_SESSION")
-                                (equal bookkeeping-variable-name "$_FILES")))
-                      (setq bookkeeping-is-superglobal t))
+                      ;; Flag super-globals
+                      (when (and (equal token 'T_VARIABLE)
+                                 (or
+                                  (equal bookkeeping-variable-name "$_COOKIE")
+                                  (equal bookkeeping-variable-name "$_GET")
+                                  (equal bookkeeping-variable-name "$_GLOBALS")
+                                  (equal bookkeeping-variable-name "$_POST")
+                                  (equal bookkeeping-variable-name "$_REQUEST")
+                                  (equal bookkeeping-variable-name "$_SERVER")
+                                  (equal bookkeeping-variable-name "$_SESSION")
+                                  (equal bookkeeping-variable-name "$_FILES")))
+                        (setq bookkeeping-is-superglobal t))
 
-                    ;; Build name-space
-                    (when (and imenu-in-namespace-name
-                               (or imenu-in-class-name imenu-in-function-name))
-                      (setq bookkeeping-namespace (concat bookkeeping-namespace " namespace " imenu-in-namespace-name)))
-                    (when imenu-in-class-name
-                      (setq bookkeeping-namespace (concat bookkeeping-namespace " class " imenu-in-class-name)))
+                      ;; Build name-space
+                      (when (and imenu-in-namespace-name
+                                 (or imenu-in-class-name imenu-in-function-name))
+                        (setq bookkeeping-namespace (concat bookkeeping-namespace " namespace " imenu-in-namespace-name)))
+                      (when imenu-in-class-name
+                        (setq bookkeeping-namespace (concat bookkeeping-namespace " class " imenu-in-class-name)))
 
-                    (when (and
-                           (equal token 'T_VARIABLE)
-                           (string= (downcase bookkeeping-variable-name) "$this"))
-                      (setq bookkeeping-variable-name "$this"))
+                      (when (and
+                             (equal token 'T_VARIABLE)
+                             (string= (downcase bookkeeping-variable-name) "$this"))
+                        (setq bookkeeping-variable-name "$this"))
 
-                    ;; self::$abc ... here
-                    (when (and
-                           (equal token 'T_VARIABLE)
-                           (equal previous-token 'T_PAAMAYIM_NEKUDOTAYIM))
-                      (let ((bookkeeping2-variable-name
-                             (downcase (substring string (1- previous2-token-start) (1- previous2-token-end)))))
-                        (when (string= bookkeeping2-variable-name "self")
-                          ;; (message "Found self: %s::%s" bookkeeping2-variable-name bookkeeping-variable-name)
-                          (setq bookkeeping-namespace (concat bookkeeping-namespace " static id " bookkeeping-variable-name))
-                          (setq bookkeeping-named t))))
+                      ;; self::$abc ... here
+                      (when (and
+                             (equal token 'T_VARIABLE)
+                             (equal previous-token 'T_PAAMAYIM_NEKUDOTAYIM))
+                        (let ((bookkeeping2-variable-name
+                               (downcase (substring string (1- previous2-token-start) (1- previous2-token-end)))))
+                          (when (string= bookkeeping2-variable-name "self")
+                            ;; (message "Found self: %s::%s" bookkeeping2-variable-name bookkeeping-variable-name)
+                            (setq bookkeeping-namespace (concat bookkeeping-namespace " static id " bookkeeping-variable-name))
+                            (setq bookkeeping-named t))))
 
-                    ;; $this->... here
-                    (when (equal token 'T_STRING)
-                      (let ((bookkeeping2-variable-name
-                             (downcase (substring string (1- previous2-token-start) (1- previous2-token-end)))))
-                        ;; (message "%s->%s" bookkeeping2-variable-name bookkeeping-variable-name)
-                        (when (string= bookkeeping2-variable-name "$this")
-                          (setq bookkeeping-namespace (concat bookkeeping-namespace " id $" bookkeeping-variable-name))
-                          ;; (message "Was here: '%s" bookkeeping-namespace)
-                          (setq bookkeeping-named t))))
+                      ;; $this->... here
+                      (when (equal token 'T_STRING)
+                        (let ((bookkeeping2-variable-name
+                               (downcase (substring string (1- previous2-token-start) (1- previous2-token-end)))))
+                          ;; (message "%s->%s" bookkeeping2-variable-name bookkeeping-variable-name)
+                          (when (string= bookkeeping2-variable-name "$this")
+                            (setq bookkeeping-namespace (concat bookkeeping-namespace " id $" bookkeeping-variable-name))
+                            ;; (message "Was here: '%s" bookkeeping-namespace)
+                            (setq bookkeeping-named t))))
 
-                    (unless bookkeeping-named
-                      (when imenu-in-function-name
-                        (setq bookkeeping-namespace (concat bookkeeping-namespace " function " imenu-in-function-name))
+                      (unless bookkeeping-named
+                        (when imenu-in-function-name
+                          (setq bookkeeping-namespace (concat bookkeeping-namespace " function " imenu-in-function-name))
 
-                        ;; Add $this special variable in class function scope
-                        (when imenu-in-class-name
-                          (let ((bookkeeping-method-this (concat bookkeeping-namespace " id $this")))
-                            (unless (gethash bookkeeping-method-this bookkeeping)
-                              (puthash bookkeeping-method-this 1 bookkeeping)))))
+                          ;; Add $this special variable in class function scope
+                          (when imenu-in-class-name
+                            (let ((bookkeeping-method-this (concat bookkeeping-namespace " id $this")))
+                              (unless (gethash bookkeeping-method-this bookkeeping)
+                                (puthash bookkeeping-method-this 1 bookkeeping)))))
 
-                      ;; Anonymous function level
-                      (when in-anonymous-function-nesting-level
-                        (setq bookkeeping-namespace (format "%s anonymous function %s" bookkeeping-namespace in-anonymous-function-number)))
+                        ;; Anonymous function level
+                        (when in-anonymous-function-nesting-level
+                          (setq bookkeeping-namespace (format "%s anonymous function %s" bookkeeping-namespace in-anonymous-function-number)))
 
-                      ;; In arrow function body
-                      (when in-arrow-fn
-                        (if in-arrow-fn-declaration
-                            (setq bookkeeping-namespace (format "%s arrow function %s" bookkeeping-namespace in-arrow-fn-number))
-                          (setq bookkeeping-alternative-namespace bookkeeping-namespace)
-                          (setq bookkeeping-namespace (format "%s arrow function %s" bookkeeping-namespace in-arrow-fn-number)))))
+                        ;; In arrow function body
+                        (when in-arrow-fn
+                          (if in-arrow-fn-declaration
+                              (setq bookkeeping-namespace (format "%s arrow function %s" bookkeeping-namespace in-arrow-fn-number))
+                            (setq bookkeeping-alternative-namespace bookkeeping-namespace)
+                            (setq bookkeeping-namespace (format "%s arrow function %s" bookkeeping-namespace in-arrow-fn-number)))))
 
-                    (unless bookkeeping-named
-                      (when (equal previous-token 'T_STATIC)
-                        (setq bookkeeping-namespace (concat bookkeeping-namespace " static"))
+                      (unless bookkeeping-named
+                        (when (equal previous-token 'T_STATIC)
+                          (setq bookkeeping-namespace (concat bookkeeping-namespace " static"))
+                          (when bookkeeping-alternative-namespace
+                            (setq bookkeeping-alternative-namespace (concat bookkeeping-alternative-namespace " static"))))
+
+                        (setq bookkeeping-namespace (concat bookkeeping-namespace " id " bookkeeping-variable-name))
                         (when bookkeeping-alternative-namespace
-                          (setq bookkeeping-alternative-namespace (concat bookkeeping-alternative-namespace " static"))))
+                          (setq bookkeeping-alternative-namespace (concat bookkeeping-alternative-namespace " id " bookkeeping-variable-name))))
 
-                      (setq bookkeeping-namespace (concat bookkeeping-namespace " id " bookkeeping-variable-name))
-                      (when bookkeeping-alternative-namespace
-                        (setq bookkeeping-alternative-namespace (concat bookkeeping-alternative-namespace " id " bookkeeping-variable-name))))
+                      (phps-mode-debug-message
+                       (message "Bookkeeping-namespace: '%s'" bookkeeping-namespace))
 
-                    (phps-mode-debug-message
-                     (message "Bookkeeping-namespace: '%s'" bookkeeping-namespace))
+                      ;; Support foreach as $key, for ($i = 0), if ($a = ), while ($a = ) and do-while ($a)assignments here
+                      (when (and
+                             (equal token 'T_VARIABLE)
+                             (string= previous-token "(")
+                             (string= next-token "=")
+                             (or (equal previous2-token 'T_IF)
+                                 (equal previous2-token 'T_ELSEIF)
+                                 (equal previous2-token 'T_WHILE)
+                                 (equal previous2-token 'T_FOR)
+                                 (equal previous2-token 'T_FOREACH)))
+                        (setq bookkeeping-in-assignment t))
 
-                    ;; Support foreach as $key, for ($i = 0), if ($a = ), while ($a = ) and do-while ($a)assignments here
-                    (when (and
-                           (equal token 'T_VARIABLE)
-                           (string= previous-token "(")
-                           (string= next-token "=")
-                           (or (equal previous2-token 'T_IF)
-                               (equal previous2-token 'T_ELSEIF)
-                               (equal previous2-token 'T_WHILE)
-                               (equal previous2-token 'T_FOR)
-                               (equal previous2-token 'T_FOREACH)))
-                      (setq bookkeeping-in-assignment t))
+                      ;; Support stuff like foreach ($items as &$key)...
+                      (when (and
+                             (equal token 'T_VARIABLE)
+                             (equal previous2-token 'T_AS)
+                             (equal previous-token "&"))
+                        (setq bookkeeping-in-assignment t))
 
-                    ;; Support stuff like foreach ($items as &$key)...
-                    (when (and
-                           (equal token 'T_VARIABLE)
-                           (equal previous2-token 'T_AS)
-                           (equal previous-token "&"))
-                      (setq bookkeeping-in-assignment t))
+                      ;; Support foreach ($items as $key => $value)...
+                      (when (and
+                             (equal token 'T_VARIABLE)
+                             (equal previous3-token 'T_AS)
+                             (equal previous2-token 'T_VARIABLE)
+                             (equal previous-token 'T_DOUBLE_ARROW)
+                             (string= next-token ")"))
+                        (setq bookkeeping-in-assignment t))
 
-                    ;; Support foreach ($items as $key => $value)...
-                    (when (and
-                           (equal token 'T_VARIABLE)
-                           (equal previous3-token 'T_AS)
-                           (equal previous2-token 'T_VARIABLE)
-                           (equal previous-token 'T_DOUBLE_ARROW)
-                           (string= next-token ")"))
-                      (setq bookkeeping-in-assignment t))
+                      ;; Support foreach ($items as $key => &$value)...
+                      (when (and
+                             (equal token 'T_VARIABLE)
+                             (equal previous3-token 'T_VARIABLE)
+                             (equal previous2-token 'T_DOUBLE_ARROW)
+                             (equal previous-token "&")
+                             (string= next-token ")"))
+                        (setq bookkeeping-in-assignment t))
 
-                    ;; Support foreach ($items as $key => &$value)...
-                    (when (and
-                           (equal token 'T_VARIABLE)
-                           (equal previous3-token 'T_VARIABLE)
-                           (equal previous2-token 'T_DOUBLE_ARROW)
-                           (equal previous-token "&")
-                           (string= next-token ")"))
-                      (setq bookkeeping-in-assignment t))
+                      ;; Stand-alone variable assignment
+                      (when (and (equal token 'T_VARIABLE)
+                                 first-token-on-line
+                                 (string= next-token "="))
+                        (setq bookkeeping-in-assignment t))
 
-                    ;; Stand-alone variable assignment
-                    (when (and (equal token 'T_VARIABLE)
-                               first-token-on-line
-                               (string= next-token "="))
-                      (setq bookkeeping-in-assignment t))
+                      ;; Naming of value
+                      (when (and
+                             (equal token 'T_VARIABLE)
+                             (equal previous-token 'T_AS))
+                        (setq bookkeeping-in-assignment t))
 
-                    ;; Naming of value
-                    (when (and
-                           (equal token 'T_VARIABLE)
-                           (equal previous-token 'T_AS))
-                      (setq bookkeeping-in-assignment t))
+                      ;; In catch declaration
+                      (when (and
+                             (equal token 'T_VARIABLE)
+                             in-catch-declaration)
+                        (setq bookkeeping-in-assignment t))
 
-                    ;; In catch declaration
-                    (when (and
-                           (equal token 'T_VARIABLE)
-                           in-catch-declaration)
-                      (setq bookkeeping-in-assignment t))
+                      ;; In function arguments
+                      (when (and imenu-in-function-declaration
+                                 (equal token 'T_VARIABLE))
+                        (setq bookkeeping-in-assignment t))
 
-                    ;; In function arguments
-                    (when (and imenu-in-function-declaration
-                               (equal token 'T_VARIABLE))
-                      (setq bookkeeping-in-assignment t))
+                      ;; In anonymous function arguments
+                      (when (and in-anonymous-function-declaration
+                                 (equal token 'T_VARIABLE))
+                        (setq bookkeeping-in-assignment t))
 
-                    ;; In anonymous function arguments
-                    (when (and in-anonymous-function-declaration
-                               (equal token 'T_VARIABLE))
-                      (setq bookkeeping-in-assignment t))
+                      ;; In arrow function variable declaration
+                      (when (and in-arrow-fn-declaration
+                                 (equal token 'T_VARIABLE))
+                        (setq bookkeeping-in-assignment t))
 
-                    ;; In arrow function variable declaration
-                    (when (and in-arrow-fn-declaration
-                               (equal token 'T_VARIABLE))
-                      (setq bookkeeping-in-assignment t))
+                      ;; In global variable declaration
+                      (when (and in-global-declaration
+                                 (equal token 'T_VARIABLE)
+                                 imenu-in-function-name)
+                        (setq bookkeeping-in-assignment t))
 
-                    ;; In global variable declaration
-                    (when (and in-global-declaration
-                               (equal token 'T_VARIABLE)
-                               imenu-in-function-name)
-                      (setq bookkeeping-in-assignment t))
+                      ;; In [$abc, $def] = .. or array($abc, $def) = ...
+                      (when (and
+                             array-variable-declaration
+                             (equal token 'T_VARIABLE))
+                        (setq bookkeeping-in-assignment t))
 
-                    ;; In [$abc, $def] = .. or array($abc, $def) = ...
-                    (when (and
-                           array-variable-declaration
-                           (equal token 'T_VARIABLE))
-                      (setq bookkeeping-in-assignment t))
+                      ;; Class variables
+                      (when (and
+                             imenu-in-class-name
+                             (not imenu-in-function-name)
+                             (or
+                              (equal previous-token 'T_STATIC)
+                              (equal previous-token 'T_PRIVATE)
+                              (equal previous-token 'T_PROTECTED)
+                              (equal previous-token 'T_PUBLIC)
+                              (equal previous-token 'T_VAR)))
+                        (setq bookkeeping-in-assignment t))
 
-                    ;; Class variables
-                    (when (and
-                           imenu-in-class-name
-                           (not imenu-in-function-name)
-                           (or
-                            (equal previous-token 'T_STATIC)
-                            (equal previous-token 'T_PRIVATE)
-                            (equal previous-token 'T_PROTECTED)
-                            (equal previous-token 'T_PUBLIC)
-                            (equal previous-token 'T_VAR)))
-                      (setq bookkeeping-in-assignment t))
+                      ;; Do we have a assignment?
+                      (when bookkeeping-in-assignment
+                        (let ((declarations (gethash bookkeeping-namespace bookkeeping)))
+                          ;; Track number of times this variable is defined
+                          (unless declarations
+                            (setq declarations 0))
+                          (setq declarations (1+ declarations))
+                          (phps-mode-debug-message
+                           (message "Bookkeeping-assignment: '%s'" bookkeeping-namespace))
+                          (puthash bookkeeping-namespace declarations bookkeeping)))
 
-                    ;; Do we have a assignment?
-                    (when bookkeeping-in-assignment
-                      (let ((declarations (gethash bookkeeping-namespace bookkeeping)))
-                        ;; Track number of times this variable is defined
-                        (unless declarations
-                          (setq declarations 0))
-                        (setq declarations (1+ declarations))
-                        (phps-mode-debug-message
-                         (message "Bookkeeping-assignment: '%s'" bookkeeping-namespace))
-                        (puthash bookkeeping-namespace declarations bookkeeping)))
+                      (if bookkeeping-is-superglobal
+                          ;; Super-globals always hit
+                          (puthash bookkeeping-index 1 bookkeeping)
 
-                    (if bookkeeping-is-superglobal
-                        ;; Super-globals always hit
-                        (puthash bookkeeping-index 1 bookkeeping)
-
-                      ;; Check scoped variable
-                      (if (gethash bookkeeping-namespace bookkeeping)
-                          (progn
-                            (phps-mode-debug-message
-                             (message "Bookkeeping-hit: %s" bookkeeping-index))
-                            (puthash bookkeeping-index 1 bookkeeping))
-                        (if (and bookkeeping-alternative-namespace
-                                 (gethash bookkeeping-alternative-namespace bookkeeping))
+                        ;; Check scoped variable
+                        (if (gethash bookkeeping-namespace bookkeeping)
                             (progn
                               (phps-mode-debug-message
-                               (message "Bookkeeping-alternative-hit: %s" bookkeeping-index))
+                               (message "Bookkeeping-hit: %s" bookkeeping-index))
                               (puthash bookkeeping-index 1 bookkeeping))
-                          (phps-mode-debug-message
-                           (message "Bookkeeping-miss: %s" bookkeeping-index))
-                          (puthash bookkeeping-index 0 bookkeeping))))))
+                          (if (and bookkeeping-alternative-namespace
+                                   (gethash bookkeeping-alternative-namespace bookkeeping))
+                              (progn
+                                (phps-mode-debug-message
+                                 (message "Bookkeeping-alternative-hit: %s" bookkeeping-index))
+                                (puthash bookkeeping-index 1 bookkeeping))
+                            (phps-mode-debug-message
+                             (message "Bookkeeping-miss: %s" bookkeeping-index))
+                            (puthash bookkeeping-index 0 bookkeeping)))))))
 
                 ;; Keep track of array variable declaration
                 (when first-token-on-line

@@ -1460,6 +1460,20 @@
             (phps-mode-test--hash-to-list (phps-mode-lex-analyzer--get-bookkeeping) t)
             (list (list " id $y" 1) (list (list 7 9) 1) (list " id $fn1" 1) (list (list 15 19) 1) (list " arrow function 1 id $x" 1) (list (list 25 27) 1) (list (list 32 34) 1) (list (list 37 39) 1) (list " id $z" 1) (list (list 41 43) 1) (list " id $fn" 1) (list (list 49 52) 1) (list " arrow function 2 id $x2" 1) (list (list 58 61) 1) (list " arrow function 2 id $y2" 1) (list (list 69 72) 1) (list (list 77 80) 1) (list (list 83 86) 1) (list (list 89 91) 1) (list " arrow function 3 id $x3" 1) (list (list 102 105) 1) (list (list 110 113) 1) (list " id $x4" 1) (list (list 115 118) 1) (list (list 144 147) 1) (list " arrow function 5 id $x5" 1) (list (list 152 155) 1) (list (list 165 168) 1) (list " arrow function 6 id $x6" 1) (list (list 174 177) 1) (list (list 182 185) 1) (list " arrow function 7 id $x7" 1) (list (list 191 194) 1) (list (list 199 202) 1) (list " arrow function 8 id $x8" 1) (list (list 207 210) 1) (list " arrow function 8 id $rest" 1) (list (list 215 220) 1) (list (list 225 230) 1)))))
 
+  (phps-mode-test--with-buffer
+   "<?php\n$z = (object) array('name' => 'random');\nif ($z->name) {\n    echo 'Hit';\n}"
+   "Bookkeeping object properties."
+   (should (equal
+            (phps-mode-test--hash-to-list (phps-mode-lex-analyzer--get-bookkeeping) t)
+            (list (list " id $z" 1) (list (list 7 9) 1) (list (list 52 54) 1)))))
+
+  (phps-mode-test--with-buffer
+   "<?php\nif (!$var = false) {\n    echo 'Hit';\n}\n"
+   "Bookkeeping negative conditional assignment"
+   (should (equal
+            (phps-mode-test--hash-to-list (phps-mode-lex-analyzer--get-bookkeeping) t)
+            (list (list " id $var" 1) (list (list 12 16) 1)))))
+
   )
 
 (defun phps-mode-test-lex-analyzer ()
