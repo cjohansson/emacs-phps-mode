@@ -1086,6 +1086,7 @@ SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
               (in-arrow-fn nil)
               (in-arrow-fn-declaration nil)
               (in-arrow-fn-number 0)
+              (in-conditional-declaration nil)
               (bookkeeping (make-hash-table :test 'equal)))
 
           (push `(END_PARSE ,(length string) . ,(length string)) tokens)
@@ -1251,16 +1252,11 @@ SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
                       (phps-mode-debug-message
                        (message "Bookkeeping-namespace: '%s'" bookkeeping-namespace))
 
-                      ;; Support foreach as $key, for ($i = 0), if ($a = ), while ($a = ) and do-while ($a)assignments here
+                      ;; Support for ($i = 0), if ($a = ), if (!$ = ), while ($a = ) and do {} while ($a = ) assignments here
                       (when (and
                              (equal token 'T_VARIABLE)
-                             (string= previous-token "(")
-                             (string= next-token "=")
-                             (or (equal previous2-token 'T_IF)
-                                 (equal previous2-token 'T_ELSEIF)
-                                 (equal previous2-token 'T_WHILE)
-                                 (equal previous2-token 'T_FOR)
-                                 (equal previous2-token 'T_FOREACH)))
+                             in-conditional-declaration
+                             (equal next-token "="))
                         (setq bookkeeping-in-assignment t))
 
                       ;; Support stuff like foreach ($items as &$key)...
@@ -1426,6 +1422,21 @@ SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
                        (equal token ";"))
                   (setq in-arrow-fn nil)
                   (setq in-arrow-fn-declaration nil))
+
+                ;; Keep track of when we are in conditional declarations
+                (when (and
+                       (not in-conditional-declaration)
+                       (or
+                        (equal token 'T_IF)
+                        (equal token 'T_ELSEIF)
+                        (equal token 'T_WHILE)
+                        (equal token 'T_FOR)))
+                  (setq in-conditional-declaration (1+ round-bracket-level)))
+                (when (and
+                       in-conditional-declaration
+                       (equal token ")")
+                       (= in-conditional-declaration round-bracket-level))
+                  (setq in-conditional-declaration nil))
 
                 ;; IMENU LOGIC
 
