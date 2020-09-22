@@ -1216,6 +1216,11 @@
    "Imenu empty namespace without brackets"
    (should (equal (phps-mode-lex-analyzer--get-imenu) nil)))
 
+  (phps-mode-test--with-buffer
+   "<?php\ninterface myInterface\n{\n    function myFunction1();\n    function myFunction2($x); // NOTE Imenu not working either\n}\n"
+   "Imenu in interface class with arguments in one method"
+   (should (equal (phps-mode-lex-analyzer--get-imenu) '(("myInterface" ("myFunction1" . 44) ("myFunction2" . 72))))))
+
   )
 
 (defun phps-mode-test-lex-analyzer--get-moved-imenu ()
@@ -1482,12 +1487,18 @@
             (phps-mode-test--hash-to-list (phps-mode-lex-analyzer--get-bookkeeping) t)
             (list (list " defined 1 id $x" 1) (list (list 18 20) 1) (list (list 33 35) 1) (list " defined 2 id $i" 1) (list (list 77 79) 1) (list " defined 2 id $u" 1) (list (list 81 83) 1) (list (list 104 106) 1) (list (list 168 170) 1) (list (list 232 234) 1) (list (list 302 304) 0) (list (list 355 357) 0) (list (list 408 410) 0) (list " defined 3 id $y" 1) (list (list 445 447) 1) (list (list 460 462) 1) (list " defined 4 id $k" 1) (list (list 505 507) 1) (list " defined 4 id $L" 1) (list (list 519 521) 1) (list (list 542 544) 1) (list (list 606 608) 1) (list (list 670 672) 1) (list (list 740 742) 0) (list (list 793 795) 0) (list (list 846 848) 0)))))
 
+  (phps-mode-test--with-buffer
+   "<?php\ninterface myInterface\n{\n    function myFunction1();\n    function myFunction2($x);\n}\n"
+   "Bookkeeping variable in interface function"
+   (should (equal
+            (phps-mode-test--hash-to-list (phps-mode-lex-analyzer--get-bookkeeping) t)
+            (list (list " class myInterface function myFunction2 id $x" 1) (list (list 84 86) 1)))))
+
   )
 
 (defun phps-mode-test-lex-analyzer ()
   "Run test for functions."
   ;; (setq debug-on-error t)
-  (phps-mode-test-lex-analyzer--bookkeeping)
   (phps-mode-test-lex-analyzer--process-changes)
   (phps-mode-test-lex-analyzer--alternative-indentation)
   (phps-mode-test-lex-analyzer--move-lines-indent)
@@ -1504,7 +1515,8 @@
   (phps-mode-test-lex-analyzer--imenu)
   (phps-mode-test-lex-analyzer--get-moved-imenu)
   (phps-mode-test-lex-analyzer--comment-uncomment-region)
-  (phps-mode-test-lex-analyzer--move-lines-indent))
+  (phps-mode-test-lex-analyzer--move-lines-indent)
+  (phps-mode-test-lex-analyzer--bookkeeping))
 
 (phps-mode-test-lex-analyzer)
 

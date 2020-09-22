@@ -1606,7 +1606,10 @@ SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
                         (if imenu-in-namespace-name
                             (push `(,imenu-in-function-name . ,imenu-in-function-index) imenu-namespace-index)
                           (push `(,imenu-in-function-name . ,imenu-in-function-index) imenu-index))))
-                    (setq imenu-open-function-level imenu-nesting-level)
+
+                    (if (string= token "{")
+                        (setq imenu-open-function-level imenu-nesting-level)
+                      (setq imenu-in-function-name nil))
                     (setq imenu-in-function-declaration nil))
 
                    ((and (equal token 'T_STRING)
