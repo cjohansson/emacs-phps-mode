@@ -1250,6 +1250,7 @@ SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
                         ;; Add namespace for isset / empty scope here
                         (when in-defined-block
                           (setq bookkeeping-namespace-old bookkeeping-namespace)
+                          (setq bookkeeping-alternative-namespace bookkeeping-namespace-old)
                           (setq bookkeeping-namespace (format "%s defined %s" bookkeeping-namespace (car in-defined-block-number))))
 
                         )
