@@ -1515,6 +1515,13 @@
             (phps-mode-test--hash-to-list (phps-mode-lex-analyzer--get-bookkeeping) t)
             '((" defined 1 id $b" 2) ((17 19) 1) ((28 30) 1) (" id $c" 1) ((42 44) 1) ((55 57) 1)))))
 
+  (phps-mode-test--with-buffer
+   "<?php\nif (!isset($a)) {\n    if ($a) {\n        echo 'Miss';\n    }\n}"
+   "Bookkeeping for variable in negative isset() conditional"
+   (should (equal
+            (phps-mode-test--hash-to-list (phps-mode-lex-analyzer--get-bookkeeping) t)
+            '(((18 20) 0) ((33 35) 0)))))
+
   )
 
 (defun phps-mode-test-lex-analyzer ()

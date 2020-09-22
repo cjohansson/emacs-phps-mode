@@ -1160,7 +1160,9 @@ SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
                        (not in-defined-prop)
                        in-conditional-declaration
                        (or
-                        (equal token 'T_ISSET)
+                        (and
+                         (equal token 'T_ISSET)
+                         (not (equal previous-token "!")))
                         (and
                          (equal token 'T_EMPTY)
                          (string= previous-token "!"))))
