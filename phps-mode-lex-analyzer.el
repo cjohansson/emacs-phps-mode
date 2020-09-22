@@ -1498,6 +1498,7 @@ SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
                 ;; Keep track of when we are inside a defined proposition isset or !empty
                 (when (and
                        (not in-defined-prop)
+                       in-conditional-declaration
                        (or
                         (equal token 'T_ISSET)
                         (and
