@@ -1154,6 +1154,39 @@ SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
               (when token
 
                 ;; BOOKKEEPING LOGIC
+
+                ;; Keep track of when we are inside a defined proposition isset or !empty
+                (when (and
+                       (not in-defined-prop)
+                       in-conditional-declaration
+                       (or
+                        (equal token 'T_ISSET)
+                        (and
+                         (equal token 'T_EMPTY)
+                         (string= previous-token "!"))))
+                  (setq in-defined-prop (1+ round-bracket-level))
+                  (setq in-defined-block-count (1+ in-defined-block-count))
+                  (push in-defined-block-count in-defined-block-number)
+                  (phps-mode-debug-message
+                   (message "Declared-defined-block: %s %s" (+ curly-bracket-level alternative-control-structure-level 1) in-defined-block-number))
+                  (push (+ curly-bracket-level alternative-control-structure-level 1) in-defined-block)
+                  (setq in-defined-awaiting-start t))
+
+                (when (and in-defined-block
+                           (not in-defined-awaiting-start)
+                           (< (+ curly-bracket-level alternative-control-structure-level) (car in-defined-block)))
+                  (phps-mode-debug-message
+                   (message "Ended-defined-block: %s %s" (+ curly-bracket-level alternative-control-structure-level) (car in-defined-block-number)))
+                  (pop in-defined-block-number)
+                  (pop in-defined-block))
+
+                (when (and in-defined-awaiting-start
+                           (equal (+ curly-bracket-level alternative-control-structure-level) (car in-defined-block)))
+                  (phps-mode-debug-message
+                   (message "Started-defined-block: %s" (+ curly-bracket-level alternative-control-structure-level)))
+                  (setq in-defined-awaiting-start nil)
+                  (setq in-defined-prop nil))
+
                 (let ((downcased-previous2))
                   (when (and
                          (equal token 'T_STRING)
@@ -1495,38 +1528,6 @@ SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
                        (equal token ")")
                        (= in-conditional-declaration round-bracket-level))
                   (setq in-conditional-declaration nil))
-
-                ;; Keep track of when we are inside a defined proposition isset or !empty
-                (when (and
-                       (not in-defined-prop)
-                       in-conditional-declaration
-                       (or
-                        (equal token 'T_ISSET)
-                        (and
-                         (equal token 'T_EMPTY)
-                         (string= previous-token "!"))))
-                  (setq in-defined-prop (1+ round-bracket-level))
-                  (setq in-defined-block-count (1+ in-defined-block-count))
-                  (push in-defined-block-count in-defined-block-number)
-                  (phps-mode-debug-message
-                   (message "Declared-defined-block: %s %s" (+ curly-bracket-level alternative-control-structure-level 1) in-defined-block-number))
-                  (push (+ curly-bracket-level alternative-control-structure-level 1) in-defined-block)
-                  (setq in-defined-awaiting-start t))
-
-                (when (and in-defined-block
-                           (not in-defined-awaiting-start)
-                           (< (+ curly-bracket-level alternative-control-structure-level) (car in-defined-block)))
-                  (phps-mode-debug-message
-                   (message "Ended-defined-block: %s %s" (+ curly-bracket-level alternative-control-structure-level) (car in-defined-block-number)))
-                  (pop in-defined-block-number)
-                  (pop in-defined-block))
-
-                (when (and in-defined-awaiting-start
-                           (equal (+ curly-bracket-level alternative-control-structure-level) (car in-defined-block)))
-                  (phps-mode-debug-message
-                   (message "Started-defined-block: %s" (+ curly-bracket-level alternative-control-structure-level)))
-                  (setq in-defined-awaiting-start nil)
-                  (setq in-defined-prop nil))
 
                 ;; IMENU LOGIC
 

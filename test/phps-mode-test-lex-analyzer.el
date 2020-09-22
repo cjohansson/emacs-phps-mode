@@ -1508,6 +1508,13 @@
             (phps-mode-test--hash-to-list (phps-mode-lex-analyzer--get-bookkeeping) t)
             '((" id $a" 1) ((8 10) 1) ((38 40) 1) (" id $uri" 1) ((44 48) 1) (" id $page" 1) ((52 57) 1) (" defined 1 id $pages" 1) ((75 81) 1) ((98 100) 1) ((150 154) 1) ((204 209) 1)))))
 
+  (phps-mode-test--with-buffer
+   "<?php\nif (isset($b)) {\n    $b = false;\n}\n$c = 2;\n\nif ($c) {\n    echo 'Hit';\n}\n"
+   "Bookkeeping of variable after isset() block"
+   (should (equal
+            (phps-mode-test--hash-to-list (phps-mode-lex-analyzer--get-bookkeeping) t)
+            '((" defined 1 id $b" 2) ((17 19) 1) ((28 30) 1) (" id $c" 1) ((42 44) 1) ((55 57) 1)))))
+
   )
 
 (defun phps-mode-test-lex-analyzer ()
