@@ -1072,6 +1072,7 @@ SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
               (imenu-in-class-declaration nil)
               (imenu-open-class-level nil)
               (imenu-in-class-name nil)
+              (imenu-in-interface-class nil)
               (imenu-in-function-declaration nil)
               (imenu-open-function-level nil)
               (imenu-in-function-name nil)
@@ -1229,7 +1230,8 @@ SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
                           (setq bookkeeping-namespace (concat bookkeeping-namespace " function " imenu-in-function-name))
 
                           ;; Add $this special variable in class function scope
-                          (when imenu-in-class-name
+                          (when (and imenu-in-class-name
+                                     (not imenu-in-interface-class))
                             (let ((bookkeeping-method-this (concat bookkeeping-namespace " id $this")))
                               (unless (gethash bookkeeping-method-this bookkeeping)
                                 (puthash bookkeeping-method-this 1 bookkeeping)))))
@@ -1625,9 +1627,15 @@ SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
                       (setq imenu-in-namespace-declaration t))
 
                      ((and (not imenu-in-class-name)
-                           (or (equal token 'T_CLASS)
-                               (equal token 'T_INTERFACE)))
+                           (equal token 'T_CLASS))
                       (setq imenu-in-class-name nil)
+                      (setq imenu-in-interface-class nil)
+                      (setq imenu-in-class-declaration t))
+
+                     ((and (not imenu-in-class-name)
+                           (equal token 'T_INTERFACE))
+                      (setq imenu-in-class-name nil)
+                      (setq imenu-in-interface-class t)
                       (setq imenu-in-class-declaration t))
 
                      ((and (not imenu-in-function-name)
