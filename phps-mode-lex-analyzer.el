@@ -1084,6 +1084,7 @@ SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
               (in-anonymous-function-number 0)
               (in-anonymous-function-nesting-level)
               (in-global-declaration nil)
+              (in-static-declaration nil)
               (in-arrow-fn nil)
               (in-arrow-fn-declaration nil)
               (in-arrow-fn-number 0)
@@ -1258,7 +1259,10 @@ SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
                           (setq bookkeeping-namespace (format "%s defined %s" bookkeeping-namespace (car in-defined-block-number)))))
 
                       (unless bookkeeping-named
-                        (when (equal previous-token 'T_STATIC)
+                        (when (and
+                               imenu-in-class-name
+                               (equal previous-token 'T_STATIC)
+                               (not imenu-in-function-declaration))
                           (setq bookkeeping-namespace (concat bookkeeping-namespace " static"))
                           (when bookkeeping-alternative-namespace
                             (setq bookkeeping-alternative-namespace (concat bookkeeping-alternative-namespace " static"))))
@@ -1338,6 +1342,12 @@ SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
 
                       ;; In global variable declaration
                       (when (and in-global-declaration
+                                 (equal token 'T_VARIABLE)
+                                 imenu-in-function-name)
+                        (setq bookkeeping-in-assignment t))
+
+                      ;; In static variable declaration
+                      (when (and in-static-declaration
                                  (equal token 'T_VARIABLE)
                                  imenu-in-function-name)
                         (setq bookkeeping-in-assignment t))
@@ -1437,11 +1447,16 @@ SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
                       (setq array-variable-declaration t)
                     (setq array-variable-declaration nil)))
 
-                ;; Keep track of global declaration for bookkeeping
                 (when first-token-on-line
+                  ;; Keep track of global declaration for bookkeeping
                   (if (equal token 'T_GLOBAL)
                       (setq in-global-declaration t)
-                    (setq in-global-declaration nil)))
+                    (setq in-global-declaration nil))
+
+                  ;; Keep track of static declaration for bookkeeping
+                  (if (equal token 'T_STATIC)
+                      (setq in-static-declaration t)
+                    (setq in-static-declaration nil)))
 
                 ;; Keep track of open catch blocks for bookkeeping
                 (when (equal token 'T_CATCH)
