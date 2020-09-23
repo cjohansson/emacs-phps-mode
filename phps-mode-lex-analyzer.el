@@ -1088,10 +1088,13 @@ SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
               (in-arrow-fn-declaration nil)
               (in-arrow-fn-number 0)
               (in-conditional-declaration nil)
+              (in-loop-conditional-declaration nil)
               (in-defined-prop nil)
               (in-defined-block-number nil)
               (in-defined-block-count 0)
-              (in-defined-block nil)
+              (in-defined-block-curly nil)
+              (in-defined-block-alternative nil)
+              (in-defined-block-inline nil)
               (in-defined-awaiting-start nil)
               (bookkeeping (make-hash-table :test 'equal)))
 
@@ -1154,40 +1157,6 @@ SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
               (when token
 
                 ;; BOOKKEEPING LOGIC
-
-                ;; Keep track of when we are inside a defined proposition isset or !empty
-                (when (and
-                       (not in-defined-prop)
-                       in-conditional-declaration
-                       (or
-                        (and
-                         (equal token 'T_ISSET)
-                         (not (equal previous-token "!")))
-                        (and
-                         (equal token 'T_EMPTY)
-                         (string= previous-token "!"))))
-                  (setq in-defined-prop (1+ round-bracket-level))
-                  (setq in-defined-block-count (1+ in-defined-block-count))
-                  (push in-defined-block-count in-defined-block-number)
-                  (phps-mode-debug-message
-                   (message "Declared-defined-block: %s %s" (+ curly-bracket-level alternative-control-structure-level 1) in-defined-block-number))
-                  (push (+ curly-bracket-level alternative-control-structure-level 1) in-defined-block)
-                  (setq in-defined-awaiting-start t))
-
-                (when (and in-defined-block
-                           (not in-defined-awaiting-start)
-                           (< (+ curly-bracket-level alternative-control-structure-level) (car in-defined-block)))
-                  (phps-mode-debug-message
-                   (message "Ended-defined-block: %s %s" (+ curly-bracket-level alternative-control-structure-level) (car in-defined-block-number)))
-                  (pop in-defined-block-number)
-                  (pop in-defined-block))
-
-                (when (and in-defined-awaiting-start
-                           (equal (+ curly-bracket-level alternative-control-structure-level) (car in-defined-block)))
-                  (phps-mode-debug-message
-                   (message "Started-defined-block: %s" (+ curly-bracket-level alternative-control-structure-level)))
-                  (setq in-defined-awaiting-start nil)
-                  (setq in-defined-prop nil))
 
                 (let ((downcased-previous2))
                   (when (and
@@ -1283,12 +1252,10 @@ SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
                             (setq bookkeeping-namespace (format "%s arrow function %s" bookkeeping-namespace in-arrow-fn-number))))
 
                         ;; Add namespace for isset / empty scope here
-                        (when in-defined-block
+                        (when in-defined-block-number
                           (setq bookkeeping-namespace-old bookkeeping-namespace)
                           (setq bookkeeping-alternative-namespace bookkeeping-namespace-old)
-                          (setq bookkeeping-namespace (format "%s defined %s" bookkeeping-namespace (car in-defined-block-number))))
-
-                        )
+                          (setq bookkeeping-namespace (format "%s defined %s" bookkeeping-namespace (car in-defined-block-number)))))
 
                       (unless bookkeeping-named
                         (when (equal previous-token 'T_STATIC)
@@ -1300,14 +1267,14 @@ SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
                         (when bookkeeping-alternative-namespace
                           (setq bookkeeping-alternative-namespace (concat bookkeeping-alternative-namespace " id " bookkeeping-variable-name))))
 
-                      (phps-mode-debug-message
-                       (message "Bookkeeping-namespace: '%s'" bookkeeping-namespace)
-                       )
+                      (phps-mode-debug-message (message "Bookkeeping-namespace: '%s'" bookkeeping-namespace))
 
                       ;; Support for ($i = 0), if ($a = ), if (!$ = ), while ($a = ) and do {} while ($a = ) assignments here
                       (when (and
                              (equal token 'T_VARIABLE)
-                             in-conditional-declaration
+                             (or
+                              in-conditional-declaration
+                              in-loop-conditional-declaration)
                              (equal next-token "="))
                         (setq bookkeeping-in-assignment t))
 
@@ -1421,46 +1388,44 @@ SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
                                (message "Bookkeeping-hit: %s" bookkeeping-index))
                               (puthash bookkeeping-index 1 bookkeeping))
 
-                          ;; If we are in a nested define block, search parent scopes for match
-                          (if (and in-defined-block-number
-                                   (> (length in-defined-block-number) 1))
-                              (let ((parent-scopes in-defined-block-number)
-                                    (parent-scope)
-                                    (parent-namespace)
-                                    (parent-search t))
-                                (setq parent-scope (pop parent-scopes))
-                                (setq parent-scope (pop parent-scopes))
+                          (if (and bookkeeping-alternative-namespace
+                                   (gethash bookkeeping-alternative-namespace bookkeeping))
+                              (progn
+                                (phps-mode-debug-message
+                                 (message "Bookkeeping-alternative-hit: %s" bookkeeping-index))
+                                (puthash bookkeeping-index 1 bookkeeping))
 
-                                ;; Search parent scopes
-                                (while (and
-                                        parent-search
-                                        parent-scope)
-                                  (setq parent-namespace
-                                        (format "%s defined %s id %s"
-                                                bookkeeping-namespace-old
-                                                parent-scope
-                                                bookkeeping-variable-name))
-                                  (phps-mode-debug-message
-                                   (message "Parent-namespace: %s" parent-namespace))
-                                  (when (gethash parent-namespace bookkeeping)
-                                    (setq parent-search nil))
-                                  (setq parent-scope (pop parent-scopes)))
+                            ;; If we are in a nested define block, search parent scopes for match
+                            (if (and in-defined-block-number
+                                     (> (length in-defined-block-number) 1))
+                                (let ((parent-scopes in-defined-block-number)
+                                      (parent-scope)
+                                      (parent-namespace)
+                                      (parent-search t))
+                                  (setq parent-scope (pop parent-scopes))
+                                  (setq parent-scope (pop parent-scopes))
 
-                                (if parent-search
-                                    (progn
-                                      (phps-mode-debug-message
-                                       (message "Found no parent hit"))
-                                      (puthash bookkeeping-index 0 bookkeeping))
-                                  (phps-mode-debug-message
-                                   (message "Found parent hit"))
-                                  (puthash bookkeeping-index 1 bookkeeping)))
+                                  ;; Search parent scopes
+                                  (while (and
+                                          parent-search
+                                          parent-scope)
+                                    (setq parent-namespace
+                                          (format "%s defined %s id %s"
+                                                  bookkeeping-namespace-old
+                                                  parent-scope
+                                                  bookkeeping-variable-name))
+                                    (phps-mode-debug-message (message "Parent-namespace: %s" parent-namespace))
+                                    (when (gethash parent-namespace bookkeeping)
+                                      (setq parent-search nil))
+                                    (setq parent-scope (pop parent-scopes)))
 
-                            (if (and bookkeeping-alternative-namespace
-                                     (gethash bookkeeping-alternative-namespace bookkeeping))
-                                (progn
-                                  (phps-mode-debug-message
-                                   (message "Bookkeeping-alternative-hit: %s" bookkeeping-index))
-                                  (puthash bookkeeping-index 1 bookkeeping))
+                                  (if parent-search
+                                      (progn
+                                        (phps-mode-debug-message (message "Found no parent hit"))
+                                        (puthash bookkeeping-index 0 bookkeeping))
+                                    (phps-mode-debug-message (message "Found parent hit"))
+                                    (puthash bookkeeping-index 1 bookkeeping)))
+
                               (phps-mode-debug-message
                                (message "Bookkeeping-miss: %s" bookkeeping-index))
                               (puthash bookkeeping-index 0 bookkeeping))))))))
@@ -1518,18 +1483,106 @@ SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
 
                 ;; Keep track of when we are in conditional declarations
                 (when (and
+                       (not in-loop-conditional-declaration)
+                       (or
+                        (equal token 'T_WHILE)
+                        (equal token 'T_FOR)))
+                  (setq in-loop-conditional-declaration (1+ round-bracket-level)))
+                (when (and
                        (not in-conditional-declaration)
                        (or
                         (equal token 'T_IF)
-                        (equal token 'T_ELSEIF)
-                        (equal token 'T_WHILE)
-                        (equal token 'T_FOR)))
+                        (equal token 'T_ELSEIF)))
                   (setq in-conditional-declaration (1+ round-bracket-level)))
+
+                ;; Keep track of when we are inside a defined proposition isset or !empty
+
+                ;; Detect we are at the beginning of if (..isset()) or if (...!empty()...)
+                (when (and
+                       in-conditional-declaration
+                       (not in-defined-prop)
+                       (or
+                        (and
+                         (equal token 'T_ISSET)
+                         (not (equal previous-token "!")))
+                        (and
+                         (equal token 'T_EMPTY)
+                         (string= previous-token "!"))))
+                  (setq in-defined-prop (1+ round-bracket-level))
+                  (setq in-defined-block-count (1+ in-defined-block-count))
+                  (push in-defined-block-count in-defined-block-number)
+                  (setq in-defined-awaiting-start 1)
+                  (phps-mode-debug-message
+                   (message "Awaiting start for defined block %s after %s" in-defined-block-count token-start)))
+
+                ;; Detect isset / !empty scope end
+                (when in-defined-block-number
+                  (cond
+
+                   ;; End of curly bracket block
+                   ((and
+                     (equal curly-bracket-level (car in-defined-block-curly))
+                     (equal token "}"))
+                    (pop in-defined-block-curly)
+                    (pop in-defined-block-number)
+                    (phps-mode-debug-message
+                     (message "Ended defined curly block at %s with level %s" token-start curly-bracket-level)))
+
+                   ;; End of inline block
+                   ((and
+                     in-defined-block-inline
+                     (equal token ";"))
+                    (setq in-defined-block-inline nil)
+                    (pop in-defined-block-number)
+                    (phps-mode-debug-message
+                     (message "Ended defined inline block at %s" token-start)))
+
+                   ;; End of alternative block
+                   ((and
+                     (equal alternative-control-structure-level (car in-defined-block-alternative))
+                     (or
+                      (equal token 'T_ELSE)
+                      (equal token 'T_ELSEIF)
+                      (equal token 'T_ENDIF)))
+                    (pop in-defined-block-alternative)
+                    (pop in-defined-block-number)
+                    (phps-mode-debug-message
+                     (message "Ended defined alternative block at %s with level %s" token-start alternative-control-structure-level)))))
+
+                ;; Detect isset / !empty scope start
+                (when (and in-defined-awaiting-start
+                           (= in-defined-awaiting-start 2))
+                  (cond
+                   ((equal token "{")
+                    (push (1+ curly-bracket-level) in-defined-block-curly)
+                    (phps-mode-debug-message
+                     (message "Started defined curly block at %s with level %s" token-start (car in-defined-block-curly))))
+                   ((equal token ":")
+                    (push (1+ alternative-control-structure-level) in-defined-block-alternative)
+                    (phps-mode-debug-message
+                     (message "Started defined alternative block at %s with level %s" token-start (car in-defined-block-alternative))))
+                   (t
+                    (setq in-defined-block-inline t)
+                    (phps-mode-debug-message
+                     (message "Started defined inline block at %s" token-start))))
+                  (setq in-defined-awaiting-start nil))
+
+                ;; Detect when IF / ELSEIF / FOR / WHILE condition end
                 (when (and
                        in-conditional-declaration
                        (equal token ")")
-                       (= in-conditional-declaration round-bracket-level))
+                       (equal in-conditional-declaration round-bracket-level))
+                  (when (and
+                         in-defined-awaiting-start
+                         (equal in-defined-awaiting-start 1))
+                    (setq in-defined-prop nil)
+                    (setq in-defined-awaiting-start 2))
                   (setq in-conditional-declaration nil))
+                (when (and
+                       in-loop-conditional-declaration
+                       (equal token ")")
+                       (equal in-loop-conditional-declaration round-bracket-level))
+                  (setq in-loop-conditional-declaration nil))
 
                 ;; IMENU LOGIC
 

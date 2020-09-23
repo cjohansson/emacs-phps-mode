@@ -1482,7 +1482,6 @@
   (phps-mode-test--with-buffer
    "<?php\n\nif (isset($x)) {\n    if ($x) {\n        echo 'Hit';\n        if (isset($i, $u)) {\n            if ($i) {\n                echo 'Hit';\n            }\n            if ($u) {\n                echo 'Hit';\n            }\n            if ($x) {\n                echo 'Hit';\n            }\n        }\n        if ($i) {\n            echo 'Miss';\n        }\n        if ($u) {\n            echo 'Miss';\n        }\n    }\n}\nif ($x) {\n    echo 'Miss';\n}\n\nif (!empty($y)) {\n    if ($y) {\n        echo 'Hit';\n        if (!empty($k) && !empty($L)) {\n            if ($k) {\n                echo 'Hit';\n            }\n            if ($L) {\n                echo 'Hit';\n            }\n            if ($y) {\n                echo 'Hit';\n            }\n        }\n        if ($k) {\n            echo 'Miss';\n        }\n        if ($L) {\n            echo 'Miss';\n        }\n    }\n}\nif ($y) {\n    echo 'Miss';\n}\n"
    "Bookkeeping of isset() and !empty() scoped variables."
-   ;; (message "Bookkeeping: %s" (phps-mode-test--hash-to-list (phps-mode-lex-analyzer--get-bookkeeping) t))
    (should (equal
             (phps-mode-test--hash-to-list (phps-mode-lex-analyzer--get-bookkeeping) t)
             (list (list " defined 1 id $x" 1) (list (list 18 20) 1) (list (list 33 35) 1) (list " defined 2 id $i" 1) (list (list 77 79) 1) (list " defined 2 id $u" 1) (list (list 81 83) 1) (list (list 104 106) 1) (list (list 168 170) 1) (list (list 232 234) 1) (list (list 302 304) 0) (list (list 355 357) 0) (list (list 408 410) 0) (list " defined 3 id $y" 1) (list (list 445 447) 1) (list (list 460 462) 1) (list " defined 4 id $k" 1) (list (list 505 507) 1) (list " defined 4 id $L" 1) (list (list 519 521) 1) (list (list 542 544) 1) (list (list 606 608) 1) (list (list 670 672) 1) (list (list 740 742) 0) (list (list 793 795) 0) (list (list 846 848) 0)))))
@@ -1521,6 +1520,13 @@
    (should (equal
             (phps-mode-test--hash-to-list (phps-mode-lex-analyzer--get-bookkeeping) t)
             '(((18 20) 0) ((33 35) 0)))))
+
+  (phps-mode-test--with-buffer
+   "<?php\n\nfunction myFunction($a, $b, $c, $d)\n{\n    global $f, $g;\n    if (isset($f)) {\n        if (!empty($g)) {\n            if ($a) {\n                echo 'Hit';\n            }\n            if ($b) {\n                echo 'Hit';\n            }\n            if ($c) {\n                echo 'Hit';\n            }\n            if ($d) {\n                echo 'Hit';\n            }\n        }\n    }\n}\n"
+   "Bookkeeping variables inside nested isset() !empty() blocks"
+   (should (equal
+            (phps-mode-test--hash-to-list (phps-mode-lex-analyzer--get-bookkeeping) t)
+            '((" function myFunction id $a" 1) ((28 30) 1) (" function myFunction id $b" 1) ((32 34) 1) (" function myFunction id $c" 1) ((36 38) 1) (" function myFunction id $d" 1) ((40 42) 1) (" function myFunction id $f" 1) ((57 59) 1) (" function myFunction id $g" 1) ((61 63) 1) (" function myFunction defined 1 id $f" 1) ((79 81) 1) (" function myFunction defined 2 id $g" 1) ((105 107) 1) ((128 130) 1) ((192 194) 1) ((256 258) 1) ((320 322) 1)))))
 
   )
 
