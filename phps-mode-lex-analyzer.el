@@ -2826,7 +2826,9 @@ SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
   "Comment region from BEG to END with optional _ARG."
 
   ;; Make sure changes has been processed
-  (phps-mode-lex-analyzer--process-changes nil t)
+  (when phps-mode-lex-analyzer--idle-timer
+    (phps-mode-lex-analyzer--process-changes nil t)
+    (phps-mode-lex-analyzer--cancel-idle-timer))
 
   ;; Iterate tokens from beginning to end and comment out all PHP code
   (when-let ((tokens phps-mode-lex-analyzer--tokens))
@@ -2918,7 +2920,9 @@ SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
   "Un-comment region from BEG to END with optional ARG."
 
   ;; Make sure changes has been processed
-  (phps-mode-lex-analyzer--process-changes nil t)
+  (when phps-mode-lex-analyzer--idle-timer
+    (phps-mode-lex-analyzer--process-changes nil t)
+    (phps-mode-lex-analyzer--cancel-idle-timer))
 
   ;; Iterate tokens from beginning to end and uncomment out all commented PHP code
   (when-let ((tokens phps-mode-lex-analyzer--tokens))
