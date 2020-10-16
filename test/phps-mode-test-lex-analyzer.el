@@ -1309,6 +1309,15 @@
    (let ((buffer-contents (buffer-substring-no-properties (point-min) (point-max))))
      (should (equal buffer-contents "<?php\n$var = '123';\n$var = 'abc';\n"))))
 
+  (phps-mode-test--with-buffer
+   "<?php\n$var1 = '123';"
+   "Comment region after changes has been made to buffer"
+   (goto-char 19)
+   (insert " def")
+   (comment-region 7 (point-max))
+   (let ((buffer-contents (buffer-substring-no-properties (point-min) (point-max))))
+     (should (equal buffer-contents "<?php\n$var1 = '123 def';\n"))))
+
   )
 
 (defun phps-mode-test-lex-analyzer--get-inline-html-indentation ()
