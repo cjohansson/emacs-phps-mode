@@ -1342,8 +1342,7 @@ SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
 
                       ;; In global variable declaration
                       (when (and in-global-declaration
-                                 (equal token 'T_VARIABLE)
-                                 imenu-in-function-name)
+                                 (equal token 'T_VARIABLE))
                         (setq bookkeeping-in-assignment t))
 
                       ;; In static variable declaration

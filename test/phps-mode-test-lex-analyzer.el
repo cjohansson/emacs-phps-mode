@@ -1558,7 +1558,7 @@
    "Bookkeeping of global variables in functional-oriented file"
    (should (equal
             (phps-mode-test--hash-to-list (phps-mode-lex-analyzer--get-bookkeeping) t)
-            '(((" id $a" 1) ("id $b" 1) (15 17) 1) ((19 21) 1) ((28 30) 1) (" function myFunction id $c" 1) ((73 75) 1) (" function myFunction id $a" 1) ((90 92) 1) ((102 104) 1) ((142 144) 0)))))
+            '((" id $a" 1) ((15 17) 1) (" id $b" 1) ((19 21) 1) ((28 30) 1) (" function myFunction id $c" 1) ((73 75) 1) (" function myFunction id $a" 1) ((90 92) 1) ((102 104) 1) ((142 144) 0)))))
 
   )
 
