@@ -1553,6 +1553,13 @@
             (phps-mode-test--hash-to-list (phps-mode-lex-analyzer--get-bookkeeping) t)
             '((" id $var" 1) ((8 12) 1) (" function test id $abc" 1) ((35 39) 1) (" function test id $var" 1) ((54 58) 1) ((68 72) 1)))))
 
+  (phps-mode-test--with-buffer
+   "<?php\n\nglobal $a, $b;\n\nif ($a) {\n    echo 'Hit';\n}\n\nfunction myFunction($c)\n{\n    global $a;\n    if ($a) {\n        echo 'Hit';\n    }\n    if ($b) {\n        echo 'Miss';\n    }\n}\n"
+   "Bookkeeping of global variables in functional-oriented file"
+   (should (equal
+            (phps-mode-test--hash-to-list (phps-mode-lex-analyzer--get-bookkeeping) t)
+            '(((" id $a" 1) ("id $b" 1) (15 17) 1) ((19 21) 1) ((28 30) 1) (" function myFunction id $c" 1) ((73 75) 1) (" function myFunction id $a" 1) ((90 92) 1) ((102 104) 1) ((142 144) 0)))))
+
   )
 
 (defun phps-mode-test-lex-analyzer ()
