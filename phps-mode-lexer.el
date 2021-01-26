@@ -973,7 +973,7 @@
       (phps-mode-lexer--match-macro
        (and ST_IN_SCRIPTING
             (looking-at
-             (concat "\\(" "[" "\\|" "(" "\\)")))
+             (concat "\\(" "\\[" "\\|" "(" "\\)")))
        (phps-mode-lexer--enter-nesting)
        (phps-mode-lexer--return-token))
 
