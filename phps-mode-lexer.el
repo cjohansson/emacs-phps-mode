@@ -163,7 +163,8 @@
 
 (defun phps-mode-lexer--yyless (points)
   "Move lexer back POINTS."
-  (setq semantic-lex-end-point (- semantic-lex-end-point points)))
+  (setq semantic-lex-end-point (- semantic-lex-end-point points))
+  (forward-char (- points)))
 
 (defun phps-mode-lexer--inline-char-handler ()
   "Mimic inline_char_handler."
@@ -1060,6 +1061,8 @@
            (phps-mode-lexer--return-end-token)
          (phps-mode-lexer--inline-char-handler)))
 
+      ;; Make sure a label character follows "->" or "?->", otherwise there is no property
+      ;; and "->"/"?->" will be taken literally
       (phps-mode-lexer--match-macro
        (and (or ST_DOUBLE_QUOTES ST_HEREDOC ST_BACKQUOTE)
             (looking-at
@@ -1072,8 +1075,19 @@
        (phps-mode-lexer--yy-push-state 'ST_LOOKING_FOR_PROPERTY)
        (phps-mode-lexer--return-token-with-str 'T_VARIABLE 1 (match-beginning 0) (- (match-end 0) 3)))
 
-      ;; TODO Was here
+      (phps-mode-lexer--match-macro
+       (and (or ST_DOUBLE_QUOTES ST_HEREDOC ST_BACKQUOTE)
+            (looking-at
+             (concat
+              "\\$"
+              phps-mode-lexer--LABEL
+              "\\?->"
+              "[a-zA-Z_\x80-\xff]")))
+       (phps-mode-lexer--yyless 4)
+       (phps-mode-lexer--yy-push-state 'ST_LOOKING_FOR_PROPERTY)
+       (phps-mode-lexer--return-token-with-str 'T_VARIABLE 1 (match-beginning 0) (- (match-end 0) 4)))
 
+      ;; A [ always designates a variable offset, regardless of what follows
       (phps-mode-lexer--match-macro
        (and (or ST_DOUBLE_QUOTES ST_HEREDOC ST_BACKQUOTE)
             (looking-at
@@ -1081,9 +1095,10 @@
               "\\$"
               phps-mode-lexer--LABEL
               "\\[")))
+       (phps-mode-lexer--yyless 1)
        (phps-mode-lexer--yy-push-state 'ST_VAR_OFFSET)
-       (forward-char -1)
-       (phps-mode-lexer--return-token 'T_VARIABLE (match-beginning 0) (- (match-end 0) 1)))
+       (phps-mode-lexer--return-token-with-str
+        'T_VARIABLE 1 (match-beginning 0) (- (match-end 0) 1)))
 
       (phps-mode-lexer--match-macro
        (and (or ST_IN_SCRIPTING ST_DOUBLE_QUOTES ST_HEREDOC ST_BACKQUOTE ST_VAR_OFFSET)
@@ -1091,27 +1106,35 @@
              (concat
               "\\$"
               phps-mode-lexer--LABEL)))
-       (phps-mode-lexer--return-token 'T_VARIABLE (match-beginning 0) (match-end 0)))
+       (phps-mode-lexer--return-token-with-str 'T_VARIABLE 1))
 
       (phps-mode-lexer--match-macro
        (and ST_VAR_OFFSET (looking-at "\\]"))
        (phps-mode-lexer--yy-pop-state)
-       (phps-mode-lexer--return-token "]" (match-beginning 0) (match-end 0)))
+       (phps-mode-lexer--return-token-with-str "]" 1 (match-beginning 0) (match-end 0)))
 
       (phps-mode-lexer--match-macro
-       (and ST_VAR_OFFSET (looking-at (concat "\\(" phps-mode-lexer--TOKENS
-                                              "\\|[{}\"`]\\)")))
+       (and ST_VAR_OFFSET
+            (looking-at
+             (concat "\\(" phps-mode-lexer--TOKENS
+                     "\\|[{}\"`]\\)")))
        (let* ((start (match-beginning 0))
               (end (match-end 0))
               (data (buffer-substring-no-properties start end)))
-         (phps-mode-lexer--return-token data start end)))
+         ;; Only '[' or '-' can be valid, but returning other tokens will allow a more explicit parse error
+         (phps-mode-lexer--return-token data)))
 
+      ;; TODO New function below
       (phps-mode-lexer--match-macro
        (and ST_VAR_OFFSET (looking-at (concat "[ \n\r\t'#]")))
-       (let* ((start (match-beginning 0))
-              (end (- (match-end 0) 1)))
-         (phps-mode-lexer--yy-pop-state)
-         (phps-mode-lexer--return-token 'T_ENCAPSED_AND_WHITESPACE start end)))
+       ;; Invalid rule to return a more explicit parse error with proper line number
+       (phps-mode-lexer--yyless 0)
+       (phps-mode-lexer--yy-pop-state)
+       (phps-mode-lexer--return-token-with-val 'T_ENCAPSED_AND_WHITESPACE))
+
+
+      ;; TODO Was here
+
 
       (phps-mode-lexer--match-macro
        (and (or ST_IN_SCRIPTING ST_VAR_OFFSET) (looking-at phps-mode-lexer--LABEL))
