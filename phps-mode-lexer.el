@@ -45,8 +45,8 @@
 ;; INITIALIZE SETTINGS
 
 
-(phps-mode-parser-grammar-macro-CG 'PARSER_MODE t)
-(phps-mode-parser-grammar-macro-CG 'SHORT_TAGS t)
+(phps-mode-parser-grammar-macro-CG 'parser-mode t)
+(phps-mode-parser-grammar-macro-CG 'short-tags t)
 
 
 ;; SETTINGS
@@ -216,8 +216,12 @@
     pos))
 
 ;; TODO Figure out what this does
-(defun phps-mode-lexer--skip-token (_token _start _end)
-  "Skip TOKEN to list with START and END.")
+(defun phps-mode-lexer--skip-token (token &optional start end)
+  "Skip TOKEN to list with START and END."
+  (unless start
+    (setq start (match-beginning 0)))
+  (unless end
+    (setq end (match-end 0))))
 
 (defmacro phps-mode-lexer--match-macro (conditions &rest body)
   "Check if CONDITIONS hold, if so execute BODY."
@@ -234,9 +238,13 @@
     (setq end (match-end 0)))
   (phps-mode-lexer--emit-token token start end))
 
-(defun phps-mode-lexer--return-or-skip-token (token start end)
+(defun phps-mode-lexer--return-or-skip-token (token &optional start end)
   "Return TOKEN with START and END but only in parse-mode."
-  (when (phps-mode-parser-grammar-macro-CG 'PARSER_MODE)
+  (unless start
+    (setq start (match-beginning 0)))
+  (unless end
+    (setq end (match-end 0)))
+  (when (phps-mode-parser-grammar-macro-CG 'parser-mode)
     (phps-mode-lexer--return-token token start end)))
 
 
@@ -573,7 +581,7 @@
               "\\(real\\)"
               phps-mode-lexer--TABS_AND_SPACES
               ")")))
-       (when (phps-mode-parser-grammar-macro-CG 'PARSER_MODE)
+       (when (phps-mode-parser-grammar-macro-CG 'parser-mode)
          (signal
           'phps-lexer-error
           (list
@@ -1000,7 +1008,7 @@
       (phps-mode-lexer--match-macro
        (and ST_INITIAL (looking-at "<\\?="))
        (phps-mode-lexer--begin 'ST_IN_SCRIPTING)
-       (when (phps-mode-parser-grammar-macro-CG 'PARSER_MODE)
+       (when (phps-mode-parser-grammar-macro-CG 'parser-mode)
          (phps-mode-lexer--return-token-with-indent 'T_ECHO))
        (phps-mode-lexer--return-token 'T_OPEN_TAG_WITH_ECHO))
 
@@ -1013,8 +1021,6 @@
        (phps-mode-lexer--begin 'ST_IN_SCRIPTING)
        (phps-mode-lexer--return-or-skip-token 'T_OPEN_TAG))
 
-      ;; TODO Was here
-
       (phps-mode-lexer--match-macro
        (and ST_INITIAL (looking-at "<\\?php"))
        (let ((start (match-beginning 0))
@@ -1026,13 +1032,11 @@
           ((equal end (point-max))
            (phps-mode-lexer--begin 'ST_IN_SCRIPTING)
            (phps-mode-lexer--return-or-skip-token
-            'T_OPEN_TAG
-            start
-            end))
+            'T_OPEN_TAG))
 
-          ((phps-mode-parser-grammar-macro-CG 'SHORT_TAGS)
-           (phps-mode-lexer--yyless 3)
-           (setq end (- end 3))
+          ((phps-mode-parser-grammar-macro-CG 'short-tags)
+           (phps-mode-lexer--yyless 2)
+           (setq end (- end 2))
            (phps-mode-lexer--begin 'ST_IN_SCRIPTING)
            (phps-mode-lexer--return-or-skip-token
             'T_OPEN_TAG
@@ -1044,18 +1048,17 @@
 
       (phps-mode-lexer--match-macro
        (and ST_INITIAL (looking-at "<\\?"))
-       (when (phps-mode-parser-grammar-macro-CG 'SHORT_TAGS)
-         (let ((start (match-beginning 0))
-               (end (match-end 0)))
-           (phps-mode-lexer--begin 'ST_IN_SCRIPTING)
-           (when phps-mode-lexer--EXPECTED
-             (phps-mode-lexer--skip-token 'T_OPEN_TAG start end))
-           ;; (message "Starting scripting after <?")
-           (phps-mode-lexer--return-token 'T_OPEN_TAG start end))))
+       (if (phps-mode-parser-grammar-macro-CG 'short-tags)
+           (progn
+             (phps-mode-lexer--begin 'ST_IN_SCRIPTING)
+             (phps-mode-lexer--return-or-skip-token 'T_OPEN_TAG))
+         (phps-mode-lexer--inline-char-handler)))
 
       (phps-mode-lexer--match-macro
        (and ST_INITIAL (looking-at phps-mode-lexer--ANY_CHAR))
-       (phps-mode-lexer--inline-char-handler))
+       (if (= (point) (point-max))
+           (phps-mode-lexer--return-end-token)
+         (phps-mode-lexer--inline-char-handler)))
 
       (phps-mode-lexer--match-macro
        (and (or ST_DOUBLE_QUOTES ST_HEREDOC ST_BACKQUOTE)
@@ -1065,9 +1068,11 @@
               phps-mode-lexer--LABEL
               "->"
               "[a-zA-Z_\x80-\xff]")))
+       (phps-mode-lexer--yyless 3)
        (phps-mode-lexer--yy-push-state 'ST_LOOKING_FOR_PROPERTY)
-       (forward-char -3)
-       (phps-mode-lexer--return-token 'T_VARIABLE (match-beginning 0) (- (match-end 0) 3)))
+       (phps-mode-lexer--return-token-with-str 'T_VARIABLE 1 (match-beginning 0) (- (match-end 0) 3)))
+
+      ;; TODO Was here
 
       (phps-mode-lexer--match-macro
        (and (or ST_DOUBLE_QUOTES ST_HEREDOC ST_BACKQUOTE)
@@ -1159,7 +1164,7 @@
          (when (= (- end start) 3)
            (setq end (1- end)))
          (phps-mode-lexer--begin 'ST_INITIAL)
-         (when (phps-mode-parser-grammar-macro-CG 'PARSER_MODE)
+         (when (phps-mode-parser-grammar-macro-CG 'parser-mode)
            (phps-mode-lexer--return-token ";" start end))
          (phps-mode-lexer--return-token 'T_CLOSE_TAG start end)))
 
