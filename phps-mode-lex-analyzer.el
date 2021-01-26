@@ -3018,8 +3018,8 @@ SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
         (insert contents)
 
         (if tokens
-            (setq phps-mode-lexer--tokens (nreverse tokens))
-          (setq phps-mode-lexer--tokens nil))
+            (setq phps-mode-lexer--generated-tokens (nreverse tokens))
+          (setq phps-mode-lexer--generated-tokens nil))
         (if state
             (setq phps-mode-lexer--state state)
           (setq phps-mode-lexer--state 'ST_INITIAL))
@@ -3062,7 +3062,7 @@ SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
         (setq state phps-mode-lexer--state)
         (setq state-stack phps-mode-lexer--state-stack)
         (setq states phps-mode-lexer--states)
-        (setq tokens (nreverse phps-mode-lexer--tokens))
+        (setq tokens (nreverse phps-mode-lexer--generated-tokens))
         (setq heredoc-label phps-mode-lexer--heredoc-label)
         (setq heredoc-label-stack phps-mode-lexer--heredoc-label-stack)
         (kill-buffer))))
