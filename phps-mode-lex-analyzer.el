@@ -138,13 +138,19 @@
 
      ((or
        (equal token-name 'T_VARIABLE)
-       (equal token-name 'T_STRING_VARNAME))
+       (equal token-name 'T_STRING_VARNAME)
+       (equal token-name 'T_NAME_RELATIVE)
+       (equal token-name 'T_NAME_QUALIFIED)
+       (equal token-name 'T_NAME_FULLY_QUALIFIED))
       (list 'font-lock-face 'font-lock-variable-name-face))
 
      ((equal token-name 'T_COMMENT)
       (list 'font-lock-face 'font-lock-comment-face))
 
      ((equal token-name 'T_DOC_COMMENT)
+      (list 'font-lock-face 'font-lock-doc-face))
+
+     ((equal token-name 'T_ATTRIBUTE)
       (list 'font-lock-face 'font-lock-doc-face))
 
      ((equal token-name 'T_INLINE_HTML)
@@ -164,6 +170,7 @@
        (equal token-name 'T_DOLLAR_OPEN_CURLY_BRACES)
        (equal token-name 'T_CURLY_OPEN)
        (equal token-name 'T_OBJECT_OPERATOR)
+       (equal token-name 'T_NULLSAFE_OBJECT_OPERATOR)
        (equal token-name 'T_PAAMAYIM_NEKUDOTAYIM)
        (equal token-name 'T_NS_SEPARATOR)
        (equal token-name 'T_EXIT)

@@ -103,7 +103,7 @@
 ;; VARIABLES
 
 
-;; TODO Fiture out way to use this
+;; TODO Figure out way to use this
 (defvar-local phps-mode-lexer--expected nil
   "Flag whether something is expected or not.")
 
@@ -231,7 +231,22 @@
     (setq start (match-beginning 0)))
   (unless end
     (setq end (match-end 0)))
-  (phps-mode-lexer--emit-token token start end))
+  (phps-mode-lexer--emit-token
+   token
+   start
+   end))
+
+(defun phps-mode-lexer--return-token-with-str (token offset &optional start end)
+  "Return TOKEN at OFFSET with START and END."
+  (unless start
+    (setq start (match-beginning 0)))
+  (unless end
+    (setq end (match-end 0)))
+  (phps-mode-lexer--return-token token (+ start offset) (+ end offset)))
+
+(defun phps-mode-lexer--return-token-with-val (token &optional start end)
+  "Return TOKEN with START and END."
+  (phps-mode-lexer--return-token token start end))
 
 (defun phps-mode-lexer--return-or-skip-token (token &optional start end)
   "Return TOKEN with START and END but only in parse-mode."
@@ -399,7 +414,6 @@
        (phps-mode-lexer--return-token-with-ident 'T_ENDFOR))
 
       ;; TODO Fix return_token_with_indent function
-      ;; TODO New attribute token
       ;; TODO New function begin_nesting
 
       (phps-mode-lexer--match-macro
@@ -487,7 +501,6 @@
        (phps-mode-lexer--yy-push-state 'ST_LOOKING_FOR_PROPERTY)
        (phps-mode-lexer--return-token-with-ident 'T_OBJECT_OPERATOR))
 
-      ;; TODO New token below
       (phps-mode-lexer--match-macro
        (and ST_IN_SCRIPTING (looking-at "?->"))
        (phps-mode-lexer--yy-push-state 'ST_LOOKING_FOR_PROPERTY)
@@ -503,7 +516,6 @@
        (and ST_LOOKING_FOR_PROPERTY (looking-at "->"))
        (phps-mode-lexer--return-token 'T_OBJECT_OPERATOR))
 
-      ;; TODO New token below
       (phps-mode-lexer--match-macro
        (and ST_LOOKING_FOR_PROPERTY (looking-at "?->"))
        (phps-mode-lexer--return-token 'T_NULLSAFE_OBJECT_OPERATOR))
@@ -1067,7 +1079,11 @@
               "[a-zA-Z_\x80-\xff]")))
        (phps-mode-lexer--yyless 3)
        (phps-mode-lexer--yy-push-state 'ST_LOOKING_FOR_PROPERTY)
-       (phps-mode-lexer--return-token-with-str 'T_VARIABLE 1 (match-beginning 0) (- (match-end 0) 3)))
+       (phps-mode-lexer--return-token-with-str
+        'T_VARIABLE
+        1
+        (match-beginning 0)
+        (- (match-end 0) 3)))
 
       (phps-mode-lexer--match-macro
        (and (or ST_DOUBLE_QUOTES ST_HEREDOC ST_BACKQUOTE)
@@ -1079,7 +1095,11 @@
               "[a-zA-Z_\x80-\xff]")))
        (phps-mode-lexer--yyless 4)
        (phps-mode-lexer--yy-push-state 'ST_LOOKING_FOR_PROPERTY)
-       (phps-mode-lexer--return-token-with-str 'T_VARIABLE 1 (match-beginning 0) (- (match-end 0) 4)))
+       (phps-mode-lexer--return-token-with-str
+        'T_VARIABLE
+        1
+        (match-beginning 0)
+        (- (match-end 0) 4)))
 
       ;; A [ always designates a variable offset, regardless of what follows
       (phps-mode-lexer--match-macro
@@ -1092,7 +1112,10 @@
        (phps-mode-lexer--yyless 1)
        (phps-mode-lexer--yy-push-state 'ST_VAR_OFFSET)
        (phps-mode-lexer--return-token-with-str
-        'T_VARIABLE 1 (match-beginning 0) (- (match-end 0) 1)))
+        'T_VARIABLE
+        1
+        (match-beginning 0)
+        (- (match-end 0) 1)))
 
       (phps-mode-lexer--match-macro
        (and (or ST_IN_SCRIPTING ST_DOUBLE_QUOTES ST_HEREDOC ST_BACKQUOTE ST_VAR_OFFSET)
@@ -1105,7 +1128,7 @@
       (phps-mode-lexer--match-macro
        (and ST_VAR_OFFSET (looking-at "\\]"))
        (phps-mode-lexer--yy-pop-state)
-       (phps-mode-lexer--return-token-with-str "]" 1 (match-beginning 0) (match-end 0)))
+       (phps-mode-lexer--return-token-with-str "]" 1))
 
       (phps-mode-lexer--match-macro
        (and ST_VAR_OFFSET
@@ -1126,7 +1149,6 @@
        (phps-mode-lexer--yy-pop-state)
        (phps-mode-lexer--return-token-with-val 'T_ENCAPSED_AND_WHITESPACE))
 
-      ;; TODO New token below
       (phps-mode-lexer--match-macro
        (and ST_IN_SCRIPTING
             (looking-at
@@ -1140,7 +1162,6 @@
         'T_NAME_RELATIVE
         (1- (length "namespace\\"))))
 
-      ;; TODO New token below
       (phps-mode-lexer--match-macro
        (and
         ST_IN_SCRIPTING
@@ -1154,7 +1175,6 @@
         'T_NAME_QUALIFIED
         0))
 
-      ;; TODO New token below
       (phps-mode-lexer--match-macro
        (and
         ST_IN_SCRIPTING
@@ -1518,8 +1538,7 @@
                    (phps-mode-lexer--return-token-with-val
                     'T_ENCAPSED_AND_WHITESPACE
                     old-start
-                    start)
-                   )
+                    start))
 
                   ))
              (progn
