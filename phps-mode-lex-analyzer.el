@@ -144,7 +144,9 @@
        (equal token-name 'T_NAME_FULLY_QUALIFIED))
       (list 'font-lock-face 'font-lock-variable-name-face))
 
-     ((equal token-name 'T_COMMENT)
+     ((or
+       (equal token-name 'T_COMMENT)
+       (equal token-name 'END))
       (list 'font-lock-face 'font-lock-comment-face))
 
      ((equal token-name 'T_DOC_COMMENT)
