@@ -35,8 +35,9 @@
   (phps-mode-test--with-buffer
    "<?php\t$öar=1; exit $var;\t?>"
    "Simple PHP with two expression"
-   (should (equal phps-mode-lex-analyzer--tokens
-                  '((T_OPEN_TAG 1 . 7) (T_VARIABLE 7 . 11) ("=" 11 . 12) (T_LNUMBER 12 . 13) (";" 13 . 14) (T_EXIT 15 . 19) (T_VARIABLE 20 . 24) (";" 24 . 25) (";" 26 . 28) (T_CLOSE_TAG 26 . 28)))))
+   (should (equal
+            phps-mode-lex-analyzer--tokens
+            '((T_OPEN_TAG 1 . 7) (T_VARIABLE 7 . 11) ("=" 11 . 12) (T_LNUMBER 12 . 13) (";" 13 . 14) (T_EXIT 15 . 19) (T_VARIABLE 20 . 24) (";" 24 . 25) (";" 26 . 28) (T_CLOSE_TAG 26 . 28)))))
 
   (phps-mode-test--with-buffer
    "<?php\nexit;\n?>"

@@ -343,18 +343,18 @@
    start
    end))
 
-(defun phps-mode-lexer--return-token-with-str (token offset &optional start end)
+;; TODO Do something with offset?
+(defun phps-mode-lexer--return-token-with-str (token _offset &optional start end)
   "Return TOKEN at OFFSET with START and END."
   (unless start
     (setq start (match-beginning 0)))
   (unless end
     (setq end (match-end 0)))
-  (phps-mode-lexer--return-token token (+ start offset) (+ end offset)))
+  (phps-mode-lexer--return-token token start end))
 
 (defun phps-mode-lexer--return-whitespace ()
   "Return whitespace."
-  ;; TODO Implement this
-  )
+  (phps-mode-lexer--move-forward (match-end 0)))
 
 (defun phps-mode-lexer--return-exit-nesting-token (&optional token start end)
   "Return TOKEN if it does not exit a nesting with optional START and END."
@@ -1741,11 +1741,20 @@
          (format "Unexpected character at %d" (match-beginning 0))
          (match-beginning 0))))
 
-      (when phps-mode-lexer--match-length
-        (phps-mode-lexer--re2c-execute)
+      (if phps-mode-lexer--match-length
+          (progn
+            (phps-mode-debug-message
+             (message
+              "Found match %s"
+              phps-mode-lexer--match-body))
+            (phps-mode-lexer--re2c-execute)
 
-        (when phps-mode-lexer--restart-flag
-          (phps-mode-lexer--re2c))))))
+            (when phps-mode-lexer--restart-flag
+              (phps-mode-debug-message
+               (message "Restarting lexer"))
+              (phps-mode-lexer--re2c)))
+        (phps-mode-debug-message
+         (message "Found nothing at %d" (point)))))))
 
 
 (provide 'phps-mode-lexer)
