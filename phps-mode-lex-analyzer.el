@@ -303,7 +303,6 @@
       (list 'font-lock-face 'font-lock-constant-face))
 
      ((equal token-name 'T_ERROR)
-      ;; NOTE This token-name is artificial and not PHP native
       (list 'font-lock-face 'font-lock-warning-face))
 
      (t (list 'font-lock-face 'font-lock-constant-face)))))
