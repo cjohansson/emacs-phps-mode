@@ -450,7 +450,6 @@
 
       (phps-mode-lexer--match-macro
        (and ST_IN_SCRIPTING (looking-at "exit"))
-       (message "was here")
        (phps-mode-lexer--return-token-with-indent 'T_EXIT))
 
       (phps-mode-lexer--match-macro
@@ -1008,14 +1007,7 @@
 
       (phps-mode-lexer--match-macro
        (and ST_IN_SCRIPTING (looking-at phps-mode-lexer--tokens))
-       (let* ((start (match-beginning 0))
-              (end (match-end 0))
-              (data (buffer-substring-no-properties start end))
-              (use-brace nil))
-         ;; (message "Found token '%s'" data)
-         (if use-brace
-             (phps-mode-lexer--return-token "{" start end)
-           (phps-mode-lexer--return-token data start end))))
+       (phps-mode-lexer--return-token))
 
       (phps-mode-lexer--match-macro
        (and ST_IN_SCRIPTING (looking-at "{"))
