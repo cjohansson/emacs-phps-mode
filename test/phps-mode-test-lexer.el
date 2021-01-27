@@ -226,15 +226,72 @@
      phps-mode-lex-analyzer--tokens
      '((T_OPEN_TAG 1 . 7) (T_COMMENT 7 . 22) (T_DOC_COMMENT 23 . 44)))))
 
-  ;; (phps-mode-test--with-buffer
-  ;;  "<?php ??= $var EXIT die function return yield from yield try catch finally throw if elseif endif else while endwhile do for endfor foreach endforeach declare enddeclare instanceof as switch endswitch case default break continue goto echo print class interface trait extends implements :: \\ ... ?? new clone var (int) (integer) (real) (double) (float) (string) (binary) (array) (object) (boolean) (bool) (unset) eval include include_once require require_once namespace use insteadof global isset empty __halt_compiler static abstract final private protected public unset => list array callable ++ -- === !== == != <> <= >= <=> += -= *= *\\*= *\\* /= .= %= <<= >>= &= |= ^= || && OR AND XOR << >> { } 0xAF 0b10 200 2147483650 2.5 2.5e10 __CLASS__ __TRAIT__ __FUNCTION__ __METHOD__ __LINE__ __FILE__ __DIR__ __NAMESPACE__\n// My comment \n# My comment 2\n/*blaha blaha2*/ /** blaha\n blaha2 **/ 'test' 'my first \\'comment\\' really' \"sentence\" \"words \\\\comment\\\" really\" 'this single quoted string never ends"
-  ;;  "All PHP tokens after each other"
-  ;;  (message "Tokens: %s" phps-mode-lex-analyzer--tokens)
-  ;;  (should (equal phps-mode-lex-analyzer--tokens
-  ;;                 '((T_OPEN_TAG 1 . 7) (T_COALESCE_EQUAL 7 . 10) (T_VARIABLE 11 . 15) (T_EXIT 16 . 20) (T_DIE 21 . 24) (T_FUNCTION 25 . 33) (T_RETURN 34 . 40) (T_YIELD_FROM 41 . 52) (T_YIELD 52 . 57) (T_TRY 58 . 61) (T_CATCH 62 . 67) (T_FINALLY 68 . 75) (T_THROW 76 . 81) (T_IF 82 . 84) (T_ELSEIF 85 . 91) (T_ENDIF 92 . 97) (T_ELSE 98 . 102) (T_WHILE 103 . 108) (T_ENDWHILE 109 . 117) (T_DO 118 . 120) (T_FOR 121 . 124) (T_ENDFOR 125 . 131) (T_FOREACH 132 . 139) (T_ENDFOREACH 140 . 150) (T_DECLARE 151 . 158) (T_ENDDECLARE 159 . 169) (T_INSTANCEOF 170 . 180) (T_AS 181 . 183) (T_SWITCH 184 . 190) (T_ENDSWITCH 191 . 200) (T_CASE 201 . 205) (T_DEFAULT 206 . 213) (T_BREAK 214 . 219) (T_CONTINUE 220 . 228) (T_GOTO 229 . 233) (T_ECHO 234 . 238) (T_PRINT 239 . 244) (T_CLASS 245 . 250) (T_INTERFACE 251 . 260) (T_TRAIT 261 . 266) (T_EXTENDS 267 . 274) (T_IMPLEMENTS 275 . 285) (T_PAAMAYIM_NEKUDOTAYIM 286 . 288) (T_NS_SEPARATOR 289 . 290) (T_ELLIPSIS 291 . 294) (T_COALESCE 295 . 297) (T_NEW 298 . 301) (T_CLONE 302 . 307) (T_VAR 308 . 311) (T_INT_CAST 312 . 317) (T_INT_CAST 318 . 327) (T_DOUBLE_CAST 328 . 334) (T_DOUBLE_CAST 335 . 343) (T_DOUBLE_CAST 344 . 351) (T_STRING_CAST 352 . 360) (T_STRING_CAST 361 . 369) (T_ARRAY_CAST 370 . 377) (T_OBJECT_CAST 378 . 386) (T_BOOL_CAST 387 . 396) (T_BOOL_CAST 397 . 403) (T_UNSET_CAST 404 . 411) (T_EVAL 412 . 416) (T_INCLUDE 417 . 424) (T_INCLUDE_ONCE 425 . 437) (T_REQUIRE 438 . 445) (T_REQUIRE_ONCE 446 . 458) (T_NAMESPACE 459 . 468) (T_USE 469 . 472) (T_INSTEADOF 473 . 482) (T_GLOBAL 483 . 489) (T_ISSET 490 . 495) (T_EMPTY 496 . 501) (T_HALT_COMPILER 502 . 517) (T_STATIC 518 . 524) (T_ABSTRACT 525 . 533) (T_FINAL 534 . 539) (T_PRIVATE 540 . 547) (T_PROTECTED 548 . 557) (T_PUBLIC 558 . 564) (T_UNSET 565 . 570) (T_DOUBLE_ARROW 571 . 573) (T_LIST 574 . 578) (T_ARRAY 579 . 584) (T_CALLABLE 585 . 593) (T_INC 594 . 596) (T_DEC 597 . 599) (T_IS_IDENTICAL 600 . 603) (T_IS_NOT_IDENTICAL 604 . 607) (T_IS_EQUAL 608 . 610) (T_IS_NOT_EQUAL 611 . 613) (T_IS_NOT_EQUAL 614 . 616) (T_IS_SMALLER_OR_EQUAL 617 . 619) (T_IS_GREATER_OR_EQUAL 620 . 622) (T_SPACESHIP 623 . 626) (T_PLUS_EQUAL 627 . 629) (T_MINUS_EQUAL 630 . 632) (T_MUL_EQUAL 633 . 635) (T_POW_EQUAL 636 . 640) (T_POW 641 . 644) (T_DIV_EQUAL 645 . 647) (T_CONCAT_EQUAL 648 . 650) (T_MOD_EQUAL 651 . 653) (T_SL_EQUAL 654 . 657) (T_SR_EQUAL 658 . 661) (T_AND_EQUAL 662 . 664) (T_OR_EQUAL 665 . 667) (T_XOR_EQUAL 668 . 670) (T_BOOLEAN_OR 671 . 673) (T_BOOLEAN_AND 674 . 676) (T_LOGICAL_OR 677 . 679) (T_LOGICAL_AND 680 . 683) (T_LOGICAL_XOR 684 . 687) (T_SL 688 . 690) (T_SR 691 . 693) ("{" 694 . 695) ("}" 696 . 697) (T_LNUMBER 698 . 702) (T_LNUMBER 703 . 707) (T_LNUMBER 708 . 711) (T_DNUMBER 712 . 722) (T_DNUMBER 723 . 726) (T_DNUMBER 727 . 733) (T_CLASS_C 734 . 743) (T_TRAIT_C 744 . 753) (T_FUNC_C 754 . 766) (T_METHOD_C 767 . 777) (T_LINE 778 . 786) (T_FILE 787 . 795) (T_DIR 796 . 803) (T_NS_C 804 . 817) (T_COMMENT 818 . 832) (T_COMMENT 833 . 847) (/ 848 . 849) (* 849 . 850) (T_STRING 850 . 855) (T_STRING 856 . 862) (* 862 . 863) (/ 863 . 864) (T_DOC_COMMENT 865 . 886) (T_CONSTANT_ENCAPSED_STRING 887 . 893) (T_CONSTANT_ENCAPSED_STRING 894 . 923) (T_CONSTANT_ENCAPSED_STRING 924 . 934) (T_CONSTANT_ENCAPSED_STRING 935 . 961) (T_ENCAPSED_AND_WHITESPACE 962 . 999)))))
+  ;; https://www.php.net/releases/8.0/en.php
+  (phps-mode-test--with-buffer
+   "<?php\nhtmlspecialchars($string, double_encode: false);"
+   "PHP 8.0 Named arguments"
+   (should
+    (equal
+     phps-mode-lex-analyzer--tokens
+     '((T_OPEN_TAG 1 . 7) (T_STRING 7 . 23) ("(" 23 . 24) (T_VARIABLE 24 . 31) ("," 31 . 32) (T_STRING 33 . 46) (":" 46 . 47) (T_STRING 48 . 53) (")" 53 . 54) (";" 54 . 55)))))
 
-  ;; TODO Add PHP 8 new tokens here
+  (phps-mode-test--with-buffer
+   "<?php\nclass PostsController\n{\n    #[Route(\"/api/posts/{id}\", methods: [\"GET\"])]\n    public function get($id) { /* ... */ }\n}"
+   "PHP 8.0 Attributes"
+   (should
+    (equal
+     phps-mode-lex-analyzer--tokens
+     '((T_OPEN_TAG 1 . 7) (T_CLASS 7 . 12) (T_STRING 13 . 28) ("{" 29 . 30) (T_ATTRIBUTE 35 . 37) (T_STRING 37 . 42) ("(" 42 . 43) (T_CONSTANT_ENCAPSED_STRING 43 . 60) ("," 60 . 61) (T_STRING 62 . 69) (":" 69 . 70) ("[" 71 . 72) (T_CONSTANT_ENCAPSED_STRING 72 . 77) ("]" 77 . 78) (")" 78 . 79) ("]" 79 . 80) (T_PUBLIC 85 . 91) (T_FUNCTION 92 . 100) (T_STRING 101 . 104) ("(" 104 . 105) (T_VARIABLE 105 . 108) (")" 108 . 109) ("{" 110 . 111) (T_COMMENT 112 . 121) ("}" 122 . 123) ("}" 124 . 125)))))
+  
+  (phps-mode-test--with-buffer
+   "<?php\nclass Point {\n  public function __construct(\n    public float $x = 0.0,\n    public float $y = 0.0,\n    public float $z = 0.0,\n  ) {}\n}"
+   "PHP 8.0 Constructor property promotion"
+   (should
+    (equal
+     phps-mode-lex-analyzer--tokens
+     '((T_OPEN_TAG 1 . 7) (T_CLASS 7 . 12) (T_STRING 13 . 18) ("{" 19 . 20) (T_PUBLIC 23 . 29) (T_FUNCTION 30 . 38) (T_STRING 39 . 50) ("(" 50 . 51) (T_PUBLIC 56 . 62) (T_STRING 63 . 68) (T_VARIABLE 69 . 71) ("=" 72 . 73) (T_DNUMBER 74 . 77) ("," 77 . 78) (T_PUBLIC 83 . 89) (T_STRING 90 . 95) (T_VARIABLE 96 . 98) ("=" 99 . 100) (T_DNUMBER 101 . 104) ("," 104 . 105) (T_PUBLIC 110 . 116) (T_STRING 117 . 122) (T_VARIABLE 123 . 125) ("=" 126 . 127) (T_DNUMBER 128 . 131) ("," 131 . 132) (")" 135 . 136) ("{" 137 . 138) ("}" 138 . 139) ("}" 140 . 141)))))
 
+  (phps-mode-test--with-buffer
+   "<?php\nclass Number {\n  public function __construct(\n    private int|float $number\n  ) {}\n}\n\nnew Number('NaN'); // TypeError"
+   "PHP 8.0 Union types"
+   (should
+    (equal
+     phps-mode-lex-analyzer--tokens
+     '((T_OPEN_TAG 1 . 7) (T_CLASS 7 . 12) (T_STRING 13 . 19) ("{" 20 . 21) (T_PUBLIC 24 . 30) (T_FUNCTION 31 . 39) (T_STRING 40 . 51) ("(" 51 . 52) (T_PRIVATE 57 . 64) (T_STRING 65 . 68) ("|" 68 . 69) (T_STRING 69 . 74) (T_VARIABLE 75 . 82) (")" 85 . 86) ("{" 87 . 88) ("}" 88 . 89) ("}" 90 . 91) (T_NEW 93 . 96) (T_STRING 97 . 103) ("(" 103 . 104) (T_CONSTANT_ENCAPSED_STRING 104 . 109) (")" 109 . 110) (";" 110 . 111) (T_COMMENT 112 . 124)))))
+
+  (phps-mode-test--with-buffer
+   "<?php\necho match (8.0) {\n  '8.0' => \"Oh no!\",\n  8.0 => \"This is what I expected\",\n};\n//> This is what I expected"
+   "PHP 8.0 Match expression"
+   (should
+    (equal
+     phps-mode-lex-analyzer--tokens
+     '((T_OPEN_TAG 1 . 7) (T_ECHO 7 . 11) (T_STRING 12 . 17) ("(" 18 . 19) (T_DNUMBER 19 . 22) (")" 22 . 23) ("{" 24 . 25) (T_CONSTANT_ENCAPSED_STRING 28 . 33) (T_DOUBLE_ARROW 34 . 36) (T_CONSTANT_ENCAPSED_STRING 37 . 45) ("," 45 . 46) (T_DNUMBER 49 . 52) (T_DOUBLE_ARROW 53 . 55) (T_CONSTANT_ENCAPSED_STRING 56 . 81) ("," 81 . 82) ("}" 83 . 84) (";" 84 . 85) (T_COMMENT 86 . 113)))))
+
+  (phps-mode-test--with-buffer
+   "<?php\n\n$country = $session?->user?->getAddress()?->country;\n"
+   "PHP 8.0 Nullsafe operator"
+   (should
+    (equal
+     phps-mode-lex-analyzer--tokens
+     '((T_OPEN_TAG 1 . 7) (T_VARIABLE 8 . 16) ("=" 17 . 18) (T_VARIABLE 19 . 27) (T_NULLSAFE_OBJECT_OPERATOR 27 . 30) (T_STRING 30 . 34) (T_NULLSAFE_OBJECT_OPERATOR 34 . 37) (T_STRING 37 . 47) ("(" 47 . 48) (")" 48 . 49) (T_NULLSAFE_OBJECT_OPERATOR 49 . 52) (T_STRING 52 . 59) (";" 59 . 60)))))
+
+  (phps-mode-test--with-buffer
+   "<?php\n\n0 == 'foobar' // false\n"
+   "PHP 8.0 Saner string to number comparisons"
+   (should
+    (equal
+     phps-mode-lex-analyzer--tokens
+     '((T_OPEN_TAG 1 . 7) (T_LNUMBER 8 . 9) (T_IS_EQUAL 10 . 12) (T_CONSTANT_ENCAPSED_STRING 13 . 21) (T_COMMENT 22 . 30)))))
+
+  (phps-mode-test--with-buffer
+   "<?php\n\nstrlen([]); // TypeError: strlen(): Argument #1 ($str) must be of type string, array given\n\narray_chunk([], -1); // ValueError: array_chunk(): Argument #2 ($length) must be greater than 0\n"
+   "PHP 8.0 Consistent type errors for internal functions"
+   (should
+    (equal
+     phps-mode-lex-analyzer--tokens
+     '((T_OPEN_TAG 1 . 7) (T_STRING 8 . 14) ("(" 14 . 15) ("[" 15 . 16) ("]" 16 . 17) (")" 17 . 18) (";" 18 . 19) (T_COMMENT 20 . 98) (T_STRING 100 . 111) ("(" 111 . 112) ("[" 112 . 113) ("]" 113 . 114) ("," 114 . 115) ("-" 116 . 117) (T_LNUMBER 117 . 118) (")" 118 . 119) (";" 119 . 120) (T_COMMENT 121 . 195)))))
+
+  ;; TODO Add more PHP 8 examples here
 
   )
 
