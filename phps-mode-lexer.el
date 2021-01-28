@@ -1,6 +1,6 @@
 ;;; phps-mode-lexer.el -- Lexer for PHPs -*- lexical-binding: t -*-
 
-;; Copyright (C) 2018-2020  Free Software Foundation, Inc.
+;; Copyright (C) 2018-2021  Free Software Foundation, Inc.
 
 ;; This file is not part of GNU Emacs.
 
@@ -45,67 +45,76 @@
 ;; INITIALIZE SETTINGS
 
 
-(phps-mode-parser-grammar-macro-CG 'PARSER_MODE t)
-(phps-mode-parser-grammar-macro-CG 'SHORT_TAGS t)
+(phps-mode-parser-grammar-macro-CG
+ 'parser-mode t)
+(phps-mode-parser-grammar-macro-CG
+ 'short-tags t)
 
 
 ;; SETTINGS
 
 
 ;; @see https://secure.php.net/manual/en/language.types.integer.php
-(defconst phps-mode-lexer--long-limit 2147483648
+(defconst phps-mode-lexer--long-limit
+  2147483648
   "Limit for 32-bit integer.")
 
-(defconst phps-mode-lexer--BNUM "0b[01]+"
+(defconst phps-mode-lexer--bnum
+  "0b[01]+"
   "Boolean number.")
 
-(defconst phps-mode-lexer--HNUM "0x[0-9a-fA-F]+"
+(defconst phps-mode-lexer--hnum
+  "0x[0-9a-fA-F]+"
   "Hexadecimal number.")
 
-(defconst phps-mode-lexer--LNUM "[0-9]+"
+(defconst phps-mode-lexer--lnum
+  "[0-9]+"
   "Long number.")
 
-(defconst phps-mode-lexer--DNUM "\\([0-9]*\\.[0-9]+\\)\\|\\([0-9]+\\.[0-9]*\\)"
+(defconst phps-mode-lexer--dnum
+  "\\([0-9]*\\.[0-9]+\\)\\|\\([0-9]+\\.[0-9]*\\)"
   "Double number.")
 
-(defconst phps-mode-lexer--EXPONENT_DNUM
+(defconst phps-mode-lexer--exponent-dnum
   (format "\\(\\(%s\\|%s\\)[eE][\\+-]?%s\\)"
-          phps-mode-lexer--LNUM
-          phps-mode-lexer--DNUM
-          phps-mode-lexer--LNUM)
+          phps-mode-lexer--lnum
+          phps-mode-lexer--dnum
+          phps-mode-lexer--lnum)
   "Exponent double number.")
 
-(defconst phps-mode-lexer--LABEL
+(defconst phps-mode-lexer--label
   "[A-Za-z_[:nonascii:]][0-9A-Za-z_[:nonascii:]]*"
   "Labels are used for names.")
 ;; NOTE original is [a-zA-Z_\x80-\xff][a-zA-Z0-9_\x80-\xff]*
 ;; NOTE Rebuilt for comparability with emacs-lisp
 
-(defconst phps-mode-lexer--WHITESPACE "[ \n\r\t]+"
+(defconst phps-mode-lexer--whitespace
+  "[ \n\r\t]+"
   "White-space.")
 
-(defconst phps-mode-lexer--TABS_AND_SPACES "[ \t]*"
+(defconst phps-mode-lexer--tabs-and-spaces
+  "[ \t]*"
   "Tabs and white-spaces.")
 
-(defconst phps-mode-lexer--TOKENS "[][;:,.()|^&+/*=%!~$<>?@-]"
+(defconst phps-mode-lexer--tokens
+  "[][;:,.()|^&+/*=%!~$<>?@-]"
   "Tokens.")
 ;; NOTE Original is [;:,.\[\]()|^&+-/*=%!~$<>?@]
 ;; NOTE The hyphen moved last since it has special meaning and to avoid it being interpreted as a range.
 
-(defconst phps-mode-lexer--ANY_CHAR "[^z-a]"
+(defconst phps-mode-lexer--any-char
+  "[^z-a]"
   "Any character.  The Zend equivalent is [^] but is not possible in Emacs Lisp.")
 
-(defconst phps-mode-lexer--NEWLINE "[\n\r]"
+(defconst phps-mode-lexer--newline
+  "[\n\r]"
   "Newline characters.  The Zend equivalent is (\"\r\"|\"\n\"|\"\r\n\").")
 
 
 ;; VARIABLES
 
 
-(defvar-local phps-mode-lexer--EXPECTED nil
-  "Flag whether something is expected or not.")
-
-(defvar-local phps-mode-lexer--tokens nil
+(defvar-local phps-mode-lexer--generated-tokens nil
   "List of current generated tokens.")
 
 (defvar-local phps-mode-lexer--state nil
@@ -132,60 +141,135 @@
 (defvar-local phps-mode-lexer--match-data nil
   "Match data.")
 
+(defvar-local phps-mode-lexer--nest-location-stack nil
+  "Nesting stack.")
+
+(defvar-local phps-mode-lexer--restart-flag nil
+  "Flag whether to restart or not.")
 
 ;; HELPER FUNCTIONS
 
 
-(defun phps-mode-lexer--BEGIN (state)
+(defun phps-mode-lexer--parser-mode ()
+  "Return whether we have some expected value or not."
+  nil)
+
+(defun phps-mode-lexer--begin (state)
   "Begin STATE."
+  (phps-mode-debug-message
+   (message "Begin state: %s" state))
   (setq phps-mode-lexer--state state))
 
-;; _yy_push_state
-(defun phps-mode-lexer--yy_push_state (state)
-  "Add NEW-STATE to stack and then begin state."
-  (push phps-mode-lexer--state phps-mode-lexer--state-stack)
-  (phps-mode-lexer--BEGIN state))
+(defun phps-mode-lexer--yy-push-state (state)
+  "Add STATE to stack and then begin state."
+  (push
+   phps-mode-lexer--state
+   phps-mode-lexer--state-stack)
+  (phps-mode-debug-message
+   (message
+    "Pushed state: %s"
+    phps-mode-lexer--state))
+  (phps-mode-lexer--begin state))
 
-(defun phps-mode-lexer--yy_pop_state ()
+(defun phps-mode-lexer--yy-pop-state ()
   "Pop current state from stack."
   (let ((old-state (pop phps-mode-lexer--state-stack)))
+    (phps-mode-debug-message
+     (message
+      "Popped state: %s"
+      old-state))
+
     ;; (message "Going back to poppped state %s" old-state)
     (if old-state
-        (phps-mode-lexer--BEGIN old-state)
+        (phps-mode-lexer--begin old-state)
       (signal
        'phps-lexer-error
        (list
         (format "Trying to pop last state at %d" (point))
         (point))))))
 
-(defun phps-mode-lexer--MOVE_FORWARD (position)
+(defun phps-mode-lexer--move-forward (position)
   "Move forward to POSITION."
   (setq semantic-lex-end-point position))
 
 (defun phps-mode-lexer--yyless (points)
   "Move lexer back POINTS."
-  (setq semantic-lex-end-point (- semantic-lex-end-point points)))
+  (setq semantic-lex-end-point (- semantic-lex-end-point points))
+  (forward-char (- points)))
 
 (defun phps-mode-lexer--inline-char-handler ()
   "Mimic inline_char_handler."
   (let ((start (match-beginning 0)))
     (let ((string-start (search-forward "<?" nil t)))
       (if string-start
-          (phps-mode-lexer--RETURN_TOKEN 'T_INLINE_HTML start (- string-start 2))
-        (phps-mode-lexer--RETURN_TOKEN 'T_INLINE_HTML start (point-max))))))
+          (phps-mode-lexer--return-token 'T_INLINE_HTML start (- string-start 2))
+        (phps-mode-lexer--return-token 'T_INLINE_HTML start (point-max))))))
+
+(defun phps-mode-lexer--enter-nesting (&optional opening)
+  "Enter nesting of OPENING."
+  (unless opening
+    (setq
+     opening
+     (buffer-substring-no-properties
+      (match-beginning 0)
+      (match-end 0))))
+  (phps-mode-debug-message
+   (message
+    "Entered nesting '%s'"
+    opening))
+  (push
+   opening
+   phps-mode-lexer--nest-location-stack))
+
+(defun phps-mode-lexer--handle-newline ()
+  "Handle newline."
+  ;; TODO Implement this?
+  )
+
+(defun phps-mode-lexer--exit-nesting (closing)
+  "Exit nesting of CLOSING."
+  (unless phps-mode-lexer--nest-location-stack
+    (signal
+     'phps-lexer-error
+     (list
+      (format "Unmatched '%s' at point %d" closing (point))
+      (point))))
+  (let ((opening
+         (car
+          phps-mode-lexer--nest-location-stack)))
+    (when (and
+           opening
+           (or
+            (and (string= opening "{")
+                 (not (string= closing "}")))
+            (and (string= opening "[")
+                 (not (string= closing "]")))
+            (and (string= opening "(")
+                 (not (string= closing ")")))))
+      (signal
+       'phps-lexer-error
+       (list
+        (format "Bad nesting '%s' vs '%s' at %d'" opening closing (point))
+        (point))))
+    (phps-mode-debug-message
+     (message
+      "Exited nesting '%s'"
+      closing))
+    (pop phps-mode-lexer--nest-location-stack)
+    t))
 
 (defun phps-mode-lexer--emit-token (token start end)
   "Emit TOKEN with START and END."
-
-  ;; (when (and
-  ;;        (equal token 'T_INLINE_HTML)
-  ;;        phps-mode-inline-mmm-submode
-  ;;        (fboundp 'mmm-make-region))
-  ;;   (mmm-make-region phps-mode-inline-mmm-submode start end))
-
   (semantic-lex-push-token (semantic-lex-token token start end))
+  (push `(,token ,start . ,end) phps-mode-lexer--generated-tokens)
 
-  (push `(,token ,start . ,end) phps-mode-lexer--tokens)
+  (phps-mode-debug-message
+   (message
+    "Emitted token '%s' -> %s"
+    (buffer-substring-no-properties
+     start
+     end)
+    `(,token ,start . ,end)))
   
   ;; Push token start, end, lexer state and state stack to variable
   (push
@@ -195,7 +279,8 @@
     phps-mode-lexer--state
     phps-mode-lexer--state-stack
     phps-mode-lexer--heredoc-label
-    phps-mode-lexer--heredoc-label-stack)
+    phps-mode-lexer--heredoc-label-stack
+    phps-mode-lexer--nest-location-stack)
    phps-mode-lexer--states))
 
 (defun phps-mode-lexer--get-next-unescaped (character)
@@ -216,25 +301,115 @@
             (setq escaped nil)))))
     pos))
 
-;; TODO Figure out what this does
-(defun phps-mode-lexer--SKIP_TOKEN (_token _start _end)
-  "Skip TOKEN to list with START and END.")
+(defun phps-mode-lexer--skip-token (_token &optional start end)
+  "Skip TOKEN to list with START and END."
+  (unless start
+    (setq start (match-beginning 0)))
+  (unless end
+    (setq end (match-end 0)))
+  (setq semantic-lex-end-point end))
 
 (defmacro phps-mode-lexer--match-macro (conditions &rest body)
-  "Check if CONDITIONS hold"
+  "Check if CONDITIONS hold, if so execute BODY."
   `(phps-mode-lexer--re2c-rule
     ,conditions
     (lambda()
       ,@body)))
 
-(defun phps-mode-lexer--RETURN_TOKEN (token start end)
-  "Return TOKEN."
-  (phps-mode-lexer--emit-token token start end))
+(defun phps-mode-lexer--return-token (&optional token start end)
+  "Return TOKEN with START and END."
+  (unless start
+    (setq start (match-beginning 0)))
+  (unless end
+    (setq end (match-end 0)))
+  (unless token
+    (setq
+     token
+     (buffer-substring-no-properties
+      start
+      end)))
+  (phps-mode-lexer--emit-token
+   token
+   start
+   end))
 
-(defun phps-mode-lexer--RETURN_OR_SKIP_TOKEN (token start end)
+(defun phps-mode-lexer--check-nesting-at-end ()
+  "Check nesting at end."
+  (when phps-mode-lexer--nest-location-stack
+    (signal
+     'phps-lexer-error
+     (list
+      (format "Bad nesting end at '%d'" (point))
+      (point))))
+  t)
+
+(defun phps-mode-lexer--return-end-token ()
+  "Return end token."
+  (if (and
+       (phps-mode-lexer--check-nesting-at-end)
+       (phps-mode-lexer--parser-mode))
+      (phps-mode-lexer--return-token 'T_ERROR)
+    (phps-mode-lexer--return-token 'END)))
+
+(defun phps-mode-lexer--reset-doc-comment ()
+  "Reset doc comment."
+  (when (phps-mode-parser-grammar-macro-CG 'doc_comment)
+    (phps-mode-parser-grammar-macro-CG 'doc_comment nil)))
+
+(defun phps-mode-lexer--return-token-with-indent (&optional token start end)
+  "Return TOKEN with START and END."
+  (phps-mode-lexer--return-token
+   token
+   start
+   end))
+
+;; TODO Do something with offset?
+(defun phps-mode-lexer--return-token-with-str (token _offset &optional start end)
+  "Return TOKEN at OFFSET with START and END."
+  (unless start
+    (setq start (match-beginning 0)))
+  (unless end
+    (setq end (match-end 0)))
+  (phps-mode-lexer--return-token token start end))
+
+(defun phps-mode-lexer--return-whitespace ()
+  "Return whitespace."
+  (phps-mode-lexer--move-forward (match-end 0)))
+
+(defun phps-mode-lexer--return-exit-nesting-token (&optional token start end)
+  "Return TOKEN if it does not exit a nesting with optional START and END."
+  (unless start
+    (setq start (match-beginning 0)))
+  (unless end
+    (setq end (match-end 0)))
+  (unless token
+    (setq
+     token
+     (buffer-substring-no-properties
+      start
+      end)))
+  (if (and
+       (phps-mode-lexer--exit-nesting token)
+       (phps-mode-lexer--parser-mode))
+      (phps-mode-lexer--return-token 'T_ERROR)
+    (phps-mode-lexer--return-token
+     token
+     start
+     end)))
+
+(defun phps-mode-lexer--restart ()
+  "Restart."
+  (setq phps-mode-lexer--restart-flag t))
+
+(defun phps-mode-lexer--return-token-with-val (&optional token start end)
+  "Return TOKEN with START and END."
+  (phps-mode-lexer--return-token token start end))
+
+(defun phps-mode-lexer--return-or-skip-token (&optional token start end)
   "Return TOKEN with START and END but only in parse-mode."
-  (when (phps-mode-parser-grammar-macro-CG 'PARSER_MODE)
-    (phps-mode-lexer--RETURN_TOKEN token start end)))
+  (if (phps-mode-lexer--parser-mode)
+      (phps-mode-lexer--skip-token token start end)
+    (phps-mode-lexer--return-token token start end)))
 
 
 ;; LEXER FUNCTIONS BELOW
@@ -277,8 +452,24 @@
 (defun phps-mode-lexer--re2c ()
   "Elisp port of original Zend re2c lexer."
 
+  (setq phps-mode-lexer--restart-flag nil)
   (let ((old-start (point)))
-    (phps-mode-debug-message (message "Running lexer from %s" old-start))
+    (phps-mode-debug-message
+     (let ((start (point))
+           (end (+ (point) 5))
+           (lookahead))
+       (when (> end (point-max))
+         (setq end (point-max)))
+       (setq
+        lookahead
+        (buffer-substring-no-properties
+         start
+         end))
+     (message
+      "\nRunning lexer from point %s, state: %s, lookahead: '%s'.."
+      old-start
+      phps-mode-lexer--state
+      lookahead)))
     (phps-mode-lexer--reset-match-data)
     
     (let ((SHEBANG (equal phps-mode-lexer--state 'SHEBANG))
@@ -295,695 +486,723 @@
 
       (phps-mode-lexer--match-macro
        (and ST_IN_SCRIPTING (looking-at "exit"))
-       (phps-mode-lexer--RETURN_TOKEN 'T_EXIT (match-beginning 0) (match-end 0)))
+       (phps-mode-lexer--return-token-with-indent 'T_EXIT))
 
       (phps-mode-lexer--match-macro
        (and ST_IN_SCRIPTING (looking-at "die"))
-       (phps-mode-lexer--RETURN_TOKEN 'T_DIE (match-beginning 0) (match-end 0)))
+       (phps-mode-lexer--return-token-with-indent 'T_DIE))
 
       (phps-mode-lexer--match-macro
        (and ST_IN_SCRIPTING (looking-at "fn"))
-       (phps-mode-lexer--RETURN_TOKEN 'T_FN (match-beginning 0) (match-end 0)))
+       (phps-mode-lexer--return-token-with-indent 'T_FN))
 
       (phps-mode-lexer--match-macro
        (and ST_IN_SCRIPTING (looking-at "function"))
-       (phps-mode-lexer--RETURN_TOKEN 'T_FUNCTION (match-beginning 0) (match-end 0)))
+       (phps-mode-lexer--return-token-with-indent 'T_FUNCTION))
 
       (phps-mode-lexer--match-macro
        (and ST_IN_SCRIPTING (looking-at "const"))
-       (phps-mode-lexer--RETURN_TOKEN 'T_CONST (match-beginning 0) (match-end 0)))
+       (phps-mode-lexer--return-token-with-indent 'T_CONST))
 
       (phps-mode-lexer--match-macro
        (and ST_IN_SCRIPTING (looking-at "return"))
-       (phps-mode-lexer--RETURN_TOKEN 'T_RETURN (match-beginning 0) (match-end 0)))
+       (phps-mode-lexer--return-token-with-indent 'T_RETURN))
+
+      (phps-mode-lexer--match-macro
+       (and ST_IN_SCRIPTING (looking-at "#\\["))
+       (phps-mode-lexer--enter-nesting "[")
+       (phps-mode-lexer--return-token 'T_ATTRIBUTE))
 
       (phps-mode-lexer--match-macro
        (and
         ST_IN_SCRIPTING
         (looking-at
-         (concat "yield" phps-mode-lexer--WHITESPACE "from" "[^a-zA-Z0-9_\x80-\xff]")))
-       (phps-mode-lexer--RETURN_TOKEN 'T_YIELD_FROM (match-beginning 0) (match-end 0)))
+         (concat
+          "yield"
+          phps-mode-lexer--whitespace
+          "from"
+          "[^a-zA-Z0-9_\x80-\xff]")))
+       (phps-mode-lexer--return-token-with-indent 'T_YIELD_FROM))
 
       (phps-mode-lexer--match-macro
        (and ST_IN_SCRIPTING (looking-at "yield"))
-       (phps-mode-lexer--RETURN_TOKEN 'T_YIELD (match-beginning 0) (match-end 0)))
+       (phps-mode-lexer--return-token-with-indent 'T_YIELD))
 
       (phps-mode-lexer--match-macro
        (and ST_IN_SCRIPTING (looking-at "try"))
-       (phps-mode-lexer--RETURN_TOKEN 'T_TRY (match-beginning 0) (match-end 0)))
+       (phps-mode-lexer--return-token-with-indent 'T_TRY))
 
       (phps-mode-lexer--match-macro
        (and ST_IN_SCRIPTING (looking-at "catch"))
-       (phps-mode-lexer--RETURN_TOKEN 'T_CATCH (match-beginning 0) (match-end 0)))
+       (phps-mode-lexer--return-token-with-indent 'T_CATCH))
 
       (phps-mode-lexer--match-macro
        (and ST_IN_SCRIPTING (looking-at "finally"))
-       (phps-mode-lexer--RETURN_TOKEN 'T_FINALLY (match-beginning 0) (match-end 0)))
+       (phps-mode-lexer--return-token-with-indent 'T_FINALLY))
 
       (phps-mode-lexer--match-macro
        (and ST_IN_SCRIPTING (looking-at "throw"))
-       (phps-mode-lexer--RETURN_TOKEN 'T_THROW (match-beginning 0) (match-end 0)))
+       (phps-mode-lexer--return-token-with-indent 'T_THROW))
 
       (phps-mode-lexer--match-macro
        (and ST_IN_SCRIPTING (looking-at "if"))
-       (phps-mode-lexer--RETURN_TOKEN 'T_IF (match-beginning 0) (match-end 0)))
+       (phps-mode-lexer--return-token-with-indent 'T_IF))
 
       (phps-mode-lexer--match-macro
        (and ST_IN_SCRIPTING (looking-at "elseif"))
-       (phps-mode-lexer--RETURN_TOKEN 'T_ELSEIF (match-beginning 0) (match-end 0)))
+       (phps-mode-lexer--return-token-with-indent 'T_ELSEIF))
 
       (phps-mode-lexer--match-macro
        (and ST_IN_SCRIPTING (looking-at "endif"))
-       (phps-mode-lexer--RETURN_TOKEN 'T_ENDIF (match-beginning 0) (match-end 0)))
+       (phps-mode-lexer--return-token-with-indent 'T_ENDIF))
 
       (phps-mode-lexer--match-macro
        (and ST_IN_SCRIPTING (looking-at "else"))
-       (phps-mode-lexer--RETURN_TOKEN 'T_ELSE (match-beginning 0) (match-end 0)))
+       (phps-mode-lexer--return-token-with-indent 'T_ELSE))
 
       (phps-mode-lexer--match-macro
        (and ST_IN_SCRIPTING (looking-at "while"))
-       (phps-mode-lexer--RETURN_TOKEN 'T_WHILE (match-beginning 0) (match-end 0)))
+       (phps-mode-lexer--return-token-with-indent 'T_WHILE))
 
       (phps-mode-lexer--match-macro
        (and ST_IN_SCRIPTING (looking-at "endwhile"))
-       (phps-mode-lexer--RETURN_TOKEN 'T_ENDWHILE (match-beginning 0) (match-end 0)))
+       (phps-mode-lexer--return-token-with-indent 'T_ENDWHILE))
 
       (phps-mode-lexer--match-macro
        (and ST_IN_SCRIPTING (looking-at "do"))
-       (phps-mode-lexer--RETURN_TOKEN 'T_DO (match-beginning 0) (match-end 0)))
+       (phps-mode-lexer--return-token-with-indent 'T_DO))
 
       (phps-mode-lexer--match-macro
        (and ST_IN_SCRIPTING (looking-at "for"))
-       (phps-mode-lexer--RETURN_TOKEN 'T_FOR (match-beginning 0) (match-end 0)))
+       (phps-mode-lexer--return-token-with-indent 'T_FOR))
 
       (phps-mode-lexer--match-macro
        (and ST_IN_SCRIPTING (looking-at "endfor"))
-       (phps-mode-lexer--RETURN_TOKEN 'T_ENDFOR (match-beginning 0) (match-end 0)))
+       (phps-mode-lexer--return-token-with-indent 'T_ENDFOR))
 
       (phps-mode-lexer--match-macro
        (and ST_IN_SCRIPTING (looking-at "foreach"))
-       (phps-mode-lexer--RETURN_TOKEN 'T_FOREACH (match-beginning 0) (match-end 0)))
+       (phps-mode-lexer--return-token-with-indent 'T_FOREACH))
 
       (phps-mode-lexer--match-macro
        (and ST_IN_SCRIPTING (looking-at "endforeach"))
-       (phps-mode-lexer--RETURN_TOKEN 'T_ENDFOREACH (match-beginning 0) (match-end 0)))
+       (phps-mode-lexer--return-token-with-indent 'T_ENDFOREACH))
 
       (phps-mode-lexer--match-macro
        (and ST_IN_SCRIPTING (looking-at "declare"))
-       (phps-mode-lexer--RETURN_TOKEN 'T_DECLARE (match-beginning 0) (match-end 0)))
+       (phps-mode-lexer--return-token-with-indent 'T_DECLARE))
 
       (phps-mode-lexer--match-macro
        (and ST_IN_SCRIPTING (looking-at "enddeclare"))
-       (phps-mode-lexer--RETURN_TOKEN 'T_ENDDECLARE (match-beginning 0) (match-end 0)))
+       (phps-mode-lexer--return-token-with-indent 'T_ENDDECLARE))
 
       (phps-mode-lexer--match-macro
        (and ST_IN_SCRIPTING (looking-at "instanceof"))
-       (phps-mode-lexer--RETURN_TOKEN 'T_INSTANCEOF (match-beginning 0) (match-end 0)))
+       (phps-mode-lexer--return-token-with-indent 'T_INSTANCEOF))
 
       (phps-mode-lexer--match-macro
        (and ST_IN_SCRIPTING (looking-at "as"))
-       (phps-mode-lexer--RETURN_TOKEN 'T_AS (match-beginning 0) (match-end 0)))
+       (phps-mode-lexer--return-token-with-indent 'T_AS))
 
       (phps-mode-lexer--match-macro
        (and ST_IN_SCRIPTING (looking-at "switch"))
-       (phps-mode-lexer--RETURN_TOKEN 'T_SWITCH (match-beginning 0) (match-end 0)))
+       (phps-mode-lexer--return-token-with-indent 'T_SWITCH))
 
       (phps-mode-lexer--match-macro
        (and ST_IN_SCRIPTING (looking-at "endswitch"))
-       (phps-mode-lexer--RETURN_TOKEN 'T_ENDSWITCH (match-beginning 0) (match-end 0)))
+       (phps-mode-lexer--return-token-with-indent 'T_ENDSWITCH))
 
       (phps-mode-lexer--match-macro
        (and ST_IN_SCRIPTING (looking-at "case"))
-       (phps-mode-lexer--RETURN_TOKEN 'T_CASE (match-beginning 0) (match-end 0)))
+       (phps-mode-lexer--return-token-with-indent 'T_CASE))
 
       (phps-mode-lexer--match-macro
        (and ST_IN_SCRIPTING (looking-at "default"))
-       (phps-mode-lexer--RETURN_TOKEN 'T_DEFAULT (match-beginning 0) (match-end 0)))
+       (phps-mode-lexer--return-token-with-indent 'T_DEFAULT))
 
       (phps-mode-lexer--match-macro
        (and ST_IN_SCRIPTING (looking-at "break"))
-       (phps-mode-lexer--RETURN_TOKEN 'T_BREAK (match-beginning 0) (match-end 0)))
+       (phps-mode-lexer--return-token-with-indent 'T_BREAK))
 
       (phps-mode-lexer--match-macro
        (and ST_IN_SCRIPTING (looking-at "continue"))
-       (phps-mode-lexer--RETURN_TOKEN 'T_CONTINUE (match-beginning 0) (match-end 0)))
+       (phps-mode-lexer--return-token-with-indent 'T_CONTINUE))
 
       (phps-mode-lexer--match-macro
        (and ST_IN_SCRIPTING (looking-at "goto"))
-       (phps-mode-lexer--RETURN_TOKEN 'T_GOTO (match-beginning 0) (match-end 0)))
+       (phps-mode-lexer--return-token-with-indent 'T_GOTO))
 
       (phps-mode-lexer--match-macro
        (and ST_IN_SCRIPTING (looking-at "echo"))
-       (phps-mode-lexer--RETURN_TOKEN 'T_ECHO (match-beginning 0) (match-end 0)))
+       (phps-mode-lexer--return-token-with-indent 'T_ECHO))
 
       (phps-mode-lexer--match-macro
        (and ST_IN_SCRIPTING (looking-at "print"))
-       (phps-mode-lexer--RETURN_TOKEN 'T_PRINT (match-beginning 0) (match-end 0)))
+       (phps-mode-lexer--return-token-with-indent 'T_PRINT))
 
       (phps-mode-lexer--match-macro
        (and ST_IN_SCRIPTING (looking-at "class"))
-       (phps-mode-lexer--RETURN_TOKEN 'T_CLASS (match-beginning 0) (match-end 0)))
+       (phps-mode-lexer--return-token-with-indent 'T_CLASS))
 
       (phps-mode-lexer--match-macro
        (and ST_IN_SCRIPTING (looking-at "interface"))
-       (phps-mode-lexer--RETURN_TOKEN 'T_INTERFACE (match-beginning 0) (match-end 0)))
+       (phps-mode-lexer--return-token-with-indent 'T_INTERFACE))
 
       (phps-mode-lexer--match-macro
        (and ST_IN_SCRIPTING (looking-at "trait"))
-       (phps-mode-lexer--RETURN_TOKEN 'T_TRAIT (match-beginning 0) (match-end 0)))
+       (phps-mode-lexer--return-token-with-indent 'T_TRAIT))
 
       (phps-mode-lexer--match-macro
        (and ST_IN_SCRIPTING (looking-at "extends"))
-       (phps-mode-lexer--RETURN_TOKEN 'T_EXTENDS (match-beginning 0) (match-end 0)))
+       (phps-mode-lexer--return-token-with-indent 'T_EXTENDS))
 
       (phps-mode-lexer--match-macro
        (and ST_IN_SCRIPTING (looking-at "implements"))
-       (phps-mode-lexer--RETURN_TOKEN 'T_IMPLEMENTS (match-beginning 0) (match-end 0)))
+       (phps-mode-lexer--return-token-with-indent 'T_IMPLEMENTS))
 
       (phps-mode-lexer--match-macro
        (and ST_IN_SCRIPTING (looking-at "->"))
-       (phps-mode-lexer--yy_push_state 'ST_LOOKING_FOR_PROPERTY)
-       (phps-mode-lexer--RETURN_TOKEN 'T_OBJECT_OPERATOR (match-beginning 0) (match-end 0)))
+       (phps-mode-lexer--yy-push-state 'ST_LOOKING_FOR_PROPERTY)
+       (phps-mode-lexer--return-token-with-indent 'T_OBJECT_OPERATOR))
+
+      (phps-mode-lexer--match-macro
+       (and ST_IN_SCRIPTING (looking-at "?->"))
+       (phps-mode-lexer--yy-push-state 'ST_LOOKING_FOR_PROPERTY)
+       (phps-mode-lexer--return-token-with-indent 'T_NULLSAFE_OBJECT_OPERATOR))
 
       (phps-mode-lexer--match-macro
        (and (or ST_IN_SCRIPTING ST_LOOKING_FOR_PROPERTY)
-            (looking-at phps-mode-lexer--WHITESPACE))
-       (let* ((start (match-beginning 0))
-              (end (match-end 0))
-              (data (buffer-substring-no-properties start end)))
-         (if (phps-mode-parser-grammar-macro-CG 'PARSER_MODE)
-             (phps-mode-lexer--MOVE_FORWARD end)
-           (phps-mode-lexer--RETURN_TOKEN data start end))))
+            (looking-at phps-mode-lexer--whitespace))
+       (phps-mode-lexer--return-whitespace))
 
       (phps-mode-lexer--match-macro
        (and ST_LOOKING_FOR_PROPERTY (looking-at "->"))
-       (phps-mode-lexer--RETURN_TOKEN 'T_OBJECT_OPERATOR (match-beginning 0) (match-end 0)))
+       (phps-mode-lexer--return-token 'T_OBJECT_OPERATOR))
 
       (phps-mode-lexer--match-macro
-       (and ST_LOOKING_FOR_PROPERTY (looking-at phps-mode-lexer--LABEL))
-       (let ((start (match-beginning 0))
-             (end (match-end 0)))
-         (phps-mode-lexer--yy_pop_state)
-         (phps-mode-lexer--RETURN_TOKEN 'T_STRING start end)))
+       (and ST_LOOKING_FOR_PROPERTY (looking-at "?->"))
+       (phps-mode-lexer--return-token 'T_NULLSAFE_OBJECT_OPERATOR))
 
       (phps-mode-lexer--match-macro
-       (and ST_LOOKING_FOR_PROPERTY (looking-at phps-mode-lexer--ANY_CHAR))
-       (phps-mode-lexer--yy_pop_state)
-      (phps-mode-lexer--re2c))
+       (and ST_LOOKING_FOR_PROPERTY (looking-at phps-mode-lexer--label))
+       (phps-mode-lexer--yy-pop-state)
+       (phps-mode-lexer--return-token-with-str 'T_STRING 0))
+
+      (phps-mode-lexer--match-macro
+       (and ST_LOOKING_FOR_PROPERTY (looking-at phps-mode-lexer--any-char))
+       (phps-mode-lexer--yyless 0)
+       (phps-mode-lexer--yy-pop-state)
+       (phps-mode-lexer--restart))
 
       (phps-mode-lexer--match-macro
        (and ST_IN_SCRIPTING (looking-at "::"))
-       (phps-mode-lexer--RETURN_TOKEN 'T_PAAMAYIM_NEKUDOTAYIM (match-beginning 0) (match-end 0)))
-
-      (phps-mode-lexer--match-macro
-       (and ST_IN_SCRIPTING (looking-at "\\\\"))
-       (phps-mode-lexer--RETURN_TOKEN 'T_NS_SEPARATOR (match-beginning 0) (match-end 0)))
+       (phps-mode-lexer--return-token 'T_PAAMAYIM_NEKUDOTAYIM))
 
       (phps-mode-lexer--match-macro
        (and ST_IN_SCRIPTING (looking-at "\\.\\.\\."))
-       (phps-mode-lexer--RETURN_TOKEN 'T_ELLIPSIS (match-beginning 0) (match-end 0)))
+       (phps-mode-lexer--return-token 'T_ELLIPSIS))
 
       (phps-mode-lexer--match-macro
        (and ST_IN_SCRIPTING (looking-at "\\?\\?"))
-       (phps-mode-lexer--RETURN_TOKEN 'T_COALESCE (match-beginning 0) (match-end 0)
-                                      ))
+       (phps-mode-lexer--return-token 'T_COALESCE))
 
       (phps-mode-lexer--match-macro
        (and ST_IN_SCRIPTING (looking-at "new"))
-       (phps-mode-lexer--RETURN_TOKEN 'T_NEW (match-beginning 0) (match-end 0)))
+       (phps-mode-lexer--return-token-with-indent 'T_NEW))
 
       (phps-mode-lexer--match-macro
        (and ST_IN_SCRIPTING (looking-at "clone"))
-       (phps-mode-lexer--RETURN_TOKEN 'T_CLONE (match-beginning 0) (match-end 0)))
+       (phps-mode-lexer--return-token-with-indent 'T_CLONE))
 
       (phps-mode-lexer--match-macro
        (and ST_IN_SCRIPTING (looking-at "var"))
-       (phps-mode-lexer--RETURN_TOKEN 'T_VAR (match-beginning 0) (match-end 0)))
+       (phps-mode-lexer--return-token-with-indent 'T_VAR))
 
       (phps-mode-lexer--match-macro
        (and ST_IN_SCRIPTING
             (looking-at
              (concat
               "("
-              phps-mode-lexer--TABS_AND_SPACES
+              phps-mode-lexer--tabs-and-spaces
               "\\(int\\|integer\\)"
-              phps-mode-lexer--TABS_AND_SPACES
+              phps-mode-lexer--tabs-and-spaces
               ")")))
-       (phps-mode-lexer--RETURN_TOKEN 'T_INT_CAST (match-beginning 0) (match-end 0)))
+       (phps-mode-lexer--return-token 'T_INT_CAST))
 
       (phps-mode-lexer--match-macro
        (and ST_IN_SCRIPTING
             (looking-at
              (concat
               "("
-              phps-mode-lexer--TABS_AND_SPACES
+              phps-mode-lexer--tabs-and-spaces
               "\\(double\\|float\\)"
-              phps-mode-lexer--TABS_AND_SPACES
+              phps-mode-lexer--tabs-and-spaces
               ")")))
-       (phps-mode-lexer--RETURN_TOKEN 'T_DOUBLE_CAST (match-beginning 0) (match-end 0)))
+       (phps-mode-lexer--return-token 'T_DOUBLE_CAST))
 
       (phps-mode-lexer--match-macro
        (and ST_IN_SCRIPTING
             (looking-at
              (concat
               "("
-              phps-mode-lexer--TABS_AND_SPACES
+              phps-mode-lexer--tabs-and-spaces
               "\\(real\\)"
-              phps-mode-lexer--TABS_AND_SPACES
+              phps-mode-lexer--tabs-and-spaces
               ")")))
-       (when (phps-mode-parser-grammar-macro-CG 'PARSER_MODE)
+       (when (phps-mode-lexer--parser-mode)
          (signal
           'phps-lexer-error
           (list
            (format
-            "The (real) cast is deprecated, use (float) instead at %d"
+            "The (real) cast has been removed, use (float) instead at %d"
             (match-beginning 0))
            (match-beginning 0)
-           (match-end 0)))
-         (phps-mode-lexer--RETURN_TOKEN 'T_DOUBLE_CAST (match-beginning 0) (match-end 0))))
+           (match-end 0))))
+       (phps-mode-lexer--return-token 'T_DOUBLE_CAST))
 
       (phps-mode-lexer--match-macro
        (and ST_IN_SCRIPTING
             (looking-at
              (concat
               "("
-              phps-mode-lexer--TABS_AND_SPACES
+              phps-mode-lexer--tabs-and-spaces
               "\\(string\\|binary\\)"
-              phps-mode-lexer--TABS_AND_SPACES
+              phps-mode-lexer--tabs-and-spaces
               ")")))
-       (phps-mode-lexer--RETURN_TOKEN 'T_STRING_CAST (match-beginning 0) (match-end 0)))
+       (phps-mode-lexer--return-token 'T_STRING_CAST))
 
       (phps-mode-lexer--match-macro
        (and ST_IN_SCRIPTING
             (looking-at
              (concat
               "("
-              phps-mode-lexer--TABS_AND_SPACES
+              phps-mode-lexer--tabs-and-spaces
               "array"
-              phps-mode-lexer--TABS_AND_SPACES
+              phps-mode-lexer--tabs-and-spaces
               ")")))
-       (phps-mode-lexer--RETURN_TOKEN 'T_ARRAY_CAST (match-beginning 0) (match-end 0)))
+       (phps-mode-lexer--return-token 'T_ARRAY_CAST))
 
       (phps-mode-lexer--match-macro
        (and ST_IN_SCRIPTING
             (looking-at
              (concat
               "("
-              phps-mode-lexer--TABS_AND_SPACES
+              phps-mode-lexer--tabs-and-spaces
               "object"
-              phps-mode-lexer--TABS_AND_SPACES
+              phps-mode-lexer--tabs-and-spaces
               ")")))
-       (phps-mode-lexer--RETURN_TOKEN 'T_OBJECT_CAST (match-beginning 0) (match-end 0)))
+       (phps-mode-lexer--return-token 'T_OBJECT_CAST))
 
       (phps-mode-lexer--match-macro
        (and
         ST_IN_SCRIPTING
-        (looking-at (concat
-                     "("
-                     phps-mode-lexer--TABS_AND_SPACES
-                     "\\(bool\\|boolean\\)"
-                     phps-mode-lexer--TABS_AND_SPACES
-                     ")")))
-       (phps-mode-lexer--RETURN_TOKEN 'T_BOOL_CAST (match-beginning 0) (match-end 0)))
+        (looking-at
+         (concat
+          "("
+          phps-mode-lexer--tabs-and-spaces
+          "\\(bool\\|boolean\\)"
+          phps-mode-lexer--tabs-and-spaces
+          ")")))
+       (phps-mode-lexer--return-token 'T_BOOL_CAST))
+
+      (phps-mode-lexer--match-macro
+       (and
+        ST_IN_SCRIPTING
+        (looking-at
+         (concat
+          "("
+          phps-mode-lexer--tabs-and-spaces
+          "unset"
+          phps-mode-lexer--tabs-and-spaces ")")))
+       (phps-mode-lexer--return-token 'T_UNSET_CAST))
+
+      (phps-mode-lexer--match-macro
+       (and ST_IN_SCRIPTING (looking-at "eval"))
+       (phps-mode-lexer--return-token-with-indent 'T_EVAL))
+
+      (phps-mode-lexer--match-macro
+       (and ST_IN_SCRIPTING (looking-at "include"))
+       (phps-mode-lexer--return-token-with-indent 'T_INCLUDE))
+
+      (phps-mode-lexer--match-macro
+       (and ST_IN_SCRIPTING (looking-at "include_once"))
+       (phps-mode-lexer--return-token-with-indent 'T_INCLUDE_ONCE))
+
+      (phps-mode-lexer--match-macro
+       (and ST_IN_SCRIPTING (looking-at "require"))
+       (phps-mode-lexer--return-token-with-indent 'T_REQUIRE))
+
+      (phps-mode-lexer--match-macro
+       (and ST_IN_SCRIPTING (looking-at "require_once"))
+       (phps-mode-lexer--return-token-with-indent 'T_REQUIRE_ONCE))
+
+      (phps-mode-lexer--match-macro
+       (and ST_IN_SCRIPTING (looking-at "namespace"))
+       (phps-mode-lexer--return-token-with-indent 'T_NAMESPACE))
+
+      (phps-mode-lexer--match-macro
+       (and ST_IN_SCRIPTING (looking-at "use"))
+       (phps-mode-lexer--return-token-with-indent 'T_USE))
+
+      (phps-mode-lexer--match-macro
+       (and ST_IN_SCRIPTING (looking-at "insteadof"))
+       (phps-mode-lexer--return-token-with-indent 'T_INSTEADOF))
+
+      (phps-mode-lexer--match-macro
+       (and ST_IN_SCRIPTING (looking-at "global"))
+       (phps-mode-lexer--return-token-with-indent 'T_GLOBAL))
+
+      (phps-mode-lexer--match-macro
+       (and ST_IN_SCRIPTING (looking-at "isset"))
+       (phps-mode-lexer--return-token-with-indent 'T_ISSET))
+
+      (phps-mode-lexer--match-macro
+       (and ST_IN_SCRIPTING (looking-at "empty"))
+       (phps-mode-lexer--return-token-with-indent 'T_EMPTY))
+
+      (phps-mode-lexer--match-macro
+       (and ST_IN_SCRIPTING (looking-at "__halt_compiler"))
+       (phps-mode-lexer--return-token-with-indent 'T_HALT_COMPILER))
+
+      (phps-mode-lexer--match-macro
+       (and ST_IN_SCRIPTING (looking-at "static"))
+       (phps-mode-lexer--return-token-with-indent 'T_STATIC))
+
+      (phps-mode-lexer--match-macro
+       (and ST_IN_SCRIPTING (looking-at "abstract"))
+       (phps-mode-lexer--return-token-with-indent 'T_ABSTRACT))
+
+      (phps-mode-lexer--match-macro
+       (and ST_IN_SCRIPTING (looking-at "final"))
+       (phps-mode-lexer--return-token-with-indent 'T_FINAL))
+
+      (phps-mode-lexer--match-macro
+       (and ST_IN_SCRIPTING (looking-at "private"))
+       (phps-mode-lexer--return-token-with-indent 'T_PRIVATE))
+
+      (phps-mode-lexer--match-macro
+       (and ST_IN_SCRIPTING (looking-at "protected"))
+       (phps-mode-lexer--return-token-with-indent 'T_PROTECTED))
+
+      (phps-mode-lexer--match-macro
+       (and ST_IN_SCRIPTING (looking-at "public"))
+       (phps-mode-lexer--return-token-with-indent 'T_PUBLIC))
+
+      (phps-mode-lexer--match-macro
+       (and ST_IN_SCRIPTING (looking-at "unset"))
+       (phps-mode-lexer--return-token-with-indent 'T_UNSET))
+
+      (phps-mode-lexer--match-macro
+       (and ST_IN_SCRIPTING (looking-at "=>"))
+       (phps-mode-lexer--return-token 'T_DOUBLE_ARROW))
+
+      (phps-mode-lexer--match-macro
+       (and ST_IN_SCRIPTING (looking-at "list"))
+       (phps-mode-lexer--return-token-with-indent 'T_LIST))
+
+      (phps-mode-lexer--match-macro
+       (and ST_IN_SCRIPTING (looking-at "array"))
+       (phps-mode-lexer--return-token-with-indent 'T_ARRAY))
+
+      (phps-mode-lexer--match-macro
+       (and ST_IN_SCRIPTING (looking-at "callable"))
+       (phps-mode-lexer--return-token-with-indent 'T_CALLABLE))
+
+      (phps-mode-lexer--match-macro
+       (and ST_IN_SCRIPTING (looking-at "\\+\\+"))
+       (phps-mode-lexer--return-token 'T_INC))
+
+      (phps-mode-lexer--match-macro
+       (and ST_IN_SCRIPTING (looking-at "--"))
+       (phps-mode-lexer--return-token 'T_DEC))
+
+      (phps-mode-lexer--match-macro
+       (and ST_IN_SCRIPTING (looking-at "==="))
+       (phps-mode-lexer--return-token 'T_IS_IDENTICAL))
+
+      (phps-mode-lexer--match-macro
+       (and ST_IN_SCRIPTING (looking-at "!=="))
+       (phps-mode-lexer--return-token 'T_IS_NOT_IDENTICAL))
+
+      (phps-mode-lexer--match-macro
+       (and ST_IN_SCRIPTING (looking-at "=="))
+       (phps-mode-lexer--return-token 'T_IS_EQUAL))
+
+      (phps-mode-lexer--match-macro
+       (and ST_IN_SCRIPTING (looking-at "\\(!=\\|<>\\)"))
+       (phps-mode-lexer--return-token 'T_IS_NOT_EQUAL))
+
+      (phps-mode-lexer--match-macro
+       (and ST_IN_SCRIPTING (looking-at "<=>"))
+       (phps-mode-lexer--return-token 'T_SPACESHIP))
+
+      (phps-mode-lexer--match-macro
+       (and ST_IN_SCRIPTING (looking-at "<="))
+       (phps-mode-lexer--return-token 'T_IS_SMALLER_OR_EQUAL))
+
+      (phps-mode-lexer--match-macro
+       (and ST_IN_SCRIPTING (looking-at ">="))
+       (phps-mode-lexer--return-token 'T_IS_GREATER_OR_EQUAL))
+
+      (phps-mode-lexer--match-macro
+       (and ST_IN_SCRIPTING (looking-at "\\+="))
+       (phps-mode-lexer--return-token 'T_PLUS_EQUAL))
+
+      (phps-mode-lexer--match-macro
+       (and ST_IN_SCRIPTING (looking-at "-="))
+       (phps-mode-lexer--return-token 'T_MINUS_EQUAL))
+
+      (phps-mode-lexer--match-macro
+       (and ST_IN_SCRIPTING (looking-at "\\*="))
+       (phps-mode-lexer--return-token 'T_MUL_EQUAL))
+
+      (phps-mode-lexer--match-macro
+       (and ST_IN_SCRIPTING (looking-at "\\*\\\\\\*="))
+       (phps-mode-lexer--return-token 'T_POW_EQUAL))
+
+      (phps-mode-lexer--match-macro
+       (and ST_IN_SCRIPTING (looking-at "\\*\\\\\\*"))
+       (phps-mode-lexer--return-token 'T_POW))
+
+      (phps-mode-lexer--match-macro
+       (and ST_IN_SCRIPTING (looking-at "/="))
+       (phps-mode-lexer--return-token 'T_DIV_EQUAL))
+
+      (phps-mode-lexer--match-macro
+       (and ST_IN_SCRIPTING (looking-at "\\.="))
+       (phps-mode-lexer--return-token 'T_CONCAT_EQUAL))
+
+      (phps-mode-lexer--match-macro
+       (and ST_IN_SCRIPTING (looking-at "%="))
+       (phps-mode-lexer--return-token 'T_MOD_EQUAL))
+
+      (phps-mode-lexer--match-macro
+       (and ST_IN_SCRIPTING (looking-at "<<="))
+       (phps-mode-lexer--return-token 'T_SL_EQUAL))
+
+      (phps-mode-lexer--match-macro
+       (and ST_IN_SCRIPTING (looking-at ">>="))
+       (phps-mode-lexer--return-token 'T_SR_EQUAL))
+
+      (phps-mode-lexer--match-macro
+       (and ST_IN_SCRIPTING (looking-at "&="))
+       (phps-mode-lexer--return-token 'T_AND_EQUAL))
+
+      (phps-mode-lexer--match-macro
+       (and ST_IN_SCRIPTING (looking-at "|="))
+       (phps-mode-lexer--return-token 'T_OR_EQUAL))
+
+      (phps-mode-lexer--match-macro
+       (and ST_IN_SCRIPTING (looking-at "\\^="))
+       (phps-mode-lexer--return-token 'T_XOR_EQUAL))
+
+      (phps-mode-lexer--match-macro
+       (and ST_IN_SCRIPTING (looking-at "\\?\\?="))
+       (phps-mode-lexer--return-token 'T_COALESCE_EQUAL))
+
+      (phps-mode-lexer--match-macro
+       (and ST_IN_SCRIPTING (looking-at "||"))
+       (phps-mode-lexer--return-token 'T_BOOLEAN_OR))
+
+      (phps-mode-lexer--match-macro
+       (and ST_IN_SCRIPTING (looking-at "&&"))
+       (phps-mode-lexer--return-token 'T_BOOLEAN_AND))
+
+      (phps-mode-lexer--match-macro
+       (and ST_IN_SCRIPTING (looking-at "OR"))
+       (phps-mode-lexer--return-token 'T_LOGICAL_OR))
+
+      (phps-mode-lexer--match-macro
+       (and ST_IN_SCRIPTING (looking-at "AND"))
+       (phps-mode-lexer--return-token 'T_LOGICAL_AND))
+
+      (phps-mode-lexer--match-macro
+       (and ST_IN_SCRIPTING (looking-at "XOR"))
+       (phps-mode-lexer--return-token 'T_LOGICAL_XOR))
+
+      (phps-mode-lexer--match-macro
+       (and ST_IN_SCRIPTING (looking-at "<<"))
+       (phps-mode-lexer--return-token 'T_SL))
+
+      (phps-mode-lexer--match-macro
+       (and ST_IN_SCRIPTING (looking-at ">>"))
+       (phps-mode-lexer--return-token 'T_SR))
 
       (phps-mode-lexer--match-macro
        (and ST_IN_SCRIPTING
             (looking-at
-             (concat
-              "("
-              phps-mode-lexer--TABS_AND_SPACES
-              "unset"
-              phps-mode-lexer--TABS_AND_SPACES ")")))
-       (phps-mode-lexer--RETURN_TOKEN 'T_UNSET_CAST (match-beginning 0) (match-end 0)))
+             (concat "\\(" "]" "\\|" ")" "\\)")))
+       (phps-mode-lexer--return-exit-nesting-token))
 
       (phps-mode-lexer--match-macro
-       (and ST_IN_SCRIPTING (looking-at "eval"))
-       (phps-mode-lexer--RETURN_TOKEN 'T_EVAL (match-beginning 0) (match-end 0)))
+       (and ST_IN_SCRIPTING
+            (looking-at
+             (concat "\\(" "\\[" "\\|" "(" "\\)")))
+       (phps-mode-lexer--enter-nesting)
+       (phps-mode-lexer--return-token))
 
       (phps-mode-lexer--match-macro
-       (and ST_IN_SCRIPTING (looking-at "include"))
-       (phps-mode-lexer--RETURN_TOKEN 'T_INCLUDE (match-beginning 0) (match-end 0)))
-
-      (phps-mode-lexer--match-macro
-       (and ST_IN_SCRIPTING (looking-at "include_once"))
-       (phps-mode-lexer--RETURN_TOKEN 'T_INCLUDE_ONCE (match-beginning 0) (match-end 0)))
-
-      (phps-mode-lexer--match-macro
-       (and ST_IN_SCRIPTING (looking-at "require"))
-       (phps-mode-lexer--RETURN_TOKEN 'T_REQUIRE (match-beginning 0) (match-end 0)))
-
-      (phps-mode-lexer--match-macro
-       (and ST_IN_SCRIPTING (looking-at "require_once"))
-       (phps-mode-lexer--RETURN_TOKEN 'T_REQUIRE_ONCE (match-beginning 0) (match-end 0)))
-
-      (phps-mode-lexer--match-macro
-       (and ST_IN_SCRIPTING (looking-at "namespace"))
-       (phps-mode-lexer--RETURN_TOKEN 'T_NAMESPACE (match-beginning 0) (match-end 0)))
-
-      (phps-mode-lexer--match-macro
-       (and ST_IN_SCRIPTING (looking-at "use"))
-       (phps-mode-lexer--RETURN_TOKEN 'T_USE (match-beginning 0) (match-end 0)))
-
-      (phps-mode-lexer--match-macro
-       (and ST_IN_SCRIPTING (looking-at "insteadof"))
-       (phps-mode-lexer--RETURN_TOKEN 'T_INSTEADOF (match-beginning 0) (match-end 0)))
-
-      (phps-mode-lexer--match-macro
-       (and ST_IN_SCRIPTING (looking-at "global"))
-       (phps-mode-lexer--RETURN_TOKEN 'T_GLOBAL (match-beginning 0) (match-end 0)))
-
-      (phps-mode-lexer--match-macro
-       (and ST_IN_SCRIPTING (looking-at "isset"))
-       (phps-mode-lexer--RETURN_TOKEN 'T_ISSET (match-beginning 0) (match-end 0)))
-
-      (phps-mode-lexer--match-macro
-       (and ST_IN_SCRIPTING (looking-at "empty"))
-       (phps-mode-lexer--RETURN_TOKEN 'T_EMPTY (match-beginning 0) (match-end 0)))
-
-      (phps-mode-lexer--match-macro
-       (and ST_IN_SCRIPTING (looking-at "__halt_compiler"))
-       (phps-mode-lexer--RETURN_TOKEN 'T_HALT_COMPILER (match-beginning 0) (match-end 0)))
-
-      (phps-mode-lexer--match-macro
-       (and ST_IN_SCRIPTING (looking-at "static"))
-       (phps-mode-lexer--RETURN_TOKEN 'T_STATIC (match-beginning 0) (match-end 0)))
-
-      (phps-mode-lexer--match-macro
-       (and ST_IN_SCRIPTING (looking-at "abstract"))
-       (phps-mode-lexer--RETURN_TOKEN 'T_ABSTRACT (match-beginning 0) (match-end 0)))
-
-      (phps-mode-lexer--match-macro
-       (and ST_IN_SCRIPTING (looking-at "final"))
-       (phps-mode-lexer--RETURN_TOKEN 'T_FINAL (match-beginning 0) (match-end 0)))
-
-      (phps-mode-lexer--match-macro
-       (and ST_IN_SCRIPTING (looking-at "private"))
-       (phps-mode-lexer--RETURN_TOKEN 'T_PRIVATE (match-beginning 0) (match-end 0)))
-
-      (phps-mode-lexer--match-macro
-       (and ST_IN_SCRIPTING (looking-at "protected"))
-       (phps-mode-lexer--RETURN_TOKEN 'T_PROTECTED (match-beginning 0) (match-end 0)))
-
-      (phps-mode-lexer--match-macro
-       (and ST_IN_SCRIPTING (looking-at "public"))
-       (phps-mode-lexer--RETURN_TOKEN 'T_PUBLIC (match-beginning 0) (match-end 0)))
-
-      (phps-mode-lexer--match-macro
-       (and ST_IN_SCRIPTING (looking-at "unset"))
-       (phps-mode-lexer--RETURN_TOKEN 'T_UNSET (match-beginning 0) (match-end 0)))
-
-      (phps-mode-lexer--match-macro
-       (and ST_IN_SCRIPTING (looking-at "=>"))
-       (phps-mode-lexer--RETURN_TOKEN 'T_DOUBLE_ARROW (match-beginning 0) (match-end 0)))
-
-      (phps-mode-lexer--match-macro
-       (and ST_IN_SCRIPTING (looking-at "list"))
-       (phps-mode-lexer--RETURN_TOKEN 'T_LIST (match-beginning 0) (match-end 0)))
-
-      (phps-mode-lexer--match-macro
-       (and ST_IN_SCRIPTING (looking-at "array"))
-       (phps-mode-lexer--RETURN_TOKEN 'T_ARRAY (match-beginning 0) (match-end 0)))
-
-      (phps-mode-lexer--match-macro
-       (and ST_IN_SCRIPTING (looking-at "callable"))
-       (phps-mode-lexer--RETURN_TOKEN 'T_CALLABLE (match-beginning 0) (match-end 0)))
-
-      (phps-mode-lexer--match-macro
-       (and ST_IN_SCRIPTING (looking-at "\\+\\+"))
-       (phps-mode-lexer--RETURN_TOKEN 'T_INC (match-beginning 0) (match-end 0)))
-
-      (phps-mode-lexer--match-macro
-       (and ST_IN_SCRIPTING (looking-at "--"))
-       (phps-mode-lexer--RETURN_TOKEN 'T_DEC (match-beginning 0) (match-end 0)))
-
-      (phps-mode-lexer--match-macro
-       (and ST_IN_SCRIPTING (looking-at "==="))
-       (phps-mode-lexer--RETURN_TOKEN 'T_IS_IDENTICAL (match-beginning 0) (match-end 0)))
-
-      (phps-mode-lexer--match-macro
-       (and ST_IN_SCRIPTING (looking-at "!=="))
-       (phps-mode-lexer--RETURN_TOKEN 'T_IS_NOT_IDENTICAL (match-beginning 0) (match-end 0)))
-
-      (phps-mode-lexer--match-macro
-       (and ST_IN_SCRIPTING (looking-at "=="))
-       (phps-mode-lexer--RETURN_TOKEN 'T_IS_EQUAL (match-beginning 0) (match-end 0)))
-
-      (phps-mode-lexer--match-macro
-       (and ST_IN_SCRIPTING (looking-at "\\(!=\\|<>\\)"))
-       (phps-mode-lexer--RETURN_TOKEN 'T_IS_NOT_EQUAL (match-beginning 0) (match-end 0)))
-
-      (phps-mode-lexer--match-macro
-       (and ST_IN_SCRIPTING (looking-at "<=>"))
-       (phps-mode-lexer--RETURN_TOKEN 'T_SPACESHIP (match-beginning 0) (match-end 0)))
-
-      (phps-mode-lexer--match-macro
-       (and ST_IN_SCRIPTING (looking-at "<="))
-       (phps-mode-lexer--RETURN_TOKEN 'T_IS_SMALLER_OR_EQUAL (match-beginning 0) (match-end 0)))
-
-      (phps-mode-lexer--match-macro
-       (and ST_IN_SCRIPTING (looking-at ">="))
-       (phps-mode-lexer--RETURN_TOKEN 'T_IS_GREATER_OR_EQUAL (match-beginning 0) (match-end 0)))
-
-      (phps-mode-lexer--match-macro
-       (and ST_IN_SCRIPTING (looking-at "\\+="))
-       (phps-mode-lexer--RETURN_TOKEN 'T_PLUS_EQUAL (match-beginning 0) (match-end 0)))
-
-      (phps-mode-lexer--match-macro
-       (and ST_IN_SCRIPTING (looking-at "-="))
-       (phps-mode-lexer--RETURN_TOKEN 'T_MINUS_EQUAL (match-beginning 0) (match-end 0)))
-
-      (phps-mode-lexer--match-macro
-       (and ST_IN_SCRIPTING (looking-at "\\*="))
-       (phps-mode-lexer--RETURN_TOKEN 'T_MUL_EQUAL (match-beginning 0) (match-end 0)))
-
-      (phps-mode-lexer--match-macro
-       (and ST_IN_SCRIPTING (looking-at "\\*\\\\\\*="))
-       (phps-mode-lexer--RETURN_TOKEN 'T_POW_EQUAL (match-beginning 0) (match-end 0)))
-
-      (phps-mode-lexer--match-macro
-       (and ST_IN_SCRIPTING (looking-at "\\*\\\\\\*"))
-       (phps-mode-lexer--RETURN_TOKEN 'T_POW (match-beginning 0) (match-end 0)))
-
-      (phps-mode-lexer--match-macro
-       (and ST_IN_SCRIPTING (looking-at "/="))
-       (phps-mode-lexer--RETURN_TOKEN 'T_DIV_EQUAL (match-beginning 0) (match-end 0)))
-
-      (phps-mode-lexer--match-macro
-       (and ST_IN_SCRIPTING (looking-at "\\.="))
-       (phps-mode-lexer--RETURN_TOKEN 'T_CONCAT_EQUAL (match-beginning 0) (match-end 0)))
-
-      (phps-mode-lexer--match-macro
-       (and ST_IN_SCRIPTING (looking-at "%="))
-       (phps-mode-lexer--RETURN_TOKEN 'T_MOD_EQUAL (match-beginning 0) (match-end 0)))
-
-      (phps-mode-lexer--match-macro
-       (and ST_IN_SCRIPTING (looking-at "<<="))
-       (phps-mode-lexer--RETURN_TOKEN 'T_SL_EQUAL (match-beginning 0) (match-end 0)))
-
-      (phps-mode-lexer--match-macro
-       (and ST_IN_SCRIPTING (looking-at ">>="))
-       (phps-mode-lexer--RETURN_TOKEN 'T_SR_EQUAL (match-beginning 0) (match-end 0)))
-
-      (phps-mode-lexer--match-macro
-       (and ST_IN_SCRIPTING (looking-at "&="))
-       (phps-mode-lexer--RETURN_TOKEN 'T_AND_EQUAL (match-beginning 0) (match-end 0)))
-
-      (phps-mode-lexer--match-macro
-       (and ST_IN_SCRIPTING (looking-at "|="))
-       (phps-mode-lexer--RETURN_TOKEN 'T_OR_EQUAL (match-beginning 0) (match-end 0)))
-
-      (phps-mode-lexer--match-macro
-       (and ST_IN_SCRIPTING (looking-at "\\^="))
-       (phps-mode-lexer--RETURN_TOKEN 'T_XOR_EQUAL (match-beginning 0) (match-end 0)))
-
-      (phps-mode-lexer--match-macro
-       (and ST_IN_SCRIPTING (looking-at "\\?\\?="))
-       (phps-mode-lexer--RETURN_TOKEN 'T_COALESCE_EQUAL (match-beginning 0) (match-end 0)))
-
-      (phps-mode-lexer--match-macro
-       (and ST_IN_SCRIPTING (looking-at "||"))
-       (phps-mode-lexer--RETURN_TOKEN 'T_BOOLEAN_OR (match-beginning 0) (match-end 0)))
-
-      (phps-mode-lexer--match-macro
-       (and ST_IN_SCRIPTING (looking-at "&&"))
-       (phps-mode-lexer--RETURN_TOKEN 'T_BOOLEAN_AND (match-beginning 0) (match-end 0)))
-
-      (phps-mode-lexer--match-macro
-       (and ST_IN_SCRIPTING (looking-at "OR"))
-       (phps-mode-lexer--RETURN_TOKEN 'T_LOGICAL_OR (match-beginning 0) (match-end 0)))
-
-      (phps-mode-lexer--match-macro
-       (and ST_IN_SCRIPTING (looking-at "AND"))
-       (phps-mode-lexer--RETURN_TOKEN 'T_LOGICAL_AND (match-beginning 0) (match-end 0)))
-
-      (phps-mode-lexer--match-macro
-       (and ST_IN_SCRIPTING (looking-at "XOR"))
-       (phps-mode-lexer--RETURN_TOKEN 'T_LOGICAL_XOR (match-beginning 0) (match-end 0)))
-
-      (phps-mode-lexer--match-macro
-       (and ST_IN_SCRIPTING (looking-at "<<"))
-       (phps-mode-lexer--RETURN_TOKEN 'T_SL (match-beginning 0) (match-end 0)))
-
-      (phps-mode-lexer--match-macro
-       (and ST_IN_SCRIPTING (looking-at ">>"))
-       (phps-mode-lexer--RETURN_TOKEN 'T_SR (match-beginning 0) (match-end 0)))
-
-      (phps-mode-lexer--match-macro
-       (and ST_IN_SCRIPTING (looking-at phps-mode-lexer--TOKENS))
-       (let* ((start (match-beginning 0))
-              (end (match-end 0))
-              (data (buffer-substring-no-properties start end))
-              (use-brace nil))
-         ;; (message "Found token '%s'" data)
-         (if use-brace
-             (phps-mode-lexer--RETURN_TOKEN "{" start end)
-           (phps-mode-lexer--RETURN_TOKEN data start end))))
+       (and ST_IN_SCRIPTING (looking-at phps-mode-lexer--tokens))
+       (phps-mode-lexer--return-token))
 
       (phps-mode-lexer--match-macro
        (and ST_IN_SCRIPTING (looking-at "{"))
-       (phps-mode-lexer--yy_push_state 'ST_IN_SCRIPTING)
-       (phps-mode-lexer--RETURN_TOKEN "{" (match-beginning 0) (match-end 0)))
+       (phps-mode-lexer--yy-push-state 'ST_IN_SCRIPTING)
+       (phps-mode-lexer--enter-nesting "{")
+       (phps-mode-lexer--return-token))
 
       (phps-mode-lexer--match-macro
        (and (or ST_DOUBLE_QUOTES ST_BACKQUOTE ST_HEREDOC) (looking-at "\\${"))
-       (phps-mode-lexer--yy_push_state 'ST_LOOKING_FOR_VARNAME)
-       (phps-mode-lexer--RETURN_TOKEN 'T_DOLLAR_OPEN_CURLY_BRACES (match-beginning 0) (match-end 0)))
+       (phps-mode-lexer--yy-push-state 'ST_LOOKING_FOR_VARNAME)
+       (phps-mode-lexer--enter-nesting "{")
+       (phps-mode-lexer--return-token 'T_DOLLAR_OPEN_CURLY_BRACES))
 
       (phps-mode-lexer--match-macro
        (and ST_IN_SCRIPTING (looking-at "}"))
+       (phps-mode-lexer--reset-doc-comment)
        (when phps-mode-lexer--state-stack
-         (phps-mode-lexer--yy_pop_state)
-         (phps-mode-lexer--RETURN_TOKEN "}" (match-beginning 0) (match-end 0))))
+         (phps-mode-lexer--yy-pop-state))
+       (phps-mode-lexer--return-exit-nesting-token))
 
       (phps-mode-lexer--match-macro
-       (and ST_LOOKING_FOR_VARNAME (looking-at (concat phps-mode-lexer--LABEL "[\\[}]")))
-       (let ((start (match-beginning 0))
-             (end (- (match-end 0) 1)))
-         ;; (message "Stopped here")
-         (phps-mode-lexer--yy_pop_state)
-         (phps-mode-lexer--yy_push_state 'ST_IN_SCRIPTING)
-         (phps-mode-lexer--RETURN_TOKEN 'T_STRING_VARNAME start end)))
+       (and
+        ST_LOOKING_FOR_VARNAME
+        (looking-at (concat phps-mode-lexer--label "[\\[}]")))
+       (let* ((start (match-beginning 0))
+              (end (1- (match-end 0)))
+              (_data (buffer-substring-no-properties start end)))
+         (phps-mode-lexer--yyless 1)
+         (phps-mode-lexer--yy-pop-state)
+         (phps-mode-lexer--yy-push-state 'ST_IN_SCRIPTING)
+         (phps-mode-lexer--return-token 'T_STRING_VARNAME start end)))
 
       (phps-mode-lexer--match-macro
-       (and ST_LOOKING_FOR_VARNAME (looking-at phps-mode-lexer--ANY_CHAR))
-       (phps-mode-lexer--yy_pop_state)
-       (phps-mode-lexer--yy_push_state 'ST_IN_SCRIPTING))
+       (and
+        ST_LOOKING_FOR_VARNAME
+        (looking-at phps-mode-lexer--any-char))
+       (phps-mode-lexer--yyless 0)
+       (phps-mode-lexer--yy-pop-state)
+       (phps-mode-lexer--yy-push-state 'ST_IN_SCRIPTING)
+       (phps-mode-lexer--restart))
 
       (phps-mode-lexer--match-macro
-       (and ST_IN_SCRIPTING (looking-at phps-mode-lexer--BNUM))
+       (and ST_IN_SCRIPTING
+            (looking-at phps-mode-lexer--bnum))
        (let* ((start (match-beginning 0))
               (end (match-end 0))
               (data (buffer-substring-no-properties (+ start 2) end))
               (long-number (string-to-number data 2)))
          ;; (message "Binary number %s from %s" long-number data)
          (if (> long-number phps-mode-lexer--long-limit)
-             (phps-mode-lexer--RETURN_TOKEN 'T_DNUMBER start end)
-           (phps-mode-lexer--RETURN_TOKEN 'T_LNUMBER start end))))
+             (phps-mode-lexer--return-token 'T_DNUMBER)
+           (phps-mode-lexer--return-token 'T_LNUMBER))))
 
       (phps-mode-lexer--match-macro
-       (and ST_IN_SCRIPTING (looking-at phps-mode-lexer--LNUM))
+       (and ST_IN_SCRIPTING
+            (looking-at phps-mode-lexer--lnum))
        (let* ((start (match-beginning 0))
               (end (match-end 0))
               (data (string-to-number (buffer-substring-no-properties start end))))
          ;; (message "Long number: %d" data)
          (if (> data phps-mode-lexer--long-limit)
-             (phps-mode-lexer--RETURN_TOKEN 'T_DNUMBER start end)
-           (phps-mode-lexer--RETURN_TOKEN 'T_LNUMBER start end))))
+             (phps-mode-lexer--return-token 'T_DNUMBER)
+           (phps-mode-lexer--return-token 'T_LNUMBER))))
 
       (phps-mode-lexer--match-macro
-       (and ST_IN_SCRIPTING (looking-at phps-mode-lexer--HNUM))
+       (and ST_IN_SCRIPTING (looking-at phps-mode-lexer--hnum))
        (let* ((start (match-beginning 0))
               (end (match-end 0))
               (data (buffer-substring-no-properties (+ start 2) end))
               (long-number (string-to-number data 16)))
          ;; (message "Hexadecimal number %s from %s" long-number data)
          (if (> long-number phps-mode-lexer--long-limit)
-             (phps-mode-lexer--RETURN_TOKEN 'T_DNUMBER start end)
-           (phps-mode-lexer--RETURN_TOKEN 'T_LNUMBER start end))))
+             (phps-mode-lexer--return-token 'T_DNUMBER)
+           (phps-mode-lexer--return-token 'T_LNUMBER))))
 
       (phps-mode-lexer--match-macro
        (and ST_VAR_OFFSET (looking-at "\\([0]\\|[1-9][0-9]*\\)"))
-       (let ((start (match-beginning 0))
-             (end (match-end 0)))
-         (phps-mode-lexer--RETURN_TOKEN 'T_NUM_STRING start end)))
+       (phps-mode-lexer--return-token 'T_NUM_STRING))
 
       (phps-mode-lexer--match-macro
-       (and ST_VAR_OFFSET (looking-at (concat "\\("
-                                              phps-mode-lexer--LNUM "\\|"
-                                              phps-mode-lexer--HNUM "\\|"
-                                              phps-mode-lexer--BNUM "\\)")))
-       (phps-mode-lexer--RETURN_TOKEN 'T_NUM_STRING (match-beginning 0) (match-end 0)))
+       (and ST_VAR_OFFSET
+            (looking-at
+             (concat "\\("
+                     phps-mode-lexer--lnum "\\|"
+                     phps-mode-lexer--hnum "\\|"
+                     phps-mode-lexer--bnum "\\)")))
+       (phps-mode-lexer--return-token 'T_NUM_STRING))
 
       (phps-mode-lexer--match-macro
-       (and ST_IN_SCRIPTING (or (looking-at phps-mode-lexer--EXPONENT_DNUM)
-                                (looking-at phps-mode-lexer--DNUM)))
-       (let* ((start (match-beginning 0))
-              (end (match-end 0))
-              (_data (buffer-substring-no-properties start end)))
-         ;; (message "Exponent/double at: %s" _data)
-         (phps-mode-lexer--RETURN_TOKEN 'T_DNUMBER start end)))
+       (and ST_IN_SCRIPTING
+            (or (looking-at phps-mode-lexer--dnum)
+                (looking-at phps-mode-lexer--exponent-dnum)))
+       (phps-mode-lexer--return-token 'T_DNUMBER))
 
       (phps-mode-lexer--match-macro
        (and ST_IN_SCRIPTING (looking-at "__CLASS__"))
-       (phps-mode-lexer--RETURN_TOKEN 'T_CLASS_C (match-beginning 0) (match-end 0))
-       )
+       (phps-mode-lexer--return-token-with-indent 'T_CLASS_C))
 
       (phps-mode-lexer--match-macro
        (and ST_IN_SCRIPTING (looking-at "__TRAIT__"))
-       (phps-mode-lexer--RETURN_TOKEN 'T_TRAIT_C (match-beginning 0) (match-end 0)))
+       (phps-mode-lexer--return-token-with-indent 'T_TRAIT_C))
 
       (phps-mode-lexer--match-macro
        (and ST_IN_SCRIPTING (looking-at "__FUNCTION__"))
-       (phps-mode-lexer--RETURN_TOKEN 'T_FUNC_C (match-beginning 0) (match-end 0)))
+       (phps-mode-lexer--return-token-with-indent 'T_FUNC_C))
 
       (phps-mode-lexer--match-macro
        (and ST_IN_SCRIPTING (looking-at "__METHOD__"))
-       (phps-mode-lexer--RETURN_TOKEN 'T_METHOD_C (match-beginning 0) (match-end 0)))
+       (phps-mode-lexer--return-token-with-indent 'T_METHOD_C))
 
       (phps-mode-lexer--match-macro
        (and ST_IN_SCRIPTING (looking-at "__LINE__"))
-       (phps-mode-lexer--RETURN_TOKEN 'T_LINE (match-beginning 0) (match-end 0)))
+       (phps-mode-lexer--return-token-with-indent 'T_LINE))
 
       (phps-mode-lexer--match-macro
        (and ST_IN_SCRIPTING (looking-at "__FILE__"))
-       (phps-mode-lexer--RETURN_TOKEN 'T_FILE (match-beginning 0) (match-end 0)))
+       (phps-mode-lexer--return-token-with-indent 'T_FILE))
 
       (phps-mode-lexer--match-macro
        (and ST_IN_SCRIPTING (looking-at "__DIR__"))
-       (phps-mode-lexer--RETURN_TOKEN 'T_DIR (match-beginning 0) (match-end 0)))
+       (phps-mode-lexer--return-token-with-indent 'T_DIR))
 
       (phps-mode-lexer--match-macro
        (and ST_IN_SCRIPTING (looking-at "__NAMESPACE__"))
-       (phps-mode-lexer--RETURN_TOKEN 'T_NS_C (match-beginning 0) (match-end 0)))
+       (phps-mode-lexer--return-token-with-indent 'T_NS_C))
 
       (phps-mode-lexer--match-macro
-       (and SHEBANG (looking-at (concat "#!.*" phps-mode-lexer--NEWLINE)))
-       (phps-mode-lexer--BEGIN 'ST_INITIAL))
+       (and SHEBANG (looking-at (concat "#!.*" phps-mode-lexer--newline)))
+       (let ((lineno
+              (1+
+               (phps-mode-parser-grammar-macro-CG 'zend_lineno))))
+         (phps-mode-parser-grammar-macro-CG 'zend-lineno lineno))
+       (phps-mode-lexer--begin 'ST_INITIAL)
+       (phps-mode-lexer--restart))
 
       (phps-mode-lexer--match-macro
-       (and SHEBANG (looking-at phps-mode-lexer--ANY_CHAR))
-       (phps-mode-lexer--BEGIN 'ST_INITIAL))
+       (and SHEBANG (looking-at phps-mode-lexer--any-char))
+       (phps-mode-lexer--yyless 0)
+       (phps-mode-lexer--begin 'ST_INITIAL)
+       (phps-mode-lexer--restart))
 
       (phps-mode-lexer--match-macro
        (and ST_INITIAL (looking-at "<\\?="))
-       (let ((start (match-beginning 0))
-             (end (match-end 0)))
-         (phps-mode-lexer--BEGIN 'ST_IN_SCRIPTING)
-         (when (phps-mode-parser-grammar-macro-CG 'PARSER_MODE)
-           (phps-mode-lexer--RETURN_TOKEN 'T_ECHO start end))
-         (phps-mode-lexer--RETURN_TOKEN 'T_OPEN_TAG_WITH_ECHO start end)))
+       (phps-mode-lexer--begin 'ST_IN_SCRIPTING)
+       (when (phps-mode-lexer--parser-mode)
+         (phps-mode-lexer--return-token-with-indent 'T_ECHO))
+       (phps-mode-lexer--return-token 'T_OPEN_TAG_WITH_ECHO))
 
       (phps-mode-lexer--match-macro
        (and
         ST_INITIAL
-        (looking-at (concat "<\\?php\\([ \t]\\|" phps-mode-lexer--NEWLINE "\\)")))
-       (let ((start (match-beginning 0))
-             (end (match-end 0)))
-         (phps-mode-lexer--BEGIN 'ST_IN_SCRIPTING)
-         ;; (message "Starting scripting after <?php")
-         (when phps-mode-lexer--EXPECTED
-           (phps-mode-lexer--SKIP_TOKEN 'T_OPEN_TAG start end))
-         (phps-mode-lexer--RETURN_TOKEN 'T_OPEN_TAG start end)))
+        (looking-at
+         (concat
+          "<\\?php\\([ \t]\\|"
+          phps-mode-lexer--newline
+          "\\)")))
+       (phps-mode-lexer--handle-newline)
+       (phps-mode-lexer--begin 'ST_IN_SCRIPTING)
+       (phps-mode-lexer--return-or-skip-token 'T_OPEN_TAG))
 
       (phps-mode-lexer--match-macro
        (and ST_INITIAL (looking-at "<\\?php"))
@@ -994,17 +1213,14 @@
          (cond
 
           ((equal end (point-max))
-           (phps-mode-lexer--BEGIN 'ST_IN_SCRIPTING)
-           (phps-mode-lexer--RETURN_OR_SKIP_TOKEN
-            'T_OPEN_TAG
-            start
-            end))
+           (phps-mode-lexer--begin 'ST_IN_SCRIPTING)
+           (phps-mode-lexer--return-or-skip-token 'T_OPEN_TAG))
 
-          ((phps-mode-parser-grammar-macro-CG 'SHORT_TAGS)
-           (phps-mode-lexer--yyless 3)
-           (setq end (- end 3))
-           (phps-mode-lexer--BEGIN 'ST_IN_SCRIPTING)
-           (phps-mode-lexer--RETURN_OR_SKIP_TOKEN
+          ((phps-mode-parser-grammar-macro-CG 'short-tags)
+           (phps-mode-lexer--yyless 2)
+           (setq end (- end 2))
+           (phps-mode-lexer--begin 'ST_IN_SCRIPTING)
+           (phps-mode-lexer--return-or-skip-token
             'T_OPEN_TAG
             start
             end))
@@ -1014,74 +1230,153 @@
 
       (phps-mode-lexer--match-macro
        (and ST_INITIAL (looking-at "<\\?"))
-       (when (phps-mode-parser-grammar-macro-CG 'SHORT_TAGS)
-         (let ((start (match-beginning 0))
-               (end (match-end 0)))
-           (phps-mode-lexer--BEGIN 'ST_IN_SCRIPTING)
-           (when phps-mode-lexer--EXPECTED
-             (phps-mode-lexer--SKIP_TOKEN 'T_OPEN_TAG start end))
-           ;; (message "Starting scripting after <?")
-           (phps-mode-lexer--RETURN_TOKEN 'T_OPEN_TAG start end))))
+       (if (phps-mode-parser-grammar-macro-CG 'short-tags)
+           (progn
+             (phps-mode-lexer--begin 'ST_IN_SCRIPTING)
+             (phps-mode-lexer--return-or-skip-token 'T_OPEN_TAG))
+         (phps-mode-lexer--inline-char-handler)))
 
       (phps-mode-lexer--match-macro
-       (and ST_INITIAL (looking-at phps-mode-lexer--ANY_CHAR))
-       (phps-mode-lexer--inline-char-handler))
+       (and ST_INITIAL (looking-at phps-mode-lexer--any-char))
+       (if (= (point) (point-max))
+           (phps-mode-lexer--return-end-token)
+         (phps-mode-lexer--inline-char-handler)))
 
+      ;; Make sure a label character follows "->" or "?->", otherwise there is no property
+      ;; and "->"/"?->" will be taken literally
       (phps-mode-lexer--match-macro
        (and (or ST_DOUBLE_QUOTES ST_HEREDOC ST_BACKQUOTE)
             (looking-at
              (concat
               "\\$"
-              phps-mode-lexer--LABEL
+              phps-mode-lexer--label
               "->"
               "[a-zA-Z_\x80-\xff]")))
-       (phps-mode-lexer--yy_push_state 'ST_LOOKING_FOR_PROPERTY)
-       (forward-char -3)
-       (phps-mode-lexer--RETURN_TOKEN 'T_VARIABLE (match-beginning 0) (- (match-end 0) 3)))
+       (phps-mode-lexer--yyless 3)
+       (phps-mode-lexer--yy-push-state 'ST_LOOKING_FOR_PROPERTY)
+       (phps-mode-lexer--return-token-with-str
+        'T_VARIABLE
+        1
+        (match-beginning 0)
+        (- (match-end 0) 3)))
 
       (phps-mode-lexer--match-macro
        (and (or ST_DOUBLE_QUOTES ST_HEREDOC ST_BACKQUOTE)
             (looking-at
              (concat
               "\\$"
-              phps-mode-lexer--LABEL
-              "\\[")))
-       (phps-mode-lexer--yy_push_state 'ST_VAR_OFFSET)
-       (forward-char -1)
-       (phps-mode-lexer--RETURN_TOKEN 'T_VARIABLE (match-beginning 0) (- (match-end 0) 1)))
+              phps-mode-lexer--label
+              "\\?->"
+              "[a-zA-Z_\x80-\xff]")))
+       (phps-mode-lexer--yyless 4)
+       (phps-mode-lexer--yy-push-state 'ST_LOOKING_FOR_PROPERTY)
+       (phps-mode-lexer--return-token-with-str
+        'T_VARIABLE
+        1
+        (match-beginning 0)
+        (- (match-end 0) 4)))
 
+      ;; A [ always designates a variable offset, regardless of what follows
       (phps-mode-lexer--match-macro
-       (and (or ST_IN_SCRIPTING ST_DOUBLE_QUOTES ST_HEREDOC ST_BACKQUOTE ST_VAR_OFFSET)
+       (and (or ST_DOUBLE_QUOTES ST_HEREDOC ST_BACKQUOTE)
             (looking-at
              (concat
               "\\$"
-              phps-mode-lexer--LABEL)))
-       (phps-mode-lexer--RETURN_TOKEN 'T_VARIABLE (match-beginning 0) (match-end 0)))
+              phps-mode-lexer--label
+              "\\[")))
+       (phps-mode-lexer--yyless 1)
+       (phps-mode-lexer--yy-push-state 'ST_VAR_OFFSET)
+       (phps-mode-lexer--return-token-with-str
+        'T_VARIABLE
+        1
+        (match-beginning 0)
+        (- (match-end 0) 1)))
+
+      (phps-mode-lexer--match-macro
+       (and (or
+             ST_IN_SCRIPTING
+             ST_DOUBLE_QUOTES
+             ST_HEREDOC
+             ST_BACKQUOTE
+             ST_VAR_OFFSET)
+            (looking-at
+             (concat
+              "\\$"
+              phps-mode-lexer--label)))
+       (phps-mode-lexer--return-token-with-str 'T_VARIABLE 1))
 
       (phps-mode-lexer--match-macro
        (and ST_VAR_OFFSET (looking-at "\\]"))
-       (phps-mode-lexer--yy_pop_state)
-       (phps-mode-lexer--RETURN_TOKEN "]" (match-beginning 0) (match-end 0)))
+       (phps-mode-lexer--yy-pop-state)
+       (phps-mode-lexer--return-token-with-str "]" 1))
 
       (phps-mode-lexer--match-macro
-       (and ST_VAR_OFFSET (looking-at (concat "\\(" phps-mode-lexer--TOKENS
-                                              "\\|[{}\"`]\\)")))
+       (and ST_VAR_OFFSET
+            (looking-at
+             (concat "\\(" phps-mode-lexer--tokens
+                     "\\|[{}\"`]\\)")))
        (let* ((start (match-beginning 0))
               (end (match-end 0))
               (data (buffer-substring-no-properties start end)))
-         (phps-mode-lexer--RETURN_TOKEN data start end)))
+         ;; Only '[' or '-' can be valid, but returning other tokens will allow a more explicit parse error
+         (phps-mode-lexer--return-token data)))
 
       (phps-mode-lexer--match-macro
        (and ST_VAR_OFFSET (looking-at (concat "[ \n\r\t'#]")))
-       (let* ((start (match-beginning 0))
-              (end (- (match-end 0) 1)))
-         (phps-mode-lexer--yy_pop_state)
-         (phps-mode-lexer--RETURN_TOKEN 'T_ENCAPSED_AND_WHITESPACE start end)))
+       ;; Invalid rule to return a more explicit parse error with proper line number
+       (phps-mode-lexer--yyless 0)
+       (phps-mode-lexer--yy-pop-state)
+       (phps-mode-lexer--return-token-with-val 'T_ENCAPSED_AND_WHITESPACE))
 
       (phps-mode-lexer--match-macro
-       (and (or ST_IN_SCRIPTING ST_VAR_OFFSET) (looking-at phps-mode-lexer--LABEL))
-       ;; (message "Adding T_STRING from %s to %s" (match-beginning 0) (match-end 0))
-       (phps-mode-lexer--RETURN_TOKEN 'T_STRING (match-beginning 0) (match-end 0)))
+       (and ST_IN_SCRIPTING
+            (looking-at
+             (concat
+              "namespace"
+              "\\("
+              "\\\\"
+              phps-mode-lexer--label
+              "\\)+")))
+       (phps-mode-lexer--return-token-with-str
+        'T_NAME_RELATIVE
+        (1- (length "namespace\\"))))
+
+      (phps-mode-lexer--match-macro
+       (and
+        ST_IN_SCRIPTING
+        (looking-at (concat
+                     phps-mode-lexer--label
+                     "\\("
+                     "\\\\"
+                     phps-mode-lexer--label
+                     "\\)+")))
+       (phps-mode-lexer--return-token-with-str
+        'T_NAME_QUALIFIED
+        0))
+
+      (phps-mode-lexer--match-macro
+       (and
+        ST_IN_SCRIPTING
+        (looking-at (concat
+                     "\\\\"
+                     phps-mode-lexer--label
+                     "\\("
+                     "\\\\"
+                     phps-mode-lexer--label
+                     "\\)*")))
+       (phps-mode-lexer--return-token-with-str
+        'T_NAME_FULLY_QUALIFIED
+        1))
+
+      (phps-mode-lexer--match-macro
+       (and ST_IN_SCRIPTING (looking-at "\\\\"))
+       (phps-mode-lexer--return-token 'T_NS_SEPARATOR))
+
+      (phps-mode-lexer--match-macro
+       (and
+        (or ST_IN_SCRIPTING ST_VAR_OFFSET)
+        (looking-at phps-mode-lexer--label))
+       (phps-mode-lexer--return-token-with-str 'T_STRING 0))
 
       (phps-mode-lexer--match-macro
        (and ST_IN_SCRIPTING (looking-at "\\(#\\|//\\)"))
@@ -1090,48 +1385,67 @@
               (_data (buffer-substring-no-properties start end))
               (line (buffer-substring-no-properties end (line-end-position))))
          (if (string-match "\\?>" line)
-             (progn
-               (phps-mode-lexer--RETURN_TOKEN 'T_COMMENT start (+ end (match-beginning 0))))
-           (progn
-             ;; TODO Handle expecting values here
-             ;; (message "Found comment 2 from %s to %s" start (line-end-position))
-             (phps-mode-lexer--RETURN_TOKEN 'T_COMMENT start (line-end-position))))))
+             (phps-mode-lexer--return-or-skip-token
+              'T_COMMENT
+              start
+              (+ end (match-beginning 0)))
+           (phps-mode-lexer--return-or-skip-token
+            'T_COMMENT
+            start
+            (line-end-position)))))
 
       (phps-mode-lexer--match-macro
        (and ST_IN_SCRIPTING
             (looking-at
              (concat
               "\\(/\\*\\|/\\*\\*"
-              phps-mode-lexer--WHITESPACE
+              phps-mode-lexer--whitespace
               "\\)")))
        (let* ((start (match-beginning 0))
               (end (match-end 0))
               (_data (buffer-substring-no-properties start end))
-              (doc-com (looking-at-p (concat "/\\*\\*" phps-mode-lexer--WHITESPACE))))
+              (doc-com (looking-at-p (concat "/\\*\\*" phps-mode-lexer--whitespace))))
          (let ((string-start (search-forward "*/" nil t)))
            (if string-start
                (if doc-com
-                   (phps-mode-lexer--RETURN_TOKEN 'T_DOC_COMMENT start (match-end 0))
-                 (phps-mode-lexer--RETURN_TOKEN 'T_COMMENT start (match-end 0)))
+                   (progn
+                     (phps-mode-lexer--reset-doc-comment)
+                     (phps-mode-lexer--return-token
+                      'T_DOC_COMMENT
+                      start)
+                     (phps-mode-parser-grammar-macro-CG 'doc_comment t))
+                 (phps-mode-lexer--return-token
+                  'T_COMMENT start))
              (progn
                (signal
                 'phps-lexer-error
                 (list
                  (format
-                  "Un-terminated comment starting at %d"
+                  "Unterminated comment starting at %d"
                   start)
                  start)))))))
 
       (phps-mode-lexer--match-macro
-       (and ST_IN_SCRIPTING (looking-at (concat "\\?>" phps-mode-lexer--NEWLINE "?")))
+       (and ST_IN_SCRIPTING
+            (looking-at
+             (concat
+              "\\?>"
+              phps-mode-lexer--newline
+              "?")))
        (let ((start (match-beginning 0))
              (end (match-end 0)))
          (when (= (- end start) 3)
            (setq end (1- end)))
-         (phps-mode-lexer--BEGIN 'ST_INITIAL)
-         (when (phps-mode-parser-grammar-macro-CG 'PARSER_MODE)
-           (phps-mode-lexer--RETURN_TOKEN ";" start end))
-         (phps-mode-lexer--RETURN_TOKEN 'T_CLOSE_TAG start end)))
+         (phps-mode-lexer--begin 'ST_INITIAL)
+         (when (phps-mode-lexer--parser-mode)
+           (phps-mode-lexer--return-token
+            ";"
+            start
+            end))
+         (phps-mode-lexer--return-token
+          'T_CLOSE_TAG
+          start
+          end)))
 
       (phps-mode-lexer--match-macro
        (and ST_IN_SCRIPTING (looking-at "'"))
@@ -1140,12 +1454,17 @@
               (_data (buffer-substring-no-properties start end))
               (un-escaped-end (phps-mode-lexer--get-next-unescaped "'")))
          (if un-escaped-end
-             (progn
-               (phps-mode-lexer--RETURN_TOKEN 'T_CONSTANT_ENCAPSED_STRING start un-escaped-end))
-           (progn
-             ;; Unclosed single quotes
-             (phps-mode-lexer--RETURN_TOKEN 'T_ENCAPSED_AND_WHITESPACE start (point-max))
-             (phps-mode-lexer--MOVE_FORWARD (point-max))))))
+             (phps-mode-lexer--return-token
+              'T_CONSTANT_ENCAPSED_STRING
+              start
+              un-escaped-end)
+           ;; Unclosed single quotes
+           (phps-mode-lexer--return-token-with-val
+            'T_ENCAPSED_AND_WHITESPACE
+            start
+            (point-max))
+           (phps-mode-lexer--move-forward
+            (point-max)))))
 
       ;; Double quoted string
       (phps-mode-lexer--match-macro
@@ -1163,9 +1482,9 @@
                   (search-forward-regexp
                    (concat
                     "\\(\""
-                    "\\|\\$" phps-mode-lexer--LABEL
-                    "\\|\\${" phps-mode-lexer--LABEL
-                    "\\|{\\$" phps-mode-lexer--LABEL "\\)")
+                    "\\|\\$" phps-mode-lexer--label
+                    "\\|\\${" phps-mode-lexer--label
+                    "\\|{\\$" phps-mode-lexer--label "\\)")
                    nil t)))
 
              ;; Do we find a ending double quote or starting variable?
@@ -1199,17 +1518,13 @@
                          (let ((_double-quoted-string
                                 (buffer-substring-no-properties start (+ string-start 1))))
                            ;; (message "Double quoted string: %s" _double-quoted-string)
-                           (phps-mode-lexer--RETURN_TOKEN
+                           (phps-mode-lexer--return-token-with-val
                             'T_CONSTANT_ENCAPSED_STRING
                             start
                             (+ string-start 1)))
                        ;; (message "Found variable after '%s' at %s-%s" (buffer-substring-no-properties start string-start) start string-start)
-                       (phps-mode-lexer--BEGIN 'ST_DOUBLE_QUOTES)
-                       (phps-mode-lexer--RETURN_TOKEN "\"" start (1+ start))
-                       (phps-mode-lexer--RETURN_TOKEN
-                        'T_ENCAPSED_AND_WHITESPACE
-                        (1+ start)
-                        string-start))))
+                       (phps-mode-lexer--begin 'ST_DOUBLE_QUOTES)
+                       (phps-mode-lexer--return-token "\"" start (1+ start)))))
                (progn
                  (setq open-quote nil)
                  (signal
@@ -1223,18 +1538,21 @@
             (looking-at
              (concat
               "<<<"
-              phps-mode-lexer--TABS_AND_SPACES
+              phps-mode-lexer--tabs-and-spaces
               "\\("
-              phps-mode-lexer--LABEL
+              phps-mode-lexer--label
               "\\|'"
-              phps-mode-lexer--LABEL
+              phps-mode-lexer--label
               "'\\|\""
-              phps-mode-lexer--LABEL
+              phps-mode-lexer--label
               "\"\\)"
-              phps-mode-lexer--NEWLINE)))
+              phps-mode-lexer--newline)))
        (let* ((start (match-beginning 0))
               (end (match-end 0))
-              (data (buffer-substring-no-properties (match-beginning 1) (match-end 1))))
+              (data
+               (buffer-substring-no-properties
+                (match-beginning 1)
+                (match-end 1))))
 
          ;; Determine if it's HEREDOC or NOWDOC and extract label here
          (if (string= (substring data 0 1) "'")
@@ -1242,7 +1560,7 @@
                (setq
                 phps-mode-lexer--heredoc-label
                 (substring data 1 (- (length data) 1)))
-               (phps-mode-lexer--BEGIN 'ST_NOWDOC))
+               (phps-mode-lexer--begin 'ST_NOWDOC))
            (progn
              (if (string= (substring data 0 1) "\"")
                  (setq
@@ -1251,7 +1569,7 @@
                (setq
                 phps-mode-lexer--heredoc-label
                 data))
-             (phps-mode-lexer--BEGIN 'ST_HEREDOC)))
+             (phps-mode-lexer--begin 'ST_HEREDOC)))
 
          ;; Check for ending label on the next line
          (when (string=
@@ -1261,23 +1579,31 @@
                     (length
                      phps-mode-lexer--heredoc-label)))
                 phps-mode-lexer--heredoc-label)
-           (phps-mode-lexer--BEGIN 'ST_END_HEREDOC))
+           (phps-mode-lexer--begin 'ST_END_HEREDOC))
 
          (push
-          phps-mode-lexer--heredoc-label
+          `(,phps-mode-lexer--heredoc-label ,start ,end)
           phps-mode-lexer--heredoc-label-stack)
          ;; (message "Found heredoc or nowdoc at %s with label %s" data phps-mode-lexer--heredoc-label)
 
-         (phps-mode-lexer--RETURN_TOKEN 'T_START_HEREDOC start end)))
+         (phps-mode-parser-grammar-macro-CG
+          'doc_comment
+          t)
+         (phps-mode-lexer--return-token
+          'T_START_HEREDOC
+          start
+          end)))
 
       (phps-mode-lexer--match-macro
        (and ST_IN_SCRIPTING (looking-at "[`]"))
        ;; (message "Begun backquote at %s-%s" (match-beginning 0) (match-end 0))
-       (phps-mode-lexer--BEGIN 'ST_BACKQUOTE)
-       (phps-mode-lexer--RETURN_TOKEN "`" (match-beginning 0) (match-end 0)))
+       (phps-mode-lexer--begin 'ST_BACKQUOTE)
+       (phps-mode-lexer--return-token "`"))
 
       (phps-mode-lexer--match-macro
-       (and ST_END_HEREDOC (looking-at (concat phps-mode-lexer--ANY_CHAR)))
+       (and ST_END_HEREDOC
+            (looking-at
+             (concat phps-mode-lexer--any-char)))
        (let* ((start (match-beginning 0))
               (end (+ start
                       (length
@@ -1286,44 +1612,55 @@
               (_data (buffer-substring-no-properties start end)))
          ;; (message "Found ending heredoc at %s, %s of %s" _data (thing-at-point 'line) phps-mode-lexer--heredoc-label)
          (pop phps-mode-lexer--heredoc-label-stack)
-         (phps-mode-lexer--BEGIN 'ST_IN_SCRIPTING)
-         (phps-mode-lexer--RETURN_TOKEN 'T_END_HEREDOC start end)))
+         (phps-mode-lexer--begin 'ST_IN_SCRIPTING)
+         (phps-mode-lexer--return-token 'T_END_HEREDOC start end)))
 
       (phps-mode-lexer--match-macro
-       (and (or ST_DOUBLE_QUOTES ST_BACKQUOTE ST_HEREDOC) (looking-at (concat "{\\$")))
-       (phps-mode-lexer--yy_push_state 'ST_IN_SCRIPTING)
-       (phps-mode-lexer--RETURN_TOKEN 'T_CURLY_OPEN (match-beginning 0) (- (match-end 0) 1)))
+       (and (or ST_DOUBLE_QUOTES ST_BACKQUOTE ST_HEREDOC) (looking-at "{\\$"))
+       (phps-mode-lexer--yy-push-state 'ST_IN_SCRIPTING)
+       (phps-mode-lexer--yyless 1)
+       (phps-mode-lexer--enter-nesting "{")
+       (phps-mode-lexer--return-token
+        'T_CURLY_OPEN
+        (match-beginning 0)
+        (- (match-end 0) 1)))
 
       (phps-mode-lexer--match-macro
        (and ST_DOUBLE_QUOTES (looking-at "[\"]"))
-       (phps-mode-lexer--BEGIN 'ST_IN_SCRIPTING)
-       ;; (message "Ended double-quote at %s" (match-beginning 0))
-       (phps-mode-lexer--RETURN_TOKEN "\"" (match-beginning 0) (match-end 0)))
+       (phps-mode-lexer--begin 'ST_IN_SCRIPTING)
+       (phps-mode-lexer--return-token "\""))
 
       (phps-mode-lexer--match-macro
        (and ST_BACKQUOTE (looking-at "[`]"))
-       (phps-mode-lexer--BEGIN 'ST_IN_SCRIPTING)
-       (phps-mode-lexer--RETURN_TOKEN "`" (match-beginning 0) (match-end 0)))
+       (phps-mode-lexer--begin 'ST_IN_SCRIPTING)
+       (phps-mode-lexer--return-token "`"))
 
       (phps-mode-lexer--match-macro
-       (and ST_DOUBLE_QUOTES (looking-at phps-mode-lexer--ANY_CHAR))
+       (and ST_DOUBLE_QUOTES
+            (looking-at phps-mode-lexer--any-char))
        (let ((start (point))
-             (start-error (car (cdr (nth 2 phps-mode-lexer--tokens)))))
+             (start-error (car (cdr (nth 2 phps-mode-lexer--generated-tokens)))))
          (let ((string-start (search-forward-regexp "[^\\\\]\"" nil t)))
            (if string-start
                (let* ((end (- (match-end 0) 1))
                       (double-quoted-string (buffer-substring-no-properties start end)))
                  ;; Do we find variable inside quote?
-                 (if (or (string-match (concat "\\${" phps-mode-lexer--LABEL) double-quoted-string)
-                         (string-match (concat "{\\$" phps-mode-lexer--LABEL) double-quoted-string)
-                         (string-match (concat "\\$" phps-mode-lexer--LABEL) double-quoted-string))
+                 (if (or (string-match (concat "\\${" phps-mode-lexer--label) double-quoted-string)
+                         (string-match (concat "{\\$" phps-mode-lexer--label) double-quoted-string)
+                         (string-match (concat "\\$" phps-mode-lexer--label) double-quoted-string))
                      (progn
                        (let ((variable-start (+ start (match-beginning 0))))
 
                          ;; (message "Found starting expression inside double-quoted string at: %s %s" start variable-start)
-                         (phps-mode-lexer--RETURN_TOKEN 'T_CONSTANT_ENCAPSED_STRING start variable-start)))
+                         (phps-mode-lexer--return-token-with-val
+                          'T_CONSTANT_ENCAPSED_STRING
+                          start
+                          variable-start)))
                    (progn
-                     (phps-mode-lexer--RETURN_TOKEN 'T_CONSTANT_ENCAPSED_STRING start end)
+                     (phps-mode-lexer--return-token-with-val
+                      'T_CONSTANT_ENCAPSED_STRING
+                      start
+                      end)
                      ;; (message "Found end of quote at %s-%s, moving ahead after '%s'" start end (buffer-substring-no-properties start end))
                      )))
              (progn
@@ -1334,13 +1671,16 @@
                  start-error)))))))
 
       (phps-mode-lexer--match-macro
-       (and ST_BACKQUOTE (looking-at phps-mode-lexer--ANY_CHAR))
-       (let ((start (car (cdr (car phps-mode-lexer--tokens)))))
+       (and ST_BACKQUOTE (looking-at phps-mode-lexer--any-char))
+       (let ((start (car (cdr (car phps-mode-lexer--generated-tokens)))))
          (let ((string-start (search-forward-regexp "\\([^\\\\]`\\|\\$\\|{\\)" nil t)))
            (if string-start
                (let ((start (- (match-end 0) 1)))
                  ;; (message "Skipping backquote forward over %s" (buffer-substring-no-properties old-start start))
-                 (phps-mode-lexer--RETURN_TOKEN 'T_CONSTANT_ENCAPSED_STRING old-start start))
+                 (phps-mode-lexer--return-token-with-val
+                  'T_ENCAPSED_AND_WHITESPACE
+                  old-start
+                  start))
              (progn
                (signal
                 'phps-lexer-error
@@ -1349,27 +1689,29 @@
                  start)))))))
 
       (phps-mode-lexer--match-macro
-       (and ST_HEREDOC (looking-at phps-mode-lexer--ANY_CHAR))
+       (and ST_HEREDOC (looking-at phps-mode-lexer--any-char))
        ;; Check for $, ${ and {$ forward
-       (let ((start (car (cdr (car phps-mode-lexer--tokens)))))
+       (let ((old-start (car (cdr (car phps-mode-lexer--heredoc-label-stack))))
+             (old-end (point)))
          (let ((string-start
                 (search-forward-regexp
                  (concat
                   "\\(\n"
                   phps-mode-lexer--heredoc-label
                   ";?\n\\|\\$"
-                  phps-mode-lexer--LABEL
+                  phps-mode-lexer--label
                   "\\|{\\$"
-                  phps-mode-lexer--LABEL
+                  phps-mode-lexer--label
                   "\\|\\${"
-                  phps-mode-lexer--LABEL
+                  phps-mode-lexer--label
                   "\\)"
-                  ) nil t)))
+                  )
+                 nil
+                 t)))
            (if string-start
                (let* ((start (match-beginning 0))
                       (end (match-end 0))
                       (data (buffer-substring-no-properties start end)))
-                ;; (message "Found something ending at %s" data)
 
                  (cond
 
@@ -1378,27 +1720,34 @@
                      "\n"
                      phps-mode-lexer--heredoc-label
                      ";?\n"
-                     ) data)
+                     )
+                    data)
                    ;; (message "Found heredoc end at %s-%s" start end)
-                   (phps-mode-lexer--RETURN_TOKEN 'T_ENCAPSED_AND_WHITESPACE old-start start)
-                   (phps-mode-lexer--BEGIN 'ST_END_HEREDOC))
+                   (phps-mode-lexer--return-token-with-val
+                    'T_ENCAPSED_AND_WHITESPACE
+                    old-end
+                    start)
+                   (phps-mode-lexer--begin
+                    'ST_END_HEREDOC))
 
                   (t
                    ;; (message "Found variable at '%s'.. Skipping forward to %s" data start)
-                   (phps-mode-lexer--RETURN_TOKEN 'T_ENCAPSED_AND_WHITESPACE old-start start)
-                   )
+                   (phps-mode-lexer--return-token-with-val
+                    'T_ENCAPSED_AND_WHITESPACE
+                    old-end
+                    start))
 
                   ))
              (progn
                (signal
                 'phps-lexer-error
                 (list
-                 (format "Found no ending of heredoc starting at %d" start)
-                 start)))))))
+                 (format "Found no ending of heredoc starting at %d" old-start)
+                 old-start)))))))
 
       (phps-mode-lexer--match-macro
-       (and ST_NOWDOC (looking-at phps-mode-lexer--ANY_CHAR))
-       (let ((start (car (cdr (car phps-mode-lexer--tokens)))))
+       (and ST_NOWDOC (looking-at phps-mode-lexer--any-char))
+       (let ((start (car (cdr (car phps-mode-lexer--generated-tokens)))))
          (let ((string-start (search-forward-regexp
                               (concat
                                "\n"
@@ -1411,8 +1760,12 @@
                       (_data (buffer-substring-no-properties start end)))
                  ;; (message "Found something ending at %s" _data)
                  ;; (message "Found nowdoc end at %s-%s" start end)
-                 (phps-mode-lexer--RETURN_TOKEN 'T_ENCAPSED_AND_WHITESPACE old-start start)
-                 (phps-mode-lexer--BEGIN 'ST_END_HEREDOC))
+                 (phps-mode-lexer--return-token-with-val
+                  'T_ENCAPSED_AND_WHITESPACE
+                  old-start
+                  start)
+                 (phps-mode-lexer--begin
+                  'ST_END_HEREDOC))
              (progn
                (signal
                 'phps-lexer-error
@@ -1421,17 +1774,30 @@
                  start)))))))
 
       (phps-mode-lexer--match-macro
-       (and (or ST_IN_SCRIPTING ST_VAR_OFFSET) (looking-at phps-mode-lexer--ANY_CHAR))
+       (and (or ST_IN_SCRIPTING ST_VAR_OFFSET)
+            (looking-at phps-mode-lexer--any-char))
        (signal
         'phps-lexer-error
         (list
          (format "Unexpected character at %d" (match-beginning 0))
          (match-beginning 0))))
 
-      (when phps-mode-lexer--match-length
-        (phps-mode-lexer--re2c-execute)))))
+      (if phps-mode-lexer--match-length
+          (progn
+            (phps-mode-debug-message
+             (message
+              "Found match %s"
+              phps-mode-lexer--match-body))
+            (phps-mode-lexer--re2c-execute)
+
+            (when phps-mode-lexer--restart-flag
+              (phps-mode-debug-message
+               (message "Restarting lexer"))
+              (phps-mode-lexer--re2c)))
+        (phps-mode-debug-message
+         (message "Found nothing at %d" (point)))))))
 
 
 (provide 'phps-mode-lexer)
 
-;;; phps-mode-lexer.el ends here 
+;;; phps-mode-lexer.el ends here

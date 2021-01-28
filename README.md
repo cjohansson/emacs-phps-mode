@@ -11,7 +11,7 @@ This mode does not require PHP installed on your computer because it has a built
 
 * GPLv3 license
 * Flycheck support with `(phps-mode-flycheck-setup)`
-* Semantic lexer based on official PHP 7.4 re2c lexer
+* Semantic lexer based on official PHP 8.0 re2c lexer
 * Syntax coloring based on lexer tokens, makes it easier to spot invalid code
 * PSR-1, PSR-2 and PSR-12 indentation based on lexer tokens
 * PSR-1, PSR-2 and PSR-12 supported white-space

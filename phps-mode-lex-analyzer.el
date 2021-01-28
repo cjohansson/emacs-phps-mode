@@ -1,6 +1,6 @@
 ;;; phps-mode-lex-analyzer.el -- Lex analyzer for PHPs -*- lexical-binding: t -*-
 
-;; Copyright (C) 2018-2020  Free Software Foundation, Inc.
+;; Copyright (C) 2018-2021  Free Software Foundation, Inc.
 
 ;; This file is not part of GNU Emacs.
 
@@ -89,6 +89,9 @@
 (defvar-local phps-mode-lex-analyzer--heredoc-label-stack nil
   "Latest Heredoc label-stack.")
 
+(defvar-local phps-mode-lex-analyzer--nest-location-stack nil
+  "Nest location stack.")
+
 
 ;; FUNCTIONS
 
@@ -106,7 +109,8 @@
   (setq phps-mode-lex-analyzer--state nil)
   (setq phps-mode-lex-analyzer--state-stack nil)
   (setq phps-mode-lex-analyzer--states nil)
-  (setq phps-mode-lex-analyzer--tokens nil))
+  (setq phps-mode-lex-analyzer--tokens nil)
+  (setq phps-mode-lex-analyzer--nest-location-stack nil))
 
 (defun phps-mode-lex-analyzer--set-region-syntax-color (start end properties)
   "Do syntax coloring for region START to END with PROPERTIES."
@@ -138,13 +142,21 @@
 
      ((or
        (equal token-name 'T_VARIABLE)
-       (equal token-name 'T_STRING_VARNAME))
+       (equal token-name 'T_STRING_VARNAME)
+       (equal token-name 'T_NAME_RELATIVE)
+       (equal token-name 'T_NAME_QUALIFIED)
+       (equal token-name 'T_NAME_FULLY_QUALIFIED))
       (list 'font-lock-face 'font-lock-variable-name-face))
 
-     ((equal token-name 'T_COMMENT)
+     ((or
+       (equal token-name 'T_COMMENT)
+       (equal token-name 'END))
       (list 'font-lock-face 'font-lock-comment-face))
 
      ((equal token-name 'T_DOC_COMMENT)
+      (list 'font-lock-face 'font-lock-doc-face))
+
+     ((equal token-name 'T_ATTRIBUTE)
       (list 'font-lock-face 'font-lock-doc-face))
 
      ((equal token-name 'T_INLINE_HTML)
@@ -164,6 +176,7 @@
        (equal token-name 'T_DOLLAR_OPEN_CURLY_BRACES)
        (equal token-name 'T_CURLY_OPEN)
        (equal token-name 'T_OBJECT_OPERATOR)
+       (equal token-name 'T_NULLSAFE_OBJECT_OPERATOR)
        (equal token-name 'T_PAAMAYIM_NEKUDOTAYIM)
        (equal token-name 'T_NS_SEPARATOR)
        (equal token-name 'T_EXIT)
@@ -294,7 +307,6 @@
       (list 'font-lock-face 'font-lock-constant-face))
 
      ((equal token-name 'T_ERROR)
-      ;; NOTE This token-name is artificial and not PHP native
       (list 'font-lock-face 'font-lock-warning-face))
 
      (t (list 'font-lock-face 'font-lock-constant-face)))))
@@ -389,6 +401,7 @@
              (setq phps-mode-lex-analyzer--state-stack (nth 3 lex-result))
              (setq phps-mode-lex-analyzer--heredoc-label (nth 4 lex-result))
              (setq phps-mode-lex-analyzer--heredoc-label-stack (nth 5 lex-result))
+             (setq phps-mode-lex-analyzer--nest-location-stack (nth 6 lex-result))
 
              ;; Save processed result
              (setq phps-mode-lex-analyzer--processed-buffer-p t)
@@ -429,8 +442,15 @@
                           error-start
                           (point-max)
                           (list 'font-lock-face 'font-lock-warning-face))))
-                     (display-warning 'phps-mode error-message :warning "*PHPs Lexer Errors*"))
-                 (display-warning error-type error-message :warning)))))))
+                     (display-warning
+                      'phps-mode
+                      error-message
+                      :warning
+                      "*PHPs Lexer Errors*"))
+                 (display-warning
+                  error-type
+                  error-message
+                  :warning)))))))
 
      nil
 
@@ -439,7 +459,7 @@
 
 (defun phps-mode-lex-analyzer--incremental-lex-string
     (buffer-name buffer-contents incremental-start-new-buffer point-max
-                 head-states incremental-state incremental-state-stack incremental-heredoc-label incremental-heredoc-label-stack head-tokens &optional force-synchronous)
+                 head-states incremental-state incremental-state-stack incremental-heredoc-label incremental-heredoc-label-stack incremental-nest-location-stack head-tokens &optional force-synchronous)
   "Incremental lex region."
   (let ((async (and (boundp 'phps-mode-async-process)
                     phps-mode-async-process))
@@ -452,16 +472,18 @@
      buffer-name
 
      (lambda()
-       (let* ((lex-result (phps-mode-lex-analyzer--lex-string
-                           buffer-contents
-                           incremental-start-new-buffer
-                           point-max
-                           head-states
-                           incremental-state
-                           incremental-state-stack
-                           incremental-heredoc-label
-                           incremental-heredoc-label-stack
-                           head-tokens))
+       (let* ((lex-result
+               (phps-mode-lex-analyzer--lex-string
+                buffer-contents
+                incremental-start-new-buffer
+                point-max
+                head-states
+                incremental-state
+                incremental-state-stack
+                incremental-heredoc-label
+                incremental-heredoc-label-stack
+                incremental-nest-location-stack
+                head-tokens))
               (processed-result
                (phps-mode-lex-analyzer--process-tokens-in-string
                 (nth 0 lex-result)
@@ -483,6 +505,7 @@
              (setq phps-mode-lex-analyzer--state-stack (nth 3 lex-result))
              (setq phps-mode-lex-analyzer--heredoc-label (nth 4 lex-result))
              (setq phps-mode-lex-analyzer--heredoc-label-stack (nth 5 lex-result))
+             (setq phps-mode-lex-analyzer--nest-location-stack (nth 6 lex-result))
 
              ;; Save processed result
              (setq phps-mode-lex-analyzer--processed-buffer-p t)
@@ -528,8 +551,15 @@
                           error-start
                           (point-max)
                           (list 'font-lock-face 'font-lock-warning-face))))
-                     (display-warning 'phps-mode error-message :warning "*PHPs Lexer Errors*"))
-                 (display-warning error-type error-message :warning)))))))
+                     (display-warning
+                      'phps-mode
+                      error-message
+                      :warning
+                      "*PHPs Lexer Errors*"))
+                 (display-warning
+                  error-type
+                  error-message
+                  :warning)))))))
 
      nil
      async
@@ -623,6 +653,7 @@
                     (incremental-state-stack nil)
                     (incremental-heredoc-label nil)
                     (incremental-heredoc-label-stack nil)
+                    (incremental-nest-location-stack nil)
                     (incremental-tokens nil)
                     (head-states '())
                     (head-tokens '())
@@ -642,6 +673,7 @@
                 (setq phps-mode-lex-analyzer--state-stack nil)
                 (setq phps-mode-lex-analyzer--heredoc-label nil)
                 (setq phps-mode-lex-analyzer--heredoc-label-stack nil)
+                (setq phps-mode-lex-analyzer--nest-location-stack nil)
 
                 ;; NOTE Starts are inclusive while ends are exclusive buffer locations
 
@@ -687,6 +719,7 @@
                                   (setq incremental-state-stack (nth 3 state-object))
                                   (setq incremental-heredoc-label (nth 4 state-object))
                                   (setq incremental-heredoc-label-stack (nth 5 state-object))
+                                  (setq incremental-nest-location-stack (nth 6 state-object))
                                   (push state-object head-states))
                               (throw 'quit "break")))))
 
@@ -695,7 +728,8 @@
                        (message "Incremental state: %s" incremental-state)
                        (message "State stack: %s" incremental-state-stack)
                        (message "Incremental heredoc-label: %s" incremental-heredoc-label)
-                       (message "Incremental heredoc-label-stack: %s" incremental-heredoc-label-stack))
+                       (message "Incremental heredoc-label-stack: %s" incremental-heredoc-label-stack)
+                       (message "Incremental nest-location-stack: %s" incremental-nest-location-stack))
 
                       (if (and
                            head-states
@@ -718,6 +752,7 @@
                              incremental-state-stack
                              incremental-heredoc-label
                              incremental-heredoc-label-stack
+                             incremental-nest-location-stack
                              head-tokens
                              force-synchronous)
 
@@ -1187,22 +1222,32 @@ SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
                       ;; Flag super-globals
                       (when (and (equal token 'T_VARIABLE)
                                  (or
+                                  (equal bookkeeping-variable-name "$GLOBALS")
                                   (equal bookkeeping-variable-name "$_COOKIE")
+                                  (equal bookkeeping-variable-name "$_ENV")
+                                  (equal bookkeeping-variable-name "$_FILES")
                                   (equal bookkeeping-variable-name "$_GET")
-                                  (equal bookkeeping-variable-name "$_GLOBALS")
                                   (equal bookkeeping-variable-name "$_POST")
                                   (equal bookkeeping-variable-name "$_REQUEST")
                                   (equal bookkeeping-variable-name "$_SERVER")
                                   (equal bookkeeping-variable-name "$_SESSION")
-                                  (equal bookkeeping-variable-name "$_FILES")))
+                                  ))
                         (setq bookkeeping-is-superglobal t))
 
                       ;; Build name-space
                       (when (and imenu-in-namespace-name
                                  (or imenu-in-class-name imenu-in-function-name))
-                        (setq bookkeeping-namespace (concat bookkeeping-namespace " namespace " imenu-in-namespace-name)))
+                        (setq bookkeeping-namespace
+                              (concat
+                               bookkeeping-namespace
+                               " namespace "
+                               imenu-in-namespace-name)))
                       (when imenu-in-class-name
-                        (setq bookkeeping-namespace (concat bookkeeping-namespace " class " imenu-in-class-name)))
+                        (setq bookkeeping-namespace
+                              (concat
+                               bookkeeping-namespace
+                               " class "
+                               imenu-in-class-name)))
 
                       (when (and
                              (equal token 'T_VARIABLE)
@@ -1227,19 +1272,25 @@ SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
                           ;; (message "%s->%s" bookkeeping2-variable-name bookkeeping-variable-name)
                           (when (string= bookkeeping2-variable-name "$this")
                             (setq bookkeeping-namespace (concat bookkeeping-namespace " id $" bookkeeping-variable-name))
-                            ;; (message "Was here: '%s" bookkeeping-namespace)
                             (setq bookkeeping-named t))))
 
                       (unless bookkeeping-named
                         (when imenu-in-function-name
-                          (setq bookkeeping-namespace (concat bookkeeping-namespace " function " imenu-in-function-name))
+                          (setq bookkeeping-namespace
+                                (concat
+                                 bookkeeping-namespace
+                                 " function "
+                                 imenu-in-function-name))
 
                           ;; Add $this special variable in class function scope
                           (when (and imenu-in-class-name
                                      (not imenu-in-interface-class))
                             (let ((bookkeeping-method-this (concat bookkeeping-namespace " id $this")))
                               (unless (gethash bookkeeping-method-this bookkeeping)
-                                (puthash bookkeeping-method-this 1 bookkeeping)))))
+                                (puthash
+                                 bookkeeping-method-this
+                                 1
+                                 bookkeeping)))))
 
                         ;; Anonymous function level
                         (when in-anonymous-function-nesting-level
@@ -1271,7 +1322,10 @@ SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
                         (when bookkeeping-alternative-namespace
                           (setq bookkeeping-alternative-namespace (concat bookkeeping-alternative-namespace " id " bookkeeping-variable-name))))
 
-                      (phps-mode-debug-message (message "Bookkeeping-namespace: '%s'" bookkeeping-namespace))
+                      (phps-mode-debug-message
+                       (message
+                        "Bookkeeping-namespace: '%s'"
+                        bookkeeping-namespace))
 
                       ;; Support for ($i = 0), if ($a = ), if (!$ = ), while ($a = ) and do {} while ($a = ) assignments here
                       (when (and
@@ -1377,13 +1431,18 @@ SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
 
                       ;; Do we have a assignment?
                       (when bookkeeping-in-assignment
-                        (let ((declarations (gethash bookkeeping-namespace bookkeeping)))
+                        (let ((declarations
+                               (gethash
+                                bookkeeping-namespace
+                                bookkeeping)))
                           ;; Track number of times this variable is defined
                           (unless declarations
                             (setq declarations 0))
                           (setq declarations (1+ declarations))
                           (phps-mode-debug-message
-                           (message "Bookkeeping-assignment: '%s'" bookkeeping-namespace))
+                           (message
+                            "Bookkeeping-assignment: '%s'"
+                            bookkeeping-namespace))
                           (puthash bookkeeping-namespace declarations bookkeeping)))
 
                       (if bookkeeping-is-superglobal
@@ -1609,10 +1668,11 @@ SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
 
                  ((string= token "}")
 
-                  (when (and imenu-open-namespace-level
-                             (= imenu-open-namespace-level imenu-nesting-level)
-                             imenu-in-namespace-name
-                             imenu-namespace-index)
+                  (when (and
+                         imenu-open-namespace-level
+                         (= imenu-open-namespace-level imenu-nesting-level)
+                         imenu-in-namespace-name
+                         imenu-namespace-index)
                     (let ((imenu-add-list (nreverse imenu-namespace-index)))
                       (push `(,imenu-in-namespace-name . ,imenu-add-list) imenu-index))
                     (setq imenu-in-namespace-name nil))
@@ -1646,8 +1706,11 @@ SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
                     (setq imenu-namespace-index '())
                     (setq imenu-in-namespace-declaration nil))
 
-                   ((and (or (equal token 'T_STRING)
-                             (equal token 'T_NS_SEPARATOR))
+                   ((and (or
+                          (equal token 'T_STRING)
+                          (equal token 'T_NAME_RELATIVE)
+                          (equal token 'T_NAME_FULLY_QUALIFIED)
+                          (equal token 'T_NAME_QUALIFIED))
                          (setq
                           imenu-in-namespace-name
                           (concat
@@ -3005,7 +3068,7 @@ SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
   (unless phps-mode-lex-analyzer--state
     (setq phps-mode-lex-analyzer--state 'ST_INITIAL)))
 
-(defun phps-mode-lex-analyzer--lex-string (contents &optional start end states state state-stack heredoc-label heredoc-label-stack tokens)
+(defun phps-mode-lex-analyzer--lex-string (contents &optional start end states state state-stack heredoc-label heredoc-label-stack nest-location-stack tokens)
   "Run lexer on CONTENTS."
   ;; Create a separate buffer, run lexer inside of it, catch errors and return them
   ;; to enable nice presentation
@@ -3018,23 +3081,34 @@ SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
         (insert contents)
 
         (if tokens
-            (setq phps-mode-lexer--tokens (nreverse tokens))
-          (setq phps-mode-lexer--tokens nil))
+            (setq
+             phps-mode-lexer--generated-tokens
+             (nreverse tokens))
+          (setq
+           phps-mode-lexer--generated-tokens
+           nil))
         (if state
-            (setq phps-mode-lexer--state state)
-          (setq phps-mode-lexer--state 'ST_INITIAL))
-        (if states
-            (setq phps-mode-lexer--states states)
-          (setq phps-mode-lexer--states nil))
-        (if state-stack
-            (setq phps-mode-lexer--state-stack state-stack)
-          (setq phps-mode-lexer--state-stack nil))
-        (if heredoc-label
-            (setq phps-mode-lexer--heredoc-label heredoc-label)
-          (setq phps-mode-lexer--heredoc-label nil))
-        (if heredoc-label-stack
-            (setq phps-mode-lexer--heredoc-label-stack heredoc-label-stack)
-          (setq phps-mode-lexer--heredoc-label-stack nil))
+            (setq
+             phps-mode-lexer--state state)
+          (setq
+           phps-mode-lexer--state
+           'ST_INITIAL))
+
+        (setq
+         phps-mode-lexer--states
+         states)
+        (setq
+         phps-mode-lexer--state-stack
+         state-stack)
+        (setq
+         phps-mode-lexer--heredoc-label
+         heredoc-label)
+        (setq
+         phps-mode-lexer--heredoc-label-stack
+         heredoc-label-stack)
+        (setq
+         phps-mode-lexer--nest-location-stack
+         nest-location-stack)
 
         ;; Setup lexer settings
         (when (boundp 'phps-mode-syntax-table)
@@ -3062,7 +3136,7 @@ SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
         (setq state phps-mode-lexer--state)
         (setq state-stack phps-mode-lexer--state-stack)
         (setq states phps-mode-lexer--states)
-        (setq tokens (nreverse phps-mode-lexer--tokens))
+        (setq tokens (nreverse phps-mode-lexer--generated-tokens))
         (setq heredoc-label phps-mode-lexer--heredoc-label)
         (setq heredoc-label-stack phps-mode-lexer--heredoc-label-stack)
         (kill-buffer))))
