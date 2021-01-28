@@ -30,19 +30,21 @@
 (defmacro phps-mode-test--incremental-vs-intial-buffer (source &optional title &rest change)
   "Set up test buffer with SOURCE, TITLE, apply CHANGE and compare incremental values with initial values."
   `(let ((test-buffer-incremental (generate-new-buffer "test-incremental"))
-         (incremental-states nil)
-         (incremental-tokens nil)
-         (incremental-imenu nil)
-         (incremental-indent nil)
-         (incremental-buffer nil)
-         (incremental-bookkeeping nil)
+         (incremental-states)
+         (incremental-tokens)
+         (incremental-imenu)
+         (incremental-indent)
+         (incremental-buffer)
+         (incremental-bookkeeping)
+         (incremental-nest-location-stack)
          (test-buffer-initial (generate-new-buffer "test-initial"))
-         (initial-states nil)
-         (initial-tokens nil)
-         (initial-imenu nil)
-         (initial-indent nil)
-         (initial-buffer nil)
-         (initial-bookkeeping nil))
+         (initial-states)
+         (initial-tokens)
+         (initial-imenu)
+         (initial-indent)
+         (initial-buffer)
+         (initial-bookkeeping)
+         (initial-nest-location-stack))
 
      ;; Setup incremental buffer
      (switch-to-buffer test-buffer-incremental)
@@ -59,6 +61,7 @@
      (setq incremental-indent (phps-mode-test--hash-to-list phps-mode-lex-analyzer--lines-indent))
      (setq incremental-buffer (buffer-substring (point-min) (point-max)))
      (setq incremental-bookkeeping (phps-mode-test--hash-to-list phps-mode-lex-analyzer--bookkeeping t))
+     (setq incremental-nest-location-stack phps-mode-lex-analyzer--nest-location-stack)
 
      ;; Setup incremental buffer
      (switch-to-buffer test-buffer-initial)
@@ -73,6 +76,7 @@
      (setq initial-indent (phps-mode-test--hash-to-list phps-mode-lex-analyzer--lines-indent))
      (setq initial-buffer (buffer-substring (point-min) (point-max)))
      (setq initial-bookkeeping (phps-mode-test--hash-to-list phps-mode-lex-analyzer--bookkeeping t))
+     (setq initial-nest-location-stack phps-mode-lex-analyzer--nest-location-stack)
 
      ;; Run tests
      (phps-mode-debug-message
@@ -87,6 +91,7 @@
      (should (equal initial-indent incremental-indent))
      (should (equal initial-imenu incremental-imenu))
      (should (equal initial-bookkeeping incremental-bookkeeping))
+     (should (equal initial-nest-location-stack incremental-nest-location-stack))
 
      (kill-buffer test-buffer-incremental)
      (kill-buffer test-buffer-initial)
