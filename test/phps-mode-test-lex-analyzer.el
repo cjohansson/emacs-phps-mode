@@ -1,6 +1,6 @@
 ;;; phps-mode-test-lex-analyzer.el --- Tests for functions -*- lexical-binding: t -*-
 
-;; Copyright (C) 2018-2019  Free Software Foundation, Inc.
+;; Copyright (C) 2018-2021  Free Software Foundation, Inc.
 
 ;; This file is not part of GNU Emacs.
 

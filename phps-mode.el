@@ -1,6 +1,6 @@
 ;;; phps-mode.el --- Major mode for PHP with Semantic integration -*- lexical-binding: t -*-
 
-;; Copyright (C) 2018-2020  Free Software Foundation, Inc.
+;; Copyright (C) 2018-2021  Free Software Foundation, Inc.
 
 ;; Author: Christian Johansson <christian@cvj.se>
 ;; Maintainer: Christian Johansson <christian@cvj.se>
