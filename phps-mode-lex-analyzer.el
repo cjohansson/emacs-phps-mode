@@ -1222,22 +1222,32 @@ SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
                       ;; Flag super-globals
                       (when (and (equal token 'T_VARIABLE)
                                  (or
+                                  (equal bookkeeping-variable-name "$GLOBALS")
                                   (equal bookkeeping-variable-name "$_COOKIE")
+                                  (equal bookkeeping-variable-name "$_ENV")
+                                  (equal bookkeeping-variable-name "$_FILES")
                                   (equal bookkeeping-variable-name "$_GET")
-                                  (equal bookkeeping-variable-name "$_GLOBALS")
                                   (equal bookkeeping-variable-name "$_POST")
                                   (equal bookkeeping-variable-name "$_REQUEST")
                                   (equal bookkeeping-variable-name "$_SERVER")
                                   (equal bookkeeping-variable-name "$_SESSION")
-                                  (equal bookkeeping-variable-name "$_FILES")))
+                                  ))
                         (setq bookkeeping-is-superglobal t))
 
                       ;; Build name-space
                       (when (and imenu-in-namespace-name
                                  (or imenu-in-class-name imenu-in-function-name))
-                        (setq bookkeeping-namespace (concat bookkeeping-namespace " namespace " imenu-in-namespace-name)))
+                        (setq bookkeeping-namespace
+                              (concat
+                               bookkeeping-namespace
+                               " namespace "
+                               imenu-in-namespace-name)))
                       (when imenu-in-class-name
-                        (setq bookkeeping-namespace (concat bookkeeping-namespace " class " imenu-in-class-name)))
+                        (setq bookkeeping-namespace
+                              (concat
+                               bookkeeping-namespace
+                               " class "
+                               imenu-in-class-name)))
 
                       (when (and
                              (equal token 'T_VARIABLE)
@@ -1266,14 +1276,21 @@ SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
 
                       (unless bookkeeping-named
                         (when imenu-in-function-name
-                          (setq bookkeeping-namespace (concat bookkeeping-namespace " function " imenu-in-function-name))
+                          (setq bookkeeping-namespace
+                                (concat
+                                 bookkeeping-namespace
+                                 " function "
+                                 imenu-in-function-name))
 
                           ;; Add $this special variable in class function scope
                           (when (and imenu-in-class-name
                                      (not imenu-in-interface-class))
                             (let ((bookkeeping-method-this (concat bookkeeping-namespace " id $this")))
                               (unless (gethash bookkeeping-method-this bookkeeping)
-                                (puthash bookkeeping-method-this 1 bookkeeping)))))
+                                (puthash
+                                 bookkeeping-method-this
+                                 1
+                                 bookkeeping)))))
 
                         ;; Anonymous function level
                         (when in-anonymous-function-nesting-level
@@ -1305,7 +1322,10 @@ SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
                         (when bookkeeping-alternative-namespace
                           (setq bookkeeping-alternative-namespace (concat bookkeeping-alternative-namespace " id " bookkeeping-variable-name))))
 
-                      (phps-mode-debug-message (message "Bookkeeping-namespace: '%s'" bookkeeping-namespace))
+                      (phps-mode-debug-message
+                       (message
+                        "Bookkeeping-namespace: '%s'"
+                        bookkeeping-namespace))
 
                       ;; Support for ($i = 0), if ($a = ), if (!$ = ), while ($a = ) and do {} while ($a = ) assignments here
                       (when (and
@@ -1411,13 +1431,18 @@ SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
 
                       ;; Do we have a assignment?
                       (when bookkeeping-in-assignment
-                        (let ((declarations (gethash bookkeeping-namespace bookkeeping)))
+                        (let ((declarations
+                               (gethash
+                                bookkeeping-namespace
+                                bookkeeping)))
                           ;; Track number of times this variable is defined
                           (unless declarations
                             (setq declarations 0))
                           (setq declarations (1+ declarations))
                           (phps-mode-debug-message
-                           (message "Bookkeeping-assignment: '%s'" bookkeeping-namespace))
+                           (message
+                            "Bookkeeping-assignment: '%s'"
+                            bookkeeping-namespace))
                           (puthash bookkeeping-namespace declarations bookkeeping)))
 
                       (if bookkeeping-is-superglobal
@@ -1643,10 +1668,11 @@ SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
 
                  ((string= token "}")
 
-                  (when (and imenu-open-namespace-level
-                             (= imenu-open-namespace-level imenu-nesting-level)
-                             imenu-in-namespace-name
-                             imenu-namespace-index)
+                  (when (and
+                         imenu-open-namespace-level
+                         (= imenu-open-namespace-level imenu-nesting-level)
+                         imenu-in-namespace-name
+                         imenu-namespace-index)
                     (let ((imenu-add-list (nreverse imenu-namespace-index)))
                       (push `(,imenu-in-namespace-name . ,imenu-add-list) imenu-index))
                     (setq imenu-in-namespace-name nil))
@@ -1680,8 +1706,9 @@ SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
                     (setq imenu-namespace-index '())
                     (setq imenu-in-namespace-declaration nil))
 
-                   ((and (or (equal token 'T_STRING)
-                             (equal token 'T_NS_SEPARATOR))
+                   ((and (or (equal token 'T_NAME_RELATIVE)
+                             (equal token 'T_NAME_FULLY_QUALIFIED)
+                             (equal token 'T_NAME_QUALIFIED))
                          (setq
                           imenu-in-namespace-name
                           (concat
