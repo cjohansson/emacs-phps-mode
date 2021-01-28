@@ -1582,7 +1582,7 @@
            (phps-mode-lexer--begin 'ST_END_HEREDOC))
 
          (push
-          phps-mode-lexer--heredoc-label
+          `(,phps-mode-lexer--heredoc-label ,start ,end)
           phps-mode-lexer--heredoc-label-stack)
          ;; (message "Found heredoc or nowdoc at %s with label %s" data phps-mode-lexer--heredoc-label)
 
@@ -1691,7 +1691,8 @@
       (phps-mode-lexer--match-macro
        (and ST_HEREDOC (looking-at phps-mode-lexer--any-char))
        ;; Check for $, ${ and {$ forward
-       (let ((old-start (car (cdr (car phps-mode-lexer--generated-tokens)))))
+       (let ((old-start (car (cdr (car phps-mode-lexer--heredoc-label-stack))))
+             (old-end (point)))
          (let ((string-start
                 (search-forward-regexp
                  (concat
@@ -1722,18 +1723,18 @@
                      )
                     data)
                    ;; (message "Found heredoc end at %s-%s" start end)
-                   (phps-mode-lexer--begin
-                    'ST_END_HEREDOC)
                    (phps-mode-lexer--return-token-with-val
                     'T_ENCAPSED_AND_WHITESPACE
-                    old-start
-                    start))
+                    old-end
+                    start)
+                   (phps-mode-lexer--begin
+                    'ST_END_HEREDOC))
 
                   (t
                    ;; (message "Found variable at '%s'.. Skipping forward to %s" data start)
                    (phps-mode-lexer--return-token-with-val
                     'T_ENCAPSED_AND_WHITESPACE
-                    old-start
+                    old-end
                     start))
 
                   ))
