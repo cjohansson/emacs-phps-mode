@@ -453,16 +453,16 @@
    (should
     (equal
      phps-mode-lex-analyzer--tokens
-     '((T_OPEN_TAG 1 . 7) (T_VARIABLE 7 . 11) ("=" 12 . 13) ("\"" 14 . 15) (T_CONSTANT_ENCAPSED_STRING 15 . 39) (T_VARIABLE 39 . 44) (T_OBJECT_OPERATOR 44 . 46) (T_STRING 46 . 51) (T_CONSTANT_ENCAPSED_STRING 51 . 64) ("\"" 64 . 65) ("." 65 . 66) (T_VARIABLE 66 . 69) ("." 69 . 70) (T_CONSTANT_ENCAPSED_STRING 70 . 73) (";" 73 . 74) (";" 75 . 77) (T_CLOSE_TAG 75 . 77)))))
+     '((T_OPEN_TAG 1 . 7) (T_VARIABLE 7 . 11) ("=" 12 . 13) ("\"" 14 . 15) (T_CONSTANT_ENCAPSED_STRING 15 . 39) (T_VARIABLE 39 . 44) (T_OBJECT_OPERATOR 44 . 46) (T_STRING 46 . 51) (T_CONSTANT_ENCAPSED_STRING 51 . 64) ("\"" 64 . 65) ("." 65 . 66) (T_VARIABLE 66 . 69) ("." 69 . 70) (T_CONSTANT_ENCAPSED_STRING 70 . 73) (";" 73 . 74) (T_CLOSE_TAG 75 . 77)))))
 
   (phps-mode-test--with-buffer
    "<?php $wpdb->get_var(\"SELECT post_parent FROM $wpdb->posts WHERE ID = '\".$id.\"'\"); ?>"
-   nil
+   "Wordpress example object operator with sql in double quotes with variable inside"
    ;; (message "Tokens 2: %s" phps-mode-lex-analyzer--tokens)
    (should
     (equal
      phps-mode-lex-analyzer--tokens
-     '((T_OPEN_TAG 1 . 7) (T_VARIABLE 7 . 12) (T_OBJECT_OPERATOR 12 . 14) (T_STRING 14 . 21) ("(" 21 . 22) ("\"" 22 . 23) (T_ENCAPSED_AND_WHITESPACE 23 . 47) (T_VARIABLE 47 . 52) (T_OBJECT_OPERATOR 52 . 54) (T_STRING 54 . 59) (T_CONSTANT_ENCAPSED_STRING 59 . 72) ("\"" 72 . 73) ("." 73 . 74) (T_VARIABLE 74 . 77) ("." 77 . 78) (T_CONSTANT_ENCAPSED_STRING 78 . 81) (")" 81 . 82) (";" 82 . 83) (";" 84 . 86) (T_CLOSE_TAG 84 . 86)))))
+     '((T_OPEN_TAG 1 . 7) (T_VARIABLE 7 . 12) (T_OBJECT_OPERATOR 12 . 14) (T_STRING 14 . 21) ("(" 21 . 22) ("\"" 22 . 23) (T_CONSTANT_ENCAPSED_STRING 23 . 47) (T_VARIABLE 47 . 52) (T_OBJECT_OPERATOR 52 . 54) (T_STRING 54 . 59) (T_CONSTANT_ENCAPSED_STRING 59 . 72) ("\"" 72 . 73) ("." 73 . 74) (T_VARIABLE 74 . 77) ("." 77 . 78) (T_CONSTANT_ENCAPSED_STRING 78 . 81) (")" 81 . 82) (";" 82 . 83) (T_CLOSE_TAG 84 . 86)))))
 
   (phps-mode-test--with-buffer
    "<?php $this->add($option['style']['selectors'], array('background' => \"{$value['color']} url('{$value['image']}')\"));"
@@ -471,7 +471,7 @@
    (should
     (equal
      phps-mode-lex-analyzer--tokens
-     '((T_OPEN_TAG 1 . 7) (T_VARIABLE 7 . 12) (T_OBJECT_OPERATOR 12 . 14) (T_STRING 14 . 17) ("(" 17 . 18) (T_VARIABLE 18 . 25) ("[" 25 . 26) (T_CONSTANT_ENCAPSED_STRING 26 . 33) ("]" 33 . 34) ("[" 34 . 35) (T_CONSTANT_ENCAPSED_STRING 35 . 46) ("]" 46 . 47) ("," 47 . 48) (T_ARRAY 49 . 54) ("(" 54 . 55) (T_CONSTANT_ENCAPSED_STRING 55 . 67) (T_DOUBLE_ARROW 68 . 70) ("\"" 71 . 72) (T_ENCAPSED_AND_WHITESPACE 72 . 72) (T_CURLY_OPEN 72 . 73) (T_VARIABLE 73 . 79) ("[" 79 . 80) (T_CONSTANT_ENCAPSED_STRING 80 . 87) ("]" 87 . 88) ("}" 88 . 89) (T_CONSTANT_ENCAPSED_STRING 89 . 95) (T_CURLY_OPEN 95 . 96) (T_VARIABLE 96 . 102) ("[" 102 . 103) (T_CONSTANT_ENCAPSED_STRING 103 . 110) ("]" 110 . 111) ("}" 111 . 112) (T_CONSTANT_ENCAPSED_STRING 112 . 114) ("\"" 114 . 115) (")" 115 . 116) (")" 116 . 117) (";" 117 . 118)))))
+     '((T_OPEN_TAG 1 . 7) (T_VARIABLE 7 . 12) (T_OBJECT_OPERATOR 12 . 14) (T_STRING 14 . 17) ("(" 17 . 18) (T_VARIABLE 18 . 25) ("[" 25 . 26) (T_CONSTANT_ENCAPSED_STRING 26 . 33) ("]" 33 . 34) ("[" 34 . 35) (T_CONSTANT_ENCAPSED_STRING 35 . 46) ("]" 46 . 47) ("," 47 . 48) (T_ARRAY 49 . 54) ("(" 54 . 55) (T_CONSTANT_ENCAPSED_STRING 55 . 67) (T_DOUBLE_ARROW 68 . 70) ("\"" 71 . 72) (T_CURLY_OPEN 72 . 73) (T_VARIABLE 73 . 79) ("[" 79 . 80) (T_CONSTANT_ENCAPSED_STRING 80 . 87) ("]" 87 . 88) ("}" 88 . 89) (T_CONSTANT_ENCAPSED_STRING 89 . 95) (T_CURLY_OPEN 95 . 96) (T_VARIABLE 96 . 102) ("[" 102 . 103) (T_CONSTANT_ENCAPSED_STRING 103 . 110) ("]" 110 . 111) ("}" 111 . 112) (T_CONSTANT_ENCAPSED_STRING 112 . 114) ("\"" 114 . 115) (")" 115 . 116) (")" 116 . 117) (";" 117 . 118)))))
 
   (phps-mode-test--with-buffer
    "<?php\n$var = <<<EOD\nrandom {$value['color']->property} again {$value->head()}; random\nEOD;\n"
@@ -489,7 +489,7 @@
    (should
     (equal
      phps-mode-lex-analyzer--tokens
-     '((T_OPEN_TAG 1 . 7) (T_ECHO 7 . 11) ("\"" 12 . 13) (T_ENCAPSED_AND_WHITESPACE 13 . 15) (T_VARIABLE 15 . 22) (T_CONSTANT_ENCAPSED_STRING 22 . 24) ("\"" 24 . 25) (";" 25 . 26)))))
+     '((T_OPEN_TAG 1 . 7) (T_ECHO 7 . 11) ("\"" 12 . 13) (T_CONSTANT_ENCAPSED_STRING 13 . 15) (T_VARIABLE 15 . 22) (T_CONSTANT_ENCAPSED_STRING 22 . 24) ("\"" 24 . 25) (";" 25 . 26)))))
 
   (phps-mode-test--with-buffer
    "<?php $var = \"\\\\\";"
@@ -506,7 +506,7 @@
    (should
     (equal
      phps-mode-lex-analyzer--tokens
-     '((T_OPEN_TAG 1 . 7) (T_VARIABLE 8 . 15) ("=" 16 . 17) (T_OBJECT_CAST 18 . 26) (T_ARRAY 27 . 32) ("(" 32 . 33) (T_CONSTANT_ENCAPSED_STRING 38 . 52) (T_DOUBLE_ARROW 53 . 55) (T_LNUMBER 56 . 58) (")" 59 . 60) (";" 60 . 61) (T_VARIABLE 62 . 68) ("=" 69 . 70) (T_CONSTANT_ENCAPSED_STRING 71 . 79) (";" 79 . 80) (T_ECHO 81 . 85) (T_VARIABLE 86 . 93) (T_OBJECT_OPERATOR 93 . 95) ("{" 95 . 96) ("\"" 96 . 97) (T_ENCAPSED_AND_WHITESPACE 97 . 103) (T_VARIABLE 103 . 109) ("\"" 109 . 110) ("}" 110 . 111) (";" 111 . 112)))))
+     '((T_OPEN_TAG 1 . 7) (T_VARIABLE 8 . 15) ("=" 16 . 17) (T_OBJECT_CAST 18 . 26) (T_ARRAY 27 . 32) ("(" 32 . 33) (T_CONSTANT_ENCAPSED_STRING 38 . 52) (T_DOUBLE_ARROW 53 . 55) (T_LNUMBER 56 . 58) (")" 59 . 60) (";" 60 . 61) (T_VARIABLE 62 . 68) ("=" 69 . 70) (T_CONSTANT_ENCAPSED_STRING 71 . 79) (";" 79 . 80) (T_ECHO 81 . 85) (T_VARIABLE 86 . 93) (T_OBJECT_OPERATOR 93 . 95) ("{" 95 . 96) ("\"" 96 . 97) (T_CONSTANT_ENCAPSED_STRING 97 . 103) (T_VARIABLE 103 . 109) ("\"" 109 . 110) ("}" 110 . 111) (";" 111 . 112)))))
 
   (phps-mode-test--with-buffer
    "<?php\nclass MyClass { function myFunction() { return 'hello'; }}\n$class = new MyClass();\n$function = \"Function\";\necho $class->{\"my$function\"}();"
@@ -514,7 +514,7 @@
    (should
     (equal
      phps-mode-lex-analyzer--tokens
-     '((T_OPEN_TAG 1 . 7) (T_CLASS 7 . 12) (T_STRING 13 . 20) ("{" 21 . 22) (T_FUNCTION 23 . 31) (T_STRING 32 . 42) ("(" 42 . 43) (")" 43 . 44) ("{" 45 . 46) (T_RETURN 47 . 53) (T_CONSTANT_ENCAPSED_STRING 54 . 61) (";" 61 . 62) ("}" 63 . 64) ("}" 64 . 65) (T_VARIABLE 66 . 72) ("=" 73 . 74) (T_NEW 75 . 78) (T_STRING 79 . 86) ("(" 86 . 87) (")" 87 . 88) (";" 88 . 89) (T_VARIABLE 90 . 99) ("=" 100 . 101) (T_CONSTANT_ENCAPSED_STRING 102 . 112) (";" 112 . 113) (T_ECHO 114 . 118) (T_VARIABLE 119 . 125) (T_OBJECT_OPERATOR 125 . 127) ("{" 127 . 128) ("\"" 128 . 129) (T_ENCAPSED_AND_WHITESPACE 129 . 131) (T_VARIABLE 131 . 140) ("\"" 140 . 141) ("}" 141 . 142) ("(" 142 . 143) (")" 143 . 144) (";" 144 . 145)))))
+     '((T_OPEN_TAG 1 . 7) (T_CLASS 7 . 12) (T_STRING 13 . 20) ("{" 21 . 22) (T_FUNCTION 23 . 31) (T_STRING 32 . 42) ("(" 42 . 43) (")" 43 . 44) ("{" 45 . 46) (T_RETURN 47 . 53) (T_CONSTANT_ENCAPSED_STRING 54 . 61) (";" 61 . 62) ("}" 63 . 64) ("}" 64 . 65) (T_VARIABLE 66 . 72) ("=" 73 . 74) (T_NEW 75 . 78) (T_STRING 79 . 86) ("(" 86 . 87) (")" 87 . 88) (";" 88 . 89) (T_VARIABLE 90 . 99) ("=" 100 . 101) (T_CONSTANT_ENCAPSED_STRING 102 . 112) (";" 112 . 113) (T_ECHO 114 . 118) (T_VARIABLE 119 . 125) (T_OBJECT_OPERATOR 125 . 127) ("{" 127 . 128) ("\"" 128 . 129) (T_CONSTANT_ENCAPSED_STRING 129 . 131) (T_VARIABLE 131 . 140) ("\"" 140 . 141) ("}" 141 . 142) ("(" 142 . 143) (")" 143 . 144) (";" 144 . 145)))))
 
   (phps-mode-test--with-buffer
    "<?php\n$product_path = \"${filename[0]}/${filename[1]}/\";\n    echo 'here';\n"
@@ -523,7 +523,7 @@
    (should
     (equal
      phps-mode-lex-analyzer--tokens
-     '((T_OPEN_TAG 1 . 7) (T_VARIABLE 7 . 20) ("=" 21 . 22) ("\"" 23 . 24) (T_ENCAPSED_AND_WHITESPACE 24 . 24) (T_DOLLAR_OPEN_CURLY_BRACES 24 . 26) (T_STRING_VARNAME 26 . 34) ("[" 34 . 35) (T_LNUMBER 35 . 36) ("]" 36 . 37) ("}" 37 . 38) (T_CONSTANT_ENCAPSED_STRING 38 . 39) (T_DOLLAR_OPEN_CURLY_BRACES 39 . 41) (T_STRING_VARNAME 41 . 49) ("[" 49 . 50) (T_LNUMBER 50 . 51) ("]" 51 . 52) ("}" 52 . 53) (T_CONSTANT_ENCAPSED_STRING 53 . 54) ("\"" 54 . 55) (";" 55 . 56) (T_ECHO 61 . 65) (T_CONSTANT_ENCAPSED_STRING 66 . 72) (";" 72 . 73)))))
+     '((T_OPEN_TAG 1 . 7) (T_VARIABLE 7 . 20) ("=" 21 . 22) ("\"" 23 . 24) (T_DOLLAR_OPEN_CURLY_BRACES 24 . 26) (T_STRING_VARNAME 26 . 34) ("[" 34 . 35) (T_LNUMBER 35 . 36) ("]" 36 . 37) ("}" 37 . 38) (T_CONSTANT_ENCAPSED_STRING 38 . 39) (T_DOLLAR_OPEN_CURLY_BRACES 39 . 41) (T_STRING_VARNAME 41 . 49) ("[" 49 . 50) (T_LNUMBER 50 . 51) ("]" 51 . 52) ("}" 52 . 53) (T_CONSTANT_ENCAPSED_STRING 53 . 54) ("\"" 54 . 55) (";" 55 . 56) (T_ECHO 61 . 65) (T_CONSTANT_ENCAPSED_STRING 66 . 72) (";" 72 . 73)))))
 
   )
 
