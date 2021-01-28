@@ -1070,7 +1070,7 @@
         (looking-at (concat phps-mode-lexer--label "[\\[}]")))
        (let* ((start (match-beginning 0))
               (end (1- (match-end 0)))
-              (data (buffer-substring-no-properties start end)))
+              (_data (buffer-substring-no-properties start end)))
          (phps-mode-lexer--yyless 1)
          (phps-mode-lexer--yy-pop-state)
          (phps-mode-lexer--yy-push-state 'ST_IN_SCRIPTING)
