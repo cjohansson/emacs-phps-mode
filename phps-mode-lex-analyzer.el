@@ -684,14 +684,31 @@
 
                 (catch 'quit
                   (dolist (token old-tokens)
-                    (let ((start (car (cdr token)))
+                    (let ((token-type (car token))
+                          (start (car (cdr token)))
                           (end (cdr (cdr token))))
                       (if (< end change-start)
                           (push token head-tokens)
                         (when (< start change-start)
+                          (when (equal token-type 'T_END_HEREDOC)
+                            ;; When incremental start is on a T_END_HEREDOC token
+                            ;; rewind another token to allow expansion of
+                            ;; T_ENCAPSED_AND_WHITESPACE
+                            (phps-mode-debug-message
+                             (message
+                              "Rewinding incremental start due to 'T_END_HEREDOC token"))
+                            (let ((previous-token (pop head-tokens)))
+                              (setq
+                               start
+                               (car (cdr previous-token)))))
+
                           (phps-mode-debug-message
-                           (message "New incremental-start-new-buffer: %s" start))
-                          (setq incremental-start-new-buffer start))
+                           (message
+                            "New incremental-start-new-buffer: %s"
+                            start))
+                          (setq
+                           incremental-start-new-buffer
+                           start))
                         (throw 'quit "break")))))
 
                 (setq head-tokens (nreverse head-tokens))
@@ -705,15 +722,13 @@
                       (phps-mode-debug-message
                        (message "Found head tokens"))
 
-                      ;; TODO Change on ST_END_HEREDOC should start before it
-
                       ;; In old buffer:
                       ;; 1. Determine state (incremental-state) and state-stack (incremental-state-stack) heredoc label (incremental-heredoc-label) heredoc-label-stack (heredoc-label-stack) before incremental start
                       ;; 2. Build list of states before incremental start (head-states)
                       (catch 'quit
                         (dolist (state-object (nreverse old-states))
                           (let ((end (nth 1 state-object)))
-                            (if (< end change-start)
+                            (if (<= end incremental-start-new-buffer)
                                 (progn
                                   (setq incremental-state (nth 2 state-object))
                                   (setq incremental-state-stack (nth 3 state-object))
@@ -1231,6 +1246,9 @@ SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
                                   (equal bookkeeping-variable-name "$_REQUEST")
                                   (equal bookkeeping-variable-name "$_SERVER")
                                   (equal bookkeeping-variable-name "$_SESSION")
+                                  (equal bookkeeping-variable-name "$argc")
+                                  (equal bookkeeping-variable-name "$argv")
+                                  (equal bookkeeping-variable-name "$http_​response_​header")
                                   ))
                         (setq bookkeeping-is-superglobal t))
 

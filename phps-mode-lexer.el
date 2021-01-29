@@ -260,6 +260,15 @@
 
 (defun phps-mode-lexer--emit-token (token start end)
   "Emit TOKEN with START and END."
+  (when (= start end)
+    (signal
+     'phps-lexer-error
+     (list
+      (format "Empty token detected: %s %s %s" token start end)
+      start
+      end
+      token)))
+
   (semantic-lex-push-token (semantic-lex-token token start end))
   (push `(,token ,start . ,end) phps-mode-lexer--generated-tokens)
 
