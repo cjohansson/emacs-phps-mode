@@ -692,6 +692,137 @@
      ("[" array_pair_list "]")
      )
 
+    (for_statement
+     statement
+     (":" inner_statement_list T_ENDFOR ";")
+     )
+
+    (foreach_statement
+     statement
+     (":" inner_statement_list T_ENDFOREACH ";")
+     )
+
+    (declare_statement
+     statement
+     (":" inner_statement_list T_ENDDECLARE ";")
+     )
+
+    (switch_case_list
+     ("{" case_list "}")
+     ("{" ";" case_list "}")
+     (":" case_list T_ENDSWITCH ";")
+     (":" ";" case_list T_ENDSWITCH ";")
+     )
+
+    (case_list
+     %empty
+     (case_list T_CASE expr case_separator inner_statement_list)
+     (case_list T_DEFAULT case_separator inner_statement_list)
+     )
+
+    (case_separator
+     ":"
+     ";"
+     )
+
+    (match
+     (T_MATCH "(" expr ")" "{" match_arm_list "}")
+     )
+
+    (match_arm_list
+     %empty
+     (non_empty_match_arm_list possible_comma)
+     )
+
+    (non_empty_match_arm_list
+     match_arm
+     (non_empty_match_arm_list "," match_arm)
+     )
+
+    (match_arm
+     (match_arm_cond_list possible_comma T_DOUBLE_ARROW expr)
+     (T_DEFAULT possible_comma T_DOUBLE_ARROW expr)
+     )
+
+    (match_arm_cond_list
+     expr
+     (match_arm_cond_list "," expr)
+     )
+
+    (while_statement
+     statement
+     (":" inner_statement_list T_ENDWHILE ";")
+     )
+
+    (if_stmt_without_else
+     (T_IF "(" expr ")" statement)
+     (if_stmt_without_else T_ELSEIF "(" expr ")" statement)
+     )
+
+    (if_stmt
+     (if_stmt_without_else T_NOELSE)
+     (if_stmt_without_else T_ELSE statement)
+     )
+
+    (alt_if_stmt_without_else
+     (T_IF "(" expr ")" ":" inner_statement_list)
+     (alt_if_stmt_without_else T_ELSEIF "(" expr ")" ":" inner_statement_list)
+     )
+
+    (alt_if_stmt
+     (alt_if_stmt_without_else T_ENDIF ";")
+     (alt_if_stmt_without_else T_ELSE ":" inner_statement_list T_ENDIF ";")
+     )
+
+    (parameter_list
+     (non_empty_parameter_list possible_comma)
+     %empty
+     )
+
+    (non_empty_parameter_list
+     attributed_parameter
+     (non_empty_parameter_list "," attributed_parameter)
+     )
+
+    (attributed_parameter
+     (attributes parameter)
+     parameter
+     )
+
+    (optional_visibility_modifier
+     %empty
+     T_PUBLIC
+     T_PROTECTED
+     T_PRIVATE
+     )
+
+    (parameter
+     (optional_visibility_modifier optional_type_without_static is_reference is_variadic T_VARIABLE backup_doc_comment)
+     (is_reference is_variadic T_VARIABLE backup_doc_comment)
+     (optional_visibility_modifier optional_type_without_static is_reference is_variadic T_VARIABLE backup_doc_comment "=" expr)
+     )
+
+    (optional_type_without_static
+     %empty
+     type_expr_without_static
+     )
+
+    (type_expr
+     type
+     ("?" type)
+     union_type
+     )
+
+    (type
+     type_without_static
+     T_STATIC
+     )
+
+    (union_type
+     (type "|" type)
+     (union_type "|" type)
+     )
+
     )
   "The productions of grammar.")
 
