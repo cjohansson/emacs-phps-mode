@@ -4,12 +4,17 @@ ifdef emacs
 endif
 EMACS_CMD := $(EMACS) -Q -batch -L . -L test/
 
-EL  := admin/phps-mode-automation.el phps-mode-flymake.el phps-mode-lex-analyzer.el phps-mode-lexer.el phps-mode-macros.el phps-mode-syntax-table.el  phps-mode-parser-grammar-macro.el phps-mode.el phps-mode-test.el test/phps-mode-test-lex-analyzer.el test/phps-mode-test-integration.el test/phps-mode-test-lexer.el test/phps-mode-test-parser.el test/phps-mode-test-syntax-table.el
+EL  := phps-mode-flymake.el phps-mode-lex-analyzer.el phps-mode-lexer.el phps-mode-macros.el phps-mode-syntax-table.el  phps-mode-parser-grammar-macro.el phps-mode.el phps-mode-test.el test/phps-mode-test-lex-analyzer.el test/phps-mode-test-integration.el test/phps-mode-test-lexer.el test/phps-mode-test-parser.el test/phps-mode-test-syntax-table.el
 ELC := $(EL:.el=.elc)
 
 .PHONY: clean
 clean:
 	rm -f $(ELC)
+
+.PHONY: generate-parser
+generate-parser:
+	$(EMACS_CMD) -l ~/.emacs.d/emacs-parser-generator/parser-generator-lr-export.el -l test/phps-mode-lexer.el -l admin/phps-mode-automation.el
+
 
 .PHONY: compile
 compile:
@@ -25,7 +30,6 @@ test-integration:
 .PHONY: test-lex-analyzer
 test-lex-analyzer:
 	$(EMACS_CMD) -l test/phps-mode-test-lex-analyzer.el
-
 
 .PHONY: test-lexer
 test-lexer:
