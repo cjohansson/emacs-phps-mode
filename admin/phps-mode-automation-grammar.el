@@ -903,7 +903,83 @@
     (trait_precedence
      (absolute_trait_method_reference T_INSTEADOF class_name_list))
 
-    
+    (trait_alias
+     (trait_method_reference T_AS T_STRING)
+     (trait_method_reference T_AS reserved_non_modifiers)
+     (trait_method_reference T_AS member_modifier identifier)
+     (trait_method_reference T_AS member_modifier))
+
+    (trait_method_reference
+     identifier
+     absolute_trait_method_reference)
+
+    (absolute_trait_method_reference
+     (class_name T_PAAMAYIM_NEKUDOTAYIM identifier))
+
+    (method_body
+     ";"
+     "{" inner_statement_list "}")
+
+    (variable_modifiers
+     non_empty_member_modifiers
+     T_VAR)
+
+    (method_modifiers
+     %empty
+     non_empty_member_modifiers)
+
+    (non_empty_member_modifiers
+     member_modifier
+     (non_empty_member_modifiers member_modifier))
+
+    (member_modifier
+     T_PUBLIC
+     T_PROTECTED
+     T_PRIVATE
+     T_STATIC
+     T_ABSTRACT
+     T_FINAL)
+
+    (property_list
+     (property_list "," property)
+     property)
+
+    (property
+     (T_VARIABLE backup_doc_comment)
+     (T_VARIABLE "=" expr backup_doc_comment))
+
+    (class_const_list
+     (class_const_list "," class_const_decl)
+     class_const_decl)
+
+    (class_const_decl
+     (identifier "=" expr backup_doc_comment))
+
+    (const_decl
+     (T_STRING "=" expr backup_doc_comment))
+
+    (echo_expr_list
+     (echo_expr_list "," echo_expr)
+     echo_expr)
+
+    (echo_expr
+     expr)
+
+    (for_exprs
+     %empty
+     non_empty_for_exprs)
+
+    (non_empty_for_exprs
+     (non_empty_for_exprs "," expr)
+     expr)
+
+    (anonymous_class
+     (T_CLASS ctor_arguments extends_from implements_list backup_doc_comment "{" class_statement_list "}"))
+
+    (new_expr
+     (T_NEW class_name_reference ctor_arguments)
+     (T_NEW anonymous_class)
+     (T_NEW attributes anonymous_class))
 
     )
   "The productions of grammar.")
