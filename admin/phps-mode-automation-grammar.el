@@ -53,6 +53,7 @@
     ctor_arguments
     declare_statement
     dereferencable_scalar
+    echo_expr
     echo_expr_list
     encaps_list
     encaps_var
@@ -175,6 +176,7 @@
     ")"
     "*"
     "+"
+    "."
     ","
     "-"
     "/"
@@ -187,58 +189,71 @@
     "@"
     "["
     "]"
+    "}"
+    "{"
     "^"
     "|"
     "~"
+    "`"
+    "'"
+    "\""
+    "$"
+    PREC_ARROW_FUNCTION
     T_ABSTRACT
-    T_AND
+    T_AND_EQUAL
     T_ARG
     T_ARRAY
+    T_ARRAY_CAST
     T_ARROW
     T_AS
     T_ASSIGN
     T_ATTRIBUTE
     T_BAD
-    T_BOOL
-    T_BOOLEAN
+    T_BOOL_CAST
+    T_BOOLEAN_AND
+    T_BOOLEAN_OR
     T_BREAK
     T_CALL
     T_CALLABLE
     T_CASE
     T_CATCH
     T_CLASS
+    T_CLASS_C
     T_CLONE
     T_CLOSE
     T_CLOSURE
     T_COALESCE
+    T_COALESCE_EQUAL
     T_COMMENT
     T_COMPILER
-    T_CONCAT
+    T_CONCAT_EQUAL
     T_CONDITIONAL
     T_CONST
-    T_CONSTANT
+    T_CONSTANT_ENCAPSED_STRING
     T_CONTINUE
-    T_CURLY
+    T_CURLY_OPEN
     T_DEC
     T_DECL
     T_DECLARE
     T_DEFAULT
     T_DIM
     T_DIR
-    T_DIV
+    T_DIV_EQUAL
     T_DNUMBER
     T_DO
     T_DOC
-    T_DOLLAR
+    T_DOLLAR_OPEN_CURLY_BRACES
     T_DOUBLE
+    T_DOUBLE_ARROW
+    T_DOUBLE_CAST
     T_ECHO
     T_ELLIPSIS
     T_ELSE
     T_ELSEIF
     T_EMPTY
     T_ENCAPS
-    T_ENCAPSED
-    T_END
+    T_ENCAPSED_AND_WHITESPACE
+    T_END_HEREDOC
     T_ENDDECLARE
     T_ENDFOR
     T_ENDFOREACH
@@ -259,52 +274,66 @@
     T_FOREACH
     T_FQ
     T_FUNC
+    T_FUNC_C
     T_FUNCTION
     T_GLOBAL
     T_GOTO
     T_GREATER
     T_GROUP
-    T_HALT
+    T_HALT_COMPILER
     T_IDENTICAL
     T_IF
     T_IMPLEMENTS
     T_INC
     T_INCLUDE
-    T_INLINE
+    T_INCLUDE_ONCE
+    T_INLINE_HTML
     T_INSTANCEOF
     T_INSTEADOF
-    T_INT
+    T_INT_CAST
     T_INTERFACE
-    T_IS
+    T_IS_IDENTICAL
+    T_IS_NOT_IDENTICAL
+    T_IS_EQUAL
+    T_IS_NOT_EQUAL
+    T_IS_SMALLER_OR_EQUAL
+    T_IS_GREATER_OR_EQUAL
     T_ISSET
     T_LABEL
     T_LINE
     T_LIST
     T_LNUMBER
-    T_LOGICAL
+    T_LOGICAL_AND
+    T_LOGICAL_OR
+    T_LOGICAL_XOR
     T_MAGIC
     T_MATCH
     T_METHOD
-    T_MINUS
-    T_MOD
-    T_MUL
-    T_NAME
-    T_NAMED
+    T_METHOD_C
+    T_MINUS_EQUAL
+    T_MOD_EQUAL
+    T_MUL_EQUAL
+    T_NAME_FULLY_QUALIFIED
+    T_NAME_RELATIVE
+    T_NAME_QUALIFIED
     T_NAMESPACE
     T_NEW
     T_NOELSE
-    T_NS
-    T_NULLSAFE
-    T_NUM
-    T_OBJECT
+    T_NS_C
+    T_NULLSAFE_OBJECT_OPERATOR
+    T_NUM_STRING
+    T_NS_SEPARATOR
+    T_OBJECT_CAST
+    T_OBJECT_OPERATOR
     T_OPEN
     T_OPERATOR
-    T_OR
-    T_PAAMAYIM
+    T_OR_EQUAL
+    T_PAAMAYIM_NEKUDOTAYIM
     T_PARAM
-    T_PLUS
+    T_PLUS_EQUAL
     T_POST
     T_POW
+    T_POW_EQUAL
     T_PRE
     T_PRINT
     T_PRIVATE
@@ -313,31 +342,39 @@
     T_PUBLIC
     T_REF
     T_REQUIRE
+    T_REQUIRE_ONCE
     T_RETURN
     T_SHELL
     T_SILENCE
     T_SL
+    T_SL_EQUAL
     T_SPACESHIP
     T_SR
-    T_START
+    T_SR_EQUAL
+    T_START_HEREDOC
     T_STATIC
     T_STMT
     T_STRING
+    T_STRING_CAST
+    T_STRING_VARNAME
     T_SWITCH
     T_THROW
     T_TRAIT
+    T_TRAIT_C
     T_TRY
     T_TYPE
     T_UNARY
     T_UNPACK
     T_UNSET
+    T_UNSET_CAST
     T_USE
     T_VAR
     T_VARIABLE
     T_WHILE
     T_WHITESPACE
-    T_XOR
+    T_XOR_EQUAL
     T_YIELD
+    T_YIELD_FROM
     )
   "The terminals of grammar.")
 
@@ -1055,7 +1092,7 @@
      (T_EXIT exit_expr)
      ("@" expr)
      scalar
-     ("`'" backticks_expr "`")
+     ("`" backticks_expr "`")
      (T_PRINT expr)
      T_YIELD
      (T_YIELD expr)
