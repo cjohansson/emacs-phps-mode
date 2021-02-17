@@ -4,6 +4,9 @@
 
 ;;; Code:
 
+
+(require 'phps-mode-lexer)
+
 (defconst
   phps-mode-automation-grammar-non-terminals
   '(
@@ -1323,7 +1326,34 @@
   '%empty
   "The e-identifier of grammar.")
 
-;; TODO Add lex-analyzer as well
+(defconst
+  phps-mode-automation-grammar-eof-identifier
+  '$
+  "The EOF-identifier of grammar.")
+
+(defconst
+  phps-mode-automation-grammar-lex-analyzer-function
+  (lambda(index)
+    (with-current-buffer "*phps-mode-lex-analyzer*"
+      (unless (= (point) index)
+        (goto-char index))
+      (phps-mode-lexer--re2c)
+      (car
+       (nreverse
+        phps-mode-lexer--generated-new-tokens))))
+  "The custom lex-analyzer.")
+
+(defconst
+  phps-mode-automation-grammar-lex-analyzer-get-function
+  (lambda (token)
+    (with-current-buffer "*phps-mode-lex-analyzer*"
+      (let ((start (car (cdr token)))
+            (end (cdr (cdr token))))
+        (when (<= end (point-max))
+          (buffer-substring-no-properties
+           start
+           end)))))
+  "Fetch token meta data.")
 
 
 (provide 'phps-mode-automation-grammar)

@@ -117,6 +117,9 @@
 (defvar-local phps-mode-lexer--generated-tokens nil
   "List of current generated tokens.")
 
+(defvar-local phps-mode-lexer--generated-new-tokens nil
+  "List of current newly generated tokens.")
+
 (defvar-local phps-mode-lexer--state nil
   "Current state of lexer.")
 
@@ -271,6 +274,7 @@
 
   (semantic-lex-push-token (semantic-lex-token token start end))
   (push `(,token ,start . ,end) phps-mode-lexer--generated-tokens)
+  (push `(,token ,start . ,end) phps-mode-lexer--generated-new-tokens)
 
   (phps-mode-debug-message
    (message
@@ -461,6 +465,7 @@
 (defun phps-mode-lexer--re2c ()
   "Elisp port of original Zend re2c lexer."
 
+  (setq phps-mode-lexer--generated-new-tokens nil)
   (setq phps-mode-lexer--restart-flag nil)
   (let ((old-start (point)))
     (phps-mode-debug-message
