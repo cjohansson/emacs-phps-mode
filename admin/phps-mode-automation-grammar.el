@@ -634,9 +634,7 @@
      (T_UNSET "(" unset_variables possible_comma ")" ";" )
      (T_FOREACH "(" expr T_AS foreach_variable ")" foreach_statement)
      (T_FOREACH "(" expr T_AS foreach_variable T_DOUBLE_ARROW foreach_variable ")" foreach_statement)
-     (T_DECLARE "(" const_list ")")
-     declare_statement
-     ";"
+     (T_DECLARE "(" const_list ")" declare_statement ";")
      (T_TRY "{" inner_statement_list "}" catch_list finally_statement)
      (T_GOTO T_STRING ";")
      T_STRING
