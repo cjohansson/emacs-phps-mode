@@ -798,7 +798,7 @@
      )
 
     (if_stmt
-     (if_stmt_without_else T_NOELSE)
+     (if_stmt_without_else (T_NOELSE (%prec 1)))
      (if_stmt_without_else T_ELSE statement)
      )
 
@@ -1060,8 +1060,8 @@
      (expr "%" expr)
      (expr T_SL expr)
      (expr T_SR expr)
-     ("+" expr "~")
-     ("-" expr "~")
+     ("+" expr ("~" (%prec 1)))
+     ("-" expr ("~" (%prec 1)))
      ("!" expr)
      ("~" expr)
      (expr T_IS_IDENTICAL expr)
@@ -1119,7 +1119,7 @@
      %empty)
 
     (backup_fn_flags
-     (PREC_ARROW_FUNCTION %empty))
+     ((PREC_ARROW_FUNCTION (%prec 1)) %empty))
 
     (backup_lex_pos
      %empty)
@@ -1373,10 +1373,23 @@
       (unless (= (point) index)
         (goto-char index))
       (phps-mode-lexer--re2c)
-      (car
-       (nreverse
-        phps-mode-lexer--generated-new-tokens))))
+      (when
+          (boundp
+           'phps-mode-lexer--generated-new-tokens)
+        (car
+         (nreverse
+          phps-mode-lexer--generated-new-tokens)))))
   "The custom lex-analyzer.")
+
+(defconst
+  phps-mode-automation-grammar-precendece-attribute
+  '%prec
+  "The precedence attribute of the grammar.")
+
+(defconst
+  phps-mode-automation-grammar-precedence-comparison-function
+  #'>
+  "The precedence comparison function of the grammar.")
 
 (defconst
   phps-mode-automation-grammar-lex-analyzer-get-function
