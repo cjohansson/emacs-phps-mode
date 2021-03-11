@@ -221,7 +221,7 @@
     "Entered nesting '%s'"
     opening))
   (push
-   opening
+   `(,opening ,(point))
    phps-mode-lexer--nest-location-stack))
 
 (defun phps-mode-lexer--handle-newline ()
@@ -243,16 +243,21 @@
     (when (and
            opening
            (or
-            (and (string= opening "{")
+            (and (string= (car opening) "{")
                  (not (string= closing "}")))
-            (and (string= opening "[")
+            (and (string= (car opening) "[")
                  (not (string= closing "]")))
-            (and (string= opening "(")
+            (and (string= (car opening) "(")
                  (not (string= closing ")")))))
       (signal
        'phps-lexer-error
        (list
-        (format "Bad nesting '%s' vs '%s' at %d'" opening closing (point))
+        (format
+         "Bad nesting '%s' started at '%s' vs '%s' at %d'"
+         (car opening)
+         (car (cdr opening))
+         closing
+         (point))
         (point))))
     (phps-mode-debug-message
      (message
