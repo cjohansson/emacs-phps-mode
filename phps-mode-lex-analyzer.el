@@ -1706,9 +1706,11 @@ SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
                     (setq imenu-namespace-index '())
                     (setq imenu-in-namespace-declaration nil))
 
-                   ((and (or (equal token 'T_NAME_RELATIVE)
-                             (equal token 'T_NAME_FULLY_QUALIFIED)
-                             (equal token 'T_NAME_QUALIFIED))
+                   ((and (or
+                          (equal token 'T_STRING)
+                          (equal token 'T_NAME_RELATIVE)
+                          (equal token 'T_NAME_FULLY_QUALIFIED)
+                          (equal token 'T_NAME_QUALIFIED))
                          (setq
                           imenu-in-namespace-name
                           (concat
