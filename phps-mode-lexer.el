@@ -308,10 +308,20 @@
    start
    end))
 
-(defun phps-mode-lexer--return-end-token ()
-  "Return end token."
+(defun phps-mode-lexer--check-nesting-at-end ()
+  "Check nesting at end."
   ;; TODO Implement this
   )
+
+;; TODO New token here
+;; TODO New function here
+(defun phps-mode-lexer--return-end-token ()
+  "Return end token."
+  (if (and
+       (phps-mode-lexer--check-nesting-at-end)
+       (phps-mode-parser-grammar-macro-CG 'parser-mode))
+      (phps-mode-lexer--return-token 'T_ERROR)
+    (phps-mode-lexer--return-token 'END)))
 
 (defun phps-mode-lexer--reset-doc-comment ()
   "Reset doc comment."
