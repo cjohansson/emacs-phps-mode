@@ -1691,7 +1691,7 @@
       (phps-mode-lexer--match-macro
        (and ST_HEREDOC (looking-at phps-mode-lexer--any-char))
        ;; Check for $, ${ and {$ forward
-       (let ((start (car (cdr (car phps-mode-lexer--generated-tokens)))))
+       (let ((old-start (car (cdr (car phps-mode-lexer--generated-tokens)))))
          (let ((string-start
                 (search-forward-regexp
                  (concat
@@ -1704,12 +1704,13 @@
                   "\\|\\${"
                   phps-mode-lexer--label
                   "\\)"
-                  ) nil t)))
+                  )
+                 nil
+                 t)))
            (if string-start
                (let* ((start (match-beginning 0))
                       (end (match-end 0))
                       (data (buffer-substring-no-properties start end)))
-                 ;; (message "Found something ending at %s" data)
 
                  (cond
 
@@ -1718,7 +1719,8 @@
                      "\n"
                      phps-mode-lexer--heredoc-label
                      ";?\n"
-                     ) data)
+                     )
+                    data)
                    ;; (message "Found heredoc end at %s-%s" start end)
                    (phps-mode-lexer--begin
                     'ST_END_HEREDOC)
@@ -1739,8 +1741,8 @@
                (signal
                 'phps-lexer-error
                 (list
-                 (format "Found no ending of heredoc starting at %d" start)
-                 start)))))))
+                 (format "Found no ending of heredoc starting at %d" old-start)
+                 old-start)))))))
 
       (phps-mode-lexer--match-macro
        (and ST_NOWDOC (looking-at phps-mode-lexer--any-char))
