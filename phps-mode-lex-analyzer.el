@@ -578,7 +578,11 @@
 (defun phps-mode-lex-analyzer--move-states (start diff)
   "Move lexer states after (or equal to) START with modification DIFF."
   (when phps-mode-lex-analyzer--states
-    (setq phps-mode-lex-analyzer--states (phps-mode-lex-analyzer--get-moved-states phps-mode-lex-analyzer--states start diff))))
+    (setq phps-mode-lex-analyzer--states
+          (phps-mode-lex-analyzer--get-moved-states
+           phps-mode-lex-analyzer--states
+           start
+           diff))))
 
 (defun phps-mode-lex-analyzer--get-moved-states (states start diff)
   "Return moved lexer STATES after (or equal to) START with modification DIFF."
@@ -591,16 +595,38 @@
         (let ((state-start (nth 0 state-object))
               (state-end (nth 1 state-object))
               (state-symbol (nth 2 state-object))
-              (state-stack (nth 3 state-object)))
+              (state-stack (nth 3 state-object))
+              (heredoc-label (nth 4 state-object))
+              (heredoc-label-stack (nth 5 state-object))
+              (nest-location-stack (nth 6 state-object)))
           (if (>= state-start start)
               (let ((new-state-start (+ state-start diff))
                     (new-state-end (+ state-end diff)))
-                (push (list new-state-start new-state-end state-symbol state-stack) new-states))
+                (push
+                 (list
+                  new-state-start
+                  new-state-end
+                  state-symbol
+                  state-stack
+                  heredoc-label
+                  heredoc-label-stack
+                  nest-location-stack)
+                 new-states))
             (if (> state-end start)
                 (let ((new-state-end (+ state-end diff)))
-                  (push (list state-start new-state-end state-symbol state-stack) new-states))
-              (push state-object new-states))))))
-
+                  (push
+                   (list
+                    state-start
+                    new-state-end
+                    state-symbol
+                    state-stack
+                    heredoc-label
+                    heredoc-label-stack
+                    nest-location-stack)
+                   new-states))
+              (push
+               state-object
+               new-states))))))
     new-states))
 
 (defun phps-mode-lex-analyzer--move-tokens (start diff)

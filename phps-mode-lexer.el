@@ -117,6 +117,9 @@
 (defvar-local phps-mode-lexer--generated-tokens nil
   "List of current generated tokens.")
 
+(defvar-local phps-mode-lexer--generated-new-tokens nil
+  "List of current newly generated tokens.")
+
 (defvar-local phps-mode-lexer--state nil
   "Current state of lexer.")
 
@@ -218,7 +221,7 @@
     "Entered nesting '%s'"
     opening))
   (push
-   opening
+   `(,opening ,(point))
    phps-mode-lexer--nest-location-stack))
 
 (defun phps-mode-lexer--handle-newline ()
@@ -240,16 +243,21 @@
     (when (and
            opening
            (or
-            (and (string= opening "{")
+            (and (string= (car opening) "{")
                  (not (string= closing "}")))
-            (and (string= opening "[")
+            (and (string= (car opening) "[")
                  (not (string= closing "]")))
-            (and (string= opening "(")
+            (and (string= (car opening) "(")
                  (not (string= closing ")")))))
       (signal
        'phps-lexer-error
        (list
-        (format "Bad nesting '%s' vs '%s' at %d'" opening closing (point))
+        (format
+         "Bad nesting '%s' started at '%s' vs '%s' at %d'"
+         (car opening)
+         (car (cdr opening))
+         closing
+         (point))
         (point))))
     (phps-mode-debug-message
      (message
@@ -271,6 +279,7 @@
 
   (semantic-lex-push-token (semantic-lex-token token start end))
   (push `(,token ,start . ,end) phps-mode-lexer--generated-tokens)
+  (push `(,token ,start . ,end) phps-mode-lexer--generated-new-tokens)
 
   (phps-mode-debug-message
    (message
@@ -461,6 +470,7 @@
 (defun phps-mode-lexer--re2c ()
   "Elisp port of original Zend re2c lexer."
 
+  (setq phps-mode-lexer--generated-new-tokens nil)
   (setq phps-mode-lexer--restart-flag nil)
   (let ((old-start (point)))
     (phps-mode-debug-message

@@ -169,155 +169,26 @@
    (goto-char 88)
    (delete-char 1))
 
-  )
+  (phps-mode-test--incremental-vs-intial-buffer
+   "<?php\n\nif (\n    true\n    && false\n) {\n    echo 'My long string here';\n    if (\nfalse\n        || true\n    ) {\n        echo 'Two lines of'\n            . 'strings here';\n    }\n}"
+   "Integration-test 15 white-space changes to see if nesting is maintained."
+   (goto-char 80)
+   (execute-kbd-macro (kbd "<tab>")))
 
-(defun phps-mode-test-integration--whitespace-modifications ()
-  "Test white-space modifications functions."
-
-  (phps-mode-test--with-buffer
-   "<?php\n$var = 'abc';\n\n$var2 = '123';\n"
-   "Add newline between two assignments and inspect moved tokens and states"
-   ;; (message "Tokens %s" phps-mode-lex-analyzer--tokens)
-   ;; (message "States: %s" phps-mode-lex-analyzer--states)
-
-   ;; Initial state
-
-   ;; Tokens
-   (should (equal phps-mode-lex-analyzer--tokens
-                  '((T_OPEN_TAG 1 . 7) (T_VARIABLE 7 . 11) ("=" 12 . 13) (T_CONSTANT_ENCAPSED_STRING 14 . 19) (";" 19 . 20) (T_VARIABLE 22 . 27) ("=" 28 . 29) (T_CONSTANT_ENCAPSED_STRING 30 . 35) (";" 35 . 36))))
-
-   ;; States
-   (should (equal phps-mode-lex-analyzer--states
-                  '((35 36 1 nil) (30 35 1 nil) (28 29 1 nil) (22 27 1 nil) (19 20 1 nil) (14 19 1 nil) (12 13 1 nil) (7 11 1 nil) (1 7 1 nil))))
-   
-   ;; Insert newline
-   (goto-char 21)
-   (newline)
-
-   ;; Final state
-   ;; (message "Tokens %s" phps-mode-lex-analyzer--tokens)
-   ;; (message "States: %s" phps-mode-lex-analyzer--states)
-   (phps-mode-lex-analyzer--process-changes)
-   ;; (message "Tokens %s" phps-mode-lex-analyzer--tokens)
-   ;; (message "States: %s" phps-mode-lex-analyzer--states)
-
-   ;; Tokens
-   (should (equal phps-mode-lex-analyzer--tokens
-                  '((T_OPEN_TAG 1 . 7) (T_VARIABLE 7 . 11) ("=" 12 . 13) (T_CONSTANT_ENCAPSED_STRING 14 . 19) (";" 19 . 20) (T_VARIABLE 23 . 28) ("=" 29 . 30) (T_CONSTANT_ENCAPSED_STRING 31 . 36) (";" 36 . 37))))
-
-   ;; States
-   (should (equal phps-mode-lex-analyzer--states
-                  '((36 37 1 nil) (31 36 1 nil) (29 30 1 nil) (23 28 1 nil) (19 20 1 nil) (14 19 1 nil) (12 13 1 nil) (7 11 1 nil) (1 7 1 nil)))))
-
-  (phps-mode-test--with-buffer
-   "<?php\n$var = 'abc';\n\n$var2 = '123';\n"
-   "Delete backward char between two assignments and inspect moved tokens and states"
-   ;; (message "Tokens %s" phps-mode-lex-analyzer--tokens)
-   ;; (message "States: %s" phps-mode-lex-analyzer--states)
-
-   ;; Initial state
-
-   ;; Tokens
-   (should (equal phps-mode-lex-analyzer--tokens
-                  '((T_OPEN_TAG 1 . 7) (T_VARIABLE 7 . 11) ("=" 12 . 13) (T_CONSTANT_ENCAPSED_STRING 14 . 19) (";" 19 . 20) (T_VARIABLE 22 . 27) ("=" 28 . 29) (T_CONSTANT_ENCAPSED_STRING 30 . 35) (";" 35 . 36))))
-
-   ;; States
-   (should (equal phps-mode-lex-analyzer--states
-                  '((35 36 1 nil) (30 35 1 nil) (28 29 1 nil) (22 27 1 nil) (19 20 1 nil) (14 19 1 nil) (12 13 1 nil) (7 11 1 nil) (1 7 1 nil))))
-
-   ;; Insert newline
-   (goto-char 21)
-   (delete-char 1)
-
-   (phps-mode-lex-analyzer--process-changes)
-
-   ;; Final state
-   ;; (message "Modified buffer: '%s'" (buffer-substring-no-properties (point-min) (point-max)))
-   ;; (message "Tokens %s" phps-mode-lex-analyzer--tokens)
-   ;; (message "States: %s" phps-mode-lex-analyzer--states)
-
-   ;; Tokens
-   (should (equal phps-mode-lex-analyzer--tokens
-                  '((T_OPEN_TAG 1 . 7) (T_VARIABLE 7 . 11) ("=" 12 . 13) (T_CONSTANT_ENCAPSED_STRING 14 . 19) (";" 19 . 20) (T_VARIABLE 21 . 26) ("=" 27 . 28) (T_CONSTANT_ENCAPSED_STRING 29 . 34) (";" 34 . 35))))
-
-   ;; States
-   (should (equal phps-mode-lex-analyzer--states
-                  '((34 35 1 nil) (29 34 1 nil) (27 28 1 nil) (21 26 1 nil) (19 20 1 nil) (14 19 1 nil) (12 13 1 nil) (7 11 1 nil) (1 7 1 nil)))))
-
-  (phps-mode-test--with-buffer
-   "<?php\nif (true):\n    $var = 'abc';\n    $var2 = '123';\nendif;\n"
-   "Add newline inside if body after two assignments and inspect moved tokens and states"
-
-   ;; Initial state
-   ;; (message "Tokens %s" phps-mode-lex-analyzer--tokens)
-   ;; (message "States: %s" phps-mode-lex-analyzer--states)
-   (should (equal phps-mode-lex-analyzer--tokens
-                  '((T_OPEN_TAG 1 . 7) (T_IF 7 . 9) ("(" 10 . 11) (T_STRING 11 . 15) (")" 15 . 16) (":" 16 . 17) (T_VARIABLE 22 . 26) ("=" 27 . 28) (T_CONSTANT_ENCAPSED_STRING 29 . 34) (";" 34 . 35) (T_VARIABLE 40 . 45) ("=" 46 . 47) (T_CONSTANT_ENCAPSED_STRING 48 . 53) (";" 53 . 54) (T_ENDIF 55 . 60) (";" 60 . 61))))
-
-   (should (equal phps-mode-lex-analyzer--states
-                  '((60 61 1 nil) (55 60 1 nil) (53 54 1 nil) (48 53 1 nil) (46 47 1 nil) (40 45 1 nil) (34 35 1 nil) (29 34 1 nil) (27 28 1 nil) (22 26 1 nil) (16 17 1 nil) (15 16 1 nil) (11 15 1 nil) (10 11 1 nil) (7 9 1 nil) (1 7 1 nil))))
-
-   ;; Insert newline and then indent
-   (goto-char 54)
-   (newline-and-indent)
-
-   (phps-mode-lex-analyzer--process-changes)
-
-   ;; Final state
-   ;; (message "Tokens %s" phps-mode-lex-analyzer--tokens)
-   ;; (message "States: %s" phps-mode-lex-analyzer--states)
-   (should (equal phps-mode-lex-analyzer--tokens
-                  '((T_OPEN_TAG 1 . 7) (T_IF 7 . 9) ("(" 10 . 11) (T_STRING 11 . 15) (")" 15 . 16) (":" 16 . 17) (T_VARIABLE 22 . 26) ("=" 27 . 28) (T_CONSTANT_ENCAPSED_STRING 29 . 34) (";" 34 . 35) (T_VARIABLE 40 . 45) ("=" 46 . 47) (T_CONSTANT_ENCAPSED_STRING 48 . 53) (";" 53 . 54) (T_ENDIF 60 . 65) (";" 65 . 66))))
-
-   (should (equal phps-mode-lex-analyzer--states
-                  '((65 66 1 nil) (60 65 1 nil) (53 54 1 nil) (48 53 1 nil) (46 47 1 nil) (40 45 1 nil) (34 35 1 nil) (29 34 1 nil) (27 28 1 nil) (22 26 1 nil) (16 17 1 nil) (15 16 1 nil) (11 15 1 nil) (10 11 1 nil) (7 9 1 nil) (1 7 1 nil)))))
-
-  (phps-mode-test--with-buffer
-   "<?php\nif (true):\n    $var = \"abc\nanother line here\nmore text here\";\n    $var2 = '123';\nendif;"
-   "Add test for inserting newlines inside token"
-
-   ;; (message "Before Tokens %s" phps-mode-lex-analyzer--tokens)
-   ;; (message "Before States: %s" phps-mode-lex-analyzer--states)
-
-   (should (equal phps-mode-lex-analyzer--tokens
-                  '((T_OPEN_TAG 1 . 7) (T_IF 7 . 9) ("(" 10 . 11) (T_STRING 11 . 15) (")" 15 . 16) (":" 16 . 17) (T_VARIABLE 22 . 26) ("=" 27 . 28) (T_CONSTANT_ENCAPSED_STRING 29 . 67) (";" 67 . 68) (T_VARIABLE 73 . 78) ("=" 79 . 80) (T_CONSTANT_ENCAPSED_STRING 81 . 86) (";" 86 . 87) (T_ENDIF 88 . 93) (";" 93 . 94))))
-   (should (equal phps-mode-lex-analyzer--states
-                  '((93 94 1 nil) (88 93 1 nil) (86 87 1 nil) (81 86 1 nil) (79 80 1 nil) (73 78 1 nil) (67 68 1 nil) (29 67 1 nil) (27 28 1 nil) (22 26 1 nil) (16 17 1 nil) (15 16 1 nil) (11 15 1 nil) (10 11 1 nil) (7 9 1 nil) (1 7 1 nil))))
-
-   ;; Insert newline and then indent
-   (goto-char 51)
-   (newline-and-indent)
-
-   (phps-mode-lex-analyzer--process-changes)
-
-   ;; (message "After Tokens %s" phps-mode-lex-analyzer--tokens)
-   ;; (message "After States: %s" phps-mode-lex-analyzer--states)
-   (should (equal phps-mode-lex-analyzer--tokens
-                  '((T_OPEN_TAG 1 . 7) (T_IF 7 . 9) ("(" 10 . 11) (T_STRING 11 . 15) (")" 15 . 16) (":" 16 . 17) (T_VARIABLE 22 . 26) ("=" 27 . 28) (T_CONSTANT_ENCAPSED_STRING 29 . 76) (";" 76 . 77) (T_VARIABLE 82 . 87) ("=" 88 . 89) (T_CONSTANT_ENCAPSED_STRING 90 . 95) (";" 95 . 96) (T_ENDIF 97 . 102) (";" 102 . 103))))
-   (should (equal phps-mode-lex-analyzer--states
-                  '((102 103 1 nil) (97 102 1 nil) (95 96 1 nil) (90 95 1 nil) (88 89 1 nil) (82 87 1 nil) (76 77 1 nil) (29 76 1 nil) (27 28 1 nil) (22 26 1 nil) (16 17 1 nil) (15 16 1 nil) (11 15 1 nil) (10 11 1 nil) (7 9 1 nil) (1 7 1 nil)))))
-
-  (phps-mode-test--with-buffer
-   "<?php\nfunction myFunctionA() {}\nfunction myFunctionB() {}\n"
-   "White-space changes in imenu function-oriented file"
-
-   (should (equal (phps-mode-lex-analyzer--get-imenu) '(("myFunctionA" . 16) ("myFunctionB" . 42))))
-
-   (goto-char 32)
-   (newline-and-indent)
-
-   (phps-mode-lex-analyzer--process-changes)
-
-   (should (equal (phps-mode-lex-analyzer--get-imenu) '(("myFunctionA" . 16) ("myFunctionB" . 43)))))
+  (phps-mode-test--incremental-vs-intial-buffer
+   "<?php\n\nif (\n    true\n    && false\n) {\n    echo 'My long string here';\n    if (\nfalse\n        || true\n    ) {\n        echo 'Two lines of'\n            . 'strings here';\n    }\n}"
+   "Integration-test 16 white-space changes to see if nesting is maintained."
+   (goto-char 80)
+   (execute-kbd-macro (kbd "<tab>"))
+   (goto-char 117)
+   (execute-kbd-macro (kbd "<return>")))
 
   )
 
 (defun phps-mode-test-integration ()
   "Run test for integration."
   ;; (setq debug-on-error t)
-  ;; (setq phps-mode-analyzer--process-on-indent-and-imenu t)
   (phps-mode-test-integration--incremental-vs-initial-buffers)
-  ;; (phps-mode-test-integration--whitespace-modifications)
   )
 
 (phps-mode-test-integration)

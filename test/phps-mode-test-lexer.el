@@ -604,53 +604,53 @@
 
   (should
    (equal
-    '((68 76 1 '(1))
-      (10 67 1 '(1))
-      (1 9 1 '(1)))
+    '((68 76 1 '(1) nil nil nil)
+      (10 67 1 '(1) nil nil nil)
+      (1 9 1 '(1) nil nil nil))
 
     (phps-mode-lex-analyzer--get-moved-states
-     '((66 74 1 '(1))
-       (8 65 1 '(1))
-       (1 7 1 '(1)))
+     '((66 74 1 '(1) nil nil nil)
+       (8 65 1 '(1) nil nil nil)
+       (1 7 1 '(1) nil nil nil))
      6
      2)))
 
   (should
    (equal
-    '((67 75 1 '(1))
-      (9 66 1 '(1))
-      (2 8 1 '(1)))
+    '((67 75 1 '(1) nil nil nil)
+      (9 66 1 '(1) nil nil nil)
+      (2 8 1 '(1) nil nil nil))
     
     (phps-mode-lex-analyzer--get-moved-states
-     '((66 74 1 '(1))
-       (8 65 1 '(1))
-       (1 7 1 '(1)))
+     '((66 74 1 '(1) nil nil nil)
+       (8 65 1 '(1) nil nil nil)
+       (1 7 1 '(1) nil nil nil))
      0
      1)))
 
   (should
    (equal
-    '((66 74 1 '(1))
-      (8 65 1 '(1))
-      (1 7 1 '(1)))
+    '((66 74 1 '(1) nil nil nil)
+      (8 65 1 '(1) nil nil nil)
+      (1 7 1 '(1) nil nil nil))
     
     (phps-mode-lex-analyzer--get-moved-states
-     '((66 74 1 '(1))
-       (8 65 1 '(1))
-       (1 7 1 '(1)))
+     '((66 74 1 '(1) nil nil nil)
+       (8 65 1 '(1) nil nil nil)
+       (1 7 1 '(1) nil nil nil))
      100
      1)))
 
   (should
    (equal
-    '((64 72 1 '(1))
-      (6 63 1 '(1))
-      (1 7 1 '(1)))
+    '((64 72 1 '(1) nil nil nil)
+      (6 63 1 '(1) nil nil nil)
+      (1 7 1 '(1) nil nil nil))
     
     (phps-mode-lex-analyzer--get-moved-states
-     '((66 74 1 '(1))
-       (8 65 1 '(1))
-       (3 9 1 '(1)))
+     '((66 74 1 '(1) nil nil nil)
+       (8 65 1 '(1) nil nil nil)
+       (3 9 1 '(1) nil nil nil))
      3
      -2))))
 
