@@ -357,6 +357,7 @@
   (phps-mode-test--with-buffer
    "<?php\nclass foo {\n    public $bar = <<<EOT\nbar\nEOT;\n}\n?>\n"
    "Example #2 Valid example (HEREDOC)"
+   ;; (message "tokens: %s" phps-mode-lex-analyzer--tokens)
    (should
     (equal
      phps-mode-lex-analyzer--tokens

@@ -53,6 +53,10 @@
      (phps-mode-debug-message
        (message "\nTesting incremental buffer '%s':\n'%s'\n" ,title ,source))
      (phps-mode)
+
+     (phps-mode-debug-message
+      (message "\nPerforming changes\n"))
+     
      ,@change
      (phps-mode-lex-analyzer--process-changes test-buffer-incremental)
      (setq incremental-states phps-mode-lex-analyzer--states)
