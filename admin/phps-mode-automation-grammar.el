@@ -823,6 +823,88 @@
      (union_type "|" type)
      )
 
+    (type_expr_without_static
+     type_without_static
+     ("?" type_without_static)
+     union_type_without_static)
+
+    (type_without_static
+     T_ARRAY
+     T_CALLABLE
+     name)
+
+    (union_type_without_static
+     (type_without_static "|" type_without_static)
+     (union_type_without_static "|" type_without_static))
+
+    (return_type
+     %empty
+     (":" type_expr))
+
+    (argument_list
+     ("(" ")")
+     ("(" non_empty_argument_list possible_comma ")"))
+
+    (non_empty_argument_list
+     argument
+     (non_empty_argument_list "," argument))
+
+    (argument
+     expr
+     (identifier ":" expr)
+     (T_ELLIPSIS expr))
+
+    (global_var_list
+     (global_var_list "," global_var)
+     global_var)
+
+    (global_var
+     simple_variable)
+
+    (static_var_list
+     (static_var_list "," static_var)
+     static_var)
+
+    (static_var
+     T_VARIABLE
+     (T_VARIABLE "=" expr))
+
+    (class_statement_list
+     (class_statement_list class_statement)
+     %empty)
+
+    (attributed_class_statement
+     (variable_modifiers optional_type_without_static property_list ",")
+     (method_modifiers T_CONST class_const_list ";")
+     (method_modifiers function returns_ref identifier backup_doc_comment "(" parameter_list ")" return_type backup_fn_flags method_body backup_fn_flags))
+
+    (class_statement
+     attributed_class_statement
+     (attributes attributed_class_statement)
+     (T_USE class_name_list trait_adaptations))
+
+    (class_name_list
+     class_name
+     (class_name_list "," class_name))
+
+    (trait_adaptations
+     ";"
+     ("{" "}")
+     ("{" trait_adaptation_list "}"))
+
+    (trait_adaptation_list
+     trait_adaptation
+     (trait_adaptation_list trait_adaptation))
+
+    (trait_adaptation
+     (trait_precedence ";")
+     (trait_alias ";"))
+
+    (trait_precedence
+     (absolute_trait_method_reference T_INSTEADOF class_name_list))
+
+    
+
     )
   "The productions of grammar.")
 
