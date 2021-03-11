@@ -291,7 +291,13 @@
      phps-mode-lex-analyzer--tokens
      '((T_OPEN_TAG 1 . 7) (T_STRING 8 . 14) ("(" 14 . 15) ("[" 15 . 16) ("]" 16 . 17) (")" 17 . 18) (";" 18 . 19) (T_COMMENT 20 . 98) (T_STRING 100 . 111) ("(" 111 . 112) ("[" 112 . 113) ("]" 113 . 114) ("," 114 . 115) ("-" 116 . 117) (T_LNUMBER 117 . 118) (")" 118 . 119) (";" 119 . 120) (T_COMMENT 121 . 195)))))
 
-  ;; TODO Add more PHP 8 examples here
+  (phps-mode-test--with-buffer
+   "<?php\nFoo;\n// Before: T_STRING\n// After:  T_STRING\n// Rule:   {LABEL}\n \nFoo\\Bar;\n// Before: T_STRING T_NS_SEPARATOR T_STRING\n// After:  T_NAME_QUALIFIED\n// Rule:   {LABEL}(\"\\\"{LABEL})+\n \n\\Foo;\n// Before: T_NS_SEPARATOR T_STRING\n// After:  T_NAME_FULLY_QUALIFIED\n// Rule:   (\"\\\"{LABEL})+\n \nnamespace\\Foo;\n// Before: T_NAMESPACE T_NS_SEPARATOR T_STRING\n// After:  T_NAME_RELATIVE\n// Rule:   \"namespace\"(\"\\\"{LABEL})+"
+   "PHP 8.0 Treat namespaced names as single token"
+   (should
+    (equal
+     phps-mode-lex-analyzer--tokens
+     '((T_OPEN_TAG 1 . 7) (T_STRING 7 . 10) (";" 10 . 11) (T_COMMENT 12 . 31) (T_COMMENT 32 . 51) (T_COMMENT 52 . 70) (T_NAME_QUALIFIED 73 . 80) (";" 80 . 81) (T_COMMENT 82 . 125) (T_COMMENT 126 . 153) (T_COMMENT 154 . 185) (T_NAME_FULLY_QUALIFIED 188 . 192) (";" 192 . 193) (T_COMMENT 194 . 228) (T_COMMENT 229 . 262) (T_COMMENT 263 . 287) (T_NAME_RELATIVE 290 . 303) (";" 303 . 304) (T_COMMENT 305 . 351) (T_COMMENT 352 . 378) (T_COMMENT 379 . 414)))))
 
   )
 
