@@ -350,6 +350,8 @@
     )
   "The productions of grammar.")
 
+;; TODO Add lex-analyzer as well
+
 
 (provide 'phps-mode-automation-grammar)
 
