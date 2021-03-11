@@ -726,21 +726,17 @@
                       ;; 1. Determine state (incremental-state) and state-stack (incremental-state-stack) heredoc label (incremental-heredoc-label) heredoc-label-stack (heredoc-label-stack) before incremental start
                       ;; 2. Build list of states before incremental start (head-states)
                       (catch 'quit
-                        (let ((previous-state))
-                          (dolist (state-object (nreverse old-states))
-                            (let ((end (nth 1 state-object)))
-                              (if (<= end incremental-start-new-buffer)
-                                  (progn
-                                    (setq incremental-state (nth 2 state-object))
-                                    (setq incremental-state-stack (nth 3 state-object))
-                                    (setq incremental-heredoc-label (nth 4 state-object))
-                                    (setq incremental-heredoc-label-stack (nth 5 state-object))
-                                    (setq incremental-nest-location-stack (nth 6 state-object))
-                                    (push state-object head-states))
-                                (throw 'quit "break")))
-                            (setq
-                             previous-state
-                             state-object))))
+                        (dolist (state-object (nreverse old-states))
+                          (let ((end (nth 1 state-object)))
+                            (if (<= end incremental-start-new-buffer)
+                                (progn
+                                  (setq incremental-state (nth 2 state-object))
+                                  (setq incremental-state-stack (nth 3 state-object))
+                                  (setq incremental-heredoc-label (nth 4 state-object))
+                                  (setq incremental-heredoc-label-stack (nth 5 state-object))
+                                  (setq incremental-nest-location-stack (nth 6 state-object))
+                                  (push state-object head-states))
+                              (throw 'quit "break")))))
 
                       (phps-mode-debug-message
                        (message "Head states: %s" head-states)
@@ -1250,6 +1246,9 @@ SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
                                   (equal bookkeeping-variable-name "$_REQUEST")
                                   (equal bookkeeping-variable-name "$_SERVER")
                                   (equal bookkeeping-variable-name "$_SESSION")
+                                  (equal bookkeeping-variable-name "$argc")
+                                  (equal bookkeeping-variable-name "$argv")
+                                  (equal bookkeeping-variable-name "$http_​response_​header")
                                   ))
                         (setq bookkeeping-is-superglobal t))
 
