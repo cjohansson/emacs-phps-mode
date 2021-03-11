@@ -2,9 +2,9 @@ EMACS = emacs
 ifdef emacs
 	EMACS = $(emacs)
 endif
-EMACS_CMD := $(EMACS) -Q -batch -L . -L test/
+EMACS_CMD := $(EMACS) -Q -batch -L . -L test/ -L admin/
 
-EL  := phps-mode-flymake.el phps-mode-lex-analyzer.el phps-mode-lexer.el phps-mode-macros.el phps-mode-syntax-table.el  phps-mode-parser-grammar-macro.el phps-mode.el phps-mode-test.el test/phps-mode-test-lex-analyzer.el test/phps-mode-test-integration.el test/phps-mode-test-lexer.el test/phps-mode-test-parser.el test/phps-mode-test-syntax-table.el
+EL  := admin/phps-mode-automation.el admin/phps-mode-automation-grammar.el phps-mode-flymake.el phps-mode-lex-analyzer.el phps-mode-lexer.el phps-mode-macros.el phps-mode-syntax-table.el  phps-mode-parser-grammar-macro.el phps-mode.el phps-mode-test.el test/phps-mode-test-lex-analyzer.el test/phps-mode-test-integration.el test/phps-mode-test-lexer.el test/phps-mode-test-parser.el test/phps-mode-test-syntax-table.el
 ELC := $(EL:.el=.elc)
 
 .PHONY: clean
@@ -13,8 +13,7 @@ clean:
 
 .PHONY: generate-parser
 generate-parser:
-	$(EMACS_CMD) -l ~/.emacs.d/emacs-parser-generator/parser-generator-lr-export.el -l test/phps-mode-lexer.el -l admin/phps-mode-automation.el
-
+	$(EMACS_CMD) -L ~/.emacs.d/emacs-parser-generator/ -l phps-mode-lexer.el -l admin/phps-mode-automation.el
 
 .PHONY: compile
 compile:
