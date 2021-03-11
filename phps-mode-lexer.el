@@ -310,11 +310,14 @@
 
 (defun phps-mode-lexer--check-nesting-at-end ()
   "Check nesting at end."
-  ;; TODO Implement this
-  )
+  (when phps-mode-lexer--nest-location-stack
+    (signal
+     'phps-lexer-error
+     (list
+      (format "Bad nesting end at '%d'" (point))
+      (point))))
+  t)
 
-;; TODO New token here
-;; TODO New function here
 (defun phps-mode-lexer--return-end-token ()
   "Return end token."
   (if (and
