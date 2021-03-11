@@ -346,9 +346,364 @@
 (defconst
   phps-mode-automation-grammar-productions
   '(
-    ;; TODO Implement this
+
+    (start
+     top_statement_list
+     )
+
+    (reserved_non_modifiers
+     T_INCLUDE
+     T_INCLUDE_ONCE
+     T_EVAL
+     T_REQUIRE
+     T_REQUIRE_ONCE
+     T_LOGICAL_OR
+     T_LOGICAL_XOR
+     T_LOGICAL_AND
+     T_INSTANCEOF
+     T_NEW
+     T_CLONE
+     T_EXIT
+     T_IF
+     T_ELSEIF
+     T_ELSE
+     T_ENDIF
+     T_ECHO
+     T_DO
+     T_WHILE
+     T_ENDWHILE
+     T_FOR
+     T_ENDFOR
+     T_FOREACH
+     T_ENDFOREACH
+     T_DECLARE
+     T_ENDDECLARE
+     T_AS
+     T_TRY
+     T_CATCH
+     T_FINALLY
+     T_THROW
+     T_USE
+     T_INSTEADOF
+     T_GLOBAL
+     T_VAR
+     T_UNSET
+     T_ISSET
+     T_EMPTY
+     T_CONTINUE
+     T_GOTO
+     T_FUNCTION
+     T_CONST
+     T_RETURN
+     T_PRINT
+     T_YIELD
+     T_LIST
+     T_SWITCH
+     T_ENDSWITCH
+     T_CASE
+     T_DEFAULT
+     T_BREAK
+     T_ARRAY
+     T_CALLABLE
+     T_EXTENDS
+     T_IMPLEMENTS
+     T_NAMESPACE
+     T_TRAIT
+     T_INTERFACE
+     T_CLASS
+     T_CLASS_C
+     T_TRAIT_C
+     T_FUNC_C
+     T_METHOD_C
+     T_LINE
+     T_FILE
+     T_DIR
+     T_NS_C
+     T_FN
+     T_MATCH
+     )
+
+    (semi_reserved
+     reserved_non_modifiers
+     T_STATIC
+     T_ABSTRACT
+     T_FINAL
+     T_PRIVATE
+     T_PROTECTED
+     T_PUBLIC
+     )
+
+    (identifier
+     T_STRING
+     semi_reserved
+     )
+
+    (top_statement_list
+     (top_statement_list top_statement)
+     %empty
+     )
+
+    (namespace_declaration_name
+     identifier
+     T_NAME_QUALIFIED
+     )
+
+    (namespace_name
+     T_STRING
+     T_NAME_QUALIFIED
+     )
+
+    (legacy_namespace_name
+     namespace_name
+     T_NAME_FULLY_QUALIFIED
+     )
+
+    (name
+     T_STRING
+     T_NAME_QUALIFIED
+     T_NAME_FULLY_QUALIFIED
+     T_NAME_RELATIVE
+     )
+
+    (attribute_decl
+     class_name
+     (class_name argument_list)
+     )
+
+    (attribute_group
+     attribute_decl
+     (attribute_group "," attribute_decl)
+     )
+
+    (attribute
+     (T_ATTRIBUTE
+     attribute_group
+     possible_comma "]")
+     )
+
+    (attributes
+     attribute
+     (attributes attribute)
+     )
+
+    (attributed_statement
+     function_declaration_statement
+     class_declaration_statement
+     trait_declaration_statement
+     interface_declaration_statement
+     )
+
+    (top_statement
+     statement
+     attributed_statement
+     attributes
+     attributed_statement
+     (T_HALT_COMPILER "(" ")" ";")
+     (T_NAMESPACE namespace_declaration_name ";")
+     (T_NAMESPACE namespace_declaration_name)
+     ("{" top_statement_list "}")
+     T_NAMESPACE
+     (T_USE mixed_group_use_declaration ";")
+     (T_USE use_type group_use_declaration ";")
+     (T_USE use_declarations ";")
+     (T_USE use_type use_declarations ";")
+     (T_CONST const_list ";")
+     )
+
+    (use_type
+     T_FUNCTION
+     T_CONST
+     )
+
+    (group_use_declaration
+     (legacy_namespace_name T_NS_SEPARATOR "{" unprefixed_use_declarations possible_comma "}")
+     )
+
+    (mixed_group_use_declaration
+     (legacy_namespace_name T_NS_SEPARATOR "{" inline_use_declarations possible_comma "}")
+     )
+
+    (possible_comma
+     %empty
+     ","
+     )
+
+    (inline_use_declarations
+     (inline_use_declarations "," inline_use_declaration)
+     inline_use_declaration
+     )
+
+    (unprefixed_use_declarations
+     (unprefixed_use_declarations "," unprefixed_use_declaration)
+     unprefixed_use_declaration
+     )
+
+    (use_declarations
+     (use_declarations "," use_declaration)
+     use_declaration
+     )
+
+    (inline_use_declaration
+     unprefixed_use_declaration
+     (use_type unprefixed_use_declaration)
+     )
+
+    (unprefixed_use_declaration
+     namespace_name
+     (namespace_name T_AS T_STRING)
+     )
+
+    (use_declaration
+     legacy_namespace_name
+     (legacy_namespace_name T_AS T_STRING)
+     )
+
+    (const_list
+     (const_list "," const_decl)
+     const_decl
+     )
+
+    (inner_statement_list
+     (inner_statement_list inner_statement)
+     %empty
+     )
+
+    (inner_statement
+     statement
+     attributed_statement
+     (attributes attributed_statement)
+     (T_HALT_COMPILER "(" ")" ";")
+     )
+
+    (statement
+     ("{" inner_statement_list "}")
+     if_stmt
+     alt_if_stmt
+     (T_WHILE "(" expr ")" while_statement)
+     (T_DO statement T_WHILE "(" expr ")" ";")
+     (T_FOR "(" for_exprs ";" for_exprs ";" for_exprs ")" for_statement)
+     (T_SWITCH "(" expr ")" switch_case_list)
+     (T_BREAK optional_expr ";")
+     (T_CONTINUE optional_expr ";")
+     (T_RETURN optional_expr ";")
+     (T_GLOBAL global_var_list ";")
+     (T_STATIC static_var_list ";")
+     (T_ECHO echo_expr_list ";")
+     T_INLINE_HTML
+     (expr ";")
+     (T_UNSET "(" unset_variables possible_comma ")" ";" )
+     (T_FOREACH "(" expr T_AS foreach_variable ")" foreach_statement)
+     (T_FOREACH "(" expr T_AS foreach_variable T_DOUBLE_ARROW foreach_variable ")" foreach_statement)
+     (T_DECLARE "(" const_list ")")
+     declare_statement
+     ";"
+     (T_TRY "{" inner_statement_list "}" catch_list finally_statement)
+     (T_GOTO T_STRING ";")
+     T_STRING
+     )
+
+    (catch_list
+     %empty
+     (catch_list T_CATCH "(" catch_name_list optional_variable ")" "{" inner_statement_list "}")
+     )
+
+    (catch_name_list
+     class_name
+     (catch_name_list "|" class_name)
+     )
+
+    (optional_variable
+     %empty
+     T_VARIABLE)
+
+    (finally_statement
+     %empty
+     (T_FINALLY "{" inner_statement_list "}")
+     )
+
+    (unset_variables
+     unset_variable
+     (unset_variables "," unset_variable)
+     )
+
+    (unset_variable
+     variable)
+
+    (function_declaration_statement
+     (function returns_ref T_STRING backup_doc_comment "(" parameter_list ")" return_type backup_fn_flags "{" inner_statement_list "}" backup_fn_flags)
+     )
+
+    (is_reference
+     %empty
+     "&"
+     )
+
+    (is_variadic
+     %empty
+     T_ELLIPSIS
+     )
+
+    (class_declaration_statement
+     (class_modifiers T_CLASS)
+     (T_STRING extends_from implements_list backup_doc_comment "{" class_statement_list "}")
+     T_CLASS
+     (T_STRING extends_from implements_list backup_doc_comment "{" class_statement_list "}")
+     )
+
+    (class_modifiers
+     class_modifier
+     (class_modifiers class_modifier)
+     )
+
+    (class_modifier
+     T_ABSTRACT
+     T_FINAL
+     )
+
+    (trait_declaration_statement
+     T_TRAIT
+     (T_STRING backup_doc_comment "{" class_statement_list "}")
+     )
+
+    (interface_declaration_statement
+     T_INTERFACE
+     (T_STRING interface_extends_list backup_doc_comment "{" class_statement_list "}")
+     )
+
+    (extends_from
+     %empty
+     (T_EXTENDS class_name)
+     )
+
+    (interface_extends_list
+     %empty
+     (T_EXTENDS class_name_list)
+     )
+
+    (implements_list
+     %empty
+     (T_IMPLEMENTS class_name_list)
+     )
+
+    (foreach_variable
+     variable
+     ("&" variable)
+     (T_LIST "(" array_pair_list ")")
+     ("[" array_pair_list "]")
+     )
+
     )
   "The productions of grammar.")
+
+(defconst
+  phps-mode-automation-grammar-start
+  'start
+  "The entry-point of grammar.")
+
+(defconst
+  phps-mode-automation-grammar-e-identifier
+  '%empty
+  "The e-identifier of grammar.")
 
 ;; TODO Add lex-analyzer as well
 
