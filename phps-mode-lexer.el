@@ -45,24 +45,30 @@
 ;; INITIALIZE SETTINGS
 
 
-(phps-mode-parser-grammar-macro-CG 'parser-mode t)
-(phps-mode-parser-grammar-macro-CG 'short-tags t)
+(phps-mode-parser-grammar-macro-CG
+ 'parser-mode t)
+(phps-mode-parser-grammar-macro-CG
+ 'short-tags t)
 
 
 ;; SETTINGS
 
 
 ;; @see https://secure.php.net/manual/en/language.types.integer.php
-(defconst phps-mode-lexer--long-limit 2147483648
+(defconst phps-mode-lexer--long-limit
+  2147483648
   "Limit for 32-bit integer.")
 
-(defconst phps-mode-lexer--bnum "0b[01]+"
+(defconst phps-mode-lexer--bnum
+  "0b[01]+"
   "Boolean number.")
 
-(defconst phps-mode-lexer--hnum "0x[0-9a-fA-F]+"
+(defconst phps-mode-lexer--hnum
+  "0x[0-9a-fA-F]+"
   "Hexadecimal number.")
 
-(defconst phps-mode-lexer--lnum "[0-9]+"
+(defconst phps-mode-lexer--lnum
+  "[0-9]+"
   "Long number.")
 
 (defconst phps-mode-lexer--dnum
@@ -82,21 +88,26 @@
 ;; NOTE original is [a-zA-Z_\x80-\xff][a-zA-Z0-9_\x80-\xff]*
 ;; NOTE Rebuilt for comparability with emacs-lisp
 
-(defconst phps-mode-lexer--whitespace "[ \n\r\t]+"
+(defconst phps-mode-lexer--whitespace
+  "[ \n\r\t]+"
   "White-space.")
 
-(defconst phps-mode-lexer--tabs-and-spaces "[ \t]*"
+(defconst phps-mode-lexer--tabs-and-spaces
+  "[ \t]*"
   "Tabs and white-spaces.")
 
-(defconst phps-mode-lexer--tokens "[][;:,.()|^&+/*=%!~$<>?@-]"
+(defconst phps-mode-lexer--tokens
+  "[][;:,.()|^&+/*=%!~$<>?@-]"
   "Tokens.")
 ;; NOTE Original is [;:,.\[\]()|^&+-/*=%!~$<>?@]
 ;; NOTE The hyphen moved last since it has special meaning and to avoid it being interpreted as a range.
 
-(defconst phps-mode-lexer--any-char "[^z-a]"
+(defconst phps-mode-lexer--any-char
+  "[^z-a]"
   "Any character.  The Zend equivalent is [^] but is not possible in Emacs Lisp.")
 
-(defconst phps-mode-lexer--newline "[\n\r]"
+(defconst phps-mode-lexer--newline
+  "[\n\r]"
   "Newline characters.  The Zend equivalent is (\"\r\"|\"\n\"|\"\r\n\").")
 
 
@@ -134,6 +145,11 @@
 (defvar-local phps-mode-lexer--match-data nil
   "Match data.")
 
+(defvar-local phps-mode-lexer--nest-location-stack nil
+  "Nesting stack.")
+
+(defvar-local phps-mode-lexer--restart-flag nil
+  "Flag whether to restart or not.")
 
 ;; HELPER FUNCTIONS
 
@@ -175,6 +191,56 @@
       (if string-start
           (phps-mode-lexer--return-token 'T_INLINE_HTML start (- string-start 2))
         (phps-mode-lexer--return-token 'T_INLINE_HTML start (point-max))))))
+
+(defun phps-mode-lexer--enter-nesting (&optional opening)
+  "Enter nesting of OPENING."
+  (unless opening
+    (setq
+     opening
+     (buffer-substring-no-properties
+      (match-beginning 0)
+      (match-end 0))))
+  (push
+   opening
+   phps-mode-lexer--nest-location-stack))
+
+(defun phps-mode-lexer--handle-newline ()
+  "Handle newline."
+  ;; TODO Implement this?
+  )
+
+(defun phps-mode-lexer--exit-nesting (&optional closing)
+  "Exit nesting of CLOSING."
+  (unless closing
+    (setq
+     closing
+     (buffer-substring-no-properties
+      (match-beginning 0)
+      (match-end 0))))
+  (unless phps-mode-lexer--nest-location-stack
+    (signal
+     'phps-lexer-error
+     (list
+      (format "Unmatched '%s' at '%d'" closing (point))
+      (point))))
+  (let ((opening
+         (car
+          phps-mode-lexer--nest-location-stack)))
+    (when
+        (or
+         (and (string= opening "{")
+              (not (string= closing "}")))
+         (and (string= opening "[")
+              (not (string= closing "]")))
+         (and (string= opening "(")
+              (not (string= closing ")"))))
+      (signal
+       'phps-lexer-error
+       (list
+        (format "Bad nesting '%s' vs '%s' at %d'" opening closing (point))
+        (point))))
+    (pop phps-mode-lexer--nest-location-stack)
+    t))
 
 (defun phps-mode-lexer--emit-token (token start end)
   "Emit TOKEN with START and END."
@@ -225,13 +291,26 @@
     (lambda()
       ,@body)))
 
-(defun phps-mode-lexer--return-token (token &optional start end)
+(defun phps-mode-lexer--return-token (&optional token start end)
   "Return TOKEN with START and END."
   (unless start
     (setq start (match-beginning 0)))
   (unless end
     (setq end (match-end 0)))
+  (unless token
+    (setq
+     token
+     (buffer-substring-no-properties
+      start
+      end)))
   (phps-mode-lexer--emit-token
+   token
+   start
+   end))
+
+(defun phps-mode-lexer--return-token-with-indent (&optional token start end)
+  "Return TOKEN with START and END."
+  (phps-mode-lexer--return-token
    token
    start
    end))
@@ -244,16 +323,39 @@
     (setq end (match-end 0)))
   (phps-mode-lexer--return-token token (+ start offset) (+ end offset)))
 
-(defun phps-mode-lexer--return-token-with-val (token &optional start end)
-  "Return TOKEN with START and END."
-  (phps-mode-lexer--return-token token start end))
+(defun phps-mode-lexer--return-whitespace ()
+  "Return whitespace."
+  ;; TODO Implement this
+  )
 
-(defun phps-mode-lexer--return-or-skip-token (token &optional start end)
-  "Return TOKEN with START and END but only in parse-mode."
+(defun phps-mode-lexer--return-exit-nesting-token (&optional token start end)
+  "Return TOKEN if it does not exit a nesting with optional START and END."
   (unless start
     (setq start (match-beginning 0)))
   (unless end
     (setq end (match-end 0)))
+  (unless token
+    (setq
+     token
+     (buffer-substring-no-properties
+      start
+      end)))
+  (if (and
+       (phps-mode-lexer--exit-nesting token)
+       (phps-mode-parser-grammar-macro-CG 'parser-mode))
+      (phps-mode-lexer--return-token 'T_ERROR)
+    (phps-mode-lexer--return-token token start end)))
+
+(defun phps-mode-lexer--restart ()
+  "Restart."
+  (setq phps-mode-lexer--restart-flag t))
+
+(defun phps-mode-lexer--return-token-with-val (&optional token start end)
+  "Return TOKEN with START and END."
+  (phps-mode-lexer--return-token token start end))
+
+(defun phps-mode-lexer--return-or-skip-token (&optional token start end)
+  "Return TOKEN with START and END but only in parse-mode."
   (when (phps-mode-parser-grammar-macro-CG 'parser-mode)
     (phps-mode-lexer--return-token token start end)))
 
@@ -298,6 +400,7 @@
 (defun phps-mode-lexer--re2c ()
   "Elisp port of original Zend re2c lexer."
 
+  (setq phps-mode-lexer--restart-flag nil)
   (let ((old-start (point)))
     (phps-mode-debug-message
      (message
@@ -343,7 +446,7 @@
 
       (phps-mode-lexer--match-macro
        (and ST_IN_SCRIPTING (looking-at "#\\["))
-       (phps-mode-lexer--ENTER_NESTING "[")
+       (phps-mode-lexer--enter-nesting "[")
        (phps-mode-lexer--return-token 'T_ATTRIBUTE))
 
       (phps-mode-lexer--match-macro
@@ -412,9 +515,6 @@
       (phps-mode-lexer--match-macro
        (and ST_IN_SCRIPTING (looking-at "endfor"))
        (phps-mode-lexer--return-token-with-ident 'T_ENDFOR))
-
-      ;; TODO Fix return_token_with_indent function
-      ;; TODO New function begin_nesting
 
       (phps-mode-lexer--match-macro
        (and ST_IN_SCRIPTING (looking-at "foreach"))
@@ -506,7 +606,6 @@
        (phps-mode-lexer--yy-push-state 'ST_LOOKING_FOR_PROPERTY)
        (phps-mode-lexer--return-token-with-ident 'T_NULLSAFE_OBJECT_OPERATOR))
 
-      ;; TODO New function below
       (phps-mode-lexer--match-macro
        (and (or ST_IN_SCRIPTING ST_LOOKING_FOR_PROPERTY)
             (looking-at phps-mode-lexer--whitespace))
@@ -520,13 +619,11 @@
        (and ST_LOOKING_FOR_PROPERTY (looking-at "?->"))
        (phps-mode-lexer--return-token 'T_NULLSAFE_OBJECT_OPERATOR))
 
-      ;; TODO New function below
       (phps-mode-lexer--match-macro
        (and ST_LOOKING_FOR_PROPERTY (looking-at phps-mode-lexer--label))
        (phps-mode-lexer--yy-pop-state)
        (phps-mode-lexer--return-token-with-tr 'T_STRING 0))
 
-      ;; TODO New function below
       (phps-mode-lexer--match-macro
        (and ST_LOOKING_FOR_PROPERTY (looking-at phps-mode-lexer--any-char))
        (phps-mode-lexer--yyless 0)
@@ -867,7 +964,18 @@
        (and ST_IN_SCRIPTING (looking-at ">>"))
        (phps-mode-lexer--return-token 'T_SR))
 
-      ;; TODO Fix new here
+      (phps-mode-lexer--match-macro
+       (and ST_IN_SCRIPTING
+            (looking-at
+             (concat "\\(" "]" "\\|" ")" "\\)")))
+       (phps-mode-lexer--return-exit-nesting-token))
+
+      (phps-mode-lexer--match-macro
+       (and ST_IN_SCRIPTING
+            (looking-at
+             (concat "\\(" "[" "\\|" "(" "\\)")))
+       (phps-mode-lexer--enter-nesting)
+       (phps-mode-lexer--return-token))
 
       (phps-mode-lexer--match-macro
        (and ST_IN_SCRIPTING (looking-at phps-mode-lexer--tokens))
@@ -892,7 +1000,6 @@
        (phps-mode-lexer--enter-nesting "{")
        (phps-mode-lexer--return-token 'T_DOLLAR_OPEN_CURLY_BRACES))
 
-      ;; TODO New function below
       (phps-mode-lexer--match-macro
        (and ST_IN_SCRIPTING (looking-at "}"))
        (phps-mode-lexer--reset-doc-comment)
@@ -901,21 +1008,26 @@
        (phps-mode-lexer--return-exit-nesting-token "}"))
 
       (phps-mode-lexer--match-macro
-       (and ST_LOOKING_FOR_VARNAME (looking-at (concat phps-mode-lexer--label "[\\[}]")))
+       (and
+        ST_LOOKING_FOR_VARNAME
+        (looking-at (concat phps-mode-lexer--label "[\\[}]")))
        (phps-mode-lexer--yyless)
        (phps-mode-lexer--yy-pop-state)
        (phps-mode-lexer--yy-push-state 'ST_IN_SCRIPTING)
        (phps-mode-lexer--return-token 'T_STRING_VARNAME))
 
       (phps-mode-lexer--match-macro
-       (and ST_LOOKING_FOR_VARNAME (looking-at phps-mode-lexer--any-char))
+       (and
+        ST_LOOKING_FOR_VARNAME
+        (looking-at phps-mode-lexer--any-char))
        (phps-mode-lexer--yyless 0)
        (phps-mode-lexer--yy-pop-state)
        (phps-mode-lexer--yy-push-state 'ST_IN_SCRIPTING)
        (phps-mode-lexer--restart))
 
       (phps-mode-lexer--match-macro
-       (and ST_IN_SCRIPTING (looking-at phps-mode-lexer--bnum))
+       (and ST_IN_SCRIPTING
+            (looking-at phps-mode-lexer--bnum))
        (let* ((start (match-beginning 0))
               (end (match-end 0))
               (data (buffer-substring-no-properties (+ start 2) end))
@@ -926,7 +1038,8 @@
            (phps-mode-lexer--return-token 'T_LNUMBER))))
 
       (phps-mode-lexer--match-macro
-       (and ST_IN_SCRIPTING (looking-at phps-mode-lexer--lnum))
+       (and ST_IN_SCRIPTING
+            (looking-at phps-mode-lexer--lnum))
        (let* ((start (match-beginning 0))
               (end (match-end 0))
               (data (string-to-number (buffer-substring-no-properties start end))))
@@ -1019,11 +1132,14 @@
          (phps-mode-lexer--return-token-with-indent 'T_ECHO))
        (phps-mode-lexer--return-token 'T_OPEN_TAG_WITH_ECHO))
 
-      ;; TODO New function below
       (phps-mode-lexer--match-macro
        (and
         ST_INITIAL
-        (looking-at (concat "<\\?php\\([ \t]\\|" phps-mode-lexer--newline "\\)")))
+        (looking-at
+         (concat
+          "<\\?php\\([ \t]\\|"
+          phps-mode-lexer--newline
+          "\\)")))
        (phps-mode-lexer--handle-newline)
        (phps-mode-lexer--begin 'ST_IN_SCRIPTING)
        (phps-mode-lexer--return-or-skip-token 'T_OPEN_TAG))
@@ -1118,7 +1234,12 @@
         (- (match-end 0) 1)))
 
       (phps-mode-lexer--match-macro
-       (and (or ST_IN_SCRIPTING ST_DOUBLE_QUOTES ST_HEREDOC ST_BACKQUOTE ST_VAR_OFFSET)
+       (and (or
+             ST_IN_SCRIPTING
+             ST_DOUBLE_QUOTES
+             ST_HEREDOC
+             ST_BACKQUOTE
+             ST_VAR_OFFSET)
             (looking-at
              (concat
               "\\$"
@@ -1141,7 +1262,6 @@
          ;; Only '[' or '-' can be valid, but returning other tokens will allow a more explicit parse error
          (phps-mode-lexer--return-token data)))
 
-      ;; TODO New function below
       (phps-mode-lexer--match-macro
        (and ST_VAR_OFFSET (looking-at (concat "[ \n\r\t'#]")))
        ;; Invalid rule to return a more explicit parse error with proper line number
@@ -1586,7 +1706,10 @@
          (match-beginning 0))))
 
       (when phps-mode-lexer--match-length
-        (phps-mode-lexer--re2c-execute)))))
+        (phps-mode-lexer--re2c-execute)
+
+        (when phps-mode-lexer--restart-flag
+          (phps-mode-lexer--re2c))))))
 
 
 (provide 'phps-mode-lexer)
