@@ -226,14 +226,8 @@
   ;; TODO Implement this?
   )
 
-(defun phps-mode-lexer--exit-nesting (&optional closing)
+(defun phps-mode-lexer--exit-nesting (closing)
   "Exit nesting of CLOSING."
-  (unless closing
-    (setq
-     closing
-     (buffer-substring-no-properties
-      (match-beginning 0)
-      (match-end 0))))
   (unless phps-mode-lexer--nest-location-stack
     (signal
      'phps-lexer-error
@@ -243,14 +237,15 @@
   (let ((opening
          (car
           phps-mode-lexer--nest-location-stack)))
-    (when
-        (or
-         (and (string= opening "{")
-              (not (string= closing "}")))
-         (and (string= opening "[")
-              (not (string= closing "]")))
-         (and (string= opening "(")
-              (not (string= closing ")"))))
+    (when (and
+           opening
+           (or
+            (and (string= opening "{")
+                 (not (string= closing "}")))
+            (and (string= opening "[")
+                 (not (string= closing "]")))
+            (and (string= opening "(")
+                 (not (string= closing ")")))))
       (signal
        'phps-lexer-error
        (list
@@ -284,7 +279,8 @@
     phps-mode-lexer--state
     phps-mode-lexer--state-stack
     phps-mode-lexer--heredoc-label
-    phps-mode-lexer--heredoc-label-stack)
+    phps-mode-lexer--heredoc-label-stack
+    phps-mode-lexer--nest-location-stack)
    phps-mode-lexer--states))
 
 (defun phps-mode-lexer--get-next-unescaped (character)
@@ -396,7 +392,10 @@
        (phps-mode-lexer--exit-nesting token)
        (phps-mode-lexer--parser-mode))
       (phps-mode-lexer--return-token 'T_ERROR)
-    (phps-mode-lexer--return-token token start end)))
+    (phps-mode-lexer--return-token
+     token
+     start
+     end)))
 
 (defun phps-mode-lexer--restart ()
   "Restart."
@@ -1215,8 +1214,7 @@
 
           ((equal end (point-max))
            (phps-mode-lexer--begin 'ST_IN_SCRIPTING)
-           (phps-mode-lexer--return-or-skip-token
-            'T_OPEN_TAG))
+           (phps-mode-lexer--return-or-skip-token 'T_OPEN_TAG))
 
           ((phps-mode-parser-grammar-macro-CG 'short-tags)
            (phps-mode-lexer--yyless 2)

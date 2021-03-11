@@ -89,6 +89,9 @@
 (defvar-local phps-mode-lex-analyzer--heredoc-label-stack nil
   "Latest Heredoc label-stack.")
 
+(defvar-local phps-mode-lex-analyzer--nest-location-stack nil
+  "Nest location stack.")
+
 
 ;; FUNCTIONS
 
@@ -106,7 +109,8 @@
   (setq phps-mode-lex-analyzer--state nil)
   (setq phps-mode-lex-analyzer--state-stack nil)
   (setq phps-mode-lex-analyzer--states nil)
-  (setq phps-mode-lex-analyzer--tokens nil))
+  (setq phps-mode-lex-analyzer--tokens nil)
+  (setq phps-mode-lex-analyzer--nest-location-stack nil))
 
 (defun phps-mode-lex-analyzer--set-region-syntax-color (start end properties)
   "Do syntax coloring for region START to END with PROPERTIES."
@@ -397,6 +401,7 @@
              (setq phps-mode-lex-analyzer--state-stack (nth 3 lex-result))
              (setq phps-mode-lex-analyzer--heredoc-label (nth 4 lex-result))
              (setq phps-mode-lex-analyzer--heredoc-label-stack (nth 5 lex-result))
+             (setq phps-mode-lex-analyzer--nest-location-stack (nth 6 lex-result))
 
              ;; Save processed result
              (setq phps-mode-lex-analyzer--processed-buffer-p t)
@@ -437,8 +442,15 @@
                           error-start
                           (point-max)
                           (list 'font-lock-face 'font-lock-warning-face))))
-                     (display-warning 'phps-mode error-message :warning "*PHPs Lexer Errors*"))
-                 (display-warning error-type error-message :warning)))))))
+                     (display-warning
+                      'phps-mode
+                      error-message
+                      :warning
+                      "*PHPs Lexer Errors*"))
+                 (display-warning
+                  error-type
+                  error-message
+                  :warning)))))))
 
      nil
 
@@ -447,7 +459,7 @@
 
 (defun phps-mode-lex-analyzer--incremental-lex-string
     (buffer-name buffer-contents incremental-start-new-buffer point-max
-                 head-states incremental-state incremental-state-stack incremental-heredoc-label incremental-heredoc-label-stack head-tokens &optional force-synchronous)
+                 head-states incremental-state incremental-state-stack incremental-heredoc-label incremental-heredoc-label-stack incremental-nest-location-stack head-tokens &optional force-synchronous)
   "Incremental lex region."
   (let ((async (and (boundp 'phps-mode-async-process)
                     phps-mode-async-process))
@@ -460,16 +472,18 @@
      buffer-name
 
      (lambda()
-       (let* ((lex-result (phps-mode-lex-analyzer--lex-string
-                           buffer-contents
-                           incremental-start-new-buffer
-                           point-max
-                           head-states
-                           incremental-state
-                           incremental-state-stack
-                           incremental-heredoc-label
-                           incremental-heredoc-label-stack
-                           head-tokens))
+       (let* ((lex-result
+               (phps-mode-lex-analyzer--lex-string
+                buffer-contents
+                incremental-start-new-buffer
+                point-max
+                head-states
+                incremental-state
+                incremental-state-stack
+                incremental-heredoc-label
+                incremental-heredoc-label-stack
+                incremental-nest-location-stack
+                head-tokens))
               (processed-result
                (phps-mode-lex-analyzer--process-tokens-in-string
                 (nth 0 lex-result)
@@ -491,6 +505,7 @@
              (setq phps-mode-lex-analyzer--state-stack (nth 3 lex-result))
              (setq phps-mode-lex-analyzer--heredoc-label (nth 4 lex-result))
              (setq phps-mode-lex-analyzer--heredoc-label-stack (nth 5 lex-result))
+             (setq phps-mode-lex-analyzer--nest-location-stack (nth 6 lex-result))
 
              ;; Save processed result
              (setq phps-mode-lex-analyzer--processed-buffer-p t)
@@ -536,8 +551,15 @@
                           error-start
                           (point-max)
                           (list 'font-lock-face 'font-lock-warning-face))))
-                     (display-warning 'phps-mode error-message :warning "*PHPs Lexer Errors*"))
-                 (display-warning error-type error-message :warning)))))))
+                     (display-warning
+                      'phps-mode
+                      error-message
+                      :warning
+                      "*PHPs Lexer Errors*"))
+                 (display-warning
+                  error-type
+                  error-message
+                  :warning)))))))
 
      nil
      async
@@ -631,6 +653,7 @@
                     (incremental-state-stack nil)
                     (incremental-heredoc-label nil)
                     (incremental-heredoc-label-stack nil)
+                    (incremental-nest-location-stack nil)
                     (incremental-tokens nil)
                     (head-states '())
                     (head-tokens '())
@@ -650,6 +673,7 @@
                 (setq phps-mode-lex-analyzer--state-stack nil)
                 (setq phps-mode-lex-analyzer--heredoc-label nil)
                 (setq phps-mode-lex-analyzer--heredoc-label-stack nil)
+                (setq phps-mode-lex-analyzer--nest-location-stack nil)
 
                 ;; NOTE Starts are inclusive while ends are exclusive buffer locations
 
@@ -695,6 +719,7 @@
                                   (setq incremental-state-stack (nth 3 state-object))
                                   (setq incremental-heredoc-label (nth 4 state-object))
                                   (setq incremental-heredoc-label-stack (nth 5 state-object))
+                                  (setq incremental-nest-location-stack (nth 6 state-object))
                                   (push state-object head-states))
                               (throw 'quit "break")))))
 
@@ -703,7 +728,8 @@
                        (message "Incremental state: %s" incremental-state)
                        (message "State stack: %s" incremental-state-stack)
                        (message "Incremental heredoc-label: %s" incremental-heredoc-label)
-                       (message "Incremental heredoc-label-stack: %s" incremental-heredoc-label-stack))
+                       (message "Incremental heredoc-label-stack: %s" incremental-heredoc-label-stack)
+                       (message "Incremental nest-location-stack: %s" incremental-nest-location-stack))
 
                       (if (and
                            head-states
@@ -726,6 +752,7 @@
                              incremental-state-stack
                              incremental-heredoc-label
                              incremental-heredoc-label-stack
+                             incremental-nest-location-stack
                              head-tokens
                              force-synchronous)
 
@@ -1235,7 +1262,6 @@ SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
                           ;; (message "%s->%s" bookkeeping2-variable-name bookkeeping-variable-name)
                           (when (string= bookkeeping2-variable-name "$this")
                             (setq bookkeeping-namespace (concat bookkeeping-namespace " id $" bookkeeping-variable-name))
-                            ;; (message "Was here: '%s" bookkeeping-namespace)
                             (setq bookkeeping-named t))))
 
                       (unless bookkeeping-named
@@ -3013,7 +3039,7 @@ SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
   (unless phps-mode-lex-analyzer--state
     (setq phps-mode-lex-analyzer--state 'ST_INITIAL)))
 
-(defun phps-mode-lex-analyzer--lex-string (contents &optional start end states state state-stack heredoc-label heredoc-label-stack tokens)
+(defun phps-mode-lex-analyzer--lex-string (contents &optional start end states state state-stack heredoc-label heredoc-label-stack nest-location-stack tokens)
   "Run lexer on CONTENTS."
   ;; Create a separate buffer, run lexer inside of it, catch errors and return them
   ;; to enable nice presentation
@@ -3026,23 +3052,34 @@ SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
         (insert contents)
 
         (if tokens
-            (setq phps-mode-lexer--generated-tokens (nreverse tokens))
-          (setq phps-mode-lexer--generated-tokens nil))
+            (setq
+             phps-mode-lexer--generated-tokens
+             (nreverse tokens))
+          (setq
+           phps-mode-lexer--generated-tokens
+           nil))
         (if state
-            (setq phps-mode-lexer--state state)
-          (setq phps-mode-lexer--state 'ST_INITIAL))
-        (if states
-            (setq phps-mode-lexer--states states)
-          (setq phps-mode-lexer--states nil))
-        (if state-stack
-            (setq phps-mode-lexer--state-stack state-stack)
-          (setq phps-mode-lexer--state-stack nil))
-        (if heredoc-label
-            (setq phps-mode-lexer--heredoc-label heredoc-label)
-          (setq phps-mode-lexer--heredoc-label nil))
-        (if heredoc-label-stack
-            (setq phps-mode-lexer--heredoc-label-stack heredoc-label-stack)
-          (setq phps-mode-lexer--heredoc-label-stack nil))
+            (setq
+             phps-mode-lexer--state state)
+          (setq
+           phps-mode-lexer--state
+           'ST_INITIAL))
+
+        (setq
+         phps-mode-lexer--states
+         states)
+        (setq
+         phps-mode-lexer--state-stack
+         state-stack)
+        (setq
+         phps-mode-lexer--heredoc-label
+         heredoc-label)
+        (setq
+         phps-mode-lexer--heredoc-label-stack
+         heredoc-label-stack)
+        (setq
+         phps-mode-lexer--nest-location-stack
+         nest-location-stack)
 
         ;; Setup lexer settings
         (when (boundp 'phps-mode-syntax-table)
