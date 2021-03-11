@@ -114,10 +114,6 @@
 ;; VARIABLES
 
 
-;; TODO Figure out way to use this
-(defvar-local phps-mode-lexer--expected nil
-  "Flag whether something is expected or not.")
-
 (defvar-local phps-mode-lexer--generated-tokens nil
   "List of current generated tokens.")
 
@@ -154,18 +150,35 @@
 ;; HELPER FUNCTIONS
 
 
+(defun phps-mode-lexer--parser-mode ()
+  "Return whether we have some expected value or not."
+  nil)
+
 (defun phps-mode-lexer--begin (state)
   "Begin STATE."
+  (phps-mode-debug-message
+   (message "Begin state: %s" state))
   (setq phps-mode-lexer--state state))
 
 (defun phps-mode-lexer--yy-push-state (state)
   "Add STATE to stack and then begin state."
-  (push phps-mode-lexer--state phps-mode-lexer--state-stack)
+  (push
+   phps-mode-lexer--state
+   phps-mode-lexer--state-stack)
+  (phps-mode-debug-message
+   (message
+    "Pushed state: %s"
+    phps-mode-lexer--state))
   (phps-mode-lexer--begin state))
 
 (defun phps-mode-lexer--yy-pop-state ()
   "Pop current state from stack."
   (let ((old-state (pop phps-mode-lexer--state-stack)))
+    (phps-mode-debug-message
+     (message
+      "Popped state: %s"
+      old-state))
+
     ;; (message "Going back to poppped state %s" old-state)
     (if old-state
         (phps-mode-lexer--begin old-state)
@@ -200,6 +213,10 @@
      (buffer-substring-no-properties
       (match-beginning 0)
       (match-end 0))))
+  (phps-mode-debug-message
+   (message
+    "Entered nesting '%s'"
+    opening))
   (push
    opening
    phps-mode-lexer--nest-location-stack))
@@ -221,7 +238,7 @@
     (signal
      'phps-lexer-error
      (list
-      (format "Unmatched '%s' at '%d'" closing (point))
+      (format "Unmatched '%s' at point %d" closing (point))
       (point))))
   (let ((opening
          (car
@@ -239,6 +256,10 @@
        (list
         (format "Bad nesting '%s' vs '%s' at %d'" opening closing (point))
         (point))))
+    (phps-mode-debug-message
+     (message
+      "Exited nesting '%s'"
+      closing))
     (pop phps-mode-lexer--nest-location-stack)
     t))
 
@@ -249,7 +270,10 @@
 
   (phps-mode-debug-message
    (message
-    "Emitted token %s"
+    "Emitted token '%s' -> %s"
+    (buffer-substring-no-properties
+     start
+     end)
     `(,token ,start . ,end)))
   
   ;; Push token start, end, lexer state and state stack to variable
@@ -281,13 +305,13 @@
             (setq escaped nil)))))
     pos))
 
-;; TODO Figure out what this does
 (defun phps-mode-lexer--skip-token (_token &optional start end)
   "Skip TOKEN to list with START and END."
   (unless start
     (setq start (match-beginning 0)))
   (unless end
-    (setq end (match-end 0))))
+    (setq end (match-end 0)))
+  (setq semantic-lex-end-point end))
 
 (defmacro phps-mode-lexer--match-macro (conditions &rest body)
   "Check if CONDITIONS hold, if so execute BODY."
@@ -327,7 +351,7 @@
   "Return end token."
   (if (and
        (phps-mode-lexer--check-nesting-at-end)
-       (phps-mode-parser-grammar-macro-CG 'parser-mode))
+       (phps-mode-lexer--parser-mode))
       (phps-mode-lexer--return-token 'T_ERROR)
     (phps-mode-lexer--return-token 'END)))
 
@@ -370,7 +394,7 @@
       end)))
   (if (and
        (phps-mode-lexer--exit-nesting token)
-       (phps-mode-parser-grammar-macro-CG 'parser-mode))
+       (phps-mode-lexer--parser-mode))
       (phps-mode-lexer--return-token 'T_ERROR)
     (phps-mode-lexer--return-token token start end)))
 
@@ -384,7 +408,8 @@
 
 (defun phps-mode-lexer--return-or-skip-token (&optional token start end)
   "Return TOKEN with START and END but only in parse-mode."
-  (when (phps-mode-parser-grammar-macro-CG 'parser-mode)
+  (if (phps-mode-lexer--parser-mode)
+      (phps-mode-lexer--skip-token token start end)
     (phps-mode-lexer--return-token token start end)))
 
 
@@ -431,9 +456,21 @@
   (setq phps-mode-lexer--restart-flag nil)
   (let ((old-start (point)))
     (phps-mode-debug-message
+     (let ((start (point))
+           (end (+ (point) 5))
+           (lookahead))
+       (when (> end (point-max))
+         (setq end (point-max)))
+       (setq
+        lookahead
+        (buffer-substring-no-properties
+         start
+         end))
      (message
-      "Running lexer from %s"
-      old-start))
+      "\nRunning lexer from point %s, state: %s, lookahead: '%s'.."
+      old-start
+      phps-mode-lexer--state
+      lookahead)))
     (phps-mode-lexer--reset-match-data)
     
     (let ((SHEBANG (equal phps-mode-lexer--state 'SHEBANG))
@@ -713,7 +750,7 @@
               "\\(real\\)"
               phps-mode-lexer--tabs-and-spaces
               ")")))
-       (when (phps-mode-parser-grammar-macro-CG 'parser-mode)
+       (when (phps-mode-lexer--parser-mode)
          (signal
           'phps-lexer-error
           (list
@@ -1152,7 +1189,7 @@
       (phps-mode-lexer--match-macro
        (and ST_INITIAL (looking-at "<\\?="))
        (phps-mode-lexer--begin 'ST_IN_SCRIPTING)
-       (when (phps-mode-parser-grammar-macro-CG 'parser-mode)
+       (when (phps-mode-lexer--parser-mode)
          (phps-mode-lexer--return-token-with-indent 'T_ECHO))
        (phps-mode-lexer--return-token 'T_OPEN_TAG_WITH_ECHO))
 
@@ -1402,7 +1439,7 @@
          (when (= (- end start) 3)
            (setq end (1- end)))
          (phps-mode-lexer--begin 'ST_INITIAL)
-         (when (phps-mode-parser-grammar-macro-CG 'parser-mode)
+         (when (phps-mode-lexer--parser-mode)
            (phps-mode-lexer--return-token
             ";"
             start
@@ -1581,11 +1618,14 @@
          (phps-mode-lexer--return-token 'T_END_HEREDOC start end)))
 
       (phps-mode-lexer--match-macro
-       (and (or ST_DOUBLE_QUOTES ST_BACKQUOTE ST_HEREDOC) (looking-at (concat "{\\$")))
+       (and (or ST_DOUBLE_QUOTES ST_BACKQUOTE ST_HEREDOC) (looking-at "{\\$"))
        (phps-mode-lexer--yy-push-state 'ST_IN_SCRIPTING)
        (phps-mode-lexer--yyless 1)
        (phps-mode-lexer--enter-nesting "{")
-       (phps-mode-lexer--return-token 'T_CURLY_OPEN (match-beginning 0) (- (match-end 0) 1)))
+       (phps-mode-lexer--return-token
+        'T_CURLY_OPEN
+        (match-beginning 0)
+        (- (match-end 0) 1)))
 
       (phps-mode-lexer--match-macro
        (and ST_DOUBLE_QUOTES (looking-at "[\"]"))
