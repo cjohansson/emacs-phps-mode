@@ -477,8 +477,8 @@
 
     (attribute
      (T_ATTRIBUTE
-     attribute_group
-     possible_comma "]")
+      attribute_group
+      possible_comma "]")
      )
 
     (attributes
@@ -1137,6 +1137,177 @@
      ("[" array_pair_list "]")
      T_CONSTANT_ENCAPSED_STRING
      ("\"" encaps_list "\"")
+     )
+
+    (scalar
+     T_LNUMBER
+     T_DNUMBER
+     (T_START_HEREDOC T_ENCAPSED_AND_WHITESPACE T_END_HEREDOC)
+     (T_START_HEREDOC T_END_HEREDOC)
+     (T_START_HEREDOC encaps_list T_END_HEREDOC)
+     dereferencable_scalar
+     constant
+     class_constant
+     )
+
+    (constant
+     name
+     T_LINE
+     T_FILE
+     T_DIR
+     T_TRAIT_C
+     T_METHOD_C
+     T_FUNC_C
+     T_NS_C
+     T_CLASS_C
+     )
+
+    (class_constant
+     (class_name T_PAAMAYIM_NEKUDOTAYIM identifier)
+     (variable_class_name T_PAAMAYIM_NEKUDOTAYIM identifier)
+     )
+
+    (optional_expr
+     %empty
+     expr
+     )
+
+    (variable_class_name
+     fully_dereferencable)
+
+    (fully_dereferencable
+     variable
+     ("(" expr ")")
+     dereferencable_scalar
+     class_constant
+     )
+
+    (array_object_dereferencable
+     fully_dereferencable
+     constant
+     )
+
+    (callable_expr
+     callable_variable
+     ("(" expr ")")
+     dereferencable_scalar
+     )
+
+    (callable_variable
+     simple_variable
+     (array_object_dereferencable "[" optional_expr "]")
+     (array_object_dereferencable "{" expr "}")
+     (array_object_dereferencable T_OBJECT_OPERATOR property_name argument_list)
+     (array_object_dereferencable T_NULLSAFE_OBJECT_OPERATOR property_name argument_list)
+     function_call
+     )
+
+    (variable
+     callable_variable
+     static_member
+     (array_object_dereferencable T_OBJECT_OPERATOR property_name)
+     (array_object_dereferencable T_NULLSAFE_OBJECT_OPERATOR property_name)
+     )
+
+    (simple_variable
+     T_VARIABLE
+     ("$" "{" expr "}")
+     ("$" simple_variable)
+     )
+
+    (static_member
+     (class_name T_PAAMAYIM_NEKUDOTAYIM simple_variable)
+     (variable_class_name T_PAAMAYIM_NEKUDOTAYIM simple_variable)
+     )
+
+    (new_variable
+     simple_variable
+     (new_variable "[" optional_expr "]")
+     (new_variable "{" expr "}")
+     (new_variable T_OBJECT_OPERATOR property_name)
+     (new_variable T_NULLSAFE_OBJECT_OPERATOR property_name)
+     (class_name T_PAAMAYIM_NEKUDOTAYIM simple_variable)
+     (new_variable T_PAAMAYIM_NEKUDOTAYIM simple_variable)
+     )
+
+    (member_name
+     identifier
+     ("{" expr "}")
+     simple_variable
+     )
+
+    (property_name
+     T_STRING
+     ("{" expr "}")
+     simple_variable
+     )
+
+    (array_pair_list
+     non_empty_array_pair_list
+     )
+
+    (possible_array_pair
+     %empty
+     array_pair
+     )
+
+    (non_empty_array_pair_list
+     (non_empty_array_pair_list "," possible_array_pair)
+     possible_array_pair
+     )
+
+    (array_pair
+     (expr T_DOUBLE_ARROW expr)
+     expr
+     (expr T_DOUBLE_ARROW "&" variable)
+     ("&" variable)
+     (T_ELLIPSIS expr)
+     (expr T_DOUBLE_ARROW T_LIST "(" array_pair_list ")")
+     (T_LIST "(" array_pair_list ")")
+     )
+
+    (encaps_list
+     (encaps_list encaps_var)
+     (encaps_list T_ENCAPSED_AND_WHITESPACE)
+     encaps_var
+     (T_ENCAPSED_AND_WHITESPACE encaps_var)
+     )
+
+    (encaps_var
+     T_VARIABLE
+     (T_VARIABLE "[" encaps_var_offset "]")
+     (T_VARIABLE T_OBJECT_OPERATOR T_STRING)
+     (T_VARIABLE T_NULLSAFE_OBJECT_OPERATOR T_STRING)
+     (T_DOLLAR_OPEN_CURLY_BRACES expr "}")
+     (T_DOLLAR_OPEN_CURLY_BRACES T_STRING_VARNAME "}")
+     (T_DOLLAR_OPEN_CURLY_BRACES T_STRING_VARNAME "[" expr "]" "}")
+     (T_CURLY_OPEN variable "}")
+     )
+
+    (encaps_var_offset
+     T_STRING
+     T_NUM_STRING
+     ("-" T_NUM_STRING)
+     T_VARIABLE
+     )
+
+    (internal_functions_in_yacc
+     (T_ISSET "(" isset_variables possible_comma ")")
+     (T_EMPTY "(" expr ")")
+     (T_INCLUDE expr)
+     (T_INCLUDE_ONCE expr)
+     (T_EVAL "(" expr ")")
+     (T_REQUIRE expr)
+     (T_REQUIRE_ONCE expr)
+     )
+
+    (isset_variables
+     isset_variable
+     (isset_variables "," isset_variable)
+     )
+
+    (isset_variable
+     expr
      )
 
     )
