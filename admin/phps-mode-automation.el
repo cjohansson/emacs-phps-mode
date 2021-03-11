@@ -64,6 +64,12 @@
   (setq
    parser-generator-lex-analyzer--get-function
    phps-mode-automation-grammar-lex-analyzer-get-function)
+  (setq
+   parser-generator-lr--precedence-attribute
+   phps-mode-automation-grammar-precendece-attribute)
+  (setq
+   parser-generator-lr--precedence-comparison-function
+   phps-mode-automation-grammar-precedence-comparison-function)
   (parser-generator-process-grammar)
   (parser-generator-lr-generate-parser-tables)
 
