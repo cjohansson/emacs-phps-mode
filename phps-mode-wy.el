@@ -1,6 +1,6 @@
 ;;; phps-mode-wy.el --- Generated parser support file
 
-;; Copyright (C) 2018-2020  Free Software Foundation, Inc.
+;; Copyright (C) 2018-2021  Free Software Foundation, Inc.
 
 ;; Author: Christian Johansson <christianjohansson@Christians-MacBook-Air.local>
 ;; Created: 2020-06-05 09:39:40+0200
