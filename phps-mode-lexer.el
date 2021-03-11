@@ -246,6 +246,11 @@
   "Emit TOKEN with START and END."
   (semantic-lex-push-token (semantic-lex-token token start end))
   (push `(,token ,start . ,end) phps-mode-lexer--generated-tokens)
+
+  (phps-mode-debug-message
+   (message
+    "Emitted token %s"
+    `(,token ,start . ,end)))
   
   ;; Push token start, end, lexer state and state stack to variable
   (push
@@ -445,6 +450,7 @@
 
       (phps-mode-lexer--match-macro
        (and ST_IN_SCRIPTING (looking-at "exit"))
+       (message "was here")
        (phps-mode-lexer--return-token-with-indent 'T_EXIT))
 
       (phps-mode-lexer--match-macro
