@@ -1463,7 +1463,7 @@
             (list (list " id $items" 1) (list (list 7 13) 1) (list (list 41 47) 1) (list " id $item" 1) (list (list 52 57) 1) (list (list 69 74) 1) (list (list 115 121) 1) (list " id $key" 1) (list (list 125 129) 1) (list " id $item2" 1) (list (list 134 140) 1) (list (list 152 157) 1)))))
 
   (phps-mode-test--with-buffer
-   "<?php\n\n[$random, $bandom] = myValues();\nif ($random) {\n    echo 'Hit';\n}\nif ($bandom) {\n    echo 'Hit';\n}\n\narray($random2, $bandom2] = myValues2();\nif ($random2) {\n    echo 'Hit';\n}\nif ($bandom3) {\n    echo 'Hit';\n}\n\n    "
+   "<?php\n\n[$random, $bandom] = myValues();\nif ($random) {\n    echo 'Hit';\n}\nif ($bandom) {\n    echo 'Hit';\n}\n\narray($random2, $bandom2) = myValues2();\nif ($random2) {\n    echo 'Hit';\n}\nif ($bandom3) {\n    echo 'Hit';\n}\n\n    "
    "Bookkeeping of variable declarations in array"
    (should (equal
             (phps-mode-test--hash-to-list (phps-mode-lex-analyzer--get-bookkeeping) t)
