@@ -981,6 +981,164 @@
      (T_NEW anonymous_class)
      (T_NEW attributes anonymous_class))
 
+    (expr
+     variable
+     (T_LIST "(" array_pair_list ")" "=" expr)
+     ("[" array_pair_list "]" "=" expr)
+     (variable "=" expr)
+     (variable "=" "&" variable)
+     (T_CLONE expr)
+     (variable T_PLUS_EQUAL expr)
+     (variable T_MINUS_EQUAL expr)
+     (variable T_MUL_EQUAL expr)
+     (variable T_POW_EQUAL expr)
+     (variable T_DIV_EQUAL expr)
+     (variable T_CONCAT_EQUAL expr)
+     (variable T_MOD_EQUAL expr)
+     (variable T_AND_EQUAL expr)
+     (variable T_OR_EQUAL expr)
+     (variable T_XOR_EQUAL expr)
+     (variable T_SL_EQUAL expr)
+     (variable T_SR_EQUAL expr)
+     (variable T_COALESCE_EQUAL expr)
+     (variable T_INC)
+     (T_INC variable)
+     (variable T_DEC)
+     (T_DEC variable)
+     (expr T_BOOLEAN_OR expr)
+     (expr T_BOOLEAN_AND expr)
+     (expr T_LOGICAL_OR expr)
+     (expr T_LOGICAL_AND expr)
+     (expr T_LOGICAL_XOR expr)
+     (expr "|" expr)
+     (expr "&" expr)
+     (expr "^" expr)
+     (expr "." expr)
+     (expr "+" expr)
+     (expr "-" expr)
+     (expr "*" expr)
+     (expr T_POW expr)
+     (expr "/" expr)
+     (expr "%" expr)
+     (expr T_SL expr)
+     (expr T_SR expr)
+     ("+" expr "~")
+     ("-" expr "~")
+     ("!" expr)
+     ("~" expr)
+     (expr T_IS_IDENTICAL expr)
+     (expr T_IS_NOT_IDENTICAL expr)
+     (expr T_IS_EQUAL expr)
+     (expr T_IS_NOT_EQUAL expr)
+     (expr "<" expr)
+     (expr T_IS_SMALLER_OR_EQUAL expr)
+     (expr ">" expr)
+     (expr T_IS_GREATER_OR_EQUAL expr)
+     (expr T_SPACESHIP expr)
+     (expr T_INSTANCEOF class_name_reference)
+     ("(" expr ")")
+     new_expr
+     (expr "?" expr ":" expr)
+     (expr "?" ":" expr)
+     (expr T_COALESCE expr)
+     internal_functions_in_yacc
+     (T_INT_CAST expr)
+     (T_DOUBLE_CAST expr)
+     (T_STRING_CAST expr)
+     (T_ARRAY_CAST expr)
+     (T_OBJECT_CAST expr)
+     (T_BOOL_CAST expr)
+     (T_UNSET_CAST expr)
+     (T_EXIT exit_expr)
+     ("@" expr)
+     scalar
+     ("`'" backticks_expr "`")
+     (T_PRINT expr)
+     T_YIELD
+     (T_YIELD expr)
+     (T_YIELD expr T_DOUBLE_ARROW expr)
+     (T_YIELD_FROM expr)
+     (T_THROW expr)
+     inline_function
+     (attributes inline_function)
+     (T_STATIC inline_function)
+     (attributes T_STATIC inline_function)
+     match
+     )
+
+    (inline_function
+     (function returns_ref backup_doc_comment "(" parameter_list ")" lexical_vars return_type backup_fn_flags "{" inner_statement_list "}" backup_fn_flags)
+     (fn returns_ref backup_doc_comment "(" parameter_list ")" return_type T_DOUBLE_ARROW backup_fn_flags backup_lex_pos expr backup_fn_flags)
+     )
+
+    (fn
+     T_FN)
+
+    (function
+     T_FUNCTION)
+
+    (backup_doc_comment
+     %empty)
+
+    (backup_fn_flags
+     (PREC_ARROW_FUNCTION %empty))
+
+    (backup_lex_pos
+     %empty)
+
+    (returns_ref
+     %empty
+     "&")
+
+    (lexical_vars
+     %empty
+     (T_USE "(" lexical_var_list possible_comma ")")
+     )
+
+    (lexical_var_list
+     (lexical_var_list "," lexical_var)
+     lexical_var
+     )
+
+    (lexical_var
+     T_VARIABLE
+     ("&" T_VARIABLE))
+
+    (function_call
+     (name argument_list)
+     (class_name T_PAAMAYIM_NEKUDOTAYIM member_name argument_list)
+     (variable_class_name T_PAAMAYIM_NEKUDOTAYIM member_name argument_list)
+     (callable_expr argument_list))
+
+    (class_name
+     T_STATIC
+     name)
+
+    (class_name_reference
+     class_name
+     new_variable
+     "(" expr ")")
+
+    (exit_expr
+     %empty
+     ("(" optional_expr ")"))
+
+    (backticks_expr
+     %empty
+     T_ENCAPSED_AND_WHITESPACE
+     encaps_list)
+
+    (ctor_arguments
+     %empty
+     argument_list)
+
+    (dereferencable_scalar
+     (T_ARRAY "(" array_pair_list ")")
+     ("[" array_pair_list "]")
+     T_CONSTANT_ENCAPSED_STRING
+     ("\"" encaps_list "\"")
+     )
+
     )
   "The productions of grammar.")
 
