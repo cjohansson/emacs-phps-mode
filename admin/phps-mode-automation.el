@@ -77,6 +77,18 @@
       (setq
        parser-generator-lr--precedence-comparison-function
        phps-mode-automation-grammar-precedence-comparison-function))
+    (when (boundp 'parser-generator--global-declaration)
+      (setq
+       parser-generator--global-declaration
+       phps-mode-automation-grammar-global-declaration))
+    (when (boundp 'parser-generator--context-sensitive-attributes)
+      (setq
+       parser-generator--context-sensitive-attributes
+       phps-mode-automation-grammar-context-sensitive-attributes))
+    (when (boundp 'parser-generator--global-attributes)
+      (setq
+       parser-generator--global-attributes
+       phps-mode-automation-grammar-global-declaration))
     (when (fboundp 'parser-generator-process-grammar)
       (parser-generator-process-grammar))
     (when (fboundp 'parser-generator-lr-generate-parser-tables)

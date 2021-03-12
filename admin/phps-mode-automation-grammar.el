@@ -8,6 +8,54 @@
 (require 'phps-mode-lexer)
 
 (defconst
+  phps-mode-automation-grammar-context-sensitive-attributes
+  '(%prec)
+  "List of context-sensitive attributes.")
+
+(defconst
+  phps-mode-automation-grammar-global-attributes
+  '(%precedence %left %right %nonassoc)
+  "List of valid global attributes.")
+
+(defconst
+  phps-mode-automation-grammar-global-declaration
+  '(
+    (%precedence T_THROW)
+    (%precedence PREC_ARROW_FUNCTION)
+    (%precedence T_INCLUDE T_INCLUDE_ONCE T_REQUIRE T_REQUIRE_ONCE)
+    (%left T_LOGICAL_OR)
+    (%left T_LOGICAL_XOR)
+    (%left T_LOGICAL_AND)
+    (%precedence T_PRINT)
+    (%precedence T_YIELD)
+    (%precedence T_DOUBLE_ARROW)
+    (%precedence T_YIELD_FROM)
+    (%precedence "=" T_PLUS_EQUAL T_MINUS_EQUAL T_MUL_EQUAL T_DIV_EQUAL T_CONCAT_EQUAL T_MOD_EQUAL T_AND_EQUAL T_OR_EQUAL T_XOR_EQUAL T_SL_EQUAL T_SR_EQUAL T_POW_EQUAL T_COALESCE_EQUAL)
+    (%left "?" ":")
+    (%right T_COALESCE)
+    (%left T_BOOLEAN_OR)
+    (%left T_BOOLEAN_AND)
+    (%left "|")
+    (%left "^")
+    (%left "&")
+    (%nonassoc T_IS_EQUAL T_IS_NOT_EQUAL T_IS_IDENTICAL T_IS_NOT_IDENTICAL T_SPACESHIP)
+    (%nonassoc "<" T_IS_SMALLER_OR_EQUAL ">" T_IS_GREATER_OR_EQUAL)
+    (%left ".")
+    (%left T_SL T_SR)
+    (%left "+" "-")
+    (%left "*" "/" "%")
+    (%precedence "!")
+    (%precedence T_INSTANCEOF)
+    (%precendece "~" T_INT_CAST T_DOUBLE_CAST T_STRING_CAST T_ARRAY_CAST T_OBJECT_CAST T_BOOL_CAST T_UNSET_CAST "@" )
+    (%right T_POW)
+    (%precedence T_CLONE)
+    (%precedence T_NOELSE)
+    (%precedence T_ELSEIF)
+    (%precedence T_ELSE)
+    )
+  "Declaration for grammar.")
+
+(defconst
   phps-mode-automation-grammar-non-terminals
   '(
     absolute_trait_method_reference
@@ -798,7 +846,7 @@
      )
 
     (if_stmt
-     (if_stmt_without_else (T_NOELSE (%prec 1)))
+     (if_stmt_without_else (%prec T_NOELSE))
      (if_stmt_without_else T_ELSE statement)
      )
 
@@ -1060,8 +1108,8 @@
      (expr "%" expr)
      (expr T_SL expr)
      (expr T_SR expr)
-     ("+" expr ("~" (%prec 1)))
-     ("-" expr ("~" (%prec 1)))
+     ("+" (expr (%prec "~")))
+     ("-" (expr (%prec "~")))
      ("!" expr)
      ("~" expr)
      (expr T_IS_IDENTICAL expr)
@@ -1119,7 +1167,7 @@
      %empty)
 
     (backup_fn_flags
-     ((PREC_ARROW_FUNCTION (%prec 1)) %empty))
+     (%empty (%prec PREC_ARROW_FUNCTION)))
 
     (backup_lex_pos
      %empty)
