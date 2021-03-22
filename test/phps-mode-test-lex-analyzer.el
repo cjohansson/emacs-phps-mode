@@ -269,6 +269,28 @@
               "<?php\nif ($shippingMethod->id ===\n    \\MyClass::METHOD_ID\n) {\n    "
               ))))
 
+  (setq phps-mode-idle-interval nil)
+  (phps-mode-test--with-buffer
+   ""
+   "Multi-line if block after opening parenthesis"
+   (execute-kbd-macro "<?php")
+   (execute-kbd-macro (kbd "<return>"))
+   (execute-kbd-macro "if (true) {")
+   (execute-kbd-macro (kbd "<return>"))
+   (execute-kbd-macro "if (")
+   (execute-kbd-macro (kbd "<return>"))
+   (message "minor-mode-alist: %S" minor-mode-alist)
+   (let ((buffer-contents
+          (buffer-substring-no-properties
+           (point-min)
+           (point-max))))
+     (message "buffer-contents: %S" buffer-contents)
+     (error "Here")
+     (should (equal
+              buffer-contents
+              "<?php\nif (true) {\n    if (\n        \n    )\n}"
+              ))))
+
   )
 
 (defun phps-mode-test-lex-analyzer--move-lines-indent ()
