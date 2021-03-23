@@ -48,8 +48,6 @@
 
 ;;; Code:
 
-;; NOTE use wisent-parse-toggle-verbose-flag and (semantic-debug) to debug parsing
-
 (require 'phps-mode-flymake)
 (require 'phps-mode-lex-analyzer)
 (require 'phps-mode-syntax-table)
