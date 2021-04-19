@@ -4,12 +4,9 @@ ifdef emacs
 endif
 EMACS_CMD := $(EMACS) -Q -batch -L . -L test/ -L admin/
 
-EL  := admin/phps-mode-automation.el admin/phps-mode-automation-grammar.el phps-mode-flymake.el phps-mode-lex-analyzer.el phps-mode-lexer.el phps-mode-macros.el phps-mode-syntax-table.el  phps-mode-parser-grammar-macro.el phps-mode.el phps-mode-test.el test/phps-mode-test-lex-analyzer.el test/phps-mode-test-integration.el test/phps-mode-test-lexer.el test/phps-mode-test-parser.el test/phps-mode-test-syntax-table.el
-ELC := $(EL:.el=.elc)
-
 .PHONY: clean
 clean:
-	rm -f $(ELC)
+	find . -name "*.elc" -exec rm -f {} \;
 
 .PHONY: generate-parser
 generate-parser:
@@ -17,7 +14,7 @@ generate-parser:
 
 .PHONY: compile
 compile:
-	$(EMACS_CMD) -f batch-byte-compile $(EL)
+	find . -name "*.el" -exec $(EMACS_CMD) -f batch-byte-compile {} \;
 
 .PHONY: tests
 tests: test-integration test-lexer test-lex-analyzer test-parser test-syntax-table
