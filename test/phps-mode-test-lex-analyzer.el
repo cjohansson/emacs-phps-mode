@@ -261,7 +261,7 @@
 
   (phps-mode-test--with-buffer
    "<?php\nif ($shippingMethod->id ===\n        \\MyClass::METHOD_ID\n    ) {\n"
-   "Multi-linte if statement testing equality in two lines"
+   "Multi-line if statement testing equality in two lines"
    (phps-mode-test-lex-analyzer--alternative-indentation-whole-buffer)
    (let ((buffer-contents (buffer-substring-no-properties (point-min) (point-max))))
      (should (equal
@@ -279,13 +279,10 @@
    (execute-kbd-macro (kbd "<return>"))
    (execute-kbd-macro "if (")
    (execute-kbd-macro (kbd "<return>"))
-   (message "minor-mode-alist: %S" minor-mode-alist)
    (let ((buffer-contents
           (buffer-substring-no-properties
            (point-min)
            (point-max))))
-     (message "buffer-contents: %S" buffer-contents)
-     (error "Here")
      (should (equal
               buffer-contents
               "<?php\nif (true) {\n    if (\n        \n    )\n}"
