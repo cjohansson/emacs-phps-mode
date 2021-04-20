@@ -269,7 +269,6 @@
               "<?php\nif ($shippingMethod->id ===\n    \\MyClass::METHOD_ID\n) {\n    "
               ))))
 
-  (setq phps-mode-idle-interval nil)
   (phps-mode-test--with-buffer
    ""
    "Multi-line if block after opening parenthesis"
@@ -1306,7 +1305,7 @@
 
   (phps-mode-test--with-buffer
    "<?php\nnamespace myNamespace;\nclass myClass extends myAbstract/*  implements myInterface  */{\n    public function myFunctionA($myArg = null) {}\n    /* protected function myFunctionB($myArg = 'abc') {} */\n}"
-   "Un-comment region were some of the region is already un-commented"
+   "Un-comment region were some of the region is already un-commented 1"
    ;; (message "Tokens %s" phps-mode-lexer-tokens)
    (uncomment-region (point-min) (point-max))
    (let ((buffer-contents (buffer-substring-no-properties (point-min) (point-max))))
@@ -1322,7 +1321,7 @@
 
   (phps-mode-test--with-buffer
    "<?php\n/** $var = '123'; */\n$var = 'abc';\n"
-   "Un-comment region were some of the region is already un-commented"
+   "Un-comment region were some of the region is already un-commented 2"
    ;; (message "Tokens %s" phps-mode-lexer-tokens)
    (uncomment-region (point-min) (point-max))
    (let ((buffer-contents (buffer-substring-no-properties (point-min) (point-max))))

@@ -666,6 +666,7 @@
    (message "Run process changes on buffer '%s'" buffer))
   (when (get-buffer buffer)
     (with-current-buffer buffer
+      (phps-mode-lex-analyzer--reset-imenu)
       (let ((run-full-lexer nil)
             (old-tokens phps-mode-lex-analyzer--tokens)
             (old-states phps-mode-lex-analyzer--states)
@@ -2902,7 +2903,8 @@ SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
 (defun phps-mode-lex-analyzer--after-change (start stop length)
   "Track buffer change from START to STOP with LENGTH."
   (phps-mode-debug-message
-   (message "After change %s - %s, length: %s" start stop length))
+   (message
+    "After change %s - %s, length: %s, enabled: %s, idle-interval: %s" start stop length phps-mode-lex-analyzer--allow-after-change-p phps-mode-idle-interval))
 
   (if phps-mode-lex-analyzer--allow-after-change-p
       (progn
@@ -2912,15 +2914,18 @@ SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
         (when (and (boundp 'phps-mode-idle-interval)
                    phps-mode-idle-interval
                    (not phps-mode-lex-analyzer--idle-timer))
-
-          (phps-mode-lex-analyzer--reset-imenu)
           (phps-mode-lex-analyzer--start-idle-timer)
           (phps-mode-serial--kill-active (buffer-name)))
 
         (when (or
                (not phps-mode-lex-analyzer--change-min)
                (< start phps-mode-lex-analyzer--change-min))
-          (setq phps-mode-lex-analyzer--change-min start)))
+          (setq phps-mode-lex-analyzer--change-min start))
+
+        (when (and
+               (boundp 'phps-mode-idle-interval)
+               (not phps-mode-idle-interval))
+          (phps-mode-lex-analyzer--process-changes (current-buffer))))
     (phps-mode-debug-message (message "After change registration is disabled"))))
 
 (defun phps-mode-lex-analyzer--imenu-create-index ()
