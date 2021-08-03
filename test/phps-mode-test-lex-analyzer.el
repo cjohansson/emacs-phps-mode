@@ -1580,6 +1580,20 @@
             (phps-mode-test--hash-to-list (phps-mode-lex-analyzer--get-bookkeeping) t)
             '((" id $a" 1) ((15 17) 1) (" id $b" 1) ((19 21) 1) ((28 30) 1) (" function myFunction id $c" 1) ((73 75) 1) (" function myFunction id $a" 1) ((90 92) 1) ((102 104) 1) ((142 144) 0)))))
 
+  (phps-mode-test--with-buffer
+   "<?php\n\nstatic $a;\n\nif ($a) {}\n\nfunction test()\n{\n    static $a;\n    if ($a) {}\n}\n\nclass There\n{\n    function here()\n    {\n        static $a;\n        if ($a) {}\n    }\n}"
+   "Bookkeeping of static variables in different scopes without namespaces"
+   (should (equal
+            (phps-mode-test--hash-to-list (phps-mode-lex-analyzer--get-bookkeeping) t)
+            '((" $id $a" 1) ((15 17) 1) ((24 26) 1) (" function test id $a" 1) ((61 63) 1) ((73 75) 1) (" class There function here id $this" 1) (" class There function here static id $a" 1) ((138 140) 1) ((154 156) 1)))))
+
+  (phps-mode-test--with-buffer
+   "<?php\n\nnamespace Here\n{\n    function here()\n    {\n        static $a;\n        if ($a) {}\n    }\n    class There\n    {\n        public function Near()\n        {\n            static $a;\n            if ($a) {}\n        }\n    }\n}\nnamespace\n{\n    static $a;\n    if ($a) {}\n}\n"
+   "Bookkeeping of static variables in different scopes with namespaces"
+   (should (equal
+            (phps-mode-test--hash-to-list (phps-mode-lex-analyzer--get-bookkeeping) t)
+            '((" namespace Here function here id $a" 1) ((66 68) 1) ((82 84) 1) (" namespace Here class There function Near id $this" 1) (" namespace Here class There function Near id $a" 1)  ((177 179) 1) ((197 199) 1) ("id $a" 1) ((245 247) 1) ((257 259) 1)))))
+
   )
 
 (defun phps-mode-test-lex-analyzer ()
