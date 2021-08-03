@@ -2,7 +2,7 @@ EMACS = emacs
 ifdef emacs
 	EMACS = $(emacs)
 endif
-EMACS_CMD := $(EMACS) -Q -batch -L . -L test/ -L admin/
+EMACS_CMD := $(EMACS) -Q -batch -L .
 
 .PHONY: clean
 clean:
