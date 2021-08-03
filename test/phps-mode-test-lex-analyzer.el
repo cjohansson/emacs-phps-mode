@@ -1469,8 +1469,7 @@
 
   (phps-mode-test--with-buffer
    "<?php\nclass myClass {\n    function random() {}\n    function __construct()\n    {\n        $this->random();\n        $this->random['abc'] = 123;\n    }\n}"
-   "Method calls should be avoied in bookkeeping"
-   ;; (message "Bookkeeping: %s" (phps-mode-test--hash-to-list (phps-mode-lex-analyzer--get-bookkeeping) t))
+   "Method calls should be avoided in bookkeeping"
    (should (equal
             (phps-mode-test--hash-to-list (phps-mode-lex-analyzer--get-bookkeeping) t)
             (list (list " class myClass function __construct id $this" 1) (list (list 89 94) 1) (list (list 114 119) 1)))))
@@ -1585,14 +1584,14 @@
    "Bookkeeping of static variables in different scopes without namespaces"
    (should (equal
             (phps-mode-test--hash-to-list (phps-mode-lex-analyzer--get-bookkeeping) t)
-            '((" $id $a" 1) ((15 17) 1) ((24 26) 1) (" function test id $a" 1) ((61 63) 1) ((73 75) 1) (" class There function here id $this" 1) (" class There function here static id $a" 1) ((138 140) 1) ((154 156) 1)))))
+            '((" id $a" 1) ((15 17) 1) ((24 26) 1) (" function test id $a" 1) ((61 63) 1) ((73 75) 1) (" class There function here id $this" 1) (" class There function here id $a" 1) ((138 140) 1) ((154 156) 1)))))
 
   (phps-mode-test--with-buffer
    "<?php\n\nnamespace Here\n{\n    function here()\n    {\n        static $a;\n        if ($a) {}\n    }\n    class There\n    {\n        public function Near()\n        {\n            static $a;\n            if ($a) {}\n        }\n    }\n}\nnamespace\n{\n    static $a;\n    if ($a) {}\n}\n"
    "Bookkeeping of static variables in different scopes with namespaces"
    (should (equal
             (phps-mode-test--hash-to-list (phps-mode-lex-analyzer--get-bookkeeping) t)
-            '((" namespace Here function here id $a" 1) ((66 68) 1) ((82 84) 1) (" namespace Here class There function Near id $this" 1) (" namespace Here class There function Near id $a" 1)  ((177 179) 1) ((197 199) 1) ("id $a" 1) ((245 247) 1) ((257 259) 1)))))
+            '((" namespace Here function here id $a" 1) ((66 68) 1) ((82 84) 1) (" namespace Here class There function Near id $this" 1) (" namespace Here class There function Near id $a" 1)  ((177 179) 1) ((197 199) 1) (" id $a" 1) ((245 247) 1) ((257 259) 1)))))
 
   )
 

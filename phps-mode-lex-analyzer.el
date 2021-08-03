@@ -1161,7 +1161,6 @@ SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
               (in-anonymous-function-number 0)
               (in-anonymous-function-nesting-level)
               (in-global-declaration nil)
-              (in-static-declaration nil)
               (in-arrow-fn nil)
               (in-arrow-fn-declaration nil)
               (in-arrow-fn-number 0)
@@ -1358,10 +1357,14 @@ SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
                         (when (and
                                imenu-in-class-name
                                (equal previous-token 'T_STATIC)
-                               (not imenu-in-function-declaration))
-                          (setq bookkeeping-namespace (concat bookkeeping-namespace " static"))
+                               (not imenu-in-function-declaration)
+                               (not imenu-in-function-name))
+                          (setq
+                           bookkeeping-namespace
+                           (concat bookkeeping-namespace " static"))
                           (when bookkeeping-alternative-namespace
-                            (setq bookkeeping-alternative-namespace (concat bookkeeping-alternative-namespace " static"))))
+                            (setq bookkeeping-alternative-namespace
+                                  (concat bookkeeping-alternative-namespace " static"))))
 
                         (setq bookkeeping-namespace (concat bookkeeping-namespace " id " bookkeeping-variable-name))
                         (when bookkeeping-alternative-namespace
@@ -1445,9 +1448,8 @@ SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
                         (setq bookkeeping-in-assignment t))
 
                       ;; In static variable declaration
-                      (when (and in-static-declaration
-                                 (equal token 'T_VARIABLE)
-                                 imenu-in-function-name)
+                      (when (and (equal previous-token 'T_STATIC)
+                                 (equal token 'T_VARIABLE))
                         (setq bookkeeping-in-assignment t))
 
                       ;; In [$abc, $def] = .. or array($abc, $def) = ...
@@ -1554,12 +1556,7 @@ SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
                   ;; Keep track of global declaration for bookkeeping
                   (if (equal token 'T_GLOBAL)
                       (setq in-global-declaration t)
-                    (setq in-global-declaration nil))
-
-                  ;; Keep track of static declaration for bookkeeping
-                  (if (equal token 'T_STATIC)
-                      (setq in-static-declaration t)
-                    (setq in-static-declaration nil)))
+                    (setq in-global-declaration nil)))
 
                 ;; Keep track of open catch blocks for bookkeeping
                 (when (equal token 'T_CATCH)
