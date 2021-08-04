@@ -1356,7 +1356,10 @@ SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
                       (unless bookkeeping-named
                         (when (and
                                imenu-in-class-name
-                               (equal previous-token 'T_STATIC)
+                               (or
+                                (equal previous-token 'T_STATIC)
+                                (equal previous2-token 'T_STATIC))
+                               (equal token 'T_VARIABLE)
                                (not imenu-in-function-declaration)
                                (not imenu-in-function-name))
                           (setq
@@ -1448,8 +1451,11 @@ SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
                         (setq bookkeeping-in-assignment t))
 
                       ;; In static variable declaration
-                      (when (and (equal previous-token 'T_STATIC)
-                                 (equal token 'T_VARIABLE))
+                      (when (and
+                             (or
+                              (equal previous-token 'T_STATIC)
+                              (equal previous2-token 'T_STATIC))
+                             (equal token 'T_VARIABLE))
                         (setq bookkeeping-in-assignment t))
 
                       ;; In [$abc, $def] = .. or array($abc, $def) = ...
@@ -1473,7 +1479,12 @@ SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
                               (equal previous-token 'T_PRIVATE)
                               (equal previous-token 'T_PROTECTED)
                               (equal previous-token 'T_PUBLIC)
-                              (equal previous-token 'T_VAR)))
+                              (equal previous-token 'T_VAR)
+                              (equal previous2-token 'T_STATIC)
+                              (equal previous2-token 'T_PRIVATE)
+                              (equal previous2-token 'T_PROTECTED)
+                              (equal previous2-token 'T_PUBLIC)
+                              (equal previous2-token 'T_VAR)))
                         (setq bookkeeping-in-assignment t))
 
                       ;; Do we have a assignment?
