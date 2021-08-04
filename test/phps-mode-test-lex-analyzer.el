@@ -1593,6 +1593,14 @@
             (phps-mode-test--hash-to-list (phps-mode-lex-analyzer--get-bookkeeping) t)
             '((" namespace Here function here id $a" 1) ((66 68) 1) ((82 84) 1) (" namespace Here class There function Near id $this" 1) (" namespace Here class There function Near id $a" 1)  ((177 179) 1) ((197 199) 1) (" id $a" 1) ((245 247) 1) ((257 259) 1)))))
 
+  (phps-mode-test--with-buffer
+   "<?php\nclass There\n{\n    private $variable;\n    private \\My\\Random $variable2;\n    private string $variable3;\n    private static $variable4;\n    private static \\My\\Random $variable5;\n    private static string $variable6;\n    function here()\n    {\n        if ($this->variable) {}\n        if ($this->variable2) {}\n        if ($this->variable3) {}\n        if ($this->variable4) {}\n        if (self::$variable4) {}\n        if (self::$variable5) {}\n        if (self::$variable6) {}\n    }\n}\n"
+   "Bookkeeping of typed class variables"
+   (should
+    (equal
+     (phps-mode-test--hash-to-list (phps-mode-lex-analyzer--get-bookkeeping) t)
+     '((" class There id $variable" 1) ((33 42) 1) (" class There id $variable2" 1) ((67 77) 1) (" class There id $variable3" 1) ((98 108) 1) (" class There static id $variable4" 1) ((129 139) 1) (" class There static id $variable5" 1) ((171 181) 1) (" class There static id $variable6" 1) ((209 219) 1) (" class There function here id $this" 1) ((259 264) 1) ((266 274) 1) ((291 296) 1) ((298 307) 1) ((324 329) 1) ((331 340) 1) ((357 362) 1) ((364 373) 0) ((396 406) 1) ((429 439) 1) ((462 472) 1)))))
+
   )
 
 (defun phps-mode-test-lex-analyzer ()
