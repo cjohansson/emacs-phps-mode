@@ -116,6 +116,11 @@
 
       ;; Export
       (let ((export (parser-generator-lr-export-to-elisp "phps-mode-parser")))
+        (generate-new-buffer "*PHP Parser*")
+        (switch-to-buffer "*PHP Parser*")
+        (insert export)
+        (write-file (expand-file-name "../phps-mode-parser.el"))
+        (kill-buffer)
         (message "export: %s" export))
 
       (message "Automation completed"))))
