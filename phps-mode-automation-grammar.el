@@ -32,9 +32,19 @@
   "List of context-sensitive attributes.")
 
 (defconst
+  phps-mode-automation-lr--context-sensitive-precedence-attribute
+  '%prec
+  "The LR-parser's context-sensitive precedence attribute.")
+
+(defconst
   phps-mode-automation-grammar-global-attributes
-  '(%precedence %left %right %nonassoc)
+  '(%left %nonassoc %precedence %right)
   "List of valid global attributes.")
+
+(defconst
+  phps-mode-lr--global-precedence-attributes
+  '%prec
+  "The LR-parser's list of global precedence attributes.")
 
 (defconst
   phps-mode-automation-grammar-global-declaration
@@ -865,7 +875,7 @@
      )
 
     (if_stmt
-     (if_stmt_without_else (%prec T_NOELSE))
+     (if_stmt_without_else %prec T_NOELSE)
      (if_stmt_without_else T_ELSE statement)
      )
 
@@ -1127,8 +1137,8 @@
      (expr "%" expr)
      (expr T_SL expr)
      (expr T_SR expr)
-     ("+" (expr (%prec "~")))
-     ("-" (expr (%prec "~")))
+     ("+" expr %prec "~")
+     ("-" expr %prec "~")
      ("!" expr)
      ("~" expr)
      (expr T_IS_IDENTICAL expr)
@@ -1186,7 +1196,7 @@
      %empty)
 
     (backup_fn_flags
-     (%empty (%prec PREC_ARROW_FUNCTION)))
+     (%empty %prec PREC_ARROW_FUNCTION))
 
     (backup_lex_pos
      %empty)
@@ -1449,13 +1459,45 @@
   "The custom lex-analyzer.")
 
 (defconst
-  phps-mode-automation-grammar-precendece-attribute
-  '%prec
-  "The precedence attribute of the grammar.")
-
-(defconst
   phps-mode-automation-grammar-precedence-comparison-function
-  #'>
+  (lambda(a-type a-value _b-type b-value)
+    (cond
+
+     ((and
+       a-value
+       b-value)
+      (cond
+       ((> a-value b-value)
+        t)
+
+       ((< a-value b-value)
+        nil)
+
+       ((= a-value b-value)
+
+        (cond
+         ((equal a-type '%left)
+          t)
+
+         ((equal a-type '%right)
+          nil)
+
+         ((equal a-type '%precedence)
+          t))
+
+        )))
+
+     ((and
+       a-value
+       (not b-value))
+      t)
+
+     ((and
+       (not a-value)
+       (not b-value))
+      nil)
+
+     ))
   "The precedence comparison function of the grammar.")
 
 (defconst
