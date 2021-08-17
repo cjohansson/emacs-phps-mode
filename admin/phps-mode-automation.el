@@ -46,67 +46,66 @@
       (when (fboundp 'parser-generator-set-grammar)
         (parser-generator-set-grammar
          `(
-           ,phps-mode-automation-grammar-non-terminals
-           ,phps-mode-automation-grammar-terminals
-           ,phps-mode-automation-grammar-productions
-           ,phps-mode-automation-grammar-start
+           ,phps-mode-automation-grammar--non-terminals
+           ,phps-mode-automation-grammar--terminals
+           ,phps-mode-automation-grammar--productions
+           ,phps-mode-automation-grammar--start
            )
          ))
+
       (when (fboundp 'parser-generator-set-look-ahead-number)
         (parser-generator-set-look-ahead-number
-         phps-mode-automation-grammar-look-ahead-number))
+         phps-mode-automation-grammar--look-ahead-number))
+
       (when (boundp 'parser-generator--e-identifier)
         (setq
          parser-generator--e-identifier
-         phps-mode-automation-grammar-e-identifier))
+         phps-mode-automation-grammar--e-identifier))
+
       (when (boundp 'parser-generator--eof-identifier)
         (setq
          parser-generator--eof-identifier
-         phps-mode-automation-grammar-eof-identifier))
+         phps-mode-automation-grammar--eof-identifier))
+
       (when (boundp 'parser-generator-lex-analyzer--function)
         (setq
          parser-generator-lex-analyzer--function
-         phps-mode-automation-grammar-lex-analyzer-function))
+         phps-mode-automation-grammar--lex-analyzer-function))
 
       (when (boundp 'parser-generator-lex-analyzer--get-function)
         (setq
          parser-generator-lex-analyzer--get-function
-         phps-mode-automation-grammar-lex-analyzer-get-function))
+         phps-mode-automation-grammar--lex-analyzer-get-function))
 
       (when (boundp 'parser-generator--global-attributes)
         (setq
          parser-generator--global-attributes
-         phps-mode-automation-grammar-global-declaration))
+         phps-mode-automation-grammar--global-attributes))
 
       (when (boundp 'parser-generator-lr--global-precedence-attributes)
         (setq
          parser-generator-lr--global-precedence-attributes
-         phps-mode-lr--global-precedence-attributes))
+         phps-mode-automation-grammar--lr-global-precedence-attributes))
 
       (when (boundp 'parser-generator--context-sensitive-attributes)
         (setq
          parser-generator--context-sensitive-attributes
-         phps-mode-automation-grammar-context-sensitive-attributes))
+         phps-mode-automation-grammar--context-sensitive-attributes))
 
       (when (boundp 'parser-generator-lr--context-sensitive-precedence-attribute)
         (setq
          parser-generator-lr--context-sensitive-precedence-attribute
-         phps-mode-automation-lr--context-sensitive-precedence-attribute))
-
-      (when (boundp 'parser-generator-lr--precedence-attribute)
-        (setq
-         parser-generator-lr--precedence-attribute
-         phps-mode-automation-grammar-precendece-attribute))
+         phps-mode-automation-grammar--lr-context-sensitive-precedence-attribute))
 
       (when (boundp 'parser-generator-lr--precedence-comparison-function)
         (setq
          parser-generator-lr--precedence-comparison-function
-         phps-mode-automation-grammar-precedence-comparison-function))
+         phps-mode-automation-grammar--precedence-comparison-function))
 
       (when (boundp 'parser-generator--global-declaration)
         (setq
          parser-generator--global-declaration
-         phps-mode-automation-grammar-global-declaration))
+         phps-mode-automation-grammar--global-declaration))
 
       (when (fboundp 'parser-generator-process-grammar)
         (parser-generator-process-grammar))

@@ -8,9 +8,9 @@ EMACS_CMD := $(EMACS) -Q -batch -L .
 clean:
 	find . -name "*.elc" -exec rm -f {} \;
 
-.PHONY: generate-parser
-generate-parser:
-	$(EMACS_CMD) -L ~/.emacs.d/emacs-parser/ -l phps-mode-lexer.el -l admin/phps-mode-automation.el -e "(progn (require 'parser-generator-lr-export)(phps-mode-automation))"
+.PHONY: parser
+parser:
+	$(EMACS_CMD) -L ~/.emacs.d/emacs-parser/ -l phps-mode-lexer.el -l admin/phps-mode-automation.el -eval "(progn (require 'parser-generator-lr-export)(phps-mode-automation))"
 
 .PHONY: compile
 compile:

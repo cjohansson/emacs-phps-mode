@@ -27,27 +27,27 @@
 (require 'phps-mode-lexer)
 
 (defconst
-  phps-mode-automation-grammar-context-sensitive-attributes
+  phps-mode-automation-grammar--context-sensitive-attributes
   '(%prec)
   "List of context-sensitive attributes.")
 
 (defconst
-  phps-mode-automation-lr--context-sensitive-precedence-attribute
+  phps-mode-automation-grammar--lr-context-sensitive-precedence-attribute
   '%prec
   "The LR-parser's context-sensitive precedence attribute.")
 
 (defconst
-  phps-mode-automation-grammar-global-attributes
+  phps-mode-automation-grammar--global-attributes
   '(%left %nonassoc %precedence %right)
   "List of valid global attributes.")
 
 (defconst
-  phps-mode-lr--global-precedence-attributes
+  phps-mode-automation-grammar--lr-global-precedence-attributes
   '%prec
   "The LR-parser's list of global precedence attributes.")
 
 (defconst
-  phps-mode-automation-grammar-global-declaration
+  phps-mode-automation-grammar--global-declaration
   '(
     (%precedence T_THROW)
     (%precedence PREC_ARROW_FUNCTION)
@@ -85,7 +85,7 @@
   "Declaration for grammar.")
 
 (defconst
-  phps-mode-automation-grammar-non-terminals
+  phps-mode-automation-grammar--non-terminals
   '(
     absolute_trait_method_reference
     alt_if_stmt
@@ -244,7 +244,7 @@
   "The non-terminals in grammar.")
 
 (defconst
-  phps-mode-automation-grammar-terminals
+  phps-mode-automation-grammar--terminals
   '(
     "!"
     "%"
@@ -456,12 +456,12 @@
   "The terminals of grammar.")
 
 (defconst
-  phps-mode-automation-grammar-look-ahead-number
+  phps-mode-automation-grammar--look-ahead-number
   1
   "The look-ahead number of grammar.")
 
 (defconst
-  phps-mode-automation-grammar-productions
+  phps-mode-automation-grammar--productions
   '(
 
     (start
@@ -1429,22 +1429,22 @@
   "The productions of grammar.")
 
 (defconst
-  phps-mode-automation-grammar-start
+  phps-mode-automation-grammar--start
   'start
   "The entry-point of grammar.")
 
 (defconst
-  phps-mode-automation-grammar-e-identifier
+  phps-mode-automation-grammar--e-identifier
   '%empty
   "The e-identifier of grammar.")
 
 (defconst
-  phps-mode-automation-grammar-eof-identifier
+  phps-mode-automation-grammar--eof-identifier
   '$
   "The EOF-identifier of grammar.")
 
 (defconst
-  phps-mode-automation-grammar-lex-analyzer-function
+  phps-mode-automation-grammar--lex-analyzer-function
   (lambda(index)
     (with-current-buffer "*phps-mode-lex-analyzer*"
       (unless (= (point) index)
@@ -1459,7 +1459,7 @@
   "The custom lex-analyzer.")
 
 (defconst
-  phps-mode-automation-grammar-precedence-comparison-function
+  phps-mode-automation-grammar--precedence-comparison-function
   (lambda(a-type a-value _b-type b-value)
     (cond
 
@@ -1501,7 +1501,7 @@
   "The precedence comparison function of the grammar.")
 
 (defconst
-  phps-mode-automation-grammar-lex-analyzer-get-function
+  phps-mode-automation-grammar--lex-analyzer-get-function
   (lambda (token)
     (with-current-buffer "*phps-mode-lex-analyzer*"
       (let ((start (car (cdr token)))
