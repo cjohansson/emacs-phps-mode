@@ -87,6 +87,11 @@
          parser-generator-lr--global-precedence-attributes
          phps-mode-automation-grammar--lr-global-precedence-attributes))
 
+      (when (boundp 'parser-generator-lr--allow-default-conflict-resolution)
+        (setq
+         parser-generator-lr--allow-default-conflict-resolution
+         phps-mode-automation-grammar--lr--allow-default-conflict-resolution))
+
       (when (boundp 'parser-generator--context-sensitive-attributes)
         (setq
          parser-generator--context-sensitive-attributes

@@ -47,6 +47,11 @@
   "The LR-parser's list of global precedence attributes.")
 
 (defconst
+  phps-mode-automation-grammar--lr--allow-default-conflict-resolution
+  t
+  "Allow shift resolution to shift/reduce conflicts were precedence is missing.")
+
+(defconst
   phps-mode-automation-grammar--global-declaration
   '(
     (%precedence T_THROW)
