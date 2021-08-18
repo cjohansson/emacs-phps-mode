@@ -43,7 +43,7 @@
 
 (defconst
   phps-mode-automation-grammar--lr-global-precedence-attributes
-  '%prec
+  '(%left %nonassoc %precedence %right)
   "The LR-parser's list of global precedence attributes.")
 
 (defconst
@@ -75,7 +75,7 @@
     (%left "*" "/" "%")
     (%precedence "!")
     (%precedence T_INSTANCEOF)
-    (%precendece "~" T_INT_CAST T_DOUBLE_CAST T_STRING_CAST T_ARRAY_CAST T_OBJECT_CAST T_BOOL_CAST T_UNSET_CAST "@" )
+    (%precedence "~" T_INT_CAST T_DOUBLE_CAST T_STRING_CAST T_ARRAY_CAST T_OBJECT_CAST T_BOOL_CAST T_UNSET_CAST "@" )
     (%right T_POW)
     (%precedence T_CLONE)
     (%precedence T_NOELSE)
