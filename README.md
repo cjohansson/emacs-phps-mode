@@ -28,7 +28,7 @@ This mode does not require PHP installed on your computer because it has a built
 * A interactive function that can be used interactively to format buffers `(phps-mode-format-buffer)`
 * Support for asynchronous lexer via processes (`async.el`) or threads
 * Mode-line asynchronous status
-* Bookkeeping in lexical-analysis, showing defined and undefined variables via syntax coloring
+* Bookkeeping in lexical-analysis, showing defined and undefined variables via syntax coloring (requires a theme that has distinct colors for 'font-lock-warning-face and 'font-lock-variable-name-face)
 
 ## Roadmap
 
