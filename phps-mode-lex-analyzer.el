@@ -1414,7 +1414,6 @@ SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
 
                       ;; Stand-alone variable assignment
                       (when (and (equal token 'T_VARIABLE)
-                                 first-token-on-line
                                  (string= next-token "="))
                         (setq bookkeeping-in-assignment t))
 
