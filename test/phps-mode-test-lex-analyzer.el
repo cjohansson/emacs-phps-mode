@@ -1601,6 +1601,14 @@
      (phps-mode-test--hash-to-list (phps-mode-lex-analyzer--get-bookkeeping) t)
      '((" class There id $variable" 1) ((33 42) 1) (" class There id $variable2" 1) ((67 77) 1) (" class There id $variable3" 1) ((98 108) 1) (" class There static id $variable4" 1) ((129 139) 1) (" class There static id $variable5" 1) ((171 181) 1) (" class There static id $variable6" 1) ((209 219) 1) (" class There function here id $this" 1) ((259 264) 1) ((266 274) 1) ((291 296) 1) ((298 307) 1) ((324 329) 1) ((331 340) 1) ((357 362) 1) ((364 373) 0) ((396 406) 1) ((429 439) 1) ((462 472) 1)))))
 
+  (phps-mode-test--with-buffer
+   "<?php\n\n$a = $b = $c = 3;\n\nif ($a) {\n    echo 'a=',$a;\n} else {\n    echo '$a is undefined!';\n}\nif ($b) {\n    echo 'b=',$b;\n} else {\n    echo '$b is undefined!';\n}\nif ($c) {\n    echo 'c=',$c;\n} else {\n    echo '$c is undefined!';\n}"
+   "Bookkeeping of typed class variables"
+   (should
+    (equal
+     (phps-mode-test--hash-to-list (phps-mode-lex-analyzer--get-bookkeeping) t)
+     '((" id $a" 1) (" id $b") (" id $c") ((8 10) 1) ((13 15) 1) ((18 20) 1) ((31 33) 1) ((51 53) 1) ((99 101) 1) ((119 121) 1) ((167 169) 1) ((187 189) 1)))))
+
   )
 
 (defun phps-mode-test-lex-analyzer ()
