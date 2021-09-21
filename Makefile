@@ -10,7 +10,7 @@ clean:
 
 .PHONY: parser
 parser:
-	$(EMACS_CMD) -L ~/.emacs.d/emacs-parser/ -l phps-mode-lexer.el -l admin/phps-mode-automation.el -eval "(progn (require 'parser-generator-lr-export)(setq debug-on-signal t)(setq debug-on-error t)(phps-mode-automation))"
+	$(EMACS_CMD) -L ~/.emacs.d/emacs-parser-generator/ -l phps-mode-lexer.el -l admin/phps-mode-automation.el -eval "(progn (require 'parser-generator-lr-export)(setq debug-on-signal t)(setq debug-on-error t)(phps-mode-automation))"
 
 .PHONY: compile
 compile:
