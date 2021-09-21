@@ -115,8 +115,50 @@
       (when (fboundp 'parser-generator-process-grammar)
         (parser-generator-process-grammar))
 
-      (when (fboundp 'parser-generator-lr-generate-parser-tables)
-        (parser-generator-lr-generate-parser-tables))
+      (when (fboundp 'parser-generator-lr--generate-precedence-tables)
+        (parser-generator-lr--generate-precedence-tables)
+        (message "Precedence Tables")
+        (when (boundp 'parser-generator-lr--symbol-precedence-value)
+          (message
+           "parser-generator-lr--symbol-precedence-value: %S"
+           parser-generator-lr--symbol-precedence-value))
+        (when (boundp 'parser-generator-lr--symbol-precedence-type)
+          (message
+           "parser-generator-lr--symbol-precedence-type: %S"
+           parser-generator-lr--symbol-precedence-type))
+        (when (boundp 'parser-generator-lr--production-number-precedence-value)
+          (message
+           "parser-generator-lr--production-number-precedence-value: %S"
+           parser-generator-lr--production-number-precedence-value))
+        (when (boundp 'parser-generator-lr--production-number-precedence-type)
+          (message
+           "parser-generator-lr--production-number-precedence-type: %S"
+           parser-generator-lr--production-number-precedence-type))
+
+        (when (fboundp 'parser-generator-lr--generate-goto-tables)
+          (let ((table-lr-items
+                 (parser-generator-lr--generate-goto-tables)))
+            (message
+             "table-lr-items: %S"
+             table-lr-items)
+            (when (boundp 'parser-generator-lr--goto-tables)
+              (message
+               "parser-generator-lr--goto-tables: %S"
+               parser-generator-lr--goto-tables))
+            (when (boundp 'parser-generator-lr--distinct-goto-tables)
+              (message
+               "parser-generator-lr--distinct-goto-tables: %S"
+               parser-generator-lr--distinct-goto-tables))
+            (when (fboundp 'parser-generator-lr--generate-action-tables)
+              (parser-generator-lr--generate-action-tables table-lr-items)
+              (when (boundp 'parser-generator-lr--action-tables)
+                (message
+                 "parser-generator-lr--action-tables: %S"
+                 parser-generator-lr--action-tables))
+              (when (boundp 'parser-generator-lr--distinct-action-tables)
+                (message
+                 "parser-generator-lr--distinct-action-tables: %S"
+                 parser-generator-lr--distinct-action-tables))))))
 
       ;; Export
       (let ((export (parser-generator-lr-export-to-elisp "phps-mode-parser")))
