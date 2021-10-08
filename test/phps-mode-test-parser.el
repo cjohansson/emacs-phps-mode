@@ -25,13 +25,21 @@
 
 ;;; Code:
 
+(require 'phps-mode-parser)
+
 (defun phps-mode-test-parser()
   "Run test for lexer."
-  ;; (message "-- Running all tests for parser... --\n")
-  ;; (setq debug-on-error t)
+  (message "-- Running all tests for parser... --\n")
 
-  ;; (message "\n-- Ran all tests for parser. --")
-  )
+  (with-temp-buffer
+    (insert "<?php echo 'hello';")
+    (should
+     (equal
+      nil
+      (phps-mode-parser-parse))))
+  (message "Passed basic echo test")
+
+  (message "\n-- Ran all tests for parser. --"))
 
 (phps-mode-test-parser)
 
