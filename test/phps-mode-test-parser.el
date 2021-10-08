@@ -25,19 +25,58 @@
 
 ;;; Code:
 
+(require 'ert)
+(require 'phps-mode)
+(require 'phps-mode-lexer)
 (require 'phps-mode-parser)
+
+(defun phps-mode-test-parser--buffer-contentes (buffer-contents name logic)
+  (generate-new-buffer "*phps-mode-lex-analyzer*")
+  (with-current-buffer "*phps-mode-lex-analyzer*"
+    (kill-region (point-min) (point-max))
+    (insert buffer-contents)
+    (message "Testing buffer '%S' with buffer-contents:\n%S\n" name (buffer-substring-no-properties (point-min) (point-max)))
+
+    ;; Reset lexer
+    (setq
+     phps-mode-lexer--generated-tokens
+     nil)
+    (setq
+     phps-mode-lexer--state
+     'ST_INITIAL)
+    (setq
+     phps-mode-lexer--states
+     nil)
+    (setq
+     phps-mode-lexer--state-stack
+     nil)
+    (setq
+     phps-mode-lexer--heredoc-label
+     nil)
+    (setq
+     phps-mode-lexer--heredoc-label-stack
+     nil)
+    (setq
+     phps-mode-lexer--nest-location-stack
+     nil)
+
+    (funcall logic)
+
+    (message "Passed %s" name)))
 
 (defun phps-mode-test-parser()
   "Run test for lexer."
   (message "-- Running all tests for parser... --\n")
 
-  (with-temp-buffer
-    (insert "<?php echo 'hello';")
-    (should
-     (equal
-      nil
-      (phps-mode-parser-parse))))
-  (message "Passed basic echo test")
+  (phps-mode-test-parser--buffer-contentes
+   "<?php echo 'hello';"
+   "Basic echo test"
+   (lambda()
+     (message "was here")
+     (should
+      (equal
+       t
+       (phps-mode-parser-parse)))))
 
   (message "\n-- Ran all tests for parser. --"))
 
