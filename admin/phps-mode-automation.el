@@ -135,37 +135,52 @@
            "parser-generator-lr--production-number-precedence-type: %S"
            parser-generator-lr--production-number-precedence-type))
 
-        (when (fboundp 'parser-generator-lr--generate-goto-tables)
-          (let ((table-lr-items
-                 (parser-generator-lr--generate-goto-tables)))
-            (message
-             "table-lr-items: %S"
-             table-lr-items)
-            (when (boundp 'parser-generator-lr--goto-tables)
-              (message
-               "parser-generator-lr--goto-tables: %S"
-               parser-generator-lr--goto-tables))
-            (when (boundp 'parser-generator-lr--distinct-goto-tables)
-              (message
-               "parser-generator-lr--distinct-goto-tables: %S"
-               parser-generator-lr--distinct-goto-tables))
-            (when (fboundp 'parser-generator-lr--generate-action-tables)
-              (parser-generator-lr--generate-action-tables table-lr-items)
-              (when (boundp 'parser-generator-lr--action-tables)
+        ;; Only generate LR-items, GOTO-tables and ACTION-tables if we are lacking it
+        (if (and
+             (boundp 'parser-generator-lr--goto-tables)
+             parser-generator-lr--goto-tables
+             (boundp 'parser-generator-lr--distinct-goto-tables)
+             parser-generator-lr--distinct-goto-tables
+             (boundp 'parser-generator-lr--action-tables)
+             parser-generator-lr--action-tables
+             (boundp 'parser-generator-lr--distinct-action-tables)
+             parser-generator-lr--distinct-action-tables)
+            (message "Parser tables are defined - skipping generation")
+          (progn
+            (message "Parser tables are not defined - generating..")
+            (when (fboundp 'parser-generator-lr--generate-goto-tables)
+              (let ((table-lr-items
+                     (parser-generator-lr--generate-goto-tables)))
                 (message
-                 "parser-generator-lr--action-tables: %S"
-                 parser-generator-lr--action-tables))
-              (when (boundp 'parser-generator-lr--distinct-action-tables)
-                (message
-                 "parser-generator-lr--distinct-action-tables: %S"
-                 parser-generator-lr--distinct-action-tables))))))
+                 "table-lr-items: %S"
+                 table-lr-items)
+                (when (boundp 'parser-generator-lr--goto-tables)
+                  (message
+                   "parser-generator-lr--goto-tables: %S"
+                   parser-generator-lr--goto-tables))
+                (when (boundp 'parser-generator-lr--distinct-goto-tables)
+                  (message
+                   "parser-generator-lr--distinct-goto-tables: %S"
+                   parser-generator-lr--distinct-goto-tables))
+                (when (fboundp 'parser-generator-lr--generate-action-tables)
+                  (parser-generator-lr--generate-action-tables table-lr-items)
+                  (when (boundp 'parser-generator-lr--action-tables)
+                    (message
+                     "parser-generator-lr--action-tables: %S"
+                     parser-generator-lr--action-tables))
+                  (when (boundp 'parser-generator-lr--distinct-action-tables)
+                    (message
+                     "parser-generator-lr--distinct-action-tables: %S"
+                     parser-generator-lr--distinct-action-tables))))))))
+
+      ;; NOTE This does not work if functions above are byte-compiled
 
       ;; Export
       (let ((export (parser-generator-lr-export-to-elisp "phps-mode-parser")))
         (generate-new-buffer "*PHP Parser*")
         (switch-to-buffer "*PHP Parser*")
         (insert export)
-        (write-file (expand-file-name "../phps-mode-parser.el"))
+        (write-file (expand-file-name "./phps-mode-parser.el"))
         (kill-buffer)
         (message "export: %s" export))
 
