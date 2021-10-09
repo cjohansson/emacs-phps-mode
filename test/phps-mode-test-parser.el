@@ -38,25 +38,25 @@
     (message "Testing buffer '%S' with buffer-contents:\n%S\n" name (buffer-substring-no-properties (point-min) (point-max)))
 
     ;; Reset lexer
-    (setq
+    (setq-local
      phps-mode-lexer--generated-tokens
      nil)
-    (setq
+    (setq-local
      phps-mode-lexer--state
      'ST_INITIAL)
-    (setq
+    (setq-local
      phps-mode-lexer--states
      nil)
-    (setq
+    (setq-local
      phps-mode-lexer--state-stack
      nil)
-    (setq
+    (setq-local
      phps-mode-lexer--heredoc-label
      nil)
-    (setq
+    (setq-local
      phps-mode-lexer--heredoc-label-stack
      nil)
-    (setq
+    (setq-local
      phps-mode-lexer--nest-location-stack
      nil)
 
@@ -68,14 +68,14 @@
   "Run test for lexer."
   (message "-- Running all tests for parser... --\n")
 
+  ;; TODO Verify parse below
   (phps-mode-test-parser--buffer-contentes
    "<?php echo 'hello';"
    "Basic echo test"
    (lambda()
-     (message "was here")
      (should
       (equal
-       t
+       '(80 459 466 411 333 332 154 102 79)
        (phps-mode-parser-parse)))))
 
   (message "\n-- Ran all tests for parser. --"))
