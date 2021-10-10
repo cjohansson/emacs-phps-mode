@@ -1450,17 +1450,64 @@
 
 (defconst
   phps-mode-automation-grammar--lex-analyzer-function
-  (lambda(index)
-    (with-current-buffer "*phps-mode-lex-analyzer*"
+  (lambda (index)
+    (save-current-buffer
+      (set-buffer "*phps-mode-lex-analyzer*")
       (unless (= (point) index)
         (goto-char index))
-      (phps-mode-lexer--re2c)
-      (when
-          (boundp
-           'phps-mode-lexer--generated-new-tokens)
-        (car
-         (nreverse
-          phps-mode-lexer--generated-new-tokens)))))
+
+      (when (< index (point-max))
+
+        ;; Only lex if we have not lexed this position recently
+        (unless (and
+                 phps-mode-lexer--generated-new-tokens-index
+                 (=
+                  phps-mode-lexer--generated-new-tokens-index
+                  index))
+          (phps-mode-lexer--re2c))
+
+        (let ((first (car (nreverse phps-mode-lexer--generated-new-tokens))))
+
+          (cond
+
+           ;; Lexer has moved forward - lex again
+           ((and
+             (not first)
+             (not (equal index semantic-lex-end-point)))
+            (setq
+             phps-mode-parser-lex-analyzer--index
+             semantic-lex-end-point)
+            (setq
+             first
+             (funcall
+              phps-mode-parser-lex-analyzer--function
+              phps-mode-parser-lex-analyzer--index)))
+
+           ;; Skip open and close tag
+           ((or
+             (equal (car first) 'T_OPEN_TAG)
+             (equal (car first) 'T_CLOSE_TAG))
+            (setq
+             phps-mode-parser-lex-analyzer--index
+             (cdr (cdr first)))
+            (setq
+             first
+             (funcall
+              phps-mode-parser-lex-analyzer--function
+              phps-mode-parser-lex-analyzer--index)))
+
+           ;; Open tag with echo is replaced with echo
+           ((equal (car first) 'T_OPEN_TAG_WITH_ECHO)
+            (setf
+             (car first)
+             'T_ECHO)
+            (setq
+             phps-mode-parser-lex-analyzer--index
+             (cdr (cdr first))))
+           
+           )
+
+          first))))
   "The custom lex-analyzer.")
 
 (defconst

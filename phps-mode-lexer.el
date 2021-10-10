@@ -120,6 +120,9 @@
 (defvar-local phps-mode-lexer--generated-new-tokens nil
   "List of current newly generated tokens.")
 
+(defvar-local phps-mode-lexer--generated-new-tokens-index nil
+  "Index started at when generated new tokens.")
+
 (defvar-local phps-mode-lexer--state nil
   "Current state of lexer.")
 
@@ -473,6 +476,9 @@
   (setq phps-mode-lexer--generated-new-tokens nil)
   (setq phps-mode-lexer--restart-flag nil)
   (let ((old-start (point)))
+    (setq
+     phps-mode-lexer--generated-new-tokens-index
+     old-start)
     (phps-mode-debug-message
      (let ((start (point))
            (end (+ (point) 5))
