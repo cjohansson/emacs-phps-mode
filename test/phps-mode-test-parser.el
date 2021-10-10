@@ -78,6 +78,25 @@
        '(80 459 466 411 333 332 154 102 79)
        (phps-mode-parser-parse)))))
 
+(phps-mode-test-parser--buffer-contentes
+   "<? echo 'hello'; ?>"
+   "Basic echo test 2 with short open tag"
+   (lambda()
+     (should
+      (equal
+       '(80 459 466 411 333 332 154 102 79)
+       (phps-mode-parser-parse)))))
+
+  (phps-mode-test-parser--buffer-contentes
+   "<?= 'hello';"
+   "Basic echo test 3 with open tag with echo"
+   (lambda()
+     (should
+      (equal
+       '(80 459 466 411 156 102 79)
+       (phps-mode-parser-parse)))))
+
+
   (message "\n-- Ran all tests for parser. --"))
 
 (phps-mode-test-parser)
