@@ -26,6 +26,11 @@
 
 (require 'phps-mode-lexer)
 
+(defvar
+  phps-mode-parser-lex-analyzer--function
+  nil
+  "Just placeholder to pass byte-compilation.")
+
 (defconst
   phps-mode-automation-grammar--context-sensitive-attributes
   '(%prec)
@@ -1432,6 +1437,11 @@
 
     )
   "The productions of grammar.")
+
+(defconst
+  phps-mode-automation-grammar--header
+  "(require 'phps-mode-lexer)\n(require 'semantic)\n(require 'semantic/lex)\n"
+  "Header contents for parser.")
 
 (defconst
   phps-mode-automation-grammar--start

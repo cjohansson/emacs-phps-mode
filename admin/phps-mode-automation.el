@@ -176,7 +176,10 @@
       ;; NOTE This does not work if functions above are byte-compiled
 
       ;; Export
-      (let ((export (parser-generator-lr-export-to-elisp "phps-mode-parser")))
+      (let ((export
+             (parser-generator-lr-export-to-elisp
+              "phps-mode-parser"
+              phps-mode-automation-grammar--header)))
         (generate-new-buffer "*PHP Parser*")
         (switch-to-buffer "*PHP Parser*")
         (insert export)

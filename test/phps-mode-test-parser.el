@@ -160,4 +160,17 @@
 
 (provide 'phps-mode-test-parser)
 
+;; TODO
+;; phps-mode-parser.el:65:167: Warning: reference to free variable
+;;     ‘phps-mode-lexer--generated-new-tokens-index’
+;; phps-mode-parser.el:65:322: Warning: reference to free variable
+;;     ‘phps-mode-lexer--generated-new-tokens’
+;; phps-mode-parser.el:65:406: Warning: reference to free variable
+;;     ‘semantic-lex-end-point’
+
+;; In end of data:
+;; phps-mode-parser.el:65:271: Warning: the function ‘phps-mode-lexer--re2c’ is
+;;     not known to be defined.
+
+
 ;;; phps-mode-test-parser.el ends here
