@@ -1462,7 +1462,7 @@
   phps-mode-automation-grammar--lex-analyzer-function
   (lambda (index)
     (save-current-buffer
-      (set-buffer "*phps-mode-lex-analyzer*")
+      (set-buffer "*PHPs Lexer*")
       (if (= (point) index) nil (goto-char index))
       (if (< index (point-max))
           (progn
@@ -1549,7 +1549,7 @@
 (defconst
   phps-mode-automation-grammar--lex-analyzer-get-function
   (lambda (token)
-    (with-current-buffer "*phps-mode-lex-analyzer*"
+    (with-current-buffer "*PHPs Lexer*"
       (let ((start (car (cdr token)))
             (end (cdr (cdr token))))
         (when (<= end (point-max))
