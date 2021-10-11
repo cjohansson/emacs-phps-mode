@@ -67,9 +67,9 @@
 
     (message "Passed %s" name)))
 
-(defun phps-mode-test-parser()
+(defun phps-mode-test-parser-boundaries ()
   "Run test for lexer."
-  (message "-- Running all tests for parser... --\n")
+  (message "-- Running tests for parser boundaries... --\n")
 
   (phps-mode-test-parser--buffer-contents
    "<?php echo 'hello';"
@@ -111,6 +111,48 @@
        '(80 459 466 411 333 332 154 102 79)
        (phps-mode-parser-parse)))))
 
+  (phps-mode-test-parser--buffer-contents
+   "<?php\necho 'blaha'\necho 'here';"
+   "Basic echo test 4 with invalid code"
+   (lambda()
+     (should-error
+      (phps-mode-parser-parse))))
+
+  (phps-mode-test-parser--buffer-contents
+   "<?php\necho 'blaha'"
+   "Basic echo test 5 with invalid code"
+   (lambda()
+     (should-error
+      (phps-mode-parser-parse))))
+
+  (phps-mode-test-parser--buffer-contents
+   "<? echo '<!DOCTYPE html>'; ?><html><head><?php echo 'My Title'; ?><body></html>"
+   "Advanced echo test with 2 echo sections"
+   (lambda()
+     (let ((parse (phps-mode-parser-parse)))
+       (message "Left-to-right with left-most derivation in reverse: %S" parse)
+       (dolist (production-number (reverse parse))
+         (let ((production
+                (phps-mode-parser--get-grammar-production-by-number
+                 production-number)))
+           (message
+            "%d: %S -> %S"
+            production-number
+            (car (car production))
+            (car (car (cdr production))))))
+       (message "\n")
+       (should
+        (equal
+         '(80 459 466 411 333 332 154 102 79 155 102 79 459 466 411 333 332 154 102 79 155 102 79)
+         parse)))))
+
+  (message "\n-- Ran tests for parser boundaries. --"))
+
+(defun phps-mode-test-parser ()
+  "Run test for lexer."
+  (message "-- Running all tests for parser... --\n")
+
+  (phps-mode-test-parser-boundaries)
 
   (message "\n-- Ran all tests for parser. --"))
 
