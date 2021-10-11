@@ -96,7 +96,7 @@
    (lambda()
      (should
       (equal
-       '(80 459 466 411 156 102 79)
+       '(80 459 466 411 333 332 154 102 79)
        (phps-mode-parser-parse)))))
 
 

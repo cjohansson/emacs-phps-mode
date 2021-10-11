@@ -1453,61 +1453,45 @@
   (lambda (index)
     (save-current-buffer
       (set-buffer "*phps-mode-lex-analyzer*")
-      (unless (= (point) index)
-        (goto-char index))
-
-      (when (< index (point-max))
-
-        ;; Only lex if we have not lexed this position recently
-        (unless (and
+      (if (= (point) index) nil (goto-char index))
+      (if (< index (point-max))
+          (progn
+            (if (and
                  phps-mode-lexer--generated-new-tokens-index
-                 (=
-                  phps-mode-lexer--generated-new-tokens-index
-                  index))
-          (phps-mode-lexer--re2c))
+                 (= phps-mode-lexer--generated-new-tokens-index index))
+                nil
+              (phps-mode-lexer--re2c))
+            (let ((first (car (reverse phps-mode-lexer--generated-new-tokens))))
+              (cond
 
-        (let ((first (car (reverse phps-mode-lexer--generated-new-tokens))))
+               ((and
+                 (not first)
+                 (not (equal index semantic-lex-end-point)))
+                (setq-local
+                 phps-mode-parser-lex-analyzer--index
+                 semantic-lex-end-point)
+                (setq
+                 first
+                 (funcall
+                  phps-mode-parser-lex-analyzer--function
+                  phps-mode-parser-lex-analyzer--index)))
 
-          (cond
+               ((or
+                 (equal (car first) 'T_OPEN_TAG)
+                 (equal (car first) 'T_CLOSE_TAG))
+                (setq-local
+                 phps-mode-parser-lex-analyzer--index
+                 (cdr (cdr first)))
+                (setq
+                 first
+                 (funcall
+                  phps-mode-parser-lex-analyzer--function
+                  phps-mode-parser-lex-analyzer--index)))
 
-           ;; Lexer has moved forward - lex again
-           ((and
-             (not first)
-             (not (equal index semantic-lex-end-point)))
-            (setq
-             phps-mode-parser-lex-analyzer--index
-             semantic-lex-end-point)
-            (setq
-             first
-             (funcall
-              phps-mode-parser-lex-analyzer--function
-              phps-mode-parser-lex-analyzer--index)))
+               ((equal (car first) 'T_OPEN_TAG_WITH_ECHO)
+                (let* ((v first)) (setcar v 'T_ECHO))))
 
-           ;; Skip open and close tag
-           ((or
-             (equal (car first) 'T_OPEN_TAG)
-             (equal (car first) 'T_CLOSE_TAG))
-            (setq
-             phps-mode-parser-lex-analyzer--index
-             (cdr (cdr first)))
-            (setq
-             first
-             (funcall
-              phps-mode-parser-lex-analyzer--function
-              phps-mode-parser-lex-analyzer--index)))
-
-           ;; Open tag with echo is replaced with echo
-           ((equal (car first) 'T_OPEN_TAG_WITH_ECHO)
-            (setf
-             (car first)
-             'T_ECHO)
-            (setq
-             phps-mode-parser-lex-analyzer--index
-             (cdr (cdr first))))
-           
-           )
-
-          first))))
+              first)))))
   "The custom lex-analyzer.")
 
 (defconst
