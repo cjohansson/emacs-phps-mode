@@ -30,12 +30,15 @@
 (require 'phps-mode-lexer)
 (require 'phps-mode-parser)
 
-(defun phps-mode-test-parser--buffer-contentes (buffer-contents name logic)
+(defun phps-mode-test-parser--buffer-contents (buffer-contents name logic)
   (generate-new-buffer "*phps-mode-lex-analyzer*")
   (with-current-buffer "*phps-mode-lex-analyzer*"
     (kill-region (point-min) (point-max))
     (insert buffer-contents)
-    (message "Testing buffer '%S' with buffer-contents:\n%S\n" name (buffer-substring-no-properties (point-min) (point-max)))
+    (message
+     "Testing buffer %S with buffer-contents:\n%S\n"
+     name
+     (buffer-substring-no-properties (point-min) (point-max)))
 
     ;; Reset lexer
     (setq-local
@@ -69,7 +72,7 @@
   (message "-- Running all tests for parser... --\n")
 
   ;; TODO Verify parse below
-  (phps-mode-test-parser--buffer-contentes
+  (phps-mode-test-parser--buffer-contents
    "<?php echo 'hello';"
    "Basic echo test"
    (lambda()
@@ -78,16 +81,16 @@
        '(80 459 466 411 333 332 154 102 79)
        (phps-mode-parser-parse)))))
 
-(phps-mode-test-parser--buffer-contentes
+  (phps-mode-test-parser--buffer-contents
    "<? echo 'hello'; ?>"
-   "Basic echo test 2 with short open tag"
+   "Basic echo test 2 with short open tag and close tag"
    (lambda()
      (should
       (equal
        '(80 459 466 411 333 332 154 102 79)
        (phps-mode-parser-parse)))))
 
-  (phps-mode-test-parser--buffer-contentes
+  (phps-mode-test-parser--buffer-contents
    "<?= 'hello';"
    "Basic echo test 3 with open tag with echo"
    (lambda()
