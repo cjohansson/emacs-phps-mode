@@ -71,15 +71,27 @@
   "Run test for lexer."
   (message "-- Running all tests for parser... --\n")
 
-  ;; TODO Verify parse below
   (phps-mode-test-parser--buffer-contents
    "<?php echo 'hello';"
    "Basic echo test"
    (lambda()
-     (should
-      (equal
-       '(80 459 466 411 333 332 154 102 79)
-       (phps-mode-parser-parse)))))
+
+     (let ((parse (phps-mode-parser-parse)))
+       (message "Left-to-right with left-most derivation in reverse: %S" parse)
+       (dolist (production-number (reverse parse))
+         (let ((production
+                (phps-mode-parser--get-grammar-production-by-number
+                 production-number)))
+           (message
+            "%d: %S -> %S"
+            production-number
+            (car (car production))
+            (car (car (cdr production))))))
+       (message "\n")
+       (should
+        (equal
+         '(80 459 466 411 333 332 154 102 79)
+         parse)))))
 
   (phps-mode-test-parser--buffer-contents
    "<? echo 'hello'; ?>"
