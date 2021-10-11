@@ -150,15 +150,18 @@
 (defvar-local phps-mode-lexer--nest-location-stack nil
   "Nesting stack.")
 
+(defvar-local phps-mode-lexer--parser-mode nil
+  "Non-nil means we are in parser-mode.")
+
 (defvar-local phps-mode-lexer--restart-flag nil
-  "Flag whether to restart or not.")
+  "Non-nil means restart.")
 
 ;; HELPER FUNCTIONS
 
 
 (defun phps-mode-lexer--parser-mode ()
   "Return whether we have some expected value or not."
-  t)
+  phps-mode-lexer--parser-mode)
 
 (defun phps-mode-lexer--begin (state)
   "Begin STATE."
