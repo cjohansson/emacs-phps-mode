@@ -362,6 +362,16 @@
   t
   (phps-mode-lexer--re2c))
 
+(defun phps-mode-lex-analyzer--parse-entire-buffer (&optional forced-synchronous)
+  "Parse entire buffer, optionally FORCED-SYNCHRONOUS"
+  (interactive)
+  (require 'phps-mode-macros)
+  (phps-mode-debug-message (message "Parse entire buffer run"))
+
+  ;; TODO Implement this
+  
+  )
+
 (defun phps-mode-lex-analyzer--re2c-run (&optional force-synchronous)
   "Run lexer, optionally FORCE-SYNCHRONOUS."
   (interactive)
