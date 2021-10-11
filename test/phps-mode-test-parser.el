@@ -147,6 +147,15 @@
          '(80 459 466 411 333 332 154 102 79 155 102 79 459 466 411 333 332 154 102 79 155 102 79)
          parse)))))
 
+  (phps-mode-test-parser--buffer-contents
+   "<?php echo 'hello'; ?>"
+   "Basic translation test of echo with open tag and close tag"
+   (lambda()
+     (should
+      (equal
+       '(nil ("echo" nil ";"))
+       (phps-mode-parser-translate)))))
+
   (message "\n-- Ran tests for parser boundaries. --"))
 
 (defun phps-mode-test-parser ()
