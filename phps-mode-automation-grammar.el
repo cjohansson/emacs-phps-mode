@@ -1466,7 +1466,7 @@
                   index))
           (phps-mode-lexer--re2c))
 
-        (let ((first (car (nreverse phps-mode-lexer--generated-new-tokens))))
+        (let ((first (car (reverse phps-mode-lexer--generated-new-tokens))))
 
           (cond
 
