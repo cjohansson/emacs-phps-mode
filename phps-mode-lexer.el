@@ -158,7 +158,7 @@
 
 (defun phps-mode-lexer--parser-mode ()
   "Return whether we have some expected value or not."
-  nil)
+  t)
 
 (defun phps-mode-lexer--begin (state)
   "Begin STATE."
