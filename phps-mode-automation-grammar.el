@@ -1488,7 +1488,9 @@
 
                ((or
                  (equal (car first) 'T_OPEN_TAG)
-                 (equal (car first) 'T_CLOSE_TAG))
+                 (equal (car first) 'T_CLOSE_TAG)
+                 (equal (car first) 'T_DOC_COMMENT)
+                 (equal (car first) 'T_COMMENT))
                 (setq-local
                  phps-mode-parser-lex-analyzer--index
                  (cdr (cdr first)))
