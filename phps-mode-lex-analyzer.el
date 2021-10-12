@@ -366,12 +366,16 @@
 (defun phps-mode-lex-analyzer--parse-string
     (
      string
+     &optional
+     start
+     before-lexer-state
+     before-parser-state
      )
-  "Parse entire STRING."
+  "Parse entire STRING, optionally from START and with BEFORE-LEXER-STATE and BEFORE-PARSER-STATE."
   (interactive)
   (require 'phps-mode-parser)
   (require 'phps-mode-macros)
-  (phps-mode-debug-message (message "Parse entire string run"))
+  (phps-mode-debug-message (message "(phps-mode-lex-analyzer--parse-string)"))
 
   (let ((buffer (generate-new-buffer "*PHPs Lexer*")))
     ;; Create temporary buffer and run lexer in it
@@ -379,59 +383,104 @@
       (with-current-buffer buffer
         (insert string)
 
-        ;; Reset lexer
+        ;; Setup lexer state
         (setq-local
          phps-mode-lexer--generated-tokens
-         nil)
+         (if before-lexer-state
+             (nth 6 before-lexer-state)
+           nil))
         (setq-local
          phps-mode-lexer--state
-         'ST_INITIAL)
+         (if
+             before-lexer-state
+             (nth 1 before-lexer-state)
+           'ST_INITIAL))
         (setq-local
          phps-mode-lexer--states
-         nil)
+         (if before-lexer-state
+             (nth 0 before-lexer-state)
+           nil))
         (setq-local
          phps-mode-lexer--state-stack
-         nil)
+         (if before-lexer-state
+             (nth 2 before-lexer-state)
+           nil))
         (setq-local
          phps-mode-lexer--heredoc-label
-         nil)
+         (if before-lexer-state
+             (nth 3 before-lexer-state)
+           nil))
         (setq-local
          phps-mode-lexer--heredoc-label-stack
-         nil)
+         (if before-lexer-state
+             (nth 4 before-lexer-state)
+           nil))
         (setq
          phps-mode-lexer--nest-location-stack
-         nil)
+         (if before-lexer-state
+             (nth 4 before-lexer-state)
+           nil))
 
         ;; Catch errors to kill generated buffer
         (let ((got-error t)
-              (after-parser-parse))
+              (after-parser-state)
+              (before-parser-input-tape-index)
+              (before-parser-pushdown-list)
+              (before-parser-output)
+              (before-parser-translation)
+              (before-parser-translation-symbol-table-list)
+              (before-parser-history))
+
+          ;; Setup parser state
+          (when before-parser-state
+            (setq
+             before-parser-input-tape-index
+             (nth 0 before-parser-state))
+            (setq
+             before-parser-pushdown-list
+             (nth 1 before-parser-state))
+            (setq
+             before-parser-output
+             (nth 2 before-parser-state))
+            (setq
+             before-parser-translation
+             (nth 3 before-parser-state))
+            (setq
+             before-parser-translation-symbol-table-list
+             (nth 4 before-parser-state))
+            (setq
+             before-parser-history
+             (nth 5 before-parser-state)))
+
           (unwind-protect
               ;; Run lexer or incremental lexer
               (progn
                 (setq
-                 after-parser-parse
-                 (phps-mode-parser--parse))
+                 after-parser-state
+                 (phps-mode-parser--parse
+                  before-parser-input-tape-index
+                  before-parser-pushdown-list
+                  before-parser-output
+                  before-parser-translation
+                  before-parser-translation-symbol-table-list
+                  before-parser-history))
                 (setq got-error nil))
             (when got-error
               (kill-buffer)))
 
           ;; Copy lexer variables outside of buffer
-          (let ((after-lexer-state phps-mode-lexer--state)
-                (after-lexer-state-stack phps-mode-lexer--state-stack)
-                (after-lexer-states phps-mode-lexer--states)
-                (after-lexer-tokens (nreverse phps-mode-lexer--generated-tokens))
-                (after-lexer-heredoc-label phps-mode-lexer--heredoc-label)
-                (after-lexer-heredoc-label-stack phps-mode-lexer--heredoc-label-stack))
+          (let ((after-lexer-state
+                 (list
+                  phps-mode-lexer--state
+                  phps-mode-lexer--state-stack
+                  phps-mode-lexer--states
+                  (nreverse phps-mode-lexer--generated-tokens)
+                  phps-mode-lexer--heredoc-label
+                  phps-mode-lexer--heredoc-label-stack)))
             (kill-buffer)
             (list
-             (list
-              after-lexer-tokens
-              after-lexer-states
-              after-lexer-state
-              after-lexer-state-stack
-              after-lexer-heredoc-label
-              after-lexer-heredoc-label-stack)
-             after-parser-parse)))))))
+             after-lexer-state
+             after-parser-state)))))))
 
 (defun phps-mode-lex-analyzer--re2c-run (&optional force-synchronous)
   "Run lexer, optionally FORCE-SYNCHRONOUS."
