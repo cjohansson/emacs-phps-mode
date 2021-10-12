@@ -31,32 +31,32 @@
   nil
   "Just placeholder to pass byte-compilation.")
 
-(defconst
+(defvar
   phps-mode-automation-grammar--context-sensitive-attributes
   '(%prec)
   "List of context-sensitive attributes.")
 
-(defconst
+(defvar
   phps-mode-automation-grammar--lr-context-sensitive-precedence-attribute
   '%prec
   "The LR-parser's context-sensitive precedence attribute.")
 
-(defconst
+(defvar
   phps-mode-automation-grammar--global-attributes
   '(%left %nonassoc %precedence %right)
   "List of valid global attributes.")
 
-(defconst
+(defvar
   phps-mode-automation-grammar--lr-global-precedence-attributes
   '(%left %nonassoc %precedence %right)
   "The LR-parser's list of global precedence attributes.")
 
-(defconst
+(defvar
   phps-mode-automation-grammar--lr--allow-default-conflict-resolution
   t
   "Allow shift resolution to shift/reduce conflicts were precedence is missing.")
 
-(defconst
+(defvar
   phps-mode-automation-grammar--global-declaration
   '(
     (%precedence T_THROW)
@@ -94,7 +94,7 @@
     )
   "Declaration for grammar.")
 
-(defconst
+(defvar
   phps-mode-automation-grammar--non-terminals
   '(
     absolute_trait_method_reference
@@ -253,7 +253,7 @@
     )
   "The non-terminals in grammar.")
 
-(defconst
+(defvar
   phps-mode-automation-grammar--terminals
   '(
     "!"
@@ -465,12 +465,12 @@
     )
   "The terminals of grammar.")
 
-(defconst
+(defvar
   phps-mode-automation-grammar--look-ahead-number
   1
   "The look-ahead number of grammar.")
 
-(defconst
+(defvar
   phps-mode-automation-grammar--productions
   '(
 
@@ -1438,27 +1438,27 @@
     )
   "The productions of grammar.")
 
-(defconst
+(defvar
   phps-mode-automation-grammar--header
   "(require 'phps-mode-lexer)\n(require 'semantic)\n(require 'semantic/lex)\n"
   "Header contents for parser.")
 
-(defconst
+(defvar
   phps-mode-automation-grammar--start
   'start
   "The entry-point of grammar.")
 
-(defconst
+(defvar
   phps-mode-automation-grammar--e-identifier
   '%empty
   "The e-identifier of grammar.")
 
-(defconst
+(defvar
   phps-mode-automation-grammar--eof-identifier
   '$
   "The EOF-identifier of grammar.")
 
-(defconst
+(defvar
   phps-mode-automation-grammar--lex-analyzer-function
   (lambda (index)
     (save-current-buffer
@@ -1466,10 +1466,10 @@
       (if (= (point) index) nil (goto-char index))
       (if (< index (point-max))
           (progn
-            (if (and
+            (unless
+                (and
                  phps-mode-lexer--generated-new-tokens-index
                  (= phps-mode-lexer--generated-new-tokens-index index))
-                nil
               (phps-mode-lexer--re2c))
             (let ((first (car (reverse phps-mode-lexer--generated-new-tokens))))
               (cond
@@ -1478,13 +1478,8 @@
                  (not first)
                  (not (equal index semantic-lex-end-point)))
                 (setq-local
-                 phps-mode-parser-lex-analyzer--index
-                 semantic-lex-end-point)
-                (setq
-                 first
-                 (funcall
-                  phps-mode-parser-lex-analyzer--function
-                  phps-mode-parser-lex-analyzer--index)))
+                 phps-mode-parser-lex-analyzer--move-to-index-flag
+                 semantic-lex-end-point))
 
                ((or
                  (equal (car first) 'T_OPEN_TAG)
@@ -1492,13 +1487,8 @@
                  (equal (car first) 'T_DOC_COMMENT)
                  (equal (car first) 'T_COMMENT))
                 (setq-local
-                 phps-mode-parser-lex-analyzer--index
-                 (cdr (cdr first)))
-                (setq
-                 first
-                 (funcall
-                  phps-mode-parser-lex-analyzer--function
-                  phps-mode-parser-lex-analyzer--index)))
+                 phps-mode-parser-lex-analyzer--move-to-index-flag
+                 (cdr (cdr first))))
 
                ((equal (car first) 'T_OPEN_TAG_WITH_ECHO)
                 (let* ((v first)) (setcar v 'T_ECHO))))
@@ -1506,7 +1496,7 @@
               first)))))
   "The custom lex-analyzer.")
 
-(defconst
+(defvar
   phps-mode-automation-grammar--precedence-comparison-function
   (lambda(a-type a-value _b-type b-value)
     (cond
@@ -1548,7 +1538,7 @@
      ))
   "The precedence comparison function of the grammar.")
 
-(defconst
+(defvar
   phps-mode-automation-grammar--lex-analyzer-get-function
   (lambda (token)
     (with-current-buffer "*PHPs Lexer*"

@@ -153,7 +153,7 @@
    (lambda()
      (should
       (equal
-       '(nil ("echo" nil ";"))
+       '(nil ("echo" "'hello'" ";"))
        (phps-mode-parser-translate)))))
 
   (message "\n-- Ran tests for parser boundaries. --"))
