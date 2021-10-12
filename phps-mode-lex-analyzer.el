@@ -410,7 +410,7 @@
               (progn
                 (setq
                  after-parser-parse
-                 (phps-mode-parser-parse))
+                 (phps-mode-parser--parse))
                 (setq got-error nil))
             (when got-error
               (kill-buffer)))
@@ -424,12 +424,13 @@
                 (after-lexer-heredoc-label-stack phps-mode-lexer--heredoc-label-stack))
             (kill-buffer)
             (list
-             after-lexer-tokens
-             after-lexer-states
-             after-lexer-state
-             after-lexer-state-stack
-             after-lexer-heredoc-label
-             after-lexer-heredoc-label-stack
+             (list
+              after-lexer-tokens
+              after-lexer-states
+              after-lexer-state
+              after-lexer-state-stack
+              after-lexer-heredoc-label
+              after-lexer-heredoc-label-stack)
              after-parser-parse)))))))
 
 (defun phps-mode-lex-analyzer--re2c-run (&optional force-synchronous)

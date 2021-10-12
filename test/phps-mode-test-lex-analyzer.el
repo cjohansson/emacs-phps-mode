@@ -1611,14 +1611,14 @@
 
   )
 
-(defun phps-mode-test-lex-analyzer--parse ()
+(defun phps-mode-test-lex-analyzer--parse-string ()
   "Test the parser."
 
   (should
    (equal
-    '(((T_OPEN_TAG 1 . 7) (T_ECHO 7 . 11) (T_CONSTANT_ENCAPSED_STRING 12 . 17) (";" 17 . 18)) ((17 18 ST_IN_SCRIPTING nil nil nil nil) (12 17 ST_IN_SCRIPTING nil nil nil nil) (7 11 ST_IN_SCRIPTING nil nil nil nil) (1 7 ST_IN_SCRIPTING nil nil nil nil)) ST_IN_SCRIPTING nil nil nil (80 459 466 411 333 332 154 102 79))
-    (phps-mode-lex-analyzer--parse-string
-     "<?php echo 'abc';")))
+    '(80 459 466 411 333 332 154 102 79)
+    (car (car (cdr (phps-mode-lex-analyzer--parse-string
+                    "<?php echo 'abc';"))))))
   (message "Passed valid parse test")
 
   (should-error
@@ -1648,7 +1648,7 @@
   (phps-mode-test-lex-analyzer--get-moved-imenu)
   (phps-mode-test-lex-analyzer--comment-uncomment-region)
   (phps-mode-test-lex-analyzer--move-lines-indent)
-  (phps-mode-test-lex-analyzer--parse))
+  (phps-mode-test-lex-analyzer--parse-string))
 
 (phps-mode-test-lex-analyzer)
 
