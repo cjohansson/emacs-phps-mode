@@ -26,10 +26,11 @@
 
 (require 'phps-mode-lexer)
 
+;; Just to stop linter from complaining
 (defvar
-  phps-mode-parser-lex-analyzer--function
-  nil
-  "Just placeholder to pass byte-compilation.")
+ phps-mode-parser-position
+ nil
+ "Position of parser.")
 
 (defvar
   phps-mode-automation-grammar--context-sensitive-attributes
@@ -1440,7 +1441,7 @@
 
 (defvar
   phps-mode-automation-grammar--header
-  "(require 'phps-mode-lexer)\n(require 'semantic)\n(require 'semantic/lex)\n"
+  "(require 'phps-mode-lexer)\n(require 'semantic)\n(require 'semantic/lex)\n\n(defvar-local\n phps-mode-parser-position\n nil\n \"Position of parser.\")\n"
   "Header contents for parser.")
 
 (defvar
@@ -1460,40 +1461,98 @@
 
 (defvar
   phps-mode-automation-grammar--lex-analyzer-function
-  (lambda (index)
-    (save-current-buffer
-      (set-buffer "*PHPs Lexer*")
-      (if (= (point) index) nil (goto-char index))
-      (if (< index (point-max))
-          (progn
-            (unless
-                (and
-                 phps-mode-lexer--generated-new-tokens-index
-                 (= phps-mode-lexer--generated-new-tokens-index index))
-              (phps-mode-lexer--re2c))
-            (let ((first (car (reverse phps-mode-lexer--generated-new-tokens))))
-              (cond
+  (lambda (buffer-index)
+    (with-current-buffer "*PHPs Lexer*"
+      (let ((token-list-index))
 
-               ((and
-                 (not first)
-                 (not (equal index semantic-lex-end-point)))
-                (setq-local
-                 phps-mode-parser-lex-analyzer--move-to-index-flag
-                 semantic-lex-end-point))
+        ;; Unless we have lexed the buffer
+        (unless
+            phps-mode-lexer--generated-tokens
+          ;; TODO Run lexer on entire buffer here
+          (setq-local
+           phps-mode-parser-position
+           nil))
 
-               ((or
-                 (equal (car first) 'T_OPEN_TAG)
-                 (equal (car first) 'T_CLOSE_TAG)
-                 (equal (car first) 'T_DOC_COMMENT)
-                 (equal (car first) 'T_COMMENT))
-                (setq-local
-                 phps-mode-parser-lex-analyzer--move-to-index-flag
-                 (cdr (cdr first))))
+        (if (and
+             phps-mode-parser-position
+             (= (car (car phps-mode-parser-position)) buffer-index))
+            (setq
+             token-list-index
+             (cdr (car phps-mode-parser-position)))
 
-               ((equal (car first) 'T_OPEN_TAG_WITH_ECHO)
-                (let* ((v first)) (setcar v 'T_ECHO))))
+          ;; Search from last requested index and forward until
+          ;; we find a token starting at or after buffer-index and
+          ;; use this as buffer-index, save buffer-index to
+          ;; token-list-index connection
+          (let ((previous-token-list-index 0))
+            (when (and
+                   phps-mode-parser-position
+                   (< (car (car phps-mode-parser-position)) buffer-index))
+              (setq
+               previous-token-list-index
+               (cdr (car phps-mode-parser-position))))
 
-              first)))))
+            (let ((temp-token-list-index
+                   previous-token-list-index)
+                  (token-list-size
+                   (length
+                    phps-mode-lexer--generated-tokens))
+                  (continue t))
+              (while (and
+                      continue
+                      (<
+                       temp-token-list-index
+                       token-list-size))
+                (let ((token
+                       (nth
+                        temp-token-list-index
+                        phps-mode-lexer--generated-tokens)))
+
+                  ;; When token starts at cursor we found correct index
+                  ;; Save it
+                  (when (= (car (cdr token)) buffer-index)
+                    ;; TODO Skip T_OPEN_TAG T_CLOSE_TAG T_DOC_COMMENT and T_COMMENT here
+
+                    (setq
+                     token-list-index
+                     temp-token-list-index)
+                    (push
+                     (list
+                      buffer-index
+                      temp-token-list-index)
+                     phps-mode-parser-position)
+                    (setq
+                     continue
+                     nil))
+
+                  ;; When token starts after cursor, flag move of cursor
+                  ;; Save it
+                  (when (> (car (cdr token)) buffer-index)
+                    ;; TODO Skip T_OPEN_TAG T_CLOSE_TAG T_DOC_COMMENT and T_COMMENT here
+
+                    (setq-local
+                     phps-mode-parser-lex-analyzer--move-to-index-flag
+                     (car (cdr token)))
+                    (push
+                     (list
+                      (car (cdr token))
+                      temp-token-list-index)
+                     phps-mode-parser-position)
+                    (setq
+                     continue
+                     nil))
+
+                  (setq
+                   temp-token-list-index
+                   (1+ temp-token-list-index))
+                  )))))
+
+        (when
+            token-list-index
+          ;; TODO Convert OPEN_TAG_WITH_ECHO to T_ECHO here
+          (nth
+           token-list-index
+           phps-mode-lexer--generated-tokens)))))
   "The custom lex-analyzer.")
 
 (defvar
