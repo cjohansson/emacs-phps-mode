@@ -40,29 +40,6 @@
      name
      (buffer-substring-no-properties (point-min) (point-max)))
 
-    ;; Reset lexer
-    (setq-local
-     phps-mode-lexer--generated-tokens
-     nil)
-    (setq-local
-     phps-mode-lexer--state
-     'ST_INITIAL)
-    (setq-local
-     phps-mode-lexer--states
-     nil)
-    (setq-local
-     phps-mode-lexer--state-stack
-     nil)
-    (setq-local
-     phps-mode-lexer--heredoc-label
-     nil)
-    (setq-local
-     phps-mode-lexer--heredoc-label-stack
-     nil)
-    (setq-local
-     phps-mode-lexer--nest-location-stack
-     nil)
-
     (funcall logic)
 
     (message "Passed %s" name)

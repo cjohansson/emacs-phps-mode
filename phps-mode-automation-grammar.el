@@ -1459,6 +1459,7 @@
   '$
   "The EOF-identifier of grammar.")
 
+;; TODO Need to use a separate reversed list of tokens
 (defvar
   phps-mode-automation-grammar--lex-analyzer-function
   (lambda (buffer-index)
@@ -1510,7 +1511,11 @@
               (phps-mode-lexer--re2c)
               (setq
                index
-               semantic-lex-end-point)))
+               semantic-lex-end-point)
+              (goto-char index)))
+          (setq
+           phps-mode-lexer--generated-tokens
+           (reverse phps-mode-lexer--generated-tokens))
 
           ;; Reset buffer-index to token-list-index connections
           (setq-local
@@ -1520,9 +1525,10 @@
         (if (and
              phps-mode-parser-position
              (= (car (car phps-mode-parser-position)) buffer-index))
-            (setq
+             (progn
+             (setq   
              token-list-index
-             (cdr (car phps-mode-parser-position)))
+             (car (cdr (car phps-mode-parser-position)))))
 
           ;; Search from last requested index and forward until
           ;; we find a token starting at or after buffer-index and
@@ -1534,7 +1540,7 @@
                    (< (car (car phps-mode-parser-position)) buffer-index))
               (setq
                previous-token-list-index
-               (cdr (car phps-mode-parser-position))))
+               (car (cdr (car phps-mode-parser-position)))))
 
             (let ((temp-token-list-index
                    previous-token-list-index)
@@ -1556,6 +1562,11 @@
                   ;; Save it
                   (when (= (car (cdr token)) buffer-index)
                     (let ((token-type (car token)))
+                      (push
+                       (list
+                        buffer-index
+                        temp-token-list-index)
+                       phps-mode-parser-position)
                       (unless (or
                                (equal token-type 'T_OPEN_TAG)
                                (equal token-type 'T_CLOSE_TAG)
@@ -1564,11 +1575,6 @@
                         (setq
                          token-list-index
                          temp-token-list-index)
-                        (push
-                         (list
-                          buffer-index
-                          temp-token-list-index)
-                         phps-mode-parser-position)
                         (setq
                          continue
                          nil))))
@@ -1577,6 +1583,11 @@
                   ;; Save it
                   (when (> (car (cdr token)) buffer-index)
                     (let ((token-type (car token)))
+                      (push
+                       (list
+                        (car (cdr token))
+                        temp-token-list-index)
+                       phps-mode-parser-position)
                       (unless (or
                                (equal token-type 'T_OPEN_TAG)
                                (equal token-type 'T_CLOSE_TAG)
@@ -1585,11 +1596,6 @@
                         (setq-local
                          phps-mode-parser-lex-analyzer--move-to-index-flag
                          (car (cdr token)))
-                        (push
-                         (list
-                          (car (cdr token))
-                          temp-token-list-index)
-                         phps-mode-parser-position)
                         (setq
                          continue
                          nil))))
