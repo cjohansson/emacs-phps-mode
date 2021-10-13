@@ -33,6 +33,11 @@
  "Position of parser.")
 
 (defvar
+ phps-mode-parser-tokens
+ nil
+ "Reversed list of tokens.")
+
+(defvar
   phps-mode-automation-grammar--context-sensitive-attributes
   '(%prec)
   "List of context-sensitive attributes.")
@@ -1441,7 +1446,7 @@
 
 (defvar
   phps-mode-automation-grammar--header
-  "(require 'phps-mode-lexer)\n(require 'semantic)\n(require 'semantic/lex)\n\n(defvar-local\n phps-mode-parser-position\n nil\n \"Position of parser.\")\n"
+  "(require 'phps-mode-lexer)\n(require 'semantic)\n(require 'semantic/lex)\n\n(defvar-local\n phps-mode-parser-position\n nil\n \"Position of parser.\")\n(defvar-local\n phps-mode-parser-tokens\n nil\n \"Reversed list of lexer tokens.\")\n"
   "Header contents for parser.")
 
 (defvar
@@ -1459,7 +1464,6 @@
   '$
   "The EOF-identifier of grammar.")
 
-;; TODO Need to use a separate reversed list of tokens
 (defvar
   phps-mode-automation-grammar--lex-analyzer-function
   (lambda (buffer-index)
@@ -1478,44 +1482,45 @@
       (let ((token-list-index))
 
         ;; Unless we have lexed the buffer
-        (unless phps-mode-lexer--generated-tokens
+        (unless phps-mode-parser-tokens
+          (unless phps-mode-lexer--generated-tokens
+            ;; Reset lexer
+            (setq-local
+             phps-mode-lexer--generated-tokens
+             nil)
+            (setq-local
+             phps-mode-lexer--state
+             'ST_INITIAL)
+            (setq-local
+             phps-mode-lexer--states
+             nil)
+            (setq-local
+             phps-mode-lexer--state-stack
+             nil)
+            (setq-local
+             phps-mode-lexer--heredoc-label
+             nil)
+            (setq-local
+             phps-mode-lexer--heredoc-label-stack
+             nil)
+            (setq-local
+             phps-mode-lexer--nest-location-stack
+             nil)
+            (goto-char (point-min))
 
-          ;; Reset lexer
+            ;; Run lexer on entire buffer here
+            (let ((index (point))
+                  (max-index (point-max)))
+              (while (< index max-index)
+                (phps-mode-lexer--re2c)
+                (setq
+                 index
+                 semantic-lex-end-point)
+                (goto-char index))))
           (setq-local
-           phps-mode-lexer--generated-tokens
-           nil)
-          (setq-local
-           phps-mode-lexer--state
-           'ST_INITIAL)
-          (setq-local
-           phps-mode-lexer--states
-           nil)
-          (setq-local
-           phps-mode-lexer--state-stack
-           nil)
-          (setq-local
-           phps-mode-lexer--heredoc-label
-           nil)
-          (setq-local
-           phps-mode-lexer--heredoc-label-stack
-           nil)
-          (setq-local
-           phps-mode-lexer--nest-location-stack
-           nil)
-          (goto-char (point-min))
-
-          ;; Run lexer on entire buffer here
-          (let ((index (point))
-                (max-index (point-max)))
-            (while (< index max-index)
-              (phps-mode-lexer--re2c)
-              (setq
-               index
-               semantic-lex-end-point)
-              (goto-char index)))
-          (setq
-           phps-mode-lexer--generated-tokens
-           (reverse phps-mode-lexer--generated-tokens))
+           phps-mode-parser-tokens
+           (reverse
+            phps-mode-lexer--generated-tokens))
 
           ;; Reset buffer-index to token-list-index connections
           (setq-local
@@ -1525,10 +1530,10 @@
         (if (and
              phps-mode-parser-position
              (= (car (car phps-mode-parser-position)) buffer-index))
-             (progn
-             (setq   
-             token-list-index
-             (car (cdr (car phps-mode-parser-position)))))
+            (progn
+              (setq
+               token-list-index
+               (car (cdr (car phps-mode-parser-position)))))
 
           ;; Search from last requested index and forward until
           ;; we find a token starting at or after buffer-index and
@@ -1546,7 +1551,7 @@
                    previous-token-list-index)
                   (token-list-size
                    (length
-                    phps-mode-lexer--generated-tokens))
+                    phps-mode-parser-tokens))
                   (continue t))
               (while (and
                       continue
@@ -1556,7 +1561,7 @@
                 (let ((token
                        (nth
                         temp-token-list-index
-                        phps-mode-lexer--generated-tokens)))
+                        phps-mode-parser-tokens)))
 
                   ;; When token starts at cursor we found correct index
                   ;; Save it
@@ -1610,7 +1615,7 @@
           (let ((token
                  (nth
                   token-list-index
-                  phps-mode-lexer--generated-tokens)))
+                  phps-mode-parser-tokens)))
             (when (equal (car token) 'T_OPEN_TAG_WITH_ECHO)
               (setf
                (car token)
