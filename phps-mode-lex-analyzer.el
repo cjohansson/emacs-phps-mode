@@ -34,7 +34,6 @@
 
 (require 'phps-mode-lexer)
 (require 'phps-mode-macros)
-(require 'phps-mode-parser)
 (require 'phps-mode-serial)
 
 (require 'semantic)
@@ -363,126 +362,6 @@
   t
   (phps-mode-lexer--re2c))
 
-(defun phps-mode-lex-analyzer--parse-string
-    (
-     string
-     &optional
-     start
-     before-lexer-state
-     before-parser-state
-     )
-  "Parse entire STRING, optionally from START and with BEFORE-LEXER-STATE and BEFORE-PARSER-STATE."
-  (interactive)
-  (require 'phps-mode-parser)
-  (require 'phps-mode-macros)
-  (phps-mode-debug-message (message "(phps-mode-lex-analyzer--parse-string)"))
-
-  (let ((buffer (generate-new-buffer "*PHPs Lexer*")))
-    ;; Create temporary buffer and run lexer in it
-    (when (get-buffer buffer)
-      (with-current-buffer buffer
-        (insert string)
-
-        ;; Setup lexer state
-        (setq-local
-         phps-mode-lexer--states
-         (if before-lexer-state
-             (nth 0 before-lexer-state)
-           nil))
-        (setq-local
-         phps-mode-lexer--state
-         (if
-             before-lexer-state
-             (nth 1 before-lexer-state)
-           'ST_INITIAL))
-        (setq-local
-         phps-mode-lexer--state-stack
-         (if before-lexer-state
-             (nth 2 before-lexer-state)
-           nil))
-        (setq-local
-         phps-mode-lexer--heredoc-label
-         (if before-lexer-state
-             (nth 3 before-lexer-state)
-           nil))
-        (setq-local
-         phps-mode-lexer--heredoc-label-stack
-         (if before-lexer-state
-             (nth 4 before-lexer-state)
-           nil))
-        (setq
-         phps-mode-lexer--nest-location-stack
-         (if before-lexer-state
-             (nth 5 before-lexer-state)
-           nil))
-        (setq-local
-         phps-mode-lexer--generated-tokens
-         (if before-lexer-state
-             (nth 6 before-lexer-state)
-           nil))
-
-        ;; Catch errors to kill generated buffer
-        (let ((got-error t)
-              (after-parser-state)
-              (before-parser-input-tape-index)
-              (before-parser-pushdown-list)
-              (before-parser-output)
-              (before-parser-translation)
-              (before-parser-translation-symbol-table-list)
-              (before-parser-history))
-
-          ;; Setup parser state
-          (when before-parser-state
-            (setq
-             before-parser-input-tape-index
-             (nth 0 before-parser-state))
-            (setq
-             before-parser-pushdown-list
-             (nth 1 before-parser-state))
-            (setq
-             before-parser-output
-             (nth 2 before-parser-state))
-            (setq
-             before-parser-translation
-             (nth 3 before-parser-state))
-            (setq
-             before-parser-translation-symbol-table-list
-             (nth 4 before-parser-state))
-            (setq
-             before-parser-history
-             (nth 5 before-parser-state)))
-
-          (unwind-protect
-              ;; Run lexer or incremental lexer
-              (progn
-                (setq
-                 after-parser-state
-                 (phps-mode-parser--parse
-                  before-parser-input-tape-index
-                  before-parser-pushdown-list
-                  before-parser-output
-                  before-parser-translation
-                  before-parser-translation-symbol-table-list
-                  before-parser-history))
-                (setq got-error nil))
-            (when got-error
-              (kill-buffer)))
-
-          ;; Copy lexer variables outside of buffer
-          (let ((after-lexer-state
-                 (list
-                  phps-mode-lexer--states
-                  phps-mode-lexer--state
-                  phps-mode-lexer--state-stack
-                  phps-mode-lexer--heredoc-label
-                  phps-mode-lexer--heredoc-label-stack
-                  phps-mode-lexer--nest-location-stack
-                  (nreverse phps-mode-lexer--generated-tokens))))
-            (kill-buffer)
-            (list
-             after-lexer-state
-             after-parser-state)))))))
-
 (defun phps-mode-lex-analyzer--re2c-run (&optional force-synchronous)
   "Run lexer, optionally FORCE-SYNCHRONOUS."
   (interactive)
@@ -501,17 +380,13 @@
      buffer-name
 
      (lambda()
-       (let* ((parser-results
-               (phps-mode-lex-analyzer--parse-string
-                buffer-contents))
-              (lex-result (nth 0 parser-results))
+       (let* ((lex-result
+               (phps-mode-lex-analyzer--lex-string buffer-contents))
               (processed-result
                (phps-mode-lex-analyzer--process-tokens-in-string
-                (nth 6 lex-result)
+                (nth 0 lex-result)
                 buffer-contents)))
-         (list
-          lex-result
-          processed-result)))
+         (list lex-result processed-result)))
 
      (lambda(result)
        (when (get-buffer buffer-name)
@@ -520,13 +395,13 @@
                  (processed-result (nth 1 result)))
 
              ;; Move variables into this buffers local variables
-             (setq phps-mode-lex-analyzer--states (nth 0 lex-result))
-             (setq phps-mode-lex-analyzer--state (nth 1 lex-result))
-             (setq phps-mode-lex-analyzer--state-stack (nth 2 lex-result))
-             (setq phps-mode-lex-analyzer--heredoc-label (nth 3 lex-result))
-             (setq phps-mode-lex-analyzer--heredoc-label-stack (nth 4 lex-result))
-             (setq phps-mode-lex-analyzer--nest-location-stack (nth 5 lex-result))
-             (setq phps-mode-lex-analyzer--tokens (nth 6 lex-result))
+             (setq phps-mode-lex-analyzer--tokens (nth 0 lex-result))
+             (setq phps-mode-lex-analyzer--states (nth 1 lex-result))
+             (setq phps-mode-lex-analyzer--state (nth 2 lex-result))
+             (setq phps-mode-lex-analyzer--state-stack (nth 3 lex-result))
+             (setq phps-mode-lex-analyzer--heredoc-label (nth 4 lex-result))
+             (setq phps-mode-lex-analyzer--heredoc-label-stack (nth 5 lex-result))
+             (setq phps-mode-lex-analyzer--nest-location-stack (nth 6 lex-result))
 
              ;; Save processed result
              (setq phps-mode-lex-analyzer--processed-buffer-p t)
@@ -589,18 +464,7 @@
   (let ((async (and (boundp 'phps-mode-async-process)
                     phps-mode-async-process))
         (async-by-process (and (boundp 'phps-mode-async-process-using-async-el)
-                               phps-mode-async-process-using-async-el))
-        (before-lexer-state
-         (list
-          head-states
-          incremental-state
-          incremental-state-stack
-          incremental-heredoc-label
-          incremental-heredoc-label-stack
-          incremental-nest-location-stack
-          head-tokens))
-        (before-parser-state))
-    ;; TODO Build before-parser-state
+                               phps-mode-async-process-using-async-el)))
     (when force-synchronous
       (setq async nil))
     (phps-mode-serial-commands
@@ -608,23 +472,23 @@
      buffer-name
 
      (lambda()
-       (let* ((parser-results
-               (phps-mode-lex-analyzer--parse-string
+       (let* ((lex-result
+               (phps-mode-lex-analyzer--lex-string
                 buffer-contents
                 incremental-start-new-buffer
-                before-lexer-state
-                before-parser-state))
-              (lex-result
-               (nth 0 parser-results))
+                point-max
+                head-states
+                incremental-state
+                incremental-state-stack
+                incremental-heredoc-label
+                incremental-heredoc-label-stack
+                incremental-nest-location-stack
+                head-tokens))
               (processed-result
                (phps-mode-lex-analyzer--process-tokens-in-string
-                (nth 6 lex-result)
+                (nth 0 lex-result)
                 buffer-contents)))
-
-         ;; TODO Add Parser AST as return as well
-         (list
-          lex-result
-          processed-result)))
+         (list lex-result processed-result)))
 
      (lambda(result)
        (when (get-buffer buffer-name)
@@ -635,13 +499,13 @@
              (phps-mode-debug-message
               (message "Incrementally-lexed-string: %s" result))
 
-             (setq phps-mode-lex-analyzer--states (nth 0 lex-result))
-             (setq phps-mode-lex-analyzer--state (nth 1 lex-result))
-             (setq phps-mode-lex-analyzer--state-stack (nth 2 lex-result))
-             (setq phps-mode-lex-analyzer--heredoc-label (nth 3 lex-result))
-             (setq phps-mode-lex-analyzer--heredoc-label-stack (nth 4 lex-result))
-             (setq phps-mode-lex-analyzer--nest-location-stack (nth 5 lex-result))
-             (setq phps-mode-lex-analyzer--tokens (nth 6 lex-result))
+             (setq phps-mode-lex-analyzer--tokens (nth 0 lex-result))
+             (setq phps-mode-lex-analyzer--states (nth 1 lex-result))
+             (setq phps-mode-lex-analyzer--state (nth 2 lex-result))
+             (setq phps-mode-lex-analyzer--state-stack (nth 3 lex-result))
+             (setq phps-mode-lex-analyzer--heredoc-label (nth 4 lex-result))
+             (setq phps-mode-lex-analyzer--heredoc-label-stack (nth 5 lex-result))
+             (setq phps-mode-lex-analyzer--nest-location-stack (nth 6 lex-result))
 
              ;; Save processed result
              (setq phps-mode-lex-analyzer--processed-buffer-p t)
@@ -1196,9 +1060,8 @@ SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
       (progn
         (phps-mode-debug-message
          (message
-          "\nCalculation indentation and imenu for all lines in buffer:\n\n%S\n\nTokens:\n\n%S\n\n"
-          string
-          tokens))
+          "\nCalculation indentation and imenu for all lines in buffer:\n\n%s"
+          string))
         (let ((in-heredoc nil)
               (in-heredoc-started-this-line nil)
               (in-heredoc-ended-this-line nil)
@@ -3260,6 +3123,80 @@ SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
   (phps-mode-debug-message (message "Lexer setup %s - %s" start end))
   (unless phps-mode-lex-analyzer--state
     (setq phps-mode-lex-analyzer--state 'ST_INITIAL)))
+
+(defun phps-mode-lex-analyzer--lex-string (contents &optional start end states state state-stack heredoc-label heredoc-label-stack nest-location-stack tokens)
+  "Run lexer on CONTENTS."
+  ;; Create a separate buffer, run lexer inside of it, catch errors and return them
+  ;; to enable nice presentation
+  (require 'phps-mode-macros)
+  (let ((buffer (generate-new-buffer "*PHPs Lexer*")))
+
+    ;; Create temporary buffer and run lexer in it
+    (when (get-buffer buffer)
+      (with-current-buffer buffer
+        (insert contents)
+
+        (if tokens
+            (setq
+             phps-mode-lexer--generated-tokens
+             (nreverse tokens))
+          (setq
+           phps-mode-lexer--generated-tokens
+           nil))
+        (if state
+            (setq
+             phps-mode-lexer--state state)
+          (setq
+           phps-mode-lexer--state
+           'ST_INITIAL))
+
+        (setq
+         phps-mode-lexer--states
+         states)
+        (setq
+         phps-mode-lexer--state-stack
+         state-stack)
+        (setq
+         phps-mode-lexer--heredoc-label
+         heredoc-label)
+        (setq
+         phps-mode-lexer--heredoc-label-stack
+         heredoc-label-stack)
+        (setq
+         phps-mode-lexer--nest-location-stack
+         nest-location-stack)
+
+        ;; Setup lexer settings
+        (when (boundp 'phps-mode-syntax-table)
+          (setq semantic-lex-syntax-table phps-mode-syntax-table))
+        (setq semantic-lex-analyzer #'phps-mode-lex-analyzer--re2c-lex)
+
+        ;; Catch errors to kill generated buffer
+        (let ((got-error t))
+          (unwind-protect
+              ;; Run lexer or incremental lexer
+              (progn
+                (if (and start end)
+                    (let ((incremental-tokens (semantic-lex start end)))
+                      (setq
+                       phps-mode-lex-analyzer--tokens
+                       (append tokens incremental-tokens)))
+                  (setq
+                   phps-mode-lex-analyzer--tokens
+                   (semantic-lex-buffer)))
+                (setq got-error nil))
+            (when got-error
+              (kill-buffer))))
+
+        ;; Copy variables outside of buffer
+        (setq state phps-mode-lexer--state)
+        (setq state-stack phps-mode-lexer--state-stack)
+        (setq states phps-mode-lexer--states)
+        (setq tokens (nreverse phps-mode-lexer--generated-tokens))
+        (setq heredoc-label phps-mode-lexer--heredoc-label)
+        (setq heredoc-label-stack phps-mode-lexer--heredoc-label-stack)
+        (kill-buffer))))
+  (list tokens states state state-stack heredoc-label heredoc-label-stack))
 
 (provide 'phps-mode-lex-analyzer)
 

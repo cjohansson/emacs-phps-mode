@@ -1617,12 +1617,12 @@
   (should
    (equal
     '(80 459 466 411 333 332 154 102 79)
-    (car (car (cdr (phps-mode-lex-analyzer--parse-string
+    (car (car (cdr (phps-mode-lex-analyzer--lex-string
                     "<?php echo 'abc';"))))))
   (message "Passed valid parse test")
 
   (should-error
-   (phps-mode-lex-analyzer--parse-string
+   (phps-mode-lex-analyzer--lex-string
     "<?php echo 'abc'"))
   (message "Passed error parse test")
   )
@@ -1646,9 +1646,7 @@
   (phps-mode-test-lex-analyzer--indent-line)
   (phps-mode-test-lex-analyzer--imenu)
   (phps-mode-test-lex-analyzer--get-moved-imenu)
-  (phps-mode-test-lex-analyzer--comment-uncomment-region)
-  (phps-mode-test-lex-analyzer--move-lines-indent)
-  (phps-mode-test-lex-analyzer--parse-string))
+  (phps-mode-test-lex-analyzer--comment-uncomment-region))
 
 (phps-mode-test-lex-analyzer)
 
