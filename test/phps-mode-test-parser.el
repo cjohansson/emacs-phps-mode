@@ -55,7 +55,7 @@
    (lambda()
 
      (let ((parse (phps-mode-parser-parse)))
-       (message "Left-to-right with left-most derivation in reverse: %S" parse)
+       (message "Left-to-right with left-most derivation:\n%S\n" parse)
        (dolist (production-number (reverse parse))
          (let ((production
                 (phps-mode-parser--get-grammar-production-by-number
@@ -108,7 +108,7 @@
    "Advanced echo test with 2 echo sections"
    (lambda()
      (let ((parse (phps-mode-parser-parse)))
-       (message "Left-to-right with left-most derivation in reverse: %S" parse)
+       (message "Left-to-right with left-most derivation:\n%S\n" parse)
        (dolist (production-number (reverse parse))
          (let ((production
                 (phps-mode-parser--get-grammar-production-by-number
@@ -125,13 +125,67 @@
          parse)))))
 
   (phps-mode-test-parser--buffer-contents
-   "<?php echo 'hello'; ?>"
-   "Basic translation test of echo with open tag and close tag"
+   "<?php\nfunction myFunction($arg) { $arg = 2; return $arg; }"
+   "Simple function defintion"
    (lambda()
-     (should
-      (equal
-       '(nil ("echo" "'hello'" ";"))
-       (phps-mode-parser-translate)))))
+     (let ((parse (phps-mode-parser-parse)))
+       (message "Left-to-right with left-most derivation:\n%S\n" parse)
+       (dolist (production-number (reverse parse))
+         (let ((production
+                (phps-mode-parser--get-grammar-production-by-number
+                 production-number)))
+           (message
+            "%d: %S -> %S"
+            production-number
+            (car (car production))
+            (car (car (cdr production))))))
+       (message "\n")
+       (should
+        (equal
+         '(80 427 431 428 176 178 428 247 241 238 120 236 266 429 137 502 492 498 461 411 345 156 138 136 502 492 498 342 481 151 138 136 429 175 98 105 79)
+         parse)))))
+
+  (phps-mode-test-parser--buffer-contents
+   "<?php\nnamespace myNamespace;\nfunction myFunction($arg) {\n    $arg = 2;\n    return $arg;\n}\n"
+   "Simple function defintion inside un-bracketed namespace"
+   (lambda()
+     (let ((parse (phps-mode-parser-parse)))
+       (message "Left-to-right with left-most derivation:\n%S\n" parse)
+       (dolist (production-number (reverse parse))
+         (let ((production
+                (phps-mode-parser--get-grammar-production-by-number
+                 production-number)))
+           (message
+            "%d: %S -> %S"
+            production-number
+            (car (car production))
+            (car (car (cdr production))))))
+       (message "\n")
+       (should
+        (equal
+         '(80 77 81 107 79 427 431 428 176 178 428 247 241 238 120 236 266 429 137 502 492 498 461 411 345 156 138 136 502 492 498 342 481 151 138 136 429 175 98 105 79)
+         parse)))))
+
+  (phps-mode-test-parser--buffer-contents
+   "<?php\nnamespace myNamespace {\n    function myFunction($arg) {\n        $arg = 2;\n        return $arg;\n    }\n}\n"
+   "Simple function defintion inside bracketed namespace"
+   (lambda()
+     (let ((parse (phps-mode-parser-parse)))
+       (message "Left-to-right with left-most derivation:\n%S\n" parse)
+       (dolist (production-number (reverse parse))
+         (let ((production
+                (phps-mode-parser--get-grammar-production-by-number
+                 production-number)))
+           (message
+            "%d: %S -> %S"
+            production-number
+            (car (car production))
+            (car (car (cdr production))))))
+       (message "\n")
+       (should
+        (equal
+         '(80 77 81 108 79 137 427 431 428 176 178 428 247 241 238 120 236 266 429 137 502 492 498 461 411 345 156 138 136 502 492 498 342 481 151 138 136 429 175 98 139 136 142 102 79)
+         parse)))))
 
   ;; TODO Make following test work
   ;; (phps-mode-test-parser--buffer-contents
