@@ -31,7 +31,6 @@
 
   (parser-generator-set-look-ahead-number
    1)
-  (message "set here")
   (setq
    parser-generator--e-identifier
    '%empty)
@@ -52,18 +51,57 @@
      (Start Productions-Block Productions-Delimiter Productions Productions Production LHS RHSS RHS RHS-Symbol Comment Logic Symbol)
      (productions-delimiter ":" "|" ";" comment logic symbol literal)
      (
-      (Start Productions-Block)
-      (Productions-Block (Productions-Delimiter Productions Productions-Delimiter))
-      (Productions-Delimiter (productions-delimiter (lambda(args) "")))
-      (Productions Production (Productions Production (lambda(args) (format "%s\n\n%s" (nth 0 args) (nth 1 args)))))
-      (Production (Comment Production) (LHS ":" RHSS ";" (lambda(args) (format "(%s\n %s\n)" (nth 0 args) (nth 2 args)))))
-      (LHS Symbol)
-      (RHSS RHS (RHSS "|" RHS (lambda(args) (format "%s\n %s" (nth 0 args) (nth 2 args)))))
-      (RHS RHS-Symbol (RHS RHS-Symbol))
+      (Start
+       Productions-Block)
+      (Productions-Block
+       (Productions-Delimiter Productions Productions-Delimiter
+                              (lambda(args) (format "'(\n%s\n)" (nth 1 args))))
+       )
+      (Productions-Delimiter
+       (productions-delimiter
+        (lambda(args) ""))
+       )
+      (Productions
+       (Production
+        (lambda(args) (format "%s" args)))
+       (Productions Production
+                    (lambda(args) (format "%s\n\n%s" (nth 0 args) (nth 1 args))))
+       )
+      (Production
+       (Comment Production
+                (lambda(args) (format "%s" (nth 1 args))))
+       (LHS ":" RHSS ";"
+            (lambda(args) (format " (%s\n  %s\n )" (nth 0 args) (nth 2 args))))
+       )
+      (LHS
+       (Symbol
+        (lambda(args) (format "%s" args)))
+       )
+      (RHSS
+       (RHS
+        (lambda(args) (format "%s" args)))
+       (RHSS "|" RHS
+             (lambda(args) (format "%s\n  %s" (nth 0 args) (nth 2 args))))
+       )
+      (RHS
+       (RHS-Symbol
+        (lambda(args) (format "%s" args)))
+       (RHS
+        RHS-Symbol
+        (lambda (args) (format "%s %s" (nth 0 args) (nth 1 args))))
+       )
       (RHS-Symbol Comment Logic Symbol)
       (Comment (comment (lambda(args) "")))
-      (Logic (logic (lambda(args) "")))
-      (Symbol symbol (literal (lambda(args) (format "%S" (substring args 1 2)))))
+      (Logic
+       (logic
+        (lambda(args) ""))
+       )
+      (Symbol
+       (symbol
+       (lambda(args) (format "%s" args)))
+       (literal
+        (lambda(args) (format "%S" (substring args 1 2))))
+       )
       )
      Start))
 
@@ -108,55 +146,55 @@
                    (logic-end)
                    (continue t))
                (forward-char 1)
-             (while (and
-                     continue
-                     (> nesting-stack 0)
-                     (< (point) (point-max)))
-               (let ((next-stop (search-forward-regexp "\\({\\|}\\|/\\*\\)" nil t)))
-                 (let ((match (buffer-substring-no-properties (match-beginning 0) (match-end 0))))
-                    (cond
-
-                     ((not next-stop)
-                      (setq
+               (while (and
                        continue
-                       nil))
+                       (> nesting-stack 0)
+                       (< (point) (point-max)))
+                 (let ((next-stop (search-forward-regexp "\\({\\|}\\|/\\*\\)" nil t)))
+                   (let ((match (buffer-substring-no-properties (match-beginning 0) (match-end 0))))
+                     (cond
 
-                    ((string= match "{")
-                     (setq
-                      nesting-stack
-                      (1+ nesting-stack)))
-
-                    ((string= match "}")
-                     (setq
-                      nesting-stack
-                      (1- nesting-stack))
-                     (when
-                         (= nesting-stack 0)
-                       (when (looking-at ";")
-                         (forward-char 1))
+                      ((not next-stop)
                        (setq
-                        logic-end
-                        (point))))
+                        continue
+                        nil))
 
-                    ((string= match "/*")
-                     (let (
-                           (comment-start (match-beginning 0))
-                           (comment-end
-                            (search-forward-regexp "\\*/" nil t)))
-                       (unless comment-end
-                         (error
-                          "Failed to find end of comment started at %S (2))"
-                          comment-start))))
-                       
+                      ((string= match "{")
+                       (setq
+                        nesting-stack
+                        (1+ nesting-stack)))
 
-                    ))))
+                      ((string= match "}")
+                       (setq
+                        nesting-stack
+                        (1- nesting-stack))
+                       (when
+                           (= nesting-stack 0)
+                         (when (looking-at ";")
+                           (forward-char 1))
+                         (setq
+                          logic-end
+                          (point))))
+
+                      ((string= match "/*")
+                       (let (
+                             (comment-start (match-beginning 0))
+                             (comment-end
+                              (search-forward-regexp "\\*/" nil t)))
+                         (unless comment-end
+                           (error
+                            "Failed to find end of comment started at %S (2))"
+                            comment-start))))
+                      
+
+                      ))))
                (unless logic-end
                  (error
                   "Failed to find end of logic started at %S"
                   logic-start))
-             (setq
-              token
-              `(logic ,logic-start . ,logic-end))))
+               (setq
+                token
+                `(logic ,logic-start . ,logic-end))))
 
             ((looking-at "\\(:\\|;\\||\\)")
              (setq
@@ -189,8 +227,7 @@
            (let ((token-data
                   (buffer-substring-no-properties
                    (car (cdr token))
-                   (cdr (cdr token)))))
-             (message "Token: %S = %S" token token-data)))
+                   (cdr (cdr token)))))))
          token))))
 
   (setq
@@ -225,7 +262,7 @@
       (kill-region delimiter-start (point-max)))
     (goto-char (point-min))
     (let ((translation (parser-generator-lr-translate)))
-      (message "translation:\n%S" translation))))
+      (message "translation:\n%s" translation))))
 
 (provide 'phps-mode-grammar-parser-generator)
 ;;; phps-mode-grammar-parser-generator.el ends here
