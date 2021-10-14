@@ -1005,7 +1005,7 @@
      %empty)
 
     (attributed_class_statement
-     (variable_modifiers optional_type_without_static property_list ",")
+     (variable_modifiers optional_type_without_static property_list ";")
      (method_modifiers T_CONST class_const_list ";")
      (method_modifiers function returns_ref identifier backup_doc_comment "(" parameter_list ")" return_type backup_fn_flags method_body backup_fn_flags))
 
