@@ -15,6 +15,10 @@ parser: clean generate-parser
 generate-parser: 
 	rm phps-mode-automation-grammar.elc; $(EMACS_CMD) -L ~/.emacs.d/emacs-parser-generator/ -l phps-mode-lexer.el -l admin/phps-mode-automation.el -eval "(progn (require 'parser-generator-lr-export)(setq debug-on-signal t)(setq debug-on-error t)(phps-mode-automation))"
 
+.PHONY: generate-grammar-parser
+generate-grammar-parser: 
+	$(EMACS_CMD) -L ~/.emacs.d/emacs-parser-generator/ -l admin/phps-mode-grammar-parser-generator.el -eval "(phps-mode-grammar-parser-generator)"
+
 .PHONY: compile
 compile:
 	find . -name "*.el" -exec $(EMACS_CMD) -f batch-byte-compile {} \;

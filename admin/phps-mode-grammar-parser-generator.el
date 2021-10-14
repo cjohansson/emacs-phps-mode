@@ -26,11 +26,12 @@
 
 (require 'parser-generator-lr)
 
-(defun phps-mod-grammar-parser-generator()
+(defun phps-mode-grammar-parser-generator()
   "Generate parser here."
 
   (parser-generator-set-look-ahead-number
    1)
+  (message "set here")
   (setq
    parser-generator--e-identifier
    '%empty)
@@ -48,15 +49,14 @@
    nil)
   (parser-generator-set-grammar
    '(
-     (Start Productions-Block Start-Delimiter Productions End-Delimiter Productions Production LHS RHSS RHS RHS-Symbol Comment Logic Symbol)
-     (start-delimiter end-delimiter ":" "|" ";" comment logic symbol)
+     (Start Productions-Block Productions-Delimiter Productions Productions Production LHS RHSS RHS RHS-Symbol Comment Logic Symbol)
+     (productions-delimiter ":" "|" ";" comment logic symbol)
      (
       (Start Productions-Block)
-      (Productions-Block (Start-Delimiter Productions End-Delimiter))
-      (Start-Delimiter start-delimiter)
-      (End-Delimiter end-delimiter)
+      (Productions-Block (Productions-Delimiter Productions Productions-Delimiter))
+      (Productions-Delimiter productions-delimiter)
       (Productions Production (Productions Production))
-      (Production (LHS ":" RHSS ";"))
+      (Production (Comment Production) (LHS ":" RHSS ";"))
       (LHS Symbol)
       (RHSS RHS (RHSS "|" RHS))
       (RHS RHS-Symbol (RHS RHS-Symbol))
@@ -80,25 +80,82 @@
             index)
 
            ;; Skip white-space(s)
-           (when (looking-at-p "[\t ]+")
+           (when (looking-at-p "[\t\n ]+")
              (when
-                 (search-forward-regexp "[^\t ]" nil t)
+                 (search-forward-regexp "[^\t\n ]" nil t)
                (forward-char -1)
+               (message "moved to %S" (point))
                (setq-local
                 parser-generator-lex-analyzer--move-to-index-flag
                 (point))))
 
            (cond
 
-            ((looking-at "\\(/\\*.+\\*/\\)")
-             (setq
-              token
-              `(comment ,(match-beginning 0) . ,(match-end 0))))
+            ((looking-at "\\(/\\*\\)")
+             (let ((comment-start (match-beginning 0))
+                   (comment-end
+                    (search-forward-regexp "\\(\\*/\\)" nil t)))
+               (unless comment-end
+                 (error
+                  "Failed to find end of comment started at %S (1)"
+                  comment-start))
+               (setq
+                token
+                `(comment ,comment-start . ,comment-end))))
 
-            ((looking-at "\\({.+}\\)")
+            ((looking-at "\\({\\)")
+             (let ((nesting-stack 1)
+                   (logic-start (match-beginning 0))
+                   (logic-end)
+                   (continue t))
+               (forward-char 1)
+             (while (and
+                     continue
+                     (> nesting-stack 0)
+                     (< (point) (point-max)))
+               (let ((next-stop (search-forward-regexp "\\({\\|}\\|/\\*\\)" nil t)))
+                 (let ((match (buffer-substring-no-properties (match-beginning 0) (match-end 0))))
+                    (cond
+
+                     ((not next-stop)
+                      (setq
+                       continue
+                       nil))
+
+                    ((string= match "{")
+                     (setq
+                      nesting-stack
+                      (1+ nesting-stack)))
+
+                    ((string= match "}")
+                     (setq
+                      nesting-stack
+                      (1- nesting-stack))
+                     (when
+                         (= nesting-stack 0)
+                       (setq
+                        logic-end
+                        (match-end 0))))
+
+                    ((string= match "/*")
+                     (let (
+                           (comment-start (match-beginning 0))
+                           (comment-end
+                            (search-forward-regexp "\\*/" nil t)))
+                       (unless comment-end
+                         (error
+                          "Failed to find end of comment started at %S (2))"
+                          comment-start))))
+                       
+
+                    ))))
+               (unless logic-end
+                 (error
+                  "Failed to find end of logic started at %S"
+                  logic-start))
              (setq
               token
-              `(logic ,(match-beginning 0) . ,(match-end 0))))
+              `(logic ,logic-start . ,logic-end))))
 
             ((looking-at "\\(:\\|;\\||\\)")
              (setq
@@ -108,10 +165,24 @@
                   (match-beginning 0)
                   (match-end 0))
                 ,(match-beginning 0)
-                . ,(match-end 0)
-                )))
+                . ,(match-end 0))))
 
-            (t (error "Unexpected input at %d!" index))))
+            ((looking-at "\\(%%\\)")
+             (setq
+              token
+              `(productions-delimiter ,(match-beginning 0) . ,(match-end 0))))
+
+            ((looking-at "\\([%a-zA-Z_]+\\|'.{1}'\\)")
+             (setq
+              token
+              `(symbol ,(match-beginning 0) . ,(match-end 0))))))
+
+         (when token
+           (let ((token-data
+                  (buffer-substring-no-properties
+                   (car (cdr token))
+                   (cdr (cdr token)))))
+             (message "Token: %S = %S" token token-data)))
          token))))
 
   (setq
@@ -135,8 +206,18 @@
 
   (let ((buffer (generate-new-buffer "*buffer*")))
     (switch-to-buffer buffer)
-
-    ))
+    (insert-file (expand-file-name "zend_language_parser.y"))
+    (goto-char (point-min))
+    (let ((delimiter-start (search-forward "%%")))
+      (setq
+       delimiter-start
+       (- delimiter-start 2))
+      (kill-region (point-min) delimiter-start))
+    (let ((delimiter-start (search-forward "%%")))
+      (kill-region delimiter-start (point-max)))
+    (goto-char (point-min))
+    (message "Buffer contents:\n\n%S" (buffer-substring-no-properties (point-min) (point-max)))
+    (parser-generator-lr-parse)))
 
 (provide 'phps-mode-grammar-parser-generator)
 ;;; phps-mode-grammar-parser-generator.el ends here
