@@ -84,7 +84,6 @@
              (when
                  (search-forward-regexp "[^\t\n ]" nil t)
                (forward-char -1)
-               (message "moved to %S" (point))
                (setq-local
                 parser-generator-lex-analyzer--move-to-index-flag
                 (point))))
@@ -133,9 +132,11 @@
                       (1- nesting-stack))
                      (when
                          (= nesting-stack 0)
+                       (when (looking-at ";")
+                         (forward-char 1))
                        (setq
                         logic-end
-                        (match-end 0))))
+                        (point))))
 
                     ((string= match "/*")
                      (let (
@@ -172,7 +173,7 @@
               token
               `(productions-delimiter ,(match-beginning 0) . ,(match-end 0))))
 
-            ((looking-at "\\([%a-zA-Z_]+\\|'.{1}'\\)")
+            ((looking-at "\\([%a-zA-Z_]+\\|'.'\\)")
              (setq
               token
               `(symbol ,(match-beginning 0) . ,(match-end 0))))))
@@ -181,8 +182,7 @@
            (let ((token-data
                   (buffer-substring-no-properties
                    (car (cdr token))
-                   (cdr (cdr token)))))
-             (message "Token: %S = %S" token token-data)))
+                   (cdr (cdr token)))))))
          token))))
 
   (setq
@@ -216,8 +216,8 @@
     (let ((delimiter-start (search-forward "%%")))
       (kill-region delimiter-start (point-max)))
     (goto-char (point-min))
-    (message "Buffer contents:\n\n%S" (buffer-substring-no-properties (point-min) (point-max)))
-    (parser-generator-lr-parse)))
+    (let ((parse (parser-generator-lr-parse)))
+      (message "parse: %S" parse))))
 
 (provide 'phps-mode-grammar-parser-generator)
 ;;; phps-mode-grammar-parser-generator.el ends here
