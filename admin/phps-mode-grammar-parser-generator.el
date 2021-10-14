@@ -50,20 +50,20 @@
   (parser-generator-set-grammar
    '(
      (Start Productions-Block Productions-Delimiter Productions Productions Production LHS RHSS RHS RHS-Symbol Comment Logic Symbol)
-     (productions-delimiter ":" "|" ";" comment logic symbol)
+     (productions-delimiter ":" "|" ";" comment logic symbol literal)
      (
       (Start Productions-Block)
       (Productions-Block (Productions-Delimiter Productions Productions-Delimiter))
-      (Productions-Delimiter productions-delimiter)
-      (Productions Production (Productions Production))
-      (Production (Comment Production) (LHS ":" RHSS ";"))
+      (Productions-Delimiter (productions-delimiter (lambda(args) "")))
+      (Productions Production (Productions Production (lambda(args) (format "%s\n\n%s" (nth 0 args) (nth 1 args)))))
+      (Production (Comment Production) (LHS ":" RHSS ";" (lambda(args) (format "(%s\n %s\n)" (nth 0 args) (nth 2 args)))))
       (LHS Symbol)
-      (RHSS RHS (RHSS "|" RHS))
+      (RHSS RHS (RHSS "|" RHS (lambda(args) (format "%s\n %s" (nth 0 args) (nth 2 args)))))
       (RHS RHS-Symbol (RHS RHS-Symbol))
       (RHS-Symbol Comment Logic Symbol)
-      (Comment comment)
-      (Logic logic)
-      (Symbol symbol)
+      (Comment (comment (lambda(args) "")))
+      (Logic (logic (lambda(args) "")))
+      (Symbol symbol (literal (lambda(args) (format "%S" (substring args 1 2)))))
       )
      Start))
 
@@ -173,16 +173,24 @@
               token
               `(productions-delimiter ,(match-beginning 0) . ,(match-end 0))))
 
-            ((looking-at "\\([%a-zA-Z_]+\\|'.'\\)")
+            ((looking-at "\\([%a-zA-Z_]+\\)")
              (setq
               token
-              `(symbol ,(match-beginning 0) . ,(match-end 0))))))
+              `(symbol ,(match-beginning 0) . ,(match-end 0))))
+
+            ((looking-at "\\('.'\\)")
+             (setq
+              token
+              `(literal ,(match-beginning 0) . ,(match-end 0))))
+
+            ))
 
          (when token
            (let ((token-data
                   (buffer-substring-no-properties
                    (car (cdr token))
-                   (cdr (cdr token)))))))
+                   (cdr (cdr token)))))
+             (message "Token: %S = %S" token token-data)))
          token))))
 
   (setq
@@ -216,8 +224,8 @@
     (let ((delimiter-start (search-forward "%%")))
       (kill-region delimiter-start (point-max)))
     (goto-char (point-min))
-    (let ((parse (parser-generator-lr-parse)))
-      (message "parse: %S" parse))))
+    (let ((translation (parser-generator-lr-translate)))
+      (message "translation:\n%S" translation))))
 
 (provide 'phps-mode-grammar-parser-generator)
 ;;; phps-mode-grammar-parser-generator.el ends here
