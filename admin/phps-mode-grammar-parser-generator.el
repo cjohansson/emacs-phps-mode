@@ -55,7 +55,7 @@
        Productions-Block)
       (Productions-Block
        (Productions-Delimiter Productions Productions-Delimiter
-                              (lambda(args) (format "'(\n%s\n)" (nth 1 args))))
+                              (lambda(args) (format "'(\n\n%s\n\n)" (nth 1 args))))
        )
       (Productions-Delimiter
        (productions-delimiter
@@ -79,26 +79,31 @@
        )
       (RHSS
        (RHS
-        (lambda(args) (format "%s" args)))
+        (lambda(args) (format "(%s)" args)))
        (RHSS "|" RHS
-             (lambda(args) (format "%s\n  %s" (nth 0 args) (nth 2 args))))
+             (lambda(args) (format "%s\n  (%s)" (nth 0 args) (nth 2 args))))
        )
       (RHS
        (RHS-Symbol
         (lambda(args) (format "%s" args)))
        (RHS
         RHS-Symbol
-        (lambda (args) (format "%s %s" (nth 0 args) (nth 1 args))))
+        (lambda (args) (if (string= (nth 1 args) "") (format "%s" (nth 0 args))(format "%s %s" (nth 0 args) (nth 1 args)))))
        )
-      (RHS-Symbol Comment Logic Symbol)
-      (Comment (comment (lambda(args) "")))
+      (RHS-Symbol
+       Comment
+       Logic
+       Symbol)
+      (Comment
+       (comment
+        (lambda(args) "")))
       (Logic
        (logic
         (lambda(args) ""))
        )
       (Symbol
        (symbol
-       (lambda(args) (format "%s" args)))
+        (lambda(args) (format "%s" args)))
        (literal
         (lambda(args) (format "%S" (substring args 1 2))))
        )
