@@ -39,8 +39,13 @@
       ;; Download Yacc if not available
       (unless (file-exists-p php-yacc-file)
         (message "Downloading PHP 8.0 YACC grammar..")
-        (url-copy-file php-yacc-url php-yacc-file t t)
+        (url-copy-file
+         php-yacc-url php-yacc-file
+         t
+         t)
         (message "Download of PHP 8.0 YACC grammar completed"))
+
+      ;; TODO Generate precedence, non-terminals, terminals, productions and start here
 
       ;; Prepare export
       (when (fboundp 'parser-generator-set-grammar)
