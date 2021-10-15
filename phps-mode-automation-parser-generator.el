@@ -466,29 +466,44 @@
    nil)
   (parser-generator-set-grammar
    '(
-     (Start Declarations Declaration Type Symbols Symbol)
-     (type symbol literal)
+     (Start Declarations-Block Declarations Declaration Type Symbols Symbol)
+     (type symbol literal comment)
      (
       (Start
-       Declarations
+       Declarations-Block
        )
+      (Declarations-Block
+       (Declarations
+        (lambda(args)
+          (format "'(\n%s)" args))))
       (Declarations
-       Declaration
-       (Declaration Declarations)
+       (Declaration
+        (lambda(args) (format "%s" args)))
+       (Declaration Declarations
+                    (lambda(args) (format "%s%s" (nth 0 args) (nth 1 args))))
        )
       (Declaration
-       (Type Symbols)
+       (comment
+        (lambda(args) ""))
+       (Type Symbols
+             (lambda(args) (format "  (%s %s)\n" (nth 0 args) (nth 1 args))))
        )
       (Type
-       type
+       (type
+        (lambda(args) (format "%s" args)))
        )
       (Symbols
-       Symbol
-       (Symbol Symbols)
+       (Symbol
+        (lambda(args) (format "%s" args)))
+       (Symbol Symbols
+               (lambda(args) (format "%s %s" (nth 0 args) (nth 1 args))))
        )
       (Symbol
-       symbol
-       literal
+       (symbol
+        (lambda(args) (format "%s" args)))
+       (literal
+        (lambda(args)
+          (format "\"%s\"" (substring args 1 2))))
        )
       )
      Start))
@@ -519,86 +534,29 @@
             ((looking-at "\\(%[a-z]+\\)")
              (setq
               token
-              `(comment ,comment-start . ,comment-end)))
-
-            ((looking-at "\\({\\)")
-             (let ((nesting-stack 1)
-                   (logic-start (match-beginning 0))
-                   (logic-end)
-                   (continue t))
-               (forward-char 1)
-               (while (and
-                       continue
-                       (> nesting-stack 0)
-                       (< (point) (point-max)))
-                 (let ((next-stop (search-forward-regexp "\\({\\|}\\|/\\*\\)" nil t)))
-                   (let ((match (buffer-substring-no-properties (match-beginning 0) (match-end 0))))
-                     (cond
-
-                      ((not next-stop)
-                       (setq
-                        continue
-                        nil))
-
-                      ((string= match "{")
-                       (setq
-                        nesting-stack
-                        (1+ nesting-stack)))
-
-                      ((string= match "}")
-                       (setq
-                        nesting-stack
-                        (1- nesting-stack))
-                       (when
-                           (= nesting-stack 0)
-                         (setq
-                          logic-end
-                          (point))))
-
-                      ((string= match "/*")
-                       (let (
-                             (comment-start (match-beginning 0))
-                             (comment-end
-                              (search-forward-regexp "\\*/" nil t)))
-                         (unless comment-end
-                           (error
-                            "Failed to find end of comment started at %S (2))"
-                            comment-start))))
-                      
-
-                      ))))
-               (unless logic-end
-                 (error
-                  "Failed to find end of logic started at %S"
-                  logic-start))
-               (setq
-                token
-                `(logic ,logic-start . ,logic-end))))
-
-            ((looking-at "\\(:\\|;\\||\\)")
-             (setq
-              token
-              `(
-                ,(buffer-substring-no-properties
-                  (match-beginning 0)
-                  (match-end 0))
-                ,(match-beginning 0)
-                . ,(match-end 0))))
-
-            ((looking-at "\\(%%\\)")
-             (setq
-              token
-              `(productions-delimiter ,(match-beginning 0) . ,(match-end 0))))
-
-            ((looking-at "\\([%a-zA-Z_]+\\)")
-             (setq
-              token
-              `(symbol ,(match-beginning 0) . ,(match-end 0))))
+              `(type ,(match-beginning 0) . ,(match-end 0))))
 
             ((looking-at "\\('.'\\)")
              (setq
               token
               `(literal ,(match-beginning 0) . ,(match-end 0))))
+
+            ((looking-at "\\([a-zA-Z_]+\\)")
+             (setq
+              token
+              `(symbol ,(match-beginning 0) . ,(match-end 0))))
+
+            ((looking-at "\\(/\\*\\)")
+             (let ((comment-start (match-beginning 0))
+                   (comment-end
+                    (search-forward-regexp "\\(\\*/\\)" nil t)))
+               (unless comment-end
+                 (error
+                  "Failed to find end of comment started at %S (1)"
+                  comment-start))
+               (setq
+                token
+                `(comment ,comment-start . ,comment-end))))
 
             ))
 
@@ -606,7 +564,9 @@
            (let ((token-data
                   (buffer-substring-no-properties
                    (car (cdr token))
-                   (cdr (cdr token)))))))
+                   (cdr (cdr token)))))
+             ;; (message "token-data: %S" token-data)
+             ))
          token))))
 
   (setq
@@ -616,14 +576,7 @@
        (let ((start (car (cdr token)))
              (end (cdr (cdr token))))
          (when (<= end (point-max))
-           (let ((symbol
-                  (buffer-substring-no-properties start end)))
-             (when
-                 (string-match-p "^\\([0-9]+\\.[0-9]+\\|[0-9]+\\)$" symbol)
-               (setq
-                symbol
-                (string-to-number symbol)))
-             symbol))))))
+           (buffer-substring-no-properties start end))))))
 
   (parser-generator-process-grammar)
   (parser-generator-lr-generate-parser-tables)
@@ -632,15 +585,23 @@
     (switch-to-buffer buffer)
     (insert-file (expand-file-name "zend_language_parser.y"))
     (goto-char (point-min))
-    (let ((delimiter-start (search-forward "%%")))
+    (let ((delimiter-start (search-forward "%precedence")))
       (setq
        delimiter-start
-       (- delimiter-start 2))
-      (kill-region (point-min) delimiter-start))
-    (let ((delimiter-start (search-forward "%%")))
-      (kill-region delimiter-start (point-max)))
+       (- delimiter-start 11))
+      (kill-region
+       (point-min)
+       delimiter-start))
+    (let ((delimiter-start (search-forward "%token")))
+      (setq
+       delimiter-start
+       (- delimiter-start 6))
+      (kill-region
+       delimiter-start
+       (point-max)))
     (goto-char (point-min))
-    (let ((productions (eval (car (read-from-string (parser-generator-lr-translate))))))))
+    (let ((global-declaration (eval (car (read-from-string (parser-generator-lr-translate))))))
+      global-declaration)))
 
 (provide 'phps-mode-automation-parser-generator)
 ;;; phps-mode-automation-parser-generator.el ends here

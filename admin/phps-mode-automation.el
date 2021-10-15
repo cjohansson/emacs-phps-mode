@@ -39,6 +39,11 @@
         ;; phps-mode-automation-grammar--global-attributes
         ;; phps-mode-automation-grammar--lr-global-precedence-attributes
         ;; phps-mode-automation-grammar--global-declaration
+        (let ((global-declaration (phps-mode-automation-parser-generator--global-declaration)))
+          (when (boundp 'parser-generator--global-declaration)
+            (setq
+             parser-generator--global-declaration
+             global-declaration)))
 
         ;; Prepare export
         (when (fboundp 'parser-generator-set-grammar)
@@ -100,11 +105,6 @@
           (setq
            parser-generator-lr--precedence-comparison-function
            phps-mode-automation-grammar--precedence-comparison-function))
-
-        (when (boundp 'parser-generator--global-declaration)
-          (setq
-           parser-generator--global-declaration
-           phps-mode-automation-grammar--global-declaration))
 
         (when (fboundp 'parser-generator-process-grammar)
           (parser-generator-process-grammar))
