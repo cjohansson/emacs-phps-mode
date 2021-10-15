@@ -48,7 +48,7 @@
    nil)
   (parser-generator-set-grammar
    '(
-     (Start Productions-Block Productions-Delimiter Productions Productions Production Production-End LHS RHSS RHS RHS-Symbol Comment Logic Symbol)
+     (Start Productions-Block Productions-Delimiter Productions Productions Production Production-End LHS RHSS RHS RHS-Symbol RHS-Symbols Comment Logic Symbol)
      (productions-delimiter ":" "|" ";" comment logic symbol literal)
      (
       (Start
@@ -89,9 +89,25 @@
       (RHS
        (RHS-Symbol
         (lambda(args) (format "%s" args)))
+       (RHS-Symbols
+        (lambda(args)
+          (if (string-match-p " " args)
+              (format "(%s)" args)
+            (format "%s" args))))
+       )
+      (RHS-Symbols
        (RHS-Symbol
-        RHS
-        (lambda (args) (format "%s %s" (nth 0 args) (nth 1 args))))
+        RHS-Symbols
+        (lambda (args)
+          (if (string= (nth 1 args) "")
+              (format "%s" (nth 0 args))
+            (format "%s %s" (nth 0 args) (nth 1 args)))))
+       (RHS-Symbol
+        RHS-Symbol
+        (lambda (args)
+          (if (string= (nth 1 args) "")
+              (format "%s" (nth 0 args))
+            (format "%s %s" (nth 0 args) (nth 1 args)))))
        )
       (RHS-Symbol
        Comment
