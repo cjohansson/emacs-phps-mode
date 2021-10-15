@@ -33,7 +33,7 @@
    1)
   (setq
    parser-generator--e-identifier
-   '%empty)
+   nil)
   (setq
    parser-generator--global-attributes
    nil)
@@ -48,7 +48,7 @@
    nil)
   (parser-generator-set-grammar
    '(
-     (Start Productions-Block Productions-Delimiter Productions Productions Production LHS RHSS RHS RHS-Symbol Comment Logic Symbol)
+     (Start Productions-Block Productions-Delimiter Productions Productions Production Production-End LHS RHSS RHS RHS-Symbol Comment Logic Symbol)
      (productions-delimiter ":" "|" ";" comment logic symbol literal)
      (
       (Start
@@ -70,25 +70,28 @@
       (Production
        (Comment Production
                 (lambda(args) (format "%s" (nth 1 args))))
-       (LHS ":" RHSS ";"
+       (LHS ":" RHSS Production-End
             (lambda(args) (format " (%s\n  %s\n )" (nth 0 args) (nth 2 args))))
        )
+      (Production-End
+       ";"
+       (";" ";"))
       (LHS
        (Symbol
         (lambda(args) (format "%s" args)))
        )
       (RHSS
        (RHS
-        (lambda(args) (format "(%s)" args)))
+        (lambda(args) (format "%s" args)))
        (RHSS "|" RHS
-             (lambda(args) (format "%s\n  (%s)" (nth 0 args) (nth 2 args))))
+             (lambda(args) (format "%s\n  %s" (nth 0 args) (nth 2 args))))
        )
       (RHS
        (RHS-Symbol
         (lambda(args) (format "%s" args)))
-       (RHS
-        RHS-Symbol
-        (lambda (args) (if (string= (nth 1 args) "") (format "%s" (nth 0 args))(format "%s %s" (nth 0 args) (nth 1 args)))))
+       (RHS-Symbol
+        RHS
+        (lambda (args) (format "%s %s" (nth 0 args) (nth 1 args))))
        )
       (RHS-Symbol
        Comment
@@ -175,8 +178,6 @@
                         (1- nesting-stack))
                        (when
                            (= nesting-stack 0)
-                         (when (looking-at ";")
-                           (forward-char 1))
                          (setq
                           logic-end
                           (point))))
