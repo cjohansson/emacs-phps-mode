@@ -126,15 +126,28 @@
 
           ;; Only generate LR-items, GOTO-tables and ACTION-tables if we are lacking it
           (if (and
-               (boundp 'parser-generator-lr--goto-tables)
-               parser-generator-lr--goto-tables
-               (boundp 'parser-generator-lr--distinct-goto-tables)
-               parser-generator-lr--distinct-goto-tables
-               (boundp 'parser-generator-lr--action-tables)
-               parser-generator-lr--action-tables
-               (boundp 'parser-generator-lr--distinct-action-tables)
-               parser-generator-lr--distinct-action-tables)
-              (message "Parser tables are defined - skipping generation")
+               (boundp 'parser-generator-lr--goto-tables-resume)
+               parser-generator-lr--goto-tables-resume
+               (boundp 'parser-generator-lr--distinct-goto-tables-resume)
+               parser-generator-lr--distinct-goto-tables-resume
+               (boundp 'parser-generator-lr--action-tables-resume)
+               parser-generator-lr--action-tables-resume
+               (boundp 'parser-generator-lr--distinct-action-tables-resume)
+               parser-generator-lr--distinct-action-tables-resume)
+              (progn
+                (setq
+                 parser-generator-lr--goto-tables
+                 parser-generator-lr--goto-tables-resume)
+                (setq
+                 parser-generator-lr--distinct-goto-tables
+                 parser-generator-lr--distinct-goto-tables-resume)
+                (setq
+                 parser-generator-lr--action-tables
+                 parser-generator-lr--action-tables-resume)
+                (setq
+                 parser-generator-lr--distinct-action-tables
+                 parser-generator-lr--distinct-action-tables-resume)
+                (message "Parser tables are defined - skipping generation"))
             (progn
               (message "Parser tables are not defined - generating..")
               (when (fboundp 'parser-generator-lr--generate-goto-tables)
@@ -145,21 +158,21 @@
                    table-lr-items)
                   (when (boundp 'parser-generator-lr--goto-tables)
                     (message
-                     "parser-generator-lr--goto-tables: %S"
+                     "(setq parser-generator-lr--goto-tables-resume %S)"
                      parser-generator-lr--goto-tables))
                   (when (boundp 'parser-generator-lr--distinct-goto-tables)
                     (message
-                     "parser-generator-lr--distinct-goto-tables: %S"
+                     "(setq parser-generator-lr--distinct-goto-tables-resume %S)"
                      parser-generator-lr--distinct-goto-tables))
                   (when (fboundp 'parser-generator-lr--generate-action-tables)
                     (parser-generator-lr--generate-action-tables table-lr-items)
                     (when (boundp 'parser-generator-lr--action-tables)
                       (message
-                       "parser-generator-lr--action-tables: %S"
+                       "(setq parser-generator-lr--action-tables-resume %S)"
                        parser-generator-lr--action-tables))
                     (when (boundp 'parser-generator-lr--distinct-action-tables)
                       (message
-                       "parser-generator-lr--distinct-action-tables: %S"
+                       "(setq parser-generator-lr--distinct-action-tables-resume %S)"
                        parser-generator-lr--distinct-action-tables))))))))
 
         ;; NOTE This does not work if functions above are byte-compiled
