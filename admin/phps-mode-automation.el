@@ -35,7 +35,7 @@
   "Generate parser."
   (if (fboundp 'parser-generator-lr-export-to-elisp)
       (progn
-        ;; TODO Generate precedence, non-terminals, terminals and start here
+        ;; TODO Generate precedence here
 
         ;; Prepare export
         (when (fboundp 'parser-generator-set-grammar)

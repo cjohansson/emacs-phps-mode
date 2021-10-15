@@ -23,6 +23,31 @@
 
 ;;; Code:
 
+(defvar
+  phps-mode-automation-parser-generator--start
+  nil
+  "Start position of grammar.")
+
+(defvar
+  phps-mode-automation-parser-generator--terminals
+  nil
+  "Terminals of grammar.")
+
+(defvar
+  phps-mode-automation-parser-generator--non-terminals
+  nil
+  "Non-terminals of grammar.")
+
+(defvar
+  phps-mode-automation-parser-generator--symbols
+  nil
+  "Symbols of grammar.")
+
+(defvar
+  phps-mode-automation-parser-generator--production-lhs
+  nil
+  "LHS of productions of grammar.")
+
 (defun phps-mode-automation-parser-generator--ensure-yacc-grammar-is-available ()
   "If grammar is not available, download it."
   (let ((php-yacc-url
@@ -48,6 +73,22 @@
   "Generate productions here."
   (require 'parser-generator-lr)
   (phps-mode-automation-parser-generator--ensure-yacc-grammar-is-available)
+
+  (setq
+   phps-mode-automation-parser-generator--start
+   nil)
+  (setq
+    phps-mode-automation-parser-generator--terminals
+    nil)
+  (setq
+   phps-mode-automation-parser-generator--non-terminals
+   nil)
+  (setq
+   phps-mode-automation-parser-generator--production-lhs
+   (make-hash-table :test 'equal))
+  (setq
+   phps-mode-automation-parser-generator--symbols
+   (make-hash-table :test 'equal))
 
   (parser-generator-set-look-ahead-number
    1)
@@ -91,7 +132,23 @@
        (Comment Production
                 (lambda(args) (format "%s" (nth 1 args))))
        (LHS ":" RHSS Production-End
-            (lambda(args) (format " (%s\n  %s\n )" (nth 0 args) (nth 2 args))))
+            (lambda(args)
+              ;; Store distinct LHS
+              (unless (gethash
+                       (intern (nth 0 args))
+                       phps-mode-automation-parser-generator--production-lhs)
+                (puthash
+                 (intern (nth 0 args))
+                 t
+                 phps-mode-automation-parser-generator--production-lhs)
+
+                ;; If no start is defined - define this as start
+                (unless phps-mode-automation-parser-generator--start
+                  (setq
+                   phps-mode-automation-parser-generator--start
+                   (intern (nth 0 args)))))
+
+              (format " (%s\n  %s\n )" (nth 0 args) (nth 2 args))))
        )
       (Production-End
        ";"
@@ -142,9 +199,29 @@
        )
       (Symbol
        (symbol
-        (lambda(args) (format "%s" args)))
+        (lambda(args)
+          ;; Store distinct symbols
+          (unless (gethash
+                   (intern args)
+                   phps-mode-automation-parser-generator--symbols)
+            (puthash
+             (intern args)
+             t
+             phps-mode-automation-parser-generator--symbols))
+          
+          (format "%s" args)))
        (literal
-        (lambda(args) (format "%S" (substring args 1 2))))
+        (lambda(args)
+          ;; Store distinct symbols
+          (unless (gethash
+                   (format "%S" (substring args 1 2))
+                   phps-mode-automation-parser-generator--symbols)
+            (puthash
+             (format "%S" (substring args 1 2))
+             t
+             phps-mode-automation-parser-generator--symbols))
+
+          (format "%S" (substring args 1 2))))
        )
       )
      Start))
@@ -304,14 +381,25 @@
       (kill-region delimiter-start (point-max)))
     (goto-char (point-min))
     (let ((productions (eval (car (read-from-string (parser-generator-lr-translate))))))
-      ;; TODO Generate non-terminals here
-      ;; TODO Generate terminals here
-      ;; TODO Generate start here
+
+      (maphash
+       (lambda (k _v)
+         (if (gethash
+              k
+              phps-mode-automation-parser-generator--production-lhs)
+             (push
+              k
+              phps-mode-automation-parser-generator--non-terminals)
+           (push
+              k
+              phps-mode-automation-parser-generator--terminals)))
+       phps-mode-automation-parser-generator--symbols)
+
       (list
-       non-terminals
-       terminals
+       phps-mode-automation-parser-generator--non-terminals
+       phps-mode-automation-parser-generator--terminals
        productions
-       start))))
+       phps-mode-automation-parser-generator--start))))
 
 (provide 'phps-mode-automation-parser-generator)
 ;;; phps-mode-automation-parser-generator.el ends here
