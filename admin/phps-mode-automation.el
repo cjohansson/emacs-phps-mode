@@ -27,172 +27,157 @@
 
 ;;; Code:
 
+
 (require 'phps-mode-automation-grammar)
+(require 'phps-mode-automation-parser-generator)
 
 (defun phps-mode-automation ()
   "Generate parser."
-  (when (fboundp 'parser-generator-lr-export-to-elisp)
+  (if (fboundp 'parser-generator-lr-export-to-elisp)
+      (progn
+        ;; TODO Generate precedence, non-terminals, terminals and start here
 
-    (let ((php-yacc-url "https://raw.githubusercontent.com/php/php-src/php-8.0.0/Zend/zend_language_parser.y")
-          (php-yacc-file (expand-file-name "zend_language_parser.y")))
+        ;; Prepare export
+        (when (fboundp 'parser-generator-set-grammar)
+          (parser-generator-set-grammar
+           (phps-mode-automation-parser-generator--grammar)))
 
-      ;; Download Yacc if not available
-      (unless (file-exists-p php-yacc-file)
-        (message "Downloading PHP 8.0 YACC grammar..")
-        (url-copy-file
-         php-yacc-url php-yacc-file
-         t
-         t)
-        (message "Download of PHP 8.0 YACC grammar completed"))
+        (when (fboundp 'parser-generator-set-look-ahead-number)
+          (parser-generator-set-look-ahead-number
+           phps-mode-automation-grammar--look-ahead-number))
 
-      ;; TODO Generate precedence, non-terminals, terminals, productions and start here
+        (when (boundp 'parser-generator--e-identifier)
+          (setq
+           parser-generator--e-identifier
+           phps-mode-automation-grammar--e-identifier))
 
-      ;; Prepare export
-      (when (fboundp 'parser-generator-set-grammar)
-        (parser-generator-set-grammar
-         `(
-           ,phps-mode-automation-grammar--non-terminals
-           ,phps-mode-automation-grammar--terminals
-           ,phps-mode-automation-grammar--productions
-           ,phps-mode-automation-grammar--start
-           )
-         ))
+        (when (boundp 'parser-generator--eof-identifier)
+          (setq
+           parser-generator--eof-identifier
+           phps-mode-automation-grammar--eof-identifier))
 
-      (when (fboundp 'parser-generator-set-look-ahead-number)
-        (parser-generator-set-look-ahead-number
-         phps-mode-automation-grammar--look-ahead-number))
+        (when (boundp 'parser-generator-lex-analyzer--function)
+          (setq
+           parser-generator-lex-analyzer--function
+           phps-mode-automation-grammar--lex-analyzer-function))
 
-      (when (boundp 'parser-generator--e-identifier)
-        (setq
-         parser-generator--e-identifier
-         phps-mode-automation-grammar--e-identifier))
+        (when (boundp 'parser-generator-lex-analyzer--get-function)
+          (setq
+           parser-generator-lex-analyzer--get-function
+           phps-mode-automation-grammar--lex-analyzer-get-function))
 
-      (when (boundp 'parser-generator--eof-identifier)
-        (setq
-         parser-generator--eof-identifier
-         phps-mode-automation-grammar--eof-identifier))
+        (when (boundp 'parser-generator--global-attributes)
+          (setq
+           parser-generator--global-attributes
+           phps-mode-automation-grammar--global-attributes))
 
-      (when (boundp 'parser-generator-lex-analyzer--function)
-        (setq
-         parser-generator-lex-analyzer--function
-         phps-mode-automation-grammar--lex-analyzer-function))
+        (when (boundp 'parser-generator-lr--global-precedence-attributes)
+          (setq
+           parser-generator-lr--global-precedence-attributes
+           phps-mode-automation-grammar--lr-global-precedence-attributes))
 
-      (when (boundp 'parser-generator-lex-analyzer--get-function)
-        (setq
-         parser-generator-lex-analyzer--get-function
-         phps-mode-automation-grammar--lex-analyzer-get-function))
+        (when (boundp 'parser-generator-lr--allow-default-conflict-resolution)
+          (setq
+           parser-generator-lr--allow-default-conflict-resolution
+           phps-mode-automation-grammar--lr--allow-default-conflict-resolution))
 
-      (when (boundp 'parser-generator--global-attributes)
-        (setq
-         parser-generator--global-attributes
-         phps-mode-automation-grammar--global-attributes))
+        (when (boundp 'parser-generator--context-sensitive-attributes)
+          (setq
+           parser-generator--context-sensitive-attributes
+           phps-mode-automation-grammar--context-sensitive-attributes))
 
-      (when (boundp 'parser-generator-lr--global-precedence-attributes)
-        (setq
-         parser-generator-lr--global-precedence-attributes
-         phps-mode-automation-grammar--lr-global-precedence-attributes))
+        (when (boundp 'parser-generator-lr--context-sensitive-precedence-attribute)
+          (setq
+           parser-generator-lr--context-sensitive-precedence-attribute
+           phps-mode-automation-grammar--lr-context-sensitive-precedence-attribute))
 
-      (when (boundp 'parser-generator-lr--allow-default-conflict-resolution)
-        (setq
-         parser-generator-lr--allow-default-conflict-resolution
-         phps-mode-automation-grammar--lr--allow-default-conflict-resolution))
+        (when (boundp 'parser-generator-lr--precedence-comparison-function)
+          (setq
+           parser-generator-lr--precedence-comparison-function
+           phps-mode-automation-grammar--precedence-comparison-function))
 
-      (when (boundp 'parser-generator--context-sensitive-attributes)
-        (setq
-         parser-generator--context-sensitive-attributes
-         phps-mode-automation-grammar--context-sensitive-attributes))
+        (when (boundp 'parser-generator--global-declaration)
+          (setq
+           parser-generator--global-declaration
+           phps-mode-automation-grammar--global-declaration))
 
-      (when (boundp 'parser-generator-lr--context-sensitive-precedence-attribute)
-        (setq
-         parser-generator-lr--context-sensitive-precedence-attribute
-         phps-mode-automation-grammar--lr-context-sensitive-precedence-attribute))
+        (when (fboundp 'parser-generator-process-grammar)
+          (parser-generator-process-grammar))
 
-      (when (boundp 'parser-generator-lr--precedence-comparison-function)
-        (setq
-         parser-generator-lr--precedence-comparison-function
-         phps-mode-automation-grammar--precedence-comparison-function))
+        (when (fboundp 'parser-generator-lr--generate-precedence-tables)
+          (parser-generator-lr--generate-precedence-tables)
+          (message "Precedence Tables")
+          (when (boundp 'parser-generator-lr--symbol-precedence-value)
+            (message
+             "parser-generator-lr--symbol-precedence-value: %S"
+             parser-generator-lr--symbol-precedence-value))
+          (when (boundp 'parser-generator-lr--symbol-precedence-type)
+            (message
+             "parser-generator-lr--symbol-precedence-type: %S"
+             parser-generator-lr--symbol-precedence-type))
+          (when (boundp 'parser-generator-lr--production-number-precedence-value)
+            (message
+             "parser-generator-lr--production-number-precedence-value: %S"
+             parser-generator-lr--production-number-precedence-value))
+          (when (boundp 'parser-generator-lr--production-number-precedence-type)
+            (message
+             "parser-generator-lr--production-number-precedence-type: %S"
+             parser-generator-lr--production-number-precedence-type))
 
-      (when (boundp 'parser-generator--global-declaration)
-        (setq
-         parser-generator--global-declaration
-         phps-mode-automation-grammar--global-declaration))
-
-      (when (fboundp 'parser-generator-process-grammar)
-        (parser-generator-process-grammar))
-
-      (when (fboundp 'parser-generator-lr--generate-precedence-tables)
-        (parser-generator-lr--generate-precedence-tables)
-        (message "Precedence Tables")
-        (when (boundp 'parser-generator-lr--symbol-precedence-value)
-          (message
-           "parser-generator-lr--symbol-precedence-value: %S"
-           parser-generator-lr--symbol-precedence-value))
-        (when (boundp 'parser-generator-lr--symbol-precedence-type)
-          (message
-           "parser-generator-lr--symbol-precedence-type: %S"
-           parser-generator-lr--symbol-precedence-type))
-        (when (boundp 'parser-generator-lr--production-number-precedence-value)
-          (message
-           "parser-generator-lr--production-number-precedence-value: %S"
-           parser-generator-lr--production-number-precedence-value))
-        (when (boundp 'parser-generator-lr--production-number-precedence-type)
-          (message
-           "parser-generator-lr--production-number-precedence-type: %S"
-           parser-generator-lr--production-number-precedence-type))
-
-        ;; Only generate LR-items, GOTO-tables and ACTION-tables if we are lacking it
-        (if (and
-             (boundp 'parser-generator-lr--goto-tables)
-             parser-generator-lr--goto-tables
-             (boundp 'parser-generator-lr--distinct-goto-tables)
-             parser-generator-lr--distinct-goto-tables
-             (boundp 'parser-generator-lr--action-tables)
-             parser-generator-lr--action-tables
-             (boundp 'parser-generator-lr--distinct-action-tables)
-             parser-generator-lr--distinct-action-tables)
-            (message "Parser tables are defined - skipping generation")
-          (progn
-            (message "Parser tables are not defined - generating..")
-            (when (fboundp 'parser-generator-lr--generate-goto-tables)
-              (let ((table-lr-items
-                     (parser-generator-lr--generate-goto-tables)))
-                (message
-                 "table-lr-items: %S"
-                 table-lr-items)
-                (when (boundp 'parser-generator-lr--goto-tables)
+          ;; Only generate LR-items, GOTO-tables and ACTION-tables if we are lacking it
+          (if (and
+               (boundp 'parser-generator-lr--goto-tables)
+               parser-generator-lr--goto-tables
+               (boundp 'parser-generator-lr--distinct-goto-tables)
+               parser-generator-lr--distinct-goto-tables
+               (boundp 'parser-generator-lr--action-tables)
+               parser-generator-lr--action-tables
+               (boundp 'parser-generator-lr--distinct-action-tables)
+               parser-generator-lr--distinct-action-tables)
+              (message "Parser tables are defined - skipping generation")
+            (progn
+              (message "Parser tables are not defined - generating..")
+              (when (fboundp 'parser-generator-lr--generate-goto-tables)
+                (let ((table-lr-items
+                       (parser-generator-lr--generate-goto-tables)))
                   (message
-                   "parser-generator-lr--goto-tables: %S"
-                   parser-generator-lr--goto-tables))
-                (when (boundp 'parser-generator-lr--distinct-goto-tables)
-                  (message
-                   "parser-generator-lr--distinct-goto-tables: %S"
-                   parser-generator-lr--distinct-goto-tables))
-                (when (fboundp 'parser-generator-lr--generate-action-tables)
-                  (parser-generator-lr--generate-action-tables table-lr-items)
-                  (when (boundp 'parser-generator-lr--action-tables)
+                   "table-lr-items: %S"
+                   table-lr-items)
+                  (when (boundp 'parser-generator-lr--goto-tables)
                     (message
-                     "parser-generator-lr--action-tables: %S"
-                     parser-generator-lr--action-tables))
-                  (when (boundp 'parser-generator-lr--distinct-action-tables)
+                     "parser-generator-lr--goto-tables: %S"
+                     parser-generator-lr--goto-tables))
+                  (when (boundp 'parser-generator-lr--distinct-goto-tables)
                     (message
-                     "parser-generator-lr--distinct-action-tables: %S"
-                     parser-generator-lr--distinct-action-tables))))))))
+                     "parser-generator-lr--distinct-goto-tables: %S"
+                     parser-generator-lr--distinct-goto-tables))
+                  (when (fboundp 'parser-generator-lr--generate-action-tables)
+                    (parser-generator-lr--generate-action-tables table-lr-items)
+                    (when (boundp 'parser-generator-lr--action-tables)
+                      (message
+                       "parser-generator-lr--action-tables: %S"
+                       parser-generator-lr--action-tables))
+                    (when (boundp 'parser-generator-lr--distinct-action-tables)
+                      (message
+                       "parser-generator-lr--distinct-action-tables: %S"
+                       parser-generator-lr--distinct-action-tables))))))))
 
-      ;; NOTE This does not work if functions above are byte-compiled
+        ;; NOTE This does not work if functions above are byte-compiled
 
-      ;; Export
-      (let ((export
-             (parser-generator-lr-export-to-elisp
-              "phps-mode-parser"
-              phps-mode-automation-grammar--header)))
-        (generate-new-buffer "*PHP Parser*")
-        (switch-to-buffer "*PHP Parser*")
-        (insert export)
-        (write-file (expand-file-name "./phps-mode-parser.el"))
-        (kill-buffer)
-        (message "export: %s" export))
+        ;; Export
+        (let ((export
+               (parser-generator-lr-export-to-elisp
+                "phps-mode-parser"
+                phps-mode-automation-grammar--header)))
+          (generate-new-buffer "*PHP Parser*")
+          (switch-to-buffer "*PHP Parser*")
+          (insert export)
+          (write-file (expand-file-name "./phps-mode-parser.el"))
+          (kill-buffer)
+          (message "export: %s" export))
 
-      (message "Automation completed"))))
+        (message "Automation completed"))
+    (error "Emacs parser generator must be available!")))
 
 (provide 'phps-mode-automation)
 ;;; phps-mode-automation.el ends here
