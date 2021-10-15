@@ -214,10 +214,10 @@
         (lambda(args)
           ;; Store distinct symbols
           (unless (gethash
-                   (format "%S" (substring args 1 2))
+                   (format "%s" (substring args 1 2))
                    phps-mode-automation-parser-generator--symbols)
             (puthash
-             (format "%S" (substring args 1 2))
+             (format "%s" (substring args 1 2))
              t
              phps-mode-automation-parser-generator--symbols))
 
@@ -390,9 +390,14 @@
              (push
               k
               phps-mode-automation-parser-generator--non-terminals)
-           (push
+           ;; Skip context-sensitive precedence and e-identifier
+           (when
+               (or
+                (stringp k)
+                (not (string-match-p "%" (symbol-name k))))
+             (push
               k
-              phps-mode-automation-parser-generator--terminals)))
+              phps-mode-automation-parser-generator--terminals))))
        phps-mode-automation-parser-generator--symbols)
 
       (list
