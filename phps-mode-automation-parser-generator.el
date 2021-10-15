@@ -24,6 +24,11 @@
 ;;; Code:
 
 (defvar
+  phps-mode-automation-parser-generator--global-declaration
+  nil
+  "Global declaration of grammar.")
+
+(defvar
   phps-mode-automation-parser-generator--start
   nil
   "Start position of grammar.")
@@ -432,6 +437,210 @@
        phps-mode-automation-parser-generator--terminals
        productions
        phps-mode-automation-parser-generator--start))))
+
+(defun phps-mode-automation-parser-generator--global-declaration ()
+  "Generate global declaration here."
+  (require 'parser-generator-lr)
+  (phps-mode-automation-parser-generator--ensure-yacc-grammar-is-available)
+
+  (setq
+   phps-mode-automation-parser-generator--global-declaration
+   nil)
+
+  (parser-generator-set-look-ahead-number
+   1)
+  (setq
+   parser-generator--e-identifier
+   nil)
+  (setq
+   parser-generator--global-attributes
+   nil)
+  (setq
+   parser-generator-lr--global-precedence-attributes
+   nil)
+  (setq
+   parser-generator-lr--context-sensitive-precedence-attribute
+   nil)
+  (setq
+   parser-generator--global-declaration
+   nil)
+  (parser-generator-set-grammar
+   '(
+     (Start Declarations Declaration Type Symbols Symbol)
+     (type symbol literal)
+     (
+      (Start
+       Declarations
+       )
+      (Declarations
+       Declaration
+       (Declaration Declarations)
+       )
+      (Declaration
+       (Type Symbols)
+       )
+      (Type
+       type
+       )
+      (Symbols
+       Symbol
+       (Symbol Symbols)
+       )
+      (Symbol
+       symbol
+       literal
+       )
+      )
+     Start))
+
+  (setq
+   parser-generator-lex-analyzer--function
+   (lambda (index)
+     (with-current-buffer "*buffer*"
+       (let ((token))
+         (when
+             (<
+              index
+              (point-max))
+           (goto-char
+            index)
+
+           ;; Skip white-space(s)
+           (when (looking-at-p "[\t\n ]+")
+             (when
+                 (search-forward-regexp "[^\t\n ]" nil t)
+               (forward-char -1)
+               (setq-local
+                parser-generator-lex-analyzer--move-to-index-flag
+                (point))))
+
+           (cond
+
+            ((looking-at "\\(%[a-z]+\\)")
+             (setq
+              token
+              `(comment ,comment-start . ,comment-end)))
+
+            ((looking-at "\\({\\)")
+             (let ((nesting-stack 1)
+                   (logic-start (match-beginning 0))
+                   (logic-end)
+                   (continue t))
+               (forward-char 1)
+               (while (and
+                       continue
+                       (> nesting-stack 0)
+                       (< (point) (point-max)))
+                 (let ((next-stop (search-forward-regexp "\\({\\|}\\|/\\*\\)" nil t)))
+                   (let ((match (buffer-substring-no-properties (match-beginning 0) (match-end 0))))
+                     (cond
+
+                      ((not next-stop)
+                       (setq
+                        continue
+                        nil))
+
+                      ((string= match "{")
+                       (setq
+                        nesting-stack
+                        (1+ nesting-stack)))
+
+                      ((string= match "}")
+                       (setq
+                        nesting-stack
+                        (1- nesting-stack))
+                       (when
+                           (= nesting-stack 0)
+                         (setq
+                          logic-end
+                          (point))))
+
+                      ((string= match "/*")
+                       (let (
+                             (comment-start (match-beginning 0))
+                             (comment-end
+                              (search-forward-regexp "\\*/" nil t)))
+                         (unless comment-end
+                           (error
+                            "Failed to find end of comment started at %S (2))"
+                            comment-start))))
+                      
+
+                      ))))
+               (unless logic-end
+                 (error
+                  "Failed to find end of logic started at %S"
+                  logic-start))
+               (setq
+                token
+                `(logic ,logic-start . ,logic-end))))
+
+            ((looking-at "\\(:\\|;\\||\\)")
+             (setq
+              token
+              `(
+                ,(buffer-substring-no-properties
+                  (match-beginning 0)
+                  (match-end 0))
+                ,(match-beginning 0)
+                . ,(match-end 0))))
+
+            ((looking-at "\\(%%\\)")
+             (setq
+              token
+              `(productions-delimiter ,(match-beginning 0) . ,(match-end 0))))
+
+            ((looking-at "\\([%a-zA-Z_]+\\)")
+             (setq
+              token
+              `(symbol ,(match-beginning 0) . ,(match-end 0))))
+
+            ((looking-at "\\('.'\\)")
+             (setq
+              token
+              `(literal ,(match-beginning 0) . ,(match-end 0))))
+
+            ))
+
+         (when token
+           (let ((token-data
+                  (buffer-substring-no-properties
+                   (car (cdr token))
+                   (cdr (cdr token)))))))
+         token))))
+
+  (setq
+   parser-generator-lex-analyzer--get-function
+   (lambda (token)
+     (with-current-buffer "*buffer*"
+       (let ((start (car (cdr token)))
+             (end (cdr (cdr token))))
+         (when (<= end (point-max))
+           (let ((symbol
+                  (buffer-substring-no-properties start end)))
+             (when
+                 (string-match-p "^\\([0-9]+\\.[0-9]+\\|[0-9]+\\)$" symbol)
+               (setq
+                symbol
+                (string-to-number symbol)))
+             symbol))))))
+
+  (parser-generator-process-grammar)
+  (parser-generator-lr-generate-parser-tables)
+
+  (let ((buffer (generate-new-buffer "*buffer*")))
+    (switch-to-buffer buffer)
+    (insert-file (expand-file-name "zend_language_parser.y"))
+    (goto-char (point-min))
+    (let ((delimiter-start (search-forward "%%")))
+      (setq
+       delimiter-start
+       (- delimiter-start 2))
+      (kill-region (point-min) delimiter-start))
+    (let ((delimiter-start (search-forward "%%")))
+      (kill-region delimiter-start (point-max)))
+    (goto-char (point-min))
+    (let ((productions (eval (car (read-from-string (parser-generator-lr-translate))))))))
 
 (provide 'phps-mode-automation-parser-generator)
 ;;; phps-mode-automation-parser-generator.el ends here
