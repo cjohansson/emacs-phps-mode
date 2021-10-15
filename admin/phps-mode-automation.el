@@ -35,7 +35,10 @@
   "Generate parser."
   (if (fboundp 'parser-generator-lr-export-to-elisp)
       (progn
-        ;; TODO Generate precedence here
+        ;; TODO Generate here
+        ;; phps-mode-automation-grammar--global-attributes
+        ;; phps-mode-automation-grammar--lr-global-precedence-attributes
+        ;; phps-mode-automation-grammar--global-declaration
 
         ;; Prepare export
         (when (fboundp 'parser-generator-set-grammar)
@@ -61,6 +64,8 @@
            parser-generator-lex-analyzer--function
            phps-mode-automation-grammar--lex-analyzer-function))
 
+        ;; TODO Make dump of variable above work
+
         (when (boundp 'parser-generator-lex-analyzer--get-function)
           (setq
            parser-generator-lex-analyzer--get-function
@@ -84,12 +89,12 @@
         (when (boundp 'parser-generator--context-sensitive-attributes)
           (setq
            parser-generator--context-sensitive-attributes
-           phps-mode-automation-grammar--context-sensitive-attributes))
+           phps-mode-automation-parser-generator--context-sensitive-attributes))
 
         (when (boundp 'parser-generator-lr--context-sensitive-precedence-attribute)
           (setq
            parser-generator-lr--context-sensitive-precedence-attribute
-           phps-mode-automation-grammar--lr-context-sensitive-precedence-attribute))
+           (car phps-mode-automation-parser-generator--context-sensitive-attributes)))
 
         (when (boundp 'parser-generator-lr--precedence-comparison-function)
           (setq

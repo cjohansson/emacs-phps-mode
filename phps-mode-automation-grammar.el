@@ -38,16 +38,6 @@
  "Reversed list of tokens.")
 
 (defvar
-  phps-mode-automation-grammar--context-sensitive-attributes
-  '(%prec)
-  "List of context-sensitive attributes.")
-
-(defvar
-  phps-mode-automation-grammar--lr-context-sensitive-precedence-attribute
-  '%prec
-  "The LR-parser's context-sensitive precedence attribute.")
-
-(defvar
   phps-mode-automation-grammar--global-attributes
   '(%left %nonassoc %precedence %right)
   "List of valid global attributes.")
@@ -56,11 +46,6 @@
   phps-mode-automation-grammar--lr-global-precedence-attributes
   '(%left %nonassoc %precedence %right)
   "The LR-parser's list of global precedence attributes.")
-
-(defvar
-  phps-mode-automation-grammar--lr--allow-default-conflict-resolution
-  t
-  "Allow shift resolution to shift/reduce conflicts were precedence is missing.")
 
 (defvar
   phps-mode-automation-grammar--global-declaration
@@ -99,6 +84,11 @@
     (%precedence T_ELSE)
     )
   "Declaration for grammar.")
+
+(defvar
+  phps-mode-automation-grammar--lr--allow-default-conflict-resolution
+  t
+  "Allow shift resolution to shift/reduce conflicts were precedence is missing.")
 
 (defvar
   phps-mode-automation-grammar--look-ahead-number

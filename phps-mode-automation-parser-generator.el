@@ -44,6 +44,11 @@
   "Symbols of grammar.")
 
 (defvar
+  phps-mode-automation-parser-generator--context-sensitive-attributes
+  nil
+  "Context-sensitive attributes found in grammar.")
+
+(defvar
   phps-mode-automation-parser-generator--production-lhs
   nil
   "LHS of productions of grammar.")
@@ -58,7 +63,7 @@
     ;; Download YACC if not available
     (unless (file-exists-p php-yacc-file)
       (message
-       "Downloading PHP 8.0 YACC grammar..")
+       "Downloading PHP 8.0 YACC grammar.. since %S does not exists" php-yacc-file)
       (url-copy-file
        php-yacc-url php-yacc-file
        t
@@ -89,6 +94,9 @@
   (setq
    phps-mode-automation-parser-generator--symbols
    (make-hash-table :test 'equal))
+  (setq
+   phps-mode-automation-parser-generator--context-sensitive-attributes
+   nil)
 
   (parser-generator-set-look-ahead-number
    1)
@@ -382,23 +390,42 @@
     (goto-char (point-min))
     (let ((productions (eval (car (read-from-string (parser-generator-lr-translate))))))
 
-      (maphash
-       (lambda (k _v)
-         (if (gethash
-              k
-              phps-mode-automation-parser-generator--production-lhs)
-             (push
-              k
-              phps-mode-automation-parser-generator--non-terminals)
-           ;; Skip context-sensitive precedence and e-identifier
-           (when
-               (or
-                (stringp k)
-                (not (string-match-p "%" (symbol-name k))))
-             (push
-              k
-              phps-mode-automation-parser-generator--terminals))))
-       phps-mode-automation-parser-generator--symbols)
+      (let ((context-sensitive-attributes)
+            (context-sensitive-attributes-map (make-hash-table :test 'equal)))
+        (maphash
+         (lambda (k _v)
+           (if (gethash
+                k
+                phps-mode-automation-parser-generator--production-lhs)
+               (push
+                k
+                phps-mode-automation-parser-generator--non-terminals)
+
+             ;; Store context-sensitive attributes and terminals
+             (if
+                 (and
+                  (symbolp k)
+                  (string-match-p "%" (symbol-name k)))
+                 (unless
+                     (or
+                      (equal k '%empty)
+                      (gethash
+                       k
+                       context-sensitive-attributes-map))
+                   (push
+                    k
+                    context-sensitive-attributes)
+                   (puthash
+                    k
+                    t
+                    context-sensitive-attributes-map))
+               (push
+                k
+                phps-mode-automation-parser-generator--terminals))))
+         phps-mode-automation-parser-generator--symbols)
+        (setq
+         phps-mode-automation-parser-generator--context-sensitive-attributes
+         context-sensitive-attributes))
 
       (list
        phps-mode-automation-parser-generator--non-terminals
