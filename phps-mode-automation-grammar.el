@@ -63,6 +63,69 @@
   "The EOF-identifier of grammar.")
 
 (defvar
+  phps-mode-automation-grammar--lex-analyzer-reset-function
+  (lambda()
+    ;; Create lexer buffer if none exists
+    (unless (get-buffer "*PHPs Lexer*")
+      (generate-new-buffer "*PHPs Lexer*")
+      (let ((old-buffer
+             (buffer-substring-no-properties
+              (point-min)
+              (point-max))))
+        (with-current-buffer "*PHPs Lexer*"
+          (insert old-buffer))))
+
+    (with-current-buffer "*PHPs Lexer*"
+      ;; Unless we have lexed the buffer
+      (unless phps-mode-parser-tokens
+        (unless phps-mode-lexer--generated-tokens
+          ;; Reset lexer
+          (setq-local
+           phps-mode-lexer--generated-tokens
+           nil)
+          (setq-local
+           phps-mode-lexer--state
+           'ST_INITIAL)
+          (setq-local
+           phps-mode-lexer--states
+           nil)
+          (setq-local
+           phps-mode-lexer--state-stack
+           nil)
+          (setq-local
+           phps-mode-lexer--heredoc-label
+           nil)
+          (setq-local
+           phps-mode-lexer--heredoc-label-stack
+           nil)
+          (setq-local
+           phps-mode-lexer--nest-location-stack
+           nil)
+          (goto-char (point-min))
+
+          ;; Run lexer on entire buffer here
+          (let ((index (point))
+                (max-index (point-max)))
+            (while (< index max-index)
+              (phps-mode-lexer--re2c)
+              (setq
+               index
+               semantic-lex-end-point)
+              (goto-char index))))
+        (setq-local
+         phps-mode-parser-tokens
+         (reverse
+          phps-mode-lexer--generated-tokens))
+
+        ;; Reset buffer-index to token-list-index connections
+        (setq-local
+         phps-mode-parser-position
+         nil)))
+
+    )
+  "The reset function.")
+
+(defvar
   phps-mode-automation-grammar--lex-analyzer-function
   (lambda (buffer-index)
 
@@ -78,53 +141,6 @@
     
     (with-current-buffer "*PHPs Lexer*"
       (let ((token-list-index))
-
-        ;; Unless we have lexed the buffer
-        (unless phps-mode-parser-tokens
-          (unless phps-mode-lexer--generated-tokens
-            ;; Reset lexer
-            (setq-local
-             phps-mode-lexer--generated-tokens
-             nil)
-            (setq-local
-             phps-mode-lexer--state
-             'ST_INITIAL)
-            (setq-local
-             phps-mode-lexer--states
-             nil)
-            (setq-local
-             phps-mode-lexer--state-stack
-             nil)
-            (setq-local
-             phps-mode-lexer--heredoc-label
-             nil)
-            (setq-local
-             phps-mode-lexer--heredoc-label-stack
-             nil)
-            (setq-local
-             phps-mode-lexer--nest-location-stack
-             nil)
-            (goto-char (point-min))
-
-            ;; Run lexer on entire buffer here
-            (let ((index (point))
-                  (max-index (point-max)))
-              (while (< index max-index)
-                (phps-mode-lexer--re2c)
-                (setq
-                 index
-                 semantic-lex-end-point)
-                (goto-char index))))
-          (setq-local
-           phps-mode-parser-tokens
-           (reverse
-            phps-mode-lexer--generated-tokens))
-
-          ;; Reset buffer-index to token-list-index connections
-          (setq-local
-           phps-mode-parser-position
-           nil))
-
         (if (and
              phps-mode-parser-position
              (= (car (car phps-mode-parser-position)) buffer-index))
