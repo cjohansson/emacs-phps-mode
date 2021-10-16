@@ -38,16 +38,6 @@
  "Reversed list of tokens.")
 
 (defvar
-  phps-mode-automation-grammar--global-attributes
-  '(%left %nonassoc %precedence %right)
-  "List of valid global attributes.")
-
-(defvar
-  phps-mode-automation-grammar--lr-global-precedence-attributes
-  '(%left %nonassoc %precedence %right)
-  "The LR-parser's list of global precedence attributes.")
-
-(defvar
   phps-mode-automation-grammar--lr--allow-default-conflict-resolution
   t
   "Allow shift resolution to shift/reduce conflicts were precedence is missing.")

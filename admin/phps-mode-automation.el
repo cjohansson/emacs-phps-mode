@@ -35,20 +35,37 @@
   "Generate parser."
   (if (fboundp 'parser-generator-lr-export-to-elisp)
       (progn
-        ;; TODO Generate here
-        ;; phps-mode-automation-grammar--global-attributes
-        ;; phps-mode-automation-grammar--lr-global-precedence-attributes
-        ;; phps-mode-automation-grammar--global-declaration
+
         (let ((global-declaration (phps-mode-automation-parser-generator--global-declaration)))
           (when (boundp 'parser-generator--global-declaration)
             (setq
              parser-generator--global-declaration
-             global-declaration)))
+             global-declaration))
+
+          (when (boundp 'parser-generator--global-attributes)
+            (setq
+             parser-generator--global-attributes
+             phps-mode-automation-parser-generator--attributes))
+
+          (when (boundp 'parser-generator-lr--global-precedence-attributes)
+            (setq
+             parser-generator-lr--global-precedence-attributes
+             phps-mode-automation-parser-generator--attributes)))
 
         ;; Prepare export
         (when (fboundp 'parser-generator-set-grammar)
           (parser-generator-set-grammar
-           (phps-mode-automation-parser-generator--grammar)))
+           (phps-mode-automation-parser-generator--grammar))
+
+          (when (boundp 'parser-generator--context-sensitive-attributes)
+            (setq
+             parser-generator--context-sensitive-attributes
+             phps-mode-automation-parser-generator--context-sensitive-attributes))
+
+          (when (boundp 'parser-generator-lr--context-sensitive-precedence-attribute)
+            (setq
+             parser-generator-lr--context-sensitive-precedence-attribute
+             (car phps-mode-automation-parser-generator--context-sensitive-attributes))))
 
         (when (fboundp 'parser-generator-set-look-ahead-number)
           (parser-generator-set-look-ahead-number
@@ -76,30 +93,10 @@
            parser-generator-lex-analyzer--get-function
            phps-mode-automation-grammar--lex-analyzer-get-function))
 
-        (when (boundp 'parser-generator--global-attributes)
-          (setq
-           parser-generator--global-attributes
-           phps-mode-automation-grammar--global-attributes))
-
-        (when (boundp 'parser-generator-lr--global-precedence-attributes)
-          (setq
-           parser-generator-lr--global-precedence-attributes
-           phps-mode-automation-grammar--lr-global-precedence-attributes))
-
         (when (boundp 'parser-generator-lr--allow-default-conflict-resolution)
           (setq
            parser-generator-lr--allow-default-conflict-resolution
            phps-mode-automation-grammar--lr--allow-default-conflict-resolution))
-
-        (when (boundp 'parser-generator--context-sensitive-attributes)
-          (setq
-           parser-generator--context-sensitive-attributes
-           phps-mode-automation-parser-generator--context-sensitive-attributes))
-
-        (when (boundp 'parser-generator-lr--context-sensitive-precedence-attribute)
-          (setq
-           parser-generator-lr--context-sensitive-precedence-attribute
-           (car phps-mode-automation-parser-generator--context-sensitive-attributes)))
 
         (when (boundp 'parser-generator-lr--precedence-comparison-function)
           (setq

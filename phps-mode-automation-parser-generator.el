@@ -24,9 +24,9 @@
 ;;; Code:
 
 (defvar
-  phps-mode-automation-parser-generator--global-declaration
+  phps-mode-automation-parser-generator--attributes
   nil
-  "Global declaration of grammar.")
+  "Attributes of grammar.")
 
 (defvar
   phps-mode-automation-parser-generator--start
@@ -383,6 +383,7 @@
 
   (let ((buffer (generate-new-buffer "*buffer*")))
     (switch-to-buffer buffer)
+    (kill-region (point-min) (point-max))
     (insert-file (expand-file-name "zend_language_parser.y"))
     (goto-char (point-min))
     (let ((delimiter-start (search-forward "%%")))
@@ -444,9 +445,8 @@
   (phps-mode-automation-parser-generator--ensure-yacc-grammar-is-available)
 
   (setq
-   phps-mode-automation-parser-generator--global-declaration
-   nil)
-
+   phps-mode-automation-parser-generator--attributes
+   (make-hash-table :test 'equal))
   (parser-generator-set-look-ahead-number
    1)
   (setq
@@ -490,7 +490,16 @@
        )
       (Type
        (type
-        (lambda(args) (format "%s" args)))
+        (lambda(args)
+          (unless
+              (gethash
+               args
+               phps-mode-automation-parser-generator--attributes)
+            (puthash
+             args
+             t
+             phps-mode-automation-parser-generator--attributes))
+          (format "%s" args)))
        )
       (Symbols
        (Symbol
@@ -583,6 +592,7 @@
 
   (let ((buffer (generate-new-buffer "*buffer*")))
     (switch-to-buffer buffer)
+    (kill-region (point-min) (point-max))
     (insert-file (expand-file-name "zend_language_parser.y"))
     (goto-char (point-min))
     (let ((delimiter-start (search-forward "%precedence")))
@@ -601,6 +611,18 @@
        (point-max)))
     (goto-char (point-min))
     (let ((global-declaration (eval (car (read-from-string (parser-generator-lr-translate))))))
+
+      (let ((attributes))
+        (maphash
+         (lambda (k _v)
+           (push
+            (intern k)
+            attributes))
+         phps-mode-automation-parser-generator--attributes)
+        (setq
+         phps-mode-automation-parser-generator--attributes
+         attributes))
+      
       global-declaration)))
 
 (provide 'phps-mode-automation-parser-generator)
