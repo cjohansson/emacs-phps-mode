@@ -23,6 +23,14 @@
 
 ;;; Code:
 
+
+(autoload 'parser-generator-set-look-ahead-number "parser-generator")
+(autoload 'parser-generator-set-grammar "parser-generator")
+(autoload 'parser-generator-process-grammar "parser-generator")
+
+(autoload 'parser-generator-lr-generate-parser-tables "parser-generator-lr")
+(autoload 'parser-generator-lr-translate "parser-generator-lr")
+
 (defvar
   phps-mode-automation-parser-generator--attributes
   nil
@@ -81,7 +89,6 @@
 
 (defun phps-mode-automation-parser-generator--grammar ()
   "Generate productions here."
-  (require 'parser-generator-lr)
   (phps-mode-automation-parser-generator--ensure-yacc-grammar-is-available)
 
   (setq
@@ -105,21 +112,26 @@
 
   (parser-generator-set-look-ahead-number
    1)
-  (setq
-   parser-generator--e-identifier
-   nil)
-  (setq
-   parser-generator--global-attributes
-   nil)
-  (setq
-   parser-generator-lr--global-precedence-attributes
-   nil)
-  (setq
-   parser-generator-lr--context-sensitive-precedence-attribute
-   nil)
-  (setq
-   parser-generator--global-declaration
-   nil)
+  (when (boundp 'parser-generator--e-identifier)
+    (setq
+     parser-generator--e-identifier
+     nil))
+  (when (boundp 'parser-generator--global-attributes)
+    (setq
+     parser-generator--global-attributes
+     nil))
+  (when (boundp 'parser-generator-lr--global-precedence-attributes)
+    (setq
+     parser-generator-lr--global-precedence-attributes
+     nil))
+  (when (boundp 'parser-generator-lr--context-sensitive-precedence-attribute)
+    (setq
+     parser-generator-lr--context-sensitive-precedence-attribute
+     nil))
+  (when (boundp 'parser-generator--global-declaration)
+    (setq
+     parser-generator--global-declaration
+     nil))
   (parser-generator-set-grammar
    '(
      (Start Productions-Block Productions-Delimiter Productions Productions Production Production-End LHS RHSS RHS RHS-Symbol RHS-Symbols Comment Logic Symbol)
@@ -239,153 +251,156 @@
       )
      Start))
 
-  (setq
-   parser-generator-lex-analyzer--function
-   (lambda (index)
-     (with-current-buffer "*buffer*"
-       (let ((token))
-         (when
-             (<
-              index
-              (point-max))
-           (goto-char
-            index)
+  (when (boundp 'parser-generator-lex-analyzer--function)
+    (setq
+     parser-generator-lex-analyzer--function
+     (lambda (index)
+       (with-current-buffer "*buffer*"
+         (let ((token))
+           (when
+               (<
+                index
+                (point-max))
+             (goto-char
+              index)
 
-           ;; Skip white-space(s)
-           (when (looking-at-p "[\t\n ]+")
-             (when
-                 (search-forward-regexp "[^\t\n ]" nil t)
-               (forward-char -1)
-               (setq-local
-                parser-generator-lex-analyzer--move-to-index-flag
-                (point))))
+             ;; Skip white-space(s)
+             (when (looking-at-p "[\t\n ]+")
+               (when
+                   (search-forward-regexp "[^\t\n ]" nil t)
+                 (forward-char -1)
+                 (when (boundp 'parser-generator-lex-analyzer--move-to-index-flag)
+                   (setq-local
+                    parser-generator-lex-analyzer--move-to-index-flag
+                    (point)))))
 
-           (cond
+             (cond
 
-            ((looking-at "\\(/\\*\\)")
-             (let ((comment-start (match-beginning 0))
-                   (comment-end
-                    (search-forward-regexp "\\(\\*/\\)" nil t)))
-               (unless comment-end
-                 (error
-                  "Failed to find end of comment started at %S (1)"
-                  comment-start))
-               (setq
-                token
-                `(comment ,comment-start . ,comment-end))))
+              ((looking-at "\\(/\\*\\)")
+               (let ((comment-start (match-beginning 0))
+                     (comment-end
+                      (search-forward-regexp "\\(\\*/\\)" nil t)))
+                 (unless comment-end
+                   (error
+                    "Failed to find end of comment started at %S (1)"
+                    comment-start))
+                 (setq
+                  token
+                  `(comment ,comment-start . ,comment-end))))
 
-            ((looking-at "\\({\\)")
-             (let ((nesting-stack 1)
-                   (logic-start (match-beginning 0))
-                   (logic-end)
-                   (continue t))
-               (forward-char 1)
-               (while (and
-                       continue
-                       (> nesting-stack 0)
-                       (< (point) (point-max)))
-                 (let ((next-stop (search-forward-regexp "\\({\\|}\\|/\\*\\)" nil t)))
-                   (let ((match (buffer-substring-no-properties (match-beginning 0) (match-end 0))))
-                     (cond
+              ((looking-at "\\({\\)")
+               (let ((nesting-stack 1)
+                     (logic-start (match-beginning 0))
+                     (logic-end)
+                     (continue t))
+                 (forward-char 1)
+                 (while (and
+                         continue
+                         (> nesting-stack 0)
+                         (< (point) (point-max)))
+                   (let ((next-stop (search-forward-regexp "\\({\\|}\\|/\\*\\)" nil t)))
+                     (let ((match (buffer-substring-no-properties (match-beginning 0) (match-end 0))))
+                       (cond
 
-                      ((not next-stop)
-                       (setq
-                        continue
-                        nil))
-
-                      ((string= match "{")
-                       (setq
-                        nesting-stack
-                        (1+ nesting-stack)))
-
-                      ((string= match "}")
-                       (setq
-                        nesting-stack
-                        (1- nesting-stack))
-                       (when
-                           (= nesting-stack 0)
+                        ((not next-stop)
                          (setq
-                          logic-end
-                          (point))))
+                          continue
+                          nil))
 
-                      ((string= match "/*")
-                       (let (
-                             (comment-start (match-beginning 0))
-                             (comment-end
-                              (search-forward-regexp "\\*/" nil t)))
-                         (unless comment-end
-                           (error
-                            "Failed to find end of comment started at %S (2))"
-                            comment-start))))
-                      
+                        ((string= match "{")
+                         (setq
+                          nesting-stack
+                          (1+ nesting-stack)))
 
-                      ))))
-               (unless logic-end
-                 (error
-                  "Failed to find end of logic started at %S"
-                  logic-start))
+                        ((string= match "}")
+                         (setq
+                          nesting-stack
+                          (1- nesting-stack))
+                         (when
+                             (= nesting-stack 0)
+                           (setq
+                            logic-end
+                            (point))))
+
+                        ((string= match "/*")
+                         (let (
+                               (comment-start (match-beginning 0))
+                               (comment-end
+                                (search-forward-regexp "\\*/" nil t)))
+                           (unless comment-end
+                             (error
+                              "Failed to find end of comment started at %S (2))"
+                              comment-start))))
+                        
+
+                        ))))
+                 (unless logic-end
+                   (error
+                    "Failed to find end of logic started at %S"
+                    logic-start))
+                 (setq
+                  token
+                  `(logic ,logic-start . ,logic-end))))
+
+              ((looking-at "\\(:\\|;\\||\\)")
                (setq
                 token
-                `(logic ,logic-start . ,logic-end))))
+                `(
+                  ,(buffer-substring-no-properties
+                    (match-beginning 0)
+                    (match-end 0))
+                  ,(match-beginning 0)
+                  . ,(match-end 0))))
 
-            ((looking-at "\\(:\\|;\\||\\)")
-             (setq
-              token
-              `(
-                ,(buffer-substring-no-properties
-                  (match-beginning 0)
-                  (match-end 0))
-                ,(match-beginning 0)
-                . ,(match-end 0))))
-
-            ((looking-at "\\(%%\\)")
-             (setq
-              token
-              `(productions-delimiter ,(match-beginning 0) . ,(match-end 0))))
-
-            ((looking-at "\\(%?[a-zA-Z_]+\\)")
-             (setq
-              token
-              `(symbol ,(match-beginning 0) . ,(match-end 0))))
-
-            ((looking-at "\\('.'\\)")
-             (setq
-              token
-              `(literal ,(match-beginning 0) . ,(match-end 0))))
-
-            ))
-
-         (when token
-           (let ((token-data
-                  (buffer-substring-no-properties
-                   (car (cdr token))
-                   (cdr (cdr token)))))
-             ;; (message "token-data: %S => %S" token token-data)
-             ))
-         token))))
-
-  (setq
-   parser-generator-lex-analyzer--get-function
-   (lambda (token)
-     (with-current-buffer "*buffer*"
-       (let ((start (car (cdr token)))
-             (end (cdr (cdr token))))
-         (when (<= end (point-max))
-           (let ((symbol
-                  (buffer-substring-no-properties start end)))
-             (when
-                 (string-match-p "^\\([0-9]+\\.[0-9]+\\|[0-9]+\\)$" symbol)
+              ((looking-at "\\(%%\\)")
                (setq
-                symbol
-                (string-to-number symbol)))
-             symbol))))))
+                token
+                `(productions-delimiter ,(match-beginning 0) . ,(match-end 0))))
+
+              ((looking-at "\\(%?[a-zA-Z_]+\\)")
+               (setq
+                token
+                `(symbol ,(match-beginning 0) . ,(match-end 0))))
+
+              ((looking-at "\\('.'\\)")
+               (setq
+                token
+                `(literal ,(match-beginning 0) . ,(match-end 0))))
+
+              ))
+
+           (when token
+             (let ((_token-data
+                    (buffer-substring-no-properties
+                     (car (cdr token))
+                     (cdr (cdr token)))))
+               ;; (message "token-data: %S => %S" token _token-data)
+               ))
+           token)))))
+
+  (when (boundp 'parser-generator-lex-analyzer--get-function)
+    (setq
+     parser-generator-lex-analyzer--get-function
+     (lambda (token)
+       (with-current-buffer "*buffer*"
+         (let ((start (car (cdr token)))
+               (end (cdr (cdr token))))
+           (when (<= end (point-max))
+             (let ((symbol
+                    (buffer-substring-no-properties start end)))
+               (when
+                   (string-match-p "^\\([0-9]+\\.[0-9]+\\|[0-9]+\\)$" symbol)
+                 (setq
+                  symbol
+                  (string-to-number symbol)))
+               symbol)))))))
 
   (parser-generator-process-grammar)
   (parser-generator-lr-generate-parser-tables)
 
   (let ((buffer (generate-new-buffer "*buffer*")))
     (switch-to-buffer buffer)
-    (insert-file (expand-file-name "zend_language_parser.y"))
+    (insert-file-contents (expand-file-name "zend_language_parser.y"))
     (goto-char (point-min))
     (let ((delimiter-start (search-forward "%%")))
       (setq
@@ -454,21 +469,26 @@
    (make-hash-table :test 'equal))
   (parser-generator-set-look-ahead-number
    1)
-  (setq
-   parser-generator--e-identifier
-   nil)
-  (setq
-   parser-generator--global-attributes
-   nil)
-  (setq
-   parser-generator-lr--global-precedence-attributes
-   nil)
-  (setq
-   parser-generator-lr--context-sensitive-precedence-attribute
-   nil)
-  (setq
-   parser-generator--global-declaration
-   nil)
+  (when (boundp 'parser-generator--e-identifier)
+    (setq
+     parser-generator--e-identifier
+     nil))
+  (when (boundp 'parser-generator--global-attributes)
+    (setq
+     parser-generator--global-attributes
+     nil))
+  (when (boundp 'parser-generator-lr--global-precedence-attributes)
+    (setq
+     parser-generator-lr--global-precedence-attributes
+     nil))
+  (when (boundp 'parser-generator-lr--context-sensitive-precedence-attribute)
+    (setq
+     parser-generator-lr--context-sensitive-precedence-attribute
+     nil))
+  (when (boundp 'parser-generator--global-declaration)
+    (setq
+     parser-generator--global-declaration
+     nil))
   (parser-generator-set-grammar
    '(
      (Start Declarations-Block Declarations Declaration Type Symbols Symbol)
@@ -522,82 +542,85 @@
       )
      Start))
 
-  (setq
-   parser-generator-lex-analyzer--function
-   (lambda (index)
-     (with-current-buffer "*buffer*"
-       (let ((token))
-         (when
-             (<
-              index
-              (point-max))
-           (goto-char
-            index)
+  (when (boundp 'parser-generator-lex-analyzer--function)
+    (setq
+     parser-generator-lex-analyzer--function
+     (lambda (index)
+       (with-current-buffer "*buffer*"
+         (let ((token))
+           (when
+               (<
+                index
+                (point-max))
+             (goto-char
+              index)
 
-           ;; Skip white-space(s)
-           (when (looking-at-p "[\t\n ]+")
-             (when
-                 (search-forward-regexp "[^\t\n ]" nil t)
-               (forward-char -1)
-               (setq-local
-                parser-generator-lex-analyzer--move-to-index-flag
-                (point))))
+             ;; Skip white-space(s)
+             (when (looking-at-p "[\t\n ]+")
+               (when
+                   (search-forward-regexp "[^\t\n ]" nil t)
+                 (forward-char -1)
+                 (when (boundp 'parser-generator-lex-analyzer--move-to-index-flag)
+                   (setq-local
+                    parser-generator-lex-analyzer--move-to-index-flag
+                    (point)))))
 
-           (cond
+             (cond
 
-            ((looking-at "\\(%[a-z]+\\)")
-             (setq
-              token
-              `(type ,(match-beginning 0) . ,(match-end 0))))
-
-            ((looking-at "\\('.'\\)")
-             (setq
-              token
-              `(literal ,(match-beginning 0) . ,(match-end 0))))
-
-            ((looking-at "\\([a-zA-Z_]+\\)")
-             (setq
-              token
-              `(symbol ,(match-beginning 0) . ,(match-end 0))))
-
-            ((looking-at "\\(/\\*\\)")
-             (let ((comment-start (match-beginning 0))
-                   (comment-end
-                    (search-forward-regexp "\\(\\*/\\)" nil t)))
-               (unless comment-end
-                 (error
-                  "Failed to find end of comment started at %S (1)"
-                  comment-start))
+              ((looking-at "\\(%[a-z]+\\)")
                (setq
                 token
-                `(comment ,comment-start . ,comment-end))))
+                `(type ,(match-beginning 0) . ,(match-end 0))))
 
-            ))
+              ((looking-at "\\('.'\\)")
+               (setq
+                token
+                `(literal ,(match-beginning 0) . ,(match-end 0))))
 
-         (when token
-           (let ((token-data
-                  (buffer-substring-no-properties
-                   (car (cdr token))
-                   (cdr (cdr token)))))
-             ;; (message "token-data: %S" token-data)
-             ))
-         token))))
+              ((looking-at "\\([a-zA-Z_]+\\)")
+               (setq
+                token
+                `(symbol ,(match-beginning 0) . ,(match-end 0))))
 
-  (setq
-   parser-generator-lex-analyzer--get-function
-   (lambda (token)
-     (with-current-buffer "*buffer*"
-       (let ((start (car (cdr token)))
-             (end (cdr (cdr token))))
-         (when (<= end (point-max))
-           (buffer-substring-no-properties start end))))))
+              ((looking-at "\\(/\\*\\)")
+               (let ((comment-start (match-beginning 0))
+                     (comment-end
+                      (search-forward-regexp "\\(\\*/\\)" nil t)))
+                 (unless comment-end
+                   (error
+                    "Failed to find end of comment started at %S (1)"
+                    comment-start))
+                 (setq
+                  token
+                  `(comment ,comment-start . ,comment-end))))
+
+              ))
+
+           (when token
+             (let ((_token-data
+                    (buffer-substring-no-properties
+                     (car (cdr token))
+                     (cdr (cdr token)))))
+               ;; (message "token-data: %S" token-data)
+               ))
+           token)))))
+
+  (when (boundp 'parser-generator-lex-analyzer--get-function)
+    (setq
+     parser-generator-lex-analyzer--get-function
+     (lambda (token)
+       (with-current-buffer "*buffer*"
+         (let ((start (car (cdr token)))
+               (end (cdr (cdr token))))
+           (when (<= end (point-max))
+             (buffer-substring-no-properties start end)))))))
 
   (parser-generator-process-grammar)
   (parser-generator-lr-generate-parser-tables)
 
   (let ((buffer (generate-new-buffer "*buffer*")))
     (switch-to-buffer buffer)
-    (insert-file (expand-file-name "zend_language_parser.y"))
+    (insert-file-contents (expand-file-name "zend_language_parser.y"))
     (goto-char (point-min))
     (let ((delimiter-start (search-forward "%precedence")))
       (setq

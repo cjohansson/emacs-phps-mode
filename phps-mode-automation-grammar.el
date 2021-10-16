@@ -48,6 +48,11 @@
   "The look-ahead number of grammar.")
 
 (defvar
+  phps-mode-parser-lex-analyzer--move-to-index-flag
+  nil
+  "A dummy flag.")
+
+(defvar
   phps-mode-automation-grammar--header
   "(require 'phps-mode-lexer)\n(require 'semantic)\n(require 'semantic/lex)\n\n(defvar-local\n phps-mode-parser-position\n nil\n \"Position of parser.\")\n(defvar-local\n phps-mode-parser-tokens\n nil\n \"Reversed list of lexer tokens.\")\n"
   "Header contents for parser.")

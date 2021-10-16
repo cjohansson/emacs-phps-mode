@@ -54,17 +54,20 @@
           (when (boundp 'parser-generator--context-sensitive-attributes)
             (setq
              parser-generator--context-sensitive-attributes
-             context-sensitive-attributes))
+             context-sensitive-attributes)
+            (message "parser-generator--context-sensitive-attributes: %S" parser-generator--context-sensitive-attributes))
 
           (when (boundp 'parser-generator-lr--context-sensitive-precedence-attribute)
             (setq
              parser-generator-lr--context-sensitive-precedence-attribute
-             (car context-sensitive-attributes)))
+             (car context-sensitive-attributes))
+            (message "parser-generator-lr--context-sensitive-precedence-attribute: %S" parser-generator-lr--context-sensitive-precedence-attribute))
 
           (when (boundp 'parser-generator--global-declaration)
             (setq
              parser-generator--global-declaration
-             global-declaration))
+             global-declaration)
+            (message "parser-generator--global-declaration: %S" parser-generator--global-declaration))
 
           (when (boundp 'parser-generator--global-attributes)
             (setq
@@ -74,13 +77,8 @@
           (when (boundp 'parser-generator-lr--global-precedence-attributes)
             (setq
              parser-generator-lr--global-precedence-attributes
-             attributes)))
-
-        (message "parser-generator--global-attributes: %S" parser-generator--global-declaration)
-        (message "parser-generator--global-declaration: %S" parser-generator--global-declaration)
-        (message "parser-generator-lr--global-precedence-attributes: %S" parser-generator-lr--global-precedence-attributes)
-        (message "parser-generator-lr--context-sensitive-precedence-attribute: %S" parser-generator-lr--context-sensitive-precedence-attribute)
-        (message "parser-generator--context-sensitive-attributes: %S" parser-generator--context-sensitive-attributes)
+             attributes)
+            (message "parser-generator-lr--global-precedence-attributes: %S" parser-generator-lr--global-precedence-attributes)))
 
         (when (fboundp 'parser-generator-set-look-ahead-number)
           (parser-generator-set-look-ahead-number
@@ -146,12 +144,16 @@
 
           ;; Only generate LR-items, GOTO-tables and ACTION-tables if we are lacking it
           (if (and
+               (boundp 'parser-generator-lr--goto-tables)
                (boundp 'parser-generator-lr--goto-tables-resume)
                parser-generator-lr--goto-tables-resume
+               (boundp 'parser-generator-lr--distinct-goto-tables)
                (boundp 'parser-generator-lr--distinct-goto-tables-resume)
                parser-generator-lr--distinct-goto-tables-resume
+               (boundp 'parser-generator-lr--action-tables)
                (boundp 'parser-generator-lr--action-tables-resume)
                parser-generator-lr--action-tables-resume
+               (boundp 'parser-generator-lr--distinct-action-tables)
                (boundp 'parser-generator-lr--distinct-action-tables-resume)
                parser-generator-lr--distinct-action-tables-resume)
               (progn
