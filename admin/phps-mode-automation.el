@@ -86,8 +86,6 @@
            parser-generator-lex-analyzer--function
            phps-mode-automation-grammar--lex-analyzer-function))
 
-        ;; TODO Make dump of variable above work
-
         (when (boundp 'parser-generator-lex-analyzer--get-function)
           (setq
            parser-generator-lex-analyzer--get-function
@@ -111,19 +109,19 @@
           (message "Precedence Tables")
           (when (boundp 'parser-generator-lr--symbol-precedence-value)
             (message
-             "parser-generator-lr--symbol-precedence-value: %S"
+             "(setq parser-generator-lr--symbol-precedence-value %S)"
              parser-generator-lr--symbol-precedence-value))
           (when (boundp 'parser-generator-lr--symbol-precedence-type)
             (message
-             "parser-generator-lr--symbol-precedence-type: %S"
+             "(setq parser-generator-lr--symbol-precedence-type %S)"
              parser-generator-lr--symbol-precedence-type))
           (when (boundp 'parser-generator-lr--production-number-precedence-value)
             (message
-             "parser-generator-lr--production-number-precedence-value: %S"
+             "(setq parser-generator-lr--production-number-precedence-value %S)"
              parser-generator-lr--production-number-precedence-value))
           (when (boundp 'parser-generator-lr--production-number-precedence-type)
             (message
-             "parser-generator-lr--production-number-precedence-type: %S"
+             "(setq parser-generator-lr--production-number-precedence-type %S)"
              parser-generator-lr--production-number-precedence-type))
 
           ;; Only generate LR-items, GOTO-tables and ACTION-tables if we are lacking it
