@@ -343,7 +343,7 @@
               token
               `(productions-delimiter ,(match-beginning 0) . ,(match-end 0))))
 
-            ((looking-at "\\([%a-zA-Z_]+\\)")
+            ((looking-at "\\(%?[a-zA-Z_]+\\)")
              (setq
               token
               `(symbol ,(match-beginning 0) . ,(match-end 0))))
@@ -359,7 +359,9 @@
            (let ((token-data
                   (buffer-substring-no-properties
                    (car (cdr token))
-                   (cdr (cdr token)))))))
+                   (cdr (cdr token)))))
+             ;; (message "token-data: %S => %S" token token-data)
+             ))
          token))))
 
   (setq
@@ -383,7 +385,6 @@
 
   (let ((buffer (generate-new-buffer "*buffer*")))
     (switch-to-buffer buffer)
-    (kill-region (point-min) (point-max))
     (insert-file (expand-file-name "zend_language_parser.y"))
     (goto-char (point-min))
     (let ((delimiter-start (search-forward "%%")))
@@ -394,6 +395,9 @@
     (let ((delimiter-start (search-forward "%%")))
       (kill-region delimiter-start (point-max)))
     (goto-char (point-min))
+
+    ;; (message "Buffer:\n%S" (buffer-substring-no-properties (point-min) (point-max)))
+    
     (let ((productions (eval (car (read-from-string (parser-generator-lr-translate))))))
 
       (let ((context-sensitive-attributes)
@@ -432,6 +436,7 @@
         (setq
          phps-mode-automation-parser-generator--context-sensitive-attributes
          context-sensitive-attributes))
+      (kill-buffer)
 
       (list
        phps-mode-automation-parser-generator--non-terminals
@@ -592,7 +597,6 @@
 
   (let ((buffer (generate-new-buffer "*buffer*")))
     (switch-to-buffer buffer)
-    (kill-region (point-min) (point-max))
     (insert-file (expand-file-name "zend_language_parser.y"))
     (goto-char (point-min))
     (let ((delimiter-start (search-forward "%precedence")))
@@ -622,6 +626,8 @@
         (setq
          phps-mode-automation-parser-generator--attributes
          attributes))
+
+      (kill-buffer)
       
       global-declaration)))
 
