@@ -369,13 +369,6 @@
 
               ))
 
-           (when token
-             (let ((_token-data
-                    (buffer-substring-no-properties
-                     (car (cdr token))
-                     (cdr (cdr token)))))
-               ;; (message "token-data: %S => %S" token _token-data)
-               ))
            token)))))
 
   (when (boundp 'parser-generator-lex-analyzer--get-function)
@@ -596,13 +589,6 @@
 
               ))
 
-           (when token
-             (let ((_token-data
-                    (buffer-substring-no-properties
-                     (car (cdr token))
-                     (cdr (cdr token)))))
-               ;; (message "token-data: %S" token-data)
-               ))
            token)))))
 
   (when (boundp 'parser-generator-lex-analyzer--get-function)
