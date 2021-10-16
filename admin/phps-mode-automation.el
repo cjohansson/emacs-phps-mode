@@ -41,7 +41,26 @@
          gc-cons-threshold
          (* 1024 1024 100))
 
-        (let ((global-declaration (phps-mode-automation-parser-generator--global-declaration)))
+        (let* ((global-declaration (phps-mode-automation-parser-generator--global-declaration))
+               (attributes phps-mode-automation-parser-generator--attributes)
+               (grammar (phps-mode-automation-parser-generator--grammar))
+               (context-sensitive-attributes phps-mode-automation-parser-generator--context-sensitive-attributes))
+
+          ;; Prepare export
+          (when (fboundp 'parser-generator-set-grammar)
+            (parser-generator-set-grammar
+             grammar))
+
+          (when (boundp 'parser-generator--context-sensitive-attributes)
+            (setq
+             parser-generator--context-sensitive-attributes
+             context-sensitive-attributes))
+
+          (when (boundp 'parser-generator-lr--context-sensitive-precedence-attribute)
+            (setq
+             parser-generator-lr--context-sensitive-precedence-attribute
+             (car context-sensitive-attributes)))
+
           (when (boundp 'parser-generator--global-declaration)
             (setq
              parser-generator--global-declaration
@@ -50,27 +69,18 @@
           (when (boundp 'parser-generator--global-attributes)
             (setq
              parser-generator--global-attributes
-             phps-mode-automation-parser-generator--attributes))
+             attributes))
 
           (when (boundp 'parser-generator-lr--global-precedence-attributes)
             (setq
              parser-generator-lr--global-precedence-attributes
-             phps-mode-automation-parser-generator--attributes)))
+             attributes)))
 
-        ;; Prepare export
-        (when (fboundp 'parser-generator-set-grammar)
-          (parser-generator-set-grammar
-           (phps-mode-automation-parser-generator--grammar))
-
-          (when (boundp 'parser-generator--context-sensitive-attributes)
-            (setq
-             parser-generator--context-sensitive-attributes
-             phps-mode-automation-parser-generator--context-sensitive-attributes))
-
-          (when (boundp 'parser-generator-lr--context-sensitive-precedence-attribute)
-            (setq
-             parser-generator-lr--context-sensitive-precedence-attribute
-             (car phps-mode-automation-parser-generator--context-sensitive-attributes))))
+        (message "parser-generator--global-attributes: %S" parser-generator--global-declaration)
+        (message "parser-generator--global-declaration: %S" parser-generator--global-declaration)
+        (message "parser-generator-lr--global-precedence-attributes: %S" parser-generator-lr--global-precedence-attributes)
+        (message "parser-generator-lr--context-sensitive-precedence-attribute: %S" parser-generator-lr--context-sensitive-precedence-attribute)
+        (message "parser-generator--context-sensitive-attributes: %S" parser-generator--context-sensitive-attributes)
 
         (when (fboundp 'parser-generator-set-look-ahead-number)
           (parser-generator-set-look-ahead-number
