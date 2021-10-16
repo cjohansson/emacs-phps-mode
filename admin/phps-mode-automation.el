@@ -36,6 +36,11 @@
   (if (fboundp 'parser-generator-lr-export-to-elisp)
       (progn
 
+        ;; 100 MB before garbage collection
+        (setq
+         gc-cons-threshold
+         (* 1024 1024 100))
+
         (let ((global-declaration (phps-mode-automation-parser-generator--global-declaration)))
           (when (boundp 'parser-generator--global-declaration)
             (setq
