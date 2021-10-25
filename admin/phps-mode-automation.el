@@ -98,11 +98,13 @@
           (setq
            parser-generator-lex-analyzer--function
            phps-mode-automation-grammar--lex-analyzer-function))
+        ;; TODO This is not exported correctly
 
         (when (boundp 'parser-generator-lex-analyzer--reset-function)
           (setq
            parser-generator-lex-analyzer--reset-function
            phps-mode-automation-grammar--lex-analyzer-reset-function))
+        ;; TODO This is not exported correctly
 
         (when (boundp 'parser-generator-lex-analyzer--get-function)
           (setq
