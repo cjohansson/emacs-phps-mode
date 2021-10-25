@@ -46,6 +46,8 @@
                (grammar (phps-mode-automation-parser-generator--grammar))
                (context-sensitive-attributes phps-mode-automation-parser-generator--context-sensitive-attributes))
 
+          ;; TODO Verify that grammar contains context-sensitive attributes
+
           ;; Prepare export
           (when (fboundp 'parser-generator-set-grammar)
             (parser-generator-set-grammar
