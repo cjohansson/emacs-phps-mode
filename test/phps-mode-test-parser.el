@@ -68,7 +68,7 @@
        (message "\n")
        (should
         (equal
-         '(80 459 466 411 333 332 154 102 79)
+         '(80 449 456 403 325 324 152 102 79)
          parse)))))
 
   (phps-mode-test-parser--buffer-contents
@@ -77,7 +77,7 @@
    (lambda()
      (should
       (equal
-       '(80 459 466 411 333 332 154 102 79)
+       '(80 449 456 403 325 324 152 102 79)
        (phps-mode-parser-parse)))))
 
   (phps-mode-test-parser--buffer-contents
@@ -86,7 +86,7 @@
    (lambda()
      (should
       (equal
-       '(80 459 466 411 333 332 154 102 79)
+       '(80 449 456 403 325 324 152 102 79)
        (phps-mode-parser-parse)))))
 
   (phps-mode-test-parser--buffer-contents
@@ -121,7 +121,7 @@
        (message "\n")
        (should
         (equal
-         '(80 459 466 411 333 332 154 102 79 155 102 79 459 466 411 333 332 154 102 79 155 102 79)
+         '(80 449 456 403 325 324 152 102 79 153 102 79 449 456 403 325 324 152 102 79 153 102 79)
          parse)))))
 
   (phps-mode-test-parser--buffer-contents
@@ -142,7 +142,7 @@
        (message "\n")
        (should
         (equal
-         '(80 427 431 428 176 178 428 247 241 238 120 236 266 429 137 502 492 498 461 411 345 156 138 136 502 492 498 342 481 151 138 136 429 175 98 105 79)
+         '(80 419 423 420 237 243 175 177 420 241 236 233 118 231 260 421 135 492 482 488 451 403 337 154 136 134 492 482 488 334 471 149 136 134 421 174 98 103 79)
          parse)))))
 
   (phps-mode-test-parser--buffer-contents
@@ -163,7 +163,7 @@
        (message "\n")
        (should
         (equal
-         '(80 77 81 107 79 427 431 428 176 178 428 247 241 238 120 236 266 429 137 502 492 498 461 411 345 156 138 136 502 492 498 342 481 151 138 136 429 175 98 105 79)
+         '(80 77 81 106 79 419 423 420 237 243 175 177 420 241 236 233 118 231 260 421 135 492 482 488 451 403 337 154 136 134 492 482 488 334 471 149 136 134 421 174 98 103 79)
          parse)))))
 
   (phps-mode-test-parser--buffer-contents
@@ -184,37 +184,35 @@
        (message "\n")
        (should
         (equal
-         '(80 77 81 108 79 137 427 431 428 176 178 428 247 241 238 120 236 266 429 137 502 492 498 461 411 345 156 138 136 502 492 498 342 481 151 138 136 429 175 98 139 136 142 102 79)
+         '(80 77 81 80 419 423 420 237 243 175 177 420 241 236 233 118 231 260 421 135 492 482 488 451 403 337 154 136 134 492 482 488 334 471 149 136 134 421 174 98 103 79 107 79)
          parse)))))
 
-  ;; TODO Make this test pass
-  ;; (phps-mode-test-parser--buffer-contents
-  ;;  "<?php\nnamespace myNamespace;\nclass MyClass\n{\n    private $var = 'abc';\n    public function myFunction($arg) {\n        $arg = 2;\n        return $arg;\n    }\n}\n"
-  ;;  "Simple function defintion and property inside class inside non-bracketed namespace"
-  ;;  (lambda()
-  ;;    (let ((parse (phps-mode-parser-parse)))
-  ;;      (message "Left-to-right with left-most derivation:\n%S\n" parse)
-  ;;      (dolist (production-number (reverse parse))
-  ;;        (let ((production
-  ;;               (phps-mode-parser--get-grammar-production-by-number
-  ;;                production-number)))
-  ;;          (message
-  ;;           "%d: %S -> %S"
-  ;;           production-number
-  ;;           (car (car production))
-  ;;           (car (car (cdr production))))))
-  ;;      (message "\n")
-  ;;      (should
-  ;;       (equal
-  ;;        '(80 77 81 108 79 137 427 431 428 176 178 428 247 241 238 120 236 266 429 137 502 492 498 461 411 345 156 138 136 502 492 498 342 481 151 138 136 429 175 98 139 136 142 102 79)
-  ;;        parse)))))
+  (phps-mode-test-parser--buffer-contents
+   "<?php\nnamespace myNamespace;\nclass MyClass\n{\n    private $var = 'abc';\n    public function myFunction($arg) {\n        $arg = 2;\n        return $arg;\n    }\n}\n"
+   "Simple function defintion and property inside class inside non-bracketed namespace"
+   (lambda()
+     (let ((parse (phps-mode-parser-parse)))
+       (message "Left-to-right with left-most derivation:\n%S\n" parse)
+       (dolist (production-number (reverse parse))
+         (let ((production
+                (phps-mode-parser--get-grammar-production-by-number
+                 production-number)))
+           (message
+            "%d: %S -> %S"
+            production-number
+            (car (car production))
+            (car (car (cdr production))))))
+       (message "\n")
+       (should
+        (equal
+         '(80 77 81 106 79 187 191 420 277 311 307 303 243 449 456 403 420 318 316 278 281 276 309 307 306 419 423 77 420 237 243 175 177 420 241 236 233 118 231 260 421 135 492 482 488 451 403 337 154 136 134 492 482 488 334 471 149 136 134 302 421 280 281 276 180 99 103 79)
+         parse)))))
 
-  ;; ;; TODO Make following test work
-  ;; (phps-mode-test-parser--buffer-contents
-  ;;  "<?php\n\nnamespace myNamespaceA {\n    $var = 123;\n    class myClassA {\n        private $var2 = 123;\n        function myFunctionA($var3) {\n            $var4 = 123;\n            if ($var) {\n                echo 'Miss';\n            }\n            if ($var2) {\n                echo 'Miss';\n            }\n            if ($var3) {\n                echo 'Hit';\n            }\n            if ($var4) {\n                echo 'Hit';\n            }\n        }\n\n        function myFunctionB($var5)\n        {\n            $var6 = 123;\n            if ($var) {\n                echo 'Miss';\n            }\n            if ($var2) {\n                echo 'Miss';\n            }\n            if ($var3) {\n                echo 'Miss';\n            }\n            if ($var4) {\n                echo 'Miss';\n            }\n            if ($var5) {\n                echo 'Hit';\n            }\n            if ($var6) {\n                echo 'Hit';\n            }\n        }\n    }\n\n    if ($var) {\n        echo 'Hit';\n    }\n    if ($var2) {\n        echo 'Miss';\n    }\n    if ($var3) {\n        echo 'Miss';\n    }\n    if ($var4) {\n        echo 'Miss';\n    }\n    if ($var5) {\n        echo 'Miss';\n    }\n    if ($var6) {\n        echo 'Miss';\n    }\n}\n\nnamespace myNamespaceB {\n    $var7 = 123;\n    class myClassB {\n        private $var8 = 123;\n        function myFunctionA($var10) {\n            $var9 = 123;\n            if ($var) {\n                echo 'Miss';\n            }\n            if ($var2) {\n                echo 'Miss';\n            }\n            if ($var3) {\n                echo 'Miss';\n            }\n            if ($var4) {\n                echo 'Miss';\n            }\n            if ($var5) {\n                echo 'Miss';\n            }\n            if ($var6) {\n                echo 'Miss';\n            }\n            if ($var7) {\n                echo 'Miss';\n            }\n            if ($var8) {\n                echo 'Miss';\n            }\n            if ($var9) {\n                echo 'Hit';\n            }\n            if ($var10) {\n                echo 'Hit';\n            }\n        }\n\n        function myFunctionB($var12)\n        {\n            $var11 = 123;\n            if ($var) {\n                echo 'Miss';\n            }\n            if ($var2) {\n                echo 'Miss';\n            }\n            if ($var3) {\n                echo 'Miss';\n            }\n            if ($var4) {\n                echo 'Miss';\n            }\n            if ($var5) {\n                echo 'Hit';\n            }\n            if ($var6) {\n                echo 'Hit';\n            }\n            if ($var7) {\n                echo 'Miss';\n            }\n            if ($var8) {\n                echo 'Miss';\n            }\n            if ($var9) {\n                echo 'Miss';\n            }\n            if ($var10) {\n                echo 'Miss';\n            }\n            if ($var11) {\n                echo 'Hit';\n            }\n            if ($var12) {\n                echo 'Hit';\n            }\n        }\n    }\n\n    if ($var) {\n        echo 'Hit';\n    }\n    if ($var2) {\n        echo 'Miss';\n    }\n    if ($var3) {\n        echo 'Miss';\n    }\n    if ($var4) {\n        echo 'Miss';\n    }\n    if ($var5) {\n        echo 'Miss';\n    }\n    if ($var6) {\n        echo 'Miss';\n    }\n    if ($var7) {\n        echo 'Hit';\n    }\n}\n"
-  ;;  "Object oriented PHP with bracket namespace"
-  ;;  (lambda()
-  ;;    (phps-mode-parser-parse)))
+  (phps-mode-test-parser--buffer-contents
+   "<?php\n\nnamespace myNamespaceA {\n    $var = 123;\n    class myClassA {\n        private $var2 = 123;\n        function myFunctionA($var3) {\n            $var4 = 123;\n            if ($var) {\n                echo 'Miss';\n            }\n            if ($var2) {\n                echo 'Miss';\n            }\n            if ($var3) {\n                echo 'Hit';\n            }\n            if ($var4) {\n                echo 'Hit';\n            }\n        }\n\n        function myFunctionB($var5)\n        {\n            $var6 = 123;\n            if ($var) {\n                echo 'Miss';\n            }\n            if ($var2) {\n                echo 'Miss';\n            }\n            if ($var3) {\n                echo 'Miss';\n            }\n            if ($var4) {\n                echo 'Miss';\n            }\n            if ($var5) {\n                echo 'Hit';\n            }\n            if ($var6) {\n                echo 'Hit';\n            }\n        }\n    }\n\n    if ($var) {\n        echo 'Hit';\n    }\n    if ($var2) {\n        echo 'Miss';\n    }\n    if ($var3) {\n        echo 'Miss';\n    }\n    if ($var4) {\n        echo 'Miss';\n    }\n    if ($var5) {\n        echo 'Miss';\n    }\n    if ($var6) {\n        echo 'Miss';\n    }\n}\n\nnamespace myNamespaceB {\n    $var7 = 123;\n    class myClassB {\n        private $var8 = 123;\n        function myFunctionA($var10) {\n            $var9 = 123;\n            if ($var) {\n                echo 'Miss';\n            }\n            if ($var2) {\n                echo 'Miss';\n            }\n            if ($var3) {\n                echo 'Miss';\n            }\n            if ($var4) {\n                echo 'Miss';\n            }\n            if ($var5) {\n                echo 'Miss';\n            }\n            if ($var6) {\n                echo 'Miss';\n            }\n            if ($var7) {\n                echo 'Miss';\n            }\n            if ($var8) {\n                echo 'Miss';\n            }\n            if ($var9) {\n                echo 'Hit';\n            }\n            if ($var10) {\n                echo 'Hit';\n            }\n        }\n\n        function myFunctionB($var12)\n        {\n            $var11 = 123;\n            if ($var) {\n                echo 'Miss';\n            }\n            if ($var2) {\n                echo 'Miss';\n            }\n            if ($var3) {\n                echo 'Miss';\n            }\n            if ($var4) {\n                echo 'Miss';\n            }\n            if ($var5) {\n                echo 'Hit';\n            }\n            if ($var6) {\n                echo 'Hit';\n            }\n            if ($var7) {\n                echo 'Miss';\n            }\n            if ($var8) {\n                echo 'Miss';\n            }\n            if ($var9) {\n                echo 'Miss';\n            }\n            if ($var10) {\n                echo 'Miss';\n            }\n            if ($var11) {\n                echo 'Hit';\n            }\n            if ($var12) {\n                echo 'Hit';\n            }\n        }\n    }\n\n    if ($var) {\n        echo 'Hit';\n    }\n    if ($var2) {\n        echo 'Miss';\n    }\n    if ($var3) {\n        echo 'Miss';\n    }\n    if ($var4) {\n        echo 'Miss';\n    }\n    if ($var5) {\n        echo 'Miss';\n    }\n    if ($var6) {\n        echo 'Miss';\n    }\n    if ($var7) {\n        echo 'Hit';\n    }\n}\n"
+   "Object oriented PHP with bracket namespace"
+   (lambda()
+     (phps-mode-parser-parse)))
 
   (message "\n-- Ran tests for parser boundaries. --"))
 
