@@ -211,6 +211,12 @@
    (lambda()
      (phps-mode-parser-parse)))
 
+  (phps-mode-test-parser--buffer-contents
+   "<?php if (empty($parameters['PARAMETER_CONFIGURATION_INTERNAL_FILENAME'])) { $parameters['PARAMETER_CONFIGURATION_INTERNAL_FILENAME'] = ''; }"
+   "Complex if-conditional"
+   (lambda()
+     (phps-mode-parser-parse)))
+
   (message "\n-- Ran tests for parser boundaries. --"))
 
 (defun phps-mode-test-parser ()
