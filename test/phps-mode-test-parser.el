@@ -31,19 +31,16 @@
 (require 'phps-mode-parser)
 
 (defun phps-mode-test-parser--buffer-contents (buffer-contents name logic)
-  (generate-new-buffer "*PHPs Lexer*")
-  (with-current-buffer "*PHPs Lexer*"
-    (kill-region (point-min) (point-max))
+  (with-temp-buffer
+    (when (get-buffer "*PHPs Lexer*")
+      (kill-buffer "*PHPs Lexer*"))
     (insert buffer-contents)
     (message
      "Testing buffer %S with buffer-contents:\n%S\n"
      name
      (buffer-substring-no-properties (point-min) (point-max)))
-
     (funcall logic)
-
-    (message "Passed %s" name)
-    (kill-buffer)))
+    (message "Passed %s" name)))
 
 (defun phps-mode-test-parser-boundaries ()
   "Run test for lexer."
