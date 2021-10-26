@@ -27,18 +27,55 @@
 
 (require 'ert)
 (require 'phps-mode)
-(require 'phps-mode-lexer)
+(require 'phps-mode-lex-analyzer)
 (require 'phps-mode-parser)
 
 (defun phps-mode-test-parser--buffer-contents (buffer-contents name logic)
   (with-temp-buffer
-    (when (get-buffer "*PHPs Lexer*")
-      (kill-buffer "*PHPs Lexer*"))
+    ;; Setup buffer
     (insert buffer-contents)
     (message
      "Testing buffer %S with buffer-contents:\n%S\n"
      name
      (buffer-substring-no-properties (point-min) (point-max)))
+    
+    ;; Setup lexer
+    (setq
+     phps-mode-lexer--generated-tokens
+     nil)
+    (setq
+     phps-mode-lexer--state
+     'ST_INITIAL)
+    (setq
+     phps-mode-lexer--states
+     nil)
+    (setq
+     phps-mode-lexer--state-stack
+     nil)
+    (setq
+     phps-mode-lexer--heredoc-label
+     nil)
+    (setq
+     phps-mode-lexer--heredoc-label-stack
+     nil)
+    (setq
+     phps-mode-lexer--nest-location-stack
+     nil)
+
+    ;; Run lexer
+    (setq
+     semantic-lex-analyzer
+     #'phps-mode-lex-analyzer--re2c-lex)
+    (setq
+     semantic-lex-syntax-table
+     phps-mode-syntax-table)
+    (semantic-lex-buffer)
+    (setq
+     phps-mode-parser-tokens
+     (reverse phps-mode-lexer--generated-tokens))
+    (message "Lexer tokens:\n%S\n" phps-mode-parser-tokens)
+
+    ;; Run test
     (funcall logic)
     (message "Passed %s" name)))
 

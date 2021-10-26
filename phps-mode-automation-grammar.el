@@ -24,8 +24,6 @@
 ;;; Code:
 
 
-(require 'phps-mode-lexer)
-
 ;; Just to stop linter from complaining
 (defvar
  phps-mode-parser-position
@@ -33,9 +31,9 @@
  "Position of parser.")
 
 (defvar
- phps-mode-parser-tokens
- nil
- "Reversed list of tokens.")
+  phps-mode-parser-tokens
+  nil
+  "Tokens for parser.")
 
 (defvar
   phps-mode-automation-grammar--lr--allow-default-conflict-resolution
@@ -54,7 +52,7 @@
 
 (defvar
   phps-mode-automation-grammar--header
-  "(require 'phps-mode-lexer)\n(require 'semantic)\n(require 'semantic/lex)\n\n(defvar-local\n phps-mode-parser-position\n nil\n \"Position of parser.\")\n(defvar-local\n phps-mode-parser-tokens\n nil\n \"Reversed list of lexer tokens.\")\n"
+  "\n\n(defvar-local\n phps-mode-parser-position\n nil\n \"Position of parser.\")\n\n(defvar-local\n phps-mode-parser-tokens\n nil\n \"Tokens for parser.\")\n\n"
   "Header contents for parser.")
 
 (defvar
@@ -66,78 +64,6 @@
   phps-mode-automation-grammar--eof-identifier
   '$
   "The EOF-identifier of grammar.")
-
-(defvar
-  phps-mode-automation-grammar--lex-analyzer-reset-function
-  (lambda()
-    (let ((generated-tokens-p)
-          (generated-tokens-list))
-
-      ;; Create lexer buffer if none exists
-      (unless (get-buffer "*PHPs Lexer*")
-        (generate-new-buffer "*PHPs Lexer*")
-        (let ((old-buffer
-               (buffer-substring-no-properties
-                (point-min)
-                (point-max))))
-          (with-current-buffer "*PHPs Lexer*"
-            (insert old-buffer))))
-
-      (with-current-buffer "*PHPs Lexer*"
-        ;; Unless we have lexed the buffer
-        (unless phps-mode-parser-tokens
-          (unless phps-mode-lexer--generated-tokens
-            ;; Reset lexer
-            (setq-local
-             phps-mode-lexer--generated-tokens
-             nil)
-            (setq-local
-             phps-mode-lexer--state
-             'ST_INITIAL)
-            (setq-local
-             phps-mode-lexer--states
-             nil)
-            (setq-local
-             phps-mode-lexer--state-stack
-             nil)
-            (setq-local
-             phps-mode-lexer--heredoc-label
-             nil)
-            (setq-local
-             phps-mode-lexer--heredoc-label-stack
-             nil)
-            (setq-local
-             phps-mode-lexer--nest-location-stack
-             nil)
-            (goto-char (point-min))
-
-            ;; Run lexer on entire buffer here
-            (let ((index (point))
-                  (max-index (point-max)))
-              (while (< index max-index)
-                (phps-mode-lexer--re2c)
-                (setq
-                 index
-                 semantic-lex-end-point)
-                (goto-char index))))
-          (setq
-           generated-tokens-p
-           t)
-          (setq
-           generated-tokens-list
-           (reverse
-            phps-mode-lexer--generated-tokens))))
-
-      (when generated-tokens-p
-        (setq-local
-         phps-mode-parser-tokens
-         generated-tokens-list))
-
-      ;; Reset buffer-index to token-list-index connections
-      (setq-local
-       phps-mode-parser-position
-       nil)))
-  "The reset function.")
 
 (defvar
   phps-mode-automation-grammar--lex-analyzer-function
@@ -240,6 +166,16 @@
   "The custom lex-analyzer.")
 
 (defvar
+  phps-mode-automation-grammar--lex-analyzer-reset-function
+  (lambda()
+    (progn
+      ;; Reset buffer-index to token-list-index connections
+      (setq-local
+       phps-mode-parser-position
+       nil)))
+  "The reset function.")
+
+(defvar
   phps-mode-automation-grammar--precedence-comparison-function
   (lambda(a-type a-value _b-type b-value)
     (cond
@@ -284,13 +220,12 @@
 (defvar
   phps-mode-automation-grammar--lex-analyzer-get-function
   (lambda (token)
-    (with-current-buffer "*PHPs Lexer*"
-      (let ((start (car (cdr token)))
-            (end (cdr (cdr token))))
-        (when (<= end (point-max))
-          (buffer-substring-no-properties
-           start
-           end)))))
+    (let ((start (car (cdr token)))
+          (end (cdr (cdr token))))
+      (when (<= end (point-max))
+        (buffer-substring-no-properties
+         start
+         end))))
   "Fetch token meta data.")
 
 
