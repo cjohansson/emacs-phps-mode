@@ -387,16 +387,39 @@
      buffer-name
 
      (lambda()
-       (let* ((lex-result
-               (phps-mode-lex-analyzer--lex-string buffer-contents))
-              (processed-result
-               (phps-mode-lex-analyzer--process-tokens-in-string
-                (nth 0 lex-result)
-                buffer-contents)))
-         ;; TODO Async parse here?
-         (list
-          lex-result
-          processed-result)))
+       (let ((lex-result
+              (phps-mode-lex-analyzer--lex-string buffer-contents))
+             (parse-trail))
+
+         ;; Prepare parser
+         (setq
+          phps-mode-lex-analyzer--parse-trail
+          nil)
+         (setq
+          phps-mode-lex-analyzer--parse-error
+          nil)
+         (setq
+          phps-mode-parser-tokens
+          (nth 0 lex-result))
+         
+         (condition-case conditions
+             (progn
+               (setq
+                parse-trail
+                (phps-mode-parser-parse)))
+           (error
+            (signal
+             'phps-parser-error
+             conditions)))
+
+         (let ((processed-result
+                (phps-mode-lex-analyzer--process-tokens-in-string
+                 (nth 0 lex-result)
+                 buffer-contents)))
+           (list
+            lex-result
+            processed-result
+            parse-trail))))
 
      (lambda(result)
        (when (get-buffer buffer-name)
@@ -412,27 +435,6 @@
              (setq phps-mode-lex-analyzer--heredoc-label (nth 4 lex-result))
              (setq phps-mode-lex-analyzer--heredoc-label-stack (nth 5 lex-result))
              (setq phps-mode-lex-analyzer--nest-location-stack (nth 6 lex-result))
-
-             ;; TODO Synchronous parse here?
-             (setq phps-mode-lex-analyzer--parse-trail nil)
-             (setq phps-mode-lex-analyzer--parse-error nil)
-             (setq phps-mode-parser-tokens phps-mode-lex-analyzer--tokens)
-             (condition-case conditions
-                 (progn
-                   (setq
-                    phps-mode-lex-analyzer--parse-trail
-                    (phps-mode-parser-parse)))
-               (error
-                (message "GOT ERROR 2: %S" conditions)
-                (setq
-                 phps-mode-lex-analyzer--parse-error
-                 conditions)))
-             ;; (when phps-mode-lex-analyzer--parse-error
-             ;;   (display-warning
-             ;;    'phps-mode
-             ;;    phps-mode-lex-analyzer--parse-error
-             ;;    :warning
-             ;;    "*PHPs Parse Errors*"))
 
              ;; Save processed result
              (setq phps-mode-lex-analyzer--processed-buffer-p t)
@@ -461,27 +463,45 @@
              (phps-mode-lex-analyzer--reset-local-variables)
 
              (when error-message
-               (if (equal error-type 'phps-lexer-error)
-                   (progn
-                     (when error-start
-                       (if error-end
-                           (phps-mode-lex-analyzer--set-region-syntax-color
-                            error-start
-                            error-end
-                            (list 'font-lock-face 'font-lock-warning-face))
-                         (phps-mode-lex-analyzer--set-region-syntax-color
-                          error-start
-                          (point-max)
-                          (list 'font-lock-face 'font-lock-warning-face))))
-                     (display-warning
-                      'phps-mode
-                      error-message
-                      :warning
-                      "*PHPs Lexer Errors*"))
+               (cond
+
+                ((equal error-type 'phps-lexer-error)
+                 (when error-start
+                   (if error-end
+                       (phps-mode-lex-analyzer--set-region-syntax-color
+                        error-start
+                        error-end
+                        (list 'font-lock-face 'font-lock-warning-face))
+                     (phps-mode-lex-analyzer--set-region-syntax-color
+                      error-start
+                      (point-max)
+                      (list 'font-lock-face 'font-lock-warning-face))))
+                 (display-warning
+                  'phps-mode
+                  error-message
+                  :warning
+                  "*PHPs Lexer Errors*"))
+
+                ((equal error-type 'phps-parser-error)
+                 (phps-mode-lex-analyzer--set-region-syntax-color
+                  (nth 5 result)
+                  (point-max)
+                  (list 'font-lock-face 'font-lock-warning-face))
+                 (display-warning
+                  'phps-mode
+                  (nth 2 result)
+                  :warning
+                  "*PHPs Parser Errors*"))
+
+                (t
                  (display-warning
                   error-type
                   error-message
-                  :warning)))))))
+                  :warning))
+
+                )
+
+               )))))
 
      nil
 
@@ -503,24 +523,49 @@
      buffer-name
 
      (lambda()
-       (let* ((lex-result
-               (phps-mode-lex-analyzer--lex-string
-                buffer-contents
-                incremental-start-new-buffer
-                point-max
-                head-states
-                incremental-state
-                incremental-state-stack
-                incremental-heredoc-label
-                incremental-heredoc-label-stack
-                incremental-nest-location-stack
-                head-tokens))
-              (processed-result
-               (phps-mode-lex-analyzer--process-tokens-in-string
-                (nth 0 lex-result)
-                buffer-contents)))
-         ;; TODO Async parse here?
-         (list lex-result processed-result)))
+       (let ((lex-result
+              (phps-mode-lex-analyzer--lex-string
+               buffer-contents
+               incremental-start-new-buffer
+               point-max
+               head-states
+               incremental-state
+               incremental-state-stack
+               incremental-heredoc-label
+               incremental-heredoc-label-stack
+               incremental-nest-location-stack
+               head-tokens))
+             (parse-trail))
+
+         ;; Prepare parser
+         (setq
+          phps-mode-lex-analyzer--parse-trail
+          nil)
+         (setq
+          phps-mode-lex-analyzer--parse-error
+          nil)
+         (setq
+          phps-mode-parser-tokens
+          (nth 0 lex-result))
+
+         (condition-case conditions
+             (progn
+               (setq
+                parse-trail
+                (phps-mode-parser-parse)))
+           (error
+            (signal
+             'phps-parser-error
+             conditions)))
+
+         (let ((processed-result
+                (phps-mode-lex-analyzer--process-tokens-in-string
+                 (nth 0 lex-result)
+                 buffer-contents)))
+           (list
+            lex-result
+            processed-result
+            parse-trail))))
 
      (lambda(result)
        (when (get-buffer buffer-name)
@@ -538,27 +583,6 @@
              (setq phps-mode-lex-analyzer--heredoc-label (nth 4 lex-result))
              (setq phps-mode-lex-analyzer--heredoc-label-stack (nth 5 lex-result))
              (setq phps-mode-lex-analyzer--nest-location-stack (nth 6 lex-result))
-
-             ;; TODO Synchronous parse here?
-             (setq phps-mode-lex-analyzer--parse-trail nil)
-             (setq phps-mode-lex-analyzer--parse-error nil)
-             (setq phps-mode-parser-tokens phps-mode-lex-analyzer--tokens)
-             (condition-case conditions
-                 (progn
-                   (setq
-                    phps-mode-lex-analyzer--parse-trail
-                    (phps-mode-parser-parse)))
-               (error
-                (message "GOT ERROR 1: %S" conditions)
-                (setq
-                 phps-mode-lex-analyzer--parse-error
-                 conditions)))
-             ;; (when phps-mode-lex-analyzer--parse-error
-             ;;   (display-warning
-             ;;    'phps-mode
-             ;;    phps-mode-lex-analyzer--parse-error
-             ;;    :warning
-             ;;    "*PHPs Parse Errors*"))
 
              ;; Save processed result
              (setq phps-mode-lex-analyzer--processed-buffer-p t)
@@ -592,27 +616,41 @@
              (phps-mode-lex-analyzer--reset-local-variables)
 
              (when error-message
-               (if (equal error-type 'phps-lexer-error)
-                   (progn
-                     (when error-start
-                       (if error-end
-                           (phps-mode-lex-analyzer--set-region-syntax-color
-                            error-start
-                            error-end
-                            (list 'font-lock-face 'font-lock-warning-face))
-                         (phps-mode-lex-analyzer--set-region-syntax-color
-                          error-start
-                          (point-max)
-                          (list 'font-lock-face 'font-lock-warning-face))))
-                     (display-warning
-                      'phps-mode
-                      error-message
-                      :warning
-                      "*PHPs Lexer Errors*"))
+               (cond
+
+                ((equal error-type 'phps-lexer-error)
+                 (when error-start
+                   (if error-end
+                       (phps-mode-lex-analyzer--set-region-syntax-color
+                        error-start
+                        error-end
+                        (list 'font-lock-face 'font-lock-warning-face))
+                     (phps-mode-lex-analyzer--set-region-syntax-color
+                      error-start
+                      (point-max)
+                      (list 'font-lock-face 'font-lock-warning-face))))
+                 (display-warning
+                  'phps-mode
+                  error-message
+                  :warning
+                  "*PHPs Lexer Errors*"))
+
+                ((equal error-type 'phps-parser-error)
+                 (phps-mode-lex-analyzer--set-region-syntax-color
+                  (nth 5 result)
+                  (point-max)
+                  (list 'font-lock-face 'font-lock-warning-face))
+                 (display-warning
+                  'phps-mode
+                  (nth 2 result)
+                  :warning
+                  "*PHPs Parser Errors*"))
+
+                (t
                  (display-warning
                   error-type
                   error-message
-                  :warning)))))))
+                  :warning))))))))
 
      nil
      async

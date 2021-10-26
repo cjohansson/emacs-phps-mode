@@ -52,7 +52,7 @@
 
 (defvar
   phps-mode-automation-grammar--header
-  "\n\n(defvar-local\n phps-mode-parser-position\n nil\n \"Position of parser.\")\n\n(defvar-local\n phps-mode-parser-tokens\n nil\n \"Tokens for parser.\")\n\n"
+  "\n\n(defvar-local\n phps-mode-parser-position\n nil\n \"Position of parser.\")\n\n(defvar-local\n phps-mode-parser-tokens\n nil\n \"Tokens for parser.\")\n\n(define-error\n 'phps-parser-error\n \"PHPs Lexer Error\")\n\n"
   "Header contents for parser.")
 
 (defvar
