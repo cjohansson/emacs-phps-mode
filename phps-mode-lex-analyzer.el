@@ -93,6 +93,12 @@
 (defvar-local phps-mode-lex-analyzer--nest-location-stack nil
   "Nest location stack.")
 
+(defvar-local phps-mode-lex-analyzer--parse-trail nil
+  "Valid parse trail or nil.")
+
+(defvar-local phps-mode-lex-analyzer--parse-error nil
+  "Non-nil means an error.")
+
 
 ;; FUNCTIONS
 
@@ -387,7 +393,10 @@
                (phps-mode-lex-analyzer--process-tokens-in-string
                 (nth 0 lex-result)
                 buffer-contents)))
-         (list lex-result processed-result)))
+         ;; TODO Async parse here?
+         (list
+          lex-result
+          processed-result)))
 
      (lambda(result)
        (when (get-buffer buffer-name)
@@ -403,6 +412,27 @@
              (setq phps-mode-lex-analyzer--heredoc-label (nth 4 lex-result))
              (setq phps-mode-lex-analyzer--heredoc-label-stack (nth 5 lex-result))
              (setq phps-mode-lex-analyzer--nest-location-stack (nth 6 lex-result))
+
+             ;; TODO Synchronous parse here?
+             (setq phps-mode-lex-analyzer--parse-trail nil)
+             (setq phps-mode-lex-analyzer--parse-error nil)
+             (setq phps-mode-parser-tokens phps-mode-lex-analyzer--tokens)
+             (condition-case conditions
+                 (progn
+                   (setq
+                    phps-mode-lex-analyzer--parse-trail
+                    (phps-mode-parser-parse)))
+               (error
+                (message "GOT ERROR 2: %S" conditions)
+                (setq
+                 phps-mode-lex-analyzer--parse-error
+                 conditions)))
+             ;; (when phps-mode-lex-analyzer--parse-error
+             ;;   (display-warning
+             ;;    'phps-mode
+             ;;    phps-mode-lex-analyzer--parse-error
+             ;;    :warning
+             ;;    "*PHPs Parse Errors*"))
 
              ;; Save processed result
              (setq phps-mode-lex-analyzer--processed-buffer-p t)
@@ -489,6 +519,7 @@
                (phps-mode-lex-analyzer--process-tokens-in-string
                 (nth 0 lex-result)
                 buffer-contents)))
+         ;; TODO Async parse here?
          (list lex-result processed-result)))
 
      (lambda(result)
@@ -507,6 +538,27 @@
              (setq phps-mode-lex-analyzer--heredoc-label (nth 4 lex-result))
              (setq phps-mode-lex-analyzer--heredoc-label-stack (nth 5 lex-result))
              (setq phps-mode-lex-analyzer--nest-location-stack (nth 6 lex-result))
+
+             ;; TODO Synchronous parse here?
+             (setq phps-mode-lex-analyzer--parse-trail nil)
+             (setq phps-mode-lex-analyzer--parse-error nil)
+             (setq phps-mode-parser-tokens phps-mode-lex-analyzer--tokens)
+             (condition-case conditions
+                 (progn
+                   (setq
+                    phps-mode-lex-analyzer--parse-trail
+                    (phps-mode-parser-parse)))
+               (error
+                (message "GOT ERROR 1: %S" conditions)
+                (setq
+                 phps-mode-lex-analyzer--parse-error
+                 conditions)))
+             ;; (when phps-mode-lex-analyzer--parse-error
+             ;;   (display-warning
+             ;;    'phps-mode
+             ;;    phps-mode-lex-analyzer--parse-error
+             ;;    :warning
+             ;;    "*PHPs Parse Errors*"))
 
              ;; Save processed result
              (setq phps-mode-lex-analyzer--processed-buffer-p t)
@@ -3125,7 +3177,7 @@ SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
   (unless phps-mode-lex-analyzer--state
     (setq phps-mode-lex-analyzer--state 'ST_INITIAL)))
 
-(defun phps-mode-lex-analyzer--lex-string (contents &optional start end states state state-stack heredoc-label heredoc-label-stack nest-location-stack tokens parse)
+(defun phps-mode-lex-analyzer--lex-string (contents &optional start end states state state-stack heredoc-label heredoc-label-stack nest-location-stack tokens)
   "Run lexer on CONTENTS."
   ;; Create a separate buffer, run lexer inside of it, catch errors and return them
   ;; to enable nice presentation
