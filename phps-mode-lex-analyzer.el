@@ -34,6 +34,7 @@
 
 (require 'phps-mode-lexer)
 (require 'phps-mode-macros)
+(require 'phps-mode-parser)
 (require 'phps-mode-serial)
 
 (require 'semantic)
@@ -3124,7 +3125,7 @@ SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
   (unless phps-mode-lex-analyzer--state
     (setq phps-mode-lex-analyzer--state 'ST_INITIAL)))
 
-(defun phps-mode-lex-analyzer--lex-string (contents &optional start end states state state-stack heredoc-label heredoc-label-stack nest-location-stack tokens)
+(defun phps-mode-lex-analyzer--lex-string (contents &optional start end states state state-stack heredoc-label heredoc-label-stack nest-location-stack tokens parse)
   "Run lexer on CONTENTS."
   ;; Create a separate buffer, run lexer inside of it, catch errors and return them
   ;; to enable nice presentation
@@ -3177,13 +3178,8 @@ SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
               ;; Run lexer or incremental lexer
               (progn
                 (if (and start end)
-                    (let ((incremental-tokens (semantic-lex start end)))
-                      (setq
-                       phps-mode-lex-analyzer--tokens
-                       (append tokens incremental-tokens)))
-                  (setq
-                   phps-mode-lex-analyzer--tokens
-                   (semantic-lex-buffer)))
+                    (semantic-lex start end)
+                   (semantic-lex-buffer))
                 (setq got-error nil))
             (when got-error
               (kill-buffer))))
@@ -3196,7 +3192,13 @@ SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
         (setq heredoc-label phps-mode-lexer--heredoc-label)
         (setq heredoc-label-stack phps-mode-lexer--heredoc-label-stack)
         (kill-buffer))))
-  (list tokens states state state-stack heredoc-label heredoc-label-stack))
+  (list
+   tokens
+   states
+   state
+   state-stack
+   heredoc-label
+   heredoc-label-stack))
 
 (provide 'phps-mode-lex-analyzer)
 
