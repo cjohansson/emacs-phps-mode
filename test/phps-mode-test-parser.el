@@ -280,6 +280,13 @@
 
   ;; TODO Make this work
   ;; (phps-mode-test-parser--buffer-contents
+  ;;  "<?php echo 'here' ?>"
+  ;;  "Expression without trailing semi-colon but with close tag"
+  ;;  (lambda()
+  ;;    (phps-mode-parser-parse)))
+
+  ;; TODO Make this work
+  ;; (phps-mode-test-parser--buffer-contents
   ;;  "<?php\n$food = 'cake';\n\n$return_value = match ($food) {\n    'apple' => 'This food is an apple',\n    'bar' => 'This food is a bar',\n    'cake' => 'This food is a cake',\n};\n\nvar_dump($return_value);\n?>"
   ;;  "Example #2 Basic match usage"
   ;;  (lambda()
