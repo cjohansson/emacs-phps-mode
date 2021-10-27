@@ -454,18 +454,28 @@
              (setq phps-mode-lex-analyzer--parse-trail parse-trail)
              (setq phps-mode-lex-analyzer--parse-error parse-error)
 
-             ;; Display parser error (if any)
+             ;; Signal parser error (if any)
              (when phps-mode-lex-analyzer--parse-error
-               (setq phps-mode-serial--status 'error)
+
+               ;; Paint error
                (phps-mode-lex-analyzer--set-region-syntax-color
                 (nth 4 phps-mode-lex-analyzer--parse-error)
                 (point-max)
                 (list 'font-lock-face 'font-lock-warning-face))
+
+               ;; Display error
                (display-warning
                 'phps-mode
                 (nth 1 phps-mode-lex-analyzer--parse-error)
                 :warning
-                "*PHPs Parser Errors*"))))))
+                "*PHPs Parser Errors*")
+
+               ;; Signal that causes updated mode-line status
+               (signal
+                'phps-parser-error
+                (list
+                 (nth 1 phps-mode-lex-analyzer--parse-error)
+                 (nth 4 phps-mode-lex-analyzer--parse-error))))))))
 
      (lambda(result)
        (when (get-buffer buffer-name)
@@ -474,7 +484,6 @@
                  (error-message (nth 1 result))
                  (error-start (nth 2 result))
                  (error-end (nth 3 result)))
-
              (phps-mode-lex-analyzer--reset-local-variables)
 
              (when error-message
@@ -496,17 +505,6 @@
                   error-message
                   :warning
                   "*PHPs Lexer Errors*"))
-
-                ((equal error-type 'phps-parser-error)
-                 (phps-mode-lex-analyzer--set-region-syntax-color
-                  (nth 5 result)
-                  (point-max)
-                  (list 'font-lock-face 'font-lock-warning-face))
-                 (display-warning
-                  'phps-mode
-                  (nth 2 result)
-                  :warning
-                  "*PHPs Parser Errors*"))
 
                 (t
                  (display-warning
@@ -622,18 +620,28 @@
              (setq phps-mode-lex-analyzer--parse-trail parse-trail)
              (setq phps-mode-lex-analyzer--parse-error parse-error)
 
-             ;; Display parser error (if any)
+             ;; Signal parser error (if any)
              (when phps-mode-lex-analyzer--parse-error
-               (setq phps-mode-serial--status 'error)
+
+               ;; Paint error
                (phps-mode-lex-analyzer--set-region-syntax-color
                 (nth 4 phps-mode-lex-analyzer--parse-error)
                 (point-max)
                 (list 'font-lock-face 'font-lock-warning-face))
+
+               ;; Display error
                (display-warning
                 'phps-mode
                 (nth 1 phps-mode-lex-analyzer--parse-error)
                 :warning
-                "*PHPs Parser Errors*"))))))
+                "*PHPs Parser Errors*")
+
+               ;; Signal that causes updated mode-line status
+               (signal
+                'phps-parser-error
+                (list
+                 (nth 1 phps-mode-lex-analyzer--parse-error)
+                 (nth 4 phps-mode-lex-analyzer--parse-error))))))))
 
      (lambda(result)
        (when (get-buffer buffer-name)
@@ -664,17 +672,6 @@
                   error-message
                   :warning
                   "*PHPs Lexer Errors*"))
-
-                ((equal error-type 'phps-parser-error)
-                 (phps-mode-lex-analyzer--set-region-syntax-color
-                  (nth 5 result)
-                  (point-max)
-                  (list 'font-lock-face 'font-lock-warning-face))
-                 (display-warning
-                  'phps-mode
-                  (nth 2 result)
-                  :warning
-                  "*PHPs Parser Errors*"))
 
                 (t
                  (display-warning
