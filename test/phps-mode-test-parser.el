@@ -266,6 +266,25 @@
    (lambda()
      (phps-mode-parser-parse)))
 
+  (phps-mode-test-parser--buffer-contents
+   "<?php\n\n//exit program normally\nexit;\nexit();\nexit(0);\n\n//exit with an error code\nexit(1);\nexit(0376); //octal\n\n?>"
+   "Example #2 exit status example"
+   (lambda()
+     (phps-mode-parser-parse)))
+
+  ;; TODO Make this work
+  ;; (phps-mode-test-parser--buffer-contents
+  ;;  "<?php\n$food = 'cake';\n\n$return_value = match ($food) {\n    'apple' => 'This food is an apple',\n    'bar' => 'This food is a bar',\n    'cake' => 'This food is a cake',\n};\n\nvar_dump($return_value);\n?>"
+  ;;  "Example #2 Basic match usage"
+  ;;  (lambda()
+  ;;    (phps-mode-parser-parse)))
+
+  ;; TODO Make this work
+  ;; (phps-mode-test-parser--buffer-contents
+  ;;  "<?php\n\n//die program normally\ndie;\ndie();\ndie(0);\n\n//die with an error code\ndie(1);\ndue(0376); //octal\n\n?>"
+  ;;  "Example #2 die status example"
+  ;;  (lambda()
+  ;;    (phps-mode-parser-parse)))
 
   (message "\n-- Ran tests for parser boundaries. --"))
 
