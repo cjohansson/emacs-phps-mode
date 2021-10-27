@@ -254,19 +254,17 @@
    (lambda()
      (phps-mode-parser-parse)))
 
-  ;; TODO Make this work
-  ;; (phps-mode-test-parser--buffer-contents
-  ;;  "<?php\necho $array['abc'];\necho \"My $array[12] random statement\";\n"
-  ;;  "Long inside array offset"
-  ;;  (lambda()
-  ;;    (phps-mode-parser-parse)))
+  (phps-mode-test-parser--buffer-contents
+   "<?php\necho \"My $array[12] random statement\";\n"
+   "Long inside array offset"
+   (lambda()
+     (phps-mode-parser-parse)))
 
-  ;; TODO Make this work
-  ;; (phps-mode-test-parser--buffer-contents
-  ;;  "<?php\n\n$k = 'key';\n\necho \"\\$a['{$k}']\";"
-  ;;  "A tricky case where variable inside double quote is escaped"
-  ;;  (lambda()
-  ;;    (phps-mode-parser-parse)))
+  (phps-mode-test-parser--buffer-contents
+   "<?php\n\necho \"\\$a['{$k}']\";"
+   "A tricky case where variable inside double quote is escaped"
+   (lambda()
+     (phps-mode-parser-parse)))
 
 
   (message "\n-- Ran tests for parser boundaries. --"))
@@ -282,18 +280,6 @@
 (phps-mode-test-parser)
 
 (provide 'phps-mode-test-parser)
-
-;; TODO
-;; phps-mode-parser.el:65:167: Warning: reference to free variable
-;;     ‘phps-mode-lexer--generated-new-tokens-index’
-;; phps-mode-parser.el:65:322: Warning: reference to free variable
-;;     ‘phps-mode-lexer--generated-new-tokens’
-;; phps-mode-parser.el:65:406: Warning: reference to free variable
-;;     ‘semantic-lex-end-point’
-
-;; In end of data:
-;; phps-mode-parser.el:65:271: Warning: the function ‘phps-mode-lexer--re2c’ is
-;;     not known to be defined.
 
 
 ;;; phps-mode-test-parser.el ends here

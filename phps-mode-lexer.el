@@ -24,9 +24,9 @@
 ;; any higher order meta-lexer logic goes into `phps-mode-lex-analyzer.el'.
 ;;
 ;; Features:
-;; * Defines the lexer for this grammar based on the Zend PHP Lexer at
-;;  `https://github.com/php/php-src/blob/master/Zend/zend_language_scanner.l'
-;;  which is using re2c.
+;; * Defines the lexer for this grammar based on the Zend PHP 8.0 Lexer at
+;; https://raw.githubusercontent.com/php/php-src/php-8.0.0/Zend/zend_language_parser.y
+;; which is using re2c.
 
 ;;; Code:
 
@@ -1681,12 +1681,12 @@
 
                          ;; (message "Found starting expression inside double-quoted string at: %s %s" start variable-start)
                          (phps-mode-lexer--return-token-with-val
-                          'T_CONSTANT_ENCAPSED_STRING
+                          'T_ENCAPSED_AND_WHITESPACE
                           start
                           variable-start)))
                    (progn
                      (phps-mode-lexer--return-token-with-val
-                      'T_CONSTANT_ENCAPSED_STRING
+                      'T_ENCAPSED_AND_WHITESPACE
                       start
                       end)
                      ;; (message "Found end of quote at %s-%s, moving ahead after '%s'" start end (buffer-substring-no-properties start end))
