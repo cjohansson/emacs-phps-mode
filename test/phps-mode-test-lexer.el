@@ -72,14 +72,13 @@
      phps-mode-lex-analyzer--tokens
      '((T_INLINE_HTML 1 . 39) (T_OPEN_TAG 39 . 45) (T_EXIT 47 . 51) (";" 51 . 52) (T_CLOSE_TAG 53 . 55) (T_INLINE_HTML 55 . 80) (T_OPEN_TAG 80 . 86) (T_EXIT 86 . 90) (";" 90 . 91) (T_CLOSE_TAG 92 . 94)))))
 
-  ;; TODO Make parser handle this
-  ;; (phps-mode-test--with-buffer
-  ;;  "<?php\n\n$k = 'key';\n\necho \"\\$a['{$k}']\";"
-  ;;  "A tricky case where variable inside double quote is escaped"
-  ;;  ;; (message "Tokens: %s" phps-mode-lex-analyzer--tokens)
-  ;;  (should (equal
-  ;;           phps-mode-lex-analyzer--tokens
-  ;;           '((T_OPEN_TAG 1 . 7) (T_VARIABLE 8 . 10) ("=" 11 . 12) (T_CONSTANT_ENCAPSED_STRING 13 . 18) (";" 18 . 19) (T_ECHO 21 . 25) ("\"" 26 . 27) (T_CONSTANT_ENCAPSED_STRING 27 . 32) (T_CURLY_OPEN 32 . 33) (T_VARIABLE 33 . 35) ("}" 35 . 36) (T_CONSTANT_ENCAPSED_STRING 36 . 38) ("\"" 38 . 39) (";" 39 . 40)))))
+  (phps-mode-test--with-buffer
+   "<?php\n\n$k = 'key';\n\necho \"\\$a['{$k}']\";"
+   "A tricky case where variable inside double quote is escaped"
+   ;; (message "Tokens: %s" phps-mode-lex-analyzer--tokens)
+   (should (equal
+            phps-mode-lex-analyzer--tokens
+            '((T_OPEN_TAG 1 . 7) (T_VARIABLE 8 . 10) ("=" 11 . 12) (T_CONSTANT_ENCAPSED_STRING 13 . 18) (";" 18 . 19) (T_ECHO 21 . 25) ("\"" 26 . 27) (T_CONSTANT_ENCAPSED_STRING 27 . 32) (T_CURLY_OPEN 32 . 33) (T_VARIABLE 33 . 35) ("}" 35 . 36) (T_CONSTANT_ENCAPSED_STRING 36 . 38) ("\"" 38 . 39) (";" 39 . 40)))))
 
   )
 
@@ -209,15 +208,14 @@
      phps-mode-lex-analyzer--tokens
      '((T_OPEN_TAG 1 . 7) (T_VARIABLE 7 . 16) ("=" 17 . 18) (T_VARIABLE 19 . 24) ("[" 24 . 25) (T_CONSTANT_ENCAPSED_STRING 25 . 31) ("]" 31 . 32) (T_COALESCE 33 . 35) (T_CONSTANT_ENCAPSED_STRING 36 . 44) (";" 44 . 45) (T_VARIABLE 46 . 51) (T_OBJECT_OPERATOR 51 . 53) (T_STRING 53 . 60) (T_OBJECT_OPERATOR 60 . 62) (T_STRING 62 . 66) ("[" 66 . 67) (T_CONSTANT_ENCAPSED_STRING 67 . 77) ("]" 77 . 78) ("[" 78 . 79) (T_CONSTANT_ENCAPSED_STRING 79 . 88) ("]" 88 . 89) (T_COALESCE_EQUAL 90 . 93) (T_CONSTANT_ENCAPSED_STRING 94 . 101) (";" 101 . 102)))))
 
-  ;; TODO Uncomment when parser handles this
-  ;; (phps-mode-test--with-buffer
-  ;;  "<?php\necho $array['abc'];\necho \"My $array[12] random statement\";\n"
-  ;;  "Long inside array offset"
-  ;;  ;; (message "Tokens: %s" phps-mode-lex-analyzer--tokens)
-  ;;  (should
-  ;;   (equal
-  ;;    phps-mode-lex-analyzer--tokens
-  ;;    '((T_OPEN_TAG 1 . 7) (T_ECHO 7 . 11) (T_VARIABLE 12 . 18) ("[" 18 . 19) (T_CONSTANT_ENCAPSED_STRING 19 . 24) ("]" 24 . 25) (";" 25 . 26) (T_ECHO 27 . 31) ("\"" 32 . 33) (T_CONSTANT_ENCAPSED_STRING 33 . 36) (T_VARIABLE 36 . 42) ("[" 42 . 43) (T_NUM_STRING 43 . 45) ("]" 45 . 46) (T_CONSTANT_ENCAPSED_STRING 46 . 63) ("\"" 63 . 64) (";" 64 . 65)))))
+  (phps-mode-test--with-buffer
+   "<?php\necho $array['abc'];\necho \"My $array[12] random statement\";\n"
+   "Long inside array offset"
+   ;; (message "Tokens: %s" phps-mode-lex-analyzer--tokens)
+   (should
+    (equal
+     phps-mode-lex-analyzer--tokens
+     '((T_OPEN_TAG 1 . 7) (T_ECHO 7 . 11) (T_VARIABLE 12 . 18) ("[" 18 . 19) (T_CONSTANT_ENCAPSED_STRING 19 . 24) ("]" 24 . 25) (";" 25 . 26) (T_ECHO 27 . 31) ("\"" 32 . 33) (T_CONSTANT_ENCAPSED_STRING 33 . 36) (T_VARIABLE 36 . 42) ("[" 42 . 43) (T_NUM_STRING 43 . 45) ("]" 45 . 46) (T_CONSTANT_ENCAPSED_STRING 46 . 63) ("\"" 63 . 64) (";" 64 . 65)))))
 
   (phps-mode-test--with-buffer
    "<?php\n/*my comment */\n/** my doc comment */"

@@ -456,13 +456,14 @@
 
              ;; Display parser error (if any)
              (when phps-mode-lex-analyzer--parse-error
+               (setq phps-mode-serial--status 'error)
                (phps-mode-lex-analyzer--set-region-syntax-color
                 (nth 4 phps-mode-lex-analyzer--parse-error)
                 (point-max)
                 (list 'font-lock-face 'font-lock-warning-face))
                (display-warning
                 'phps-mode
-                (nth 2 phps-mode-lex-analyzer--parse-error)
+                (nth 1 phps-mode-lex-analyzer--parse-error)
                 :warning
                 "*PHPs Parser Errors*"))))))
 
@@ -623,13 +624,14 @@
 
              ;; Display parser error (if any)
              (when phps-mode-lex-analyzer--parse-error
+               (setq phps-mode-serial--status 'error)
                (phps-mode-lex-analyzer--set-region-syntax-color
                 (nth 4 phps-mode-lex-analyzer--parse-error)
                 (point-max)
                 (list 'font-lock-face 'font-lock-warning-face))
                (display-warning
                 'phps-mode
-                (nth 2 phps-mode-lex-analyzer--parse-error)
+                (nth 1 phps-mode-lex-analyzer--parse-error)
                 :warning
                 "*PHPs Parser Errors*"))))))
 
