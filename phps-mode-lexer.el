@@ -518,7 +518,7 @@
 
       (phps-mode-lexer--match-macro
        (and ST_IN_SCRIPTING (looking-at "die"))
-       (phps-mode-lexer--return-token-with-indent 'T_DIE))
+       (phps-mode-lexer--return-token-with-indent 'T_EXIT))
 
       (phps-mode-lexer--match-macro
        (and ST_IN_SCRIPTING (looking-at "fn"))

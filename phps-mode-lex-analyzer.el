@@ -187,7 +187,6 @@
        (equal token-name 'T_PAAMAYIM_NEKUDOTAYIM)
        (equal token-name 'T_NS_SEPARATOR)
        (equal token-name 'T_EXIT)
-       (equal token-name 'T_DIE)
        (equal token-name 'T_RETURN)
        (equal token-name 'T_YIELD_FROM)
        (equal token-name 'T_YIELD)
