@@ -139,7 +139,6 @@
                     ;; Compatibility with parser
                     (unless (or
                              (equal token-type 'T_OPEN_TAG)
-                             (equal token-type 'T_CLOSE_TAG)
                              (equal token-type 'T_DOC_COMMENT)
                              (equal token-type 'T_COMMENT))
                       (setq-local
@@ -162,13 +161,13 @@
 
           ;; Compatibility with parser
           (when (equal (car token) 'T_OPEN_TAG_WITH_ECHO)
-            (setf
-             (car token)
-             'T_ECHO))
+            (setq
+             token
+             `(T_ECHO ,(car (cdr token)) . ,(cdr (cdr token)))))
           (when (equal (car token) 'T_CLOSE_TAG)
-            (setf
-             (car token)
-             ";"))
+            (setq
+             token
+             `(";" ,(car (cdr token)) . ,(cdr (cdr token)))))
 
           token))))
   "The custom lex-analyzer.")
