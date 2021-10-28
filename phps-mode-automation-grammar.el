@@ -135,6 +135,8 @@
                       (car (cdr token))
                       temp-token-list-index)
                      phps-mode-parser-position)
+
+                    ;; Compatibility with parser
                     (unless (or
                              (equal token-type 'T_OPEN_TAG)
                              (equal token-type 'T_CLOSE_TAG)
@@ -151,17 +153,23 @@
                  temp-token-list-index
                  (1+ temp-token-list-index))
                 )))))
-
       (when
           token-list-index
         (let ((token
                (nth
                 token-list-index
                 phps-mode-parser-tokens)))
+
+          ;; Compatibility with parser
           (when (equal (car token) 'T_OPEN_TAG_WITH_ECHO)
             (setf
              (car token)
              'T_ECHO))
+          (when (equal (car token) 'T_CLOSE_TAG)
+            (setf
+             (car token)
+             ";"))
+
           token))))
   "The custom lex-analyzer.")
 

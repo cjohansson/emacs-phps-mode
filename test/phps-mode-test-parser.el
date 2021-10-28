@@ -111,7 +111,7 @@
    (lambda()
      (should
       (equal
-       '(80 449 456 403 325 324 152 102 79)
+       '(80 449 456 403 325 324 152 102 79 159 102 79)
        (phps-mode-parser-parse)))))
 
   (phps-mode-test-parser--buffer-contents
@@ -132,7 +132,7 @@
 
   (phps-mode-test-parser--buffer-contents
    "<?php\necho 'blaha'"
-   "Basic echo test 5 with invalid code"
+   "Basic echo test 5 with valid code in parser mode only"
    (lambda()
      (should-error
       (phps-mode-parser-parse))))
@@ -155,7 +155,7 @@
        (message "\n")
        (should
         (equal
-         '(80 449 456 403 325 324 152 102 79 153 102 79 449 456 403 325 324 152 102 79 153 102 79)
+         '(80 449 456 403 325 324 152 102 79 159 102 79 153 102 79 449 456 403 325 324 152 102 79 159 102 79 153 102 79)
          parse)))))
 
   (phps-mode-test-parser--buffer-contents
@@ -278,12 +278,11 @@
    (lambda()
      (phps-mode-parser-parse)))
 
-  ;; TODO Make this work
-  ;; (phps-mode-test-parser--buffer-contents
-  ;;  "<?php echo 'here' ?>"
-  ;;  "Expression without trailing semi-colon but with close tag"
-  ;;  (lambda()
-  ;;    (phps-mode-parser-parse)))
+  (phps-mode-test-parser--buffer-contents
+   "<?php echo 'here' ?>"
+   "Expression without trailing semi-colon but with close tag"
+   (lambda()
+     (phps-mode-parser-parse)))
 
   ;; TODO Make this work
   ;; (phps-mode-test-parser--buffer-contents
