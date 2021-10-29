@@ -1,11 +1,11 @@
-# PHPs - Another Semantic Major-Mode for PHP in Emacs
+# PHPs - Semantic Major-Mode for PHP in Emacs
 
 [![License GPL 3](https://img.shields.io/badge/license-GPL_3-green.svg)](https://www.gnu.org/licenses/gpl-3.0.txt)
 [![Build Status](https://api.travis-ci.com/cjohansson/emacs-phps-mode.svg?branch=master)](https://app.travis-ci.com/github/cjohansson/emacs-phps-mode)
 
-**Goal**: An Emacs major mode for PHP scripting language which aims at making a full semantic integration. Currently at *usable* stage.
+**Goal**: An Emacs major mode for PHP scripting language which aims at making a full syntax and semantic integration. Currently at *usable* stage.
 
-This mode does not require PHP installed on your computer because it has a built-in elisp based semantic lexer. It supports all PHP versions and Emacs >= 26.
+This mode does not require PHP installed on your computer because it has a built-in elisp based lexer and parser. It also works over TRAMP for the same reason. It supports Emacs >= 26.
 
 ## Features
 
@@ -29,12 +29,13 @@ This mode does not require PHP installed on your computer because it has a built
 * Support for asynchronous lexer via processes (`async.el`) or threads
 * Mode-line asynchronous status
 * Bookkeeping in lexical-analysis, showing defined and undefined variables via syntax coloring (requires a theme that has distinct colors for 'font-lock-warning-face and 'font-lock-variable-name-face)
+* Canonical LR(1) Parser automatically generated from official PHP 8.0 LALR YACC grammar
 
 ## Roadmap
 
-* 1. LALR(1) Parser support
+* 1. Fix parser support for match-expressions
 * 2. Improved token-blind indentation (alternative and inline control structures)
-* 3. Other enhancements
+* 3. Bookkeeping and imenu-generation via syntax directed translations via the parser
 
 ## Keymap
 
@@ -123,4 +124,3 @@ Enable with:
 * [Heuristics](docs/heuristics.md)
 * [Indentation algorithm](docs/indentation.md)
 * [Imenu algorithm](docs/imenu.md)
-* [TODO](docs/todo.md)
