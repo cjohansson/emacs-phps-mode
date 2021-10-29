@@ -288,8 +288,15 @@
 
   ;; TODO Make this work
   ;; (phps-mode-test-parser--buffer-contents
+  ;;  "<?php\n$food = 'cake';\n\n$return_value = match ($food) {\n    default => 'This food is an apple',\n};\n\nvar_dump($return_value);\n?>"
+  ;;  "Basic match usage 1"
+  ;;  (lambda()
+  ;;    (phps-mode-parser-parse)))
+
+  ;; TODO Make this work
+  ;; (phps-mode-test-parser--buffer-contents
   ;;  "<?php\n$food = 'cake';\n\n$return_value = match ($food) {\n    'apple' => 'This food is an apple',\n    'bar' => 'This food is a bar',\n    'cake' => 'This food is a cake',\n};\n\nvar_dump($return_value);\n?>"
-  ;;  "Example #2 Basic match usage"
+  ;;  "Basic match usage 2"
   ;;  (lambda()
   ;;    (phps-mode-parser-parse)))
 
