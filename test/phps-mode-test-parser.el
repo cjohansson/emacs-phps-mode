@@ -72,8 +72,10 @@
     (semantic-lex-buffer)
     (setq
      phps-mode-parser-tokens
-     (reverse phps-mode-lexer--generated-tokens))
-    (message "Lexer tokens:\n%S\n" phps-mode-parser-tokens)
+     (phps-mode-lex-analyzer--generate-parser-tokens
+      phps-mode-lexer--generated-tokens))
+    (message "Lexer tokens:\n%S\n" phps-mode-lexer--generated-tokens)
+    (message "Parser tokens:\n%S\n" phps-mode-parser-tokens)
 
     ;; Run test
     (funcall logic)

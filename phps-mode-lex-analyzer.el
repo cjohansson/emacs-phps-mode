@@ -3196,6 +3196,50 @@ SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
   (unless phps-mode-lex-analyzer--state
     (setq phps-mode-lex-analyzer--state 'ST_INITIAL)))
 
+(defun phps-mode-lex-analyzer--generate-parser-tokens (lexer-tokens)
+  "Generate parser-tokens from LEXER-TOKENS which are in reversed order."
+  (let ((parser-tokens (make-hash-table :test 'equal))
+        (previous-start))
+    (dolist (token lexer-tokens)
+      (let ((token-type (car token))
+            (token-start (car (cdr token)))
+            (token-end (cdr (cdr token))))
+        (if (or
+             (equal token-type 'T_OPEN_TAG)
+             (equal token-type 'T_DOC_COMMENT)
+             (equal token-type 'T_COMMENT))
+            (when previous-start
+              (puthash
+               token-start
+               previous-start
+               parser-tokens))
+          (cond
+           ((equal token-type 'T_CLOSE_TAG)
+            (setq
+             token
+             `(";" ,token-start . ,token-end)))
+           ((equal token-type 'T_OPEN_TAG_WITH_ECHO)
+            (setq
+             token
+             `(T_ECHO ,token-start . ,token-end))))
+          (puthash
+           token-start
+           token
+           parser-tokens))
+
+        (when (and
+               previous-start
+               (not
+                   (= previous-start token-end)))
+          (puthash
+           token-end
+           previous-start
+           parser-tokens))
+        (setq
+         previous-start
+         token-start)))
+    parser-tokens))
+
 (defun phps-mode-lex-analyzer--lex-string (contents &optional start end states state state-stack heredoc-label heredoc-label-stack nest-location-stack tokens)
   "Run lexer on CONTENTS."
   ;; Create a separate buffer, run lexer inside of it, catch errors and return them
@@ -3261,15 +3305,18 @@ SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
         (setq state phps-mode-lexer--state)
         (setq state-stack phps-mode-lexer--state-stack)
         (setq states phps-mode-lexer--states)
+
+        ;; NOTE Generate parser tokens here before nreverse destructs list
+        (setq
+         phps-mode-parser-tokens
+         (phps-mode-lex-analyzer--generate-parser-tokens
+          phps-mode-lexer--generated-tokens))
         (setq tokens (nreverse phps-mode-lexer--generated-tokens))
         (setq heredoc-label phps-mode-lexer--heredoc-label)
         (setq heredoc-label-stack phps-mode-lexer--heredoc-label-stack)
         (setq nest-location-stack phps-mode-lexer--nest-location-stack)
 
         ;; Error-free parse here
-        (setq
-         phps-mode-parser-tokens
-         tokens)
         (condition-case conditions
             (progn
               (setq

@@ -25,10 +25,6 @@
 
 
 ;; Just to stop linter from complaining
-(defvar
- phps-mode-parser-position
- nil
- "Position of parser.")
 
 (defvar
   phps-mode-parser-tokens
@@ -52,7 +48,7 @@
 
 (defvar
   phps-mode-automation-grammar--header
-  "\n\n(defvar-local\n phps-mode-parser-position\n nil\n \"Position of parser.\")\n\n(defvar-local\n phps-mode-parser-tokens\n nil\n \"Tokens for parser.\")\n\n(define-error\n 'phps-parser-error\n \"PHPs Lexer Error\")\n\n"
+  "\n\n(defvar-local\n phps-mode-parser-tokens\n nil\n \"Tokens for parser.\")\n\n(define-error\n 'phps-parser-error\n \"PHPs Parser Error\")\n\n"
   "Header contents for parser.")
 
 (defvar
@@ -68,118 +64,26 @@
 (defvar
   phps-mode-automation-grammar--lex-analyzer-function
   (lambda (buffer-index)
-    (let ((token-list-index))
-      (if (and
-           phps-mode-parser-position
-           (= (car (car phps-mode-parser-position)) buffer-index))
-          (progn
-            (setq
-             token-list-index
-             (car (cdr (car phps-mode-parser-position)))))
-
-        ;; Search from last requested index and forward until
-        ;; we find a token starting at or after buffer-index and
-        ;; use this as buffer-index, save buffer-index to
-        ;; token-list-index connection
-        (let ((previous-token-list-index 0))
-          (when (and
-                 phps-mode-parser-position
-                 (< (car (car phps-mode-parser-position)) buffer-index))
-            (setq
-             previous-token-list-index
-             (car (cdr (car phps-mode-parser-position)))))
-
-          (let ((temp-token-list-index
-                 previous-token-list-index)
-                (token-list-size
-                 (length
-                  phps-mode-parser-tokens))
-                (continue t))
-            (while (and
-                    continue
-                    (<
-                     temp-token-list-index
-                     token-list-size))
-              (let ((token
-                     (nth
-                      temp-token-list-index
-                      phps-mode-parser-tokens)))
-
-                ;; When token starts at cursor we found correct index
-                ;; Save it
-                (when (= (car (cdr token)) buffer-index)
-                  (let ((token-type (car token)))
-                    (push
-                     (list
-                      buffer-index
-                      temp-token-list-index)
-                     phps-mode-parser-position)
-                    (unless (or
-                             (equal token-type 'T_OPEN_TAG)
-                             (equal token-type 'T_CLOSE_TAG)
-                             (equal token-type 'T_DOC_COMMENT)
-                             (equal token-type 'T_COMMENT))
-                      (setq
-                       token-list-index
-                       temp-token-list-index)
-                      (setq
-                       continue
-                       nil))))
-
-                ;; When token starts after cursor, flag move of cursor
-                ;; Save it
-                (when (> (car (cdr token)) buffer-index)
-                  (let ((token-type (car token)))
-                    (push
-                     (list
-                      (car (cdr token))
-                      temp-token-list-index)
-                     phps-mode-parser-position)
-
-                    ;; Compatibility with parser
-                    (unless (or
-                             (equal token-type 'T_OPEN_TAG)
-                             (equal token-type 'T_DOC_COMMENT)
-                             (equal token-type 'T_COMMENT))
-                      (setq-local
-                       phps-mode-parser-lex-analyzer--move-to-index-flag
-                       (car (cdr token)))
-                      (setq
-                       continue
-                       nil))))
-
-                (setq
-                 temp-token-list-index
-                 (1+ temp-token-list-index))
-                )))))
-      (when
-          token-list-index
-        (let ((token
-               (nth
-                token-list-index
-                phps-mode-parser-tokens)))
-
-          ;; Compatibility with parser
-          (when (equal (car token) 'T_OPEN_TAG_WITH_ECHO)
-            (setq
-             token
-             `(T_ECHO ,(car (cdr token)) . ,(cdr (cdr token)))))
-          (when (equal (car token) 'T_CLOSE_TAG)
-            (setq
-             token
-             `(";" ,(car (cdr token)) . ,(cdr (cdr token)))))
-
-          token))))
+    (let ((result (gethash buffer-index phps-mode-parser-tokens))
+          (token))
+      (when result
+        (cond
+         ((numberp result)
+          (setq
+           phps-mode-parser-lex-analyzer--move-to-index-flag
+           result))
+         ((listp result)
+          (setq
+           token
+           result))))
+      token))
   "The custom lex-analyzer.")
 
 (defvar
   phps-mode-automation-grammar--lex-analyzer-reset-function
   (lambda()
     (progn
-      ;; Reset buffer-index to token-list-index connections
-      (setq-local
-       phps-mode-parser-position
-       nil)))
+      ))
   "The reset function.")
 
 (defvar
