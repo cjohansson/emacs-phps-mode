@@ -213,6 +213,7 @@
        (equal token-name 'T_INSTANCEOF)
        (equal token-name 'T_AS)
        (equal token-name 'T_SWITCH)
+       (equal token-name 'T_MATCH)
        (equal token-name 'T_ENDSWITCH)
        (equal token-name 'T_CASE)
        (equal token-name 'T_DEFAULT)

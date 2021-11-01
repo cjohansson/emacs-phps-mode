@@ -637,6 +637,10 @@
        (phps-mode-lexer--return-token-with-indent 'T_SWITCH))
 
       (phps-mode-lexer--match-macro
+       (and ST_IN_SCRIPTING (looking-at "match"))
+       (phps-mode-lexer--return-token-with-indent 'T_MATCH))
+
+      (phps-mode-lexer--match-macro
        (and ST_IN_SCRIPTING (looking-at "endswitch"))
        (phps-mode-lexer--return-token-with-indent 'T_ENDSWITCH))
 

@@ -265,7 +265,7 @@
    (should
     (equal
      phps-mode-lex-analyzer--tokens
-     '((T_OPEN_TAG 1 . 7) (T_ECHO 7 . 11) (T_STRING 12 . 17) ("(" 18 . 19) (T_DNUMBER 19 . 22) (")" 22 . 23) ("{" 24 . 25) (T_CONSTANT_ENCAPSED_STRING 28 . 33) (T_DOUBLE_ARROW 34 . 36) (T_CONSTANT_ENCAPSED_STRING 37 . 45) ("," 45 . 46) (T_DNUMBER 49 . 52) (T_DOUBLE_ARROW 53 . 55) (T_CONSTANT_ENCAPSED_STRING 56 . 81) ("," 81 . 82) ("}" 83 . 84) (";" 84 . 85) (T_COMMENT 86 . 113)))))
+     '((T_OPEN_TAG 1 . 7) (T_ECHO 7 . 11) (T_MATCH 12 . 17) ("(" 18 . 19) (T_DNUMBER 19 . 22) (")" 22 . 23) ("{" 24 . 25) (T_CONSTANT_ENCAPSED_STRING 28 . 33) (T_DOUBLE_ARROW 34 . 36) (T_CONSTANT_ENCAPSED_STRING 37 . 45) ("," 45 . 46) (T_DNUMBER 49 . 52) (T_DOUBLE_ARROW 53 . 55) (T_CONSTANT_ENCAPSED_STRING 56 . 81) ("," 81 . 82) ("}" 83 . 84) (";" 84 . 85) (T_COMMENT 86 . 113)))))
 
   (phps-mode-test--with-buffer
    "<?php\n\n$country = $session?->user?->getAddress()?->country;\n"
