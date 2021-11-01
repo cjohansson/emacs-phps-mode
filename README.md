@@ -33,9 +33,8 @@ This mode does not require PHP installed on your computer because it has a built
 
 ## Roadmap
 
-* 1. Fix parser support for match-expressions
-* 2. Improved token-blind indentation (alternative and inline control structures)
-* 3. Bookkeeping and imenu-generation via syntax directed translations via the parser
+* 1. Improved token-blind indentation (alternative and inline control structures)
+* 2. Bookkeeping and imenu-generation via syntax directed translations via the parser
 
 ## Keymap
 
