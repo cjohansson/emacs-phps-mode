@@ -119,41 +119,41 @@
      (phps-mode)
      ,@body
 
-     (let ((lexer-tokens phps-mode-lex-analyzer--tokens))
-       (setq phps-mode-test--native-tokens nil)
-       (with-temp-buffer
-         (let ((filename (expand-file-name "lexer-test.tmp"))
-               (filename2 (expand-file-name "lexer-test2.tmp")))
-           (insert "<?php ini_set('display_errors', false); ini_set('error_reporting', false); if (function_exists('token_get_all')) { $tokens = token_get_all(file_get_contents(\"lexer-test2.tmp\")); echo \"'(\"; foreach ($tokens as $token) { echo \"\n  \"; if (is_array($token)) { echo token_name($token[0]); } else { echo '\"' . $token . '\"'; }} echo \"\n)\";}")
-           (write-file filename)
-           (kill-region (point-min) (point-max))
-           (insert ,source)
-           (write-file filename2)
-           (kill-region (point-min) (point-max))
+     ;; (let ((lexer-tokens phps-mode-lex-analyzer--tokens))
+     ;;   (setq phps-mode-test--native-tokens nil)
+     ;;   (with-temp-buffer
+     ;;     (let ((filename (expand-file-name "lexer-test.tmp"))
+     ;;           (filename2 (expand-file-name "lexer-test2.tmp")))
+     ;;       (insert "<?php ini_set('display_errors', false); ini_set('error_reporting', false); if (function_exists('token_get_all')) { $tokens = token_get_all(file_get_contents(\"lexer-test2.tmp\")); echo \"'(\"; foreach ($tokens as $token) { echo \"\n  \"; if (is_array($token)) { echo token_name($token[0]); } else { echo '\"' . $token . '\"'; }} echo \"\n)\";}")
+     ;;       (write-file filename)
+     ;;       (kill-region (point-min) (point-max))
+     ;;       (insert ,source)
+     ;;       (write-file filename2)
+     ;;       (kill-region (point-min) (point-max))
 
-           (let* ((native-tokens
-                   (call-process
-                    "php"
-                    nil
-                    t
-                    t
-                    (concat "-f" filename))))
-             (when (= native-tokens 0)
-               ;; (message "native-tokens: %S %s" native-tokens (buffer-substring-no-properties (point-min) (point-max)))
-               (let ((tokens (eval (car (read-from-string (buffer-substring-no-properties (point-min) (point-max)))))))
-                 (setq
-                  phps-mode-test--native-tokens
-                  tokens)
-                 (let ((trimmed-tokens))
-                   (dolist (token lexer-tokens)
-                     (push (car token) trimmed-tokens)
-                     )
-                   (setq trimmed-tokens (reverse trimmed-tokens))
-                   (should
-                    (equal
-                     trimmed-tokens
-                     phps-mode-test--native-tokens))
-                   (message "Native tokens matches elisp tokens"))))))))
+     ;;       (let* ((native-tokens
+     ;;               (call-process
+     ;;                "php"
+     ;;                nil
+     ;;                t
+     ;;                t
+     ;;                (concat "-f" filename))))
+     ;;         (when (= native-tokens 0)
+     ;;           ;; (message "native-tokens: %S %s" native-tokens (buffer-substring-no-properties (point-min) (point-max)))
+     ;;           (let ((tokens (eval (car (read-from-string (buffer-substring-no-properties (point-min) (point-max)))))))
+     ;;             (setq
+     ;;              phps-mode-test--native-tokens
+     ;;              tokens)
+     ;;             (let ((trimmed-tokens))
+     ;;               (dolist (token lexer-tokens)
+     ;;                 (push (car token) trimmed-tokens)
+     ;;                 )
+     ;;               (setq trimmed-tokens (reverse trimmed-tokens))
+     ;;               (should
+     ;;                (equal
+     ;;                 trimmed-tokens
+     ;;                 phps-mode-test--native-tokens))
+     ;;               (message "Native tokens matches elisp tokens"))))))))
      
      (kill-buffer test-buffer)
      (when ,title
