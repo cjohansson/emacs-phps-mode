@@ -839,7 +839,8 @@
        (let ((lex-result
                (phps-mode-lex-analyzer--lex-string
                 buffer-contents)))
-         (thread-yield)
+         (when (fboundp 'thread-yield)
+           (thread-yield))
          (let ((processed-result
                 (phps-mode-lex-analyzer--process-tokens-in-string
                  (nth 0 lex-result)
@@ -871,7 +872,8 @@
              (setq phps-mode-lex-analyzer--lines-indent (nth 1 processed-result))
              (setq phps-mode-lex-analyzer--bookkeeping (nth 2 processed-result))
              (phps-mode-lex-analyzer--reset-imenu)
-             (thread-yield)
+             (when (fboundp 'thread-yield)
+               (thread-yield))
 
              ;; Apply syntax color on tokens
              (dolist (token phps-mode-lex-analyzer--tokens)
@@ -976,7 +978,8 @@
                incremental-heredoc-label-stack
                incremental-nest-location-stack
                head-tokens)))
-         (thread-yield)
+         (when (fboundp 'thread-yield)
+           (thread-yield))
          (let ((processed-result
                 (phps-mode-lex-analyzer--process-tokens-in-string
                  (nth 0 lex-result)
@@ -1013,7 +1016,8 @@
              (setq phps-mode-lex-analyzer--lines-indent (nth 1 processed-result))
              (setq phps-mode-lex-analyzer--bookkeeping (nth 2 processed-result))
              (phps-mode-lex-analyzer--reset-imenu)
-             (thread-yield)
+             (when (fboundp 'thread-yield)
+               (thread-yield))
 
              ;; Apply syntax color on tokens
              (dolist (token phps-mode-lex-analyzer--tokens)

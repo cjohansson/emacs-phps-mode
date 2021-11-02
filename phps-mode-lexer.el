@@ -848,7 +848,8 @@
           phps-mode-lexer--tabs-and-spaces ")")))
        (phps-mode-lexer--return-token 'T_UNSET_CAST))
 
-      (thread-yield)
+      (when (fboundp 'thread-yield)
+        (thread-yield))
 
       (phps-mode-lexer--match-macro
        (and ST_IN_SCRIPTING (looking-at "eval"))
@@ -1153,7 +1154,8 @@
              (phps-mode-lexer--return-token 'T_DNUMBER)
            (phps-mode-lexer--return-token 'T_LNUMBER))))
 
-      (thread-yield)
+      (when (fboundp 'thread-yield)
+        (thread-yield))
 
       (phps-mode-lexer--match-macro
        (and ST_VAR_OFFSET (looking-at "\\([0]\\|[1-9][0-9]*\\)"))
@@ -1832,7 +1834,8 @@
               (phps-mode-lexer--re2c)))
         (phps-mode-debug-message
          (message "Found nothing at %d" (point))))))
-  (thread-yield))
+  (when (fboundp 'thread-yield)
+    (thread-yield)))
 
 
 (provide 'phps-mode-lexer)
