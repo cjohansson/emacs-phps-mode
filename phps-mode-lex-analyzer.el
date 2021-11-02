@@ -99,6 +99,607 @@
 (defvar-local phps-mode-lex-analyzer--parse-error nil
   "Non-nil means an error.")
 
+(defvar
+  phps-mode-lex-analyzer--token-for-bookkeeping-p
+  (make-hash-table :test 'equal)
+  "Tokens that are connected to the bookkeeping of symbols.")
+(puthash
+ 'T_VARIABLE
+ t
+ phps-mode-lex-analyzer--token-for-bookkeeping-p)
+(puthash
+ 'T_STRING
+ t
+ phps-mode-lex-analyzer--token-for-bookkeeping-p)
+
+(defvar
+  phps-mode-lex-analyzer--token-font-face
+  (make-hash-table :test 'equal)
+  "Token symbol to font face.")
+
+(puthash
+ 'T_ERROR
+ 'font-lock-warning-face
+ phps-mode-lex-analyzer--token-font-face)
+
+(puthash
+ 'T_OPEN_TAG
+ 'font-lock-constant-face
+ phps-mode-lex-analyzer--token-font-face)
+(puthash
+ 'T_OPEN_TAG_WITH_ECHO
+ 'font-lock-constant-face
+ phps-mode-lex-analyzer--token-font-face)
+(puthash
+ 'T_CLOSE_TAG
+ 'font-lock-constant-face
+ phps-mode-lex-analyzer--token-font-face)
+(puthash
+ 'T_START_HEREDOC
+ 'font-lock-constant-face
+ phps-mode-lex-analyzer--token-font-face)
+(puthash
+ 'T_END_HEREDOC
+ 'font-lock-constant-face
+ phps-mode-lex-analyzer--token-font-face)
+(puthash
+ 'T_ELLIPSIS
+ 'font-lock-constant-face
+ phps-mode-lex-analyzer--token-font-face)
+(puthash
+ 'T_COALESCE
+ 'font-lock-constant-face
+ phps-mode-lex-analyzer--token-font-face)
+(puthash
+ 'T_DOUBLE_ARROW
+ 'font-lock-constant-face
+ phps-mode-lex-analyzer--token-font-face)
+(puthash
+ 'T_DOUBLE_ARROW
+ 'font-lock-constant-face
+ phps-mode-lex-analyzer--token-font-face)
+(puthash
+ 'T_INC
+ 'font-lock-constant-face
+ phps-mode-lex-analyzer--token-font-face)
+(puthash
+ 'T_DEC
+ 'font-lock-constant-face
+ phps-mode-lex-analyzer--token-font-face)
+(puthash
+ 'T_IS_IDENTICAL
+ 'font-lock-constant-face
+ phps-mode-lex-analyzer--token-font-face)
+(puthash
+ 'T_IS_NOT_IDENTICAL
+ 'font-lock-constant-face
+ phps-mode-lex-analyzer--token-font-face)
+(puthash
+ 'T_IS_EQUAL
+ 'font-lock-constant-face
+ phps-mode-lex-analyzer--token-font-face)
+(puthash
+ 'T_IS_NOT_EQUAL
+ 'font-lock-constant-face
+ phps-mode-lex-analyzer--token-font-face)
+(puthash
+ 'T_SPACESHIP
+ 'font-lock-constant-face
+ phps-mode-lex-analyzer--token-font-face)
+(puthash
+ 'T_IS_SMALLER_OR_EQUAL
+ 'font-lock-constant-face
+ phps-mode-lex-analyzer--token-font-face)
+(puthash
+ 'T_IS_GREATER_OR_EQUAL
+ 'font-lock-constant-face
+ phps-mode-lex-analyzer--token-font-face)
+(puthash
+ 'T_PLUS_EQUAL
+ 'font-lock-constant-face
+ phps-mode-lex-analyzer--token-font-face)
+(puthash
+ 'T_MINUS_EQUAL
+ 'font-lock-constant-face
+ phps-mode-lex-analyzer--token-font-face)
+(puthash
+ 'T_MUL_EQUAL
+ 'font-lock-constant-face
+ phps-mode-lex-analyzer--token-font-face)
+(puthash
+ 'T_POW_EQUAL
+ 'font-lock-constant-face
+ phps-mode-lex-analyzer--token-font-face)
+(puthash
+ 'T_POW
+ 'font-lock-constant-face
+ phps-mode-lex-analyzer--token-font-face)
+(puthash
+ 'T_DIV_EQUAL
+ 'font-lock-constant-face
+ phps-mode-lex-analyzer--token-font-face)
+(puthash
+ 'T_CONCAT_EQUAL
+ 'font-lock-constant-face
+ phps-mode-lex-analyzer--token-font-face)
+(puthash
+ 'T_MOD_EQUAL
+ 'font-lock-constant-face
+ phps-mode-lex-analyzer--token-font-face)
+(puthash
+ 'T_SL_EQUAL
+ 'font-lock-constant-face
+ phps-mode-lex-analyzer--token-font-face)
+(puthash
+ 'T_SR_EQUAL
+ 'font-lock-constant-face
+ phps-mode-lex-analyzer--token-font-face)
+(puthash
+ 'T_AND_EQUAL
+ 'font-lock-constant-face
+ phps-mode-lex-analyzer--token-font-face)
+(puthash
+ 'T_OR_EQUAL
+ 'font-lock-constant-face
+ phps-mode-lex-analyzer--token-font-face)
+(puthash
+ 'T_XOR_EQUAL
+ 'font-lock-constant-face
+ phps-mode-lex-analyzer--token-font-face)
+(puthash
+ 'T_COALESCE_EQUAL
+ 'font-lock-constant-face
+ phps-mode-lex-analyzer--token-font-face)
+(puthash
+ 'T_BOOLEAN_OR
+ 'font-lock-constant-face
+ phps-mode-lex-analyzer--token-font-face)
+(puthash
+ 'T_BOOLEAN_AND
+ 'font-lock-constant-face
+ phps-mode-lex-analyzer--token-font-face)
+(puthash
+ 'T_BOOLEAN_XOR
+ 'font-lock-constant-face
+ phps-mode-lex-analyzer--token-font-face)
+(puthash
+ 'T_LOGICAL_XOR
+ 'font-lock-constant-face
+ phps-mode-lex-analyzer--token-font-face)
+(puthash
+ 'T_LOGICAL_OR
+ 'font-lock-constant-face
+ phps-mode-lex-analyzer--token-font-face)
+(puthash
+ 'T_LOGICAL_AND
+ 'font-lock-constant-face
+ phps-mode-lex-analyzer--token-font-face)
+(puthash
+ 'T_SL
+ 'font-lock-constant-face
+ phps-mode-lex-analyzer--token-font-face)
+(puthash
+ 'T_SR
+ 'font-lock-constant-face
+ phps-mode-lex-analyzer--token-font-face)
+(puthash
+ 'T_CLASS_C
+ 'font-lock-constant-face
+ phps-mode-lex-analyzer--token-font-face)
+(puthash
+ 'T_TRAIT_C
+ 'font-lock-constant-face
+ phps-mode-lex-analyzer--token-font-face)
+(puthash
+ 'T_FUNC_C
+ 'font-lock-constant-face
+ phps-mode-lex-analyzer--token-font-face)
+(puthash
+ 'T_METHOD_C
+ 'font-lock-constant-face
+ phps-mode-lex-analyzer--token-font-face)
+(puthash
+ 'T_LINE
+ 'font-lock-constant-face
+ phps-mode-lex-analyzer--token-font-face)
+(puthash
+ 'T_FILE
+ 'font-lock-constant-face
+ phps-mode-lex-analyzer--token-font-face)
+(puthash
+ 'T_DIR
+ 'font-lock-constant-face
+ phps-mode-lex-analyzer--token-font-face)
+(puthash
+ 'T_NS_C
+ 'font-lock-constant-face
+ phps-mode-lex-analyzer--token-font-face)
+(puthash
+ 'T_INT_CAST
+ 'font-lock-constant-face
+ phps-mode-lex-analyzer--token-font-face)
+(puthash
+ 'T_DOUBLE_CAST
+ 'font-lock-constant-face
+ phps-mode-lex-analyzer--token-font-face)
+(puthash
+ 'T_STRING_CAST
+ 'font-lock-constant-face
+ phps-mode-lex-analyzer--token-font-face)
+(puthash
+ 'T_ARRAY_CAST
+ 'font-lock-constant-face
+ phps-mode-lex-analyzer--token-font-face)
+(puthash
+ 'T_OBJECT_CAST
+ 'font-lock-constant-face
+ phps-mode-lex-analyzer--token-font-face)
+(puthash
+ 'T_BOOL_CAST
+ 'font-lock-constant-face
+ phps-mode-lex-analyzer--token-font-face)
+(puthash
+ 'T_UNSET_CAST
+ 'font-lock-constant-face
+ phps-mode-lex-analyzer--token-font-face)
+
+(puthash
+ 'T_DOLLAR_OPEN_CURLY_BRACES
+ 'font-lock-keyword-face
+ phps-mode-lex-analyzer--token-font-face)
+(puthash
+ 'T_CURLY_OPEN
+ 'font-lock-keyword-face
+ phps-mode-lex-analyzer--token-font-face)
+(puthash
+ 'T_OBJECT_OPERATOR
+ 'font-lock-keyword-face
+ phps-mode-lex-analyzer--token-font-face)
+(puthash
+ 'T_NULLSAFE_OBJECT_OPERATOR
+ 'font-lock-keyword-face
+ phps-mode-lex-analyzer--token-font-face)
+(puthash
+ 'T_PAAMAYIM_NEKUDOTAYIM
+ 'font-lock-keyword-face
+ phps-mode-lex-analyzer--token-font-face)
+(puthash
+ 'T_NS_SEPARATOR
+ 'font-lock-keyword-face
+ phps-mode-lex-analyzer--token-font-face)
+(puthash
+ 'T_EXIT
+ 'font-lock-keyword-face
+ phps-mode-lex-analyzer--token-font-face)
+(puthash
+ 'T_RETURN
+ 'font-lock-keyword-face
+ phps-mode-lex-analyzer--token-font-face)
+(puthash
+ 'T_YIELD_FROM
+ 'font-lock-keyword-face
+ phps-mode-lex-analyzer--token-font-face)
+(puthash
+ 'T_YIELD
+ 'font-lock-keyword-face
+ phps-mode-lex-analyzer--token-font-face)
+(puthash
+ 'T_TRY
+ 'font-lock-keyword-face
+ phps-mode-lex-analyzer--token-font-face)
+(puthash
+ 'T_CATCH
+ 'font-lock-keyword-face
+ phps-mode-lex-analyzer--token-font-face)
+(puthash
+ 'T_FINALLY
+ 'font-lock-keyword-face
+ phps-mode-lex-analyzer--token-font-face)
+(puthash
+ 'T_THROW
+ 'font-lock-keyword-face
+ phps-mode-lex-analyzer--token-font-face)
+(puthash
+ 'T_IF
+ 'font-lock-keyword-face
+ phps-mode-lex-analyzer--token-font-face)
+(puthash
+ 'T_ELSEIF
+ 'font-lock-keyword-face
+ phps-mode-lex-analyzer--token-font-face)
+(puthash
+ 'T_ENDIF
+ 'font-lock-keyword-face
+ phps-mode-lex-analyzer--token-font-face)
+(puthash
+ 'T_ELSE
+ 'font-lock-keyword-face
+ phps-mode-lex-analyzer--token-font-face)
+(puthash
+ 'T_WHILE
+ 'font-lock-keyword-face
+ phps-mode-lex-analyzer--token-font-face)
+(puthash
+ 'T_ENDWHILE
+ 'font-lock-keyword-face
+ phps-mode-lex-analyzer--token-font-face)
+(puthash
+ 'T_DO
+ 'font-lock-keyword-face
+ phps-mode-lex-analyzer--token-font-face)
+(puthash
+ 'T_FUNCTION
+ 'font-lock-keyword-face
+ phps-mode-lex-analyzer--token-font-face)
+(puthash
+ 'T_FN
+ 'font-lock-keyword-face
+ phps-mode-lex-analyzer--token-font-face)
+(puthash
+ 'T_CONST
+ 'font-lock-keyword-face
+ phps-mode-lex-analyzer--token-font-face)
+(puthash
+ 'T_FOREACH
+ 'font-lock-keyword-face
+ phps-mode-lex-analyzer--token-font-face)
+(puthash
+ 'T_ENDFOREACH
+ 'font-lock-keyword-face
+ phps-mode-lex-analyzer--token-font-face)
+(puthash
+ 'T_FOR
+ 'font-lock-keyword-face
+ phps-mode-lex-analyzer--token-font-face)
+(puthash
+ 'T_ENDFOR
+ 'font-lock-keyword-face
+ phps-mode-lex-analyzer--token-font-face)
+(puthash
+ 'T_DECLARE
+ 'font-lock-keyword-face
+ phps-mode-lex-analyzer--token-font-face)
+(puthash
+ 'T_ENDDECLARE
+ 'font-lock-keyword-face
+ phps-mode-lex-analyzer--token-font-face)
+(puthash
+ 'T_INSTANCEOF
+ 'font-lock-keyword-face
+ phps-mode-lex-analyzer--token-font-face)
+(puthash
+ 'T_AS
+ 'font-lock-keyword-face
+ phps-mode-lex-analyzer--token-font-face)
+(puthash
+ 'T_SWITCH
+ 'font-lock-keyword-face
+ phps-mode-lex-analyzer--token-font-face)
+(puthash
+ 'T_MATCH
+ 'font-lock-keyword-face
+ phps-mode-lex-analyzer--token-font-face)
+(puthash
+ 'T_ENDSWITCH
+ 'font-lock-keyword-face
+ phps-mode-lex-analyzer--token-font-face)
+(puthash
+ 'T_CASE
+ 'font-lock-keyword-face
+ phps-mode-lex-analyzer--token-font-face)
+(puthash
+ 'T_DEFAULT
+ 'font-lock-keyword-face
+ phps-mode-lex-analyzer--token-font-face)
+(puthash
+ 'T_BREAK
+ 'font-lock-keyword-face
+ phps-mode-lex-analyzer--token-font-face)
+(puthash
+ 'T_CONTINUE
+ 'font-lock-keyword-face
+ phps-mode-lex-analyzer--token-font-face)
+(puthash
+ 'T_GOTO
+ 'font-lock-keyword-face
+ phps-mode-lex-analyzer--token-font-face)
+(puthash
+ 'T_ECHO
+ 'font-lock-keyword-face
+ phps-mode-lex-analyzer--token-font-face)
+(puthash
+ 'T_PRINT
+ 'font-lock-keyword-face
+ phps-mode-lex-analyzer--token-font-face)
+(puthash
+ 'T_CLASS
+ 'font-lock-keyword-face
+ phps-mode-lex-analyzer--token-font-face)
+(puthash
+ 'T_INTERFACE
+ 'font-lock-keyword-face
+ phps-mode-lex-analyzer--token-font-face)
+(puthash
+ 'T_TRAIT
+ 'font-lock-keyword-face
+ phps-mode-lex-analyzer--token-font-face)
+(puthash
+ 'T_EXTENDS
+ 'font-lock-keyword-face
+ phps-mode-lex-analyzer--token-font-face)
+(puthash
+ 'T_IMPLEMENTS
+ 'font-lock-keyword-face
+ phps-mode-lex-analyzer--token-font-face)
+(puthash
+ 'T_NEW
+ 'font-lock-keyword-face
+ phps-mode-lex-analyzer--token-font-face)
+(puthash
+ 'T_CLONE
+ 'font-lock-keyword-face
+ phps-mode-lex-analyzer--token-font-face)
+(puthash
+ 'T_VAR
+ 'font-lock-keyword-face
+ phps-mode-lex-analyzer--token-font-face)
+(puthash
+ 'T_EVAL
+ 'font-lock-keyword-face
+ phps-mode-lex-analyzer--token-font-face)
+(puthash
+ 'T_INCLUDE_ONCE
+ 'font-lock-keyword-face
+ phps-mode-lex-analyzer--token-font-face)
+(puthash
+ 'T_INCLUDE
+ 'font-lock-keyword-face
+ phps-mode-lex-analyzer--token-font-face)
+(puthash
+ 'T_REQUIRE_ONCE
+ 'font-lock-keyword-face
+ phps-mode-lex-analyzer--token-font-face)
+(puthash
+ 'T_REQUIRE
+ 'font-lock-keyword-face
+ phps-mode-lex-analyzer--token-font-face)
+(puthash
+ 'T_NAMESPACE
+ 'font-lock-keyword-face
+ phps-mode-lex-analyzer--token-font-face)
+(puthash
+ 'T_USE
+ 'font-lock-keyword-face
+ phps-mode-lex-analyzer--token-font-face)
+(puthash
+ 'T_INSTEADOF
+ 'font-lock-keyword-face
+ phps-mode-lex-analyzer--token-font-face)
+(puthash
+ 'T_GLOBAL
+ 'font-lock-keyword-face
+ phps-mode-lex-analyzer--token-font-face)
+(puthash
+ 'T_ISSET
+ 'font-lock-keyword-face
+ phps-mode-lex-analyzer--token-font-face)
+(puthash
+ 'T_EMPTY
+ 'font-lock-keyword-face
+ phps-mode-lex-analyzer--token-font-face)
+(puthash
+ 'T_HALT_COMPILER
+ 'font-lock-keyword-face
+ phps-mode-lex-analyzer--token-font-face)
+(puthash
+ 'T_STATIC
+ 'font-lock-keyword-face
+ phps-mode-lex-analyzer--token-font-face)
+(puthash
+ 'T_ABSTRACT
+ 'font-lock-keyword-face
+ phps-mode-lex-analyzer--token-font-face)
+(puthash
+ 'T_FINAL
+ 'font-lock-keyword-face
+ phps-mode-lex-analyzer--token-font-face)
+(puthash
+ 'T_PRIVATE
+ 'font-lock-keyword-face
+ phps-mode-lex-analyzer--token-font-face)
+(puthash
+ 'T_PROTECTED
+ 'font-lock-keyword-face
+ phps-mode-lex-analyzer--token-font-face)
+(puthash
+ 'T_PUBLIC
+ 'font-lock-keyword-face
+ phps-mode-lex-analyzer--token-font-face)
+(puthash
+ 'T_UNSET
+ 'font-lock-keyword-face
+ phps-mode-lex-analyzer--token-font-face)
+(puthash
+ 'T_LIST
+ 'font-lock-keyword-face
+ phps-mode-lex-analyzer--token-font-face)
+(puthash
+ 'T_ARRAY
+ 'font-lock-keyword-face
+ phps-mode-lex-analyzer--token-font-face)
+(puthash
+ 'T_CALLABLE
+ 'font-lock-keyword-face
+ phps-mode-lex-analyzer--token-font-face)
+
+(puthash
+ 'T_STRING
+ 'font-lock-string-face
+ phps-mode-lex-analyzer--token-font-face)
+(puthash
+ 'T_CONSTANT_ENCAPSED_STRING
+ 'font-lock-string-face
+ phps-mode-lex-analyzer--token-font-face)
+(puthash
+ 'T_ENCAPSED_AND_WHITESPACE
+ 'font-lock-string-face
+ phps-mode-lex-analyzer--token-font-face)
+(puthash
+ 'T_NUM_STRING
+ 'font-lock-string-face
+ phps-mode-lex-analyzer--token-font-face)
+(puthash
+ 'T_DNUMBER
+ 'font-lock-string-face
+ phps-mode-lex-analyzer--token-font-face)
+(puthash
+ 'T_LNUMBER
+ 'font-lock-string-face
+ phps-mode-lex-analyzer--token-font-face)
+
+(puthash
+ 'T_INLINE_HTML
+ 'font-lock-preprocessor-face
+ phps-mode-lex-analyzer--token-font-face)
+
+(puthash
+ 'T_ATTRIBUTE
+ 'font-lock-doc-face
+ phps-mode-lex-analyzer--token-font-face)
+(puthash
+ 'T_DOC_COMMENT
+ 'font-lock-doc-face
+ phps-mode-lex-analyzer--token-font-face)
+(puthash
+ 'T_COMMENT
+ 'font-lock-doc-face
+ phps-mode-lex-analyzer--token-font-face)
+(puthash
+ 'END
+ 'font-lock-doc-face
+ phps-mode-lex-analyzer--token-font-face)
+
+(puthash
+ 'T_VARIABLE
+ 'font-lock-variable-name-face
+ phps-mode-lex-analyzer--token-font-face)
+(puthash
+ 'T_STRING_VARNAME
+ 'font-lock-variable-name-face
+ phps-mode-lex-analyzer--token-font-face)
+(puthash
+ 'T_NAME_RELATIVE
+ 'font-lock-variable-name-face
+ phps-mode-lex-analyzer--token-font-face)
+(puthash
+ 'T_NAME_QUALIFIED
+ 'font-lock-variable-name-face
+ phps-mode-lex-analyzer--token-font-face)
+(puthash
+ 'T_NAME_FULLY_QUALIFIED
+ 'font-lock-variable-name-face
+ phps-mode-lex-analyzer--token-font-face)
+
 
 ;; FUNCTIONS
 
@@ -139,184 +740,18 @@
     ;; (message "Color token %s %s %s" token-name start end)
     (cond
 
-     ((and (or (equal token-name 'T_VARIABLE)
-               (equal token-name 'T_STRING))
-           (gethash bookkeeping-index phps-mode-lex-analyzer--bookkeeping))
+     ((and
+       (gethash token-name phps-mode-lex-analyzer--token-for-bookkeeping-p)
+       (gethash bookkeeping-index phps-mode-lex-analyzer--bookkeeping))
       (let ((bookkeeping (gethash bookkeeping-index phps-mode-lex-analyzer--bookkeeping)))
         (if (> bookkeeping 0)
-            (list 'font-lock-face 'font-lock-variable-name-face)
-          (list 'font-lock-face 'font-lock-warning-face))))
+            'font-lock-variable-name-face
+          'font-lock-warning-face)))
 
-     ((or
-       (equal token-name 'T_VARIABLE)
-       (equal token-name 'T_STRING_VARNAME)
-       (equal token-name 'T_NAME_RELATIVE)
-       (equal token-name 'T_NAME_QUALIFIED)
-       (equal token-name 'T_NAME_FULLY_QUALIFIED))
-      (list 'font-lock-face 'font-lock-variable-name-face))
+     ((when-let ((face (gethash token-name phps-mode-lex-analyzer--token-font-face)))
+        face))
 
-     ((or
-       (equal token-name 'T_COMMENT)
-       (equal token-name 'END))
-      (list 'font-lock-face 'font-lock-comment-face))
-
-     ((equal token-name 'T_DOC_COMMENT)
-      (list 'font-lock-face 'font-lock-doc-face))
-
-     ((equal token-name 'T_ATTRIBUTE)
-      (list 'font-lock-face 'font-lock-doc-face))
-
-     ((equal token-name 'T_INLINE_HTML)
-      ;; NOTE T_INLINE_HTML is missing by purpose here to distinguish those areas from other entities
-      nil)
-
-     ((or
-       (equal token-name 'T_STRING)
-       (equal token-name 'T_CONSTANT_ENCAPSED_STRING)
-       (equal token-name 'T_ENCAPSED_AND_WHITESPACE)
-       (equal token-name 'T_NUM_STRING)
-       (equal token-name 'T_DNUMBER)
-       (equal token-name 'T_LNUMBER))
-      (list 'font-lock-face 'font-lock-string-face))
-
-     ((or
-       (equal token-name 'T_DOLLAR_OPEN_CURLY_BRACES)
-       (equal token-name 'T_CURLY_OPEN)
-       (equal token-name 'T_OBJECT_OPERATOR)
-       (equal token-name 'T_NULLSAFE_OBJECT_OPERATOR)
-       (equal token-name 'T_PAAMAYIM_NEKUDOTAYIM)
-       (equal token-name 'T_NS_SEPARATOR)
-       (equal token-name 'T_EXIT)
-       (equal token-name 'T_RETURN)
-       (equal token-name 'T_YIELD_FROM)
-       (equal token-name 'T_YIELD)
-       (equal token-name 'T_TRY)
-       (equal token-name 'T_CATCH)
-       (equal token-name 'T_FINALLY)
-       (equal token-name 'T_THROW)
-       (equal token-name 'T_IF)
-       (equal token-name 'T_ELSEIF)
-       (equal token-name 'T_ENDIF)
-       (equal token-name 'T_ELSE)
-       (equal token-name 'T_WHILE)
-       (equal token-name 'T_ENDWHILE)
-       (equal token-name 'T_DO)
-       (equal token-name 'T_FUNCTION)
-       (equal token-name 'T_FN)
-       (equal token-name 'T_CONST)
-       (equal token-name 'T_FOREACH)
-       (equal token-name 'T_ENDFOREACH)
-       (equal token-name 'T_FOR)
-       (equal token-name 'T_ENDFOR)
-       (equal token-name 'T_DECLARE)
-       (equal token-name 'T_ENDDECLARE)
-       (equal token-name 'T_INSTANCEOF)
-       (equal token-name 'T_AS)
-       (equal token-name 'T_SWITCH)
-       (equal token-name 'T_MATCH)
-       (equal token-name 'T_ENDSWITCH)
-       (equal token-name 'T_CASE)
-       (equal token-name 'T_DEFAULT)
-       (equal token-name 'T_BREAK)
-       (equal token-name 'T_CONTINUE)
-       (equal token-name 'T_GOTO)
-       (equal token-name 'T_ECHO)
-       (equal token-name 'T_PRINT)
-       (equal token-name 'T_CLASS)
-       (equal token-name 'T_INTERFACE)
-       (equal token-name 'T_TRAIT)
-       (equal token-name 'T_EXTENDS)
-       (equal token-name 'T_IMPLEMENTS)
-       (equal token-name 'T_NEW)
-       (equal token-name 'T_CLONE)
-       (equal token-name 'T_VAR)
-       (equal token-name 'T_EVAL)
-       (equal token-name 'T_INCLUDE_ONCE)
-       (equal token-name 'T_INCLUDE)
-       (equal token-name 'T_REQUIRE_ONCE)
-       (equal token-name 'T_REQUIRE)
-       (equal token-name 'T_NAMESPACE)
-       (equal token-name 'T_USE)
-       (equal token-name 'T_INSTEADOF)
-       (equal token-name 'T_GLOBAL)
-       (equal token-name 'T_ISSET)
-       (equal token-name 'T_EMPTY)
-       (equal token-name 'T_HALT_COMPILER)
-       (equal token-name 'T_STATIC)
-       (equal token-name 'T_ABSTRACT)
-       (equal token-name 'T_FINAL)
-       (equal token-name 'T_PRIVATE)
-       (equal token-name 'T_PROTECTED)
-       (equal token-name 'T_PUBLIC)
-       (equal token-name 'T_UNSET)
-       (equal token-name 'T_LIST)
-       (equal token-name 'T_ARRAY)
-       (equal token-name 'T_CALLABLE)
-       )
-      (list 'font-lock-face 'font-lock-keyword-face))
-
-     ((or
-       (equal token-name 'T_OPEN_TAG)
-       (equal token-name 'T_OPEN_TAG_WITH_ECHO)
-       (equal token-name 'T_CLOSE_TAG)
-       (equal token-name 'T_START_HEREDOC)
-       (equal token-name 'T_END_HEREDOC)
-       (equal token-name 'T_ELLIPSIS)
-       (equal token-name 'T_COALESCE)
-       (equal token-name 'T_DOUBLE_ARROW)
-       (equal token-name 'T_INC)
-       (equal token-name 'T_DEC)
-       (equal token-name 'T_IS_IDENTICAL)
-       (equal token-name 'T_IS_NOT_IDENTICAL)
-       (equal token-name 'T_IS_EQUAL)
-       (equal token-name 'T_IS_NOT_EQUAL)
-       (equal token-name 'T_SPACESHIP)
-       (equal token-name 'T_IS_SMALLER_OR_EQUAL)
-       (equal token-name 'T_IS_GREATER_OR_EQUAL)
-       (equal token-name 'T_PLUS_EQUAL)
-       (equal token-name 'T_MINUS_EQUAL)
-       (equal token-name 'T_MUL_EQUAL)
-       (equal token-name 'T_POW_EQUAL)
-       (equal token-name 'T_POW)
-       (equal token-name 'T_DIV_EQUAL)
-       (equal token-name 'T_CONCAT_EQUAL)
-       (equal token-name 'T_MOD_EQUAL)
-       (equal token-name 'T_SL_EQUAL)
-       (equal token-name 'T_SR_EQUAL)
-       (equal token-name 'T_AND_EQUAL)
-       (equal token-name 'T_OR_EQUAL)
-       (equal token-name 'T_XOR_EQUAL)
-       (equal token-name 'T_COALESCE_EQUAL)
-       (equal token-name 'T_BOOLEAN_OR)
-       (equal token-name 'T_BOOLEAN_AND)
-       (equal token-name 'T_BOOLEAN_XOR)
-       (equal token-name 'T_LOGICAL_XOR)
-       (equal token-name 'T_LOGICAL_OR)
-       (equal token-name 'T_LOGICAL_AND)
-       (equal token-name 'T_SL)
-       (equal token-name 'T_SR)
-       (equal token-name 'T_CLASS_C)
-       (equal token-name 'T_TRAIT_C)
-       (equal token-name 'T_FUNC_C)
-       (equal token-name 'T_METHOD_C)
-       (equal token-name 'T_LINE)
-       (equal token-name 'T_FILE)
-       (equal token-name 'T_DIR)
-       (equal token-name 'T_NS_C)
-       (equal token-name 'T_INT_CAST)
-       (equal token-name 'T_DOUBLE_CAST)
-       (equal token-name 'T_STRING_CAST)
-       (equal token-name 'T_ARRAY_CAST)
-       (equal token-name 'T_OBJECT_CAST)
-       (equal token-name 'T_BOOL_CAST)
-       (equal token-name 'T_UNSET_CAST)
-       )
-      (list 'font-lock-face 'font-lock-constant-face))
-
-     ((equal token-name 'T_ERROR)
-      (list 'font-lock-face 'font-lock-warning-face))
-
-     (t (list 'font-lock-face 'font-lock-constant-face)))))
+     (t 'font-lock-constant-face))))
 
 
 ;; LEXERS
@@ -345,7 +780,7 @@
               (let ((token-syntax-color
                      (phps-mode-lex-analyzer--get-token-syntax-color token)))
                 (if token-syntax-color
-                    (phps-mode-lex-analyzer--set-region-syntax-color start end token-syntax-color)
+                    (phps-mode-lex-analyzer--set-region-syntax-color start end (list 'font-lock-face token-syntax-color))
                   (phps-mode-lex-analyzer--clear-region-syntax-color start end)))
 
               (semantic-lex-push-token
@@ -431,7 +866,7 @@
                      (end (cdr (cdr token))))
                  (let ((token-syntax-color (phps-mode-lex-analyzer--get-token-syntax-color token)))
                    (if token-syntax-color
-                       (phps-mode-lex-analyzer--set-region-syntax-color start end token-syntax-color)
+                       (phps-mode-lex-analyzer--set-region-syntax-color start end (list 'font-lock-face token-syntax-color))
                      (phps-mode-lex-analyzer--clear-region-syntax-color start end)))))
 
 
@@ -575,7 +1010,7 @@
                  ;; Apply syntax color on token
                  (let ((token-syntax-color (phps-mode-lex-analyzer--get-token-syntax-color token)))
                    (if token-syntax-color
-                       (phps-mode-lex-analyzer--set-region-syntax-color start end token-syntax-color)
+                       (phps-mode-lex-analyzer--set-region-syntax-color start end (list 'font-lock-face token-syntax-color))
                      (phps-mode-lex-analyzer--clear-region-syntax-color start end)))))
 
              ;; Signal parser error (if any)
