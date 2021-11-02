@@ -5,8 +5,8 @@
 ;; Author: Christian Johansson <christian@cvj.se>
 ;; Maintainer: Christian Johansson <christian@cvj.se>
 ;; Created: 3 Mar 2018
-;; Modified: 1 Nov 2021
-;; Version: 0.4.10
+;; Modified: 2 Nov 2021
+;; Version: 0.4.11
 ;; Keywords: tools, convenience
 ;; URL: https://github.com/cjohansson/emacs-phps-mode
 
@@ -37,9 +37,9 @@
 ;;
 ;; For flycheck support run `(phps-mode-flycheck-setup)'.
 ;;
-;; For asynchronous lexer run: `(setq phps-mode-async-process t)'
+;; For asynchronous lexer set: `(setq phps-mode-async-process t)'
 ;;
-;; For asynchronous lexer via `async.el' instead of threads run: `(phps-mode-async-process-using-async-el t)'
+;; For asynchronous lexer via `async.el' instead of threads set: `(setq phps-mode-async-process-using-async-el t)'
 ;;
 ;; Please see README.md from the same repository for extended documentation.
 
