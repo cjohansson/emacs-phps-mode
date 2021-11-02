@@ -730,25 +730,38 @@
 
 (defun phps-mode-lex-analyzer--get-token-syntax-color (token)
   "Return syntax color for TOKEN."
-  ;; Syntax coloring
-  ;; see https://www.gnu.org/software/emacs/manual/html_node/elisp/Faces-for-Font-Lock.html#Faces-for-Font-Lock
-  (let* ((start (car (cdr token)))
-         (end (cdr (cdr token)))
-         (bookkeeping-index (list start end))
-         (token-name (car token)))
+  (let ((token-name (car token))
+        (start)
+        (end)
+        (bookkeeping-index)
+        (bookkeeping-value))
+    (when (gethash
+           token-name
+           phps-mode-lex-analyzer--token-for-bookkeeping-p)
+      (setq
+       start (car (cdr token)))
+      (setq
+       end (cdr (cdr token)))
+      (setq
+       bookkeeping-index
+       (list start end))
+      (setq
+       bookkeeping-value
+       (gethash
+        bookkeeping-index
+        phps-mode-lex-analyzer--bookkeeping)))
 
-    ;; (message "Color token %s %s %s" token-name start end)
     (cond
 
-     ((and
-       (gethash token-name phps-mode-lex-analyzer--token-for-bookkeeping-p)
-       (gethash bookkeeping-index phps-mode-lex-analyzer--bookkeeping))
-      (let ((bookkeeping (gethash bookkeeping-index phps-mode-lex-analyzer--bookkeeping)))
-        (if (> bookkeeping 0)
+     ((when bookkeeping-value
+        (if (> bookkeeping-value 0)
             'font-lock-variable-name-face
           'font-lock-warning-face)))
 
-     ((when-let ((face (gethash token-name phps-mode-lex-analyzer--token-font-face)))
+     ((when-let ((face
+                  (gethash
+                   token-name
+                   phps-mode-lex-analyzer--token-font-face)))
         face))
 
      (t 'font-lock-constant-face))))
