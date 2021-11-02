@@ -388,16 +388,17 @@
      buffer-name
 
      (lambda()
-       (let* ((lex-result
+       (let ((lex-result
                (phps-mode-lex-analyzer--lex-string
-                buffer-contents))
-              (processed-result
-               (phps-mode-lex-analyzer--process-tokens-in-string
-                (nth 0 lex-result)
                 buffer-contents)))
-         (list
-          lex-result
-          processed-result)))
+         (thread-yield)
+         (let ((processed-result
+                (phps-mode-lex-analyzer--process-tokens-in-string
+                 (nth 0 lex-result)
+                 buffer-contents)))
+           (list
+            lex-result
+            processed-result))))
 
      (lambda(result)
        (when (get-buffer buffer-name)
@@ -422,6 +423,7 @@
              (setq phps-mode-lex-analyzer--lines-indent (nth 1 processed-result))
              (setq phps-mode-lex-analyzer--bookkeeping (nth 2 processed-result))
              (phps-mode-lex-analyzer--reset-imenu)
+             (thread-yield)
 
              ;; Apply syntax color on tokens
              (dolist (token phps-mode-lex-analyzer--tokens)
@@ -514,7 +516,7 @@
      buffer-name
 
      (lambda()
-       (let* ((lex-result
+       (let ((lex-result
               (phps-mode-lex-analyzer--lex-string
                buffer-contents
                incremental-start-new-buffer
@@ -525,14 +527,15 @@
                incremental-heredoc-label
                incremental-heredoc-label-stack
                incremental-nest-location-stack
-               head-tokens))
-             (processed-result
-              (phps-mode-lex-analyzer--process-tokens-in-string
-               (nth 0 lex-result)
-               buffer-contents)))
-         (list
-          lex-result
-          processed-result)))
+               head-tokens)))
+         (thread-yield)
+         (let ((processed-result
+                (phps-mode-lex-analyzer--process-tokens-in-string
+                 (nth 0 lex-result)
+                 buffer-contents)))
+           (list
+            lex-result
+            processed-result))))
 
      (lambda(result)
        (when (get-buffer buffer-name)
@@ -562,6 +565,7 @@
              (setq phps-mode-lex-analyzer--lines-indent (nth 1 processed-result))
              (setq phps-mode-lex-analyzer--bookkeeping (nth 2 processed-result))
              (phps-mode-lex-analyzer--reset-imenu)
+             (thread-yield)
 
              ;; Apply syntax color on tokens
              (dolist (token phps-mode-lex-analyzer--tokens)

@@ -493,11 +493,11 @@
         (buffer-substring-no-properties
          start
          end))
-     (message
-      "\nRunning lexer from point %s, state: %s, lookahead: '%s'.."
-      old-start
-      phps-mode-lexer--state
-      lookahead)))
+       (message
+        "\nRunning lexer from point %s, state: %s, lookahead: '%s'.."
+        old-start
+        phps-mode-lexer--state
+        lookahead)))
     (phps-mode-lexer--reset-match-data)
     
     (let ((SHEBANG (equal phps-mode-lexer--state 'SHEBANG))
@@ -848,6 +848,8 @@
           phps-mode-lexer--tabs-and-spaces ")")))
        (phps-mode-lexer--return-token 'T_UNSET_CAST))
 
+      (thread-yield)
+
       (phps-mode-lexer--match-macro
        (and ST_IN_SCRIPTING (looking-at "eval"))
        (phps-mode-lexer--return-token-with-indent 'T_EVAL))
@@ -1150,6 +1152,8 @@
          (if (> long-number phps-mode-lexer--long-limit)
              (phps-mode-lexer--return-token 'T_DNUMBER)
            (phps-mode-lexer--return-token 'T_LNUMBER))))
+
+      (thread-yield)
 
       (phps-mode-lexer--match-macro
        (and ST_VAR_OFFSET (looking-at "\\([0]\\|[1-9][0-9]*\\)"))
@@ -1827,7 +1831,8 @@
                (message "Restarting lexer"))
               (phps-mode-lexer--re2c)))
         (phps-mode-debug-message
-         (message "Found nothing at %d" (point)))))))
+         (message "Found nothing at %d" (point))))))
+  (thread-yield))
 
 
 (provide 'phps-mode-lexer)
