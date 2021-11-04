@@ -311,28 +311,42 @@
   (message "-- Running tests for parser translation... --\n")
 
   ;; TODO Generate bookkeeping and imenu index here
+  (let ((imenu-index))
 
-  ;; (phps-mode-test-parser--buffer-contents
-  ;;  "<?php\nfunction myFunctionA() {}\nfunction myFunctionB() {}\n$var = function () {\n    echo 'here';\n};"
-  ;;  "Imenu function-oriented file with anonymous function"
-  ;;  (lambda()
-  ;;    (let ((parse (phps-mode-parser-parse)))
-  ;;      (message "Left-to-right with left-most derivation:\n%S\n" parse)
-  ;;      (dolist (production-number (reverse parse))
-  ;;        (let ((production
-  ;;               (phps-mode-parser--get-grammar-production-by-number
-  ;;                production-number)))
-  ;;          (message
-  ;;           "%d: %S -> %S"
-  ;;           production-number
-  ;;           (car (car production))
-  ;;           (car (cdr production))))))
-  ;;    (let ((translation (phps-mode-parser-translate)))
-  ;;      (should
-  ;;       (equal
-  ;;        (phps-mode-lex-analyzer--get-imenu)
-  ;;        '(("myFunctionA" . 16) ("myFunctionB" . 42))))
-  ;;    )))
+    ;; function_declaration_statement -> (function returns_ref T_STRING backup_doc_comment "(" parameter_list ")" return_type backup_fn_flags "{" inner_statement_list "}" backup_fn_flags)
+    (puthash
+     174
+     (lambda(args terminals)
+       (push
+        `(,(nth 2 args) . ,(car (cdr (nth 2 terminals))))
+        imenu-index))
+     phps-mode-parser--table-translations)
+
+    (phps-mode-test-parser--buffer-contents
+     "<?php\nfunction myFunctionA() {}\nfunction myFunctionB() {}\n$var = function () {\n    echo 'here';\n};"
+     "Imenu function-oriented file with anonymous function"
+     (lambda()
+       (let ((parse (phps-mode-parser-parse)))
+         (message "Left-to-right with left-most derivation:\n%S\n" parse)
+         (dolist (production-number (reverse parse))
+           (let ((production
+                  (phps-mode-parser--get-grammar-production-by-number
+                   production-number)))
+             (message
+              "%d: %S -> %S"
+              production-number
+              (car (car production))
+              (car (cdr production))))))
+       (phps-mode-parser-translate)
+       (setq
+        imenu-index
+        (nreverse imenu-index))
+       (should
+        (equal
+         imenu-index
+         '(("myFunctionA" . 16) ("myFunctionB" . 42))))
+       ;; TODO Test bookkeeping here
+       )))
 
   (message "\n-- Ran tests for parser translation. --"))
 
