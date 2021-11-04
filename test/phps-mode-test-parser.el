@@ -81,9 +81,9 @@
     (funcall logic)
     (message "Passed %s" name)))
 
-(defun phps-mode-test-parser-boundaries ()
-  "Run test for lexer."
-  (message "-- Running tests for parser boundaries... --\n")
+(defun phps-mode-test-parser-parse ()
+  "Run test for parser."
+  (message "-- Running tests for parser basic... --\n")
 
   (phps-mode-test-parser--buffer-contents
    "<?php echo 'hello';"
@@ -100,7 +100,7 @@
             "%d: %S -> %S"
             production-number
             (car (car production))
-            (car (car (cdr production))))))
+            (car (cdr production)))))
        (message "\n")
        (should
         (equal
@@ -153,7 +153,7 @@
             "%d: %S -> %S"
             production-number
             (car (car production))
-            (car (car (cdr production))))))
+            (car (cdr production)))))
        (message "\n")
        (should
         (equal
@@ -174,7 +174,7 @@
             "%d: %S -> %S"
             production-number
             (car (car production))
-            (car (car (cdr production))))))
+            (car (cdr production)))))
        (message "\n")
        (should
         (equal
@@ -195,7 +195,7 @@
             "%d: %S -> %S"
             production-number
             (car (car production))
-            (car (car (cdr production))))))
+            (car (cdr production)))))
        (message "\n")
        (should
         (equal
@@ -216,7 +216,7 @@
             "%d: %S -> %S"
             production-number
             (car (car production))
-            (car (car (cdr production))))))
+            (car (cdr production)))))
        (message "\n")
        (should
         (equal
@@ -237,7 +237,7 @@
             "%d: %S -> %S"
             production-number
             (car (car production))
-            (car (car (cdr production))))))
+            (car (cdr production)))))
        (message "\n")
        (should
         (equal
@@ -304,13 +304,44 @@
    (lambda()
      (phps-mode-parser-parse)))
 
-  (message "\n-- Ran tests for parser boundaries. --"))
+  (message "\n-- Ran tests for parser parse. --"))
+
+(defun phps-mode-test-parser-translate ()
+  "Run test for parse translation."
+  (message "-- Running tests for parser translation... --\n")
+
+  ;; TODO Generate bookkeeping and imenu index here
+
+  ;; (phps-mode-test-parser--buffer-contents
+  ;;  "<?php\nfunction myFunctionA() {}\nfunction myFunctionB() {}\n$var = function () {\n    echo 'here';\n};"
+  ;;  "Imenu function-oriented file with anonymous function"
+  ;;  (lambda()
+  ;;    (let ((parse (phps-mode-parser-parse)))
+  ;;      (message "Left-to-right with left-most derivation:\n%S\n" parse)
+  ;;      (dolist (production-number (reverse parse))
+  ;;        (let ((production
+  ;;               (phps-mode-parser--get-grammar-production-by-number
+  ;;                production-number)))
+  ;;          (message
+  ;;           "%d: %S -> %S"
+  ;;           production-number
+  ;;           (car (car production))
+  ;;           (car (cdr production))))))
+  ;;    (let ((translation (phps-mode-parser-translate)))
+  ;;      (should
+  ;;       (equal
+  ;;        (phps-mode-lex-analyzer--get-imenu)
+  ;;        '(("myFunctionA" . 16) ("myFunctionB" . 42))))
+  ;;    )))
+
+  (message "\n-- Ran tests for parser translation. --"))
 
 (defun phps-mode-test-parser ()
   "Run test for lexer."
   (message "-- Running all tests for parser... --\n")
 
-  (phps-mode-test-parser-boundaries)
+  (phps-mode-test-parser-parse)
+  (phps-mode-test-parser-translate)
 
   (message "\n-- Ran all tests for parser. --"))
 

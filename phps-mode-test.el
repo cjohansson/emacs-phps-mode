@@ -48,7 +48,6 @@
          (incremental-buffer)
          (incremental-bookkeeping)
          (incremental-nest-location-stack)
-         (incremental)
          (test-buffer-initial (generate-new-buffer "test-initial"))
          (initial-state)
          (initial-state-stack)
