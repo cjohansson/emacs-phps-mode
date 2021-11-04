@@ -1054,7 +1054,6 @@
                  (nth 4 phps-mode-lex-analyzer--parse-error))))))))
 
      (lambda(result)
-       (message "error 1: %S" result)
        (when (get-buffer buffer-name)
          (with-current-buffer buffer-name
            (let ((error-type (nth 0 result))
@@ -1230,6 +1229,8 @@
                 (setq phps-mode-lex-analyzer--heredoc-label nil)
                 (setq phps-mode-lex-analyzer--heredoc-label-stack nil)
                 (setq phps-mode-lex-analyzer--nest-location-stack nil)
+                (setq phps-mode-lex-analyzer--parse-trail nil)
+                (setq phps-mode-lex-analyzer--parse-error nil)
 
                 ;; NOTE Starts are inclusive while ends are exclusive buffer locations
 
