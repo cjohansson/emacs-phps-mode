@@ -205,7 +205,8 @@
         (let ((export
                (parser-generator-lr-export-to-elisp
                 "phps-mode-parser"
-                phps-mode-automation-grammar--header)))
+                phps-mode-automation-grammar--header
+                phps-mode-automation-grammar--copyright)))
           (generate-new-buffer "*PHP Parser*")
           (switch-to-buffer "*PHP Parser*")
           (insert export)
