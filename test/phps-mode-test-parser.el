@@ -476,7 +476,7 @@
                              (progn
                                (dolist (grandchild grandchildren)
                                  (push
-                                  `(,(plist-get grandchild 'name) . ,(plist-get grandchild 'start))
+                                  `(,(plist-get grandchild 'name) . ,(plist-get grandchild 'index))
                                   subparent))
                                (push
                                 (append
@@ -484,7 +484,7 @@
                                  (reverse subparent))
                                 parent))
                            (push
-                            `(,(plist-get child 'name) . ,(plist-get child 'start))
+                            `(,(plist-get child 'name) . ,(plist-get child 'index))
                             parent)))
                        )
                      (push
@@ -493,7 +493,7 @@
                        (reverse parent))
                       imenu-index))
                  (push
-                  `(,(plist-get item 'name) . ,(plist-get item 'start))
+                  `(,(plist-get item 'name) . ,(plist-get item 'index))
                   imenu-index))))
 
            (message "imenu-index:\n%S\n" imenu-index)
@@ -501,7 +501,7 @@
            (should
             (equal
              imenu-index
-             '(("MyNamespace" ("aFunction" . 53) ("MyClass" ("__construct" . 178) ("myFunction1" . 279) ("myFunction2" . 451) ("myFunction3" . 531) ("myFunction4" . 601))))))
+             '(("MyNamespace" ("aFunction" . 41) ("MyClass" ("__construct" . 160) ("myFunction1" . 261) ("myFunction2" . 433) ("myFunction3" . 513) ("myFunction4" . 583))))))
            )))))
 
   (message "\n-- Ran tests for parser translation. --"))

@@ -1239,6 +1239,11 @@
    "Imenu in interface class with arguments in one method"
    (should (equal (phps-mode-lex-analyzer--get-imenu) '(("myInterface" ("myFunction1" . 44) ("myFunction2" . 72))))))
 
+  (phps-mode-test--with-buffer
+   "<?php\n\nnamespace MyNamespace;\n\nfunction aFunction() {\n    /**\n     * With some contents\n     */\n}\n\nclass MyClass\n{\n\n    /**\n     *\n     */\n    public function __construct()\n    {\n        if ($test) {\n        }\n    }\n\n    /**\n     *\n     */\n    public function myFunction1()\n    {\n        $this->addMessage(\"My random {$message} here\" . ($random > 1 ? \"A\" : \"\") . \" was here.\");\n    }\n    \n    /**\n     *\n     */\n    public function myFunction2()\n    {\n    }\n\n    /**\n     * It's good\n     */\n    public function myFunction3()\n    {\n    }\n\n    /**\n     *\n     */\n    public function myFunction4()\n    {\n    }\n}\n"
+   "Imenu with double quoted string with variable inside it and concatenated string"
+   (should (equal (phps-mode-lex-analyzer--get-imenu) '(("MyNamespace" ("aFunction" . 41) ("MyClass" ("__construct" . 160) ("myFunction1" . 261) ("myFunction2" . 433) ("myFunction3" . 513) ("myFunction4" . 583)))))))
+
   )
 
 (defun phps-mode-test-lex-analyzer--get-moved-imenu ()
