@@ -317,7 +317,7 @@
     ;; top_statement_list -> (top_statement_list top_statement)
     (puthash
      79
-     (lambda(args terminals)
+     (lambda(args _terminals)
        ;; (message "top_statement_list: %S" args)
        (let ((ast-object))
          (if (car args)
@@ -383,7 +383,7 @@
     ;; top_statement -> (T_NAMESPACE "{" top_statement_list "}")
     (puthash
      108
-     (lambda(args terminals)
+     (lambda(args _terminals)
        (message "T_NAMESPACE: %S" args)
        (when (nth 2 args)
          (setq
@@ -449,7 +449,7 @@
     ;; class_statement_list -> (class_statement_list class_statement)
     (puthash
      276
-     (lambda(args terminals)
+     (lambda(args _terminals)
        ;; (message "class_statement_list: %S" args)
        (let ((ast-object))
          (if (car args)
@@ -496,7 +496,7 @@
               production-number
               (car (car production))
               (car (cdr production))))))
-       (let ((translation (phps-mode-parser-translate))
+       (let ((_translation (phps-mode-parser-translate))
              (imenu-index))
          ;; (message "translation: %S" translation)
 
@@ -511,46 +511,45 @@
 
          (message "\nAST:\n%S\n" ast)
 
-         (let ((imenu-index))
-           (dolist (item ast)
-             (let ((children (plist-get item 'children))
-                   (item-type (plist-get item 'type))
-                   (parent))
-               (if (and
-                    (or
-                     (equal item-type 'namespace)
-                     (equal item-type 'class))
-                    children)
-                   (progn
-                     (dolist (child children)
-                       (let ((grandchildren (plist-get child 'children))
-                             (child-type (plist-get child 'type))
-                             (subparent))
-                         (if (and
-                              (equal child-type 'class)
-                              grandchildren)
-                             (progn
-                               (dolist (grandchild grandchildren)
-                                 (push
-                                  `(,(plist-get grandchild 'name) . ,(plist-get grandchild 'index))
-                                  subparent))
+         (dolist (item ast)
+           (let ((children (plist-get item 'children))
+                 (item-type (plist-get item 'type))
+                 (parent))
+             (if (and
+                  (or
+                   (equal item-type 'namespace)
+                   (equal item-type 'class))
+                  children)
+                 (progn
+                   (dolist (child children)
+                     (let ((grandchildren (plist-get child 'children))
+                           (child-type (plist-get child 'type))
+                           (subparent))
+                       (if (and
+                            (equal child-type 'class)
+                            grandchildren)
+                           (progn
+                             (dolist (grandchild grandchildren)
                                (push
-                                (append
-                                 (list (plist-get child 'name))
-                                 (reverse subparent))
-                                parent))
-                           (push
-                            `(,(plist-get child 'name) . ,(plist-get child 'index))
-                            parent)))
-                       )
-                     (push
-                      (append
-                       (list (plist-get item 'name))
-                       (reverse parent))
-                      imenu-index))
-                 (push
-                  `(,(plist-get item 'name) . ,(plist-get item 'index))
-                  imenu-index))))
+                                `(,(plist-get grandchild 'name) . ,(plist-get grandchild 'index))
+                                subparent))
+                             (push
+                              (append
+                               (list (plist-get child 'name))
+                               (reverse subparent))
+                              parent))
+                         (push
+                          `(,(plist-get child 'name) . ,(plist-get child 'index))
+                          parent)))
+                     )
+                   (push
+                    (append
+                     (list (plist-get item 'name))
+                     (reverse parent))
+                    imenu-index))
+               (push
+                `(,(plist-get item 'name) . ,(plist-get item 'index))
+                imenu-index))))
 
            (message "imenu-index:\n%S\n" imenu-index)
 
@@ -558,7 +557,7 @@
             (equal
              imenu-index
              '(("MyNamespace" ("aFunction" . 41) ("MyClass" ("__construct" . 160) ("myFunction1" . 261) ("myFunction2" . 433) ("myFunction3" . 513) ("myFunction4" . 583))))))
-           ))))
+           )))
 
     (setq
      ast-current-namespace
@@ -585,8 +584,7 @@
               production-number
               (car (car production))
               (car (cdr production))))))
-       (let ((translation (phps-mode-parser-translate))
-             (imenu-index))
+       (let ((_translation (phps-mode-parser-translate)))
          ;; (message "translation: %S" translation)
 
          (when ast-current-namespace
