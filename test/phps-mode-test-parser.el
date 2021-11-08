@@ -310,49 +310,9 @@
   "Run test for parse translation."
   (message "-- Running tests for parser translation... --\n")
 
-  ;; TODO Generate bookkeeping and imenu index here
-  (let ((imenu-index))
-
-    ;; function_declaration_statement -> (function returns_ref T_STRING backup_doc_comment "(" parameter_list ")" return_type backup_fn_flags "{" inner_statement_list "}" backup_fn_flags)
-    (puthash
-     174
-     (lambda(args terminals)
-       (push
-        `(,(nth 2 args) . ,(car (cdr (nth 2 terminals))))
-        imenu-index))
-     phps-mode-parser--table-translations)
-
-    (phps-mode-test-parser--buffer-contents
-     "<?php\nfunction myFunctionA() {}\nfunction myFunctionB() {}\n$var = function () {\n    echo 'here';\n};"
-     "Imenu function-oriented file with anonymous function"
-     (lambda()
-       (let ((parse (phps-mode-parser-parse)))
-         (message "Left-to-right with left-most derivation:\n%S\n" parse)
-         (dolist (production-number (reverse parse))
-           (let ((production
-                  (phps-mode-parser--get-grammar-production-by-number
-                   production-number)))
-             (message
-              "%d: %S -> %S"
-              production-number
-              (car (car production))
-              (car (cdr production))))))
-       (phps-mode-parser-translate)
-       (setq
-        imenu-index
-        (nreverse imenu-index))
-       (should
-        (equal
-         imenu-index
-         '(("myFunctionA" . 16) ("myFunctionB" . 42))))
-       ;; TODO Test bookkeeping here
-       )))
-  (message "Passed functional oriented imenu-index")
-
-  (let ((imenu-functions)
-        (imenu-namespaces)
-        (imenu-classes)
-        (imenu-methods))
+  (let ((ast)
+        (ast-current-namespace)
+        (ast-current-namespace-children))
 
     ;; function_declaration_statement -> (function returns_ref T_STRING backup_doc_comment "(" parameter_list ")" return_type backup_fn_flags "{" inner_statement_list "}" backup_fn_flags)
     (puthash
@@ -360,17 +320,26 @@
      (lambda(args terminals)
        (let ((ast-object
               (list
+               'type
                'function
+               'name
                (nth 2 args)
+               'index
                (car (cdr (nth 2 terminals)))
+               'start
                (car (cdr (nth 9 terminals)))
+               'end
                (car (cdr (nth 11 terminals))))))
-         (message "Function: %S" ast-object)
-         (message "args: %S" args)
-         (message "terminals: %S" terminals)
-         (push
-          ast-object
-          imenu-functions)
+         ;; (message "Function: %S" ast-object)
+         ;; (message "args: %S" args)
+         ;; (message "terminals: %S" terminals)
+         (if ast-current-namespace
+             (push
+              ast-object
+              ast-current-namespace-children)
+           (push
+            ast-object
+            ast))
          ast-object))
      phps-mode-parser--table-translations)
 
@@ -380,17 +349,19 @@
      (lambda(args terminals)
        (let ((ast-object
               (list
+               'type
                'method
+               'name
                (nth 3 args)
+               'index
                (car (cdr (nth 3 terminals)))
+               'start
                (car (cdr (car (nth 10 terminals))))
+               'end
                (cdr (cdr (car (cdr (cdr (nth 10 terminals)))))))))
-         (message "Method: %S" ast-object)
-         (message "args: %S" args)
-         (message "terminals: %S" terminals)
-         (push
-          ast-object
-          imenu-methods)
+         ;; (message "Method: %S" ast-object)
+         ;; (message "args: %S" args)
+         ;; (message "terminals: %S" terminals)
          ast-object))
      phps-mode-parser--table-translations)
 
@@ -400,17 +371,22 @@
      (lambda(args terminals)
        (let ((ast-object
               (list
+               'type
                'namespace
+               'name
                (nth 1 args)
+               'index
                (car (cdr (nth 1 terminals)))
+               'start
                (car (cdr (nth 2 terminals)))
+               'end
                'max)))
-         (message "Namespace %S" ast-object)
-         (message "args: %S" args)
-         (message "terminals: %S" terminals)
-         (push
-          ast-object
-          imenu-namespaces)
+         ;; (message "Namespace %S" ast-object)
+         ;; (message "args: %S" args)
+         ;; (message "terminals: %S" terminals)
+         (setq
+          ast-current-namespace
+          ast-object)
          ast-object))
      phps-mode-parser--table-translations)
 
@@ -420,17 +396,41 @@
      (lambda(args terminals)
        (let ((ast-object
               (list
+               'type
                'class
+               'name
                (nth 1 args)
+               'index
                (car (cdr (nth 1 terminals)))
+               'start
                (car (cdr (nth 5 terminals)))
-               (car (cdr (nth 7 terminals))))))
-         (message "Class %S" ast-object)
-         (message "args: %S" args)
-         (message "terminals: %S" terminals)
-         (push
-          ast-object
-          imenu-classes)
+               'end
+               (car (cdr (nth 7 terminals)))
+               'children
+               (nth 6 args))))
+         ;; (message "Class %S" ast-object)
+         ;; (message "args: %S" args)
+         ;; (message "terminals: %S" terminals)
+         (if ast-current-namespace
+             (push
+              ast-object
+              ast-current-namespace-children)
+           (push
+            ast-object
+            ast))
+         ast-object))
+     phps-mode-parser--table-translations)
+
+    ;; class_statement_list -> (class_statement_list class_statement)
+    (puthash
+     276
+     (lambda(args terminals)
+       ;; (message "class_statement_list: %S" args)
+       (let ((ast-object))
+         (if (car args)
+             (setq ast-object (append (car args) (cdr args)))
+           (setq ast-object (cdr args)))
+         ;; (message "ast-object: %S" ast-object)
          ast-object))
      phps-mode-parser--table-translations)
 
@@ -451,15 +451,29 @@
               (car (cdr production))))))
        (let ((translation (phps-mode-parser-translate))
              (imenu-index))
-         (message "translation: %S" translation)
+         ;; (message "translation: %S" translation)
 
-         ;; TODO Build imenu-index here
-         (should
-          (equal
-           imenu-index
-           '(("MyNamespace" ("MyClass" ("__construct" . 92) ("myFunction1" . 193) ("myFunction2" . 365) ("myFunction3" . 445) ("myFunction4" . 515))))))
-         ;; TODO Test bookkeeping here
-         ))))
+         (when ast-current-namespace
+           (plist-put
+            ast-current-namespace
+            'children
+            (reverse ast-current-namespace-children))
+           (push
+            ast-current-namespace
+            ast))
+
+         (message "\nAST:\n%S\n" ast)
+         (let ((imenu-index))
+           ;; TODO Build imenu-index here
+           (dolist (item ast)
+             )
+
+           (should
+            (equal
+             imenu-index
+             '(("MyNamespace" ("MyClass" ("__construct" . 92) ("myFunction1" . 193) ("myFunction2" . 365) ("myFunction3" . 445) ("myFunction4" . 515))))))
+           ;; TODO Test bookkeeping here
+           )))))
 
   (message "\n-- Ran tests for parser translation. --"))
 
@@ -467,8 +481,8 @@
   "Run test for lexer."
   (message "-- Running all tests for parser... --\n")
 
+  (phps-mode-test-parser-translate)
   (phps-mode-test-parser-parse)
-  ;; (phps-mode-test-parser-translate)
 
   (message "\n-- Ran all tests for parser. --"))
 
