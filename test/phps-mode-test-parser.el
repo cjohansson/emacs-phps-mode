@@ -464,15 +464,44 @@
 
          (message "\nAST:\n%S\n" ast)
          (let ((imenu-index))
-           ;; TODO Build imenu-index here
            (dolist (item ast)
-             )
+             (let ((children (plist-get item 'children))
+                   (parent))
+               (if children
+                   (progn
+                     (dolist (child children)
+                       (let ((grandchildren (plist-get child 'children))
+                             (subparent))
+                         (if grandchildren
+                             (progn
+                               (dolist (grandchild grandchildren)
+                                 (push
+                                  `(,(plist-get grandchild 'name) . ,(plist-get grandchild 'start))
+                                  subparent))
+                               (push
+                                (append
+                                 (list (plist-get child 'name))
+                                 (reverse subparent))
+                                parent))
+                           (push
+                            `(,(plist-get child 'name) . ,(plist-get child 'start))
+                            parent)))
+                       )
+                     (push
+                      (append
+                       (list (plist-get item 'name))
+                       (reverse parent))
+                      imenu-index))
+                 (push
+                  `(,(plist-get item 'name) . ,(plist-get item 'start))
+                  imenu-index))))
+
+           (message "imenu-index:\n%S\n" imenu-index)
 
            (should
             (equal
              imenu-index
-             '(("MyNamespace" ("MyClass" ("__construct" . 92) ("myFunction1" . 193) ("myFunction2" . 365) ("myFunction3" . 445) ("myFunction4" . 515))))))
-           ;; TODO Test bookkeeping here
+             '(("MyNamespace" ("aFunction" . 53) ("MyClass" ("__construct" . 178) ("myFunction1" . 279) ("myFunction2" . 451) ("myFunction3" . 531) ("myFunction4" . 601))))))
            )))))
 
   (message "\n-- Ran tests for parser translation. --"))
