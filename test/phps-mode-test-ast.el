@@ -83,6 +83,50 @@
   (message "-- Running tests for imenu generation... --\n")
 
   (phps-mode-test-ast--buffer-contents
+   "<?php\nclass myClass\n{\n\n    public function myFunction1()\n    {\n        echo \"my string with variable {$variable} inside it\";\n    }\n\n    public function myFunction2()\n    {\n    }\n\n}"
+   "Imenu generated via parser SDT for simple class"
+   (lambda()
+     (phps-mode-ast-generate)
+     (message "\nAST:\n%S\n" phps-mode-ast--tree)
+     (message "imenu-index:\n%S\n" phps-mode-ast--imenu)
+     (should (equal
+              phps-mode-ast--imenu
+              '(("myClass" ("myFunction1" . 44) ("myFunction2" . 153)))))))
+
+  ;; (phps-mode-test-ast--buffer-contents
+  ;;  "<?php\ninterface myInterface {\n    public function myFunctionA() {}\n    protected function myFunctionB() {}\n}\n"
+  ;;  "Imenu generated via parser SDT for interface"
+  ;;  (lambda()
+  ;;    (phps-mode-ast-generate)
+  ;;    (message "\nAST:\n%S\n" phps-mode-ast--tree)
+  ;;    (message "imenu-index:\n%S\n" phps-mode-ast--imenu)
+  ;;    (should (equal
+  ;;             phps-mode-ast--imenu
+  ;;             '(("myInterface" . (("myFunctionA" . 51) ("myFunctionB" . 91))))))))
+
+  ;; (phps-mode-test-ast--buffer-contents
+  ;;  "<?php\nfunction myFunctionA() {}\nfunction myFunctionB() {}\n$var = function () {\n    echo 'here';\n};"
+  ;;  "Imenu generated via parser SDT for function-oriented file without namespace"
+  ;;  (lambda()
+  ;;    (let ((parse (phps-mode-parser-parse)))
+  ;;      (message "Left-to-right with left-most derivation:\n%S\n" parse)
+  ;;      (dolist (production-number (reverse parse))
+  ;;        (let ((production
+  ;;               (phps-mode-parser--get-grammar-production-by-number
+  ;;                production-number)))
+  ;;          (message
+  ;;           "%d: %S -> %S"
+  ;;           production-number
+  ;;           (car (car production))
+  ;;           (car (cdr production))))))
+  ;;    (phps-mode-ast-generate)
+  ;;    ;; (message "\nAST:\n%S\n" phps-mode-ast--tree)
+  ;;    ;; (message "imenu-index:\n%S\n" phps-mode-ast--imenu)
+  ;;    (should (equal
+  ;;             phps-mode-ast--imenu
+  ;;             '(("myFunctionA" . 16) ("myFunctionB" . 42))))))
+
+  (phps-mode-test-ast--buffer-contents
    "<?php\n\nnamespace MyNamespace;\n\nfunction aFunction() {\n    /**\n     * With some contents\n     */\n}\n\nclass MyClass\n{\n\n    /**\n     *\n     */\n    public function __construct()\n    {\n        if ($test) {\n        }\n    }\n\n    /**\n     *\n     */\n    public function myFunction1()\n    {\n        $this->addMessage(\"My random {$message} here\" . ($random > 1 ? \"A\" : \"\") . \" was here.\");\n    }\n    \n    /**\n     *\n     */\n    public function myFunction2()\n    {\n    }\n\n    /**\n     * It's good\n     */\n    public function myFunction3()\n    {\n    }\n\n    /**\n     *\n     */\n    public function myFunction4()\n    {\n    }\n}\n"
    "Passed imenu-generation via parser AST for basic object oriented file"
    (lambda()

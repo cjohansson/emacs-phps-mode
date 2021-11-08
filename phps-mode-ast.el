@@ -85,7 +85,7 @@
      (setq
       phps-mode-ast--current-namespace
       ast-object)
-     ast-object))
+     nil))
  phps-mode-parser--table-translations)
 
 ;; top_statement -> (T_NAMESPACE namespace_declaration_name "{" top_statement_list "}")
@@ -229,9 +229,17 @@
   (setq
    phps-mode-ast--tree
    nil)
-  (let ((_translation (phps-mode-parser-translate)))
+  (let ((translation (phps-mode-parser-translate)))
     
-    ;; (message "translation: %S" translation)
+    (message "translation: %S" translation)
+    (when translation
+      (if phps-mode-ast--tree
+          (setq
+           phps-mode-ast--tree
+           (append phps-mode-ast--tree translation))
+        (setq
+         phps-mode-ast--tree
+         translation)))
 
     (when phps-mode-ast--current-namespace
       (plist-put
