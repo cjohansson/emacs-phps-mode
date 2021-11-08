@@ -314,54 +314,16 @@
         (ast-current-namespace)
         (ast-current-namespace-children))
 
-    ;; function_declaration_statement -> (function returns_ref T_STRING backup_doc_comment "(" parameter_list ")" return_type backup_fn_flags "{" inner_statement_list "}" backup_fn_flags)
+    ;; top_statement_list -> (top_statement_list top_statement)
     (puthash
-     174
+     79
      (lambda(args terminals)
-       (let ((ast-object
-              (list
-               'type
-               'function
-               'name
-               (nth 2 args)
-               'index
-               (car (cdr (nth 2 terminals)))
-               'start
-               (car (cdr (nth 9 terminals)))
-               'end
-               (car (cdr (nth 11 terminals))))))
-         ;; (message "Function: %S" ast-object)
-         ;; (message "args: %S" args)
-         ;; (message "terminals: %S" terminals)
-         (if ast-current-namespace
-             (push
-              ast-object
-              ast-current-namespace-children)
-           (push
-            ast-object
-            ast))
-         ast-object))
-     phps-mode-parser--table-translations)
-
-    ;; attributed_class_statement -> (method_modifiers function returns_ref identifier backup_doc_comment "(" parameter_list ")" return_type backup_fn_flags method_body backup_fn_flags)
-    (puthash
-     280
-     (lambda(args terminals)
-       (let ((ast-object
-              (list
-               'type
-               'method
-               'name
-               (nth 3 args)
-               'index
-               (car (cdr (nth 3 terminals)))
-               'start
-               (car (cdr (car (nth 10 terminals))))
-               'end
-               (cdr (cdr (car (cdr (cdr (nth 10 terminals)))))))))
-         ;; (message "Method: %S" ast-object)
-         ;; (message "args: %S" args)
-         ;; (message "terminals: %S" terminals)
+       ;; (message "top_statement_list: %S" args)
+       (let ((ast-object))
+         (if (car args)
+             (setq ast-object (append (car args) (cdr args)))
+           (setq ast-object (cdr args)))
+         ;; (message "ast-object: %S" ast-object)
          ast-object))
      phps-mode-parser--table-translations)
 
@@ -390,6 +352,72 @@
          ast-object))
      phps-mode-parser--table-translations)
 
+    ;; top_statement -> (T_NAMESPACE namespace_declaration_name "{" top_statement_list "}")
+    (puthash
+     107
+     (lambda(args terminals)
+       (let ((ast-object
+              (list
+               'type
+               'namespace
+               'name
+               (nth 1 args)
+               'index
+               (car (cdr (nth 1 terminals)))
+               'start
+               (car (cdr (nth 2 terminals)))
+               'end
+               (car (cdr (nth 4 terminals)))
+               'children
+               (nth 3 args))))
+         ;; (message "Namespace %S" ast-object)
+         ;; (message "args: %S" args)
+         ;; (message "terminals: %S" terminals)
+         ;; (message "ast-object: %S" ast-object)
+         (push
+          ast-object
+          ast)
+         ast-object))
+     phps-mode-parser--table-translations)
+
+    ;; top_statement -> (T_NAMESPACE "{" top_statement_list "}")
+    (puthash
+     108
+     (lambda(args terminals)
+       (message "T_NAMESPACE: %S" args)
+       (when (nth 2 args)
+         (setq
+          ast
+          (append ast (nth 2 args))))
+       (nth 2 args))
+     phps-mode-parser--table-translations)
+
+    ;; function_declaration_statement -> (function returns_ref T_STRING backup_doc_comment "(" parameter_list ")" return_type backup_fn_flags "{" inner_statement_list "}" backup_fn_flags)
+    (puthash
+     174
+     (lambda(args terminals)
+       (let ((ast-object
+              (list
+               'type
+               'function
+               'name
+               (nth 2 args)
+               'index
+               (car (cdr (nth 2 terminals)))
+               'start
+               (car (cdr (nth 9 terminals)))
+               'end
+               (car (cdr (nth 11 terminals))))))
+         ;; (message "Function: %S" ast-object)
+         ;; (message "args: %S" args)
+         ;; (message "terminals: %S" terminals)
+         (when ast-current-namespace
+           (push
+            ast-object
+            ast-current-namespace-children))
+         ast-object))
+     phps-mode-parser--table-translations)
+
     ;; class_declaration_statement -> (T_CLASS T_STRING extends_from implements_list backup_doc_comment "{" class_statement_list "}")
     (puthash
      180
@@ -411,13 +439,10 @@
          ;; (message "Class %S" ast-object)
          ;; (message "args: %S" args)
          ;; (message "terminals: %S" terminals)
-         (if ast-current-namespace
-             (push
-              ast-object
-              ast-current-namespace-children)
+         (when ast-current-namespace
            (push
             ast-object
-            ast))
+            ast-current-namespace-children))
          ast-object))
      phps-mode-parser--table-translations)
 
@@ -431,6 +456,28 @@
              (setq ast-object (append (car args) (cdr args)))
            (setq ast-object (cdr args)))
          ;; (message "ast-object: %S" ast-object)
+         ast-object))
+     phps-mode-parser--table-translations)
+
+    ;; attributed_class_statement -> (method_modifiers function returns_ref identifier backup_doc_comment "(" parameter_list ")" return_type backup_fn_flags method_body backup_fn_flags)
+    (puthash
+     280
+     (lambda(args terminals)
+       (let ((ast-object
+              (list
+               'type
+               'method
+               'name
+               (nth 3 args)
+               'index
+               (car (cdr (nth 3 terminals)))
+               'start
+               (car (cdr (car (nth 10 terminals))))
+               'end
+               (cdr (cdr (car (cdr (cdr (nth 10 terminals)))))))))
+         ;; (message "Method: %S" ast-object)
+         ;; (message "args: %S" args)
+         ;; (message "terminals: %S" terminals)
          ast-object))
      phps-mode-parser--table-translations)
 
@@ -511,7 +558,101 @@
             (equal
              imenu-index
              '(("MyNamespace" ("aFunction" . 41) ("MyClass" ("__construct" . 160) ("myFunction1" . 261) ("myFunction2" . 433) ("myFunction3" . 513) ("myFunction4" . 583))))))
-           )))))
+           ))))
+
+    (setq
+     ast-current-namespace
+     nil)
+    (setq
+     ast-current-namespace-children
+     nil)
+    (setq
+     ast
+     nil)
+
+    (phps-mode-test-parser--buffer-contents
+     "<?php\n\nnamespace MyNamespaceA\n{\n    function aFunctionA() {\n        /**\n         * With some contents\n         */\n    }\n    class MyClass\n    {\n\n        /**\n         *\n         */\n        public function __construct()\n        {\n            if ($test) {\n            }\n        }\n\n        /**\n         *\n         */\n        public function myFunction1()\n        {\n            $this->addMessage(\"My random {$message} here\" . ($random > 1 ? \"A\" : \"\") . \" was here.\");\n        }\n        \n        /**\n         *\n         */\n        public function myFunction2()\n        {\n        }\n\n        /**\n         * It's good\n         */\n        public function myFunction3()\n        {\n        }\n\n        /**\n         *\n         */\n        public function myFunction4()\n        {\n        }\n    }\n}\nnamespace {\n    function aFunctionB()\n    {\n        \n    }\n    class MyClass\n    {\n\n        /**\n         *\n         */\n        public function __construct()\n        {\n            if ($test) {\n            }\n        }\n\n        /**\n         *\n         */\n        public function myFunction1()\n        {\n            $this->addMessage(\"My random {$message} here\" . ($random > 1 ? \"A\" : \"\") . \" was here.\");\n        }\n        \n        /**\n         *\n         */\n        public function myFunction2()\n        {\n        }\n\n        /**\n         * It's good\n         */\n        public function myFunction3()\n        {\n        }\n\n        /**\n         *\n         */\n        public function myFunction4()\n        {\n        }\n    }\n}"
+     "Imenu with double quoted string with variable inside it and concatenated string in two namespaces"
+     (lambda()
+       (let ((parse (phps-mode-parser-parse)))
+         (message "Left-to-right with left-most derivation:\n%S\n" parse)
+         (dolist (production-number (reverse parse))
+           (let ((production
+                  (phps-mode-parser--get-grammar-production-by-number
+                   production-number)))
+             (message
+              "%d: %S -> %S"
+              production-number
+              (car (car production))
+              (car (cdr production))))))
+       (let ((translation (phps-mode-parser-translate))
+             (imenu-index))
+         ;; (message "translation: %S" translation)
+
+         (when ast-current-namespace
+           (plist-put
+            ast-current-namespace
+            'children
+            (reverse ast-current-namespace-children))
+           (push
+            ast-current-namespace
+            ast))
+
+         (message "\nAST:\n%S\n" ast)
+
+         (let ((imenu-index))
+           (dolist (item ast)
+             (let ((children (plist-get item 'children))
+                   (item-type (plist-get item 'type))
+                   (parent))
+               (if (and
+                    (or
+                     (equal item-type 'namespace)
+                     (equal item-type 'class))
+                    children)
+                   (progn
+                     (dolist (child children)
+                       (let ((grandchildren (plist-get child 'children))
+                             (child-type (plist-get child 'type))
+                             (subparent))
+                         (if (and
+                              (equal child-type 'class)
+                              grandchildren)
+                             (progn
+                               (dolist (grandchild grandchildren)
+                                 (push
+                                  `(,(plist-get grandchild 'name) . ,(plist-get grandchild 'index))
+                                  subparent))
+                               (push
+                                (append
+                                 (list (plist-get child 'name))
+                                 (reverse subparent))
+                                parent))
+                           (push
+                            `(,(plist-get child 'name) . ,(plist-get child 'index))
+                            parent)))
+                       )
+                     (push
+                      (append
+                       (list (plist-get item 'name))
+                       (reverse parent))
+                      imenu-index))
+                 (push
+                  `(,(plist-get item 'name) . ,(plist-get item 'index))
+                  imenu-index))))
+           (setq
+            imenu-index
+            (reverse imenu-index))
+
+           (message "imenu-index:\n%S\n" imenu-index)
+
+           (should
+            (equal
+             imenu-index
+             '(("MyNamespaceA" ("aFunctionA" . 46) ("MyClass" ("__construct" . 205) ("myFunction1" . 338) ("myFunction2" . 542) ("myFunction3" . 646) ("myFunction4" . 740))) ("aFunctionB" . 807) ("MyClass" ("__construct" . 925) ("myFunction1" . 1058) ("myFunction2" . 1262) ("myFunction3" . 1366) ("myFunction4" . 1460)))))
+           ))))
+
+    )
 
   (message "\n-- Ran tests for parser translation. --"))
 
