@@ -463,16 +463,25 @@
             ast))
 
          (message "\nAST:\n%S\n" ast)
+
          (let ((imenu-index))
            (dolist (item ast)
              (let ((children (plist-get item 'children))
+                   (item-type (plist-get item 'type))
                    (parent))
-               (if children
+               (if (and
+                    (or
+                     (equal item-type 'namespace)
+                     (equal item-type 'class))
+                    children)
                    (progn
                      (dolist (child children)
                        (let ((grandchildren (plist-get child 'children))
+                             (child-type (plist-get child 'type))
                              (subparent))
-                         (if grandchildren
+                         (if (and
+                              (equal child-type 'class)
+                              grandchildren)
                              (progn
                                (dolist (grandchild grandchildren)
                                  (push
