@@ -110,9 +110,6 @@
      ;; (message "args: %S" args)
      ;; (message "terminals: %S" terminals)
      ;; (message "ast-object: %S" ast-object)
-     (push
-      ast-object
-      phps-mode-ast--tree)
      ast-object))
  phps-mode-parser--table-translations)
 
@@ -121,10 +118,6 @@
  108
  (lambda(args _terminals)
    ;; (message "T_NAMESPACE: %S" args)
-   (when (nth 2 args)
-     (setq
-      phps-mode-ast--tree
-      (append phps-mode-ast--tree (nth 2 args))))
    (nth 2 args))
  phps-mode-parser--table-translations)
 
@@ -147,10 +140,6 @@
      ;; (message "Function: %S" ast-object)
      ;; (message "args: %S" args)
      ;; (message "terminals: %S" terminals)
-     (when phps-mode-ast--current-namespace
-       (push
-        ast-object
-        phps-mode-ast--current-namespace-children))
      ast-object))
  phps-mode-parser--table-translations)
 
@@ -175,10 +164,6 @@
      ;; (message "Class %S" ast-object)
      ;; (message "args: %S" args)
      ;; (message "terminals: %S" terminals)
-     (when phps-mode-ast--current-namespace
-       (push
-        ast-object
-        phps-mode-ast--current-namespace-children))
      ast-object))
  phps-mode-parser--table-translations)
 
@@ -230,16 +215,33 @@
    phps-mode-ast--tree
    nil)
   (let ((translation (phps-mode-parser-translate)))
-    
-    (message "translation: %S" translation)
+    ;; (message "translation:\n%S\n\n" translation)
     (when translation
-      (if phps-mode-ast--tree
-          (setq
-           phps-mode-ast--tree
-           (append phps-mode-ast--tree translation))
-        (setq
-         phps-mode-ast--tree
-         translation)))
+      (dolist (item translation)
+        (when (listp item)
+          (cond
+
+           ((plist-get item 'type)
+            (if phps-mode-ast--current-namespace
+                (push
+                 item
+                 phps-mode-ast--current-namespace-children)
+              (push
+               item
+               phps-mode-ast--tree)))
+
+           ((listp (car item))
+            (dolist (sub-item item)
+              (when (and
+                     (listp sub-item)
+                     (plist-get sub-item 'type))
+                (if phps-mode-ast--current-namespace
+                    (push
+                     sub-item
+                     phps-mode-ast--current-namespace-children)
+                  (push
+                   sub-item
+                   phps-mode-ast--tree)))))))))
 
     (when phps-mode-ast--current-namespace
       (plist-put
@@ -249,6 +251,11 @@
       (push
        phps-mode-ast--current-namespace
        phps-mode-ast--tree))
+    (setq
+     phps-mode-ast--tree
+     (reverse phps-mode-ast--tree))
+
+    ;; (message "AST:\n%S\n\n" phps-mode-ast--tree)
 
     (let ((imenu-index))
       (dolist (item phps-mode-ast--tree)
@@ -292,7 +299,10 @@
              imenu-index))))
       (setq
        phps-mode-ast--imenu
-       (reverse imenu-index)))))
+       (reverse imenu-index)))
+
+    ;; (message "imenu:\n%S\n\n" phps-mode-ast--imenu)
+    ))
 
 
 (provide 'phps-mode-ast)
