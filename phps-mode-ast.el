@@ -167,6 +167,31 @@
      ast-object))
  phps-mode-parser--table-translations)
 
+
+;; interface_declaration_statement -> (T_INTERFACE T_STRING interface_extends_list backup_doc_comment "{" class_statement_list "}")
+(puthash
+ 186
+ (lambda(args terminals)
+   (let ((ast-object
+          (list
+           'type
+           'interface
+           'name
+           (nth 1 args)
+           'index
+           (car (cdr (nth 1 terminals)))
+           'start
+           (car (cdr (nth 4 terminals)))
+           'end
+           (car (cdr (nth 6 terminals)))
+           'children
+           (nth 5 args))))
+     ;; (message "Interface %S" ast-object)
+     ;; (message "args: %S" args)
+     ;; (message "terminals: %S" terminals)
+     ast-object))
+ phps-mode-parser--table-translations)
+
 ;; class_statement_list -> (class_statement_list class_statement)
 (puthash
  276
@@ -265,7 +290,8 @@
           (if (and
                (or
                 (equal item-type 'namespace)
-                (equal item-type 'class))
+                (equal item-type 'class)
+                (equal item-type 'interface))
                children)
               (progn
                 (dolist (child children)
@@ -273,7 +299,9 @@
                         (child-type (plist-get child 'type))
                         (subparent))
                     (if (and
-                         (equal child-type 'class)
+                         (or
+                          (equal child-type 'class)
+                          (equal child-type 'interface))
                          grand-children)
                         (progn
                           (dolist (grand-child grand-children)
