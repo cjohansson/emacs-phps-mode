@@ -129,6 +129,86 @@
        phps-mode-ast--imenu
        '(("MyNamespaceA" ("aFunctionA" . 46) ("MyClass" ("__construct" . 205) ("myFunction1" . 338) ("myFunction2" . 542) ("myFunction3" . 646) ("myFunction4" . 740))) ("aFunctionB" . 807) ("MyClass" ("__construct" . 925) ("myFunction1" . 1058) ("myFunction2" . 1262) ("myFunction3" . 1366) ("myFunction4" . 1460)))))))
 
+  (phps-mode-test-ast--buffer-contents
+  "<?php\nnamespace myNamespace {\n    class myClass extends myAbstract {\n        public function myFunctionA() {}\n        protected function myFunctionB() {}\n    }\n}\n"
+  "Imenu object-oriented file with namespace, class that extends and functions"
+  (lambda()
+     (phps-mode-ast-generate)
+     (should
+      (equal
+       phps-mode-ast--imenu
+       '(("myNamespace" ("myClass" ("myFunctionA" . 94) ("myFunctionB" . 138))))))))
+
+  (phps-mode-test-ast--buffer-contents
+   "<?php\nnamespace myNamespace;\nclass myClass extends myAbstract implements myInterface {\n    public function myFunctionA() {}\n    protected function myFunctionB() {}\n}\n"
+   "Imenu object-oriented file with bracket-less namespace, class that extends and implements and functions"
+   (lambda()
+     (phps-mode-ast-generate)
+     (should
+      (equal
+       phps-mode-ast--imenu
+       '(("myNamespace" ("myClass" ("myFunctionA" . 108) ("myFunctionB" . 148))))))))
+
+  (phps-mode-test-ast--buffer-contents
+   "<?php\nclass myClass {}"
+   "Imenu empty class"
+   (lambda()
+     (phps-mode-ast-generate)
+     (should
+      (equal
+       phps-mode-ast--imenu
+       '(("myClass" . 13))))))
+
+  (phps-mode-test-ast--buffer-contents
+   "<?php\nnamespace myNamespace {}"
+   "Imenu empty bracketed namespace"
+   (lambda()
+     (phps-mode-ast-generate)
+     (should
+      (equal
+       phps-mode-ast--imenu
+       '(("myNamespace" . 17))))))
+
+  (phps-mode-test-ast--buffer-contents
+   "<?php\nnamespace myNamespace;"
+   "Imenu empty namespace without brackets"
+   (lambda()
+     (phps-mode-ast-generate)
+     (should
+      (equal
+       phps-mode-ast--imenu
+       '(("myNamespace" . 17))))))
+
+  (phps-mode-test-ast--buffer-contents
+   "<?php\nnamespace myNamespace;\nclass myClass extends myAbstract implements myInterface {\n    public function myFunctionA($myArg = null) {}\n    protected function myFunctionB($myArg = 'abc') {}\n}\n"
+   "Imenu object-oriented file with bracket-less namespace, class that extends and implements and functions with optional arguments"
+   (lambda()
+     (phps-mode-ast-generate)
+     (should
+      (equal
+       phps-mode-ast--imenu
+       '(("myNamespace" ("myClass" ("myFunctionA" . 108) ("myFunctionB" . 161))))))))
+
+  (phps-mode-test-ast--buffer-contents
+   "<?php\nnamespace myNamespace\\myNamespace2;\nclass myClass extends myAbstract implements myInterface {\n    public function myFunctionA($myArg = null) {}\n    protected function myFunctionB($myArg = 'abc') {}\n}\n"
+   "Imenu object-oriented file with bracket-less namespace with multiple levels, class that extends and implements and functions with optional arguments"
+   (lambda()
+     (phps-mode-ast-generate)
+     (should
+      (equal
+       phps-mode-ast--imenu
+       '(("myNamespace\\myNamespace2" ("myClass" ("myFunctionA" . 121) ("myFunctionB" . 174))))))))
+
+  (phps-mode-test-ast--buffer-contents
+   "<?php\nnamespace {}"
+   "Imenu empty unnamed bracketed namespace"
+   (lambda()
+     (phps-mode-ast-generate)
+     (should
+      (equal
+       phps-mode-ast--imenu
+       nil))))
+
   (message "\n-- Ran tests for imenu generation. --"))
 
 (defun phps-mode-test-ast ()
