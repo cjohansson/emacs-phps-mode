@@ -198,6 +198,14 @@
      ast-object))
  phps-mode-parser--table-translations)
 
+;; if_stmt_without_else -> (T_IF "(" expr ")" statement)
+(puthash
+ 223
+ (lambda(args terminals)
+   (message "if_stmt_without_else: %S" args terminals)
+   args)
+ phps-mode-parser--table-translations)
+
 ;; class_statement_list -> (class_statement_list class_statement)
 (puthash
  276
@@ -238,7 +246,7 @@
 (puthash
  337
  (lambda(args terminals)
-   (message "expr: %S %S" args terminals)
+   ;; (message "expr: %S %S" args terminals)
    (let ((ast-object
           (list
            'type
@@ -254,6 +262,23 @@
      ;; (message "Method: %S" ast-object)
      ;; (message "args: %S" args)
      ;; (message "terminals: %S" terminals)
+     ast-object))
+ phps-mode-parser--table-translations)
+
+;; simple_variable -> (T_VARIABLE)
+(puthash
+ 492
+ (lambda(args terminals)
+   ;; (message "simple_variable: %S %S" args terminals)
+   (let ((ast-object
+          (list
+           'type
+           'variable
+           'name
+           args
+           'start
+           (car (cdr terminals))
+           (cdr (cdr terminals)))))
      ast-object))
  phps-mode-parser--table-translations)
 
