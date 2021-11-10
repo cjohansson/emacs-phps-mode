@@ -114,6 +114,19 @@
    (nth 2 args))
  phps-mode-parser--table-translations)
 
+;; inner_statement_list -> (inner_statement_list inner_statement)
+(puthash
+ 134
+ (lambda(args _terminals)
+   ;; (message "inner_statement_list: %S" args)
+   (let ((ast-object))
+     (if (car args)
+         (setq ast-object (append (car args) (cdr args)))
+       (setq ast-object (cdr args)))
+     ;; (message "ast-object: %S" ast-object)
+     ast-object))
+ phps-mode-parser--table-translations)
+
 ;; function_declaration_statement -> (function returns_ref T_STRING backup_doc_comment "(" parameter_list ")" return_type backup_fn_flags "{" inner_statement_list "}" backup_fn_flags)
 (puthash
  174
@@ -221,6 +234,30 @@
  phps-mode-parser--table-translations)
 
 
+;; expr -> (variable "=" expr)
+(puthash
+ 337
+ (lambda(args terminals)
+   (message "expr: %S %S" args terminals)
+   (let ((ast-object
+          (list
+           'type
+           'assign-variable
+           'name
+           (nth 0 args)
+           'start
+           (car (cdr (nth 0 terminals)))
+           'end
+           (cdr (cdr (nth 0 terminals)))
+           'value
+           (nth 2 args))))
+     ;; (message "Method: %S" ast-object)
+     ;; (message "args: %S" args)
+     ;; (message "terminals: %S" terminals)
+     ast-object))
+ phps-mode-parser--table-translations)
+
+
 ;; Functions:
 
 
@@ -230,7 +267,9 @@
         (namespace)
         (namespace-children)
         (ast))
-    ;; (message "translation:\n%S\n\n" translation)
+
+    (message "\nTranslation:\n%S\n\n" translation)
+
     (when translation
       (dolist (item translation)
         (when (listp item)
@@ -285,45 +324,49 @@
       (dolist (item ast)
         (let ((children (plist-get item 'children))
               (item-type (plist-get item 'type))
+              (item-index (plist-get item 'index))
               (parent))
-          (if (and
-               (or
-                (equal item-type 'namespace)
-                (equal item-type 'class)
-                (equal item-type 'interface))
-               children)
-              (progn
-                (dolist (child children)
-                  (let ((grand-children (plist-get child 'children))
-                        (child-type (plist-get child 'type))
-                        (subparent))
-                    (if (and
-                         (or
-                          (equal child-type 'class)
-                          (equal child-type 'interface))
-                         grand-children)
-                        (progn
-                          (dolist (grand-child grand-children)
+          (when (and
+                 item-type
+                 item-index)
+            (if (and
+                 (or
+                  (equal item-type 'namespace)
+                  (equal item-type 'class)
+                  (equal item-type 'interface))
+                 children)
+                (progn
+                  (dolist (child children)
+                    (let ((grand-children (plist-get child 'children))
+                          (child-type (plist-get child 'type))
+                          (subparent))
+                      (if (and
+                           (or
+                            (equal child-type 'class)
+                            (equal child-type 'interface))
+                           grand-children)
+                          (progn
+                            (dolist (grand-child grand-children)
+                              (push
+                               `(,(plist-get grand-child 'name) . ,(plist-get grand-child 'index))
+                               subparent))
                             (push
-                             `(,(plist-get grand-child 'name) . ,(plist-get grand-child 'index))
-                             subparent))
-                          (push
-                           (append
-                            (list (plist-get child 'name))
-                            (reverse subparent))
-                           parent))
-                      (push
-                       `(,(plist-get child 'name) . ,(plist-get child 'index))
-                       parent)))
-                  )
-                (push
-                 (append
-                  (list (plist-get item 'name))
-                  (reverse parent))
-                 imenu-index))
-            (push
-             `(,(plist-get item 'name) . ,(plist-get item 'index))
-             imenu-index))))
+                             (append
+                              (list (plist-get child 'name))
+                              (reverse subparent))
+                             parent))
+                        (push
+                         `(,(plist-get child 'name) . ,(plist-get child 'index))
+                         parent)))
+                    )
+                  (push
+                   (append
+                    (list (plist-get item 'name))
+                    (reverse parent))
+                   imenu-index))
+              (push
+               `(,(plist-get item 'name) . ,(plist-get item 'index))
+               imenu-index)))))
       (setq
        phps-mode-ast--imenu
        (reverse imenu-index)))
