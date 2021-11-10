@@ -20,7 +20,7 @@
 
 ;;; Commentary:
 
-;; Run from terminal make test-parser
+;; Run from terminal make test-ast
 
 
 ;;; Code:
@@ -211,11 +211,20 @@
 
   (message "\n-- Ran tests for imenu generation. --"))
 
+(defun phps-mode-test-ast-bookkeeping ()
+  "Run test for bookkeeping generation."
+  (message "-- Running tests for bookkeeping generation... --\n")
+
+  
+
+  (message "\n-- Ran tests for bookkeeping generation. --"))
+
 (defun phps-mode-test-ast ()
   "Run test for ast."
   (message "-- Running all tests for ast... --\n")
 
   (phps-mode-test-ast-imenu)
+  (phps-mode-test-ast-bookkeeping)
 
   (message "\n-- Ran all tests for ast. --"))
 

@@ -31,24 +31,20 @@
 
 
 (defvar-local
-  phps-mode-ast--current-namespace
+  phps-mode-ast--bookkeeping
   nil
-  "Current namespace for AST.")
+  "Bookkeeping for current buffer.")
 
 (defvar-local
-  phps-mode-ast--current-namespace-children
+  phps-mode-ast--imenu
   nil
-  "Children for current namespace for AST.")
+  "Imenu for current buffer.")
 
 (defvar-local
   phps-mode-ast--tree
   nil
   "Tree for current buffer.")
 
-(defvar-local
-  phps-mode-ast--imenu
-  nil
-  "Imenu for current buffer.")
 
 ;; top_statement_list -> (top_statement_list top_statement)
 (puthash
@@ -82,10 +78,7 @@
      ;; (message "Namespace %S" ast-object)
      ;; (message "args: %S" args)
      ;; (message "terminals: %S" terminals)
-     (setq
-      phps-mode-ast--current-namespace
-      ast-object)
-     nil))
+     ast-object))
  phps-mode-parser--table-translations)
 
 ;; top_statement -> (T_NAMESPACE namespace_declaration_name "{" top_statement_list "}")
@@ -233,13 +226,10 @@
 
 (defun phps-mode-ast-generate ()
   "Generate AST for current buffer."
-  (setq
-   phps-mode-ast--current-namespace
-   nil)
-  (setq
-   phps-mode-ast--tree
-   nil)
-  (let ((translation (phps-mode-parser-translate)))
+  (let ((translation (phps-mode-parser-translate))
+        (namespace)
+        (namespace-children)
+        (ast))
     ;; (message "translation:\n%S\n\n" translation)
     (when translation
       (dolist (item translation)
@@ -247,43 +237,52 @@
           (cond
 
            ((plist-get item 'type)
-            (if phps-mode-ast--current-namespace
+            (if (and
+                 (not namespace)
+                 (equal (plist-get item 'type) 'namespace)
+                 (equal (plist-get item 'end) 'max))
+                (progn
+                  ;; (message "Found global namespace: %S" item)
+                  (setq
+                   namespace
+                   item))
+              (if namespace
+                  (push
+                   item
+                   namespace-children)
                 (push
                  item
-                 phps-mode-ast--current-namespace-children)
-              (push
-               item
-               phps-mode-ast--tree)))
+                 ast))))
 
            ((listp (car item))
             (dolist (sub-item item)
               (when (and
                      (listp sub-item)
                      (plist-get sub-item 'type))
-                (if phps-mode-ast--current-namespace
+                (if namespace
                     (push
                      sub-item
-                     phps-mode-ast--current-namespace-children)
+                     namespace-children)
                   (push
                    sub-item
-                   phps-mode-ast--tree)))))))))
+                   ast)))))))))
 
-    (when phps-mode-ast--current-namespace
+    (when namespace
       (plist-put
-       phps-mode-ast--current-namespace
+       namespace
        'children
-       (reverse phps-mode-ast--current-namespace-children))
+       (reverse namespace-children))
       (push
-       phps-mode-ast--current-namespace
-       phps-mode-ast--tree))
+       namespace
+       ast))
     (setq
-     phps-mode-ast--tree
-     (reverse phps-mode-ast--tree))
+     ast
+     (reverse ast))
 
-    ;; (message "AST:\n%S\n\n" phps-mode-ast--tree)
+    ;; (message "AST:\n%S\n\n" ast)
 
     (let ((imenu-index))
-      (dolist (item phps-mode-ast--tree)
+      (dolist (item ast)
         (let ((children (plist-get item 'children))
               (item-type (plist-get item 'type))
               (parent))
@@ -330,7 +329,10 @@
        (reverse imenu-index)))
 
     ;; (message "imenu:\n%S\n\n" phps-mode-ast--imenu)
-    ))
+
+    (setq
+     phps-mode-ast--tree
+     ast)))
 
 
 (provide 'phps-mode-ast)
