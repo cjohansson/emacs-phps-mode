@@ -46,6 +46,9 @@
   "Tree for current buffer.")
 
 
+;; Syntax directed translation for grammar
+
+
 ;; top_statement_list -> (top_statement_list top_statement)
 (puthash
  79
@@ -169,7 +172,15 @@
            'start
            (car (cdr (nth 9 terminals)))
            'end
-           (car (cdr (nth 11 terminals))))))
+           (car (cdr (nth 11 terminals)))
+           'returns-reference-p
+           (not (equal (nth 1 args) nil))
+           'parameters
+           (nth 5 args)
+           'return-type
+           (nth 7 args)
+           'body
+           (nth 10 args))))
      ;; (message "Function: %S" ast-object)
      ;; (message "args: %S" args)
      ;; (message "terminals: %S" terminals)
@@ -240,6 +251,42 @@
      ast-object))
  phps-mode-parser--table-translations)
 
+;; 231: parameter_list -> (non_empty_parameter_list possible_comma)
+(puthash
+ 231
+ (lambda(args _terminals)
+   (if (listp (car (nth 0 args)))
+       (nth 0 args)
+     (list (nth 0 args))))
+ phps-mode-parser--table-translations)
+
+; 234: non_empty_parameter_list -> (non_empty_parameter_list "," attributed_parameter)
+(puthash
+ 234
+ (lambda(args _terminals)
+   (list (nth 0 args) (nth 2 args)))
+ phps-mode-parser--table-translations)
+
+;; 241: parameter -> (optional_visibility_modifier optional_type_without_static is_reference is_variadic T_VARIABLE backup_doc_comment)
+(puthash
+ 241
+ (lambda(args _terminals)
+   ;; (message "parameter: %S %S" args _terminals)
+   (let ((ast-object
+          (list
+           'visibility
+           (nth 0 args)
+           'type
+           (nth 1 args)
+           'is-reference
+           (nth 2 args)
+           'is-variadic
+           (nth 3 args)
+           'name
+           (nth 4 args))))
+     ast-object))
+ phps-mode-parser--table-translations)
+
 ;; class_statement_list -> (class_statement_list class_statement)
 (puthash
  276
@@ -274,7 +321,6 @@
      ;; (message "terminals: %S" terminals)
      ast-object))
  phps-mode-parser--table-translations)
-
 
 ;; expr -> (variable "=" expr)
 (puthash
