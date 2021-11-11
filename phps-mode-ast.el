@@ -72,7 +72,7 @@
  (lambda(args terminals)
    (let ((ast-object
           (list
-           'type
+           'ast-type
            'namespace
            'name
            (nth 1 args)
@@ -94,7 +94,7 @@
  (lambda(args terminals)
    (let ((ast-object
           (list
-           'type
+           'ast-type
            'namespace
            'name
            (nth 1 args)
@@ -147,9 +147,9 @@
  (lambda(args _terminals)
    (let ((ast-object
           (list
-           'type
+           'ast-type
            'echo
-           'body
+           'children
            (nth 1 args))))
      ast-object))
  phps-mode-parser--table-translations)
@@ -167,7 +167,7 @@
  (lambda(args terminals)
    (let ((ast-object
           (list
-           'type
+           'ast-type
            'function
            'name
            (nth 2 args)
@@ -183,7 +183,7 @@
            (nth 5 args)
            'return-type
            (nth 7 args)
-           'body
+           'children
            (nth 10 args))))
      ;; (message "Function: %S" ast-object)
      ;; (message "args: %S" args)
@@ -197,7 +197,7 @@
  (lambda(args terminals)
    (let ((ast-object
           (list
-           'type
+           'ast-type
            'class
            'name
            (nth 1 args)
@@ -221,7 +221,7 @@
  (lambda(args terminals)
    (let ((ast-object
           (list
-           'type
+           'ast-type
            'interface
            'name
            (nth 1 args)
@@ -246,11 +246,11 @@
    ;; (message "if_stmt_without_else: %S" args _terminals)
    (let ((ast-object
           (list
-           'type
+           'ast-type
            'if
            'condition
            (nth 2 args)
-           'body
+           'children
            (nth 4 args))))
      ast-object))
  phps-mode-parser--table-translations)
@@ -280,7 +280,7 @@
           (list
            'visibility
            (nth 0 args)
-           'type
+           'ast-type
            (nth 1 args)
            'is-reference
            (nth 2 args)
@@ -308,16 +308,41 @@
      ast-object))
  phps-mode-parser--table-translations)
 
+;; attributed_class_statement -> (variable_modifiers optional_type_without_static property_list ";")
+(puthash
+ 278
+ (lambda(args _terminals)
+   (let ((ast-object
+          (list
+           'ast-type
+           'property
+           'modifiers
+           (nth 0 args)
+           'type
+           (nth 1 args)
+           'subject
+           (nth 2 args))))
+     ast-object))
+ phps-mode-parser--table-translations)
+
 ;; attributed_class_statement -> (method_modifiers function returns_ref identifier backup_doc_comment "(" parameter_list ")" return_type backup_fn_flags method_body backup_fn_flags)
 (puthash
  280
  (lambda(args terminals)
    (let ((ast-object
           (list
-           'type
+           'ast-type
            'method
+           'returns-reference-p
+           (not (equal (nth 2 args) nil))
            'name
            (nth 3 args)
+           'parameters
+           (nth 6 args)
+           'return-type
+           (nth 8 args)
+           'children
+           (nth 10 args)
            'index
            (car (cdr (nth 3 terminals)))
            'start
@@ -330,6 +355,27 @@
      ast-object))
  phps-mode-parser--table-translations)
 
+;; property -> (T_VARIABLE "=" expr backup_doc_comment)
+(puthash
+ 318
+ (lambda(args terminals)
+   (let ((ast-object
+          (list
+           'ast-type
+           'assign-property
+           'key
+           (nth 0 args)
+           'value
+           (nth 2 args)
+           'index
+           (car (cdr (nth 0 terminals)))
+           'start
+           (car (cdr (nth 0 terminals)))
+           'end
+           (cdr (cdr (nth 0 terminals))))))
+     ast-object))
+ phps-mode-parser--table-translations)
+
 ;; expr -> (variable "=" expr)
 (puthash
  337
@@ -337,7 +383,7 @@
    ;; (message "expr: %S %S" args _terminals)
    (let ((ast-object
           (list
-           'type
+           'ast-type
            'assign-variable
            'key
            (nth 0 args)
@@ -356,10 +402,12 @@
    ;; (message "simple_variable: %S %S" args terminals)
    (let ((ast-object
           (list
-           'type
+           'ast-type
            'variable
            'name
            args
+           'index
+           (car (cdr terminals))
            'start
            (car (cdr terminals))
            'end
@@ -386,10 +434,10 @@
         (when (listp item)
           (cond
 
-           ((plist-get item 'type)
+           ((plist-get item 'ast-type)
             (if (and
                  (not namespace)
-                 (equal (plist-get item 'type) 'namespace)
+                 (equal (plist-get item 'ast-type) 'namespace)
                  (equal (plist-get item 'end) 'max))
                 (progn
                   ;; (message "Found global namespace: %S" item)
@@ -408,7 +456,7 @@
             (dolist (sub-item item)
               (when (and
                      (listp sub-item)
-                     (plist-get sub-item 'type))
+                     (plist-get sub-item 'ast-type))
                 (if namespace
                     (push
                      sub-item
@@ -434,7 +482,7 @@
     (let ((imenu-index))
       (dolist (item ast)
         (let ((children (plist-get item 'children))
-              (item-type (plist-get item 'type))
+              (item-type (plist-get item 'ast-type))
               (item-index (plist-get item 'index))
               (parent))
           (when (and
@@ -449,7 +497,7 @@
                 (progn
                   (dolist (child children)
                     (let ((grand-children (plist-get child 'children))
-                          (child-type (plist-get child 'type))
+                          (child-type (plist-get child 'ast-type))
                           (subparent))
                       (if (and
                            (or
@@ -505,7 +553,7 @@
             (setq
              item
              item-raw))
-          (let ((type (plist-get item 'type)))
+          (let ((type (plist-get item 'ast-type)))
             (cond
 
              ((equal type 'variable)
@@ -558,17 +606,53 @@
                        1
                        bookkeeping))))
 
-                (when-let ((body (reverse (plist-get item 'body))))
-                  (dolist (body-item body)
+                (when-let ((children (reverse (plist-get item 'children))))
+                  (dolist (child children)
                     (push
                      (list
                       subnamespace
-                      body-item)
+                      child)
+                     bookkeeping-stack)))))
+
+             ((equal type 'namespace)
+              (let ((subnamespace
+                     (format
+                      "%s namespace %s"
+                      namespace
+                      (plist-get item 'name))))
+                (when-let ((children (reverse (plist-get item 'children))))
+                  (dolist (child children)
+                    (if (equal
+                         (plist-get child 'ast-type)
+                         'assign-variable)
+                        (push
+                         (list
+                          namespace
+                          child)
+                         bookkeeping-stack)
+                      (push
+                       (list
+                        subnamespace
+                        child)
+                       bookkeeping-stack))))))
+
+             ((equal type 'class)
+              (let ((subnamespace
+                     (format
+                      "%s class %s"
+                      namespace
+                      (plist-get item 'name))))
+                (when-let ((children (reverse (plist-get item 'children))))
+                  (dolist (child children)
+                    (push
+                     (list
+                      subnamespace
+                      child)
                      bookkeeping-stack)))))
 
              ((equal type 'if)
               (let ((condition (plist-get item 'condition)))
-                (when (equal (plist-get condition 'type) 'variable)
+                (when (equal (plist-get condition 'ast-type) 'variable)
                   (push
                    (list
                     namespace
@@ -597,6 +681,30 @@
                  object
                  defined
                  bookkeeping)))
+
+             ((equal type 'assign-property)
+              (let ((subject (plist-get item 'subject)))
+                (let ((id (format
+                           "%s id %s"
+                           namespace
+                           (plist-get subject 'name)))
+                      (object (list
+                               (plist-get subject 'start)
+                               (plist-get subject 'end)))
+                      (defined 1))
+                  ;; (message "id: %S from %S" id item)
+                  (when-let ((predefined (gethash id bookkeeping)))
+                    (setq
+                     defined
+                     (1+ predefined)))
+                  (puthash
+                   id
+                   defined
+                   bookkeeping)
+                  (puthash
+                   object
+                   defined
+                   bookkeeping))))
 
              )))))
     (setq
