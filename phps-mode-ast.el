@@ -127,6 +127,33 @@
      ast-object))
  phps-mode-parser--table-translations)
 
+;; statement -> ("{" inner_statement_list "}")
+(puthash
+ 140
+ (lambda(args _terminals)
+   (nth 1 args))
+ phps-mode-parser--table-translations)
+
+;; statement -> (T_ECHO echo_expr_list ";")
+(puthash
+ 152
+ (lambda(args _terminals)
+   (let ((ast-object
+          (list
+           'type
+           'echo
+           'body
+           (nth 1 args))))
+     ast-object))
+ phps-mode-parser--table-translations)
+
+;; statement -> (expr ";")
+(puthash
+ 154
+ (lambda(args _terminals)
+   (car args))
+ phps-mode-parser--table-translations)
+
 ;; function_declaration_statement -> (function returns_ref T_STRING backup_doc_comment "(" parameter_list ")" return_type backup_fn_flags "{" inner_statement_list "}" backup_fn_flags)
 (puthash
  174
@@ -173,7 +200,6 @@
      ast-object))
  phps-mode-parser--table-translations)
 
-
 ;; interface_declaration_statement -> (T_INTERFACE T_STRING interface_extends_list backup_doc_comment "{" class_statement_list "}")
 (puthash
  186
@@ -201,9 +227,17 @@
 ;; if_stmt_without_else -> (T_IF "(" expr ")" statement)
 (puthash
  223
- (lambda(args terminals)
-   (message "if_stmt_without_else: %S" args terminals)
-   args)
+ (lambda(args _terminals)
+   ;; (message "if_stmt_without_else: %S" args _terminals)
+   (let ((ast-object
+          (list
+           'type
+           'if
+           'condition
+           (nth 2 args)
+           'body
+           (nth 4 args))))
+     ast-object))
  phps-mode-parser--table-translations)
 
 ;; class_statement_list -> (class_statement_list class_statement)
@@ -245,18 +279,14 @@
 ;; expr -> (variable "=" expr)
 (puthash
  337
- (lambda(args terminals)
-   ;; (message "expr: %S %S" args terminals)
+ (lambda(args _terminals)
+   ;; (message "expr: %S %S" args _terminals)
    (let ((ast-object
           (list
            'type
            'assign-variable
-           'name
+           'key
            (nth 0 args)
-           'start
-           (car (cdr (nth 0 terminals)))
-           'end
-           (cdr (cdr (nth 0 terminals)))
            'value
            (nth 2 args))))
      ;; (message "Method: %S" ast-object)
@@ -278,6 +308,7 @@
            args
            'start
            (car (cdr terminals))
+           'end
            (cdr (cdr terminals)))))
      ast-object))
  phps-mode-parser--table-translations)
@@ -291,7 +322,8 @@
   (let ((translation (phps-mode-parser-translate))
         (namespace)
         (namespace-children)
-        (ast))
+        (ast)
+        (bookkeeping (make-hash-table :test 'equal)))
 
     (message "\nTranslation:\n%S\n\n" translation)
 
@@ -343,7 +375,7 @@
      ast
      (reverse ast))
 
-    ;; (message "AST:\n%S\n\n" ast)
+    (message "AST:\n%S\n\n" ast)
 
     (let ((imenu-index))
       (dolist (item ast)
@@ -397,6 +429,63 @@
        (reverse imenu-index)))
 
     ;; (message "imenu:\n%S\n\n" phps-mode-ast--imenu)
+    
+
+    ;; TODO Build bookkeeping here
+    (let ((bookkeeping-stack ast))
+      (while bookkeeping-stack
+        (let ((item (pop bookkeeping-stack)))
+          (let ((type (plist-get item 'type)))
+            (cond
+
+             ((equal type 'variable)
+              (let ((id (format " id %s" (plist-get item 'name)))
+                    (object (list
+                             (plist-get item 'start)
+                             (plist-get item 'end)))
+                    (defined-p 0))
+                (when (gethash id bookkeeping)
+                  (setq
+                   defined-p
+                   1))
+                (puthash
+                 object
+                 defined-p
+                 bookkeeping)))
+
+             ((equal type 'if)
+              (let ((condition (plist-get item 'condition)))
+                (when (equal (plist-get condition 'type) 'variable)
+                  (push
+                   condition
+                   bookkeeping-stack))))
+
+             ((equal type 'assign-variable)
+              (let ((id (format " id %s" (plist-get (plist-get item 'key) 'name)))
+                    (object (list
+                             (plist-get (plist-get item 'key) 'start)
+                             (plist-get (plist-get item 'key) 'end)))
+                    (defined 1))
+                (message "id: %S from %S" id item)
+                (when-let ((predefined (gethash id bookkeeping)))
+                  (setq
+                   defined
+                   (1+ predefined)))
+                (puthash
+                 id
+                 defined
+                 bookkeeping)
+                (puthash
+                 object
+                 defined
+                 bookkeeping)))
+
+             )))))
+    (setq
+     phps-mode-ast--bookkeeping
+     bookkeeping)
+
+    (message "\nBookkeeping\n:%S\n" bookkeeping)
 
     (setq
      phps-mode-ast--tree
