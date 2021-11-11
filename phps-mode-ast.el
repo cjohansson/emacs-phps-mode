@@ -270,7 +270,7 @@
 ;; 241: parameter -> (optional_visibility_modifier optional_type_without_static is_reference is_variadic T_VARIABLE backup_doc_comment)
 (puthash
  241
- (lambda(args _terminals)
+ (lambda(args terminals)
    ;; (message "parameter: %S %S" args _terminals)
    (let ((ast-object
           (list
@@ -283,7 +283,11 @@
            'is-variadic
            (nth 3 args)
            'name
-           (nth 4 args))))
+           (nth 4 args)
+           'start
+           (car (cdr (nth 4 terminals)))
+           'end
+           (cdr (cdr (nth 4 terminals))))))
      ast-object))
  phps-mode-parser--table-translations)
 
@@ -480,12 +484,31 @@
     ;; TODO Build bookkeeping here
     (let ((bookkeeping-stack ast))
       (while bookkeeping-stack
-        (let ((item (pop bookkeeping-stack)))
+        (let ((item-raw (pop bookkeeping-stack))
+              (item)
+              (namespace))
+          (if (stringp (car item-raw))
+              (progn
+                (setq
+                 namespace
+                 (car item-raw))
+                (setq
+                 item
+                 (car (cdr item-raw))))
+            (setq
+             namespace
+             "")
+            (setq
+             item
+             item-raw))
           (let ((type (plist-get item 'type)))
             (cond
 
              ((equal type 'variable)
-              (let ((id (format " id %s" (plist-get item 'name)))
+              (let ((id (format
+                         "%s id %s"
+                         namespace
+                         (plist-get item 'name)))
                     (object (list
                              (plist-get item 'start)
                              (plist-get item 'end)))
@@ -499,20 +522,57 @@
                  defined-p
                  bookkeeping)))
 
+             ((equal type 'function)
+              (let ((subnamespace
+                     (format
+                      "%s function %s"
+                      namespace
+                      (plist-get item 'name))))
+                (when-let ((parameters (reverse (plist-get item 'parameters))))
+                  (dolist (parameter parameters)
+                    (let ((id (format
+                               "%s id %s"
+                               subnamespace
+                               (plist-get parameter 'name)))
+                          (object (list
+                                   (plist-get parameter 'start)
+                                   (plist-get parameter 'end))))
+                      (puthash
+                       id
+                       1
+                       bookkeeping)
+                      (puthash
+                       object
+                       1
+                       bookkeeping))))
+
+                (when-let ((body (reverse (plist-get item 'body))))
+                  (dolist (body-item body)
+                    (push
+                     (list
+                      subnamespace
+                      body-item)
+                     bookkeeping-stack)))))
+
              ((equal type 'if)
               (let ((condition (plist-get item 'condition)))
                 (when (equal (plist-get condition 'type) 'variable)
                   (push
-                   condition
+                   (list
+                    namespace
+                    condition)
                    bookkeeping-stack))))
 
              ((equal type 'assign-variable)
-              (let ((id (format " id %s" (plist-get (plist-get item 'key) 'name)))
+              (let ((id (format
+                         "%s id %s"
+                         namespace
+                         (plist-get (plist-get item 'key) 'name)))
                     (object (list
                              (plist-get (plist-get item 'key) 'start)
                              (plist-get (plist-get item 'key) 'end)))
                     (defined 1))
-                (message "id: %S from %S" id item)
+                ;; (message "id: %S from %S" id item)
                 (when-let ((predefined (gethash id bookkeeping)))
                   (setq
                    defined
