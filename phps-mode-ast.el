@@ -45,6 +45,10 @@
   nil
   "Tree for current buffer.")
 
+(defvar
+  phps-mode-ast--superglobal-variable-p
+  #s(hash-table size 12 test equal rehash-size 1.5 rehash-threshold 0.8125 data ("$_GET" 1 "$_POST" 1 "$_COOKIE" 1 "$_SESSION" 1 "$_REQUEST" 1 "$GLOBALS" 1 "$_SERVER" 1 "$_FILES" 1 "$_ENV" 1 "$argc" 1 "$argv" 1 "$http_​response_​header" 1))
+  "Hash-table of super-global variables.")
 
 ;; Syntax directed translation for grammar
 
@@ -514,6 +518,14 @@
                              (plist-get item 'end)))
                     (defined-p 0))
                 (when (gethash id bookkeeping)
+                  (setq
+                   defined-p
+                   1))
+
+                ;; Is a super-global variable?
+                (when (gethash
+                       (plist-get item 'name)
+                       phps-mode-ast--superglobal-variable-p)
                   (setq
                    defined-p
                    1))
