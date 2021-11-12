@@ -278,9 +278,11 @@
    ;; (message "parameter: %S %S" args _terminals)
    (let ((ast-object
           (list
+           'ast-type
+           'parameter
            'visibility
            (nth 0 args)
-           'ast-type
+           'type
            (nth 1 args)
            'is-reference
            (nth 2 args)
@@ -355,6 +357,13 @@
      ast-object))
  phps-mode-parser--table-translations)
 
+;; 302: method_body -> ("{" inner_statement_list "}")
+(puthash
+ 302
+ (lambda(args terminals)
+   (nth 1 args))
+ phps-mode-parser--table-translations)
+
 ;; property -> (T_VARIABLE "=" expr backup_doc_comment)
 (puthash
  318
@@ -363,7 +372,7 @@
           (list
            'ast-type
            'assign-property
-           'key
+           'name
            (nth 0 args)
            'value
            (nth 2 args)
@@ -538,33 +547,82 @@
       (while bookkeeping-stack
         (let ((item-raw (pop bookkeeping-stack))
               (item)
-              (namespace))
-          (if (stringp (car item-raw))
+              (class)
+              (function)
+              (namespace)
+              (variable-namespace "")
+              (symbol-namespace ""))
+          (if (listp (car item-raw))
               (progn
                 (setq
+                 class
+                 (nth 0 (car item-raw)))
+                (setq
+                 function
+                 (nth 1 (car item-raw)))
+                (setq
                  namespace
-                 (car item-raw))
+                 (nth 2 (car item-raw)))
                 (setq
                  item
-                 (car (cdr item-raw))))
-            (setq
-             namespace
-             "")
+                 (car (cdr item-raw)))
+                (when namespace
+                  (setq
+                   symbol-namespace
+                   (format
+                    "%s namespace %s"
+                    symbol-namespace
+                    namespace)))
+                (when class
+                  (setq
+                   symbol-namespace
+                   (format
+                    "%s class %s"
+                    symbol-namespace
+                    class))
+                  (when namespace
+                    (setq
+                     variable-namespace
+                     (format
+                      "%s namespace %s"
+                      variable-namespace
+                      namespace)))
+                  (setq
+                   variable-namespace
+                   (format
+                    "%s class %s"
+                    variable-namespace
+                    class)))
+                (when function
+                  (setq
+                   symbol-namespace
+                   (format
+                    "%s function %s"
+                    symbol-namespace
+                    function))
+                  (setq
+                   variable-namespace
+                   (format
+                    "%s function %s"
+                    variable-namespace
+                    function))))
             (setq
              item
              item-raw))
+
           (let ((type (plist-get item 'ast-type)))
             (cond
 
              ((equal type 'variable)
               (let ((id (format
                          "%s id %s"
-                         namespace
+                         variable-namespace
                          (plist-get item 'name)))
                     (object (list
                              (plist-get item 'start)
                              (plist-get item 'end)))
                     (defined-p 0))
+
                 (when (gethash id bookkeeping)
                   (setq
                    defined-p
@@ -583,11 +641,12 @@
                  bookkeeping)))
 
              ((equal type 'function)
-              (let ((subnamespace
+              (let* ((name (plist-get item 'name))
+                    (subnamespace
                      (format
                       "%s function %s"
-                      namespace
-                      (plist-get item 'name))))
+                      symbol-namespace
+                      name)))
                 (when-let ((parameters (reverse (plist-get item 'parameters))))
                   (dolist (parameter parameters)
                     (let ((id (format
@@ -610,43 +669,88 @@
                   (dolist (child children)
                     (push
                      (list
-                      subnamespace
+                      (list
+                       class
+                       name
+                       namespace)
                       child)
                      bookkeeping-stack)))))
 
-             ((equal type 'namespace)
-              (let ((subnamespace
-                     (format
-                      "%s namespace %s"
-                      namespace
-                      (plist-get item 'name))))
-                (when-let ((children (reverse (plist-get item 'children))))
-                  (dolist (child children)
-                    (if (equal
-                         (plist-get child 'ast-type)
-                         'assign-variable)
-                        (push
-                         (list
-                          namespace
-                          child)
-                         bookkeeping-stack)
-                      (push
-                       (list
-                        subnamespace
-                        child)
-                       bookkeeping-stack))))))
+             ((equal type 'method)
+              (let* ((name (plist-get item 'name))
+                     (subnamespace
+                      (format
+                       "%s function %s"
+                       symbol-namespace
+                       name)))
 
-             ((equal type 'class)
-              (let ((subnamespace
-                     (format
-                      "%s class %s"
-                      namespace
-                      (plist-get item 'name))))
+                ;; TODO should only do this is method is not static
+                (let ((this-id
+                       (format
+                        "%s id %s"
+                        subnamespace
+                        "$this")))
+                  (puthash
+                   this-id
+                   1
+                   bookkeeping))
+                (when-let ((parameters (reverse (plist-get item 'parameters))))
+                  (dolist (parameter parameters)
+                    (let ((id (format
+                               "%s id %s"
+                               subnamespace
+                               (plist-get parameter 'name)))
+                          (object (list
+                                   (plist-get parameter 'start)
+                                   (plist-get parameter 'end))))
+                      (puthash
+                       id
+                       1
+                       bookkeeping)
+                      (puthash
+                       object
+                       1
+                       bookkeeping))))
+
                 (when-let ((children (reverse (plist-get item 'children))))
                   (dolist (child children)
                     (push
                      (list
-                      subnamespace
+                      (list
+                       class
+                       name
+                       namespace)
+                      child)
+                     bookkeeping-stack)))))
+
+             ((equal type 'namespace)
+              (let* ((name (plist-get item 'name))
+                     (subnamespace
+                      (format
+                       "%s namespace %s"
+                       symbol-namespace
+                       name)))
+                (when-let ((children (reverse (plist-get item 'children))))
+                  (dolist (child children)
+                    (push
+                     (list
+                      (list
+                       class
+                       function
+                       name)
+                      child)
+                     bookkeeping-stack)))))
+
+             ((equal type 'class)
+              (let ((name (plist-get item 'name)))
+                (when-let ((children (reverse (plist-get item 'children))))
+                  (dolist (child children)
+                    (push
+                     (list
+                      (list
+                       name
+                       function
+                       namespace)
                       child)
                      bookkeeping-stack)))))
 
@@ -655,20 +759,22 @@
                 (when (equal (plist-get condition 'ast-type) 'variable)
                   (push
                    (list
-                    namespace
+                    (list
+                     class
+                     function
+                     namespace)
                     condition)
                    bookkeeping-stack))))
 
              ((equal type 'assign-variable)
               (let ((id (format
                          "%s id %s"
-                         namespace
+                         variable-namespace
                          (plist-get (plist-get item 'key) 'name)))
                     (object (list
                              (plist-get (plist-get item 'key) 'start)
                              (plist-get (plist-get item 'key) 'end)))
                     (defined 1))
-                ;; (message "id: %S from %S" id item)
                 (when-let ((predefined (gethash id bookkeeping)))
                   (setq
                    defined
@@ -682,11 +788,11 @@
                  defined
                  bookkeeping)))
 
-             ((equal type 'assign-property)
+             ((equal type 'property)
               (let ((subject (plist-get item 'subject)))
                 (let ((id (format
                            "%s id %s"
-                           namespace
+                           symbol-namespace
                            (plist-get subject 'name)))
                       (object (list
                                (plist-get subject 'start)
