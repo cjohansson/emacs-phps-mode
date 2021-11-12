@@ -2,21 +2,6 @@
 
 ;; Copyright (C) 2018-2021  Free Software Foundation, Inc.
 
-;; This file is not part of GNU Emacs.
-
-;; This program is free software; you can redistribute it and/or
-;; modify it under the terms of the GNU General Public License as
-;; published by the Free Software Foundation; either version 2, or (at
-;; your option) any later version.
-
-;; This program is distributed in the hope that it will be useful, but
-;; WITHOUT ANY WARRANTY; without even the implied warranty of
-;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-;; General Public License for more details.
-
-;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
-
 
 ;;; Commentary:
 
@@ -49,6 +34,17 @@
   phps-mode-ast--superglobal-variable-p
   #s(hash-table size 12 test equal rehash-size 1.5 rehash-threshold 0.8125 data ("$_GET" 1 "$_POST" 1 "$_COOKIE" 1 "$_SESSION" 1 "$_REQUEST" 1 "$GLOBALS" 1 "$_SERVER" 1 "$_FILES" 1 "$_ENV" 1 "$argc" 1 "$argv" 1 "$http_​response_​header" 1))
   "Hash-table of super-global variables.")
+
+;; Macros
+
+
+(defun phps-mode-ast--get-list-of-objects (objects)
+  "Get list of OBJECTS."
+  (if (and (listp objects)
+           (plist-get objects 'ast-type))
+      (list objects)
+    objects))
+
 
 ;; Syntax directed translation for grammar
 
@@ -141,6 +137,36 @@
    (nth 1 args))
  phps-mode-parser--table-translations)
 
+;; statement -> (T_WHILE "(" expr ")" while_statement)
+(puthash
+ 143
+ (lambda(args _terminals)
+   (let ((ast-object
+          (list
+           'ast-type
+           'while
+           'condition
+           (phps-mode-ast--get-list-of-objects (nth 2 args))
+           'children
+           (phps-mode-ast--get-list-of-objects (nth 4 args)))))
+     ast-object))
+ phps-mode-parser--table-translations)
+
+;; statement -> (T_DO statement T_WHILE "(" expr ")" ";")
+(puthash
+ 144
+ (lambda(args _terminals)
+   (let ((ast-object
+          (list
+           'ast-type
+           'do-while
+           'children
+           (phps-mode-ast--get-list-of-objects (nth 1 args))
+           'condition
+           (phps-mode-ast--get-list-of-objects (nth 4 args)))))
+     ast-object))
+ phps-mode-parser--table-translations)
+
 ;; statement -> (T_FOR "(" for_exprs ";" for_exprs ";" for_exprs ")" for_statement)
 (puthash
  145
@@ -150,13 +176,13 @@
            'ast-type
            'for
            'initial
-           (nth 2 args)
+           (phps-mode-ast--get-list-of-objects (nth 2 args))
            'test
-           (nth 4 args)
+           (phps-mode-ast--get-list-of-objects (nth 4 args))
            'incremental
-           (nth 6 args)
+           (phps-mode-ast--get-list-of-objects (nth 6 args))
            'children
-           (nth 8 args))))
+           (phps-mode-ast--get-list-of-objects (nth 8 args)))))
      ast-object))
  phps-mode-parser--table-translations)
 
@@ -169,7 +195,7 @@
            'ast-type
            'echo
            'children
-           (nth 1 args))))
+           (phps-mode-ast--get-list-of-objects (nth 1 args)))))
      ast-object))
  phps-mode-parser--table-translations)
 
@@ -177,7 +203,7 @@
 (puthash
  154
  (lambda(args _terminals)
-   (car args))
+   (nth 0 args))
  phps-mode-parser--table-translations)
 
 ;; statement -> (T_FOREACH "(" expr T_AS foreach_variable ")" foreach_statement)
@@ -189,11 +215,11 @@
            'ast-type
            'foreach
            'expression
-           (nth 2 args)
+           (phps-mode-ast--get-list-of-objects (nth 2 args))
            'value
            (nth 4 args)
            'children
-           (nth 6 args))))
+           (phps-mode-ast--get-list-of-objects (nth 6 args)))))
      ast-object))
  phps-mode-parser--table-translations)
 
@@ -206,13 +232,13 @@
            'ast-type
            'foreach
            'expression
-           (nth 2 args)
+           (phps-mode-ast--get-list-of-objects (nth 2 args))
            'key
            (nth 4 args)
            'value
            (nth 6 args)
            'children
-           (nth 8 args))))
+           (phps-mode-ast--get-list-of-objects (nth 8 args)))))
      ast-object))
  phps-mode-parser--table-translations)
 
@@ -239,7 +265,7 @@
            'return-type
            (nth 7 args)
            'children
-           (nth 10 args))))
+           (phps-mode-ast--get-list-of-objects (nth 10 args)))))
      ;; (message "Function: %S" ast-object)
      ;; (message "args: %S" args)
      ;; (message "terminals: %S" terminals)
@@ -263,7 +289,7 @@
            'end
            (car (cdr (nth 7 terminals)))
            'children
-           (nth 6 args))))
+           (phps-mode-ast--get-list-of-objects (nth 6 args)))))
      ;; (message "Class %S" ast-object)
      ;; (message "args: %S" args)
      ;; (message "terminals: %S" terminals)
@@ -280,6 +306,8 @@
            'interface
            'name
            (nth 1 args)
+           'extends
+           (phps-mode-ast--get-list-of-objects (nth 2 args))
            'index
            (car (cdr (nth 1 terminals)))
            'start
@@ -287,7 +315,7 @@
            'end
            (car (cdr (nth 6 terminals)))
            'children
-           (nth 5 args))))
+           (phps-mode-ast--get-list-of-objects (nth 5 args)))))
      ;; (message "Interface %S" ast-object)
      ;; (message "args: %S" args)
      ;; (message "terminals: %S" terminals)
@@ -304,9 +332,9 @@
            'ast-type
            'if
            'condition
-           (nth 2 args)
+           (phps-mode-ast--get-list-of-objects (nth 2 args))
            'children
-           (nth 4 args))))
+           (phps-mode-ast--get-list-of-objects (nth 4 args)))))
      ast-object))
  phps-mode-parser--table-translations)
 
@@ -374,7 +402,7 @@
            'ast-type
            'property
            'modifiers
-           (nth 0 args)
+           (phps-mode-ast--get-list-of-objects (nth 0 args))
            'type
            (nth 1 args)
            'subject
@@ -390,6 +418,8 @@
           (list
            'ast-type
            'method
+           'modifiers
+           (phps-mode-ast--get-list-of-objects (nth 0 args))
            'returns-reference-p
            (not (equal (nth 2 args) nil))
            'name
@@ -399,7 +429,7 @@
            'return-type
            (nth 8 args)
            'children
-           (nth 10 args)
+           (phps-mode-ast--get-list-of-objects (nth 10 args))
            'index
            (car (cdr (nth 3 terminals)))
            'start
@@ -415,7 +445,7 @@
 ;; 302: method_body -> ("{" inner_statement_list "}")
 (puthash
  302
- (lambda(args terminals)
+ (lambda(args _terminals)
    (nth 1 args))
  phps-mode-parser--table-translations)
 
@@ -452,7 +482,7 @@
            'key
            (nth 0 args)
            'value
-           (nth 2 args))))
+           (phps-mode-ast--get-list-of-objects (nth 2 args)))))
      ;; (message "Method: %S" ast-object)
      ;; (message "args: %S" args)
      ;; (message "terminals: %S" terminals)
@@ -810,16 +840,6 @@
                      bookkeeping-stack)))))
 
              ((equal type 'if)
-              (let ((condition (plist-get item 'condition)))
-                (when (equal (plist-get condition 'ast-type) 'variable)
-                  (push
-                   (list
-                    (list
-                     class
-                     function
-                     namespace)
-                    condition)
-                   bookkeeping-stack)))
               (let ((children (reverse (plist-get item 'children))))
                 (dolist (child children)
                   (push
@@ -829,6 +849,16 @@
                      function
                      namespace)
                     child)
+                   bookkeeping-stack)))
+              (let ((conditions (reverse (plist-get item 'condition))))
+                (dolist (condition conditions)
+                  (push
+                   (list
+                    (list
+                     class
+                     function
+                     namespace)
+                    condition)
                    bookkeeping-stack))))
 
              ((equal type 'foreach)
@@ -849,7 +879,6 @@
                    object
                    1
                    bookkeeping)))
-
               (let* ((value (plist-get item 'value))
                      (id (format
                           "%s id %s"
@@ -866,8 +895,63 @@
                  object
                  1
                  bookkeeping))
-
               (let ((children (reverse (plist-get item 'children))))
+                (dolist (child children)
+                  (push
+                   (list
+                    (list
+                     class
+                     function
+                     namespace)
+                    child)
+                   bookkeeping-stack)))
+              (let ((expression (reverse (plist-get item 'expression))))
+                (dolist (expr expression)
+                  (push
+                   (list
+                    (list
+                     class
+                     function
+                     namespace)
+                    expr)
+                   bookkeeping-stack))))
+
+             ((equal type 'for)
+              ;; Optional incremental
+              (when-let ((children (reverse (plist-get item 'children))))
+                (dolist (child children)
+                  (push
+                   (list
+                    (list
+                     class
+                     function
+                     namespace)
+                    child)
+                   bookkeeping-stack)))
+              ;; Optional incremental
+              (when-let ((children (reverse (plist-get item 'incremental))))
+                (dolist (child children)
+                  (push
+                   (list
+                    (list
+                     class
+                     function
+                     namespace)
+                    child)
+                   bookkeeping-stack)))
+              ;; Optional test
+              (when-let ((children (reverse (plist-get item 'test))))
+                (dolist (child children)
+                  (push
+                   (list
+                    (list
+                     class
+                     function
+                     namespace)
+                    child)
+                   bookkeeping-stack)))
+              ;; Optional initial
+              (when-let ((children (reverse (plist-get item 'initial))))
                 (dolist (child children)
                   (push
                    (list
@@ -878,37 +962,49 @@
                     child)
                    bookkeeping-stack))))
 
-             ((equal type 'for)
-              ;; Optional incremental
-              (when-let ((child (plist-get item 'incremental)))
-                (push
-                 (list
-                  (list
-                   class
-                   function
-                   namespace)
-                  child)
-                 bookkeeping-stack))
-              ;; Optional test
-              (when-let ((child (plist-get item 'test)))
-                (push
-                 (list
-                  (list
-                   class
-                   function
-                   namespace)
-                  child)
-                 bookkeeping-stack))
-              ;; Optional initial
-              (when-let ((child (plist-get item 'initial)))
-                (push
-                 (list
-                  (list
-                   class
-                   function
-                   namespace)
-                  child)
-                 bookkeeping-stack)))
+             ((equal type 'while)
+              (when-let ((children (reverse (plist-get item 'children))))
+                (dolist (child children)
+                  (push
+                   (list
+                    (list
+                     class
+                     function
+                     namespace)
+                    child)
+                   bookkeeping-stack)))
+              (when-let ((conditions (reverse (plist-get item 'condition))))
+                (dolist (condition conditions)
+                  (push
+                   (list
+                    (list
+                     class
+                     function
+                     namespace)
+                    condition)
+                   bookkeeping-stack))))
+
+             ((equal type 'do-while)
+              (when-let ((conditions (reverse (plist-get item 'condition))))
+                (dolist (condition conditions)
+                  (push
+                   (list
+                    (list
+                     class
+                     function
+                     namespace)
+                    condition)
+                   bookkeeping-stack)))
+              (when-let ((children (reverse (plist-get item 'children))))
+                (dolist (child children)
+                  (push
+                   (list
+                    (list
+                     class
+                     function
+                     namespace)
+                    child)
+                   bookkeeping-stack))))
 
              ((equal type 'assign-variable)
               (let ((id (format
