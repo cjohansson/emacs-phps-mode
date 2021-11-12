@@ -171,10 +171,29 @@
            'foreach
            'expression
            (nth 2 args)
-           'as
+           'value
            (nth 4 args)
            'children
            (nth 6 args))))
+     ast-object))
+ phps-mode-parser--table-translations)
+
+;; 157: statement -> (T_FOREACH "(" expr T_AS foreach_variable T_DOUBLE_ARROW foreach_variable ")" foreach_statement)
+(puthash
+ 157
+ (lambda(args _terminals)
+   (let ((ast-object
+          (list
+           'ast-type
+           'foreach
+           'expression
+           (nth 2 args)
+           'key
+           (nth 4 args)
+           'value
+           (nth 6 args)
+           'children
+           (nth 8 args))))
      ast-object))
  phps-mode-parser--table-translations)
 
@@ -781,16 +800,45 @@
                      function
                      namespace)
                     condition)
+                   bookkeeping-stack)))
+              (let ((children (reverse (plist-get item 'children))))
+                (dolist (child children)
+                  (push
+                   (list
+                    (list
+                     class
+                     function
+                     namespace)
+                    child)
                    bookkeeping-stack))))
 
              ((equal type 'foreach)
-              (let ((id (format
-                         "%s id %s"
-                         variable-namespace
-                         (plist-get (plist-get item 'as) 'name)))
-                    (object (list
-                             (plist-get (plist-get item 'as) 'start)
-                             (plist-get (plist-get item 'as) 'end))))
+              ;; Optional key
+              (when-let ((key (plist-get item 'key)))
+                (let ((id (format
+                           "%s id %s"
+                           variable-namespace
+                           (plist-get key 'name)))
+                      (object (list
+                               (plist-get key 'start)
+                               (plist-get key 'end))))
+                  (puthash
+                   id
+                   1
+                   bookkeeping)
+                  (puthash
+                   object
+                   1
+                   bookkeeping)))
+
+              (let* ((value (plist-get item 'value))
+                     (id (format
+                          "%s id %s"
+                          variable-namespace
+                          (plist-get value 'name)))
+                     (object (list
+                              (plist-get value 'start)
+                              (plist-get value 'end))))
                 (puthash
                  id
                  1
@@ -799,6 +847,7 @@
                  object
                  1
                  bookkeeping))
+
               (let ((children (reverse (plist-get item 'children))))
                 (dolist (child children)
                   (push
