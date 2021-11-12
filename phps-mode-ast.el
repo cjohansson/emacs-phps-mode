@@ -161,6 +161,23 @@
    (car args))
  phps-mode-parser--table-translations)
 
+;; statement -> (T_FOREACH "(" expr T_AS foreach_variable ")" foreach_statement)
+(puthash
+ 156
+ (lambda(args _terminals)
+   (let ((ast-object
+          (list
+           'ast-type
+           'foreach
+           'expression
+           (nth 2 args)
+           'as
+           (nth 4 args)
+           'children
+           (nth 6 args))))
+     ast-object))
+ phps-mode-parser--table-translations)
+
 ;; function_declaration_statement -> (function returns_ref T_STRING backup_doc_comment "(" parameter_list ")" return_type backup_fn_flags "{" inner_statement_list "}" backup_fn_flags)
 (puthash
  174
@@ -764,6 +781,33 @@
                      function
                      namespace)
                     condition)
+                   bookkeeping-stack))))
+
+             ((equal type 'foreach)
+              (let ((id (format
+                         "%s id %s"
+                         variable-namespace
+                         (plist-get (plist-get item 'as) 'name)))
+                    (object (list
+                             (plist-get (plist-get item 'as) 'start)
+                             (plist-get (plist-get item 'as) 'end))))
+                (puthash
+                 id
+                 1
+                 bookkeeping)
+                (puthash
+                 object
+                 1
+                 bookkeeping))
+              (let ((children (reverse (plist-get item 'children))))
+                (dolist (child children)
+                  (push
+                   (list
+                    (list
+                     class
+                     function
+                     namespace)
+                    child)
                    bookkeeping-stack))))
 
              ((equal type 'assign-variable)
