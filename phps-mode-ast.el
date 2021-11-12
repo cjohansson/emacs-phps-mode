@@ -141,6 +141,25 @@
    (nth 1 args))
  phps-mode-parser--table-translations)
 
+;; statement -> (T_FOR "(" for_exprs ";" for_exprs ";" for_exprs ")" for_statement)
+(puthash
+ 145
+ (lambda(args _terminals)
+   (let ((ast-object
+          (list
+           'ast-type
+           'for
+           'initial
+           (nth 2 args)
+           'test
+           (nth 4 args)
+           'incremental
+           (nth 6 args)
+           'children
+           (nth 8 args))))
+     ast-object))
+ phps-mode-parser--table-translations)
+
 ;; statement -> (T_ECHO echo_expr_list ";")
 (puthash
  152
@@ -858,6 +877,38 @@
                      namespace)
                     child)
                    bookkeeping-stack))))
+
+             ((equal type 'for)
+              ;; Optional incremental
+              (when-let ((child (plist-get item 'incremental)))
+                (push
+                 (list
+                  (list
+                   class
+                   function
+                   namespace)
+                  child)
+                 bookkeeping-stack))
+              ;; Optional test
+              (when-let ((child (plist-get item 'test)))
+                (push
+                 (list
+                  (list
+                   class
+                   function
+                   namespace)
+                  child)
+                 bookkeeping-stack))
+              ;; Optional initial
+              (when-let ((child (plist-get item 'initial)))
+                (push
+                 (list
+                  (list
+                   class
+                   function
+                   namespace)
+                  child)
+                 bookkeeping-stack)))
 
              ((equal type 'assign-variable)
               (let ((id (format
