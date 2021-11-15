@@ -40,10 +40,16 @@
 
 (defun phps-mode-ast--get-list-of-objects (objects)
   "Get list of OBJECTS."
-  (if (and (listp objects)
-           (plist-get objects 'ast-type))
-      (list objects)
-    objects))
+  (cond
+
+   ((and (listp objects)
+         (plist-get objects 'ast-type))
+    (list objects))
+
+   ((listp objects)
+    objects)
+
+   (t (list objects))))
 
 
 ;; Syntax directed translation for grammar
@@ -459,6 +465,55 @@
      ;; (message "args: %S" args)
      ;; (message "terminals: %S" terminals)
      ast-object))
+ phps-mode-parser--table-translations)
+
+;; 304: variable_modifiers -> (T_VAR)
+(puthash
+ 304
+ (lambda(_args _terminals)
+   'public)
+ phps-mode-parser--table-translations)
+
+;; 309: member_modifier -> (T_PUBLIC)
+(puthash
+ 309
+ (lambda(_args _terminals)
+   'public)
+ phps-mode-parser--table-translations)
+
+;; 310: member_modifier -> (T_PROTECTED)
+(puthash
+ 310
+ (lambda(_args _terminals)
+   'protected)
+ phps-mode-parser--table-translations)
+
+;; 311: member_modifier -> (T_PRIVATE)
+(puthash
+ 311
+ (lambda(_args _terminals)
+   'private)
+ phps-mode-parser--table-translations)
+
+;; 312: member_modifier -> (T_STATIC)
+(puthash
+ 312
+ (lambda(_args _terminals)
+   'static)
+ phps-mode-parser--table-translations)
+
+;; 313: member_modifier -> (T_ABSTRACT)
+(puthash
+ 313
+ (lambda(_args _terminals)
+   'abstract)
+ phps-mode-parser--table-translations)
+
+;; 314: member_modifier -> (T_FINAL)
+(puthash
+ 314
+ (lambda(_args _terminals)
+   'final)
  phps-mode-parser--table-translations)
 
 ;; 302: method_body -> ("{" inner_statement_list "}")
