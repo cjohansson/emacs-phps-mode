@@ -282,6 +282,10 @@
            'class
            'name
            (nth 1 args)
+           'extends
+           (phps-mode-ast--get-list-of-objects (nth 2 args))
+           'implements
+           (phps-mode-ast--get-list-of-objects (nth 3 args))
            'index
            (car (cdr (nth 1 terminals)))
            'start
@@ -320,6 +324,21 @@
      ;; (message "args: %S" args)
      ;; (message "terminals: %S" terminals)
      ast-object))
+ phps-mode-parser--table-translations)
+
+;; extends_from -> (%empty)
+(puthash
+ 187
+ (lambda(_args _terminals)
+   nil
+   )
+ phps-mode-parser--table-translations)
+
+;; extends_from -> (T_EXTENDS class_name)
+(puthash
+ 188
+ (lambda(args _terminals)
+   (nth 1 args))
  phps-mode-parser--table-translations)
 
 ;; if_stmt_without_else -> (T_IF "(" expr ")" statement)
@@ -513,7 +532,7 @@
    (let ((ast-object
           (list
            'ast-type
-           'simple_variable
+           'simple-variable
            'name
            args
            'index
@@ -522,6 +541,36 @@
            (car (cdr terminals))
            'end
            (cdr (cdr terminals)))))
+     ast-object))
+ phps-mode-parser--table-translations)
+
+;; 490: variable -> (array_object_dereferencable T_OBJECT_OPERATOR property_name)
+(puthash
+ 490
+ (lambda(args _terminals)
+   (let ((ast-object
+          (list
+           'ast-type
+           'array-object-dereferencable
+           'subject
+           (nth 0 args)
+           'property-name
+           (nth 2 args))))
+     ast-object))
+ phps-mode-parser--table-translations)
+
+;; static_member -> (class_name T_PAAMAYIM_NEKUDOTAYIM simple_variable)
+(puthash
+ 495
+ (lambda(args _terminals)
+   (let ((ast-object
+          (list
+           'ast-type
+           'static-member
+           'class
+           (nth 0 args)
+           'member
+           (nth 2 args))))
      ast-object))
  phps-mode-parser--table-translations)
 
@@ -714,7 +763,7 @@
           (let ((type (plist-get item 'ast-type)))
             (cond
 
-             ((equal type 'simple_variable)
+             ((equal type 'simple-variable)
               (let ((id (format
                          "%s id %s"
                          variable-namespace
