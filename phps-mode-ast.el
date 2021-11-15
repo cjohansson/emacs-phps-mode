@@ -489,6 +489,22 @@
      ast-object))
  phps-mode-parser--table-translations)
 
+
+;; function_call -> (name argument_list)
+(puthash
+ 431
+ (lambda(args _terminals)
+   (let ((ast-object
+          (list
+           'ast-type
+           'function_call
+           'name
+           (nth 0 args)
+           'argument_list
+           (phps-mode-ast--get-list-of-objects (nth 1 args)))))
+     ast-object))
+ phps-mode-parser--table-translations)
+
 ;; simple_variable -> (T_VARIABLE)
 (puthash
  492
@@ -497,7 +513,7 @@
    (let ((ast-object
           (list
            'ast-type
-           'variable
+           'simple_variable
            'name
            args
            'index
@@ -698,7 +714,7 @@
           (let ((type (plist-get item 'ast-type)))
             (cond
 
-             ((equal type 'variable)
+             ((equal type 'simple_variable)
               (let ((id (format
                          "%s id %s"
                          variable-namespace
@@ -840,7 +856,7 @@
                      bookkeeping-stack)))))
 
              ((equal type 'if)
-              (let ((children (reverse (plist-get item 'children))))
+              (when-let ((children (reverse (plist-get item 'children))))
                 (dolist (child children)
                   (push
                    (list
@@ -850,7 +866,7 @@
                      namespace)
                     child)
                    bookkeeping-stack)))
-              (let ((conditions (reverse (plist-get item 'condition))))
+              (when-let ((conditions (reverse (plist-get item 'condition))))
                 (dolist (condition conditions)
                   (push
                    (list
@@ -862,40 +878,7 @@
                    bookkeeping-stack))))
 
              ((equal type 'foreach)
-              ;; Optional key
-              (when-let ((key (plist-get item 'key)))
-                (let ((id (format
-                           "%s id %s"
-                           variable-namespace
-                           (plist-get key 'name)))
-                      (object (list
-                               (plist-get key 'start)
-                               (plist-get key 'end))))
-                  (puthash
-                   id
-                   1
-                   bookkeeping)
-                  (puthash
-                   object
-                   1
-                   bookkeeping)))
-              (let* ((value (plist-get item 'value))
-                     (id (format
-                          "%s id %s"
-                          variable-namespace
-                          (plist-get value 'name)))
-                     (object (list
-                              (plist-get value 'start)
-                              (plist-get value 'end))))
-                (puthash
-                 id
-                 1
-                 bookkeeping)
-                (puthash
-                 object
-                 1
-                 bookkeeping))
-              (let ((children (reverse (plist-get item 'children))))
+              (when-let ((children (reverse (plist-get item 'children))))
                 (dolist (child children)
                   (push
                    (list
@@ -905,7 +888,33 @@
                      namespace)
                     child)
                    bookkeeping-stack)))
-              (let ((expression (reverse (plist-get item 'expression))))
+              (when-let ((value (plist-get item 'value)))
+                (push
+                 (list
+                  (list
+                   class
+                   function
+                   namespace)
+                  (list
+                   'ast-type
+                   'assign-variable
+                   'key
+                   value))
+                 bookkeeping-stack))
+              (when-let ((key (plist-get item 'key)))
+                (push
+                 (list
+                  (list
+                   class
+                   function
+                   namespace)
+                  (list
+                   'ast-type
+                   'assign-variable
+                   'key
+                   key))
+                 bookkeeping-stack))
+              (when-let ((expression (reverse (plist-get item 'expression))))
                 (dolist (expr expression)
                   (push
                    (list
@@ -917,7 +926,6 @@
                    bookkeeping-stack))))
 
              ((equal type 'for)
-              ;; Optional incremental
               (when-let ((children (reverse (plist-get item 'children))))
                 (dolist (child children)
                   (push
@@ -928,7 +936,6 @@
                      namespace)
                     child)
                    bookkeeping-stack)))
-              ;; Optional incremental
               (when-let ((children (reverse (plist-get item 'incremental))))
                 (dolist (child children)
                   (push
@@ -939,7 +946,6 @@
                      namespace)
                     child)
                    bookkeeping-stack)))
-              ;; Optional test
               (when-let ((children (reverse (plist-get item 'test))))
                 (dolist (child children)
                   (push
@@ -950,7 +956,6 @@
                      namespace)
                     child)
                    bookkeeping-stack)))
-              ;; Optional initial
               (when-let ((children (reverse (plist-get item 'initial))))
                 (dolist (child children)
                   (push
@@ -1026,7 +1031,18 @@
                 (puthash
                  object
                  defined
-                 bookkeeping)))
+                 bookkeeping)
+                (when-let ((exps (plist-get item 'value)))
+                  (when (listp exps)
+                    (dolist (exp exps)
+                      (push
+                       (list
+                        (list
+                         class
+                         function
+                         namespace)
+                        exp)
+                       bookkeeping-stack))))))
 
              ((equal type 'property)
               (let ((subject (plist-get item 'subject)))
@@ -1051,6 +1067,18 @@
                    object
                    defined
                    bookkeeping))))
+
+             ((equal type 'function_call)
+              (when-let ((arguments (plist-get item 'argument_list)))
+                (dolist (argument arguments)
+                  (push
+                   (list
+                    (list
+                     class
+                     function
+                     namespace)
+                    argument)
+                   bookkeeping-stack))))
 
              )))))
     (setq
