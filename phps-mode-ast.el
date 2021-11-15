@@ -489,6 +489,19 @@
      ast-object))
  phps-mode-parser--table-translations)
 
+;; expr -> (variable T_INC)
+(puthash
+ 353
+ (lambda(args _terminals)
+   (let ((ast-object
+          (list
+           'ast-type
+           'increment-variable
+           'variable
+           (nth 0 args))))
+     ast-object))
+ phps-mode-parser--table-translations)
+
 ;; expr -> (variable "=" expr)
 (puthash
  337
@@ -1128,6 +1141,16 @@
                      namespace)
                     argument)
                    bookkeeping-stack))))
+
+             ((equal type 'increment-variable)
+              (push
+               (list
+                (list
+                 class
+                 function
+                 namespace)
+                (plist-get item 'variable))
+               bookkeeping-stack))
 
              )))))
     (setq
