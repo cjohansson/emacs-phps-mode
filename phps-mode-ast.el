@@ -523,6 +523,13 @@
    (nth 1 args))
  phps-mode-parser--table-translations)
 
+;; property -> (T_VARIABLE backup_doc_comment)
+(puthash
+ 317
+ (lambda(args terminals)
+   (nth 0 args))
+ phps-mode-parser--table-translations)
+
 ;; property -> (T_VARIABLE "=" expr backup_doc_comment)
 (puthash
  318
