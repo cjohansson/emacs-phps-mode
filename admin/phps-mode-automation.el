@@ -20,9 +20,15 @@
 
 ;;; Commentary:
 
-;;; Uses a parser to convert LALR Yacc grammar to Wisent grammar
+;;; Uses a parser-generator library to convert LALR(1) YACC grammar into a Canonical LR(1) Parser
 
-;;; AST should be like this: (root (block (rule (logic))))
+;; This does not work if some variables are byte-compiled
+;; therefore we delete byte-compiled files in `make parser' command
+
+;; To resume use command: `make parser &> output.txt'
+;; and to extract Emacs-Lisp data to separate file run `cat output.txt | grep -F "-resume" - > resume.el'
+;; and then to resume parser-generation run
+;; `emacs -Q -batch -L . -L ~/.emacs.d/emacs-parser-generator -l phps-mode-lexer.el -l admin/phps-mode-automation.el -eval "(progn (require 'parser-generator-lr)(require 'parser-generator-lr-export))" -l resume.el -eval "(phps-mode-automation)"'
 
 
 ;;; Code:
@@ -199,18 +205,17 @@
                        "(setq parser-generator-lr--distinct-action-tables-resume %S)"
                        parser-generator-lr--distinct-action-tables))))))))
 
-        ;; NOTE This does not work if functions above are byte-compiled
-
         ;; Export
         (let ((export
                (parser-generator-lr-export-to-elisp
                 "phps-mode-parser"
                 phps-mode-automation-grammar--header
-                phps-mode-automation-grammar--copyright)))
+                phps-mode-automation-grammar--copyright))
+              (parser-file-name (expand-file-name "./phps-mode-parser.el")))
           (generate-new-buffer "*PHP Parser*")
           (switch-to-buffer "*PHP Parser*")
           (insert export)
-          (write-file (expand-file-name "./phps-mode-parser.el"))
+          (write-file parser-file-name)
           (kill-buffer)
           (message "export: %s" export))
 
