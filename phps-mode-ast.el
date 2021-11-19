@@ -421,7 +421,7 @@
 ;; attributed_class_statement -> (variable_modifiers optional_type_without_static property_list ";")
 (puthash
  278
- (lambda(args _terminals)
+ (lambda(args terminals)
    (let ((ast-object
           (list
            'ast-type
@@ -431,7 +431,11 @@
            'type
            (nth 1 args)
            'subject
-           (nth 2 args))))
+           (nth 2 args)
+           'start
+           (car (cdr (nth 2 terminals)))
+           'end
+           (cdr (cdr (nth 2 terminals))))))
      ast-object))
  phps-mode-parser--table-translations)
 
@@ -526,7 +530,7 @@
 ;; property -> (T_VARIABLE backup_doc_comment)
 (puthash
  317
- (lambda(args terminals)
+ (lambda(args _terminals)
    (nth 0 args))
  phps-mode-parser--table-translations)
 
@@ -534,14 +538,15 @@
 (puthash
  318
  (lambda(args terminals)
+   ;; (message "318: %S %S" args terminals)
    (let ((ast-object
           (list
            'ast-type
-           'assign-property
-           'name
+           'assign-property-variable
+           'key
            (nth 0 args)
            'value
-           (nth 2 args)
+           (phps-mode-ast--get-list-of-objects (nth 2 args))
            'index
            (car (cdr (nth 0 terminals)))
            'start
@@ -567,8 +572,8 @@
 ;; expr -> (variable "=" expr)
 (puthash
  337
- (lambda(args _terminals)
-   ;; (message "expr: %S %S" args _terminals)
+ (lambda(args terminals)
+   ;; (message "337: %S %S" args terminals)
    (let ((ast-object
           (list
            'ast-type
@@ -576,7 +581,13 @@
            'key
            (nth 0 args)
            'value
-           (phps-mode-ast--get-list-of-objects (nth 2 args)))))
+           (phps-mode-ast--get-list-of-objects (nth 2 args))
+           'index
+           (car (cdr (nth 0 terminals)))
+           'start
+           (car (cdr (nth 0 terminals)))
+           'end
+           (cdr (cdr (nth 0 terminals))))))
      ;; (message "Method: %S" ast-object)
      ;; (message "args: %S" args)
      ;; (message "terminals: %S" terminals)
@@ -610,8 +621,6 @@
            'simple-variable
            'name
            args
-           'index
-           (car (cdr terminals))
            'start
            (car (cdr terminals))
            'end
@@ -718,10 +727,12 @@
         (let ((children (plist-get item 'children))
               (item-type (plist-get item 'ast-type))
               (item-index (plist-get item 'index))
+              (item-name (plist-get item 'name))
               (parent))
           (when (and
-                 item-type
-                 item-index)
+                 item-index
+                 item-name
+                 item-type)
             (if (and
                  (or
                   (equal item-type 'namespace)
@@ -732,40 +743,50 @@
                   (dolist (child children)
                     (let ((grand-children (plist-get child 'children))
                           (child-type (plist-get child 'ast-type))
+                          (child-name (plist-get child 'name))
+                          (child-index (plist-get child 'index))
                           (subparent))
-                      (if (and
-                           (or
-                            (equal child-type 'class)
-                            (equal child-type 'interface))
-                           grand-children)
-                          (progn
-                            (dolist (grand-child grand-children)
-                              (push
-                               `(,(plist-get grand-child 'name) . ,(plist-get grand-child 'index))
-                               subparent))
-                            (push
-                             (append
-                              (list (plist-get child 'name))
-                              (reverse subparent))
-                             parent))
-                        (push
-                         `(,(plist-get child 'name) . ,(plist-get child 'index))
-                         parent)))
-                    )
-                  (push
-                   (append
-                    (list (plist-get item 'name))
-                    (reverse parent))
-                   imenu-index))
+                      (when (and
+                             child-name
+                             child-index)
+                        (if (and
+                             (or
+                              (equal child-type 'class)
+                              (equal child-type 'interface))
+                             grand-children)
+                            (progn
+                              (dolist (grand-child grand-children)
+                                (let ((grand-child-index (plist-get grand-child 'index))
+                                      (grand-child-name (plist-get grand-child 'name)))
+                                  (when (and
+                                         grand-child-index
+                                         grand-child-name)
+                                    (push
+                                     `(,grand-child-name . ,grand-child-index)
+                                     subparent))))
+                              (when subparent
+                                (push
+                                 (append
+                                  (list child-name)
+                                  (reverse subparent))
+                                 parent)))
+                          (push
+                           `(,child-name . ,child-index)
+                           parent)))))
+                  (when parent
+                    (push
+                     (append
+                      (list item-name)
+                      (reverse parent))
+                     imenu-index)))
               (push
-               `(,(plist-get item 'name) . ,(plist-get item 'index))
+               `(,item-name . ,item-index)
                imenu-index)))))
       (setq
        phps-mode-ast--imenu
        (reverse imenu-index)))
 
-    ;; (message "imenu:\n%S\n\n" phps-mode-ast--imenu)
-    
+    (message "imenu:\n%S\n\n" phps-mode-ast--imenu)
 
     ;; TODO Build bookkeeping here
     (let ((bookkeeping-stack ast))
@@ -1135,6 +1156,28 @@
                     child)
                    bookkeeping-stack))))
 
+             ((equal type 'assign-property-variable)
+              (let ((id (format
+                         "%s id %s"
+                         variable-namespace
+                         (plist-get item 'key)))
+                    (object (list
+                             (plist-get item 'start)
+                             (plist-get item 'end)))
+                    (defined 1))
+                (when-let ((predefined (gethash id bookkeeping)))
+                  (setq
+                   defined
+                   (1+ predefined)))
+                (puthash
+                 id
+                 defined
+                 bookkeeping)
+                (puthash
+                 object
+                 defined
+                 bookkeeping)))
+
              ((equal type 'assign-variable)
               (let ((id (format
                          "%s id %s"
@@ -1170,27 +1213,36 @@
 
              ((equal type 'property)
               (let ((subject (plist-get item 'subject)))
-                (let ((id (format
-                           "%s id %s"
-                           symbol-namespace
-                           (plist-get subject 'name)))
-                      (object (list
-                               (plist-get subject 'start)
-                               (plist-get subject 'end)))
-                      (defined 1))
-                  ;; (message "id: %S from %S" id item)
-                  (when-let ((predefined (gethash id bookkeeping)))
-                    (setq
-                     defined
-                     (1+ predefined)))
-                  (puthash
-                   id
-                   defined
-                   bookkeeping)
-                  (puthash
-                   object
-                   defined
-                   bookkeeping))))
+                (if (stringp subject)
+                    (let ((id (format
+                               "%s id %s"
+                               variable-namespace
+                               subject))
+                          (object (list
+                                   (plist-get item 'start)
+                                   (plist-get item 'end)))
+                          (defined 1))
+                      ;; (message "id: %S from %S" id item)
+                      (when-let ((predefined (gethash id bookkeeping)))
+                        (setq
+                         defined
+                         (1+ predefined)))
+                      (puthash
+                       id
+                       defined
+                       bookkeeping)
+                      (puthash
+                       object
+                       defined
+                       bookkeeping))
+                  (push
+                   (list
+                    (list
+                     class
+                     function
+                     namespace)
+                    subject)
+                   bookkeeping-stack))))
 
              ((equal type 'function_call)
               (when-let ((arguments (plist-get item 'argument_list)))
