@@ -433,9 +433,9 @@
            'subject
            (nth 2 args)
            'start
-           (car (cdr (nth 2 terminals)))
+           (car (cdr (car (nth 2 terminals))))
            'end
-           (cdr (cdr (nth 2 terminals))))))
+           (cdr (cdr (car (nth 2 terminals)))))))
      ast-object))
  phps-mode-parser--table-translations)
 
@@ -970,12 +970,7 @@
                      bookkeeping-stack)))))
 
              ((equal type 'namespace)
-              (let* ((name (plist-get item 'name))
-                     (subnamespace
-                      (format
-                       "%s namespace %s"
-                       symbol-namespace
-                       name)))
+              (let* ((name (plist-get item 'name)))
                 (when-let ((children (reverse (plist-get item 'children))))
                   (dolist (child children)
                     (push
@@ -1212,37 +1207,59 @@
                        bookkeeping-stack))))))
 
              ((equal type 'property)
-              (let ((subject (plist-get item 'subject)))
+              (let ((subject (plist-get item 'subject))
+                    (static-p))
+                (when-let ((modifiers (plist-get item 'modifiers)))
+                  (dolist (modifier modifiers)
+                    (when (equal modifier 'static)
+                      (setq
+                       static-p
+                       t))))
                 (if (stringp subject)
-                    (let ((id (format
-                               "%s id %s"
-                               variable-namespace
-                               subject))
-                          (object (list
-                                   (plist-get item 'start)
-                                   (plist-get item 'end)))
-                          (defined 1))
-                      ;; (message "id: %S from %S" id item)
-                      (when-let ((predefined (gethash id bookkeeping)))
+                    (let ((id))
+                      (if static-p
+                          (setq
+                           id
+                           (format
+                            "%s static id %s"
+                            variable-namespace
+                            subject))
                         (setq
+                         id
+                         (format
+                          "%s id %s"
+                          variable-namespace
+                          subject)))
+                      (let ((object (list
+                                     (plist-get item 'start)
+                                     (plist-get item 'end)))
+                            (defined 1))
+                        ;; (message "id: %S from %S" id item)
+                        (when-let ((predefined (gethash id bookkeeping)))
+                          (setq
+                           defined
+                           (1+ predefined)))
+                        (puthash
+                         id
                          defined
-                         (1+ predefined)))
-                      (puthash
-                       id
-                       defined
-                       bookkeeping)
-                      (puthash
-                       object
-                       defined
-                       bookkeeping))
-                  (push
-                   (list
-                    (list
-                     class
-                     function
-                     namespace)
-                    subject)
-                   bookkeeping-stack))))
+                         bookkeeping)
+                        (puthash
+                         object
+                         defined
+                         bookkeeping)))
+                  (let ((class-namespace class))
+                    (when static-p
+                      (setq
+                       class-namespace
+                       (format "%s static")))
+                    (push
+                     (list
+                      (list
+                       class-namespace
+                       function
+                       namespace)
+                      subject)
+                     bookkeeping-stack)))))
 
              ((equal type 'function_call)
               (when-let ((arguments (plist-get item 'argument_list)))
