@@ -28,7 +28,7 @@
 ;; To resume use command: `make parser &> output.txt'
 ;; and to extract Emacs-Lisp data to separate file run `cat output.txt | grep -F "-resume" - > resume.el'
 ;; and then to resume parser-generation run
-;; `emacs -Q -batch -L . -L ~/.emacs.d/emacs-parser-generator -l phps-mode-lexer.el -l admin/phps-mode-automation.el -eval "(progn (require 'parser-generator-lr)(require 'parser-generator-lr-export))" -l resume.el -eval "(phps-mode-automation)"'
+;; `rm phps-mode-automation-grammar.elc; emacs -Q -batch -L . -L ~/.emacs.d/emacs-parser-generator -l phps-mode-lexer.el -l admin/phps-mode-automation.el -eval "(progn (require 'parser-generator-lr)(require 'parser-generator-lr-export))" -l resume.el -eval "(phps-mode-automation)"'
 
 
 ;;; Code:
