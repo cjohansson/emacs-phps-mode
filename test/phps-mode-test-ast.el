@@ -29,6 +29,8 @@
 (require 'phps-mode)
 (require 'phps-mode-test)
 (require 'phps-mode-ast)
+(require 'phps-mode-ast-bookkeeping)
+(require 'phps-mode-ast-imenu)
 
 (defun phps-mode-test-ast--buffer-contents (buffer-contents name logic)
   (with-temp-buffer
@@ -87,127 +89,140 @@
    "<?php\nclass myClass\n{\n\n    public function myFunction1()\n    {\n        echo \"my string with variable {$variable} inside it\";\n    }\n\n    public function myFunction2()\n    {\n    }\n\n}"
    "Imenu generated via parser SDT for simple class"
    (lambda()
-     (phps-mode-ast-generate)
+     (phps-mode-ast--generate)
+     (phps-mode-ast-imenu--generate)
      (should (equal
-              phps-mode-ast--imenu
+              phps-mode-ast-imenu--index
               '(("myClass" ("myFunction1" . 44) ("myFunction2" . 153)))))))
 
   (phps-mode-test-ast--buffer-contents
    "<?php\ninterface myInterface {\n    public function myFunctionA() {}\n    protected function myFunctionB() {}\n}\n"
    "Imenu generated via parser SDT for interface"
    (lambda()
-     (phps-mode-ast-generate)
+     (phps-mode-ast--generate)
+     (phps-mode-ast-imenu--generate)
      (should (equal
-              phps-mode-ast--imenu
+              phps-mode-ast-imenu--index
               '(("myInterface" . (("myFunctionA" . 51) ("myFunctionB" . 91))))))))
 
   (phps-mode-test-ast--buffer-contents
    "<?php\nfunction myFunctionA() {}\nfunction myFunctionB() {}\n$var = function () {\n    echo 'here';\n};"
    "Imenu generated via parser SDT for function-oriented file without namespace"
    (lambda()
-     (phps-mode-ast-generate)
+     (phps-mode-ast--generate)
+     (phps-mode-ast-imenu--generate)
      (should (equal
-              phps-mode-ast--imenu
+              phps-mode-ast-imenu--index
               '(("myFunctionA" . 16) ("myFunctionB" . 42))))))
 
   (phps-mode-test-ast--buffer-contents
    "<?php\n\nnamespace MyNamespace;\n\nfunction aFunction() {\n    /**\n     * With some contents\n     */\n}\n\nclass MyClass\n{\n\n    /**\n     *\n     */\n    public function __construct()\n    {\n        if ($test) {\n        }\n    }\n\n    /**\n     *\n     */\n    public function myFunction1()\n    {\n        $this->addMessage(\"My random {$message} here\" . ($random > 1 ? \"A\" : \"\") . \" was here.\");\n    }\n    \n    /**\n     *\n     */\n    public function myFunction2()\n    {\n    }\n\n    /**\n     * It's good\n     */\n    public function myFunction3()\n    {\n    }\n\n    /**\n     *\n     */\n    public function myFunction4()\n    {\n    }\n}\n"
    "Passed imenu-generation via parser AST for basic object oriented file"
    (lambda()
-     (phps-mode-ast-generate)
+     (phps-mode-ast--generate)
+     (phps-mode-ast-imenu--generate)
      (should
       (equal
-       phps-mode-ast--imenu
+       phps-mode-ast-imenu--index
        '(("MyNamespace" ("aFunction" . 41) ("MyClass" ("__construct" . 160) ("myFunction1" . 261) ("myFunction2" . 433) ("myFunction3" . 513) ("myFunction4" . 583))))))))
 
   (phps-mode-test-ast--buffer-contents
    "<?php\n\nnamespace MyNamespaceA\n{\n    function aFunctionA() {\n        /**\n         * With some contents\n         */\n    }\n    class MyClass\n    {\n\n        /**\n         *\n         */\n        public function __construct()\n        {\n            if ($test) {\n            }\n        }\n\n        /**\n         *\n         */\n        public function myFunction1()\n        {\n            $this->addMessage(\"My random {$message} here\" . ($random > 1 ? \"A\" : \"\") . \" was here.\");\n        }\n        \n        /**\n         *\n         */\n        public function myFunction2()\n        {\n        }\n\n        /**\n         * It's good\n         */\n        public function myFunction3()\n        {\n        }\n\n        /**\n         *\n         */\n        public function myFunction4()\n        {\n        }\n    }\n}\nnamespace {\n    function aFunctionB()\n    {\n        \n    }\n    class MyClass\n    {\n\n        /**\n         *\n         */\n        public function __construct()\n        {\n            if ($test) {\n            }\n        }\n\n        /**\n         *\n         */\n        public function myFunction1()\n        {\n            $this->addMessage(\"My random {$message} here\" . ($random > 1 ? \"A\" : \"\") . \" was here.\");\n        }\n        \n        /**\n         *\n         */\n        public function myFunction2()\n        {\n        }\n\n        /**\n         * It's good\n         */\n        public function myFunction3()\n        {\n        }\n\n        /**\n         *\n         */\n        public function myFunction4()\n        {\n        }\n    }\n}"
    "Passed imenu-generation via parser AST for advanced object oriented file"
    (lambda()
-     (phps-mode-ast-generate)
+     (phps-mode-ast--generate)
+     (phps-mode-ast-imenu--generate)
      (should
       (equal
-       phps-mode-ast--imenu
+       phps-mode-ast-imenu--index
        '(("MyNamespaceA" ("aFunctionA" . 46) ("MyClass" ("__construct" . 205) ("myFunction1" . 338) ("myFunction2" . 542) ("myFunction3" . 646) ("myFunction4" . 740))) ("aFunctionB" . 807) ("MyClass" ("__construct" . 925) ("myFunction1" . 1058) ("myFunction2" . 1262) ("myFunction3" . 1366) ("myFunction4" . 1460)))))))
 
   (phps-mode-test-ast--buffer-contents
    "<?php\nnamespace myNamespace {\n    class myClass extends myAbstract {\n        public function myFunctionA() {}\n        protected function myFunctionB() {}\n    }\n}\n"
    "Imenu object-oriented file with namespace, class that extends and functions"
    (lambda()
-     (phps-mode-ast-generate)
+     (phps-mode-ast--generate)
+     (phps-mode-ast-imenu--generate)
      (should
       (equal
-       phps-mode-ast--imenu
+       phps-mode-ast-imenu--index
        '(("myNamespace" ("myClass" ("myFunctionA" . 94) ("myFunctionB" . 138))))))))
 
   (phps-mode-test-ast--buffer-contents
    "<?php\nnamespace myNamespace;\nclass myClass extends myAbstract implements myInterface {\n    public function myFunctionA() {}\n    protected function myFunctionB() {}\n}\n"
    "Imenu object-oriented file with bracket-less namespace, class that extends and implements and functions"
    (lambda()
-     (phps-mode-ast-generate)
+     (phps-mode-ast--generate)
+     (phps-mode-ast-imenu--generate)
      (should
       (equal
-       phps-mode-ast--imenu
+       phps-mode-ast-imenu--index
        '(("myNamespace" ("myClass" ("myFunctionA" . 108) ("myFunctionB" . 148))))))))
 
   (phps-mode-test-ast--buffer-contents
    "<?php\nclass myClass {}"
    "Imenu empty class"
    (lambda()
-     (phps-mode-ast-generate)
+     (phps-mode-ast--generate)
+     (phps-mode-ast-imenu--generate)
      (should
       (equal
-       phps-mode-ast--imenu
+       phps-mode-ast-imenu--index
        '(("myClass" . 13))))))
 
   (phps-mode-test-ast--buffer-contents
    "<?php\nnamespace myNamespace {}"
    "Imenu empty bracketed namespace"
    (lambda()
-     (phps-mode-ast-generate)
+     (phps-mode-ast--generate)
+     (phps-mode-ast-imenu--generate)
      (should
       (equal
-       phps-mode-ast--imenu
+       phps-mode-ast-imenu--index
        '(("myNamespace" . 17))))))
 
   (phps-mode-test-ast--buffer-contents
    "<?php\nnamespace myNamespace;"
    "Imenu empty namespace without brackets"
    (lambda()
-     (phps-mode-ast-generate)
+     (phps-mode-ast--generate)
+     (phps-mode-ast-imenu--generate)
      (should
       (equal
-       phps-mode-ast--imenu
+       phps-mode-ast-imenu--index
        '(("myNamespace" . 17))))))
 
   (phps-mode-test-ast--buffer-contents
    "<?php\nnamespace myNamespace;\nclass myClass extends myAbstract implements myInterface {\n    public function myFunctionA($myArg = null) {}\n    protected function myFunctionB($myArg = 'abc') {}\n}\n"
    "Imenu object-oriented file with bracket-less namespace, class that extends and implements and functions with optional arguments"
    (lambda()
-     (phps-mode-ast-generate)
+     (phps-mode-ast--generate)
+     (phps-mode-ast-imenu--generate)
      (should
       (equal
-       phps-mode-ast--imenu
+       phps-mode-ast-imenu--index
        '(("myNamespace" ("myClass" ("myFunctionA" . 108) ("myFunctionB" . 161))))))))
 
   (phps-mode-test-ast--buffer-contents
    "<?php\nnamespace myNamespace\\myNamespace2;\nclass myClass extends myAbstract implements myInterface {\n    public function myFunctionA($myArg = null) {}\n    protected function myFunctionB($myArg = 'abc') {}\n}\n"
    "Imenu object-oriented file with bracket-less namespace with multiple levels, class that extends and implements and functions with optional arguments"
    (lambda()
-     (phps-mode-ast-generate)
+     (phps-mode-ast--generate)
+     (phps-mode-ast-imenu--generate)
      (should
       (equal
-       phps-mode-ast--imenu
+       phps-mode-ast-imenu--index
        '(("myNamespace\\myNamespace2" ("myClass" ("myFunctionA" . 121) ("myFunctionB" . 174))))))))
 
   (phps-mode-test-ast--buffer-contents
    "<?php\nnamespace {}"
    "Imenu empty unnamed bracketed namespace"
    (lambda()
-     (phps-mode-ast-generate)
+     (phps-mode-ast--generate)
+     (phps-mode-ast-imenu--generate)
      (should
       (equal
-       phps-mode-ast--imenu
+       phps-mode-ast-imenu--index
        nil))))
 
   (message "\n-- Ran tests for imenu generation. --"))
@@ -231,9 +246,10 @@
             production-number
             (car (car production))
             (car (cdr production))))))
-     (phps-mode-ast-generate)
+     (phps-mode-ast--generate)
+     (phps-mode-ast-bookkeeping--generate)
      (should (equal
-              (phps-mode-test--hash-to-list phps-mode-ast--bookkeeping t)
+              (phps-mode-test--hash-to-list phps-mode-ast-bookkeeping--index t)
               (list (list " id $var" 1) (list (list 8 12) 1) (list (list 27 32) 0) (list (list 73 77) 1))))))
 
   (phps-mode-test-ast--buffer-contents
@@ -251,9 +267,10 @@
             production-number
             (car (car production))
             (car (cdr production))))))
-     (phps-mode-ast-generate)
+     (phps-mode-ast--generate)
+     (phps-mode-ast-bookkeeping--generate)
    (should (equal
-            (phps-mode-test--hash-to-list phps-mode-ast--bookkeeping t)
+            (phps-mode-test--hash-to-list phps-mode-ast-bookkeeping--index t)
             (list (list " id $var" 1) (list (list 8 12) 1) (list (list 27 31) 1) (list (list 72 77) 0))))))
 
   (phps-mode-test-ast--buffer-contents
@@ -271,9 +288,10 @@
             production-number
             (car (car production))
             (car (cdr production))))))
-     (phps-mode-ast-generate)
+     (phps-mode-ast--generate)
+     (phps-mode-ast-bookkeeping--generate)
      (should (equal
-              (phps-mode-test--hash-to-list phps-mode-ast--bookkeeping t)
+              (phps-mode-test--hash-to-list phps-mode-ast-bookkeeping--index t)
               '((" id $var2" 1) ((8 13) 1) (" function myFunction id $var" 1) ((40 44) 1) (" function myFunction id $var3" 1) ((52 57) 1) ((71 75) 1) ((113 118) 0) ((157 162) 1) (" function myFunction2 id $abc" 1) ((216 220) 1) ((232 236) 0) ((275 279) 1) ((316 320) 0) ((347 352) 1))))))
 
   (phps-mode-test-ast--buffer-contents
@@ -291,10 +309,11 @@
             production-number
             (car (car production))
             (car (cdr production))))))
-     (phps-mode-ast-generate)
+     (phps-mode-ast--generate)
+     (phps-mode-ast-bookkeeping--generate)
      (should
       (equal
-       (phps-mode-test--hash-to-list phps-mode-ast--bookkeeping t)
+       (phps-mode-test--hash-to-list phps-mode-ast-bookkeeping--index t)
        (list (list (list 30 35) 1) (list (list 61 67) 1) (list (list 93 101) 1) (list (list 127 136) 1) (list (list 162 171) 1) (list (list 197 205) 1) (list (list 231 239) 1) (list (list 265 272) 1) (list (list 298 303) 1) (list (list 329 334) 1) (list (list 360 365) 1)  (list (list 391 414) 1))))))
 
   (phps-mode-test-ast--buffer-contents
@@ -312,10 +331,11 @@
             production-number
             (car (car production))
             (car (cdr production))))))
-     (phps-mode-ast-generate)
+     (phps-mode-ast--generate)
+     (phps-mode-ast-bookkeeping--generate)
      (should
       (equal
-       (phps-mode-test--hash-to-list phps-mode-ast--bookkeeping 1)
+       (phps-mode-test--hash-to-list phps-mode-ast-bookkeeping--index 1)
        (list (list " id $var" 1) (list (list 37 41) 1) (list " namespace myNamespaceA class myClassA id $var2" 1) (list (list 86 91) 1) (list " namespace myNamespaceA class myClassA function myFunctionA id $this" 1) (list " namespace myNamespaceA class myClassA function myFunctionA id $var3" 1) (list (list 128 133) 1) (list " namespace myNamespaceA class myClassA function myFunctionA id $var4" 1) (list (list 149 154) 1) (list (list 178 182) 0) (list (list 245 250) 0) (list (list 313 318) 1) (list (list 380 385) 1) (list " namespace myNamespaceA class myClassA function myFunctionB id $this" 1) (list " namespace myNamespaceA class myClassA function myFunctionB id $var5" 1) (list (list 471 476) 1) (list " namespace myNamespaceA class myClassA function myFunctionB id $var6" 1) (list (list 500 505) 1) (list (list 529 533) 0) (list (list 596 601) 0) (list (list 664 669) 0) (list (list 732 737) 0) (list (list 800 805) 1) (list (list 867 872) 1) (list (list 943 947) 1) (list (list 985 990) 0) (list (list 1029 1034) 0) (list (list 1073 1078) 0) (list (list 1117 1122) 0) (list (list 1161 1166) 0) (list " id $var7" 1) (list (list 1229 1234) 1) (list " namespace myNamespaceB class myClassB id $var8" 1) (list (list 1279 1284) 1) (list " namespace myNamespaceB class myClassB function myFunctionA id $this" 1) (list " namespace myNamespaceB class myClassB function myFunctionA id $var10" 1) (list (list 1321 1327) 1) (list " namespace myNamespaceB class myClassB function myFunctionA id $var9" 1) (list (list 1343 1348) 1) (list (list 1372 1376) 0) (list (list 1439 1444) 0) (list (list 1507 1512) 0) (list (list 1575 1580) 0) (list (list 1643 1648) 0) (list (list 1711 1716) 0) (list (list 1779 1784) 0) (list (list 1847 1852) 0) (list (list 1915 1920) 1) (list (list 1982 1988) 1) (list " namespace myNamespaceB class myClassB function myFunctionB id $this" 1) (list " namespace myNamespaceB class myClassB function myFunctionB id $var12" 1) (list (list 2074 2080) 1) (list " namespace myNamespaceB class myClassB function myFunctionB id $var11" 1) (list (list 2104 2110) 1) (list (list 2134 2138) 0) (list (list 2201 2206) 0) (list (list 2269 2274) 0) (list (list 2337 2342) 0) (list (list 2405 2410) 0) (list (list 2472 2477) 0) (list (list 2539 2544) 0) (list (list 2607 2612) 0) (list (list 2675 2680) 0) (list (list 2743 2749) 0) (list (list 2812 2818) 1) (list (list 2880 2886) 1) (list (list 2957 2961) 1) (list (list 2999 3004) 0) (list (list 3043 3048) 0) (list (list 3087 3092) 0) (list (list 3131 3136) 0) (list (list 3175 3180) 0) (list (list 3219 3224) 1))))))
 
   (phps-mode-test-ast--buffer-contents
@@ -333,9 +353,10 @@
             production-number
             (car (car production))
             (car (cdr production))))))
-     (phps-mode-ast-generate)
+     (phps-mode-ast--generate)
+     (phps-mode-ast-bookkeeping--generate)
      (should (equal
-              (phps-mode-test--hash-to-list phps-mode-ast--bookkeeping t)
+              (phps-mode-test--hash-to-list phps-mode-ast-bookkeeping--index t)
               (list (list " id $items" 1) (list (list 36 42) 1) (list (list 70 76) 1) (list " id $item" 1) (list (list 80 85) 1) (list (list 97 102) 1) (list (list 143 149) 1) (list " id $key" 1) (list (list 153 157) 1) (list " id $value" 1) (list (list 161 167) 1) (list (list 179 183) 1) (list (list 187 193) 1) (list " id $i" 1) (list (list 230 232) 1) (list (list 238 240) 1) (list (list 249 255) 1) (list (list 258 260) 1) (list (list 274 276) 1) (list " id $a" 1) (list (list 312 314) 1) (list (list 332 334) 1) (list " id $b" 1) (list (list 373 375) 1) (list (list 393 395) 1) (list " id $c" 1) (list (list 457 459) 1))))))
 
   (phps-mode-test-ast--buffer-contents
@@ -353,9 +374,10 @@
             production-number
             (car (car production))
             (car (cdr production))))))
-     (phps-mode-ast-generate)
+     (phps-mode-ast--generate)
+     (phps-mode-ast-bookkeeping--generate)
      (should (equal
-              (phps-mode-test--hash-to-list phps-mode-ast--bookkeeping t)
+              (phps-mode-test--hash-to-list phps-mode-ast-bookkeeping--index t)
               (list (list " class myParent id $var1" 1) (list (list 93 98) 1) (list " class myParent static id $var2" 1) (list (list 127 132) 1) (list " class myParent id $var3" 1) (list (list 145 150) 1) (list " class myParent id $var4" 1) (list (list 160 165) 1) (list " class myParent function __construct id $this" 1) (list (list 208 213) 1) (list (list 263 268) 1) (list (list 270 274) 1) (list (list 330 335) 0) (list (list 392 397) 1) (list (list 447 452) 1) (list (list 454 458) 1) (list (list 508 513) 1) (list (list 515 519) 1) (list (list 569 574) 1) (list (list 576 580) 0) (list (list 688 693) 0))))))
 
   (phps-mode-test-ast--buffer-contents
@@ -373,9 +395,10 @@
             production-number
             (car (car production))
             (car (cdr production))))))
-     (phps-mode-ast-generate)
+     (phps-mode-ast--generate)
+     (phps-mode-ast-bookkeeping--generate)
      (should (equal
-              (phps-mode-test--hash-to-list phps-mode-ast--bookkeeping t)
+              (phps-mode-test--hash-to-list phps-mode-ast-bookkeeping--index t)
               (list (list " id $e" 1) (list (list 39 41) 1) (list (list 53 55) 1) (list (list 92 94) 1))))))
 
   (phps-mode-test-ast--buffer-contents
@@ -393,9 +416,10 @@
             production-number
             (car (car production))
             (car (cdr production))))))
-     (phps-mode-ast-generate)
+     (phps-mode-ast--generate)
+     (phps-mode-ast-bookkeeping--generate)
      (should (equal
-              (phps-mode-test--hash-to-list phps-mode-ast--bookkeeping t)
+              (phps-mode-test--hash-to-list phps-mode-ast-bookkeeping--index t)
               (list (list " id $example" 1) (list (list 8 16) 1) (list " anonymous function 1 id $test" 1) (list (list 29 34) 1) (list (list 46 51) 1) (list (list 89 97) 0) (list " id $example2" 1) (list (list 131 140) 1) (list " anonymous function 2 id $test2" 1) (list (list 153 159) 1) (list " anonymous function 2 id $example" 1) (list (list 166 174) 1) (list (list 186 192) 1) (list (list 230 238) 1) (list (list 276 285) 0) (list (list 324 333) 0) (list (list 371 376) 0) (list (list 403 409) 0))))))
 
   (phps-mode-test-ast--buffer-contents
@@ -413,9 +437,10 @@
             production-number
             (car (car production))
             (car (cdr production))))))
-     (phps-mode-ast-generate)
+     (phps-mode-ast--generate)
+     (phps-mode-ast-bookkeeping--generate)
      (should (equal
-              (phps-mode-test--hash-to-list phps-mode-ast--bookkeeping t)
+              (phps-mode-test--hash-to-list phps-mode-ast-bookkeeping--index t)
               (list (list " class myClass function __construct id $this" 1) (list (list 89 94) 1) (list (list 114 119) 1))))))
 
   (phps-mode-test-ast--buffer-contents
@@ -433,9 +458,10 @@
             production-number
             (car (car production))
             (car (cdr production))))))
-     (phps-mode-ast-generate)
+     (phps-mode-ast--generate)
+     (phps-mode-ast-bookkeeping--generate)
      (should (equal
-              (phps-mode-test--hash-to-list phps-mode-ast--bookkeeping t)
+              (phps-mode-test--hash-to-list phps-mode-ast-bookkeeping--index t)
               (list (list " id $items" 1) (list (list 7 13) 1) (list (list 41 47) 1) (list " id $item" 1) (list (list 52 57) 1) (list (list 69 74) 1) (list (list 115 121) 1) (list " id $key" 1) (list (list 125 129) 1) (list " id $item2" 1) (list (list 134 140) 1) (list (list 152 157) 1))))))
 
   (phps-mode-test-ast--buffer-contents
@@ -453,9 +479,10 @@
             production-number
             (car (car production))
             (car (cdr production))))))
-     (phps-mode-ast-generate)
+     (phps-mode-ast--generate)
+     (phps-mode-ast-bookkeeping--generate)
      (should (equal
-              (phps-mode-test--hash-to-list phps-mode-ast--bookkeeping t)
+              (phps-mode-test--hash-to-list phps-mode-ast-bookkeeping--index t)
               (list (list " id $random" 1) (list (list 9 16) 1) (list " id $bandom" 1) (list (list 18 25) 1) (list (list 45 52) 1) (list (list 78 85) 1) (list " id $random2" 1) (list (list 114 122) 1) (list " id $bandom2" 1) (list (list 124 132) 1) (list (list 153 161) 1) (list (list 187 195) 0))))))
 
   (phps-mode-test-ast--buffer-contents
@@ -473,9 +500,10 @@
             production-number
             (car (car production))
             (car (cdr production))))))
-     (phps-mode-ast-generate)
+     (phps-mode-ast--generate)
+     (phps-mode-ast-bookkeeping--generate)
      (should (equal
-              (phps-mode-test--hash-to-list phps-mode-ast--bookkeeping t)
+              (phps-mode-test--hash-to-list phps-mode-ast-bookkeeping--index t)
               (list (list " id $var" 1) (list (list 8 12) 1) (list " function test id $abc" 1) (list (list 35 39) 1) (list " function test id $var" 1) (list (list 54 58) 1) (list (list 68 72) 1))))))
 
   (phps-mode-test-ast--buffer-contents
@@ -493,9 +521,10 @@
             production-number
             (car (car production))
             (car (cdr production))))))
-     (phps-mode-ast-generate)
+     (phps-mode-ast--generate)
+     (phps-mode-ast-bookkeeping--generate)
      (should (equal
-              (phps-mode-test--hash-to-list phps-mode-ast--bookkeeping t)
+              (phps-mode-test--hash-to-list phps-mode-ast-bookkeeping--index t)
               (list (list " id $y" 1) (list (list 7 9) 1) (list " id $fn1" 1) (list (list 15 19) 1) (list " arrow function 1 id $x" 1) (list (list 25 27) 1) (list (list 32 34) 1) (list (list 37 39) 1) (list " id $z" 1) (list (list 41 43) 1) (list " id $fn" 1) (list (list 49 52) 1) (list " arrow function 2 id $x2" 1) (list (list 58 61) 1) (list " arrow function 2 id $y2" 1) (list (list 69 72) 1) (list (list 77 80) 1) (list (list 83 86) 1) (list (list 89 91) 1) (list " arrow function 3 id $x3" 1) (list (list 102 105) 1) (list (list 110 113) 1) (list " id $x4" 1) (list (list 115 118) 1) (list (list 144 147) 1) (list " arrow function 5 id $x5" 1) (list (list 152 155) 1) (list (list 165 168) 1) (list " arrow function 6 id $x6" 1) (list (list 174 177) 1) (list (list 182 185) 1) (list " arrow function 7 id $x7" 1) (list (list 191 194) 1) (list (list 199 202) 1) (list " arrow function 8 id $x8" 1) (list (list 207 210) 1) (list " arrow function 8 id $rest" 1) (list (list 215 220) 1) (list (list 225 230) 1))))))
 
   (phps-mode-test-ast--buffer-contents
@@ -513,9 +542,10 @@
             production-number
             (car (car production))
             (car (cdr production))))))
-     (phps-mode-ast-generate)
+     (phps-mode-ast--generate)
+     (phps-mode-ast-bookkeeping--generate)
      (should (equal
-              (phps-mode-test--hash-to-list phps-mode-ast--bookkeeping t)
+              (phps-mode-test--hash-to-list phps-mode-ast-bookkeeping--index t)
               (list (list " id $z" 1) (list (list 7 9) 1) (list (list 52 54) 1))))))
 
   (phps-mode-test-ast--buffer-contents
@@ -533,9 +563,10 @@
             production-number
             (car (car production))
             (car (cdr production))))))
-     (phps-mode-ast-generate)
+     (phps-mode-ast--generate)
+     (phps-mode-ast-bookkeeping--generate)
      (should (equal
-              (phps-mode-test--hash-to-list phps-mode-ast--bookkeeping t)
+              (phps-mode-test--hash-to-list phps-mode-ast-bookkeeping--index t)
               (list (list " id $var" 1) (list (list 12 16) 1))))))
 
   (phps-mode-test-ast--buffer-contents
@@ -553,9 +584,10 @@
             production-number
             (car (car production))
             (car (cdr production))))))
-     (phps-mode-ast-generate)
+     (phps-mode-ast--generate)
+     (phps-mode-ast-bookkeeping--generate)
      (should (equal
-              (phps-mode-test--hash-to-list phps-mode-ast--bookkeeping t)
+              (phps-mode-test--hash-to-list phps-mode-ast-bookkeeping--index t)
               (list (list " defined 1 id $x" 1) (list (list 18 20) 1) (list (list 33 35) 1) (list " defined 2 id $i" 1) (list (list 77 79) 1) (list " defined 2 id $u" 1) (list (list 81 83) 1) (list (list 104 106) 1) (list (list 168 170) 1) (list (list 232 234) 1) (list (list 302 304) 0) (list (list 355 357) 0) (list (list 408 410) 0) (list " defined 3 id $y" 1) (list (list 445 447) 1) (list (list 460 462) 1) (list " defined 4 id $k" 1) (list (list 505 507) 1) (list " defined 4 id $L" 1) (list (list 519 521) 1) (list (list 542 544) 1) (list (list 606 608) 1) (list (list 670 672) 1) (list (list 740 742) 0) (list (list 793 795) 0) (list (list 846 848) 0))))))
 
   (phps-mode-test-ast--buffer-contents
@@ -573,9 +605,10 @@
             production-number
             (car (car production))
             (car (cdr production))))))
-     (phps-mode-ast-generate)
+     (phps-mode-ast--generate)
+     (phps-mode-ast-bookkeeping--generate)
      (should (equal
-              (phps-mode-test--hash-to-list phps-mode-ast--bookkeeping t)
+              (phps-mode-test--hash-to-list phps-mode-ast-bookkeeping--index t)
               (list (list " class myInterface function myFunction2 id $x" 1) (list (list 84 86) 1))))))
 
   (phps-mode-test-ast--buffer-contents
@@ -593,9 +626,10 @@
             production-number
             (car (car production))
             (car (cdr production))))))
-     (phps-mode-ast-generate)
+     (phps-mode-ast--generate)
+     (phps-mode-ast-bookkeeping--generate)
      (should (equal
-              (phps-mode-test--hash-to-list phps-mode-ast--bookkeeping t)
+              (phps-mode-test--hash-to-list phps-mode-ast-bookkeeping--index t)
               '(((50 52) 0) (" function myFunction2 id $b" 1) ((87 89) 1) ((103 105) 1) ((143 145) 1))))))
 
   (phps-mode-test-ast--buffer-contents
@@ -613,9 +647,10 @@
             production-number
             (car (car production))
             (car (cdr production))))))
-     (phps-mode-ast-generate)
+     (phps-mode-ast--generate)
+     (phps-mode-ast-bookkeeping--generate)
      (should (equal
-              (phps-mode-test--hash-to-list phps-mode-ast--bookkeeping t)
+              (phps-mode-test--hash-to-list phps-mode-ast-bookkeeping--index t)
               '((" id $a" 1) ((8 10) 1) ((38 40) 1) (" id $uri" 1) ((44 48) 1) (" id $page" 1) ((52 57) 1) (" defined 1 id $pages" 1) ((75 81) 1) ((98 100) 1) ((150 154) 1) ((204 209) 1))))))
 
   (phps-mode-test-ast--buffer-contents
@@ -633,9 +668,10 @@
             production-number
             (car (car production))
             (car (cdr production))))))
-     (phps-mode-ast-generate)
+     (phps-mode-ast--generate)
+     (phps-mode-ast-bookkeeping--generate)
      (should (equal
-              (phps-mode-test--hash-to-list phps-mode-ast--bookkeeping t)
+              (phps-mode-test--hash-to-list phps-mode-ast-bookkeeping--index t)
               '((" defined 1 id $b" 2) ((17 19) 1) ((28 30) 1) (" id $c" 1) ((42 44) 1) ((55 57) 1))))))
 
   (phps-mode-test-ast--buffer-contents
@@ -653,9 +689,10 @@
             production-number
             (car (car production))
             (car (cdr production))))))
-     (phps-mode-ast-generate)
+     (phps-mode-ast--generate)
+     (phps-mode-ast-bookkeeping--generate)
      (should (equal
-              (phps-mode-test--hash-to-list phps-mode-ast--bookkeeping t)
+              (phps-mode-test--hash-to-list phps-mode-ast-bookkeeping--index t)
               '(((18 20) 0) ((33 35) 0))))))
 
   (phps-mode-test-ast--buffer-contents
@@ -673,9 +710,10 @@
             production-number
             (car (car production))
             (car (cdr production))))))
-     (phps-mode-ast-generate)
+     (phps-mode-ast--generate)
+     (phps-mode-ast-bookkeeping--generate)
      (should (equal
-              (phps-mode-test--hash-to-list phps-mode-ast--bookkeeping t)
+              (phps-mode-test--hash-to-list phps-mode-ast-bookkeeping--index t)
               '((" function myFunction id $a" 1) ((28 30) 1) (" function myFunction id $b" 1) ((32 34) 1) (" function myFunction id $c" 1) ((36 38) 1) (" function myFunction id $d" 1) ((40 42) 1) (" function myFunction id $f" 1) ((57 59) 1) (" function myFunction id $g" 1) ((61 63) 1) (" function myFunction defined 1 id $f" 1) ((79 81) 1) (" function myFunction defined 2 id $g" 1) ((105 107) 1) ((128 130) 1) ((192 194) 1) ((256 258) 1) ((320 322) 1))))))
 
   (phps-mode-test-ast--buffer-contents
@@ -693,9 +731,10 @@
             production-number
             (car (car production))
             (car (cdr production))))))
-     (phps-mode-ast-generate)
+     (phps-mode-ast--generate)
+     (phps-mode-ast-bookkeeping--generate)
      (should (equal
-              (phps-mode-test--hash-to-list phps-mode-ast--bookkeeping t)
+              (phps-mode-test--hash-to-list phps-mode-ast-bookkeeping--index t)
               '((" id $var" 1) ((8 12) 1) (" function test id $abc" 1) ((35 39) 1) (" function test id $var" 1) ((54 58) 1) ((68 72) 1))))))
 
   (phps-mode-test-ast--buffer-contents
@@ -713,9 +752,10 @@
             production-number
             (car (car production))
             (car (cdr production))))))
-     (phps-mode-ast-generate)
+     (phps-mode-ast--generate)
+     (phps-mode-ast-bookkeeping--generate)
      (should (equal
-              (phps-mode-test--hash-to-list phps-mode-ast--bookkeeping t)
+              (phps-mode-test--hash-to-list phps-mode-ast-bookkeeping--index t)
               '((" id $a" 1) ((15 17) 1) (" id $b" 1) ((19 21) 1) ((28 30) 1) (" function myFunction id $c" 1) ((73 75) 1) (" function myFunction id $a" 1) ((90 92) 1) ((102 104) 1) ((142 144) 0))))))
 
   (phps-mode-test-ast--buffer-contents
@@ -733,9 +773,10 @@
             production-number
             (car (car production))
             (car (cdr production))))))
-     (phps-mode-ast-generate)
+     (phps-mode-ast--generate)
+     (phps-mode-ast-bookkeeping--generate)
      (should (equal
-              (phps-mode-test--hash-to-list phps-mode-ast--bookkeeping t)
+              (phps-mode-test--hash-to-list phps-mode-ast-bookkeeping--index t)
               '((" id $a" 1) ((15 17) 1) ((24 26) 1) (" function test id $a" 1) ((61 63) 1) ((73 75) 1) (" class There function here id $this" 1) (" class There function here id $a" 1) ((138 140) 1) ((154 156) 1))))))
 
   (phps-mode-test-ast--buffer-contents
@@ -753,9 +794,10 @@
             production-number
             (car (car production))
             (car (cdr production))))))
-     (phps-mode-ast-generate)
+     (phps-mode-ast--generate)
+     (phps-mode-ast-bookkeeping--generate)
      (should (equal
-              (phps-mode-test--hash-to-list phps-mode-ast--bookkeeping t)
+              (phps-mode-test--hash-to-list phps-mode-ast-bookkeeping--index t)
               '((" namespace Here function here id $a" 1) ((66 68) 1) ((82 84) 1) (" namespace Here class There function Near id $this" 1) (" namespace Here class There function Near id $a" 1)  ((177 179) 1) ((197 199) 1) (" id $a" 1) ((245 247) 1) ((257 259) 1))))))
 
   (phps-mode-test-ast--buffer-contents
@@ -773,10 +815,11 @@
             production-number
             (car (car production))
             (car (cdr production))))))
-     (phps-mode-ast-generate)
+     (phps-mode-ast--generate)
+     (phps-mode-ast-bookkeeping--generate)
      (should
       (equal
-       (phps-mode-test--hash-to-list phps-mode-ast--bookkeeping t)
+       (phps-mode-test--hash-to-list phps-mode-ast-bookkeeping--index t)
        '((" class There id $variable" 1) ((33 42) 1) (" class There id $variable2" 1) ((67 77) 1) (" class There id $variable3" 1) ((98 108) 1) (" class There static id $variable4" 1) ((129 139) 1) (" class There static id $variable5" 1) ((171 181) 1) (" class There static id $variable6" 1) ((209 219) 1) (" class There function here id $this" 1) ((259 264) 1) ((266 274) 1) ((291 296) 1) ((298 307) 1) ((324 329) 1) ((331 340) 1) ((357 362) 1) ((364 373) 0) ((396 406) 1) ((429 439) 1) ((462 472) 1))))))
 
   (phps-mode-test-ast--buffer-contents
@@ -794,10 +837,11 @@
             production-number
             (car (car production))
             (car (cdr production))))))
-     (phps-mode-ast-generate)
+     (phps-mode-ast--generate)
+     (phps-mode-ast-bookkeeping--generate)
      (should
       (equal
-       (phps-mode-test--hash-to-list phps-mode-ast--bookkeeping t)
+       (phps-mode-test--hash-to-list phps-mode-ast-bookkeeping--index t)
        '((" id $a" 1) ((8 10) 1) (" id $b" 1) ((13 15) 1) (" id $c" 1) ((18 20) 1) ((31 33) 1) ((51 53) 1) ((99 101) 1) ((119 121) 1) ((167 169) 1) ((187 189) 1))))))
 
   (message "\n-- Ran tests for bookkeeping generation. --"))

@@ -11,6 +11,19 @@
 
 (require 'phps-mode-parser)
 
+(defun phps-mode-parser-sdt--get-list-of-object (objects)
+  "Get list of OBJECTS."
+  (cond
+
+   ((and (listp objects)
+         (plist-get objects 'ast-type))
+    (list objects))
+
+   ((listp objects)
+    objects)
+
+   (t (list objects))))
+
 ;; top_statement_list -> (top_statement_list top_statement)
 (puthash
  79
@@ -108,9 +121,9 @@
            'ast-type
            'while
            'condition
-           (phps-mode-ast--get-list-of-objects (nth 2 args))
+           (phps-mode-parser-sdt--get-list-of-object (nth 2 args))
            'children
-           (phps-mode-ast--get-list-of-objects (nth 4 args)))))
+           (phps-mode-parser-sdt--get-list-of-object (nth 4 args)))))
      ast-object))
  phps-mode-parser--table-translations)
 
@@ -123,9 +136,9 @@
            'ast-type
            'do-while
            'children
-           (phps-mode-ast--get-list-of-objects (nth 1 args))
+           (phps-mode-parser-sdt--get-list-of-object (nth 1 args))
            'condition
-           (phps-mode-ast--get-list-of-objects (nth 4 args)))))
+           (phps-mode-parser-sdt--get-list-of-object (nth 4 args)))))
      ast-object))
  phps-mode-parser--table-translations)
 
@@ -138,13 +151,13 @@
            'ast-type
            'for
            'initial
-           (phps-mode-ast--get-list-of-objects (nth 2 args))
+           (phps-mode-parser-sdt--get-list-of-object (nth 2 args))
            'test
-           (phps-mode-ast--get-list-of-objects (nth 4 args))
+           (phps-mode-parser-sdt--get-list-of-object (nth 4 args))
            'incremental
-           (phps-mode-ast--get-list-of-objects (nth 6 args))
+           (phps-mode-parser-sdt--get-list-of-object (nth 6 args))
            'children
-           (phps-mode-ast--get-list-of-objects (nth 8 args)))))
+           (phps-mode-parser-sdt--get-list-of-object (nth 8 args)))))
      ast-object))
  phps-mode-parser--table-translations)
 
@@ -157,7 +170,7 @@
            'ast-type
            'echo
            'children
-           (phps-mode-ast--get-list-of-objects (nth 1 args)))))
+           (phps-mode-parser-sdt--get-list-of-object (nth 1 args)))))
      ast-object))
  phps-mode-parser--table-translations)
 
@@ -177,11 +190,11 @@
            'ast-type
            'foreach
            'expression
-           (phps-mode-ast--get-list-of-objects (nth 2 args))
+           (phps-mode-parser-sdt--get-list-of-object (nth 2 args))
            'value
            (nth 4 args)
            'children
-           (phps-mode-ast--get-list-of-objects (nth 6 args)))))
+           (phps-mode-parser-sdt--get-list-of-object (nth 6 args)))))
      ast-object))
  phps-mode-parser--table-translations)
 
@@ -194,13 +207,13 @@
            'ast-type
            'foreach
            'expression
-           (phps-mode-ast--get-list-of-objects (nth 2 args))
+           (phps-mode-parser-sdt--get-list-of-object (nth 2 args))
            'key
            (nth 4 args)
            'value
            (nth 6 args)
            'children
-           (phps-mode-ast--get-list-of-objects (nth 8 args)))))
+           (phps-mode-parser-sdt--get-list-of-object (nth 8 args)))))
      ast-object))
  phps-mode-parser--table-translations)
 
@@ -227,7 +240,7 @@
            'return-type
            (nth 7 args)
            'children
-           (phps-mode-ast--get-list-of-objects (nth 10 args)))))
+           (phps-mode-parser-sdt--get-list-of-object (nth 10 args)))))
      ;; (message "Function: %S" ast-object)
      ;; (message "args: %S" args)
      ;; (message "terminals: %S" terminals)
@@ -245,9 +258,9 @@
            'name
            (nth 1 args)
            'extends
-           (phps-mode-ast--get-list-of-objects (nth 2 args))
+           (phps-mode-parser-sdt--get-list-of-object (nth 2 args))
            'implements
-           (phps-mode-ast--get-list-of-objects (nth 3 args))
+           (phps-mode-parser-sdt--get-list-of-object (nth 3 args))
            'index
            (car (cdr (nth 1 terminals)))
            'start
@@ -255,7 +268,7 @@
            'end
            (car (cdr (nth 7 terminals)))
            'children
-           (phps-mode-ast--get-list-of-objects (nth 6 args)))))
+           (phps-mode-parser-sdt--get-list-of-object (nth 6 args)))))
      ;; (message "Class %S" ast-object)
      ;; (message "args: %S" args)
      ;; (message "terminals: %S" terminals)
@@ -273,7 +286,7 @@
            'name
            (nth 1 args)
            'extends
-           (phps-mode-ast--get-list-of-objects (nth 2 args))
+           (phps-mode-parser-sdt--get-list-of-object (nth 2 args))
            'index
            (car (cdr (nth 1 terminals)))
            'start
@@ -281,7 +294,7 @@
            'end
            (car (cdr (nth 6 terminals)))
            'children
-           (phps-mode-ast--get-list-of-objects (nth 5 args)))))
+           (phps-mode-parser-sdt--get-list-of-object (nth 5 args)))))
      ;; (message "Interface %S" ast-object)
      ;; (message "args: %S" args)
      ;; (message "terminals: %S" terminals)
@@ -313,9 +326,9 @@
            'ast-type
            'if
            'condition
-           (phps-mode-ast--get-list-of-objects (nth 2 args))
+           (phps-mode-parser-sdt--get-list-of-object (nth 2 args))
            'children
-           (phps-mode-ast--get-list-of-objects (nth 4 args)))))
+           (phps-mode-parser-sdt--get-list-of-object (nth 4 args)))))
      ast-object))
  phps-mode-parser--table-translations)
 
@@ -383,7 +396,7 @@
            'ast-type
            'property
            'modifiers
-           (phps-mode-ast--get-list-of-objects (nth 0 args))
+           (phps-mode-parser-sdt--get-list-of-object (nth 0 args))
            'type
            (nth 1 args)
            'subject
@@ -404,7 +417,7 @@
            'ast-type
            'method
            'modifiers
-           (phps-mode-ast--get-list-of-objects (nth 0 args))
+           (phps-mode-parser-sdt--get-list-of-object (nth 0 args))
            'returns-reference-p
            (not (equal (nth 2 args) nil))
            'name
@@ -414,7 +427,7 @@
            'return-type
            (nth 8 args)
            'children
-           (phps-mode-ast--get-list-of-objects (nth 10 args))
+           (phps-mode-parser-sdt--get-list-of-object (nth 10 args))
            'index
            (car (cdr (nth 3 terminals)))
            'start
@@ -502,7 +515,7 @@
            'key
            (nth 0 args)
            'value
-           (phps-mode-ast--get-list-of-objects (nth 2 args))
+           (phps-mode-parser-sdt--get-list-of-object (nth 2 args))
            'index
            (car (cdr (nth 0 terminals)))
            'start
@@ -537,7 +550,7 @@
            'key
            (nth 0 args)
            'value
-           (phps-mode-ast--get-list-of-objects (nth 2 args))
+           (phps-mode-parser-sdt--get-list-of-object (nth 2 args))
            'index
            (car (cdr (nth 0 terminals)))
            'start
@@ -562,7 +575,7 @@
            'name
            (nth 0 args)
            'argument_list
-           (phps-mode-ast--get-list-of-objects (nth 1 args)))))
+           (phps-mode-parser-sdt--get-list-of-object (nth 1 args)))))
      ast-object))
  phps-mode-parser--table-translations)
 
