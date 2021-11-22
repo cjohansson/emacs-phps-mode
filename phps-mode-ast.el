@@ -662,6 +662,60 @@
 ;; Functions:
 
 
+(defun phps-mode-bookkeeping-generate-symbol-namespace
+    (&optional namespace class function)
+  "Generate symbol namespace for NAMESPACE, CLASS and FUNCTION."
+  (let ((symbol-namespace ""))
+    (when namespace
+      (setq
+       symbol-namespace
+       (format
+        "%s namespace %s"
+        symbol-namespace
+        namespace)))
+    (when class
+      (setq
+       symbol-namespace
+       (format
+        "%s class %s"
+        symbol-namespace
+        class)))
+    (when function
+      (setq
+       symbol-namespace
+       (format
+        "%s function %s"
+        symbol-namespace
+        function)))
+    symbol-namespace))
+
+(defun phps-mode-bookkeeping-generate-variable-namespace
+    (&optional namespace class function)
+  "Generate variable namespace for NAMESPACE, CLASS and FUNCTION."
+  (let ((variable-namespace ""))
+    (when class
+      (when namespace
+        (setq
+         variable-namespace
+         (format
+          "%s namespace %s"
+          variable-namespace
+          namespace)))
+      (setq
+       variable-namespace
+       (format
+        "%s class %s"
+        variable-namespace
+        class)))
+    (when function
+      (setq
+       variable-namespace
+       (format
+        "%s function %s"
+        variable-namespace
+        function)))
+    variable-namespace))
+
 (defun phps-mode-ast-generate ()
   "Generate AST for current buffer."
   (let ((translation (phps-mode-parser-translate))
@@ -812,46 +866,18 @@
                 (setq
                  item
                  (car (cdr item-raw)))
-                (when namespace
-                  (setq
-                   symbol-namespace
-                   (format
-                    "%s namespace %s"
-                    symbol-namespace
-                    namespace)))
-                (when class
-                  (setq
-                   symbol-namespace
-                   (format
-                    "%s class %s"
-                    symbol-namespace
-                    class))
-                  (when namespace
-                    (setq
-                     variable-namespace
-                     (format
-                      "%s namespace %s"
-                      variable-namespace
-                      namespace)))
-                  (setq
-                   variable-namespace
-                   (format
-                    "%s class %s"
-                    variable-namespace
-                    class)))
-                (when function
-                  (setq
-                   symbol-namespace
-                   (format
-                    "%s function %s"
-                    symbol-namespace
-                    function))
-                  (setq
-                   variable-namespace
-                   (format
-                    "%s function %s"
-                    variable-namespace
-                    function))))
+                (setq
+                 symbol-namespace
+                 (phps-mode-bookkeeping-generate-symbol-namespace
+                  namespace
+                  class
+                  function))
+                (setq
+                 variable-namespace
+                 (phps-mode-bookkeeping-generate-variable-namespace
+                  namespace
+                  class
+                  function)))
             (setq
              item
              item-raw))
@@ -1251,7 +1277,9 @@
                     (when static-p
                       (setq
                        class-namespace
-                       (format "%s static")))
+                       (format
+                        "%s static"
+                        class-namespace)))
                     (push
                      (list
                       (list
@@ -1282,6 +1310,30 @@
                  namespace)
                 (plist-get item 'variable))
                bookkeeping-stack))
+
+             ((equal type 'array-object-dereferencable)
+              (let* ((subject (plist-get item 'subject))
+                     (property-name (plist-get item 'property))
+                     (downcase-subject (downcase subject)))
+
+                (cond
+
+                 ((string= downcase-subject "$this")
+                  (let ((sub-variable-namespace
+                         (phps-mode-bookkeeping-generate-variable-namespace
+                          namespace
+                          nil
+                          function))
+                        (sub-symbol-namespace
+                         (phps-mode-bookkeeping-generate-variable-namespace
+                          namespace
+                          nil
+                          function)))
+                    ;; TODO Check bookkeeping here
+                    ;; (gethash id bookkeeping)
+                    ))
+
+                 )))
 
              )))))
     (setq
