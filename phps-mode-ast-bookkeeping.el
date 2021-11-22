@@ -557,24 +557,47 @@
            ((equal type 'array-object-dereferencable)
             (let* ((subject (plist-get item 'subject))
                    (property-name (plist-get item 'property))
-                   (downcase-subject-name (downcase (plist-get subject 'name))))
+                   (downcase-subject-name (downcase (plist-get subject 'name)))
+                   (property-name (plist-get item 'property-name)))
 
               (cond
 
                ((string= downcase-subject-name "$this")
-                (let ((sub-variable-namespace
-                       (phps-mode-ast-bookkeeping--generate-variable-namespace
-                        namespace
-                        nil
-                        function))
-                      (sub-symbol-namespace
-                       (phps-mode-ast-bookkeeping--generate-variable-namespace
-                        namespace
-                        nil
-                        function)))
-                  ;; TODO Check bookkeeping here
-                  ;; (gethash id bookkeeping)
-                  ))
+                (let* ((sub-variable-namespace
+                        (phps-mode-ast-bookkeeping--generate-variable-namespace
+                         namespace
+                         nil
+                         function))
+                       (variable-id
+                        (format
+                         "%s id $%s"
+                         sub-variable-namespace
+                         property-name))
+                       (sub-symbol-namespace
+                        (phps-mode-ast-bookkeeping--generate-variable-namespace
+                         namespace
+                         nil
+                         function))
+                       (symbol-id
+                        (format
+                         "%s id %s"
+                         sub-variable-namespace
+                         property-name))
+                       (bookkeeping-object
+                        (list
+                         (plist-get item 'property-start)
+                         (plist-get item 'property-end))))
+                  (if (or
+                       (gethash variable-id bookkeeping)
+                       (gethash symbol-id bookkeeping))
+                      (puthash
+                       bookkeeping-object
+                       t
+                       bookkeeping)
+                    (puthash
+                     bookkeeping-object
+                     nil
+                     bookkeeping))))
 
                )))
 

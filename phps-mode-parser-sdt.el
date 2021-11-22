@@ -600,7 +600,7 @@
 ;; 490: variable -> (array_object_dereferencable T_OBJECT_OPERATOR property_name)
 (puthash
  490
- (lambda(args _terminals)
+ (lambda(args terminals)
    (let ((ast-object
           (list
            'ast-type
@@ -608,7 +608,11 @@
            'subject
            (nth 0 args)
            'property-name
-           (nth 2 args))))
+           (nth 2 args)
+           'property-start
+           (car (cdr (nth 2 terminals)))
+           'property-end
+           (cdr (cdr (nth 2 terminals))))))
      ast-object))
  phps-mode-parser--table-translations)
 
