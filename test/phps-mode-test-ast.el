@@ -378,7 +378,7 @@
      (phps-mode-ast-bookkeeping--generate)
      (should (equal
               (phps-mode-test--hash-to-list phps-mode-ast-bookkeeping--index t)
-              (list (list " class myParent id $var1" 1) (list (list 93 98) 1) (list " class myParent static id $var2" 1) (list (list 127 132) 1) (list " class myParent id $var3" 1) (list (list 145 150) 1) (list " class myParent id $var4" 1) (list (list 160 165) 1) (list " class myParent function __construct id $this" 1) (list (list 208 213) 1) (list (list 263 268) 1) (list (list 270 274) 1) (list (list 330 335) 0) (list (list 392 397) 1) (list (list 447 452) 1) (list (list 454 458) 1) (list (list 508 513) 1) (list (list 515 519) 1) (list (list 569 574) 1) (list (list 576 580) 0) (list (list 688 693) 0))))))
+              '((" class myParent id $var1" 1) ((93 98) 1) (" class myParent static id $var2" 1) ((127 132) 1) (" class myParent id $var3" 1) ((145 150) 1) (" class myParent id $var4" 1) ((160 165) 1) (" class myParent function __construct id $this" 1) ((208 213) 1) ((263 268) 1) ((270 274) 1) ((330 335) 0) ((392 397) 1) ((447 452) 1) ((454 458) 1) ((508 513) 1) ((515 519) 1) ((569 574) 1) ((576 580) 0) ((688 693) 0))))))
 
   (phps-mode-test-ast--buffer-contents
    "<?php\n\ntry {\n    \n} catch (\\Exception $e) {\n    if ($e) {\n        echo 'Hit';\n    }\n}\n\nif ($e) {\n    echo 'Miss';\n}\n"

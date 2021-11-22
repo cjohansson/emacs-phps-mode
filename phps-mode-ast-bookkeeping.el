@@ -566,8 +566,8 @@
                 (let* ((sub-variable-namespace
                         (phps-mode-ast-bookkeeping--generate-variable-namespace
                          namespace
-                         nil
-                         function))
+                         class
+                         nil))
                        (variable-id
                         (format
                          "%s id $%s"
@@ -576,8 +576,8 @@
                        (sub-symbol-namespace
                         (phps-mode-ast-bookkeeping--generate-variable-namespace
                          namespace
-                         nil
-                         function))
+                         class
+                         nil))
                        (symbol-id
                         (format
                          "%s id %s"
@@ -587,19 +587,61 @@
                         (list
                          (plist-get item 'property-start)
                          (plist-get item 'property-end))))
+                  ;; (message "dereferenced: %S %S" variable-id symbol-id)
                   (if (or
                        (gethash variable-id bookkeeping)
                        (gethash symbol-id bookkeeping))
                       (puthash
                        bookkeeping-object
-                       t
+                       1
                        bookkeeping)
                     (puthash
                      bookkeeping-object
-                     nil
+                     0
                      bookkeeping))))
 
                )))
+
+           ((equal type 'static-member)
+            (let* ((parent-class (plist-get item 'class))
+                   (downcased-parent-class (downcase parent-class))
+                   (member (plist-get item 'member))
+                   (member-type (plist-get member 'ast-type)))
+
+              (cond
+
+               ((string= downcased-parent-class "self")
+
+                (cond
+
+                 ((equal member-type 'simple-variable)
+                  (let* ((sub-variable-namespace
+                          (phps-mode-ast-bookkeeping--generate-variable-namespace
+                           namespace
+                           class
+                           nil))
+                         (variable-id
+                          (format
+                           "%s static id %s"
+                           sub-variable-namespace
+                           (plist-get member 'name)))
+                         (bookkeeping-object
+                          (list
+                           (plist-get member 'start)
+                           (plist-get member 'end))))
+                    (if (gethash variable-id bookkeeping)
+                        (puthash
+                         bookkeeping-object
+                         1
+                         bookkeeping)
+                      (puthash
+                       bookkeeping-object
+                       0
+                       bookkeeping))))
+
+                 )
+
+                ))))
 
            ))))
     (setq
