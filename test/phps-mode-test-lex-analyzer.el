@@ -1156,6 +1156,101 @@
 
   )
 
+(defun phps-mode-test-lex-analyzer--imenu ()
+  "Test for imenu."
+
+  (phps-mode-test--with-buffer
+   "<?php\nfunction myFunctionA() {}\nfunction myFunctionB() {}\n$var = function () {\n    echo 'here';\n};"
+   "Imenu function-oriented file with anonymous function"
+   (should (equal (phps-mode-lex-analyzer--get-imenu) '(("myFunctionA" . 16) ("myFunctionB" . 42)))))
+
+  (phps-mode-test--with-buffer
+   "<?php\nfunction myFunctionA() {}\nfunction myFunctionB() {}\n"
+   "Imenu function-oriented file"
+   (should (equal (phps-mode-lex-analyzer--get-imenu) '(("myFunctionA" . 16) ("myFunctionB" . 42)))))
+
+  (phps-mode-test--with-buffer
+   "<?php\nclass myClass {\n    public function myFunctionA() {}\n    protected function myFunctionB() {}\n}\n"
+   "Imenu object-oriented file"
+   (should (equal (phps-mode-lex-analyzer--get-imenu) '(("myClass" . (("myFunctionA" . 43) ("myFunctionB" . 83)))))))
+
+  (phps-mode-test--with-buffer
+   "<?php\ninterface myInterface {\n    public function myFunctionA() {}\n    protected function myFunctionB() {}\n}\n"
+   "Imenu object-oriented file with interface"
+   (should (equal (phps-mode-lex-analyzer--get-imenu) '(("myInterface" . (("myFunctionA" . 51) ("myFunctionB" . 91)))))))
+
+  (phps-mode-test--with-buffer
+   "<?php\nnamespace myNamespace {\n    class myClass {\n        public function myFunctionA() {}\n        protected function myFunctionB() {}\n    }\n}\n"
+   "Imenu object-oriented file with namespace, class and function"
+   (should (equal (phps-mode-lex-analyzer--get-imenu) '(("myNamespace" ("myClass" ("myFunctionA" . 75) ("myFunctionB" . 119)))))))
+
+  (phps-mode-test--with-buffer
+   "<?php\nnamespace myNamespace;\nclass myClass {\n    public function myFunctionA() {}\n    protected function myFunctionB() {}\n}\n"
+   "Imenu object-oriented file with bracket-less namespace, class and function"
+   (should (equal (phps-mode-lex-analyzer--get-imenu) '(("myNamespace" ("myClass" ("myFunctionA" . 66) ("myFunctionB" . 106)))))))
+
+  (phps-mode-test--with-buffer
+   "<?php\nnamespace myNamespace {\n    class myClass extends myAbstract {\n        public function myFunctionA() {}\n        protected function myFunctionB() {}\n    }\n}\n"
+   "Imenu object-oriented file with namespace, class that extends and functions"
+   (should (equal (phps-mode-lex-analyzer--get-imenu) '(("myNamespace" ("myClass" ("myFunctionA" . 94) ("myFunctionB" . 138)))))))
+
+  (phps-mode-test--with-buffer
+   "<?php\nnamespace myNamespace;\nclass myClass extends myAbstract implements myInterface {\n    public function myFunctionA() {}\n    protected function myFunctionB() {}\n}\n"
+   "Imenu object-oriented file with bracket-less namespace, class that extends and implements and functions"
+   (should (equal (phps-mode-lex-analyzer--get-imenu) '(("myNamespace" ("myClass" ("myFunctionA" . 108) ("myFunctionB" . 148)))))))
+
+  (phps-mode-test--with-buffer
+   "<?php\nnamespace myNamespace;\nclass myClass extends myAbstract implements myInterface {\n    public function myFunctionA($myArg = null) {}\n    protected function myFunctionB($myArg = 'abc') {}\n}\n"
+   "Imenu object-oriented file with bracket-less namespace, class that extends and implements and functions with optional arguments"
+   (should (equal (phps-mode-lex-analyzer--get-imenu) '(("myNamespace" ("myClass" ("myFunctionA" . 108) ("myFunctionB" . 161)))))))
+
+  (phps-mode-test--with-buffer
+   "<?php\nnamespace myNamespace\\myNamespace2;\nclass myClass extends myAbstract implements myInterface {\n    public function myFunctionA($myArg = null) {}\n    protected function myFunctionB($myArg = 'abc') {}\n}\n"
+   "Imenu object-oriented file with bracket-less namespace with multiple levels, class that extends and implements and functions with optional arguments"
+   (should (equal (phps-mode-lex-analyzer--get-imenu) '(("myNamespace\\myNamespace2" ("myClass" ("myFunctionA" . 121) ("myFunctionB" . 174)))))))
+
+  (phps-mode-test--with-buffer
+   "<?php\nclass myClass\n{\n\n    public function myFunction1()\n    {\n        echo \"my string with variable {$variable} inside it\";\n    }\n\n    public function myFunction2()\n    {\n    }\n\n}"
+   "Imenu with double quoted string with variable inside it"
+   (should (equal (phps-mode-lex-analyzer--get-imenu) '(("myClass" ("myFunction1" . 44) ("myFunction2" . 153))))))
+
+  (phps-mode-test--with-buffer
+   "<?php\n\nnamespace MyNamespace;\n\nclass MyClass\n{\n\n    /**\n     *\n     */\n    public function __construct()\n    {\n        if ($test) {\n        }\n    }\n\n    /**\n     *\n     */\n    public function myFunction1()\n    {\n        $this->addMessage(\"My random {$message} here\" . ($random > 1 ? \"A\" : \"\") . \" was here.\");\n    }\n    \n    /**\n     *\n     */\n    public function myFunction2()\n    {\n    }\n\n    /**\n     * It's good\n     */\n    public function myFunction3()\n    {\n    }\n\n    /**\n     *\n     */\n    public function myFunction4()\n    {\n    }\n}\n"
+   "Imenu with double quoted string with variable inside it and concatenated string"
+   (should (equal (phps-mode-lex-analyzer--get-imenu) '(("MyNamespace" ("MyClass" ("__construct" . 92) ("myFunction1" . 193) ("myFunction2" . 365) ("myFunction3" . 445) ("myFunction4" . 515)))))))
+
+  (phps-mode-test--with-buffer
+   "<?php\nclass myClass {}"
+   "Imenu empty class"
+   (should (equal (phps-mode-lex-analyzer--get-imenu) nil)))
+
+  (phps-mode-test--with-buffer
+   "<?php\nnamespace myNamespace {}"
+   "Imenu empty bracketed namespace"
+   (should (equal (phps-mode-lex-analyzer--get-imenu) nil)))
+
+  (phps-mode-test--with-buffer
+   "<?php\nnamespace myNamespace;"
+   "Imenu empty namespace without brackets"
+   (should (equal (phps-mode-lex-analyzer--get-imenu) nil)))
+
+  (phps-mode-test--with-buffer
+   "<?php\ninterface myInterface\n{\n    function myFunction1();\n    function myFunction2($x); // NOTE Imenu not working either\n}\n"
+   "Imenu in interface class with arguments in one method"
+   (should (equal (phps-mode-lex-analyzer--get-imenu) '(("myInterface" ("myFunction1" . 44) ("myFunction2" . 72))))))
+
+  (phps-mode-test--with-buffer
+   "<?php\n\nnamespace MyNamespace;\n\nfunction aFunction() {\n    /**\n     * With some contents\n     */\n}\n\nclass MyClass\n{\n\n    /**\n     *\n     */\n    public function __construct()\n    {\n        if ($test) {\n        }\n    }\n\n    /**\n     *\n     */\n    public function myFunction1()\n    {\n        $this->addMessage(\"My random {$message} here\" . ($random > 1 ? \"A\" : \"\") . \" was here.\");\n    }\n    \n    /**\n     *\n     */\n    public function myFunction2()\n    {\n    }\n\n    /**\n     * It's good\n     */\n    public function myFunction3()\n    {\n    }\n\n    /**\n     *\n     */\n    public function myFunction4()\n    {\n    }\n}\n"
+   "Imenu with double quoted string with variable inside it and concatenated string"
+   (should (equal (phps-mode-lex-analyzer--get-imenu) '(("MyNamespace" ("aFunction" . 41) ("MyClass" ("__construct" . 160) ("myFunction1" . 261) ("myFunction2" . 433) ("myFunction3" . 513) ("myFunction4" . 583)))))))
+
+  (phps-mode-test--with-buffer
+  "<?php\n\nnamespace MyNamespaceA\n{\n    function aFunctionA() {\n        /**\n         * With some contents\n         */\n    }\n    class MyClass\n    {\n\n        /**\n         *\n         */\n        public function __construct()\n        {\n            if ($test) {\n            }\n        }\n\n        /**\n         *\n         */\n        public function myFunction1()\n        {\n            $this->addMessage(\"My random {$message} here\" . ($random > 1 ? \"A\" : \"\") . \" was here.\");\n        }\n        \n        /**\n         *\n         */\n        public function myFunction2()\n        {\n        }\n\n        /**\n         * It's good\n         */\n        public function myFunction3()\n        {\n        }\n\n        /**\n         *\n         */\n        public function myFunction4()\n        {\n        }\n    }\n}\nnamespace {\n    function aFunctionB()\n    {\n        \n    }\n    class MyClass\n    {\n\n        /**\n         *\n         */\n        public function __construct()\n        {\n            if ($test) {\n            }\n        }\n\n        /**\n         *\n         */\n        public function myFunction1()\n        {\n            $this->addMessage(\"My random {$message} here\" . ($random > 1 ? \"A\" : \"\") . \" was here.\");\n        }\n        \n        /**\n         *\n         */\n        public function myFunction2()\n        {\n        }\n\n        /**\n         * It's good\n         */\n        public function myFunction3()\n        {\n        }\n\n        /**\n         *\n         */\n        public function myFunction4()\n        {\n        }\n    }\n}"
+  "Imenu with double quoted string with variable inside it and concatenated string in two namespaces"
+  (should (equal (phps-mode-lex-analyzer--get-imenu) '(("MyNamespaceA" ("aFunctionA" . 46) ("MyClass" ("__construct" . 205) ("myFunction1" . 338) ("myFunction2" . 542) ("myFunction3" . 646) ("myFunction4" . 740))) ("aFunctionB" . 807) ("MyClass" ("__construct" . 925) ("myFunction1" . 1058) ("myFunction2" . 1262) ("myFunction3" . 1366) ("myFunction4" . 1460))))))
+
+  )
+
 (defun phps-mode-test-lex-analyzer--get-moved-imenu ()
   "Test for moving imenu index."
 
@@ -1559,6 +1654,7 @@
   (phps-mode-test-lex-analyzer--get-lines-indent-psr-2)
   (phps-mode-test-lex-analyzer--get-lines-indent)
   (phps-mode-test-lex-analyzer--indent-line)
+  (phps-mode-test-lex-analyzer--imenu)
   (phps-mode-test-lex-analyzer--get-moved-imenu)
   (phps-mode-test-lex-analyzer--comment-uncomment-region))
 

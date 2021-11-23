@@ -20,7 +20,7 @@ compile:
 	find . -name "*.el" -exec $(EMACS_CMD) -f batch-byte-compile {} \;
 
 .PHONY: tests
-tests: test-integration test-lexer test-lex-analyzer test-parser test-syntax-table test-ast
+tests: test-integration test-lexer test-lex-analyzer test-parser test-syntax-table #test-ast
 
 .PHONY: test-ast
 test-ast:
