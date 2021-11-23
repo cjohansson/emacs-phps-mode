@@ -619,7 +619,7 @@
 ;; static_member -> (class_name T_PAAMAYIM_NEKUDOTAYIM simple_variable)
 (puthash
  495
- (lambda(args _terminals)
+ (lambda(args terminals)
    (let ((ast-object
           (list
            'ast-type
@@ -627,7 +627,11 @@
            'class
            (nth 0 args)
            'member
-           (nth 2 args))))
+           (nth 2 args)
+           'start
+           (car (cdr (nth 0 terminals)))
+           'end
+           (cdr (cdr (nth 0 terminals))))))
      ast-object))
  phps-mode-parser--table-translations)
 

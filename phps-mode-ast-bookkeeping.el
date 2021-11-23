@@ -563,6 +563,12 @@
               (cond
 
                ((string= downcase-subject-name "$this")
+                (puthash
+                 (list
+                  (plist-get subject 'start)
+                  (plist-get subject 'end))
+                 1
+                 bookkeeping)
                 (let* ((sub-variable-namespace
                         (phps-mode-ast-bookkeeping--generate-variable-namespace
                          namespace
