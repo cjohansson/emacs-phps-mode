@@ -217,6 +217,44 @@
      ast-object))
  phps-mode-parser--table-translations)
 
+;; statement -> (T_TRY "{" inner_statement_list "}" catch_list finally_statement)
+(puthash
+ 160
+ (lambda(args _terminals)
+   (let ((ast-object
+          (list
+           'ast-type
+           'try
+           'inner-statement-list
+           (phps-mode-parser-sdt--get-list-of-object (nth 2 args))
+           'catch-list
+           (phps-mode-parser-sdt--get-list-of-object (nth 4 args))
+           'finally-statement
+           (nth 5 args))))
+     ast-object))
+ phps-mode-parser--table-translations)
+
+;; catch_list -> (catch_list T_CATCH "(" catch_name_list optional_variable ")" "{" inner_statement_list "}")
+(puthash
+ 164
+ (lambda(args terminals)
+   (let ((ast-object
+          (list
+           'ast-type
+           'catch
+           'catch-name-list
+           (phps-mode-parser-sdt--get-list-of-object (nth 3 args))
+           'optional-variable
+           (nth 4 args)
+           'optional-variable-start
+           (car (cdr (nth 4 terminals)))
+           'optional-variable-end
+           (cdr (cdr (nth 4 terminals)))
+           'children
+           (nth 7 args))))
+     ast-object))
+ phps-mode-parser--table-translations)
+
 ;; function_declaration_statement -> (function returns_ref T_STRING backup_doc_comment "(" parameter_list ")" return_type backup_fn_flags "{" inner_statement_list "}" backup_fn_flags)
 (puthash
  174

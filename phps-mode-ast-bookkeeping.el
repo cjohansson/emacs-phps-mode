@@ -554,6 +554,66 @@
               (plist-get item 'variable))
              bookkeeping-stack))
 
+           ((equal type 'try)
+            (when-let ((children (reverse (plist-get item 'inner-statement-list))))
+              (dolist (child children)
+                (push
+                 (list
+                  (list
+                   class
+                   function
+                   namespace)
+                  child)
+                 bookkeeping-stack)))
+            (when-let ((children (reverse (plist-get item 'catch-list))))
+              (dolist (child children)
+                (push
+                 (list
+                  (list
+                   class
+                   function
+                   namespace)
+                  child)
+                 bookkeeping-stack)))
+            (when-let ((children (reverse (plist-get item 'finally-statement))))
+              (dolist (child children)
+                (push
+                 (list
+                  (list
+                   class
+                   function
+                   namespace)
+                  child)
+                 bookkeeping-stack))))
+
+           ((equal type 'catch)
+            (when-let ((optional-variable (plist-get item 'optional-variable)))
+              (let ((id
+                     (format
+                      "%s id %s"
+                      variable-namespace
+                      optional-variable)))
+                (puthash
+                 id
+                 1
+                 bookkeeping)
+                (puthash
+                 (list
+                  (plist-get item 'optional-variable-start)
+                  (plist-get item 'optional-variable-end))
+                 1
+                 bookkeeping)))
+            (when-let ((children (reverse (plist-get item 'children))))
+              (dolist (child children)
+                (push
+                 (list
+                  (list
+                   class
+                   function
+                   namespace)
+                  child)
+                 bookkeeping-stack))))
+
            ((equal type 'array-object-dereferencable)
             (let* ((subject (plist-get item 'subject))
                    (property-name (plist-get item 'property))
