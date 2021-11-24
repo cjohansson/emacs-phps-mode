@@ -601,6 +601,43 @@
      ast-object))
  phps-mode-parser--table-translations)
 
+;; inline_function -> (function returns_ref backup_doc_comment "(" parameter_list ")" lexical_vars return_type backup_fn_flags "{" inner_statement_list "}" backup_fn_flags)
+(puthash
+ 416
+ (lambda(args terminals)
+   (let ((ast-object
+          (list
+           'ast-type
+           'inline-function
+           'start
+           (car (cdr (nth 9 terminals)))
+           'end
+           (cdr (cdr (nth 11 terminals)))
+           'returns-ref
+           (nth 1 args)
+           'backup-doc-comment
+           (nth 2 args)
+           'parameter-list
+           (phps-mode-parser-sdt--get-list-of-object (nth 4 args))
+           'lexical-vars
+           (phps-mode-parser-sdt--get-list-of-object (nth 6 args))
+           'return-type
+           (nth 7 args)
+           'backup-fn-flags-1
+           (nth 8 args)
+           'inner-statement-list
+           (nth 10 args)
+           'backup-fn-flags-2
+           (nth 12 args))))
+     ast-object))
+ phps-mode-parser--table-translations)
+
+;; lexical_vars -> (T_USE "(" lexical_var_list possible_comma ")")
+(puthash
+ 426
+ (lambda(args _terminals)
+   (nth 2 args))
+ phps-mode-parser--table-translations)
 
 ;; function_call -> (name argument_list)
 (puthash
