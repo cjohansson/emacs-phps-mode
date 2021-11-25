@@ -683,6 +683,19 @@
      ast-object))
  phps-mode-parser--table-translations)
 
+;; dereferencable_scalar -> (T_ARRAY "(" array_pair_list ")")
+(puthash
+ 447
+ (lambda(args _terminals)
+   (let ((ast-object
+          (list
+           'ast-type
+           'dereferencable-scalar
+           'array-pair-list
+           (phps-mode-parser-sdt--get-list-of-object (nth 2 args)))))
+     ast-object))
+ phps-mode-parser--table-translations)
+
 ;; callable_variable -> (array_object_dereferencable "[" optional_expr "]")
 (puthash
  483
@@ -714,24 +727,6 @@
      ast-object))
  phps-mode-parser--table-translations)
 
-;; simple_variable -> (T_VARIABLE)
-(puthash
- 492
- (lambda(args terminals)
-   ;; (message "simple_variable: %S %S" args terminals)
-   (let ((ast-object
-          (list
-           'ast-type
-           'simple-variable
-           'name
-           args
-           'start
-           (car (cdr terminals))
-           'end
-           (cdr (cdr terminals)))))
-     ast-object))
- phps-mode-parser--table-translations)
-
 ;; 490: variable -> (array_object_dereferencable T_OBJECT_OPERATOR property_name)
 (puthash
  490
@@ -748,6 +743,24 @@
            (car (cdr (nth 2 terminals)))
            'property-end
            (cdr (cdr (nth 2 terminals))))))
+     ast-object))
+ phps-mode-parser--table-translations)
+
+;; simple_variable -> (T_VARIABLE)
+(puthash
+ 492
+ (lambda(args terminals)
+   ;; (message "simple_variable: %S %S" args terminals)
+   (let ((ast-object
+          (list
+           'ast-type
+           'simple-variable
+           'name
+           args
+           'start
+           (car (cdr terminals))
+           'end
+           (cdr (cdr terminals)))))
      ast-object))
  phps-mode-parser--table-translations)
 
@@ -768,6 +781,24 @@
            'end
            (cdr (cdr (nth 0 terminals))))))
      ast-object))
+ phps-mode-parser--table-translations)
+
+;; non_empty_array_pair_list -> (non_empty_array_pair_list "," possible_array_pair)
+(puthash
+ 513
+ (lambda(args _terminals)
+   ;; (message "non_empty_array_pair_list 513: %S" args)
+   (if (nth 2 args)
+       (append (nth 0 args) (list (nth 2 args)))
+     (nth 0 args)))
+ phps-mode-parser--table-translations)
+
+;; non_empty_array_pair_list -> (possible_array_pair)
+(puthash
+ 514
+ (lambda(args _terminals)
+   ;; (message "non_empty_array_pair_list 514: %S" args)
+   (list args))
  phps-mode-parser--table-translations)
 
 (provide 'phps-mode-parser-sdt)
