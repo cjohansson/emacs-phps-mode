@@ -273,7 +273,7 @@
            (car (cdr (nth 11 terminals)))
            'returns-reference-p
            (not (equal (nth 1 args) nil))
-           'parameters
+           'parameter-list
            (nth 5 args)
            'return-type
            (nth 7 args)
@@ -412,6 +412,20 @@
      ast-object))
  phps-mode-parser--table-translations)
 
+;; 262: argument_list -> ("(" ")")
+(puthash
+ 262
+ (lambda(_args _terminals)
+   nil)
+ phps-mode-parser--table-translations)
+
+;; 263: argument_list -> ("(" non_empty_argument_list possible_comma ")")
+(puthash
+ 263
+ (lambda(args _terminals)
+   (nth 1 args))
+ phps-mode-parser--table-translations)
+
 ;; class_statement_list -> (class_statement_list class_statement)
 (puthash
  276
@@ -460,7 +474,7 @@
            (not (equal (nth 2 args) nil))
            'name
            (nth 3 args)
-           'parameters
+           'parameter-list
            (nth 6 args)
            'return-type
            (nth 8 args)
@@ -476,6 +490,13 @@
      ;; (message "args: %S" args)
      ;; (message "terminals: %S" terminals)
      ast-object))
+ phps-mode-parser--table-translations)
+
+;; 302: method_body -> ("{" inner_statement_list "}")
+(puthash
+ 302
+ (lambda(args _terminals)
+   (nth 1 args))
  phps-mode-parser--table-translations)
 
 ;; 304: variable_modifiers -> (T_VAR)
@@ -525,13 +546,6 @@
  314
  (lambda(_args _terminals)
    'final)
- phps-mode-parser--table-translations)
-
-;; 302: method_body -> ("{" inner_statement_list "}")
-(puthash
- 302
- (lambda(args _terminals)
-   (nth 1 args))
  phps-mode-parser--table-translations)
 
 ;; property -> (T_VARIABLE backup_doc_comment)
@@ -666,6 +680,37 @@
            (nth 0 args)
            'argument-list
            (phps-mode-parser-sdt--get-list-of-object (nth 1 args)))))
+     ast-object))
+ phps-mode-parser--table-translations)
+
+;; callable_variable -> (array_object_dereferencable "[" optional_expr "]")
+(puthash
+ 483
+ (lambda(args _terminals)
+   (let ((ast-object
+          (list
+           'ast-type
+           'callable-variable
+           'array-object-dereferencable
+           'array-index
+           (phps-mode-parser-sdt--get-list-of-object (nth 2 args)))))
+     ast-object))
+ phps-mode-parser--table-translations)
+
+;; callable_variable -> (array_object_dereferencable T_OBJECT_OPERATOR property_name argument_list)
+(puthash
+ 485
+ (lambda(args _terminals)
+   (let ((ast-object
+          (list
+           'ast-type
+           'callable-variable
+           'array-object-dereferencable
+           (nth 0 args)
+           'property-name
+           (nth 2 args)
+           'argument-list
+           (phps-mode-parser-sdt--get-list-of-object (nth 3 args)))))
      ast-object))
  phps-mode-parser--table-translations)
 

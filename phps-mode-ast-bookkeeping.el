@@ -223,8 +223,8 @@
             (let ((name (plist-get item 'name))
                   (sub-scope scope))
               (push `(type function name ,name) sub-scope)
-              (when-let ((parameters (reverse (plist-get item 'parameters))))
-                (dolist (parameter parameters)
+              (when-let ((parameter-list (reverse (plist-get item 'parameter-list))))
+                (dolist (parameter parameter-list)
                   (let ((id
                          (phps-mode-ast-bookkeeping--generate-variable-scope-string
                           sub-scope
@@ -260,8 +260,8 @@
                  this-id
                  1
                  bookkeeping))
-              (when-let ((parameters (reverse (plist-get item 'parameters))))
-                (dolist (parameter parameters)
+              (when-let ((parameter-list (reverse (plist-get item 'parameter-list))))
+                (dolist (parameter parameter-list)
                   (let ((id
                          (phps-mode-ast-bookkeeping--generate-variable-scope-string
                           sub-scope
@@ -388,7 +388,9 @@
                defined
                bookkeeping)))
 
-           ((equal type 'assign-variable)
+           ((and
+             (equal type 'assign-variable)
+             (plist-get (plist-get item 'key) 'name))
             (let ((id
                    (phps-mode-ast-bookkeeping--generate-variable-scope-string
                     scope

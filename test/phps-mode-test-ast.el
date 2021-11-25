@@ -441,7 +441,7 @@
      (phps-mode-ast-bookkeeping--generate)
      (should (equal
               (phps-mode-test--hash-to-list phps-mode-ast-bookkeeping--index t)
-              (list (list " class myClass function __construct id $this" 1) (list (list 89 94) 1) (list (list 114 119) 1))))))
+              (list (list " class myClass function random id $this" 1) (list " class myClass function __construct id $this" 1))))))
 
   (phps-mode-test-ast--buffer-contents
    "<?php\n$items = array(1, 2, 3);\nforeach ($items as &$item) {\n    if ($item) {\n        echo 'Hit';\n    }\n}\nforeach ($items as $key => &$item2) {\n    if ($item) {\n        echo 'Hit';\n    }\n}"
