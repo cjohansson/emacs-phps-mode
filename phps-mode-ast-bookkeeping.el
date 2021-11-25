@@ -29,98 +29,161 @@
 ;; Functions:
 
 
-(defun phps-mode-ast-bookkeeping--generate-symbol-namespace
-    (&optional namespace class function)
-  "Generate symbol namespace for NAMESPACE, CLASS and FUNCTION."
-  (let ((symbol-namespace ""))
-    (when namespace
-      (setq
-       symbol-namespace
-       (format
-        "%s namespace %s"
-        symbol-namespace
-        namespace)))
-    (when class
-      (setq
-       symbol-namespace
-       (format
-        "%s class %s"
-        symbol-namespace
-        class)))
-    (when function
-      (setq
-       symbol-namespace
-       (format
-        "%s function %s"
-        symbol-namespace
-        function)))
-    symbol-namespace))
+(defun phps-mode-ast-bookkeeping--generate-symbol-scope-string
+    (scope name)
+  "Generate symbol scope string from SCOPE and NAME."
+  (let ((scope-string ""))
+    (dolist (bubble (reverse scope))
+      (let ((scope-type (plist-get bubble 'type))
+            (scope-name (plist-get bubble 'name)))
+        (cond
 
-(defun phps-mode-ast-bookkeeping--generate-variable-namespace
-    (&optional namespace class function)
-  "Generate variable namespace for NAMESPACE, CLASS and FUNCTION."
-  (let ((variable-namespace ""))
-    (when class
-      (when namespace
-        (setq
-         variable-namespace
-         (format
-          "%s namespace %s"
-          variable-namespace
-          namespace)))
-      (setq
-       variable-namespace
-       (format
-        "%s class %s"
-        variable-namespace
-        class)))
-    (when function
-      (setq
-       variable-namespace
-       (format
-        "%s function %s"
-        variable-namespace
-        function)))
-    variable-namespace))
+         ((and
+           (equal scope-type 'namespace)
+           scope-name)
+          (setq
+           scope-string
+           (format
+            "%s namespace %s"
+            (setq
+             scope-string
+             scope-name))))
+
+         ((and
+           (equal scope-type 'class)
+           scope-name)
+          (setq
+           scope-string
+           (format
+            "%s class %s"
+            scope-string
+            scope-name)))
+
+         ((and
+           (equal scope-type 'function)
+           (setq
+            scope-string
+            (format
+             "%s function %s"
+             scope-string
+             scope-name))))
+
+         ((and
+           (equal scope-type 'inline-function)
+           scope-name)
+          (setq
+           scope-string
+           (format
+            "%s anonymous function %s"
+            scope-string
+            scope-name)))
+
+         ((and
+           (equal scope-type 'static)
+           (setq
+            scope-string
+            (format
+             "%s static"
+             scope-string))))
+
+         )))
+    (setq
+     scope-string
+     (format
+      "%s id %s"
+      scope-string
+      name))
+    scope-string))
+
+(defun phps-mode-ast-bookkeeping--generate-variable-scope-string
+    (scope name)
+  "Generate variable scope string from SCOPE and NAME."
+  (let ((scope-string "")
+        (namespace))
+    (dolist (bubble (reverse scope))
+      (let ((scope-type (plist-get bubble 'type))
+            (scope-name (plist-get bubble 'name)))
+        (cond
+
+         ((and
+           (equal scope-type 'namespace)
+           scope-name)
+          (setq
+           namespace
+           scope-name))
+
+         ((and
+           (equal scope-type 'class)
+           scope-name)
+          (if namespace
+              (setq
+               scope-string
+               (format
+                "%s namespace %s class %s"
+                scope-string
+                namespace
+                scope-name))
+            (setq
+             scope-string
+             (format
+              "%s class %s"
+              scope-string
+              scope-name))))
+
+         ((and
+           (equal scope-type 'function)
+           scope-name)
+          (setq
+           scope-string
+           (format
+            "%s function %s"
+            scope-string
+            scope-name)))
+
+         ((and
+           (equal scope-type 'inline-function)
+           scope-name)
+          (setq
+           scope-string
+           (format
+            "%s anonymous function %s"
+            scope-string
+            scope-name)))
+
+         ((and
+           (equal scope-type 'static)
+           (setq
+            scope-string
+            (format
+             "%s static"
+             scope-string))))
+
+         )))
+    (setq
+     scope-string
+     (format
+      "%s id %s"
+      scope-string
+      name))
+    scope-string))
 
 (defun phps-mode-ast-bookkeeping--generate ()
   "Generate AST for current buffer."
   (let ((bookkeeping (make-hash-table :test 'equal))
-        (bookkeeping-stack phps-mode-ast--tree))
+        (bookkeeping-stack phps-mode-ast--tree)
+        (inline-function-count 0))
     (while bookkeeping-stack
       (let ((item-raw (pop bookkeeping-stack))
             (item)
-            (class)
-            (function)
-            (namespace)
-            (variable-namespace "")
-            (symbol-namespace ""))
+            (scope))
         (if (listp (car item-raw))
             (progn
               (setq
-               class
-               (nth 0 (car item-raw)))
-              (setq
-               function
-               (nth 1 (car item-raw)))
-              (setq
-               namespace
-               (nth 2 (car item-raw)))
+               scope
+               (car item-raw))
               (setq
                item
-               (car (cdr item-raw)))
-              (setq
-               symbol-namespace
-               (phps-mode-ast-bookkeeping--generate-symbol-namespace
-                namespace
-                class
-                function))
-              (setq
-               variable-namespace
-               (phps-mode-ast-bookkeeping--generate-variable-namespace
-                namespace
-                class
-                function)))
+               (car (cdr item-raw))))
           (setq
            item
            item-raw))
@@ -129,13 +192,14 @@
           (cond
 
            ((equal type 'simple-variable)
-            (let ((id (format
-                       "%s id %s"
-                       variable-namespace
-                       (plist-get item 'name)))
-                  (object (list
-                           (plist-get item 'start)
-                           (plist-get item 'end)))
+            (let ((id
+                   (phps-mode-ast-bookkeeping--generate-variable-scope-string
+                    scope
+                    (plist-get item 'name)))
+                  (object
+                   (list
+                    (plist-get item 'start)
+                    (plist-get item 'end)))
                   (defined-p 0))
 
               (when (gethash id bookkeeping)
@@ -156,21 +220,19 @@
                bookkeeping)))
 
            ((equal type 'function)
-            (let* ((name (plist-get item 'name))
-                   (subnamespace
-                    (format
-                     "%s function %s"
-                     symbol-namespace
-                     name)))
+            (let ((name (plist-get item 'name))
+                  (sub-scope scope))
+              (push `(type function name ,name) sub-scope)
               (when-let ((parameters (reverse (plist-get item 'parameters))))
                 (dolist (parameter parameters)
-                  (let ((id (format
-                             "%s id %s"
-                             subnamespace
-                             (plist-get parameter 'name)))
-                        (object (list
-                                 (plist-get parameter 'start)
-                                 (plist-get parameter 'end))))
+                  (let ((id
+                         (phps-mode-ast-bookkeeping--generate-variable-scope-string
+                          sub-scope
+                          (plist-get parameter 'name)))
+                        (object
+                         (list
+                          (plist-get parameter 'start)
+                          (plist-get parameter 'end))))
                     (puthash
                      id
                      1
@@ -182,28 +244,17 @@
 
               (when-let ((children (reverse (plist-get item 'children))))
                 (dolist (child children)
-                  (push
-                   (list
-                    (list
-                     class
-                     name
-                     namespace)
-                    child)
-                   bookkeeping-stack)))))
+                  (push `(,sub-scope ,child) bookkeeping-stack)))))
 
            ((equal type 'method)
-            (let* ((name (plist-get item 'name))
-                   (subnamespace
-                    (format
-                     "%s function %s"
-                     symbol-namespace
-                     name)))
+            (let ((name (plist-get item 'name))
+                  (sub-scope scope))
+              (push `(type function name ,name) sub-scope)
 
               ;; TODO should only do this is method is not static
               (let ((this-id
-                     (format
-                      "%s id %s"
-                      subnamespace
+                     (phps-mode-ast-bookkeeping--generate-variable-scope-string
+                      sub-scope
                       "$this")))
                 (puthash
                  this-id
@@ -211,13 +262,14 @@
                  bookkeeping))
               (when-let ((parameters (reverse (plist-get item 'parameters))))
                 (dolist (parameter parameters)
-                  (let ((id (format
-                             "%s id %s"
-                             subnamespace
-                             (plist-get parameter 'name)))
-                        (object (list
-                                 (plist-get parameter 'start)
-                                 (plist-get parameter 'end))))
+                  (let ((id
+                         (phps-mode-ast-bookkeeping--generate-variable-scope-string
+                          sub-scope
+                          (plist-get parameter 'name)))
+                        (object
+                         (list
+                          (plist-get parameter 'start)
+                          (plist-get parameter 'end))))
                     (puthash
                      id
                      1
@@ -229,81 +281,40 @@
 
               (when-let ((children (reverse (plist-get item 'children))))
                 (dolist (child children)
-                  (push
-                   (list
-                    (list
-                     class
-                     name
-                     namespace)
-                    child)
-                   bookkeeping-stack)))))
+                  (push `(,sub-scope ,child) bookkeeping-stack)))))
 
            ((equal type 'namespace)
-            (let* ((name (plist-get item 'name)))
+            (let ((name (plist-get item 'name))
+                  (sub-scope scope))
+              (push `(type namespace name ,name) sub-scope)
               (when-let ((children (reverse (plist-get item 'children))))
                 (dolist (child children)
-                  (push
-                   (list
-                    (list
-                     class
-                     function
-                     name)
-                    child)
-                   bookkeeping-stack)))))
+                  (push `(,sub-scope ,child) bookkeeping-stack)))))
 
            ((equal type 'class)
-            (let ((name (plist-get item 'name)))
+            (let ((name (plist-get item 'name))
+                  (sub-scope scope))
+              (push `(type class name ,name) sub-scope)
               (when-let ((children (reverse (plist-get item 'children))))
                 (dolist (child children)
-                  (push
-                   (list
-                    (list
-                     name
-                     function
-                     namespace)
-                    child)
-                   bookkeeping-stack)))))
+                  (push `(,sub-scope ,child) bookkeeping-stack)))))
 
            ((equal type 'if)
             (when-let ((children (reverse (plist-get item 'children))))
               (dolist (child children)
-                (push
-                 (list
-                  (list
-                   class
-                   function
-                   namespace)
-                  child)
-                 bookkeeping-stack)))
+                (push `(,scope, child) bookkeeping-stack)))
             (when-let ((conditions (reverse (plist-get item 'condition))))
               (dolist (condition conditions)
-                (push
-                 (list
-                  (list
-                   class
-                   function
-                   namespace)
-                  condition)
-                 bookkeeping-stack))))
+                (push `(,scope ,condition) bookkeeping-stack))))
 
            ((equal type 'foreach)
             (when-let ((children (reverse (plist-get item 'children))))
               (dolist (child children)
-                (push
-                 (list
-                  (list
-                   class
-                   function
-                   namespace)
-                  child)
-                 bookkeeping-stack)))
+                (push `(,scope ,child) bookkeeping-stack)))
             (when-let ((value (plist-get item 'value)))
               (push
                (list
-                (list
-                 class
-                 function
-                 namespace)
+                scope
                 (list
                  'ast-type
                  'assign-variable
@@ -313,10 +324,7 @@
             (when-let ((key (plist-get item 'key)))
               (push
                (list
-                (list
-                 class
-                 function
-                 namespace)
+                scope
                 (list
                  'ast-type
                  'assign-variable
@@ -325,109 +333,47 @@
                bookkeeping-stack))
             (when-let ((expression (reverse (plist-get item 'expression))))
               (dolist (expr expression)
-                (push
-                 (list
-                  (list
-                   class
-                   function
-                   namespace)
-                  expr)
-                 bookkeeping-stack))))
+                (push `(,scope ,expr) bookkeeping-stack))))
 
            ((equal type 'for)
             (when-let ((children (reverse (plist-get item 'children))))
               (dolist (child children)
-                (push
-                 (list
-                  (list
-                   class
-                   function
-                   namespace)
-                  child)
-                 bookkeeping-stack)))
+                (push `(,scope ,child) bookkeeping-stack)))
             (when-let ((children (reverse (plist-get item 'incremental))))
               (dolist (child children)
-                (push
-                 (list
-                  (list
-                   class
-                   function
-                   namespace)
-                  child)
-                 bookkeeping-stack)))
+                (push `(,scope ,child) bookkeeping-stack)))
             (when-let ((children (reverse (plist-get item 'test))))
               (dolist (child children)
-                (push
-                 (list
-                  (list
-                   class
-                   function
-                   namespace)
-                  child)
-                 bookkeeping-stack)))
+                (push `(,scope ,child) bookkeeping-stack)))
             (when-let ((children (reverse (plist-get item 'initial))))
               (dolist (child children)
-                (push
-                 (list
-                  (list
-                   class
-                   function
-                   namespace)
-                  child)
-                 bookkeeping-stack))))
+                (push `(,scope ,child) bookkeeping-stack))))
 
            ((equal type 'while)
             (when-let ((children (reverse (plist-get item 'children))))
               (dolist (child children)
-                (push
-                 (list
-                  (list
-                   class
-                   function
-                   namespace)
-                  child)
-                 bookkeeping-stack)))
+                (push `(,scope ,child) bookkeeping-stack)))
             (when-let ((conditions (reverse (plist-get item 'condition))))
               (dolist (condition conditions)
-                (push
-                 (list
-                  (list
-                   class
-                   function
-                   namespace)
-                  condition)
-                 bookkeeping-stack))))
+                (push `(,scope ,condition) bookkeeping-stack))))
 
            ((equal type 'do-while)
             (when-let ((conditions (reverse (plist-get item 'condition))))
               (dolist (condition conditions)
-                (push
-                 (list
-                  (list
-                   class
-                   function
-                   namespace)
-                  condition)
-                 bookkeeping-stack)))
+                (push `(,scope ,condition) bookkeeping-stack)))
             (when-let ((children (reverse (plist-get item 'children))))
               (dolist (child children)
-                (push
-                 (list
-                  (list
-                   class
-                   function
-                   namespace)
-                  child)
-                 bookkeeping-stack))))
+                (push `(,scope ,child) bookkeeping-stack))))
 
            ((equal type 'assign-property-variable)
-            (let ((id (format
-                       "%s id %s"
-                       variable-namespace
-                       (plist-get item 'key)))
-                  (object (list
-                           (plist-get item 'start)
-                           (plist-get item 'end)))
+            (let ((id
+                   (phps-mode-ast-bookkeeping--generate-variable-scope-string
+                    scope
+                    (plist-get item 'key)))
+                  (object
+                   (list
+                    (plist-get item 'start)
+                    (plist-get item 'end)))
                   (defined 1))
               (when-let ((predefined (gethash id bookkeeping)))
                 (setq
@@ -443,13 +389,14 @@
                bookkeeping)))
 
            ((equal type 'assign-variable)
-            (let ((id (format
-                       "%s id %s"
-                       variable-namespace
-                       (plist-get (plist-get item 'key) 'name)))
-                  (object (list
-                           (plist-get (plist-get item 'key) 'start)
-                           (plist-get (plist-get item 'key) 'end)))
+            (let ((id
+                   (phps-mode-ast-bookkeeping--generate-variable-scope-string
+                    scope
+                    (plist-get (plist-get item 'key) 'name)))
+                  (object
+                   (list
+                    (plist-get (plist-get item 'key) 'start)
+                    (plist-get (plist-get item 'key) 'end)))
                   (defined 1))
               (when-let ((predefined (gethash id bookkeeping)))
                 (setq
@@ -466,18 +413,12 @@
               (when-let ((exps (plist-get item 'value)))
                 (when (listp exps)
                   (dolist (exp exps)
-                    (push
-                     (list
-                      (list
-                       class
-                       function
-                       namespace)
-                      exp)
-                     bookkeeping-stack))))))
+                    (push `(,scope ,exp) bookkeeping-stack))))))
 
            ((equal type 'property)
             (let ((subject (plist-get item 'subject))
-                  (static-p))
+                  (static-p)
+                  (sub-scope scope))
               (when-let ((modifiers (plist-get item 'modifiers)))
                 (dolist (modifier modifiers)
                   (when (equal modifier 'static)
@@ -486,22 +427,17 @@
                      t))))
               (if (stringp subject)
                   (let ((id))
-                    (if static-p
-                        (setq
-                         id
-                         (format
-                          "%s static id %s"
-                          variable-namespace
-                          subject))
-                      (setq
-                       id
-                       (format
-                        "%s id %s"
-                        variable-namespace
-                        subject)))
-                    (let ((object (list
-                                   (plist-get item 'start)
-                                   (plist-get item 'end)))
+                    (when static-p
+                      (push '(type static) sub-scope))
+                    (setq
+                     id
+                     (phps-mode-ast-bookkeeping--generate-variable-scope-string
+                      sub-scope
+                      subject))
+                    (let ((object
+                           (list
+                            (plist-get item 'start)
+                            (plist-get item 'end)))
                           (defined 1))
                       ;; (message "id: %S from %S" id item)
                       (when-let ((predefined (gethash id bookkeeping)))
@@ -516,82 +452,33 @@
                        object
                        defined
                        bookkeeping)))
-                (let ((class-namespace class))
-                  (when static-p
-                    (setq
-                     class-namespace
-                     (format
-                      "%s static"
-                      class-namespace)))
-                  (push
-                   (list
-                    (list
-                     class-namespace
-                     function
-                     namespace)
-                    subject)
-                   bookkeeping-stack)))))
+                (push `(,sub-scope ,subject) bookkeeping-stack))))
 
-           ((equal type 'function_call)
-            (when-let ((arguments (plist-get item 'argument_list)))
+           ((equal type 'function-call)
+            (when-let ((arguments (plist-get item 'argument-list)))
               (dolist (argument arguments)
-                (push
-                 (list
-                  (list
-                   class
-                   function
-                   namespace)
-                  argument)
-                 bookkeeping-stack))))
+                (push `(,scope ,argument) bookkeeping-stack))))
 
            ((equal type 'increment-variable)
-            (push
-             (list
-              (list
-               class
-               function
-               namespace)
-              (plist-get item 'variable))
-             bookkeeping-stack))
+            (push `(,scope ,(plist-get item 'variable)) bookkeeping-stack))
 
            ((equal type 'try)
             (when-let ((children (reverse (plist-get item 'inner-statement-list))))
               (dolist (child children)
-                (push
-                 (list
-                  (list
-                   class
-                   function
-                   namespace)
-                  child)
-                 bookkeeping-stack)))
+                (push `(,scope ,child) bookkeeping-stack)))
             (when-let ((children (reverse (plist-get item 'catch-list))))
               (dolist (child children)
-                (push
-                 (list
-                  (list
-                   class
-                   function
-                   namespace)
-                  child)
-                 bookkeeping-stack)))
+                (push `(,scope ,child) bookkeeping-stack)))
             (when-let ((children (reverse (plist-get item 'finally-statement))))
               (dolist (child children)
-                (push
-                 (list
-                  (list
-                   class
-                   function
-                   namespace)
-                  child)
-                 bookkeeping-stack))))
+                (push `(,scope ,child) bookkeeping-stack))))
 
            ((equal type 'catch)
-            (when-let ((optional-variable (plist-get item 'optional-variable)))
+            (when-let ((optional-variable
+                        (plist-get item 'optional-variable)))
               (let ((id
-                     (format
-                      "%s id %s"
-                      variable-namespace
+                     (phps-mode-ast-bookkeeping--generate-variable-scope-string
+                      scope
                       optional-variable)))
                 (puthash
                  id
@@ -605,14 +492,7 @@
                  bookkeeping)))
             (when-let ((children (reverse (plist-get item 'children))))
               (dolist (child children)
-                (push
-                 (list
-                  (list
-                   class
-                   function
-                   namespace)
-                  child)
-                 bookkeeping-stack))))
+                (push `(,scope ,child) bookkeeping-stack))))
 
            ((equal type 'array-object-dereferencable)
             (let* ((subject (plist-get item 'subject))
@@ -629,30 +509,20 @@
                   (plist-get subject 'end))
                  1
                  bookkeeping)
-                (let* ((sub-variable-namespace
-                        (phps-mode-ast-bookkeeping--generate-variable-namespace
-                         namespace
-                         class
-                         nil))
+
+                (let* ((sub-scope (cdr scope))
                        (variable-id
-                        (format
-                         "%s id $%s"
-                         sub-variable-namespace
-                         property-name))
-                       (sub-symbol-namespace
-                        (phps-mode-ast-bookkeeping--generate-variable-namespace
-                         namespace
-                         class
-                         nil))
+                        (phps-mode-ast-bookkeeping--generate-variable-scope-string
+                         sub-scope
+                         (concat "$" property-name)))
                        (symbol-id
-                        (format
-                         "%s id %s"
-                         sub-variable-namespace
+                        (phps-mode-ast-bookkeeping--generate-symbol-scope-string
+                         sub-scope
                          property-name))
-                       (bookkeeping-object
-                        (list
-                         (plist-get item 'property-start)
-                         (plist-get item 'property-end))))
+                        (bookkeeping-object
+                         (list
+                          (plist-get item 'property-start)
+                          (plist-get item 'property-end))))
                   ;; (message "dereferenced: %S %S" variable-id symbol-id)
                   (if (or
                        (gethash variable-id bookkeeping)
@@ -676,38 +546,81 @@
 
               (cond
 
-               ((string= downcased-parent-class "self")
+               ((or (string= downcased-parent-class "self")
+                    (string= downcased-parent-class "static"))
 
                 (cond
 
                  ((equal member-type 'simple-variable)
-                  (let* ((sub-variable-namespace
-                          (phps-mode-ast-bookkeeping--generate-variable-namespace
-                           namespace
-                           class
-                           nil))
-                         (variable-id
-                          (format
-                           "%s static id %s"
-                           sub-variable-namespace
-                           (plist-get member 'name)))
-                         (bookkeeping-object
-                          (list
-                           (plist-get member 'start)
-                           (plist-get member 'end))))
-                    (if (gethash variable-id bookkeeping)
+                  (let ((sub-scope (cdr scope)))
+                    (push '(type static) sub-scope)
+                    (let ((variable-id
+                           (phps-mode-ast-bookkeeping--generate-variable-scope-string
+                            sub-scope
+                            (plist-get member 'name)))
+                          (bookkeeping-object
+                           (list
+                            (plist-get member 'start)
+                            (plist-get member 'end))))
+                      (if (gethash variable-id bookkeeping)
+                          (puthash
+                           bookkeeping-object
+                           1
+                           bookkeeping)
                         (puthash
                          bookkeeping-object
-                         1
-                         bookkeeping)
-                      (puthash
-                       bookkeeping-object
-                       0
-                       bookkeeping))))
+                         0
+                         bookkeeping)))))
 
                  )
 
                 ))))
+
+           ((equal type 'inline-function)
+            (setq
+             inline-function-count
+             (1+ inline-function-count))
+            (let ((sub-scope scope))
+              (push `(type inline-function name ,inline-function-count) sub-scope)
+              (when-let ((inner-statement-list (reverse (plist-get item 'inner-statement-list))))
+                (dolist (inner-statement inner-statement-list)
+                  (push `(,sub-scope ,inner-statement) bookkeeping-stack)))
+              (when-let ((parameter-list (reverse (plist-get item 'parameter-list))))
+                (dolist (parameter parameter-list)
+                  (let ((id
+                         (phps-mode-ast-bookkeeping--generate-variable-scope-string
+                          sub-scope
+                          (plist-get parameter 'name)))
+                        (object
+                         (list
+                          (plist-get parameter 'start)
+                          (plist-get parameter 'end))))
+                    (puthash
+                     id
+                     1
+                     bookkeeping)
+                    (puthash
+                     object
+                     1
+                     bookkeeping))))
+              (when-let ((lexical-vars (reverse (plist-get item 'lexical-vars))))
+                (dolist (lexical-var lexical-vars)
+                  (let ((id
+                         (phps-mode-ast-bookkeeping--generate-variable-scope-string
+                          sub-scope
+                          (plist-get lexical-var 'name)))
+                        (object
+                         (list
+                          (plist-get lexical-var 'start)
+                          (plist-get lexical-var 'end))))
+                    (puthash
+                     id
+                     1
+                     bookkeeping)
+                    (puthash
+                     object
+                     1
+                     bookkeeping))))))
 
            ))))
     (setq

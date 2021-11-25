@@ -639,6 +639,21 @@
    (nth 2 args))
  phps-mode-parser--table-translations)
 
+;; lexical_var -> (T_VARIABLE)
+(puthash
+ 429
+ (lambda(args terminals)
+   (list
+    'ast-type
+    'lexical-var
+    'name
+    args
+    'start
+    (car (cdr terminals))
+    'end
+    (cdr (cdr terminals))))
+ phps-mode-parser--table-translations)
+
 ;; function_call -> (name argument_list)
 (puthash
  431
@@ -646,10 +661,10 @@
    (let ((ast-object
           (list
            'ast-type
-           'function_call
+           'function-call
            'name
            (nth 0 args)
-           'argument_list
+           'argument-list
            (phps-mode-parser-sdt--get-list-of-object (nth 1 args)))))
      ast-object))
  phps-mode-parser--table-translations)
