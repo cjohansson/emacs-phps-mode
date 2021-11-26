@@ -483,7 +483,7 @@
      (phps-mode-ast-bookkeeping--generate)
      (should (equal
               (phps-mode-test--hash-to-list phps-mode-ast-bookkeeping--index t)
-              (list (list " id $random" 1) (list (list 9 16) 1) (list " id $bandom" 1) (list (list 18 25) 1) (list (list 45 52) 1) (list (list 78 85) 1))))))
+              '((" id $random" 1) ((9 16) 1) (" id $bandom" 1) ((18 25) 1) ((45 52) 1) ((78 85) 1))))))
 
   (phps-mode-test-ast--buffer-contents
    "<?php\n\n$var = 123;\n\nfunction test($abc) {\n    global $var;\n    if ($var) {\n        echo 'Hit';\n    }\n}"

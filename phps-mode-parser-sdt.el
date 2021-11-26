@@ -585,16 +585,21 @@
      ast-object))
  phps-mode-parser--table-translations)
 
-;; expr -> (variable T_INC)
+;; expr -> ("[" array_pair_list "]" "=" expr)
 (puthash
- 353
+ 336
  (lambda(args _terminals)
    (let ((ast-object
           (list
            'ast-type
-           'increment-variable
-           'variable
-           (nth 0 args))))
+           'assign-variables-from-array
+           'keys
+           (nth 1 args)
+           'values
+           (phps-mode-parser-sdt--get-list-of-object (nth 4 args)))))
+     ;; (message "Method: %S" ast-object)
+     ;; (message "args: %S" args)
+     ;; (message "terminals: %S" terminals)
      ast-object))
  phps-mode-parser--table-translations)
 
@@ -620,6 +625,19 @@
      ;; (message "Method: %S" ast-object)
      ;; (message "args: %S" args)
      ;; (message "terminals: %S" terminals)
+     ast-object))
+ phps-mode-parser--table-translations)
+
+;; expr -> (variable T_INC)
+(puthash
+ 353
+ (lambda(args _terminals)
+   (let ((ast-object
+          (list
+           'ast-type
+           'increment-variable
+           'variable
+           (nth 0 args))))
      ast-object))
  phps-mode-parser--table-translations)
 

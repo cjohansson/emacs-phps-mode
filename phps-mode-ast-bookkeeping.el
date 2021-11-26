@@ -398,6 +398,19 @@
                defined
                bookkeeping)))
 
+           ((equal type 'assign-variables-from-array)
+            (when-let ((keys (reverse (plist-get item 'keys))))
+              (dolist (key keys)
+                (push
+                 (list
+                  scope
+                  (list
+                   'ast-type
+                   'assign-variable
+                   'key
+                   key))
+                 bookkeeping-stack))))
+
            ((and
              (equal type 'assign-variable)
              (plist-get (plist-get item 'key) 'name))
