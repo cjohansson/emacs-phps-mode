@@ -433,6 +433,36 @@
      ast-object))
  phps-mode-parser--table-translations)
 
+;; 242: parameter -> (optional_visibility_modifier optional_type_without_static is_reference is_variadic T_VARIABLE backup_doc_comment "=" expr)
+(puthash
+ 242
+ (lambda(args terminals)
+   ;; (message "parameter: %S %S" args _terminals)
+   (let ((ast-object
+          (list
+           'ast-type
+           'parameter-with-default-value
+           'visibility
+           (nth 0 args)
+           'type
+           (nth 1 args)
+           'is-reference
+           (nth 2 args)
+           'is-variadic
+           (nth 3 args)
+           'name
+           (nth 4 args)
+           'start
+           (car (cdr (nth 4 terminals)))
+           'end
+           (cdr (cdr (nth 4 terminals)))
+           'backup-doc-comment
+           (nth 5 args)
+           'default-value
+           (phps-mode-parser-sdt--get-list-of-object (nth 7 args)))))
+     ast-object))
+ phps-mode-parser--table-translations)
+
 ;; 262: argument_list -> ("(" ")")
 (puthash
  262
@@ -654,6 +684,32 @@
      ast-object))
  phps-mode-parser--table-translations)
 
+;; expr -> (expr "+" expr)
+(puthash
+ 366
+ (lambda(args _terminals)
+   (let ((ast-object
+          (list
+           'ast-type
+           'addition-expression
+           'a
+           (phps-mode-parser-sdt--get-list-of-object (nth 0 args))
+           'b
+           (phps-mode-parser-sdt--get-list-of-object (nth 2 args)))))
+     ast-object))
+ phps-mode-parser--table-translations)
+
+;; expr -> (T_STATIC inline_function)
+(puthash
+ 413
+ (lambda(args _terminals)
+   `(
+     'ast-type
+     'static-inline-function
+     'inline-function
+     ,(nth 1 args)))
+ phps-mode-parser--table-translations)
+
 ;; inline_function -> (function returns_ref backup_doc_comment "(" parameter_list ")" lexical_vars return_type backup_fn_flags "{" inner_statement_list "}" backup_fn_flags)
 (puthash
  416
@@ -679,9 +735,40 @@
            'backup-fn-flags-1
            (nth 8 args)
            'inner-statement-list
-           (nth 10 args)
+           (phps-mode-parser-sdt--get-list-of-object (nth 10 args))
            'backup-fn-flags-2
            (nth 12 args))))
+     ast-object))
+ phps-mode-parser--table-translations)
+
+;; inline_function -> (fn returns_ref backup_doc_comment "(" parameter_list ")" return_type T_DOUBLE_ARROW backup_fn_flags backup_lex_pos expr backup_fn_flags)
+(puthash
+ 417
+ (lambda(args terminals)
+   (let ((ast-object
+          (list
+           'ast-type
+           'inline-function
+           'start
+           (car (cdr (nth 9 terminals)))
+           'end
+           (cdr (cdr (nth 11 terminals)))
+           'returns-ref
+           (nth 1 args)
+           'backup-doc-comment
+           (nth 2 args)
+           'parameter-list
+           (phps-mode-parser-sdt--get-list-of-object (nth 4 args))
+           'return-type
+           (nth 6 args)
+           'backup-fn-flags-1
+           (nth 8 args)
+           'backup-lex-pos
+           (nth 9 args)
+           'inner-statement-list
+           (phps-mode-parser-sdt--get-list-of-object (nth 10 args))
+           'backup-fn-flags-2
+           (nth 11 args))))
      ast-object))
  phps-mode-parser--table-translations)
 

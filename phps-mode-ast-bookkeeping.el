@@ -398,6 +398,14 @@
                defined
                bookkeeping)))
 
+           ((equal type 'addition-expression)
+            (when-let ((bs (reverse (plist-get item 'b))))
+              (dolist (b bs)
+                (push `(,scope ,b) bookkeeping-stack)))
+            (when-let ((as (reverse (plist-get item 'a))))
+              (dolist (a as)
+                (push `(,scope ,a) bookkeeping-stack))))
+
            ((equal type 'global-statement)
             (when-let ((global-var-list (reverse (plist-get item 'global-var-list))))
               (dolist (global-var global-var-list)
@@ -614,6 +622,9 @@
 
                 ))))
 
+           ((equal type 'static-inline-function)
+            (push `(,scope ,(plist-get item 'inline-function)) bookkeeping-stack))
+
            ((equal type 'inline-function)
             (setq
              inline-function-count
@@ -623,7 +634,7 @@
               (when-let ((inner-statement-list (reverse (plist-get item 'inner-statement-list))))
                 (dolist (inner-statement inner-statement-list)
                   (push `(,sub-scope ,inner-statement) bookkeeping-stack)))
-              (when-let ((parameter-list (reverse (plist-get item 'parameter-list))))
+              (when-let ((parameter-list (plist-get item 'parameter-list)))
                 (dolist (parameter parameter-list)
                   (let ((id
                          (phps-mode-ast-bookkeeping--generate-variable-scope-string
@@ -641,7 +652,7 @@
                      object
                      1
                      bookkeeping))))
-              (when-let ((lexical-vars (reverse (plist-get item 'lexical-vars))))
+              (when-let ((lexical-vars (plist-get item 'lexical-vars)))
                 (dolist (lexical-var lexical-vars)
                   (let ((id
                          (phps-mode-ast-bookkeeping--generate-variable-scope-string
