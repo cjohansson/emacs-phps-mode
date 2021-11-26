@@ -354,6 +354,14 @@
    (nth 1 args))
  phps-mode-parser--table-translations)
 
+;; foreach_variable -> ("&" variable)
+(puthash
+ 194
+ (lambda(args _terminals)
+   `(ast-type foreach-referenced-variable variable ,(nth 1 args))
+   )
+ phps-mode-parser--table-translations)
+
 ;; if_stmt_without_else -> (T_IF "(" expr ")" statement)
 (puthash
  223
@@ -694,6 +702,20 @@
            'array-pair-list
            (phps-mode-parser-sdt--get-list-of-object (nth 2 args)))))
      ast-object))
+ phps-mode-parser--table-translations)
+
+;; dereferencable_scalar -> (T_CONSTANT_ENCAPSED_STRING)
+(puthash
+ 449
+ (lambda(args _terminals)
+   (substring args 1 -1))
+ phps-mode-parser--table-translations)
+
+;; scalar -> (T_LNUMBER)
+(puthash
+ 451
+ (lambda(args _terminals)
+   (string-to-number args))
  phps-mode-parser--table-translations)
 
 ;; callable_variable -> (array_object_dereferencable "[" optional_expr "]")

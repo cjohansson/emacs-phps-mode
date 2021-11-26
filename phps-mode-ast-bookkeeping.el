@@ -312,15 +312,25 @@
               (dolist (child children)
                 (push `(,scope ,child) bookkeeping-stack)))
             (when-let ((value (plist-get item 'value)))
-              (push
-               (list
-                scope
-                (list
-                 'ast-type
-                 'assign-variable
-                 'key
-                 value))
-               bookkeeping-stack))
+              (if (equal (plist-get value 'ast-type) 'foreach-referenced-variable)
+                  (push
+                   (list
+                    scope
+                    (list
+                     'ast-type
+                     'assign-variable
+                     'key
+                     (plist-get value 'variable)))
+                   bookkeeping-stack)
+                (push
+                 (list
+                  scope
+                  (list
+                   'ast-type
+                   'assign-variable
+                   'key
+                   value))
+                 bookkeeping-stack)))
             (when-let ((key (plist-get item 'key)))
               (push
                (list
