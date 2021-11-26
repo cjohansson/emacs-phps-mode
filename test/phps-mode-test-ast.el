@@ -537,7 +537,7 @@
      (should
       (equal
        (phps-mode-test--hash-to-list phps-mode-ast-bookkeeping--index t)
-       '((" id $y" 1) ((7 9) 1) (" id $fn1" 1) ((15 19) 1) (" anonymous function 1 id $x" 1) ((25 27) 1) ((32 34) 1) ((37 39) 1) (" id $z" 1) ((41 43) 1) (" id $fn" 1) ((49 52) 1) (" anonymous function 2 id $x2" 1) ((58 61) 1) (" anonymous function 2 anonymous function 3 id $y2" 1) ((69 72) 1) ((77 80) 1) ((83 86) 1) ((89 91) 1) (" anonymous function 3 id $x3" 1) ((102 105) 1) ((110 113) 1) (" id $x4" 1) ((115 118) 1) ((144 147) 1) (" anonymous function 6 id $x5" 1) ((152 155) 1) ((165 168) 1) (" anonymous function 7 id $x6" 1) ((174 177) 1) ((182 185) 1) (" anonymous function 8 id $x7" 1) ((191 194) 1) ((199 202) 1) (" anonymous function 9 id $x8" 1) ((207 210) 1) (" anonymous function 9 id $rest" 1) ((215 220) 1) ((225 230) 1))))))
+       '((" id $y" 1) ((7 9) 1) (" id $fn1" 1) ((15 19) 1) (" arrow function 1 id $x" 1) ((25 27) 1) ((32 34) 1) ((37 39) 1) (" id $z" 1) ((41 43) 1) (" id $fn" 1) ((49 52) 1) (" arrow function 2 id $x2" 1) ((58 61) 1) (" arrow function 2 arrow function 3 id $y2" 1) ((69 72) 1) ((77 80) 1) ((83 86) 1) ((89 91) 1) (" arrow function 3 id $x3" 1) ((102 105) 1) ((110 113) 1) (" id $x4" 1) ((115 118) 1) ((144 147) 1) (" arrow function 6 id $x5" 1) ((152 155) 1) ((165 168) 1) (" arrow function 7 id $x6" 1) ((174 177) 1) ((182 185) 1) (" arrow function 8 id $x7" 1) ((191 194) 1) ((199 202) 1) (" arrow function 9 id $x8" 1) ((207 210) 1) (" arrow function 9 id $rest" 1) ((215 220) 1) ((225 230) 1))))))
 
   (phps-mode-test-ast--buffer-contents
    "<?php\n$z = (object) array('name' => 'random');\nif ($z->name) {\n    echo 'Hit';\n}"

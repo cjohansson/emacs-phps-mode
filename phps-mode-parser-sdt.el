@@ -748,7 +748,7 @@
    (let ((ast-object
           (list
            'ast-type
-           'inline-function
+           'arrow-function
            'start
            (car (cdr (nth 9 terminals)))
            'end

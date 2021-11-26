@@ -79,6 +79,16 @@
             scope-name)))
 
          ((and
+           (equal scope-type 'arrow-function)
+           scope-name)
+          (setq
+           scope-string
+           (format
+            "%s arrow function %s"
+            scope-string
+            scope-name)))
+
+         ((and
            (equal scope-type 'static)
            (setq
             scope-string
@@ -96,8 +106,8 @@
     scope-string))
 
 (defun phps-mode-ast-bookkeeping--generate-variable-scope-string
-    (scope name)
-  "Generate variable scope string from SCOPE and NAME."
+    (scope name &optional read-only)
+  "Generate variable scope string from SCOPE and NAME and optionally READ-ONLY."
   (let ((scope-string "")
         (namespace))
     (dolist (bubble (reverse scope))
@@ -151,6 +161,17 @@
             scope-name)))
 
          ((and
+           (equal scope-type 'arrow-function)
+           scope-name
+           (not read-only))
+          (setq
+           scope-string
+           (format
+            "%s arrow function %s"
+            scope-string
+            scope-name)))
+
+         ((and
            (equal scope-type 'static)
            (setq
             scope-string
@@ -171,7 +192,8 @@
   "Generate AST for current buffer."
   (let ((bookkeeping (make-hash-table :test 'equal))
         (bookkeeping-stack phps-mode-ast--tree)
-        (inline-function-count 0))
+        (inline-function-count 0)
+        (arrow-function-count 0))
     (while bookkeeping-stack
       (let ((item-raw (pop bookkeeping-stack))
             (item)
@@ -625,11 +647,35 @@
            ((equal type 'static-inline-function)
             (push `(,scope ,(plist-get item 'inline-function)) bookkeeping-stack))
 
-           ((equal type 'inline-function)
-            (setq
-             inline-function-count
-             (1+ inline-function-count))
+           ((equal type 'arrow-function)
             (let ((sub-scope scope))
+              (setq arrow-function-count (1+ arrow-function-count))
+              (push `(type arrow-function name ,arrow-function-count) sub-scope)
+              (when-let ((inner-statement-list (reverse (plist-get item 'inner-statement-list))))
+                (dolist (inner-statement inner-statement-list)
+                  (push `(,sub-scope ,inner-statement) bookkeeping-stack)))
+              (when-let ((parameter-list (plist-get item 'parameter-list)))
+                (dolist (parameter parameter-list)
+                  (let ((id
+                         (phps-mode-ast-bookkeeping--generate-variable-scope-string
+                          sub-scope
+                          (plist-get parameter 'name)))
+                        (object
+                         (list
+                          (plist-get parameter 'start)
+                          (plist-get parameter 'end))))
+                    (puthash
+                     id
+                     1
+                     bookkeeping)
+                    (puthash
+                     object
+                     1
+                     bookkeeping))))))
+
+           ((equal type 'inline-function)
+            (let ((sub-scope scope))
+              (setq inline-function-count (1+ inline-function-count))
               (push `(type inline-function name ,inline-function-count) sub-scope)
               (when-let ((inner-statement-list (reverse (plist-get item 'inner-statement-list))))
                 (dolist (inner-statement inner-statement-list)
