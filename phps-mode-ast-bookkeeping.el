@@ -398,6 +398,19 @@
                defined
                bookkeeping)))
 
+           ((equal type 'global-statement)
+            (when-let ((global-var-list (reverse (plist-get item 'global-var-list))))
+              (dolist (global-var global-var-list)
+                (push
+                 (list
+                  scope
+                  (list
+                   'ast-type
+                   'assign-variable
+                   'key
+                   global-var))
+                 bookkeeping-stack))))
+
            ((equal type 'assign-variables-from-array)
             (when-let ((keys (reverse (plist-get item 'keys))))
               (dolist (key keys)

@@ -161,6 +161,19 @@
      ast-object))
  phps-mode-parser--table-translations)
 
+;; statement -> (T_GLOBAL global_var_list ";")
+(puthash
+ 150
+ (lambda(args _terminals)
+   (let ((ast-object
+          (list
+           'ast-type
+           'global-statement
+           'global-var-list
+           (phps-mode-parser-sdt--get-list-of-object (nth 1 args)))))
+     ast-object))
+ phps-mode-parser--table-translations)
+
 ;; statement -> (T_ECHO echo_expr_list ";")
 (puthash
  152
