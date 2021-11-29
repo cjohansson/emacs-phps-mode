@@ -105,88 +105,107 @@
       name))
     scope-string))
 
+;; TODO Should return a list of strings to support the case with a read-only
+;; variable inside a arrow function that should check outer scopes as well
 (defun phps-mode-ast-bookkeeping--generate-variable-scope-string
     (scope name &optional read-only)
   "Generate variable scope string from SCOPE and NAME and optionally READ-ONLY."
-  (let ((scope-string "")
-        (namespace))
-    (dolist (bubble (reverse scope))
-      (let ((scope-type (plist-get bubble 'type))
-            (scope-name (plist-get bubble 'name)))
-        (cond
+  (let ((scope-strings)
+        (bubbles-stack (list (list "" nil (reverse scope))))) ;; scope-string namespace bubbles
+    (while bubbles-stack
+      (setq
+       bubbles-data
+       (pop bubbles-stack))
+      (let ((scope-string (car bubbles-data))
+            (namespace (car (cdr bubbles-data)))
+            (bubbles (car (cdr (cdr bubbles-data)))))
+        (while bubbles
+          (let* ((bubble (pop bubbles))
+                 (scope-type (plist-get bubble 'type))
+                 (scope-name (plist-get bubble 'name)))
+            (cond
 
-         ((and
-           (equal scope-type 'namespace)
-           scope-name)
-          (setq
-           namespace
-           scope-name))
+             ((and
+               (equal scope-type 'namespace)
+               scope-name)
+              (setq
+               namespace
+               scope-name))
 
-         ((and
-           (equal scope-type 'class)
-           scope-name)
-          (if namespace
+             ((and
+               (equal scope-type 'class)
+               scope-name)
+              (if namespace
+                  (setq
+                   scope-string
+                   (format
+                    "%s namespace %s class %s"
+                    scope-string
+                    namespace
+                    scope-name))
+                (setq
+                 scope-string
+                 (format
+                  "%s class %s"
+                  scope-string
+                  scope-name))))
+
+             ((and
+               (equal scope-type 'function)
+               scope-name)
               (setq
                scope-string
                (format
-                "%s namespace %s class %s"
+                "%s function %s"
                 scope-string
-                namespace
-                scope-name))
-            (setq
-             scope-string
-             (format
-              "%s class %s"
-              scope-string
-              scope-name))))
+                scope-name)))
 
-         ((and
-           (equal scope-type 'function)
-           scope-name)
-          (setq
-           scope-string
-           (format
-            "%s function %s"
-            scope-string
-            scope-name)))
+             ((and
+               (equal scope-type 'inline-function)
+               scope-name)
+              (setq
+               scope-string
+               (format
+                "%s anonymous function %s"
+                scope-string
+                scope-name)))
 
-         ((and
-           (equal scope-type 'inline-function)
-           scope-name)
-          (setq
-           scope-string
-           (format
-            "%s anonymous function %s"
-            scope-string
-            scope-name)))
+             ((and
+               (equal scope-type 'arrow-function)
+               scope-name)
+              (when read-only
+                ;; Branch off here in alternative scope without arrow context
+                ;; but only for read-only contexts
+                (push
+                 (list
+                  scope-string
+                  namespace
+                  bubbles)
+                 bubbles-stack))
+              (setq
+               scope-string
+               (format
+                "%s arrow function %s"
+                scope-string
+                scope-name)))
 
-         ((and
-           (equal scope-type 'arrow-function)
-           scope-name
-           (not read-only))
-          (setq
-           scope-string
-           (format
-            "%s arrow function %s"
-            scope-string
-            scope-name)))
+             ((and
+               (equal scope-type 'static)
+               (setq
+                scope-string
+                (format
+                 "%s static"
+                 scope-string))))
 
-         ((and
-           (equal scope-type 'static)
-           (setq
-            scope-string
-            (format
-             "%s static"
-             scope-string))))
-
-         )))
-    (setq
-     scope-string
-     (format
-      "%s id %s"
-      scope-string
-      name))
-    scope-string))
+             )))
+        (setq
+         scope-string
+         (format
+          "%s id %s"
+          scope-string
+          name))
+        (push scope-string scope-strings)))
+    scope-strings))
 
 (defun phps-mode-ast-bookkeeping--generate ()
   "Generate AST for current buffer."
@@ -214,7 +233,7 @@
           (cond
 
            ((equal type 'simple-variable)
-            (let ((id
+            (let ((ids
                    (phps-mode-ast-bookkeeping--generate-variable-scope-string
                     scope
                     (plist-get item 'name)))
@@ -224,10 +243,11 @@
                     (plist-get item 'end)))
                   (defined-p 0))
 
-              (when (gethash id bookkeeping)
-                (setq
-                 defined-p
-                 1))
+              (dolist (id ids)
+                (when (gethash id bookkeeping)
+                  (setq
+                   defined-p
+                   1)))
 
               ;; Is a super-global variable?
               (when (gethash
@@ -247,7 +267,7 @@
               (push `(type function name ,name) sub-scope)
               (when-let ((parameter-list (reverse (plist-get item 'parameter-list))))
                 (dolist (parameter parameter-list)
-                  (let ((id
+                  (let ((ids
                          (phps-mode-ast-bookkeeping--generate-variable-scope-string
                           sub-scope
                           (plist-get parameter 'name)))
@@ -255,10 +275,11 @@
                          (list
                           (plist-get parameter 'start)
                           (plist-get parameter 'end))))
-                    (puthash
-                     id
-                     1
-                     bookkeeping)
+                    (dolist (id ids)
+                      (puthash
+                       id
+                       1
+                       bookkeeping))
                     (puthash
                      object
                      1
@@ -274,17 +295,18 @@
               (push `(type function name ,name) sub-scope)
 
               ;; TODO should only do this is method is not static
-              (let ((this-id
+              (let ((this-ids
                      (phps-mode-ast-bookkeeping--generate-variable-scope-string
                       sub-scope
                       "$this")))
-                (puthash
-                 this-id
-                 1
-                 bookkeeping))
+                (dolist (this-id this-ids)
+                  (puthash
+                   this-id
+                   1
+                   bookkeeping)))
               (when-let ((parameter-list (reverse (plist-get item 'parameter-list))))
                 (dolist (parameter parameter-list)
-                  (let ((id
+                  (let ((ids
                          (phps-mode-ast-bookkeeping--generate-variable-scope-string
                           sub-scope
                           (plist-get parameter 'name)))
@@ -292,10 +314,11 @@
                          (list
                           (plist-get parameter 'start)
                           (plist-get parameter 'end))))
-                    (puthash
-                     id
-                     1
-                     bookkeeping)
+                    (dolist (id ids)
+                      (puthash
+                       id
+                       1
+                       bookkeeping))
                     (puthash
                      object
                      1
@@ -398,7 +421,7 @@
                 (push `(,scope ,child) bookkeeping-stack))))
 
            ((equal type 'assign-property-variable)
-            (let ((id
+            (let ((ids
                    (phps-mode-ast-bookkeeping--generate-variable-scope-string
                     scope
                     (plist-get item 'key)))
@@ -407,14 +430,16 @@
                     (plist-get item 'start)
                     (plist-get item 'end)))
                   (defined 1))
-              (when-let ((predefined (gethash id bookkeeping)))
-                (setq
+              (dolist (id ids)
+                (when-let ((predefined (gethash id bookkeeping)))
+                  (setq
+                   defined
+                   (1+ predefined))))
+              (dolist (id ids)
+                (puthash
+                 id
                  defined
-                 (1+ predefined)))
-              (puthash
-               id
-               defined
-               bookkeeping)
+                 bookkeeping))
               (puthash
                object
                defined
@@ -457,7 +482,7 @@
            ((and
              (equal type 'assign-variable)
              (plist-get (plist-get item 'key) 'name))
-            (let ((id
+            (let ((ids
                    (phps-mode-ast-bookkeeping--generate-variable-scope-string
                     scope
                     (plist-get (plist-get item 'key) 'name)))
@@ -466,14 +491,16 @@
                     (plist-get (plist-get item 'key) 'start)
                     (plist-get (plist-get item 'key) 'end)))
                   (defined 1))
-              (when-let ((predefined (gethash id bookkeeping)))
-                (setq
+              (dolist (id ids)
+                (when-let ((predefined (gethash id bookkeeping)))
+                  (setq
+                   defined
+                   (1+ predefined))))
+              (dolist (id ids)
+                (puthash
+                 id
                  defined
-                 (1+ predefined)))
-              (puthash
-               id
-               defined
-               bookkeeping)
+                 bookkeeping))
               (puthash
                object
                defined
@@ -494,11 +521,11 @@
                      static-p
                      t))))
               (if (stringp subject)
-                  (let ((id))
+                  (let ((ids))
                     (when static-p
                       (push '(type static) sub-scope))
                     (setq
-                     id
+                     ids
                      (phps-mode-ast-bookkeeping--generate-variable-scope-string
                       sub-scope
                       subject))
@@ -508,14 +535,16 @@
                             (plist-get item 'end)))
                           (defined 1))
                       ;; (message "id: %S from %S" id item)
-                      (when-let ((predefined (gethash id bookkeeping)))
-                        (setq
+                      (dolist (id ids)
+                        (when-let ((predefined (gethash id bookkeeping)))
+                          (setq
+                           defined
+                           (1+ predefined))))
+                      (dolist (id ids)
+                        (puthash
+                         id
                          defined
-                         (1+ predefined)))
-                      (puthash
-                       id
-                       defined
-                       bookkeeping)
+                         bookkeeping))
                       (puthash
                        object
                        defined
@@ -544,14 +573,15 @@
            ((equal type 'catch)
             (when-let ((optional-variable
                         (plist-get item 'optional-variable)))
-              (let ((id
+              (let ((ids
                      (phps-mode-ast-bookkeeping--generate-variable-scope-string
                       scope
                       optional-variable)))
-                (puthash
-                 id
-                 1
-                 bookkeeping)
+                (dolist (id ids)
+                  (puthash
+                   id
+                   1
+                   bookkeeping))
                 (puthash
                  (list
                   (plist-get item 'optional-variable-start)
@@ -579,7 +609,8 @@
                  bookkeeping)
 
                 (let* ((sub-scope (cdr scope))
-                       (variable-id
+                       (predefined)
+                       (variable-ids
                         (phps-mode-ast-bookkeeping--generate-variable-scope-string
                          sub-scope
                          (concat "$" property-name)))
@@ -592,9 +623,16 @@
                           (plist-get item 'property-start)
                           (plist-get item 'property-end))))
                   ;; (message "dereferenced: %S %S" variable-id symbol-id)
-                  (if (or
-                       (gethash variable-id bookkeeping)
-                       (gethash symbol-id bookkeeping))
+                  (when (gethash symbol-id bookkeeping)
+                    (setq
+                     predefined
+                     t))
+                  (dolist (variable-id variable-ids)
+                    (when (gethash variable-id bookkeeping)
+                      (setq
+                       predefined
+                       t)))
+                  (if predefined
                       (puthash
                        bookkeeping-object
                        1
@@ -622,7 +660,8 @@
                  ((equal member-type 'simple-variable)
                   (let ((sub-scope (cdr scope)))
                     (push '(type static) sub-scope)
-                    (let ((variable-id
+                    (let ((predefined)
+                          (variable-ids
                            (phps-mode-ast-bookkeeping--generate-variable-scope-string
                             sub-scope
                             (plist-get member 'name)))
@@ -630,7 +669,12 @@
                            (list
                             (plist-get member 'start)
                             (plist-get member 'end))))
-                      (if (gethash variable-id bookkeeping)
+                      (dolist (variable-id variable-ids)
+                        (when (gethash variable-id bookkeeping)
+                          (setq
+                           predefined
+                           t)))
+                      (if predefined
                           (puthash
                            bookkeeping-object
                            1
@@ -656,7 +700,7 @@
                   (push `(,sub-scope ,inner-statement) bookkeeping-stack)))
               (when-let ((parameter-list (plist-get item 'parameter-list)))
                 (dolist (parameter parameter-list)
-                  (let ((id
+                  (let ((ids
                          (phps-mode-ast-bookkeeping--generate-variable-scope-string
                           sub-scope
                           (plist-get parameter 'name)))
@@ -664,10 +708,11 @@
                          (list
                           (plist-get parameter 'start)
                           (plist-get parameter 'end))))
-                    (puthash
-                     id
-                     1
-                     bookkeeping)
+                    (dolist (id ids)
+                      (puthash
+                       id
+                       1
+                       bookkeeping))
                     (puthash
                      object
                      1
@@ -682,7 +727,7 @@
                   (push `(,sub-scope ,inner-statement) bookkeeping-stack)))
               (when-let ((parameter-list (plist-get item 'parameter-list)))
                 (dolist (parameter parameter-list)
-                  (let ((id
+                  (let ((ids
                          (phps-mode-ast-bookkeeping--generate-variable-scope-string
                           sub-scope
                           (plist-get parameter 'name)))
@@ -690,17 +735,18 @@
                          (list
                           (plist-get parameter 'start)
                           (plist-get parameter 'end))))
-                    (puthash
-                     id
-                     1
-                     bookkeeping)
+                    (dolist (id ids)
+                      (puthash
+                       id
+                       1
+                       bookkeeping))
                     (puthash
                      object
                      1
                      bookkeeping))))
               (when-let ((lexical-vars (plist-get item 'lexical-vars)))
                 (dolist (lexical-var lexical-vars)
-                  (let ((id
+                  (let ((ids
                          (phps-mode-ast-bookkeeping--generate-variable-scope-string
                           sub-scope
                           (plist-get lexical-var 'name)))
@@ -708,10 +754,11 @@
                          (list
                           (plist-get lexical-var 'start)
                           (plist-get lexical-var 'end))))
-                    (puthash
-                     id
-                     1
-                     bookkeeping)
+                    (dolist (id ids)
+                      (puthash
+                       id
+                       1
+                       bookkeeping))
                     (puthash
                      object
                      1
