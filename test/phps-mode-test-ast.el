@@ -233,7 +233,7 @@
 
   (phps-mode-test-ast--buffer-contents
    "<?php\n\n$var = 'abc';\n\nif ($var2) {\n    echo 'This never happens';\n}\nif ($var) {\n    echo 'This happens';\n}"
-   "Bookkeeping in root level variable assignments #1."
+   "Bookkeeping in root level variable assignments #1"
    (lambda()
      (let ((parse (phps-mode-parser-parse)))
        (message "Left-to-right with right-most derivation:\n%S\n" parse)
@@ -255,7 +255,7 @@
 
   (phps-mode-test-ast--buffer-contents
    "<?php\n\n$var = 'abc';\n\nif ($var) {\n    echo 'This never happens';\n}\nif ($var2) {\n    echo 'This happens';\n}"
-   "Bookkeeping in root level variable assignments #2."
+   "Bookkeeping in root level variable assignments #2"
    (lambda()
      (let ((parse (phps-mode-parser-parse)))
        (message "Left-to-right with right-most derivation:\n%S\n" parse)
@@ -277,7 +277,7 @@
 
   (phps-mode-test-ast--buffer-contents
    "<?php\n\n$var2 = 4;\n\nfunction myFunction($var)\n{\n    $var3 = 3;\n    if ($var) {\n        echo 'Hit';\n    }\n    if ($var2) {\n        echo 'Miss';\n    }\n    if ($var3) {\n        echo 'Hit';\n    }\n}\n\nfunction myFunction2($abc)\n{\n    if ($var) {\n        echo 'Miss';\n    }\n    if ($abc) {\n        echo 'Hit';\n    }\n}\n\nif ($var) {\n    echo 'Miss';\n}\nif ($var2) {\n    echo 'Hit';\n}"
-   "Bookkeeping in function level with variable assignments."
+   "Bookkeeping in function level with variable assignments"
    (lambda()
      (let ((parse (phps-mode-parser-parse)))
        (message "Left-to-right with right-most derivation:\n%S\n" parse)
@@ -541,7 +541,7 @@
 
   (phps-mode-test-ast--buffer-contents
    "<?php\n$z = (object) array('name' => 'random');\nif ($z->name) {\n    echo 'Hit';\n}"
-   "Bookkeeping object properties."
+   "Bookkeeping ignoring variable properties"
    (lambda()
      (let ((parse (phps-mode-parser-parse)))
        (message "Left-to-right with right-most derivation:\n%S\n" parse)
@@ -585,7 +585,7 @@
 
   (phps-mode-test-ast--buffer-contents
    "<?php\n\nif (isset($x)) {\n    if ($x) {\n        echo 'Hit';\n        if (isset($i, $u)) {\n            if ($i) {\n                echo 'Hit';\n            }\n            if ($u) {\n                echo 'Hit';\n            }\n            if ($x) {\n                echo 'Hit';\n            }\n        }\n        if ($i) {\n            echo 'Miss';\n        }\n        if ($u) {\n            echo 'Miss';\n        }\n    }\n}\nif ($x) {\n    echo 'Miss';\n}\n\nif (!empty($y)) {\n    if ($y) {\n        echo 'Hit';\n        if (!empty($k) && !empty($L)) {\n            if ($k) {\n                echo 'Hit';\n            }\n            if ($L) {\n                echo 'Hit';\n            }\n            if ($y) {\n                echo 'Hit';\n            }\n        }\n        if ($k) {\n            echo 'Miss';\n        }\n        if ($L) {\n            echo 'Miss';\n        }\n    }\n}\nif ($y) {\n    echo 'Miss';\n}\n"
-   "Bookkeeping of isset() and !empty() scoped variables."
+   "Bookkeeping of isset() and !empty() scoped variables"
    (lambda()
      (let ((parse (phps-mode-parser-parse)))
        (message "Left-to-right with right-most derivation:\n%S\n" parse)

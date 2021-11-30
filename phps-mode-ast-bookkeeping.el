@@ -644,6 +644,28 @@
                      0
                      bookkeeping))))
 
+               (t
+                (let ((variable-ids
+                       (phps-mode-ast-bookkeeping--generate-variable-scope-string
+                        scope
+                        (plist-get subject 'name)
+                        t))
+                      (predefined 0))
+                  ;; (message "variable-ids: %S" variable-ids)
+                  (dolist (variable-id variable-ids)
+                    (when (gethash
+                           variable-id
+                           bookkeeping)
+                      (setq
+                       predefined
+                       1)))
+                  (puthash
+                   (list
+                    (plist-get subject 'start)
+                    (plist-get subject 'end))
+                   predefined
+                   bookkeeping)))
+
                )))
 
            ((equal type 'static-member)
