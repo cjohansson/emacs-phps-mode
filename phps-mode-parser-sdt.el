@@ -941,5 +941,33 @@
    (list args))
  phps-mode-parser--table-translations)
 
+;; internal_functions_in_yacc -> (T_ISSET "(" isset_variables possible_comma ")")
+(puthash
+ 538
+ (lambda(args _terminals)
+   `(ast-type isset-variables variables ,(nth 2 args)))
+ phps-mode-parser--table-translations)
+
+;; internal_functions_in_yacc -> (T_EMPTY "(" expr ")")
+(puthash
+ 539
+ (lambda(args _terminals)
+   `(ast-type empty-expression variables ,(phps-mode-parser-sdt--get-list-of-object (nth 2 args))))
+ phps-mode-parser--table-translations)
+
+;; isset_variables -> (isset_variable)
+(puthash
+ 545
+ (lambda(args _terminals)
+   (list args))
+ phps-mode-parser--table-translations)
+
+;; isset_variables -> (isset_variables "," isset_variable)
+(puthash
+ 546
+ (lambda(args _terminals)
+   (append (nth 0 args) (nth 2 args)))
+ phps-mode-parser--table-translations)
+
 (provide 'phps-mode-parser-sdt)
 ;;; phps-mode-parser-sdt.el ends here
