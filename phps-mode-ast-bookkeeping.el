@@ -236,7 +236,8 @@
             (let ((ids
                    (phps-mode-ast-bookkeeping--generate-variable-scope-string
                     scope
-                    (plist-get item 'name)))
+                    (plist-get item 'name)
+                    t))
                   (object
                    (list
                     (plist-get item 'start)
@@ -534,7 +535,7 @@
                             (plist-get item 'start)
                             (plist-get item 'end)))
                           (defined 1))
-                      ;; (message "id: %S from %S" id item)
+                      ;; (message "ids: %S from %S" ids item)
                       (dolist (id ids)
                         (when-let ((predefined (gethash id bookkeeping)))
                           (setq
@@ -613,7 +614,8 @@
                        (variable-ids
                         (phps-mode-ast-bookkeeping--generate-variable-scope-string
                          sub-scope
-                         (concat "$" property-name)))
+                         (concat "$" property-name)
+                         t))
                        (symbol-id
                         (phps-mode-ast-bookkeeping--generate-symbol-scope-string
                          sub-scope
@@ -664,7 +666,8 @@
                           (variable-ids
                            (phps-mode-ast-bookkeeping--generate-variable-scope-string
                             sub-scope
-                            (plist-get member 'name)))
+                            (plist-get member 'name)
+                            t))
                           (bookkeeping-object
                            (list
                             (plist-get member 'start)
