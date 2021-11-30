@@ -236,7 +236,7 @@
    "Bookkeeping in root level variable assignments #1."
    (lambda()
      (let ((parse (phps-mode-parser-parse)))
-       (message "Left-to-right with left-most derivation:\n%S\n" parse)
+       (message "Left-to-right with right-most derivation:\n%S\n" parse)
        (dolist (production-number (reverse parse))
          (let ((production
                 (phps-mode-parser--get-grammar-production-by-number
@@ -258,7 +258,7 @@
    "Bookkeeping in root level variable assignments #2."
    (lambda()
      (let ((parse (phps-mode-parser-parse)))
-       (message "Left-to-right with left-most derivation:\n%S\n" parse)
+       (message "Left-to-right with right-most derivation:\n%S\n" parse)
        (dolist (production-number (reverse parse))
          (let ((production
                 (phps-mode-parser--get-grammar-production-by-number
@@ -280,7 +280,7 @@
    "Bookkeeping in function level with variable assignments."
    (lambda()
      (let ((parse (phps-mode-parser-parse)))
-       (message "Left-to-right with left-most derivation:\n%S\n" parse)
+       (message "Left-to-right with right-most derivation:\n%S\n" parse)
        (dolist (production-number (reverse parse))
          (let ((production
                 (phps-mode-parser--get-grammar-production-by-number
@@ -302,7 +302,7 @@
    "Bookkeeping of super-globals"
    (lambda()
      (let ((parse (phps-mode-parser-parse)))
-       (message "Left-to-right with left-most derivation:\n%S\n" parse)
+       (message "Left-to-right with right-most derivation:\n%S\n" parse)
        (dolist (production-number (reverse parse))
          (let ((production
                 (phps-mode-parser--get-grammar-production-by-number
@@ -324,7 +324,7 @@
    "Bookkeeping in maximum level with namespaces, classes and functions."
    (lambda()
      (let ((parse (phps-mode-parser-parse)))
-       (message "Left-to-right with left-most derivation:\n%S\n" parse)
+       (message "Left-to-right with right-most derivation:\n%S\n" parse)
        (dolist (production-number (reverse parse))
          (let ((production
                 (phps-mode-parser--get-grammar-production-by-number
@@ -346,7 +346,7 @@
    "Bookkeeping of conditional assignments"
    (lambda()
      (let ((parse (phps-mode-parser-parse)))
-       (message "Left-to-right with left-most derivation:\n%S\n" parse)
+       (message "Left-to-right with right-most derivation:\n%S\n" parse)
        (dolist (production-number (reverse parse))
          (let ((production
                 (phps-mode-parser--get-grammar-production-by-number
@@ -368,7 +368,7 @@
    "Bookkeeping of class properties"
    (lambda()
      (let ((parse (phps-mode-parser-parse)))
-       (message "Left-to-right with left-most derivation:\n%S\n" parse)
+       (message "Left-to-right with right-most derivation:\n%S\n" parse)
        (dolist (production-number (reverse parse))
          (let ((production
                 (phps-mode-parser--get-grammar-production-by-number
@@ -390,7 +390,7 @@
    "Bookkeeping of try catch variable assignment"
    (lambda()
      (let ((parse (phps-mode-parser-parse)))
-       (message "Left-to-right with left-most derivation:\n%S\n" parse)
+       (message "Left-to-right with right-most derivation:\n%S\n" parse)
        (dolist (production-number (reverse parse))
          (let ((production
                 (phps-mode-parser--get-grammar-production-by-number
@@ -412,7 +412,7 @@
    "Bookkeeping of anonymous function variable assignments"
    (lambda()
      (let ((parse (phps-mode-parser-parse)))
-       (message "Left-to-right with left-most derivation:\n%S\n" parse)
+       (message "Left-to-right with right-most derivation:\n%S\n" parse)
        (dolist (production-number (reverse parse))
          (let ((production
                 (phps-mode-parser--get-grammar-production-by-number
@@ -434,7 +434,7 @@
    "Method calls should be avoided in bookkeeping"
    (lambda()
      (let ((parse (phps-mode-parser-parse)))
-       (message "Left-to-right with left-most derivation:\n%S\n" parse)
+       (message "Left-to-right with right-most derivation:\n%S\n" parse)
        (dolist (production-number (reverse parse))
          (let ((production
                 (phps-mode-parser--get-grammar-production-by-number
@@ -456,7 +456,7 @@
    "Bookkeeping of foreach reference variable declaration"
    (lambda()
      (let ((parse (phps-mode-parser-parse)))
-       (message "Left-to-right with left-most derivation:\n%S\n" parse)
+       (message "Left-to-right with right-most derivation:\n%S\n" parse)
        (dolist (production-number (reverse parse))
          (let ((production
                 (phps-mode-parser--get-grammar-production-by-number
@@ -478,7 +478,7 @@
    "Bookkeeping of variable declarations in array"
    (lambda()
      (let ((parse (phps-mode-parser-parse)))
-       (message "Left-to-right with left-most derivation:\n%S\n" parse)
+       (message "Left-to-right with right-most derivation:\n%S\n" parse)
        (dolist (production-number (reverse parse))
          (let ((production
                 (phps-mode-parser--get-grammar-production-by-number
@@ -500,7 +500,7 @@
    "Bookkeeping of global variable declaration in function"
    (lambda()
      (let ((parse (phps-mode-parser-parse)))
-       (message "Left-to-right with left-most derivation:\n%S\n" parse)
+       (message "Left-to-right with right-most derivation:\n%S\n" parse)
        (dolist (production-number (reverse parse))
          (let ((production
                 (phps-mode-parser--get-grammar-production-by-number
@@ -522,7 +522,7 @@
    "Bookkeeping in arrow functions"
    (lambda()
      (let ((parse (phps-mode-parser-parse)))
-       (message "Left-to-right with left-most derivation:\n%S\n" parse)
+       (message "Left-to-right with right-most derivation:\n%S\n" parse)
        (dolist (production-number (reverse parse))
          (let ((production
                 (phps-mode-parser--get-grammar-production-by-number
@@ -544,7 +544,7 @@
    "Bookkeeping object properties."
    (lambda()
      (let ((parse (phps-mode-parser-parse)))
-       (message "Left-to-right with left-most derivation:\n%S\n" parse)
+       (message "Left-to-right with right-most derivation:\n%S\n" parse)
        (dolist (production-number (reverse parse))
          (let ((production
                 (phps-mode-parser--get-grammar-production-by-number
@@ -566,7 +566,7 @@
    "Bookkeeping negative conditional assignment"
    (lambda()
      (let ((parse (phps-mode-parser-parse)))
-       (message "Left-to-right with left-most derivation:\n%S\n" parse)
+       (message "Left-to-right with right-most derivation:\n%S\n" parse)
        (dolist (production-number (reverse parse))
          (let ((production
                 (phps-mode-parser--get-grammar-production-by-number
@@ -588,7 +588,7 @@
    "Bookkeeping of isset() and !empty() scoped variables."
    (lambda()
      (let ((parse (phps-mode-parser-parse)))
-       (message "Left-to-right with left-most derivation:\n%S\n" parse)
+       (message "Left-to-right with right-most derivation:\n%S\n" parse)
        (dolist (production-number (reverse parse))
          (let ((production
                 (phps-mode-parser--get-grammar-production-by-number
@@ -610,7 +610,7 @@
    "Bookkeeping variable in interface function"
    (lambda()
      (let ((parse (phps-mode-parser-parse)))
-       (message "Left-to-right with left-most derivation:\n%S\n" parse)
+       (message "Left-to-right with right-most derivation:\n%S\n" parse)
        (dolist (production-number (reverse parse))
          (let ((production
                 (phps-mode-parser--get-grammar-production-by-number
@@ -632,7 +632,7 @@
    "Bookkeeping after definition condition"
    (lambda()
      (let ((parse (phps-mode-parser-parse)))
-       (message "Left-to-right with left-most derivation:\n%S\n" parse)
+       (message "Left-to-right with right-most derivation:\n%S\n" parse)
        (dolist (production-number (reverse parse))
          (let ((production
                 (phps-mode-parser--get-grammar-production-by-number
@@ -654,7 +654,7 @@
    "Bookkeeping of foreach variable inside if (isset()) block"
    (lambda()
      (let ((parse (phps-mode-parser-parse)))
-       (message "Left-to-right with left-most derivation:\n%S\n" parse)
+       (message "Left-to-right with right-most derivation:\n%S\n" parse)
        (dolist (production-number (reverse parse))
          (let ((production
                 (phps-mode-parser--get-grammar-production-by-number
@@ -676,7 +676,7 @@
    "Bookkeeping of variable after isset() block"
    (lambda()
      (let ((parse (phps-mode-parser-parse)))
-       (message "Left-to-right with left-most derivation:\n%S\n" parse)
+       (message "Left-to-right with right-most derivation:\n%S\n" parse)
        (dolist (production-number (reverse parse))
          (let ((production
                 (phps-mode-parser--get-grammar-production-by-number
@@ -698,7 +698,7 @@
    "Bookkeeping for variable in negative isset() conditional"
    (lambda()
      (let ((parse (phps-mode-parser-parse)))
-       (message "Left-to-right with left-most derivation:\n%S\n" parse)
+       (message "Left-to-right with right-most derivation:\n%S\n" parse)
        (dolist (production-number (reverse parse))
          (let ((production
                 (phps-mode-parser--get-grammar-production-by-number
@@ -720,7 +720,7 @@
    "Bookkeeping variables inside nested isset() !empty() blocks"
    (lambda()
      (let ((parse (phps-mode-parser-parse)))
-       (message "Left-to-right with left-most derivation:\n%S\n" parse)
+       (message "Left-to-right with right-most derivation:\n%S\n" parse)
        (dolist (production-number (reverse parse))
          (let ((production
                 (phps-mode-parser--get-grammar-production-by-number
@@ -742,7 +742,7 @@
    "Bookkeeping of static variable declaration in function"
    (lambda()
      (let ((parse (phps-mode-parser-parse)))
-       (message "Left-to-right with left-most derivation:\n%S\n" parse)
+       (message "Left-to-right with right-most derivation:\n%S\n" parse)
        (dolist (production-number (reverse parse))
          (let ((production
                 (phps-mode-parser--get-grammar-production-by-number
@@ -764,7 +764,7 @@
    "Bookkeeping of global variables in functional-oriented file"
    (lambda()
      (let ((parse (phps-mode-parser-parse)))
-       (message "Left-to-right with left-most derivation:\n%S\n" parse)
+       (message "Left-to-right with right-most derivation:\n%S\n" parse)
        (dolist (production-number (reverse parse))
          (let ((production
                 (phps-mode-parser--get-grammar-production-by-number
@@ -786,7 +786,7 @@
    "Bookkeeping of static variables in different scopes without namespaces"
    (lambda()
      (let ((parse (phps-mode-parser-parse)))
-       (message "Left-to-right with left-most derivation:\n%S\n" parse)
+       (message "Left-to-right with right-most derivation:\n%S\n" parse)
        (dolist (production-number (reverse parse))
          (let ((production
                 (phps-mode-parser--get-grammar-production-by-number
@@ -808,7 +808,7 @@
    "Bookkeeping of static variables in different scopes with namespaces"
    (lambda()
      (let ((parse (phps-mode-parser-parse)))
-       (message "Left-to-right with left-most derivation:\n%S\n" parse)
+       (message "Left-to-right with right-most derivation:\n%S\n" parse)
        (dolist (production-number (reverse parse))
          (let ((production
                 (phps-mode-parser--get-grammar-production-by-number
@@ -830,7 +830,7 @@
    "Bookkeeping of typed class variables"
    (lambda()
      (let ((parse (phps-mode-parser-parse)))
-       (message "Left-to-right with left-most derivation:\n%S\n" parse)
+       (message "Left-to-right with right-most derivation:\n%S\n" parse)
        (dolist (production-number (reverse parse))
          (let ((production
                 (phps-mode-parser--get-grammar-production-by-number
@@ -852,7 +852,7 @@
    "Bookkeeping of typed class variables"
    (lambda()
      (let ((parse (phps-mode-parser-parse)))
-       (message "Left-to-right with left-most derivation:\n%S\n" parse)
+       (message "Left-to-right with right-most derivation:\n%S\n" parse)
        (dolist (production-number (reverse parse))
          (let ((production
                 (phps-mode-parser--get-grammar-production-by-number

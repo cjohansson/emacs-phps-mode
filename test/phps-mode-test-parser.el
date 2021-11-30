@@ -89,7 +89,7 @@
    (lambda()
 
      (let ((parse (phps-mode-parser-parse)))
-       (message "Left-to-right with left-most derivation:\n%S\n" parse)
+       (message "Left-to-right with right-most derivation:\n%S\n" parse)
        (dolist (production-number (reverse parse))
          (let ((production
                 (phps-mode-parser--get-grammar-production-by-number
@@ -142,7 +142,7 @@
    "Advanced echo test with 2 echo sections"
    (lambda()
      (let ((parse (phps-mode-parser-parse)))
-       (message "Left-to-right with left-most derivation:\n%S\n" parse)
+       (message "Left-to-right with right-most derivation:\n%S\n" parse)
        (dolist (production-number (reverse parse))
          (let ((production
                 (phps-mode-parser--get-grammar-production-by-number
@@ -163,7 +163,7 @@
    "Simple function defintion"
    (lambda()
      (let ((parse (phps-mode-parser-parse)))
-       (message "Left-to-right with left-most derivation:\n%S\n" parse)
+       (message "Left-to-right with right-most derivation:\n%S\n" parse)
        (dolist (production-number (reverse parse))
          (let ((production
                 (phps-mode-parser--get-grammar-production-by-number
@@ -184,7 +184,7 @@
    "Simple function defintion inside un-bracketed namespace"
    (lambda()
      (let ((parse (phps-mode-parser-parse)))
-       (message "Left-to-right with left-most derivation:\n%S\n" parse)
+       (message "Left-to-right with right-most derivation:\n%S\n" parse)
        (dolist (production-number (reverse parse))
          (let ((production
                 (phps-mode-parser--get-grammar-production-by-number
@@ -205,7 +205,7 @@
    "Simple function defintion inside bracketed namespace"
    (lambda()
      (let ((parse (phps-mode-parser-parse)))
-       (message "Left-to-right with left-most derivation:\n%S\n" parse)
+       (message "Left-to-right with right-most derivation:\n%S\n" parse)
        (dolist (production-number (reverse parse))
          (let ((production
                 (phps-mode-parser--get-grammar-production-by-number
@@ -226,7 +226,7 @@
    "Simple function defintion and property inside class inside non-bracketed namespace"
    (lambda()
      (let ((parse (phps-mode-parser-parse)))
-       (message "Left-to-right with left-most derivation:\n%S\n" parse)
+       (message "Left-to-right with right-most derivation:\n%S\n" parse)
        (dolist (production-number (reverse parse))
          (let ((production
                 (phps-mode-parser--get-grammar-production-by-number
