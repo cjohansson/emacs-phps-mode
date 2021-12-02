@@ -446,7 +446,14 @@
                defined
                bookkeeping)))
 
-           ((equal type 'addition-expression)
+           ;; Infix operations
+           ((or
+             (equal type 'addition-expression)
+             (equal type 'boolean-and-expression)
+             (equal type 'boolean-or-expression)
+             (equal type 'logical-and-expression)
+             (equal type 'logical-or-expression)
+             (equal type 'logical-xor-expression))
             (when-let ((bs (reverse (plist-get item 'b))))
               (dolist (b bs)
                 (push `(,scope ,b) bookkeeping-stack)))
@@ -559,6 +566,15 @@
 
            ((equal type 'increment-variable)
             (push `(,scope ,(plist-get item 'variable)) bookkeeping-stack))
+
+           ((equal type 'negated-expression)
+            (let ((expression (plist-get item 'expression)))
+              ;; TODO Define sub-scope here
+              (when (equal (plist-get expression 'ast-type) 'empty-expression)
+                (let ((not-empty-variables (reverse (plist-get expression 'variables))))
+                  ;; TODO Define variable here
+                  ))
+              (push `(,scope ,expression) bookkeeping-stack)))
 
            ((equal type 'try)
             (when-let ((children (reverse (plist-get item 'inner-statement-list))))

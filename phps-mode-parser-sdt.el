@@ -684,6 +684,71 @@
      ast-object))
  phps-mode-parser--table-translations)
 
+;; expr -> (expr T_BOOLEAN_OR expr)
+(puthash
+ 357
+ (lambda(args _terminals)
+   `(
+     ast-type
+     boolean-or-expression
+     a
+     ,(phps-mode-parser-sdt--get-list-of-object (nth 0 args))
+     b
+     ,(phps-mode-parser-sdt--get-list-of-object (nth 2 args))))
+ phps-mode-parser--table-translations)
+
+;; expr -> (expr T_BOOLEAN_AND expr)
+(puthash
+ 358
+ (lambda(args _terminals)
+   `(
+     ast-type
+     boolean-and-expression
+     a
+     ,(phps-mode-parser-sdt--get-list-of-object (nth 0 args))
+     b
+     ,(phps-mode-parser-sdt--get-list-of-object (nth 2 args))))
+ phps-mode-parser--table-translations)
+
+;; expr -> (expr T_LOGICAL_OR expr)
+(puthash
+ 359
+ (lambda(args _terminals)
+   `(
+     ast-type
+     logical-or-expression
+     a
+     ,(phps-mode-parser-sdt--get-list-of-object (nth 0 args))
+     b
+     ,(phps-mode-parser-sdt--get-list-of-object (nth 2 args))))
+ phps-mode-parser--table-translations)
+
+;; expr -> (expr T_LOGICAL_AND expr)
+(puthash
+ 360
+ (lambda(args _terminals)
+   `(
+     ast-type
+     logical-and-expression
+     a
+     ,(phps-mode-parser-sdt--get-list-of-object (nth 0 args))
+     b
+     ,(phps-mode-parser-sdt--get-list-of-object (nth 2 args))))
+ phps-mode-parser--table-translations)
+
+;; expr -> (expr T_LOGICAL_XOR expr)
+(puthash
+ 361
+ (lambda(args _terminals)
+   `(
+     ast-type
+     logical-xor-expression
+     a
+     (phps-mode-parser-sdt--get-list-of-object ,(nth 0 args))
+     b
+     ,(phps-mode-parser-sdt--get-list-of-object (nth 2 args))))
+ phps-mode-parser--table-translations)
+
 ;; expr -> (expr "+" expr)
 (puthash
  366
@@ -696,6 +761,19 @@
            (phps-mode-parser-sdt--get-list-of-object (nth 0 args))
            'b
            (phps-mode-parser-sdt--get-list-of-object (nth 2 args)))))
+     ast-object))
+ phps-mode-parser--table-translations)
+
+;; expr -> ("!" expr)
+(puthash
+ 376
+ (lambda(args _terminals)
+   (let ((ast-object
+          (list
+           'ast-type
+           'negated-expression
+           'expression
+           (nth 1 args))))
      ast-object))
  phps-mode-parser--table-translations)
 
@@ -832,6 +910,13 @@
 ;; scalar -> (T_LNUMBER)
 (puthash
  451
+ (lambda(args _terminals)
+   (string-to-number args))
+ phps-mode-parser--table-translations)
+
+;; scalar -> (T_T_DNUMBER)
+(puthash
+ 452
  (lambda(args _terminals)
    (string-to-number args))
  phps-mode-parser--table-translations)
