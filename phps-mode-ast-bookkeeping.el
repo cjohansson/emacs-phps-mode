@@ -105,8 +105,6 @@
       name))
     scope-string))
 
-;; TODO Should return a list of strings to support the case with a read-only
-;; variable inside a arrow function that should check outer scopes as well
 (defun phps-mode-ast-bookkeeping--generate-variable-scope-string
     (scope name &optional read-only)
   "Generate variable scope string from SCOPE and NAME and optionally READ-ONLY."
@@ -171,6 +169,16 @@
                 scope-name)))
 
              ((and
+               (equal scope-type 'defined)
+               scope-name)
+              (setq
+               scope-string
+               (format
+                "%s defined %s"
+                scope-string
+                scope-name)))
+
+             ((and
                (equal scope-type 'arrow-function)
                scope-name)
               (when read-only
@@ -212,7 +220,8 @@
   (let ((bookkeeping (make-hash-table :test 'equal))
         (bookkeeping-stack phps-mode-ast--tree)
         (inline-function-count 0)
-        (arrow-function-count 0))
+        (arrow-function-count 0)
+        (defined-count 0))
     (while bookkeeping-stack
       (let ((item-raw (pop bookkeeping-stack))
             (item)
@@ -346,12 +355,58 @@
                   (push `(,sub-scope ,child) bookkeeping-stack)))))
 
            ((equal type 'if)
-            (when-let ((children (reverse (plist-get item 'children))))
-              (dolist (child children)
-                (push `(,scope, child) bookkeeping-stack)))
-            (when-let ((conditions (reverse (plist-get item 'condition))))
+            (let ((conditions (reverse (plist-get item 'condition)))
+                  (found-defined-scope)
+                  (sub-scope scope))
               (dolist (condition conditions)
-                (push `(,scope ,condition) bookkeeping-stack))))
+                (when-let ((condition-type (plist-get condition 'ast-type)))
+                  (cond
+
+                   ((equal condition-type 'isset-variables)
+                    (let ((sub-scope scope))
+                      (unless found-defined-scope
+                        (setq defined-count (1+ defined-count))
+                        (setq found-defined-scope t))
+                      (push `(type defined name ,defined-count) sub-scope)
+                      (let ((isset-variables (plist-get condition 'variables)))
+                        (dolist (isset-variable isset-variables)
+                          (let ((id
+                                 (phps-mode-ast-bookkeeping--generate-variable-scope-string
+                                  sub-scope
+                                  (plist-get isset-variable 'name))))
+                            (puthash
+                             id
+                             1
+                             bookkeeping))))))
+
+                   ((and
+                     (equal condition-type 'negated-expression)
+                     (equal (plist-get (plist-get condition 'expression) 'ast-type) 'empty-expression))
+                    (let ((sub-scope scope))
+                      (unless found-defined-scope
+                        (setq defined-count (1+ defined-count))
+                        (setq found-defined-scope t))
+                      (push `(type defined name ,defined-count) sub-scope)
+                      (let ((not-empty-variables (plist-get (plist-get condition 'expression) 'variables)))
+                        (dolist (not-empty-variable not-empty-variables)
+                          (let ((id
+                                 (phps-mode-ast-bookkeeping--generate-variable-scope-string
+                                  sub-scope
+                                  (plist-get not-empty-variable 'name))))
+                            (puthash
+                             id
+                             1
+                             bookkeeping))))))
+
+                   )))
+              (when found-defined-scope
+                (push `(type defined name ,defined-count) sub-scope))
+              (when-let ((children (reverse (plist-get item 'children))))
+                (dolist (child children)
+                  (push `(,sub-scope, child) bookkeeping-stack)))
+              (when conditions
+                (dolist (condition conditions)
+                  (push `(,sub-scope ,condition) bookkeeping-stack)))))
 
            ((equal type 'foreach)
             (when-let ((children (reverse (plist-get item 'children))))
@@ -568,13 +623,7 @@
             (push `(,scope ,(plist-get item 'variable)) bookkeeping-stack))
 
            ((equal type 'negated-expression)
-            (let ((expression (plist-get item 'expression)))
-              ;; TODO Define sub-scope here
-              (when (equal (plist-get expression 'ast-type) 'empty-expression)
-                (let ((not-empty-variables (reverse (plist-get expression 'variables))))
-                  ;; TODO Define variable here
-                  ))
-              (push `(,scope ,expression) bookkeeping-stack)))
+            (push `(,scope ,(plist-get item 'expression)) bookkeeping-stack))
 
            ((equal type 'try)
             (when-let ((children (reverse (plist-get item 'inner-statement-list))))
@@ -636,10 +685,10 @@
                         (phps-mode-ast-bookkeeping--generate-symbol-scope-string
                          sub-scope
                          property-name))
-                        (bookkeeping-object
-                         (list
-                          (plist-get item 'property-start)
-                          (plist-get item 'property-end))))
+                       (bookkeeping-object
+                        (list
+                         (plist-get item 'property-start)
+                         (plist-get item 'property-end))))
                   ;; (message "dereferenced: %S %S" variable-id symbol-id)
                   (when (gethash symbol-id bookkeeping)
                     (setq

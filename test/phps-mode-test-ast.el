@@ -603,7 +603,7 @@
      (should
       (equal
        (phps-mode-test--hash-to-list phps-mode-ast-bookkeeping--index t)
-       '((" defined 1 id $x" 1) ((18 20) 1) ((33 35) 1) (" defined 2 id $i" 1) ((77 79) 1) (" defined 2 id $u" 1) ((81 83) 1) ((104 106) 1) ((168 170) 1) ((232 234) 1) ((302 304) 0) ((355 357) 0) ((408 410) 0) (" defined 3 id $y" 1) ((445 447) 1) ((460 462) 1) (" defined 4 id $k" 1) ((505 507) 1) (" defined 4 id $L" 1) ((519 521) 1) ((542 544) 1) ((606 608) 1) ((670 672) 1) ((740 742) 0) ((793 795) 0) ((846 848) 0))))))
+       '((" defined 1 id $x" 1) ((18 20) 1) ((33 35) 1) (" defined 2 id $i" 1) (" defined 2 id $u" 1) ((77 79) 1) ((81 83) 1) ((104 106) 1) ((168 170) 1) ((232 234) 1) ((302 304) 0) ((355 357) 0) ((408 410) 0) (" defined 3 id $y" 1) ((445 447) 1) ((460 462) 1) (" defined 4 id $k" 1) ((505 507) 1) (" defined 4 id $L" 1) ((519 521) 1) ((542 544) 1) ((606 608) 1) ((670 672) 1) ((740 742) 0) ((793 795) 0) ((846 848) 0))))))
 
   (phps-mode-test-ast--buffer-contents
    "<?php\ninterface myInterface\n{\n    function myFunction1();\n    function myFunction2($x);\n}\n"
