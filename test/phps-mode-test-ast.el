@@ -647,7 +647,7 @@
      (should
       (equal
        (phps-mode-test--hash-to-list phps-mode-ast-bookkeeping--index t)
-       '(((50 52) 0) (" function myFunction2 id $b" 1) ((87 89) 1) ((103 105) 1) ((143 145) 1))))))
+       '((" function myFunction2 id $b" 1) ((87 89) 1) ((103 105) 1) ((143 145) 1))))))
 
   (phps-mode-test-ast--buffer-contents
    "<?php\n\n$a = array(1, 2, 3);\nforeach ($a as $uri => $page)\n{\n    if (isset($pages)) {\n        if ($a) {\n            echo 'Hit';\n        }\n        if ($uri) {\n            echo 'Hit';\n        }\n        if ($page) {\n            echo 'Hit';\n        }\n    }\n}\n"
@@ -691,7 +691,7 @@
      (should
       (equal
        (phps-mode-test--hash-to-list phps-mode-ast-bookkeeping--index t)
-       '((" defined 1 id $b" 2) ((17 19) 1) ((28 30) 1) (" id $c" 1) ((42 44) 1) ((55 57) 1))))))
+       '((" defined 1 id $b" 2) ((17 19) 1) ((28 30) 2) (" id $c" 1) ((42 44) 1) ((55 57) 1))))))
 
   (phps-mode-test-ast--buffer-contents
    "<?php\nif (!isset($a)) {\n    if ($a) {\n        echo 'Miss';\n    }\n}"
@@ -735,7 +735,7 @@
      (should
       (equal
        (phps-mode-test--hash-to-list phps-mode-ast-bookkeeping--index t)
-       '((" function myFunction id $a" 1) ((28 30) 1) (" function myFunction id $b" 1) ((32 34) 1) (" function myFunction id $c" 1) ((36 38) 1) (" function myFunction id $d" 1) ((40 42) 1) (" function myFunction id $f" 1) ((57 59) 1) (" function myFunction id $g" 1) ((61 63) 1) (" function myFunction defined 1 id $f" 1) ((79 81) 1) (" function myFunction defined 2 id $g" 1) ((105 107) 1) ((128 130) 1) ((192 194) 1) ((256 258) 1) ((320 322) 1))))))
+       '((" function myFunction id $a" 1) ((28 30) 1) (" function myFunction id $b" 1) ((32 34) 1) (" function myFunction id $c" 1) ((36 38) 1) (" function myFunction id $d" 1) ((40 42) 1) (" function myFunction id $f" 1) ((57 59) 1) (" function myFunction id $g" 1) ((61 63) 1) (" function myFunction defined 1 id $f" 1) ((79 81) 1) (" function myFunction defined 1 defined 2 id $g" 1) ((105 107) 1) ((128 130) 1) ((192 194) 1) ((256 258) 1) ((320 322) 1))))))
 
   (phps-mode-test-ast--buffer-contents
    "<?php\n\n$var = 123;\n\nfunction test($abc) {\n    static $var;\n    if ($var) {\n        echo 'Hit';\n    }\n}"

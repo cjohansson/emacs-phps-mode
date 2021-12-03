@@ -402,16 +402,21 @@
 (puthash
  231
  (lambda(args _terminals)
-   (if (listp (car (nth 0 args)))
-       (nth 0 args)
-     (list (nth 0 args))))
+   (nth 0 args))
+ phps-mode-parser--table-translations)
+
+; 233: non_empty_parameter_list -> (attributed_parameter)
+(puthash
+ 233
+ (lambda(args _terminals)
+   (list args))
  phps-mode-parser--table-translations)
 
 ; 234: non_empty_parameter_list -> (non_empty_parameter_list "," attributed_parameter)
 (puthash
  234
  (lambda(args _terminals)
-   (list (nth 0 args) (nth 2 args)))
+   (append (nth 0 args) (list (nth 2 args))))
  phps-mode-parser--table-translations)
 
 ;; 241: parameter -> (optional_visibility_modifier optional_type_without_static is_reference is_variadic T_VARIABLE backup_doc_comment)
@@ -825,7 +830,7 @@
            'backup-doc-comment
            (nth 2 args)
            'parameter-list
-           (phps-mode-parser-sdt--get-list-of-object (nth 4 args))
+           (nth 4 args)
            'lexical-vars
            (phps-mode-parser-sdt--get-list-of-object (nth 6 args))
            'return-type
@@ -856,7 +861,7 @@
            'backup-doc-comment
            (nth 2 args)
            'parameter-list
-           (phps-mode-parser-sdt--get-list-of-object (nth 4 args))
+           (nth 4 args)
            'return-type
            (nth 6 args)
            'backup-fn-flags-1
