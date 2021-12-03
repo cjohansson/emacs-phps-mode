@@ -50,7 +50,8 @@
              scope-name))))
 
          ((and
-           (equal scope-type 'class)
+           (or (equal scope-type 'class)
+               (equal scope-type 'interface))
            scope-name)
           (setq
            scope-string
@@ -131,7 +132,8 @@
                scope-name))
 
              ((and
-               (equal scope-type 'class)
+               (or (equal scope-type 'class)
+                   (equal scope-type 'interface))
                scope-name)
               (if namespace
                   (setq
@@ -314,6 +316,7 @@
               (push `(type function name ,name) sub-scope)
 
               ;; TODO should only do this is method is not static
+              ;; TODO should only do this if method is not in a interface class
               (let ((this-ids
                      (phps-mode-ast-bookkeeping--generate-variable-scope-string
                       sub-scope
@@ -359,6 +362,14 @@
             (let ((name (plist-get item 'name))
                   (sub-scope scope))
               (push `(type class name ,name) sub-scope)
+              (when-let ((children (reverse (plist-get item 'children))))
+                (dolist (child children)
+                  (push `(,sub-scope ,child) bookkeeping-stack)))))
+
+           ((equal type 'interface)
+            (let ((name (plist-get item 'name))
+                  (sub-scope scope))
+              (push `(type interface name ,name) sub-scope)
               (when-let ((children (reverse (plist-get item 'children))))
                 (dolist (child children)
                   (push `(,sub-scope ,child) bookkeeping-stack)))))

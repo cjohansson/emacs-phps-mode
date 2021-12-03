@@ -530,17 +530,30 @@
            'return-type
            (nth 8 args)
            'children
-           (phps-mode-parser-sdt--get-list-of-object (nth 10 args))
+           (if (nth 10 args)
+               (phps-mode-parser-sdt--get-list-of-object (nth 10 args))
+             nil)
            'index
            (car (cdr (nth 3 terminals)))
            'start
-           (car (cdr (car (nth 10 terminals))))
+           (if (nth 10 args)
+               (car (cdr (car (nth 10 terminals))))
+             nil)
            'end
-           (cdr (cdr (car (cdr (cdr (nth 10 terminals)))))))))
+           (if (nth 10 args)
+               (cdr (cdr (car (cdr (cdr (nth 10 terminals))))))
+             nil))))
      ;; (message "Method: %S" ast-object)
      ;; (message "args: %S" args)
      ;; (message "terminals: %S" terminals)
      ast-object))
+ phps-mode-parser--table-translations)
+
+;; 301: method_body -> (";")
+(puthash
+ 301
+ (lambda(_args _terminals)
+   nil)
  phps-mode-parser--table-translations)
 
 ;; 302: method_body -> ("{" inner_statement_list "}")
