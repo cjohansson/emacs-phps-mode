@@ -310,22 +310,41 @@
                 (dolist (child children)
                   (push `(,sub-scope ,child) bookkeeping-stack)))))
 
+           ((equal type 'return-statement)
+            (when-let ((expr (reverse (plist-get item 'optional-expr))))
+              (dolist (e expr)
+                (push `(,scope ,e) bookkeeping-stack))))
+
            ((equal type 'method)
             (let ((name (plist-get item 'name))
-                  (sub-scope scope))
+                  (sub-scope scope)
+                  (parent-is-interface)
+                  (is-static))
               (push `(type function name ,name) sub-scope)
 
-              ;; TODO should only do this is method is not static
-              ;; TODO should only do this if method is not in a interface class
-              (let ((this-ids
-                     (phps-mode-ast-bookkeeping--generate-variable-scope-string
-                      sub-scope
-                      "$this")))
-                (dolist (this-id this-ids)
-                  (puthash
-                   this-id
-                   1
-                   bookkeeping)))
+              (when-let ((modifiers (plist-get item 'modifiers)))
+                (dolist (modifier modifiers)
+                  (when (equal modifier 'static)
+                    (setq
+                     is-static
+                     t))))
+
+              (when (equal (plist-get (car scope) 'type) 'interface)
+                (setq parent-is-interface t))
+
+              (unless (or
+                       is-static
+                       parent-is-interface)
+                (let ((this-ids
+                       (phps-mode-ast-bookkeeping--generate-variable-scope-string
+                        sub-scope
+                        "$this")))
+                  (dolist (this-id this-ids)
+                    (puthash
+                     this-id
+                     1
+                     bookkeeping))))
+
               (when-let ((parameter-list (reverse (plist-get item 'parameter-list))))
                 (dolist (parameter parameter-list)
                   (let ((ids
