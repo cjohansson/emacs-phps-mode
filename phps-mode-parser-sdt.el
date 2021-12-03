@@ -181,6 +181,17 @@
      ast-object))
  phps-mode-parser--table-translations)
 
+;; statement -> (T_STATIC static_var_list ";")
+(puthash
+ 151
+ (lambda(args _terminals)
+   `(
+     ast-type
+     static-variables-statement
+     static-var-list
+     ,(nth 1 args)))
+ phps-mode-parser--table-translations)
+
 ;; statement -> (T_ECHO echo_expr_list ";")
 (puthash
  152
@@ -487,6 +498,56 @@
  263
  (lambda(args _terminals)
    (nth 1 args))
+ phps-mode-parser--table-translations)
+
+;; static_var_list -> (static_var_list "," static_var)
+(puthash
+ 272
+ (lambda(args _terminals)
+   (append (nth 0 args) (list (nth 2 args))))
+ phps-mode-parser--table-translations)
+
+;; static_var_list -> (static_var)
+(puthash
+ 273
+ (lambda(args _terminals)
+   (list args))
+ phps-mode-parser--table-translations)
+
+;; static_var -> (T_VARIABLE)
+(puthash
+ 274
+ (lambda(args terminals)
+   `(
+     ast-type
+     variable
+     name
+     ,(nth 0 args)
+     index
+     ,(car (cdr (nth 0 terminals)))
+     start
+     ,(car (cdr (nth 0 terminals)))
+     end
+     ,(cdr (cdr (nth 0 terminals)))))
+ phps-mode-parser--table-translations)
+
+;; static_var -> (T_VARIABLE "=" expr)
+(puthash
+ 275
+ (lambda(args terminals)
+   `(
+     ast-type
+     variable
+     name
+     ,(nth 0 args)
+     expr
+     ,(nth 2 args)
+     index
+     ,(car (cdr (nth 0 terminals)))
+     start
+     ,(car (cdr (nth 0 terminals)))
+     end
+     ,(cdr (cdr (nth 0 terminals)))))
  phps-mode-parser--table-translations)
 
 ;; class_statement_list -> (class_statement_list class_statement)

@@ -282,6 +282,27 @@
                defined-p
                bookkeeping)))
 
+           ((equal type 'static-variables-statement)
+            (when-let ((variables (reverse (plist-get item 'static-var-list))))
+              (dolist (variable variables)
+                (let ((ids
+                       (phps-mode-ast-bookkeeping--generate-variable-scope-string
+                        scope
+                        (plist-get variable 'name)))
+                      (object
+                       (list
+                        (plist-get variable 'start)
+                        (plist-get variable 'end))))
+                  (dolist (id ids)
+                    (puthash
+                     id
+                     1
+                     bookkeeping))
+                  (puthash
+                   object
+                   1
+                   bookkeeping)))))
+
            ((equal type 'function)
             (let ((name (plist-get item 'name))
                   (sub-scope scope))
