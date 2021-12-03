@@ -869,6 +869,8 @@
        (phps-mode-test--hash-to-list phps-mode-ast-bookkeeping--index t)
        '((" id $a" 1) ((8 10) 1) (" id $b" 1) ((13 15) 1) (" id $c" 1) ((18 20) 1) ((31 33) 1) ((51 53) 1) ((99 101) 1) ((119 121) 1) ((167 169) 1) ((187 189) 1))))))
 
+  ;; TODO Test variables inside static function and method
+
   ;; TODO Test this and make sure all variables hit
   ;; class myClass { private $test = 'abc'; public function test($d) { return fn($d) => $this->test . $d; }} $a = new myClass(); echo $a->test('def')('ghi');
 
