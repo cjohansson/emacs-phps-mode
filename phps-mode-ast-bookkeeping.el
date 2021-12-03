@@ -171,6 +171,15 @@
              ((and
                (equal scope-type 'defined)
                scope-name)
+              (when read-only
+                ;; Branch off here in alternative scope without this defined context
+                ;; but only for read-only contexts
+                (push
+                 (list
+                  scope-string
+                  namespace
+                  bubbles)
+                 bubbles-stack))
               (setq
                scope-string
                (format
@@ -355,50 +364,64 @@
                   (push `(,sub-scope ,child) bookkeeping-stack)))))
 
            ((equal type 'if)
-            (let ((conditions (reverse (plist-get item 'condition)))
+            (let* ((conditions (reverse (plist-get item 'condition)))
+                   (condition-stack conditions)
+                   (condition)
                   (found-defined-scope)
                   (sub-scope scope))
-              (dolist (condition conditions)
-                (when-let ((condition-type (plist-get condition 'ast-type)))
-                  (cond
+              (while condition-stack
+                (let ((condition (pop condition-stack)))
+                  (when-let ((condition-type (plist-get condition 'ast-type)))
+                    (cond
 
-                   ((equal condition-type 'isset-variables)
-                    (let ((sub-scope scope))
-                      (unless found-defined-scope
-                        (setq defined-count (1+ defined-count))
-                        (setq found-defined-scope t))
-                      (push `(type defined name ,defined-count) sub-scope)
-                      (let ((isset-variables (plist-get condition 'variables)))
-                        (dolist (isset-variable isset-variables)
-                          (let ((id
-                                 (phps-mode-ast-bookkeeping--generate-variable-scope-string
-                                  sub-scope
-                                  (plist-get isset-variable 'name))))
-                            (puthash
-                             id
-                             1
-                             bookkeeping))))))
+                     ((or (equal condition-type 'boolean-and-expression)
+                          (equal condition-type 'boolean-or-expression))
+                      (let ((as (reverse (plist-get condition 'a)))
+                            (bs (reverse (plist-get condition 'b))))
+                        (dolist (b bs)
+                          (push b condition-stack))
+                        (dolist (a as)
+                          (push a condition-stack))))
 
-                   ((and
-                     (equal condition-type 'negated-expression)
-                     (equal (plist-get (plist-get condition 'expression) 'ast-type) 'empty-expression))
-                    (let ((sub-scope scope))
-                      (unless found-defined-scope
-                        (setq defined-count (1+ defined-count))
-                        (setq found-defined-scope t))
-                      (push `(type defined name ,defined-count) sub-scope)
-                      (let ((not-empty-variables (plist-get (plist-get condition 'expression) 'variables)))
-                        (dolist (not-empty-variable not-empty-variables)
-                          (let ((id
-                                 (phps-mode-ast-bookkeeping--generate-variable-scope-string
-                                  sub-scope
-                                  (plist-get not-empty-variable 'name))))
-                            (puthash
-                             id
-                             1
-                             bookkeeping))))))
+                     ((equal condition-type 'isset-variables)
+                      (let ((sub-scope scope))
+                        (unless found-defined-scope
+                          (setq defined-count (1+ defined-count))
+                          (setq found-defined-scope t))
+                        (push `(type defined name ,defined-count) sub-scope)
+                        (let ((isset-variables (plist-get condition 'variables)))
+                          (dolist (isset-variable isset-variables)
+                            (let ((ids
+                                   (phps-mode-ast-bookkeeping--generate-variable-scope-string
+                                    sub-scope
+                                    (plist-get isset-variable 'name))))
+                              (dolist (id ids)
+                                (puthash
+                                 id
+                                 1
+                                 bookkeeping)))))))
 
-                   )))
+                     ((and
+                       (equal condition-type 'negated-expression)
+                       (equal (plist-get (plist-get condition 'expression) 'ast-type) 'empty-expression))
+                      (let ((sub-scope scope))
+                        (unless found-defined-scope
+                          (setq defined-count (1+ defined-count))
+                          (setq found-defined-scope t))
+                        (push `(type defined name ,defined-count) sub-scope)
+                        (let ((not-empty-variables (plist-get (plist-get condition 'expression) 'variables)))
+                          (dolist (not-empty-variable not-empty-variables)
+                            (let ((ids
+                                   (phps-mode-ast-bookkeeping--generate-variable-scope-string
+                                    sub-scope
+                                    (plist-get not-empty-variable 'name))))
+                              (dolist (id ids)
+                                (puthash
+                                 id
+                                 1
+                                 bookkeeping)))))))
+
+                     ))))
               (when found-defined-scope
                 (push `(type defined name ,defined-count) sub-scope))
               (when-let ((children (reverse (plist-get item 'children))))
@@ -407,6 +430,16 @@
               (when conditions
                 (dolist (condition conditions)
                   (push `(,sub-scope ,condition) bookkeeping-stack)))))
+
+           ((equal type 'isset-variables)
+            (let ((isset-variables (reverse (plist-get item 'variables))))
+              (dolist (isset-variable isset-variables)
+                (push `(,scope ,isset-variable) bookkeeping-stack))))
+
+           ((equal type 'empty-expression)
+            (let ((not-empty-variables (reverse (plist-get item 'variables))))
+              (dolist (not-empty-variable not-empty-variables)
+                (push `(,scope ,not-empty-variable) bookkeeping-stack))))
 
            ((equal type 'foreach)
             (when-let ((children (reverse (plist-get item 'children))))
@@ -597,7 +630,6 @@
                             (plist-get item 'start)
                             (plist-get item 'end)))
                           (defined 1))
-                      ;; (message "ids: %S from %S" ids item)
                       (dolist (id ids)
                         (when-let ((predefined (gethash id bookkeeping)))
                           (setq
@@ -689,7 +721,6 @@
                         (list
                          (plist-get item 'property-start)
                          (plist-get item 'property-end))))
-                  ;; (message "dereferenced: %S %S" variable-id symbol-id)
                   (when (gethash symbol-id bookkeeping)
                     (setq
                      predefined
@@ -716,7 +747,6 @@
                         (plist-get subject 'name)
                         t))
                       (predefined 0))
-                  ;; (message "variable-ids: %S" variable-ids)
                   (dolist (variable-id variable-ids)
                     (when (gethash
                            variable-id
