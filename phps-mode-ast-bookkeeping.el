@@ -684,10 +684,10 @@
                     (setq
                      static-p
                      t))))
+              (when static-p
+                (push '(type static) sub-scope))
               (if (stringp subject)
                   (let ((ids))
-                    (when static-p
-                      (push '(type static) sub-scope))
                     (setq
                      ids
                      (phps-mode-ast-bookkeeping--generate-variable-scope-string

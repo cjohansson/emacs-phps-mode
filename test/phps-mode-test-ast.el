@@ -409,11 +409,10 @@
    "Bookkeeping of $this reference inside arrow function inside of method"
    '((" class myClass id $test" 1) ((36 41) 1) (" class myClass function test id $this" 1) (" class myClass function test id $d" 1) ((76 78) 1) (" class myClass function test arrow function 1 id $e" 1) ((104 106) 1) ((111 116) 1) ((118 122) 1) ((125 127) 1) ((130 132) 1) (" id $a" 1) ((143 145) 1)))
 
-  ;; TODO Make this test pass
   (phps-mode-test-ast--should-bookkeep
    "<?php class myClass { static $var = '123'; static function myMethod($a) { return fn($b) => self::$var . $a . $b; }} echo myClass::myMethod('4')('5');"
    "Bookkeeping of self reference inside arrow function inside of static method"
-   '((" class myClass id $var" 1) ((30 34) 1) (" class myClass function myMethod id $a" 1) ((69 71) 1) (" class myClass function myMethod arrow function 1 id $b" 1) ((85 87) 1) ((98 102) 1) ((105 107) 1) ((110 112) 1)))
+   '((" class myClass static id $var" 1) ((30 34) 1) (" class myClass function myMethod id $a" 1) ((69 71) 1) (" class myClass function myMethod arrow function 1 id $b" 1) ((85 87) 1) ((98 102) 1) ((105 107) 1) ((110 112) 1)))
 
   (message "\n-- Ran tests for bookkeeping generation. --"))
 
