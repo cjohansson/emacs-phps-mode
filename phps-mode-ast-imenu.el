@@ -84,7 +84,7 @@
      phps-mode-ast-imenu--index
      (reverse imenu-index)))
 
-  (message "imenu:\n%S\n\n" phps-mode-ast-imenu--index)
+  ;; (message "imenu:\n%S\n\n" phps-mode-ast-imenu--index)
   phps-mode-ast-imenu--index)
 
 

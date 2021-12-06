@@ -45,9 +45,8 @@
            scope-string
            (format
             "%s namespace %s"
-            (setq
-             scope-string
-             scope-name))))
+            scope-string
+            scope-name)))
 
          ((and
            (or (equal scope-type 'class)
@@ -110,7 +109,8 @@
     (scope name &optional read-only)
   "Generate variable scope string from SCOPE and NAME and optionally READ-ONLY."
   (let ((scope-strings)
-        (bubbles-stack (list (list "" nil nil (reverse scope))))) ;; scope-string namespace bubbles
+        (bubbles-stack (list (list "" nil nil (reverse scope))))
+        (bubbles-data))
     (while bubbles-stack
       (setq
        bubbles-data
@@ -433,9 +433,8 @@
            ((equal type 'if)
             (let* ((conditions (reverse (plist-get item 'condition)))
                    (condition-stack conditions)
-                   (condition)
-                  (found-defined-scope)
-                  (sub-scope scope))
+                   (found-defined-scope)
+                   (sub-scope scope))
               (while condition-stack
                 (let ((condition (pop condition-stack)))
                   (when-let ((condition-type (plist-get condition 'ast-type)))
@@ -760,7 +759,6 @@
 
            ((equal type 'array-object-dereferencable)
             (let* ((subject (plist-get item 'subject))
-                   (property-name (plist-get item 'property))
                    (downcase-subject-name (downcase (plist-get subject 'name)))
                    (property-name (plist-get item 'property-name)))
 
@@ -998,7 +996,7 @@
      phps-mode-ast-bookkeeping--index
      bookkeeping)
 
-    (message "\nBookkeeping\n:%S\n" bookkeeping)
+    ;; (message "\nBookkeeping\n:%S\n" bookkeeping)
     phps-mode-ast-bookkeeping--index))
 
 
