@@ -399,7 +399,10 @@
    "Bookkeeping of nullable typed class variables"
    '((" class There id $variable" 1) ((33 42) 1) (" class There id $variable2" 1) ((68 78) 1) (" class There id $variable3" 1) ((99 109) 1) (" class There static id $variable4" 1) ((130 140) 1) (" class There static id $variable5" 1) ((172 182) 1) (" class There static id $variable6" 1) ((211 221) 1) (" class There function here id $this" 1) ((261 266) 1) ((268 276) 1) ((293 298) 1) ((300 309) 1) ((326 331) 1) ((333 342) 1) ((359 364) 1) ((366 375) 0) ((398 408) 1) ((431 441) 1) ((464 474) 1)))
 
-  ;; TODO Test variables available inside static function and method
+  (phps-mode-test-ast--should-bookkeep
+   "<?php\nclass MyClass\n{\n    static function here()\n    {\n        if ($this) {\n            // Miss;\n        }\n    }\n    function there()\n    {\n        if ($this) {\n            // Hit\n        }\n    }\n}\n"
+   "Test variables available inside static function and method"
+   '(((68 73) 0) (" class MyClass function there id $this" 1) ((153 158) 1)))
 
   ;; TODO Test this and make sure all variables hit
   ;; class myClass { private $test = 'abc'; public function test($d) { return fn($d) => $this->test . $d; }} $a = new myClass(); echo $a->test('def')('ghi');
