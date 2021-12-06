@@ -401,11 +401,14 @@
 
   (phps-mode-test-ast--should-bookkeep
    "<?php\nclass MyClass\n{\n    static function here()\n    {\n        if ($this) {\n            // Miss;\n        }\n    }\n    function there()\n    {\n        if ($this) {\n            // Hit\n        }\n    }\n}\n"
-   "Test variables available inside static function and method"
+   "Bookkeeping of $this not available inside static method"
    '(((68 73) 0) (" class MyClass function there id $this" 1) ((153 158) 1)))
 
-  ;; TODO Test this and make sure all variables hit
-  ;; class myClass { private $test = 'abc'; public function test($d) { return fn($d) => $this->test . $d; }} $a = new myClass(); echo $a->test('def')('ghi');
+  ;; TODO Make this test work and pass
+  (phps-mode-test-ast--should-bookkeep
+   "<?php\n\nclass myClass\n{\n    private $test = 'abc';\n    public function test($d)\n    {\n        return fn($e) => $this->test . $d . $e;\n    }\n}\n\n$a = new myClass();\necho $a->test('def')('ghi');"
+   "Bookkeeping of $this reference inside arrow function inside of method"
+   '(0 1 2))
 
   (message "\n-- Ran tests for bookkeeping generation. --"))
 
