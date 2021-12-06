@@ -601,14 +601,15 @@
                defined
                bookkeeping)))
 
-           ;; Infix operations
+           ;; Infix expressions
            ((or
              (equal type 'addition-expression)
              (equal type 'boolean-and-expression)
              (equal type 'boolean-or-expression)
              (equal type 'logical-and-expression)
              (equal type 'logical-or-expression)
-             (equal type 'logical-xor-expression))
+             (equal type 'logical-xor-expression)
+             (equal type 'concat-expression))
             (when-let ((bs (reverse (plist-get item 'b))))
               (dolist (b bs)
                 (push `(,scope ,b) bookkeeping-stack)))
@@ -888,9 +889,9 @@
             (let ((sub-scope scope))
               (setq arrow-function-count (1+ arrow-function-count))
               (push `(type arrow-function name ,arrow-function-count) sub-scope)
-              (when-let ((inner-statement-list (reverse (plist-get item 'inner-statement-list))))
-                (dolist (inner-statement inner-statement-list)
-                  (push `(,sub-scope ,inner-statement) bookkeeping-stack)))
+              (when-let ((expr (reverse (plist-get item 'expr))))
+                (dolist (e expr)
+                  (push `(,sub-scope ,e) bookkeeping-stack)))
               (when-let ((parameter-list (plist-get item 'parameter-list)))
                 (dolist (parameter parameter-list)
                   (let ((ids

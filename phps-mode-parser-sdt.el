@@ -835,6 +835,19 @@
      ,(phps-mode-parser-sdt--get-list-of-object (nth 2 args))))
  phps-mode-parser--table-translations)
 
+;; expr -> (expr "." expr)
+(puthash
+ 365
+ (lambda(args _terminals)
+   `(
+     ast-type
+     concat-expression
+     a
+     (phps-mode-parser-sdt--get-list-of-object ,(nth 0 args))
+     b
+     ,(phps-mode-parser-sdt--get-list-of-object (nth 2 args))))
+ phps-mode-parser--table-translations)
+
 ;; expr -> (expr "+" expr)
 (puthash
  366
@@ -929,7 +942,7 @@
            (nth 8 args)
            'backup-lex-pos
            (nth 9 args)
-           'inner-statement-list
+           'expr
            (phps-mode-parser-sdt--get-list-of-object (nth 10 args))
            'backup-fn-flags-2
            (nth 11 args))))

@@ -37,17 +37,17 @@
    buffer-contents
    name
    (lambda()
-      ;; (let ((parse (phps-mode-parser-parse)))
-      ;;   (message "Left-to-right with right-most derivation:\n%S\n" parse)
-      ;;   (dolist (production-number (reverse parse))
-      ;;     (let ((production
-      ;;            (phps-mode-parser--get-grammar-production-by-number
-      ;;             production-number)))
-      ;;       (message
-      ;;        "%d: %S -> %S"
-      ;;        production-number
-      ;;        (car (car production))
-      ;;        (car (cdr production))))))
+      (let ((parse (phps-mode-parser-parse)))
+        (message "Left-to-right with right-most derivation:\n%S\n" parse)
+        (dolist (production-number (reverse parse))
+          (let ((production
+                 (phps-mode-parser--get-grammar-production-by-number
+                  production-number)))
+            (message
+             "%d: %S -> %S"
+             production-number
+             (car (car production))
+             (car (cdr production))))))
       (phps-mode-ast--generate)
       (phps-mode-ast-bookkeeping--generate)
       (should
@@ -404,11 +404,11 @@
    "Bookkeeping of $this not available inside static method"
    '(((68 73) 0) (" class MyClass function there id $this" 1) ((153 158) 1)))
 
-  ;; TODO Make this test work and pass
+  ;; TODO Make this test pass
   (phps-mode-test-ast--should-bookkeep
    "<?php\n\nclass myClass\n{\n    private $test = 'abc';\n    public function test($d)\n    {\n        return fn($e) => $this->test . $d . $e;\n    }\n}\n\n$a = new myClass();\necho $a->test('def')('ghi');"
    "Bookkeeping of $this reference inside arrow function inside of method"
-   '(0 1 2))
+   '((" class myClass id $test" 1) ((36 41) 1) (" class myClass function test id $this" 1) (" class myClass function test id $d" 1) ((76 78) 1) (" class myClass function test arrow function 1 id $e" 1) ((104 106) 1) ((111 116) 1) ((118 122) 1) ((125 127) 1) ((130 132) 1) (" id $a" 1) ((143 145) 1)))
 
   (message "\n-- Ran tests for bookkeeping generation. --"))
 
