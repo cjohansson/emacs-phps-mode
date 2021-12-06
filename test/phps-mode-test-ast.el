@@ -849,7 +849,7 @@
 
   (phps-mode-test-ast--buffer-contents
    "<?php\n\n$a = $b = $c = 3;\n\nif ($a) {\n    echo 'a=',$a;\n} else {\n    echo '$a is undefined!';\n}\nif ($b) {\n    echo 'b=',$b;\n} else {\n    echo '$b is undefined!';\n}\nif ($c) {\n    echo 'c=',$c;\n} else {\n    echo '$c is undefined!';\n}"
-   "Bookkeeping of typed class variables"
+   "Bookkeeping of chained variable assignments"
    (lambda()
      (let ((parse (phps-mode-parser-parse)))
        (message "Left-to-right with right-most derivation:\n%S\n" parse)
@@ -868,6 +868,8 @@
       (equal
        (phps-mode-test--hash-to-list phps-mode-ast-bookkeeping--index t)
        '((" id $a" 1) ((8 10) 1) (" id $b" 1) ((13 15) 1) (" id $c" 1) ((18 20) 1) ((31 33) 1) ((51 53) 1) ((99 101) 1) ((119 121) 1) ((167 169) 1) ((187 189) 1))))))
+
+  ;; TODO Test nullable typed class properties
 
   ;; TODO Test variables inside static function and method
 

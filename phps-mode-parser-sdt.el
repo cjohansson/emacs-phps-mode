@@ -522,13 +522,13 @@
      ast-type
      variable
      name
-     ,(nth 0 args)
+     ,args
      index
-     ,(car (cdr (nth 0 terminals)))
+     ,(car (cdr terminals))
      start
-     ,(car (cdr (nth 0 terminals)))
+     ,(car (cdr terminals))
      end
-     ,(cdr (cdr (nth 0 terminals)))))
+     ,(cdr (cdr terminals))))
  phps-mode-parser--table-translations)
 
 ;; static_var -> (T_VARIABLE "=" expr)

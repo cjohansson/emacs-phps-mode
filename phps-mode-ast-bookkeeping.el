@@ -110,14 +110,15 @@
     (scope name &optional read-only)
   "Generate variable scope string from SCOPE and NAME and optionally READ-ONLY."
   (let ((scope-strings)
-        (bubbles-stack (list (list "" nil (reverse scope))))) ;; scope-string namespace bubbles
+        (bubbles-stack (list (list "" nil nil (reverse scope))))) ;; scope-string namespace bubbles
     (while bubbles-stack
       (setq
        bubbles-data
        (pop bubbles-stack))
       (let ((scope-string (car bubbles-data))
             (namespace (car (cdr bubbles-data)))
-            (bubbles (car (cdr (cdr bubbles-data)))))
+            (class (car (cdr (cdr bubbles-data))))
+            (bubbles (car (cdr (cdr (cdr bubbles-data))))))
         (while bubbles
           (let* ((bubble (pop bubbles))
                  (scope-type (plist-get bubble 'type))
@@ -148,17 +149,30 @@
                  (format
                   "%s class %s"
                   scope-string
-                  scope-name))))
+                  scope-name)))
+              (setq
+               class
+               scope-name))
 
              ((and
                (equal scope-type 'function)
                scope-name)
-              (setq
-               scope-string
-               (format
-                "%s function %s"
-                scope-string
-                scope-name)))
+              (if (and
+                   namespace
+                   (not class))
+                  (setq
+                   scope-string
+                   (format
+                    "%s namespace %s function %s"
+                    scope-string
+                    namespace
+                    scope-name))
+                (setq
+                 scope-string
+                 (format
+                  "%s function %s"
+                  scope-string
+                  scope-name))))
 
              ((and
                (equal scope-type 'inline-function)
@@ -180,6 +194,7 @@
                  (list
                   scope-string
                   namespace
+                  class
                   bubbles)
                  bubbles-stack))
               (setq
@@ -199,6 +214,7 @@
                  (list
                   scope-string
                   namespace
+                  class
                   bubbles)
                  bubbles-stack))
               (setq
