@@ -347,7 +347,7 @@
   (phps-mode-test-ast--should-bookkeep
    "<?php\n\nfunction myFunction1()\n{\n    return isset($a);\n}\n\nfunction myFunction2()\n{\n    $b = 2;\n    if ($b) {\n        echo 'Hit';\n    }\n    if ($b) {\n        echo 'Hit';\n    }\n}\n"
    "Bookkeeping after definition condition"
-   '((" function myFunction2 id $b" 1) ((87 89) 1) ((103 105) 1) ((143 145) 1)))
+   '(((50 52) 0) (" function myFunction2 id $b" 1) ((87 89) 1) ((103 105) 1) ((143 145) 1)))
 
   (phps-mode-test-ast--should-bookkeep
    "<?php\n\n$a = array(1, 2, 3);\nforeach ($a as $uri => $page)\n{\n    if (isset($pages)) {\n        if ($a) {\n            echo 'Hit';\n        }\n        if ($uri) {\n            echo 'Hit';\n        }\n        if ($page) {\n            echo 'Hit';\n        }\n    }\n}\n"
