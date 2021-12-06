@@ -862,7 +862,25 @@
                 (cond
 
                  ((equal member-type 'simple-variable)
-                  (let ((sub-scope (cdr scope)))
+                  ;; When current scope is arrow function
+                  ;; we should go up in scope until we get out of
+                  ;; arrow functions scope
+                  (let ((sub-scope scope)
+                        (head-scope)
+                        (is-arrow-function-scope t))
+                    (while (and
+                            sub-scope
+                            is-arrow-function-scope)
+                      (setq
+                       head-scope
+                       (car sub-scope))
+                      (setq
+                       sub-scope
+                       (cdr sub-scope))
+                      (unless (equal
+                               (plist-get head-scope 'type)
+                               'arrow-function)
+                        (setq is-arrow-function-scope nil)))
                     (push '(type static) sub-scope)
                     (let ((predefined)
                           (variable-ids
