@@ -830,7 +830,7 @@
      ast-type
      logical-xor-expression
      a
-     (phps-mode-parser-sdt--get-list-of-object ,(nth 0 args))
+     ,(phps-mode-parser-sdt--get-list-of-object (nth 0 args))
      b
      ,(phps-mode-parser-sdt--get-list-of-object (nth 2 args))))
  phps-mode-parser--table-translations)
@@ -843,7 +843,7 @@
      ast-type
      concat-expression
      a
-     (phps-mode-parser-sdt--get-list-of-object ,(nth 0 args))
+     ,(phps-mode-parser-sdt--get-list-of-object (nth 0 args))
      b
      ,(phps-mode-parser-sdt--get-list-of-object (nth 2 args))))
  phps-mode-parser--table-translations)

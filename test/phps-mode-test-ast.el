@@ -37,17 +37,17 @@
    buffer-contents
    name
    (lambda()
-      (let ((parse (phps-mode-parser-parse)))
-        (message "Left-to-right with right-most derivation:\n%S\n" parse)
-        (dolist (production-number (reverse parse))
-          (let ((production
-                 (phps-mode-parser--get-grammar-production-by-number
-                  production-number)))
-            (message
-             "%d: %S -> %S"
-             production-number
-             (car (car production))
-             (car (cdr production))))))
+      ;; (let ((parse (phps-mode-parser-parse)))
+      ;;   (message "Left-to-right with right-most derivation:\n%S\n" parse)
+      ;;   (dolist (production-number (reverse parse))
+      ;;     (let ((production
+      ;;            (phps-mode-parser--get-grammar-production-by-number
+      ;;             production-number)))
+      ;;       (message
+      ;;        "%d: %S -> %S"
+      ;;        production-number
+      ;;        (car (car production))
+      ;;        (car (cdr production))))))
       (phps-mode-ast--generate)
       (phps-mode-ast-bookkeeping--generate)
       (should

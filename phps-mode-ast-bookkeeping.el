@@ -773,40 +773,57 @@
                   (plist-get subject 'end))
                  1
                  bookkeeping)
-
-                (let* ((sub-scope (cdr scope))
-                       (predefined)
-                       (variable-ids
-                        (phps-mode-ast-bookkeeping--generate-variable-scope-string
-                         sub-scope
-                         (concat "$" property-name)
-                         t))
-                       (symbol-id
-                        (phps-mode-ast-bookkeeping--generate-symbol-scope-string
-                         sub-scope
-                         property-name))
-                       (bookkeeping-object
-                        (list
-                         (plist-get item 'property-start)
-                         (plist-get item 'property-end))))
-                  (when (gethash symbol-id bookkeeping)
+                ;; When current scope is arrow function
+                ;; we should go up in scope until we get out of
+                ;; arrow functions scope
+                (let ((sub-scope scope)
+                      (head-scope)
+                      (is-arrow-function-scope t))
+                  (while (and
+                          sub-scope
+                          is-arrow-function-scope)
                     (setq
-                     predefined
-                     t))
-                  (dolist (variable-id variable-ids)
-                    (when (gethash variable-id bookkeeping)
+                     head-scope
+                     (car sub-scope))
+                    (setq
+                     sub-scope
+                     (cdr sub-scope))
+                    (unless (equal
+                             (plist-get head-scope 'type)
+                             'arrow-function)
+                      (setq is-arrow-function-scope nil)))
+                  (let* ((predefined)
+                         (variable-ids
+                          (phps-mode-ast-bookkeeping--generate-variable-scope-string
+                           sub-scope
+                           (concat "$" property-name)
+                           t))
+                         (symbol-id
+                          (phps-mode-ast-bookkeeping--generate-symbol-scope-string
+                           sub-scope
+                           property-name))
+                         (bookkeeping-object
+                          (list
+                           (plist-get item 'property-start)
+                           (plist-get item 'property-end))))
+                    (when (gethash symbol-id bookkeeping)
                       (setq
                        predefined
-                       t)))
-                  (if predefined
+                       t))
+                    (dolist (variable-id variable-ids)
+                      (when (gethash variable-id bookkeeping)
+                        (setq
+                         predefined
+                         t)))
+                    (if predefined
+                        (puthash
+                         bookkeeping-object
+                         1
+                         bookkeeping)
                       (puthash
                        bookkeeping-object
-                       1
-                       bookkeeping)
-                    (puthash
-                     bookkeeping-object
-                     0
-                     bookkeeping))))
+                       0
+                       bookkeeping)))))
 
                (t
                 (let ((variable-ids
