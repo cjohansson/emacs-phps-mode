@@ -199,7 +199,7 @@
    (let ((ast-object
           (list
            'ast-type
-           'echo
+           'echo-statement
            'children
            (phps-mode-parser-sdt--get-list-of-object (nth 1 args)))))
      ast-object))

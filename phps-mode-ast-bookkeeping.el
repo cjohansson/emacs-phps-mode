@@ -878,6 +878,12 @@
            ((equal type 'static-inline-function)
             (push `(,scope ,(plist-get item 'inline-function)) bookkeeping-stack))
 
+           ((equal type 'echo-statement)
+            (let ((children (reverse (plist-get item 'children))))
+              (dolist (child children)
+                (when (listp child)
+                  (push `(,scope ,child) bookkeeping-stack)))))
+
            ((equal type 'arrow-function)
             (let ((sub-scope scope))
               (setq arrow-function-count (1+ arrow-function-count))
