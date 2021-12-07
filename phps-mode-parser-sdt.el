@@ -8,6 +8,33 @@
 
 ;;; Code:
 
+;; TODO Add SDT for
+;; argument_list
+;; array_pair_list
+;; catch_list
+;; catch_name_list
+;; class_statement_list
+;; echo_expr_list
+;; expr
+;; extends_from
+;; for_exprs
+;; for_statement
+;; foreach_statement
+;; global_var_list
+;; implements_list
+;; inner_statement_list
+;; inner_statement_list
+;; interface_extends_list
+;; isset_variables
+;; lexical_vars
+;; method_body
+;; method_modifiers
+;; optional_expr
+;; statement
+;; variable_modifiers
+
+;; TODO Remove function (phps-mode-parser-sdt--get-list-of-object)
+
 
 (require 'phps-mode-parser)
 
@@ -165,7 +192,10 @@
 (puthash
  149
  (lambda(args _terminals)
-   `(ast-type return-statement optional-expr ,(phps-mode-parser-sdt--get-list-of-object (nth 1 args))))
+   `(ast-type
+     return-statement
+     optional-expr
+     ,(phps-mode-parser-sdt--get-list-of-object (nth 1 args))))
  phps-mode-parser--table-translations)
 
 ;; statement -> (T_GLOBAL global_var_list ";")

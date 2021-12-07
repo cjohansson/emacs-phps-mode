@@ -32,7 +32,6 @@
 
 
 (require 'phps-mode-macros)
-(require 'phps-mode-parser-grammar-macro)
 
 (require 'semantic)
 (require 'semantic/lex)
@@ -45,9 +44,19 @@
 ;; INITIALIZE SETTINGS
 
 
-(phps-mode-parser-grammar-macro-CG
+(defvar phps-mode-lexer--CG-data
+  (make-hash-table :test 'equal)
+  "A hash-table with all settings.")
+
+(defun phps-mode-lexer--CG (subject &optional value)
+  "Return and optionally set VALUE of SUBJECT."
+  (if value
+      (puthash subject value phps-mode-lexer--CG-data)
+    (gethash subject phps-mode-lexer--CG-data)))
+
+(phps-mode-lexer--CG
  'parser-mode t)
-(phps-mode-parser-grammar-macro-CG
+(phps-mode-lexer--CG
  'short-tags t)
 
 
@@ -377,8 +386,8 @@
 
 (defun phps-mode-lexer--reset-doc-comment ()
   "Reset doc comment."
-  (when (phps-mode-parser-grammar-macro-CG 'doc_comment)
-    (phps-mode-parser-grammar-macro-CG 'doc_comment nil)))
+  (when (phps-mode-lexer--CG 'doc_comment)
+    (phps-mode-lexer--CG 'doc_comment nil)))
 
 (defun phps-mode-lexer--return-token-with-indent (&optional token start end)
   "Return TOKEN with START and END."
@@ -1212,8 +1221,8 @@
        (and SHEBANG (looking-at (concat "#!.*" phps-mode-lexer--newline)))
        (let ((lineno
               (1+
-               (phps-mode-parser-grammar-macro-CG 'zend_lineno))))
-         (phps-mode-parser-grammar-macro-CG 'zend-lineno lineno))
+               (phps-mode-lexer--CG 'zend_lineno))))
+         (phps-mode-lexer--CG 'zend-lineno lineno))
        (phps-mode-lexer--begin 'ST_INITIAL)
        (phps-mode-lexer--restart))
 
@@ -1254,7 +1263,7 @@
            (phps-mode-lexer--begin 'ST_IN_SCRIPTING)
            (phps-mode-lexer--return-or-skip-token 'T_OPEN_TAG))
 
-          ((phps-mode-parser-grammar-macro-CG 'short-tags)
+          ((phps-mode-lexer--CG 'short-tags)
            (phps-mode-lexer--yyless 2)
            (setq end (- end 2))
            (phps-mode-lexer--begin 'ST_IN_SCRIPTING)
@@ -1268,7 +1277,7 @@
 
       (phps-mode-lexer--match-macro
        (and ST_INITIAL (looking-at "<\\?"))
-       (if (phps-mode-parser-grammar-macro-CG 'short-tags)
+       (if (phps-mode-lexer--CG 'short-tags)
            (progn
              (phps-mode-lexer--begin 'ST_IN_SCRIPTING)
              (phps-mode-lexer--return-or-skip-token 'T_OPEN_TAG))
@@ -1451,7 +1460,7 @@
                      (phps-mode-lexer--return-token
                       'T_DOC_COMMENT
                       start)
-                     (phps-mode-parser-grammar-macro-CG 'doc_comment t))
+                     (phps-mode-lexer--CG 'doc_comment t))
                  (phps-mode-lexer--return-token
                   'T_COMMENT start))
              (progn
@@ -1624,7 +1633,7 @@
           phps-mode-lexer--heredoc-label-stack)
          ;; (message "Found heredoc or nowdoc at %s with label %s" data phps-mode-lexer--heredoc-label)
 
-         (phps-mode-parser-grammar-macro-CG
+         (phps-mode-lexer--CG
           'doc_comment
           t)
          (phps-mode-lexer--return-token
