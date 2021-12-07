@@ -35,8 +35,12 @@
 (require 'phps-mode-lexer)
 (require 'phps-mode-macros)
 (require 'phps-mode-parser)
+(require 'phps-mode-parser-sdt)
 (require 'phps-mode-serial)
 (require 'phps-mode-syntax-color)
+(require 'phps-mode-ast)
+(require 'phps-mode-ast-bookkeeping)
+(require 'phps-mode-ast-imenu)
 
 (require 'semantic)
 (require 'semantic/lex)
@@ -64,11 +68,11 @@
 (defvar-local phps-mode-lex-analyzer--idle-timer nil
   "Timer object of idle timer.")
 
+(defvar-local phps-mode-lex-analyzer--ast nil
+  "The AST for current buffer, nil if none.")
+
 (defvar-local phps-mode-lex-analyzer--imenu nil
   "The Imenu alist for current buffer, nil if none.")
-
-(defvar-local phps-mode-lex-analyzer--lines-indent nil
-  "The indentation of each line in buffer, nil if none.")
 
 (defvar-local phps-mode-lex-analyzer--bookkeeping nil
   "Bookkeeping of all variables in tokens.")
@@ -112,7 +116,6 @@
   (setq phps-mode-lex-analyzer--heredoc-label-stack nil)
   (setq phps-mode-lex-analyzer--idle-timer nil)
   (setq phps-mode-lex-analyzer--imenu nil)
-  (setq phps-mode-lex-analyzer--lines-indent nil)
   (setq phps-mode-lex-analyzer--processed-buffer-p nil)
   (setq phps-mode-lex-analyzer--state nil)
   (setq phps-mode-lex-analyzer--state-stack nil)
@@ -236,77 +239,64 @@
      buffer-name
 
      (lambda()
-       (let ((lex-result
-               (phps-mode-lex-analyzer--lex-string
-                buffer-contents)))
-         (when (fboundp 'thread-yield)
-           (thread-yield))
-         (let ((processed-result
-                (phps-mode-lex-analyzer--process-tokens-in-string
-                 (nth 0 lex-result)
-                 buffer-contents)))
-           (list
-            lex-result
-            processed-result))))
+       (phps-mode-lex-analyzer--lex-string buffer-contents))
 
-     (lambda(result)
+     (lambda(lex-result)
        (when (get-buffer buffer-name)
          (with-current-buffer buffer-name
-           (let ((lex-result (nth 0 result))
-                 (processed-result (nth 1 result)))
 
-             ;; Move variables into this buffers local variables
-             (setq phps-mode-lex-analyzer--tokens (nth 0 lex-result))
-             (setq phps-mode-lex-analyzer--states (nth 1 lex-result))
-             (setq phps-mode-lex-analyzer--state (nth 2 lex-result))
-             (setq phps-mode-lex-analyzer--state-stack (nth 3 lex-result))
-             (setq phps-mode-lex-analyzer--heredoc-label (nth 4 lex-result))
-             (setq phps-mode-lex-analyzer--heredoc-label-stack (nth 5 lex-result))
-             (setq phps-mode-lex-analyzer--nest-location-stack (nth 6 lex-result))
-             (setq phps-mode-lex-analyzer--parse-trail (nth 7 lex-result))
-             (setq phps-mode-lex-analyzer--parse-error (nth 8 lex-result))
+           ;; Move variables into this buffers local variables
+           (setq phps-mode-lex-analyzer--tokens (nth 0 lex-result))
+           (setq phps-mode-lex-analyzer--states (nth 1 lex-result))
+           (setq phps-mode-lex-analyzer--state (nth 2 lex-result))
+           (setq phps-mode-lex-analyzer--state-stack (nth 3 lex-result))
+           (setq phps-mode-lex-analyzer--heredoc-label (nth 4 lex-result))
+           (setq phps-mode-lex-analyzer--heredoc-label-stack (nth 5 lex-result))
+           (setq phps-mode-lex-analyzer--nest-location-stack (nth 6 lex-result))
+           (setq phps-mode-lex-analyzer--parse-trail (nth 7 lex-result))
+           (setq phps-mode-lex-analyzer--parse-error (nth 8 lex-result))
 
-             ;; Save processed result
-             (setq phps-mode-lex-analyzer--processed-buffer-p t)
-             (setq phps-mode-lex-analyzer--imenu (nth 0 processed-result))
-             (setq phps-mode-lex-analyzer--lines-indent (nth 1 processed-result))
-             (setq phps-mode-lex-analyzer--bookkeeping (nth 2 processed-result))
-             (phps-mode-lex-analyzer--reset-imenu)
-             (when (fboundp 'thread-yield)
-               (thread-yield))
+           ;; Save processed result
+           (setq phps-mode-lex-analyzer--processed-buffer-p t)
+           (setq phps-mode-lex-analyzer--ast (nth 9 lex-result))
+           (setq phps-mode-lex-analyzer--imenu (nth 10 lex-result))
+           (setq phps-mode-lex-analyzer--bookkeeping (nth 11 lex-result))
+           (phps-mode-lex-analyzer--reset-imenu)
+           (when (fboundp 'thread-yield)
+             (thread-yield))
 
-             ;; Apply syntax color on tokens
-             (dolist (token phps-mode-lex-analyzer--tokens)
-               (let ((start (car (cdr token)))
-                     (end (cdr (cdr token))))
-                 (let ((token-syntax-color (phps-mode-lex-analyzer--get-token-syntax-color token)))
-                   (if token-syntax-color
-                       (phps-mode-lex-analyzer--set-region-syntax-color start end (list 'font-lock-face token-syntax-color))
-                     (phps-mode-lex-analyzer--clear-region-syntax-color start end)))))
+           ;; Apply syntax color on tokens
+           (dolist (token phps-mode-lex-analyzer--tokens)
+             (let ((start (car (cdr token)))
+                   (end (cdr (cdr token))))
+               (let ((token-syntax-color (phps-mode-lex-analyzer--get-token-syntax-color token)))
+                 (if token-syntax-color
+                     (phps-mode-lex-analyzer--set-region-syntax-color start end (list 'font-lock-face token-syntax-color))
+                   (phps-mode-lex-analyzer--clear-region-syntax-color start end)))))
 
 
-             ;; Signal parser error (if any)
-             (when phps-mode-lex-analyzer--parse-error
+           ;; Signal parser error (if any)
+           (when phps-mode-lex-analyzer--parse-error
 
-               ;; Paint error
-               (phps-mode-lex-analyzer--set-region-syntax-color
-                (nth 4 phps-mode-lex-analyzer--parse-error)
-                (point-max)
-                (list 'font-lock-face 'font-lock-warning-face))
+             ;; Paint error
+             (phps-mode-lex-analyzer--set-region-syntax-color
+              (nth 4 phps-mode-lex-analyzer--parse-error)
+              (point-max)
+              (list 'font-lock-face 'font-lock-warning-face))
 
-               ;; Display error
-               (display-warning
-                'phps-mode
-                (nth 1 phps-mode-lex-analyzer--parse-error)
-                :warning
-                "*PHPs Parser Errors*")
+             ;; Display error
+             (display-warning
+              'phps-mode
+              (nth 1 phps-mode-lex-analyzer--parse-error)
+              :warning
+              "*PHPs Parser Errors*")
 
-               ;; Signal that causes updated mode-line status
-               (signal
-                'phps-parser-error
-                (list
-                 (nth 1 phps-mode-lex-analyzer--parse-error)
-                 (nth 4 phps-mode-lex-analyzer--parse-error))))))))
+             ;; Signal that causes updated mode-line status
+             (signal
+              'phps-parser-error
+              (list
+               (nth 1 phps-mode-lex-analyzer--parse-error)
+               (nth 4 phps-mode-lex-analyzer--parse-error)))))))
 
      (lambda(result)
        (when (get-buffer buffer-name)
@@ -366,92 +356,80 @@
      buffer-name
 
      (lambda()
-       (let ((lex-result
-              (phps-mode-lex-analyzer--lex-string
-               buffer-contents
-               incremental-start-new-buffer
-               point-max
-               head-states
-               incremental-state
-               incremental-state-stack
-               incremental-heredoc-label
-               incremental-heredoc-label-stack
-               incremental-nest-location-stack
-               head-tokens)))
-         (when (fboundp 'thread-yield)
-           (thread-yield))
-         (let ((processed-result
-                (phps-mode-lex-analyzer--process-tokens-in-string
-                 (nth 0 lex-result)
-                 buffer-contents)))
-           (list
-            lex-result
-            processed-result))))
+       (phps-mode-lex-analyzer--lex-string
+        buffer-contents
+        incremental-start-new-buffer
+        point-max
+        head-states
+        incremental-state
+        incremental-state-stack
+        incremental-heredoc-label
+        incremental-heredoc-label-stack
+        incremental-nest-location-stack
+        head-tokens))
 
-     (lambda(result)
+     (lambda(lex-result)
        (when (get-buffer buffer-name)
          (with-current-buffer buffer-name
-           (let ((lex-result (nth 0 result))
-                 (processed-result (nth 1 result)))
 
-             (phps-mode-debug-message
-              (message "Incrementally-lexed-string: %s" result))
+           (phps-mode-debug-message
+            (message "Incrementally-lexed-string: %s" result))
 
-             (setq phps-mode-lex-analyzer--tokens (nth 0 lex-result))
-             (setq phps-mode-lex-analyzer--states (nth 1 lex-result))
-             (setq phps-mode-lex-analyzer--state (nth 2 lex-result))
-             (setq phps-mode-lex-analyzer--state-stack (nth 3 lex-result))
-             (setq phps-mode-lex-analyzer--heredoc-label (nth 4 lex-result))
-             (setq phps-mode-lex-analyzer--heredoc-label-stack (nth 5 lex-result))
-             (setq phps-mode-lex-analyzer--nest-location-stack (nth 6 lex-result))
-             (setq phps-mode-lex-analyzer--parse-trail (nth 7 lex-result))
-             (setq phps-mode-lex-analyzer--parse-error (nth 8 lex-result))
+           (setq phps-mode-lex-analyzer--tokens (nth 0 lex-result))
+           (setq phps-mode-lex-analyzer--states (nth 1 lex-result))
+           (setq phps-mode-lex-analyzer--state (nth 2 lex-result))
+           (setq phps-mode-lex-analyzer--state-stack (nth 3 lex-result))
+           (setq phps-mode-lex-analyzer--heredoc-label (nth 4 lex-result))
+           (setq phps-mode-lex-analyzer--heredoc-label-stack (nth 5 lex-result))
+           (setq phps-mode-lex-analyzer--nest-location-stack (nth 6 lex-result))
+           (setq phps-mode-lex-analyzer--parse-trail (nth 7 lex-result))
+           (setq phps-mode-lex-analyzer--parse-error (nth 8 lex-result))
 
-             (phps-mode-debug-message
-              (message "Incremental tokens: %s" phps-mode-lex-analyzer--tokens))
+           (phps-mode-debug-message
+            (message "Incremental tokens: %s" phps-mode-lex-analyzer--tokens))
 
-             ;; Save processed result
-             (setq phps-mode-lex-analyzer--processed-buffer-p t)
-             (setq phps-mode-lex-analyzer--imenu (nth 0 processed-result))
-             (setq phps-mode-lex-analyzer--lines-indent (nth 1 processed-result))
-             (setq phps-mode-lex-analyzer--bookkeeping (nth 2 processed-result))
-             (phps-mode-lex-analyzer--reset-imenu)
-             (when (fboundp 'thread-yield)
-               (thread-yield))
+           ;; Save processed result
+           (setq phps-mode-lex-analyzer--processed-buffer-p t)
+           (setq phps-mode-lex-analyzer--ast (nth 9 lex-result))
+           (setq phps-mode-lex-analyzer--imenu (nth 10 lex-result))
+           (setq phps-mode-lex-analyzer--bookkeeping (nth 10 lex-result))
+           (phps-mode-lex-analyzer--reset-imenu)
+           (when (fboundp 'thread-yield)
+             (thread-yield))
 
-             ;; Apply syntax color on tokens
-             (dolist (token phps-mode-lex-analyzer--tokens)
-               (let ((start (car (cdr token)))
-                     (end (cdr (cdr token))))
+           ;; Apply syntax color on tokens
+           (dolist (token phps-mode-lex-analyzer--tokens)
+             (let ((start (car (cdr token)))
+                   (end (cdr (cdr token))))
 
-                 ;; Apply syntax color on token
-                 (let ((token-syntax-color (phps-mode-lex-analyzer--get-token-syntax-color token)))
-                   (if token-syntax-color
-                       (phps-mode-lex-analyzer--set-region-syntax-color start end (list 'font-lock-face token-syntax-color))
-                     (phps-mode-lex-analyzer--clear-region-syntax-color start end)))))
+               ;; Apply syntax color on token
+               (let ((token-syntax-color (phps-mode-lex-analyzer--get-token-syntax-color token)))
+                 (if token-syntax-color
+                     (phps-mode-lex-analyzer--set-region-syntax-color start end (list 'font-lock-face token-syntax-color))
+                   (phps-mode-lex-analyzer--clear-region-syntax-color start end)))))
 
-             ;; Signal parser error (if any)
-             (when phps-mode-lex-analyzer--parse-error
+           ;; Signal parser error (if any)
+           (when phps-mode-lex-analyzer--parse-error
 
-               ;; Paint error
-               (phps-mode-lex-analyzer--set-region-syntax-color
-                (nth 4 phps-mode-lex-analyzer--parse-error)
-                (point-max)
-                (list 'font-lock-face 'font-lock-warning-face))
+             ;; Paint error
+             (phps-mode-lex-analyzer--set-region-syntax-color
+              (nth 4 phps-mode-lex-analyzer--parse-error)
+              (point-max)
+              (list 'font-lock-face 'font-lock-warning-face))
 
-               ;; Display error
-               (display-warning
-                'phps-mode
-                (nth 1 phps-mode-lex-analyzer--parse-error)
-                :warning
-                "*PHPs Parser Errors*")
+             ;; Display error
+             (display-warning
+              'phps-mode
+              (nth 1 phps-mode-lex-analyzer--parse-error)
+              :warning
+              "*PHPs Parser Errors*")
 
-               ;; Signal that causes updated mode-line status
-               (signal
-                'phps-parser-error
-                (list
-                 (nth 1 phps-mode-lex-analyzer--parse-error)
-                 (nth 4 phps-mode-lex-analyzer--parse-error))))))))
+             ;; Signal that causes updated mode-line status
+             (signal
+              'phps-parser-error
+              (list
+               (nth 1 phps-mode-lex-analyzer--parse-error)
+               (nth 4 phps-mode-lex-analyzer--parse-error)))))))
 
      (lambda(result)
        (when (get-buffer buffer-name)
@@ -756,39 +734,6 @@
 
         log))))
 
-(defun phps-mode-lex-analyzer--process-current-buffer (&optional force)
-  "Process current buffer, generate indentations and Imenu, trigger incremental lexer if we have change.  FORCE processes without change."
-  (interactive)
-  (phps-mode-debug-message (message "Process current buffer"))
-  (when phps-mode-lex-analyzer--idle-timer
-    (phps-mode-debug-message
-     (message "Flag buffer as not processed since changes are detected"))
-    (setq phps-mode-lex-analyzer--processed-buffer-p nil))
-  (if (or
-       force
-       (and
-        (not phps-mode-lex-analyzer--processed-buffer-p)
-        (not phps-mode-lex-analyzer--idle-timer)))
-      (progn
-        (phps-mode-debug-message (message "Buffer is not processed"))
-        (let ((processed
-               (phps-mode-lex-analyzer--process-tokens-in-string
-                phps-mode-lex-analyzer--tokens
-                (buffer-substring-no-properties
-                 (point-min)
-                 (point-max)))))
-          (phps-mode-debug-message (message "Processed result: %s" processed))
-          (setq phps-mode-lex-analyzer--imenu (nth 0 processed))
-          (setq phps-mode-lex-analyzer--lines-indent (nth 1 processed))
-          (setq phps-mode-lex-analyzer--bookkeeping (nth 2 processed)))
-        (phps-mode-lex-analyzer--reset-imenu)
-        (setq phps-mode-lex-analyzer--processed-buffer-p t))
-    (phps-mode-debug-message
-     (when phps-mode-lex-analyzer--processed-buffer-p
-       (message "Buffer is already processed"))
-     (when phps-mode-lex-analyzer--idle-timer
-       (message "Not processing buffer since there are non-lexed changes")))))
-
 (defun phps-mode-lex-analyzer--get-moved-lines-indent (old-lines-indents start-line-number diff)
   "Move OLD-LINES-INDENTS from START-LINE-NUMBER with DIFF points."
   (let ((lines-indents (make-hash-table :test 'equal))
@@ -824,30 +769,12 @@
           (phps-mode-lex-analyzer--get-moved-imenu phps-mode-lex-analyzer--imenu start diff))
     (phps-mode-lex-analyzer--reset-imenu)))
 
-(defun phps-mode-lex-analyzer--move-lines-indent (start-line-number diff)
-  "Move lines indent from START-LINE-NUMBER with DIFF points."
-  (when phps-mode-lex-analyzer--lines-indent
-    ;; (message "Moving line-indent index from %s with %s" start-line-number diff)
-    (setq
-     phps-mode-lex-analyzer--lines-indent
-     (phps-mode-lex-analyzer--get-moved-lines-indent
-      phps-mode-lex-analyzer--lines-indent
-      start-line-number
-      diff))))
-
-(defun phps-mode-lex-analyzer--get-lines-indent ()
-  "Return lines indent, process buffer if not done already."
-  (phps-mode-lex-analyzer--process-current-buffer)
-  phps-mode-lex-analyzer--lines-indent)
-
 (defun phps-mode-lex-analyzer--get-bookkeeping ()
   "Return bookkeeping, process buffer if not done already."
-  (phps-mode-lex-analyzer--process-current-buffer)
   phps-mode-lex-analyzer--bookkeeping)
 
 (defun phps-mode-lex-analyzer--get-imenu ()
   "Return Imenu, process buffer if not done already."
-  (phps-mode-lex-analyzer--process-current-buffer)
   phps-mode-lex-analyzer--imenu)
 
 (defun phps-mode-lex-analyzer--get-moved-imenu (old-index start diff)
@@ -2579,55 +2506,7 @@ SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
 
 (defun phps-mode-lex-analyzer--indent-line ()
   "Indent line."
-  (phps-mode-debug-message (message "Indent line"))
-  (phps-mode-lex-analyzer--process-current-buffer)
-  (if phps-mode-lex-analyzer--processed-buffer-p
-      (if phps-mode-lex-analyzer--lines-indent
-          (let ((line-number (line-number-at-pos (point))))
-            (phps-mode-debug-message (message "Found lines indent index, indenting.."))
-            (let ((indent (gethash line-number phps-mode-lex-analyzer--lines-indent)))
-              (if indent
-                  (progn
-                    (let ((indent-sum (+ (* (car indent) tab-width) (car (cdr indent))))
-                          (old-indentation (current-indentation))
-                          (line-start (line-beginning-position)))
-
-                      (unless old-indentation
-                        (setq old-indentation 0))
-
-                      ;; Only continue if current indentation is wrong
-                      (if (not (equal indent-sum old-indentation))
-                          (progn
-
-                            (setq phps-mode-lex-analyzer--allow-after-change-p nil)
-                            (indent-line-to indent-sum)
-                            (setq phps-mode-lex-analyzer--allow-after-change-p t)
-
-                            (let ((indent-diff (- (current-indentation) old-indentation)))
-
-
-                              ;; When indent is changed the trailing tokens and states just
-                              ;; need to adjust their positions, this will improve speed of indent-region a lot
-                              (phps-mode-lex-analyzer--move-tokens line-start indent-diff)
-                              (phps-mode-lex-analyzer--move-states line-start indent-diff)
-                              (phps-mode-lex-analyzer--move-imenu-index line-start indent-diff)
-
-                              (phps-mode-debug-message
-                               (message "Lexer tokens after move: %s" phps-mode-lex-analyzer--tokens)
-                               (message "Lexer states after move: %s" phps-mode-lex-analyzer--states))
-
-                              ;; Reset change flag
-                              (phps-mode-lex-analyzer--reset-changes)
-                              (phps-mode-lex-analyzer--cancel-idle-timer))))))
-                (phps-mode-lex-analyzer--alternative-indentation (point))
-                (phps-mode-debug-message
-                 (message "Did not find indent for line, using alternative indentation..")))))
-        (phps-mode-lex-analyzer--alternative-indentation (point))
-        (phps-mode-debug-message
-         (message "Did not find lines indent index, using alternative indentation..")))
-    (phps-mode-lex-analyzer--alternative-indentation (point))
-    (phps-mode-debug-message
-     (message "Using alternative indentation since buffer is not processed yet"))))
+  (phps-mode-lex-analyzer--alternative-indentation (point)))
 
 (defun phps-mode-lex-analyzer--alternative-indentation (&optional point)
   "Apply alternative indentation at POINT here."
@@ -2867,7 +2746,6 @@ SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
 
 (defun phps-mode-lex-analyzer--imenu-create-index ()
   "Get Imenu for current buffer."
-  (phps-mode-lex-analyzer--process-current-buffer)
   phps-mode-lex-analyzer--imenu)
 
 (defun phps-mode-lex-analyzer--comment-region (beg end &optional _arg)
@@ -3103,9 +2981,8 @@ SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
   ;; Create a separate buffer, run lexer inside of it, catch errors and return them
   ;; to enable nice presentation
   (require 'phps-mode-macros)
-  (let ((buffer (generate-new-buffer "*PHPs Lexer*"))
-        (parse-trail)
-        (parse-error))
+  (let* ((buffer (generate-new-buffer "*PHPs Lexer*"))
+         (parse-error))
 
     ;; Create temporary buffer and run lexer in it
     (when (get-buffer buffer)
@@ -3144,8 +3021,12 @@ SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
 
         ;; Setup lexer settings
         (when (boundp 'phps-mode-syntax-table)
-          (setq semantic-lex-syntax-table phps-mode-syntax-table))
-        (setq semantic-lex-analyzer #'phps-mode-lex-analyzer--re2c-lex)
+          (setq
+           semantic-lex-syntax-table
+           phps-mode-syntax-table))
+        (setq
+         semantic-lex-analyzer
+         #'phps-mode-lex-analyzer--re2c-lex)
 
         ;; Catch errors to kill generated buffer
         (let ((got-error t))
@@ -3177,9 +3058,9 @@ SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
         ;; Error-free parse here
         (condition-case conditions
             (progn
-              (setq
-               parse-trail
-               (phps-mode-parser-parse)))
+              (phps-mode-ast--generate)
+              (phps-mode-ast-bookkeeping--generate)
+              (phps-mode-ast-imenu--generate))
           (error
            (setq
             parse-error
@@ -3193,8 +3074,11 @@ SQUARE-BRACKET-LEVEL and ROUND-BRACKET-LEVEL."
      heredoc-label
      heredoc-label-stack
      nest-location-stack
-     parse-trail
-     parse-error)))
+     phps-mode-ast--parse-trail
+     parse-error
+     phps-mode-ast--tree
+     phps-mode-ast-imenu--index
+     phps-mode-ast-bookkeeping--index)))
 
 (provide 'phps-mode-lex-analyzer)
 

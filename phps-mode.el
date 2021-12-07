@@ -123,7 +123,6 @@
           (phps-mode-add-trailing-newline))
 
         (phps-mode-lex-analyzer--process-changes nil t)
-        (phps-mode-lex-analyzer--process-current-buffer t)
         (indent-region (point-min) (point-max)))
     (let ((old-buffer-contents
            (buffer-substring-no-properties (point-min) (point-max)))

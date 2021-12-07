@@ -14,6 +14,10 @@
 
 ;;; Variables:
 
+(defvar-local
+  phps-mode-ast--parse-trail
+  nil
+  "Parse trail for current buffer.")
 
 (defvar-local
   phps-mode-ast--tree
@@ -26,10 +30,15 @@
 
 (defun phps-mode-ast--generate ()
   "Generate AST for current buffer."
-  (let ((translation (phps-mode-parser-translate))
-        (namespace)
-        (namespace-children)
-        (ast))
+  (let* ((result (phps-mode-parser--parse t))
+         (parse-trail (nth 0 result))
+         (translation (nth 1 result))
+         (namespace)
+         (namespace-children)
+         (ast))
+    (setq
+     phps-mode-ast--parse-trail
+     parse-trail)
 
     ;; (message "\nTranslation:\n%S\n\n" translation)
 
