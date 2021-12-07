@@ -721,9 +721,6 @@
    "Curly bracket test")
 
   (phps-mode-test-lex-analyzer--indent-should-equal
-   "<html><head><title><?php if ($myCondition) {\nif ($mySeconCondition) {\n    echo $title1;\n} ?></title><body>Bla bla</body></html>")
-
-  (phps-mode-test-lex-analyzer--indent-should-equal
    "<html><head><title><?php if ($myCondition) {\nif ($mySeconCondition) {\necho $title2;\n\n} ?></title><body>Bla bla</body></html>"
    "Curly bracket test 3")
 
