@@ -10,6 +10,23 @@
 ;;; Code:
 
 
+(defun phps-mode-indent--string-indentation (string)
+  "Count indentation of STRING."
+  (let ((occurences 0)
+        (start 0)
+        (length (length string)))
+    (when (< start length)
+      (let ((match-start (string-match "[\t ]" string start)))
+        (while (and
+                match-start
+                (= match-start start))
+          (setq occurences (1+ occurences))
+          (setq start (match-end 0))
+          (if (< start length)
+              (setq match-start (string-match "[\t ]" string start))
+            (setq match-start nil)))))
+    occurences))
+
 (defun phps-mode-indent-line (&optional initial-point)
   "Apply alternative indentation at INITIAL-POINT here."
   (let ((point))
@@ -56,11 +73,9 @@
             (setq
              move-length (1+ move-length)))
 
-          (message "Previous non-empty line: %S" line-string)
-
           (if line-is-empty-p
               (indent-line-to 0)
-            (let* ((old-indentation (current-indentation))
+            (let* ((old-indentation (phps-mode-indent--string-indentation line-string))
                    (current-line-starts-with-closing-bracket (phps-mode-indent--string-starts-with-closing-bracket-p current-line-string))
                    (line-starts-with-closing-bracket (phps-mode-indent--string-starts-with-closing-bracket-p line-string))
                    (line-starts-with-opening-doc-comment (phps-mode-indent--string-starts-with-opening-doc-comment-p line-string))
@@ -69,6 +84,8 @@
                    (line-ends-with-terminus (phps-mode-indent--string-ends-with-terminus-p line-string))
                    (bracket-level (phps-mode-indent--get-string-brackets-count line-string))
                    (line-ends-with-implements-p (string-match-p "[\t ]+implements$" line-string)))
+              (message "Previous non-empty line: %S with indentation: %S" line-string old-indentation)
+
               (setq new-indentation old-indentation)
               (goto-char point)
 
@@ -148,6 +165,7 @@
               ;; Decrease indentation if current line decreases in bracket level
               (when (< new-indentation 0)
                 (setq new-indentation 0))
+              (message "new-indentation: %S bracket-level: %S old-indentation: %S" new-indentation bracket-level old-indentation)
 
               (indent-line-to new-indentation)))))
       ;; Only move to end of line if point is the current point and is at end of line
