@@ -29,6 +29,7 @@
   (phps-mode-test--with-buffer
    string
    name
+   (message "Initial buffer:\n%S" string)
    (phps-mode-test-indent--indent-whole-buffer)
    (let ((buffer-contents (buffer-substring-no-properties (point-min) (point-max))))
      (message "Indented buffer:\n%S" buffer-contents)
