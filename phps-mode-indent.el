@@ -12,20 +12,9 @@
 
 (defun phps-mode-indent--string-indentation (string)
   "Count indentation of STRING."
-  (let ((occurences 0)
-        (start 0)
-        (length (length string)))
-    (when (< start length)
-      (let ((match-start (string-match "[\t ]" string start)))
-        (while (and
-                match-start
-                (= match-start start))
-          (setq occurences (1+ occurences))
-          (setq start (match-end 0))
-          (if (< start length)
-              (setq match-start (string-match "[\t ]" string start))
-            (setq match-start nil)))))
-    occurences))
+  (if (string-match "\\(^[\t ]+\\)" string)
+      (length (substring string (match-beginning 0) (match-end 0)))
+    0))
 
 (defun phps-mode-indent-line (&optional initial-point)
   "Apply alternative indentation at INITIAL-POINT here."
