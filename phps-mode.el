@@ -48,6 +48,7 @@
 ;;; Code:
 
 (require 'phps-mode-flymake)
+(require 'phps-mode-indent)
 (require 'phps-mode-lex-analyzer)
 (require 'phps-mode-syntax-table)
 
@@ -174,7 +175,7 @@
 
   ;; Indentation
   ;; Indent-region will call this on each line of selected region
-  (setq-local indent-line-function #'phps-mode-lex-analyzer--indent-line)
+  (setq-local indent-line-function #'phps-mode-indent-line)
 
   ;; Custom Imenu
   (setq-local imenu-create-index-function #'phps-mode-lex-analyzer--imenu-create-index)
