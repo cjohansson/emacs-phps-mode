@@ -368,6 +368,10 @@
    "<?php\nwhile (true)\n    echo 'Something';"
    "Inline control structures while")
 
+  (phps-mode-test-indent--should-equal
+   "<?php\nwhile (true)\n    echo 'Something';\necho 'Afterwards';"
+   "Inline control structures while")
+
   )
 
 (defun phps-mode-test-indent--get-lines-indent-alternative-control-structures ()

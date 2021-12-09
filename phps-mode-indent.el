@@ -258,9 +258,17 @@
 
               ;; else
               ;;     echo 'Something';
-              (when (phps-mode-indent--string-starts-with-regexp
-                     previous-line-string
-                     "else[\t ]*$")
+              ;; or
+              ;; else if (true)
+              ;;     echo 'Something';
+              (when (and
+                     (phps-mode-indent--string-starts-with-regexp
+                      previous-line-string
+                      "[\t ]*else")
+                     (not
+                      (phps-mode-indent--string-ends-with-regexp
+                       previous-line-string
+                       "{[\t ]*")))
                 (setq new-indentation (+ new-indentation tab-width)))
 
               (when (and
@@ -283,12 +291,21 @@
                 ;; if (true)
                 ;;     echo 'Something';
                 ;; echo 'Something else';
-                ;; TODO
-                (when (or
-                       (phps-mode-indent--string-starts-with-regexp
-                        previous2-line-string "[\t ]*else")
-                       (phps-mode-indent--string-starts-with-regexp
-                        previous2-line-string "[\t ]*if[\t ]*("))
+                ;; or
+                ;; when (true)
+                ;;     echo 'Something';
+                ;; echo 'Afterwards';
+                (when (and
+                       (not
+                        (phps-mode-indent--string-ends-with-regexp
+                         previous2-line-string "{[\t ]*"))
+                       (or
+                        (phps-mode-indent--string-starts-with-regexp
+                         previous2-line-string "[\t ]*else")
+                        (phps-mode-indent--string-starts-with-regexp
+                         previous2-line-string "[\t ]*if[\t ]*(")
+                        (phps-mode-indent--string-starts-with-regexp
+                         previous2-line-string "[\t ]*while[\t ]*(")))
                   (setq new-indentation (- new-indentation tab-width)))
 
                 )
