@@ -83,17 +83,46 @@
                    (line-starts-with-closing-bracket (phps-mode-indent--string-starts-with-closing-bracket-p line-string))
                    (line-starts-with-opening-doc-comment (phps-mode-indent--string-starts-with-opening-doc-comment-p line-string))
                    (line-ends-with-assignment (phps-mode-indent--string-ends-with-assignment-p line-string))
-                   (line-ends-with-opening-bracket (phps-mode-indent--string-ends-with-opening-bracket-p line-string))
+                   (line-ends-with-opening-bracket (phps-mode-indent--string-ends-with-opening-bracket line-string))
                    (line-ends-with-terminus (phps-mode-indent--string-ends-with-terminus-p line-string))
-                   (bracket-level (phps-mode-indent--get-string-brackets-count line-string))
-                   (line-ends-with-implements-p (string-match-p "[\t ]+implements$" line-string)))
+                   (bracket-level (phps-mode-indent--get-string-brackets-count line-string)))
               (message "Previous non-empty line: %S with indentation: %S" line-string old-indentation)
 
               (setq new-indentation old-indentation)
               (goto-char point)
 
-              (when line-ends-with-implements-p
+              ;; class MyClass implements
+              ;;     myInterface
+              ;; or
+              ;; class MyClass extends
+              ;;     myParent
+              (when (string-match-p "[\t ]+\\(extends\\|implements\\)$" line-string)
                 (setq bracket-level (+ tab-width)))
+
+              ;; class MyClass
+              ;;     implements myInterface
+              ;; or
+              ;; class MyClass
+              ;;     extends myParent
+              ;; or
+              ;; class MyClass
+              ;;     extends myParent
+              ;;     implements MyInterface
+              (when
+                  (string-match "^[\t ]*\\(extends\\|implements\\)" current-line-string)
+                  ;; TODO Should backtrack to class statement and increase indentation from that
+                )
+
+              ;; class MyClass implements
+              ;;     myInterface,
+              ;;     myInterface2
+              ;; {
+              (when (and
+                     current-line-starts-with-opening-bracket
+                     (string= current-line-starts-with-opening-bracket "{")
+                     (phps-mode-indent--backwards-looking-at-p
+                      "[\t ]*implements[\n\t ]+\\([\n\t ]*[a-zA-Z_0-9]+,?\\)+[\n\t ]*{$"))
+                (setq new-indentation (- new-indentation tab-width)))
 
               (when (> bracket-level 0)
                 (if (< bracket-level tab-width)
@@ -106,13 +135,6 @@
               (when (and (= bracket-level 0)
                          line-starts-with-closing-bracket)
                 (setq new-indentation (+ new-indentation tab-width)))
-
-              (when (and
-                     current-line-starts-with-opening-bracket
-                     (string= current-line-starts-with-opening-bracket "{")
-                     (phps-mode-indent--backwards-looking-at-p
-                      "[\t ]*implements[\n\t ]+\\([\n\t ]*[a-zA-Z_0-9]+,?\\)+[\n\t ]*{$"))
-                (setq new-indentation (- new-indentation tab-width)))
 
               (when current-line-starts-with-closing-bracket
                 (setq new-indentation (- new-indentation tab-width)))
@@ -242,9 +264,12 @@
       (match-string 0 string)
     nil))
 
-(defun phps-mode-indent--string-ends-with-opening-bracket-p (string)
-  "Get bracket count for STRING."
-  (string-match-p "\\([\[{(]\\|<[a-zA-Z]+\\|[\t ]+implements\\)[\t ]*$" string))
+(defun phps-mode-indent--string-ends-with-opening-bracket (string)
+  "If STRING end with opening bracket, return it, otherwise nil."
+  (if
+      (string-match "\\([\[{(]\\)[\t ]*$" string)
+      (match-string 0 string)
+    nil))
 
 (defun phps-mode-indent--string-ends-with-assignment-p (string)
   "Get bracket count for STRING."
