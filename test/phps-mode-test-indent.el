@@ -353,6 +353,10 @@
   "Test for inline control structures."
 
   (phps-mode-test-indent--should-equal
+   "<?php\nif (true)\n    echo 'Something';\necho 'Something after';\n"
+   "Inline control structures if")
+  
+  (phps-mode-test-indent--should-equal
    "<?php\nif (true)\n    echo 'Something';\nelse\n    echo 'Something else';\necho true;\n"
    "Inline control structures if else")
 

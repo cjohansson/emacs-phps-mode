@@ -114,11 +114,10 @@
           (point-at-end-of-line (equal point (line-end-position))))
       (save-excursion
         (let ((move-length 0)
-              (line-is-empty-p t)
-              (line-beginning-position)
-              (line-end-position)
-              (line-string)
-              (current-line-string))
+              (current-line-string "")
+              (previous-line-string "")
+              (previous-line-is-empty-p)
+              (previous2-line-string ""))
 
           (when initial-point
             (goto-char point))
@@ -133,50 +132,83 @@
           ;; (message "\nCurrent line: %S" current-line-string)
 
           ;; TODO Try to find previous 2 non-empty lines
-          (while (and
-                  (= (forward-line -1) 0)
-                  line-is-empty-p)
-            (beginning-of-line)
-            (setq
-             line-beginning-position (line-beginning-position))
-            (setq
-             line-end-position (line-end-position))
-            (setq
-             line-string
-             (buffer-substring-no-properties line-beginning-position line-end-position))
-            (setq
-             line-is-empty-p (string-match-p "^[ \t\f\r\n]*$" line-string))
-            (setq
-             move-length (1+ move-length)))
+          (let ((line-is-empty-p t)
+                (searching-previous-lines 2))
+            (while (and
+                    (= (forward-line -1) 0)
+                    (> searching-previous-lines 0))
+              (beginning-of-line)
+              (let ((line-string
+                     (buffer-substring-no-properties
+                      (line-beginning-position)
+                      (line-end-position))))
+                (setq
+                 line-is-empty-p
+                 (string-match-p
+                  "^[ \t\f\r\n]*$"
+                  line-string))
+                (unless line-is-empty-p
+                  (cond
+                   ((= searching-previous-lines 2)
+                    (setq
+                     previous-line-string
+                     line-string))
+                   ((= searching-previous-lines 1)
+                    (setq
+                     previous2-line-string
+                     line-string)))
+                  (setq
+                   searching-previous-lines
+                   (1- searching-previous-lines))
+                  (when (= searching-previous-lines 1)
+                    (setq
+                     previous-line-is-empty-p
+                     line-is-empty-p)))
+                (setq
+                 move-length
+                 (1+ move-length)))))
+          ;; (message "previous-line-string: %S" previous-line-string)
+          ;; (message "previous2-line-string: %S" previous2-line-string)
 
-          (if line-is-empty-p
+          (if previous-line-is-empty-p
               (indent-line-to 0)
-            (let* ((old-indentation
-                    (phps-mode-indent--string-indentation line-string))
+            (let* ((previous-indentation
+                    (phps-mode-indent--string-indentation
+                     previous-line-string))
                    (current-line-starts-with-closing-bracket
-                    (phps-mode-indent--string-starts-with-closing-bracket current-line-string))
+                    (phps-mode-indent--string-starts-with-closing-bracket
+                     current-line-string))
                    (current-line-starts-with-opening-bracket
-                    (phps-mode-indent--string-starts-with-opening-bracket current-line-string))
+                    (phps-mode-indent--string-starts-with-opening-bracket
+                     current-line-string))
                    (current-line-ends-with-terminus
-                    (phps-mode-indent--string-ends-with-terminus current-line-string))
-                   (line-starts-with-closing-bracket
-                    (phps-mode-indent--string-starts-with-closing-bracket line-string))
-                   (line-ends-with-closing-bracket
-                    (phps-mode-indent--string-ends-with-closing-bracket line-string))
-                   (line-starts-with-opening-doc-comment
-                    (phps-mode-indent--string-starts-with-opening-doc-comment line-string))
-                   (line-ends-with-assignment
-                    (phps-mode-indent--string-ends-with-assignment line-string))
-                   (line-ends-with-opening-bracket
-                    (phps-mode-indent--string-ends-with-opening-bracket line-string))
-                   (line-ends-with-terminus
-                    (phps-mode-indent--string-ends-with-terminus line-string))
-                   (bracket-level
-                    (phps-mode-indent--get-string-brackets-count line-string)))
-              ;; (message "Previous non-empty line: %S with indentation: %S" line-string old-indentation)
-              ;; (message "line-ends-with-terminus: %S" line-ends-with-terminus)
+                    (phps-mode-indent--string-ends-with-terminus
+                     current-line-string))
+                   (previous-line-starts-with-closing-bracket
+                    (phps-mode-indent--string-starts-with-closing-bracket
+                     previous-line-string))
+                   (previous-line-ends-with-closing-bracket
+                    (phps-mode-indent--string-ends-with-closing-bracket
+                     previous-line-string))
+                   (previous-line-starts-with-opening-doc-comment
+                    (phps-mode-indent--string-starts-with-opening-doc-comment
+                     previous-line-string))
+                   (previous-line-ends-with-assignment
+                    (phps-mode-indent--string-ends-with-assignment
+                     previous-line-string))
+                   (previous-line-ends-with-opening-bracket
+                    (phps-mode-indent--string-ends-with-opening-bracket
+                     previous-line-string))
+                   (previous-line-ends-with-terminus
+                    (phps-mode-indent--string-ends-with-terminus
+                     previous-line-string))
+                   (previous-bracket-level
+                    (phps-mode-indent--get-string-brackets-count
+                     previous-line-string)))
+              ;; (message "Previous non-empty line: %S with indentation: %S" previous-line-string old-indentation)
+              ;; (message "previous-line-ends-with-terminus: %S" previous-line-ends-with-terminus)
 
-              (setq new-indentation old-indentation)
+              (setq new-indentation previous-indentation)
               (goto-char point)
 
               ;; class MyClass implements
@@ -184,8 +216,8 @@
               ;; or
               ;; class MyClass extends
               ;;     myParent
-              (when (string-match-p "[\t ]+\\(extends\\|implements\\)$" line-string)
-                (setq bracket-level (+ tab-width)))
+              (when (string-match-p "[\t ]+\\(extends\\|implements\\)$" previous-line-string)
+                (setq previous-bracket-level (+ tab-width)))
 
               ;; class MyClass
               ;;     implements myInterface
@@ -219,66 +251,79 @@
               ;;     echo 'Something';
               (when (and
                      (not current-line-starts-with-closing-bracket)
-                     line-ends-with-closing-bracket
-                     (string= line-ends-with-closing-bracket ")")
-                     (string-match-p "^[\t ]*\\(if\\|while\\)[\t ]*(" line-string))
+                     previous-line-ends-with-closing-bracket
+                     (string= previous-line-ends-with-closing-bracket ")")
+                     (string-match-p "^[\t ]*\\(if\\|while\\)[\t ]*(" previous-line-string))
                 (setq new-indentation (+ new-indentation tab-width)))
 
               ;; else
               ;;     echo 'Something';
               (when (phps-mode-indent--string-starts-with-regexp
-                     line-string
+                     previous-line-string
                      "else[\t ]*$")
                 (setq new-indentation (+ new-indentation tab-width)))
 
-              ;; if (true)
-              ;;     echo 'Something';
-              ;; else
               (when (and
-                     line-ends-with-terminus
-                     (string= line-ends-with-terminus ";"))
+                     previous-line-ends-with-terminus
+                     (string= previous-line-ends-with-terminus ";"))
+
+                ;; if (true)
+                ;;     echo 'Something';
+                ;; else
                 (when (phps-mode-indent--string-starts-with-regexp
                        current-line-string "[\t ]*else")
-                  (setq new-indentation (- new-indentation tab-width))))
+                  (setq new-indentation (- new-indentation tab-width)))
 
-              ;; if (true)
-              ;;     echo 'Something';
-              ;; else
-              ;;     echo 'Something else';
-              ;; echo true;
-              ;; TODO
+                ;; if (true)
+                ;;     echo 'Something';
+                ;; else
+                ;;     echo 'Something else';
+                ;; echo true;
+                ;; or
+                ;; if (true)
+                ;;     echo 'Something';
+                ;; echo 'Something else';
+                ;; TODO
+                (when (or
+                       (phps-mode-indent--string-starts-with-regexp
+                        previous2-line-string "[\t ]*else")
+                       (phps-mode-indent--string-starts-with-regexp
+                        previous2-line-string "[\t ]*if[\t ]*("))
+                  (setq new-indentation (- new-indentation tab-width)))
 
-              (when (> bracket-level 0)
-                (if (< bracket-level tab-width)
+                )
+
+              (when (> previous-bracket-level 0)
+                (if (< previous-bracket-level tab-width)
                     (setq new-indentation (+ new-indentation 1))
                   (setq new-indentation (+ new-indentation tab-width))))
 
-              (when (= bracket-level -1)
+              (when (= previous-bracket-level -1)
                 (setq new-indentation (1- new-indentation)))
 
-              (when (and (= bracket-level 0)
-                         line-starts-with-closing-bracket)
+              (when (and (= previous-bracket-level 0)
+                         previous-line-starts-with-closing-bracket)
                 (setq new-indentation (+ new-indentation tab-width)))
 
               (when current-line-starts-with-closing-bracket
                 (setq new-indentation (- new-indentation tab-width)))
 
-              (when line-starts-with-opening-doc-comment
+              (when previous-line-starts-with-opening-doc-comment
                 (setq new-indentation (+ new-indentation 1)))
 
               (when (and
-                     line-ends-with-assignment
-                     (<= bracket-level 0))
+                     previous-line-ends-with-assignment
+                     (<= previous-bracket-level 0))
                 (setq new-indentation (+ new-indentation tab-width)))
 
               (when (and
-                     line-ends-with-opening-bracket
-                     (< bracket-level 0))
+                     previous-line-ends-with-opening-bracket
+                     (< previous-bracket-level 0))
                 (setq new-indentation (+ new-indentation tab-width)))
 
               (when (and
-                     line-ends-with-terminus
-                     (not (string-match-p "^[\t ]*\\(echo[\t ]+\\|print[\t ]+\\)" line-string)))
+                     previous-line-ends-with-terminus
+                     (not (string-match-p "^[\t ]*\\(echo[\t ]+\\|print[\t ]+\\)" previous-line-string)))
                 ;; Back-trace buffer from previous line
                 ;; Determine if semi-colon ended an multi-line assignment or bracket-less command or not
                 ;; If it's on the same line we ignore it
@@ -312,11 +357,11 @@
                        (or
                         (and
                          is-assignment
-                         (> bracket-level -1))
+                         (> previous-bracket-level -1))
                         is-bracket-less-command))
 
                     ;; NOTE stuff like $var = array(\n    4\n);\n
-                    ;; will end assignment but also decrease bracket-level
+                    ;; will end assignment but also decrease previous-bracket-level
                     (setq new-indentation (- new-indentation tab-width))))
 
                 (goto-char point))
@@ -324,7 +369,7 @@
               ;; Decrease indentation if current line decreases in bracket level
               (when (< new-indentation 0)
                 (setq new-indentation 0))
-              ;; (message "new-indentation: %S bracket-level: %S old-indentation: %S" new-indentation bracket-level old-indentation)
+              ;; (message "new-indentation: %S previous-bracket-level: %S old-indentation: %S" new-indentation previous-bracket-level old-indentation)
 
               (indent-line-to new-indentation)))))
       ;; Only move to end of line if point is the current point and is at end of line
