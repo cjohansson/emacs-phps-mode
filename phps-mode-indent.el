@@ -10,6 +10,9 @@
 ;;; Code:
 
 
+;; Helper functions
+
+
 (defun phps-mode-indent--string-indentation (string)
   "Count indentation of STRING."
   (if (string-match "\\(^[\t ]+\\)" string)
@@ -30,6 +33,29 @@
       (if (string-match regexp backward-string)
           backward-string
         nil))))
+
+(defun phps-mode-indent--string-starts-with-regexp (string regexp)
+  "If STRING start with REGEXP, return it, otherwise nil."
+  (phps-mode-indent--string-match-regexp
+   (concat "^" regexp)
+   string))
+
+(defun phps-mode-indent--string-ends-with-regexp (string regexp)
+  "If STRING end with REGEXP, return it, otherwise nil."
+  (phps-mode-indent--string-match-regexp
+   (concat regexp "$")
+   string))
+
+(defun phps-mode-indent--string-match-regexp (string regexp)
+  "If STRING match REGEXP, return it, otherwise nil."
+  (if
+      (string-match regexp string)
+      (match-string 0 string)
+    nil))
+
+
+;; Main functions
+
 
 (defun phps-mode-indent-line (&optional initial-point)
   "Apply alternative indentation at INITIAL-POINT here."
@@ -83,6 +109,7 @@
                    (current-line-starts-with-closing-bracket (phps-mode-indent--string-starts-with-closing-bracket-p current-line-string))
                    (current-line-starts-with-opening-bracket (phps-mode-indent--string-starts-with-opening-bracket current-line-string))
                    (line-starts-with-closing-bracket (phps-mode-indent--string-starts-with-closing-bracket-p line-string))
+                   (line-ends-with-closing-bracket (phps-mode-indent--string-ends-with-closing-bracket line-string))
                    (line-starts-with-opening-doc-comment (phps-mode-indent--string-starts-with-opening-doc-comment-p line-string))
                    (line-ends-with-assignment (phps-mode-indent--string-ends-with-assignment-p line-string))
                    (line-ends-with-opening-bracket (phps-mode-indent--string-ends-with-opening-bracket line-string))
@@ -128,6 +155,25 @@
                      (phps-mode-indent--backwards-looking-at
                       "[\t ]*implements[\n\t ]+\\([\n\t ]*[a-zA-Z_0-9]+,?\\)+[\n\t ]*{$"))
                 (setq new-indentation (- new-indentation tab-width)))
+
+              ;; if (true)
+              ;;     echo 'Something';
+              (when (and
+                     (not current-line-starts-with-closing-bracket)
+                     line-ends-with-closing-bracket
+                     (string= line-ends-with-closing-bracket ")")
+                     (string-match-p "^[\t ]*\\(if\\|while\\)[\t ]*(" line-string))
+                (setq new-indentation (+ new-indentation tab-width)))
+              
+
+              ;; else
+              ;;     echo 'Something';
+              ;; TODO
+
+              ;; if (true)
+              ;;     echo 'Something';
+              ;; else
+              ;; TODO
 
               (when (> bracket-level 0)
                 (if (< bracket-level tab-width)
@@ -256,7 +302,13 @@
 
 (defun phps-mode-indent--string-starts-with-closing-bracket-p (string)
   "Get bracket count for STRING."
-  (string-match-p "^[\t ]*\\([\]})[]\\|</[a-zA-Z]+\\|/>\\)" string))
+  (string-match-p "^[\t ]*\\([\]})[]\\)" string))
+
+(defun phps-mode-indent--string-ends-with-closing-bracket (string)
+  "If STRING end with closing bracket, return it, otherwise nil."
+  (if (string-match "\\([\]})[]\\)[\t ]*$" string)
+      (match-string 0 string)
+    nil))
 
 (defun phps-mode-indent--string-starts-with-opening-doc-comment-p (string)
   "Does STRING start with opening doc comment?"
@@ -283,6 +335,7 @@
 (defun phps-mode-indent--string-ends-with-terminus-p (string)
   "Get bracket count for STRING."
   (string-match-p "\\(;\\|,\\)[\t ]*$" string))
+
 
 
 (provide 'phps-mode-indent)
