@@ -16,6 +16,19 @@
       (length (substring string (match-beginning 0) (match-end 0)))
     0))
 
+(defun phps-mode-indent--backwards-looking-at-p (regexp)
+  "Non-nil if point is backwards looking at REGEXP."
+  (let ((point (point))
+        (limit 100))
+    (when (< point limit)
+      (setq limit (1- point)))
+    (let* ((start (- point limit))
+           (backward-string
+            (buffer-substring-no-properties
+             start
+             (1+ point))))
+      (string-match-p regexp backward-string))))
+
 (defun phps-mode-indent-line (&optional initial-point)
   "Apply alternative indentation at INITIAL-POINT here."
   (let ((point))
@@ -43,7 +56,7 @@
             (line-beginning-position)
             (line-end-position)))
 
-          (message "Current line: %S" current-line-string)
+          (message "\nCurrent line: %S" current-line-string)
 
           ;; Try to find previous non-empty line
           (while (and
@@ -66,6 +79,7 @@
               (indent-line-to 0)
             (let* ((old-indentation (phps-mode-indent--string-indentation line-string))
                    (current-line-starts-with-closing-bracket (phps-mode-indent--string-starts-with-closing-bracket-p current-line-string))
+                   (current-line-starts-with-opening-bracket (phps-mode-indent--string-starts-with-opening-bracket current-line-string))
                    (line-starts-with-closing-bracket (phps-mode-indent--string-starts-with-closing-bracket-p line-string))
                    (line-starts-with-opening-doc-comment (phps-mode-indent--string-starts-with-opening-doc-comment-p line-string))
                    (line-ends-with-assignment (phps-mode-indent--string-ends-with-assignment-p line-string))
@@ -93,6 +107,13 @@
                          line-starts-with-closing-bracket)
                 (setq new-indentation (+ new-indentation tab-width)))
 
+              (when (and
+                     current-line-starts-with-opening-bracket
+                     (string= current-line-starts-with-opening-bracket "{")
+                     (phps-mode-indent--backwards-looking-at-p
+                      "[\t ]*implements[\n\t ]+\\([\n\t ]*[a-zA-Z_0-9]+,?\\)+[\n\t ]*{$"))
+                (setq new-indentation (- new-indentation tab-width)))
+
               (when current-line-starts-with-closing-bracket
                 (setq new-indentation (- new-indentation tab-width)))
 
@@ -109,9 +130,12 @@
                      (< bracket-level 0))
                 (setq new-indentation (+ new-indentation tab-width)))
 
-              (when line-ends-with-terminus
+              (when (and
+                     line-ends-with-terminus
+                     (not (string-match-p "^[\t ]*\\(echo[\t ]+\\|print[\t ]+\\)" line-string)))
                 ;; Back-trace buffer from previous line
-                ;; Determine if semi-colon ended an assignment or bracket-less command or not
+                ;; Determine if semi-colon ended an multi-line assignment or bracket-less command or not
+                ;; If it's on the same line we ignore it
                 (forward-line (* -1 move-length))
                 (end-of-line)
                 (forward-char -1)
@@ -210,6 +234,13 @@
 (defun phps-mode-indent--string-starts-with-opening-doc-comment-p (string)
   "Does STRING start with opening doc comment?"
   (string-match-p "^[\t ]*/\\*\\*" string))
+
+(defun phps-mode-indent--string-starts-with-opening-bracket (string)
+  "If STRING start with opening bracket return it otherwise nil."
+  (if
+      (string-match "^[\t ]*\\([\[{(]\\)" string)
+      (match-string 0 string)
+    nil))
 
 (defun phps-mode-indent--string-ends-with-opening-bracket-p (string)
   "Get bracket count for STRING."
