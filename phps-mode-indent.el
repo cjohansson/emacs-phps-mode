@@ -132,7 +132,7 @@
 
           ;; (message "\nCurrent line: %S" current-line-string)
 
-          ;; Try to find previous non-empty line
+          ;; TODO Try to find previous 2 non-empty lines
           (while (and
                   (= (forward-line -1) 0)
                   line-is-empty-p)
@@ -151,16 +151,28 @@
 
           (if line-is-empty-p
               (indent-line-to 0)
-            (let* ((old-indentation (phps-mode-indent--string-indentation line-string))
-                   (current-line-starts-with-closing-bracket (phps-mode-indent--string-starts-with-closing-bracket current-line-string))
-                   (current-line-starts-with-opening-bracket (phps-mode-indent--string-starts-with-opening-bracket current-line-string))
-                   (line-starts-with-closing-bracket (phps-mode-indent--string-starts-with-closing-bracket line-string))
-                   (line-ends-with-closing-bracket (phps-mode-indent--string-ends-with-closing-bracket line-string))
-                   (line-starts-with-opening-doc-comment (phps-mode-indent--string-starts-with-opening-doc-comment line-string))
-                   (line-ends-with-assignment (phps-mode-indent--string-ends-with-assignment line-string))
-                   (line-ends-with-opening-bracket (phps-mode-indent--string-ends-with-opening-bracket line-string))
-                   (line-ends-with-terminus (phps-mode-indent--string-ends-with-terminus line-string))
-                   (bracket-level (phps-mode-indent--get-string-brackets-count line-string)))
+            (let* ((old-indentation
+                    (phps-mode-indent--string-indentation line-string))
+                   (current-line-starts-with-closing-bracket
+                    (phps-mode-indent--string-starts-with-closing-bracket current-line-string))
+                   (current-line-starts-with-opening-bracket
+                    (phps-mode-indent--string-starts-with-opening-bracket current-line-string))
+                   (current-line-ends-with-terminus
+                    (phps-mode-indent--string-ends-with-terminus current-line-string))
+                   (line-starts-with-closing-bracket
+                    (phps-mode-indent--string-starts-with-closing-bracket line-string))
+                   (line-ends-with-closing-bracket
+                    (phps-mode-indent--string-ends-with-closing-bracket line-string))
+                   (line-starts-with-opening-doc-comment
+                    (phps-mode-indent--string-starts-with-opening-doc-comment line-string))
+                   (line-ends-with-assignment
+                    (phps-mode-indent--string-ends-with-assignment line-string))
+                   (line-ends-with-opening-bracket
+                    (phps-mode-indent--string-ends-with-opening-bracket line-string))
+                   (line-ends-with-terminus
+                    (phps-mode-indent--string-ends-with-terminus line-string))
+                   (bracket-level
+                    (phps-mode-indent--get-string-brackets-count line-string)))
               ;; (message "Previous non-empty line: %S with indentation: %S" line-string old-indentation)
               ;; (message "line-ends-with-terminus: %S" line-ends-with-terminus)
 
@@ -211,11 +223,13 @@
                      (string= line-ends-with-closing-bracket ")")
                      (string-match-p "^[\t ]*\\(if\\|while\\)[\t ]*(" line-string))
                 (setq new-indentation (+ new-indentation tab-width)))
-              
 
               ;; else
               ;;     echo 'Something';
-              ;; TODO
+              (when (phps-mode-indent--string-starts-with-regexp
+                     line-string
+                     "else[\t ]*$")
+                (setq new-indentation (+ new-indentation tab-width)))
 
               ;; if (true)
               ;;     echo 'Something';
@@ -223,8 +237,16 @@
               (when (and
                      line-ends-with-terminus
                      (string= line-ends-with-terminus ";"))
-                (when (phps-mode-indent--string-starts-with-regexp current-line-string "[\t ]*else")
+                (when (phps-mode-indent--string-starts-with-regexp
+                       current-line-string "[\t ]*else")
                   (setq new-indentation (- new-indentation tab-width))))
+
+              ;; if (true)
+              ;;     echo 'Something';
+              ;; else
+              ;;     echo 'Something else';
+              ;; echo true;
+              ;; TODO
 
               (when (> bracket-level 0)
                 (if (< bracket-level tab-width)

@@ -32,7 +32,7 @@
    (message "Initial buffer:\n%S" string)
    (phps-mode-test-indent--indent-whole-buffer)
    (let ((buffer-contents (buffer-substring-no-properties (point-min) (point-max))))
-     (message "Indented buffer:\n%S" buffer-contents)
+     (message "\nIndented buffer:\n%S" buffer-contents)
      (should (equal
               buffer-contents
               string)))))
@@ -349,8 +349,8 @@
 
   )
 
-(defun phps-mode-test-indent--get-lines-indent-inline-if ()
-  "Test for inline if indentations."
+(defun phps-mode-test-indent--get-lines-indent-inline-control-structures ()
+  "Test for inline control structures."
 
   (phps-mode-test-indent--should-equal
    "<?php\nif (true)\n    echo 'Something';\nelse\n    echo 'Something else';\necho true;\n"
@@ -366,8 +366,8 @@
 
   )
 
-(defun phps-mode-test-indent--get-lines-indent-alternative-if ()
-  "Test for alternative if indentations."
+(defun phps-mode-test-indent--get-lines-indent-alternative-control-structures ()
+  "Test for alternative control structures."
 
   (phps-mode-test-indent--should-equal
    "<?php\nif (true):\n    echo 'Something';\nelseif (true):\n    echo 'Something';\nelse:\n    echo 'Something else';\n    echo 'Something else again';\nendif;\necho true;\n"
@@ -829,8 +829,8 @@
   (phps-mode-test-indent--helpers)
   (phps-mode-test-indent--get-lines-indent-if)
   (phps-mode-test-indent--get-lines-indent-classes)
-  (phps-mode-test-indent--get-lines-indent-inline-if)
-  (phps-mode-test-indent--get-lines-indent-alternative-if)
+  (phps-mode-test-indent--get-lines-indent-inline-control-structures)
+  (phps-mode-test-indent--get-lines-indent-alternative-control-structures)
   (phps-mode-test-indent--get-lines-indent-multi-line-assignments)
   (phps-mode-test-indent--get-lines-indent-switch-case)
   (phps-mode-test-indent--get-lines-indent-psr-2)
