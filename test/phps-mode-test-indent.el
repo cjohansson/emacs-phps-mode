@@ -37,6 +37,31 @@
               buffer-contents
               string)))))
 
+(defun phps-mode-test-indent--helpers ()
+  "Test helper functions."
+
+  (should
+   (string=
+    (phps-mode-indent--string-ends-with-regexp "	  a" "a")
+    "a"))
+
+  (should
+   (equal
+    (phps-mode-indent--string-ends-with-regexp "	  a" "b")
+    nil))
+
+  (should
+   (string=
+    (phps-mode-indent--string-starts-with-regexp "if (something) {" "if ")
+    "if "))
+
+  (should
+   (equal
+    (phps-mode-indent--string-starts-with-regexp "if (something) {" "if  ")
+    nil))
+
+  )
+
 (defun phps-mode-test-indent--get-lines-indent ()
   "Test indent function."
   
@@ -801,6 +826,7 @@
 (defun phps-mode-test-indent ()
   "Run test for functions."
   ;; (setq debug-on-error t)
+  (phps-mode-test-indent--helpers)
   (phps-mode-test-indent--get-lines-indent-if)
   (phps-mode-test-indent--get-lines-indent-classes)
   (phps-mode-test-indent--get-lines-indent-inline-if)
