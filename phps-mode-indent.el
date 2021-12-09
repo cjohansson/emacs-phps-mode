@@ -16,8 +16,8 @@
       (length (substring string (match-beginning 0) (match-end 0)))
     0))
 
-(defun phps-mode-indent--backwards-looking-at-p (regexp)
-  "Non-nil if point is backwards looking at REGEXP."
+(defun phps-mode-indent--backwards-looking-at (regexp)
+  "Backward string if point is backwards looking at REGEXP, otherwise nil."
   (let ((point (point))
         (limit 100))
     (when (< point limit)
@@ -27,7 +27,9 @@
             (buffer-substring-no-properties
              start
              (1+ point))))
-      (string-match-p regexp backward-string))))
+      (if (string-match regexp backward-string)
+          backward-string
+        nil))))
 
 (defun phps-mode-indent-line (&optional initial-point)
   "Apply alternative indentation at INITIAL-POINT here."
@@ -56,7 +58,7 @@
             (line-beginning-position)
             (line-end-position)))
 
-          (message "\nCurrent line: %S" current-line-string)
+          ;; (message "\nCurrent line: %S" current-line-string)
 
           ;; Try to find previous non-empty line
           (while (and
@@ -86,7 +88,7 @@
                    (line-ends-with-opening-bracket (phps-mode-indent--string-ends-with-opening-bracket line-string))
                    (line-ends-with-terminus (phps-mode-indent--string-ends-with-terminus-p line-string))
                    (bracket-level (phps-mode-indent--get-string-brackets-count line-string)))
-              (message "Previous non-empty line: %S with indentation: %S" line-string old-indentation)
+              ;; (message "Previous non-empty line: %S with indentation: %S" line-string old-indentation)
 
               (setq new-indentation old-indentation)
               (goto-char point)
@@ -110,8 +112,11 @@
               ;;     implements MyInterface
               (when
                   (string-match "^[\t ]*\\(extends\\|implements\\)" current-line-string)
-                  ;; TODO Should backtrack to class statement and increase indentation from that
-                )
+                (when-let ((backwards-string
+                            (phps-mode-indent--backwards-looking-at
+                             "\\([\t ]*\\)class[\t ]+[a-zA-Z0-9_]+[\n\t ]+\\(extends[\t ]+[a-zA-Z0-9_]+\\)?[\n\t ]*\\(implements[\t ]+[a-zA-Z0-9_]+\\)?")))
+                  (let ((old-indentation (length (match-string 1 backwards-string))))
+                    (setq new-indentation (+ old-indentation tab-width)))))
 
               ;; class MyClass implements
               ;;     myInterface,
@@ -120,7 +125,7 @@
               (when (and
                      current-line-starts-with-opening-bracket
                      (string= current-line-starts-with-opening-bracket "{")
-                     (phps-mode-indent--backwards-looking-at-p
+                     (phps-mode-indent--backwards-looking-at
                       "[\t ]*implements[\n\t ]+\\([\n\t ]*[a-zA-Z_0-9]+,?\\)+[\n\t ]*{$"))
                 (setq new-indentation (- new-indentation tab-width)))
 
@@ -200,7 +205,7 @@
               ;; Decrease indentation if current line decreases in bracket level
               (when (< new-indentation 0)
                 (setq new-indentation 0))
-              (message "new-indentation: %S bracket-level: %S old-indentation: %S" new-indentation bracket-level old-indentation)
+              ;; (message "new-indentation: %S bracket-level: %S old-indentation: %S" new-indentation bracket-level old-indentation)
 
               (indent-line-to new-indentation)))))
       ;; Only move to end of line if point is the current point and is at end of line
