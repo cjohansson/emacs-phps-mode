@@ -249,11 +249,27 @@
 
               ;; if (true)
               ;;     echo 'Something';
+              ;; or
+              ;; while (true)
+              ;;     echo 'Something';
+              ;; or
+              ;; if (true):
+              ;;     echo 'Something';
+              ;; or
+              ;; while (true):
+              ;;     echo 'Something';
+              ;; or
+              ;; for ($i = 0; $i < 10; $i++):
+              ;;     echo 'Something';
+              ;; or
+              ;; foreach ($array as $value):
+              ;;     echo 'Something';
               (when (and
-                     (not current-line-starts-with-closing-bracket)
-                     previous-line-ends-with-closing-bracket
-                     (string= previous-line-ends-with-closing-bracket ")")
-                     (string-match-p "^[\t ]*\\(if\\|while\\)[\t ]*(" previous-line-string))
+                     current-line-ends-with-terminus
+                     (string= current-line-ends-with-terminus ";")
+                     (string-match-p
+                      "^[\t ]*\\(if\\|while\\|for\\|foreach\\)[\t ]*(.+):?$"
+                      previous-line-string))
                 (setq new-indentation (+ new-indentation tab-width)))
 
               ;; else
@@ -261,26 +277,73 @@
               ;; or
               ;; else if (true)
               ;;     echo 'Something';
+              ;; or
+              ;; elseif (true)
+              ;;     echo 'Something';
+              ;; or
+              ;; else:
+              ;;     echo 'Something';
+              ;; or
+              ;; else if (true):
+              ;;     echo 'Something';
+              ;; or
+              ;; elseif (true):
+              ;;     echo 'Something';
               (when (and
-                     (phps-mode-indent--string-starts-with-regexp
-                      previous-line-string
-                      "[\t ]*else")
-                     (not
-                      (phps-mode-indent--string-ends-with-regexp
-                       previous-line-string
-                       "{[\t ]*")))
-                (setq new-indentation (+ new-indentation tab-width)))
+                     current-line-ends-with-terminus
+                     (string=
+                      current-line-ends-with-terminus
+                      ";")
+                     (string-match-p
+                      "^[\t ]*else\\([\t ]*$\\|.*\\()\\|:\\)$\\)"
+                      previous-line-string))
+                (setq
+                 new-indentation
+                 (+ new-indentation tab-width)))
 
               (when (and
                      previous-line-ends-with-terminus
-                     (string= previous-line-ends-with-terminus ";"))
+                     (string=
+                      previous-line-ends-with-terminus
+                      ";"))
 
                 ;; if (true)
                 ;;     echo 'Something';
                 ;; else
-                (when (phps-mode-indent--string-starts-with-regexp
-                       current-line-string "[\t ]*else")
-                  (setq new-indentation (- new-indentation tab-width)))
+                ;; or
+                ;; if (true):
+                ;;     echo 'Something';
+                ;; else:
+                ;; or
+                ;; if (true)
+                ;;     echo 'Something';
+                ;; elseif (false)
+                ;; or
+                ;; if (true):
+                ;;     echo 'Something';
+                ;; elseif (false):
+                ;; or
+                ;; if (true):
+                ;;     echo 'Something';
+                ;; endif;
+                ;; or
+                ;; while (true):
+                ;;     echo 'Something';
+                ;; endwhile;
+                ;; or
+                ;; for ($i = 0; $i < 10; $i++):
+                ;;     echo 'Something';
+                ;; endfor;
+                ;; or
+                ;; foreach ($array as $value):
+                ;;     echo 'Something';
+                ;; endforeach;
+                (when (string-match-p
+                       "^[\t ]*\\(else:?[\t ]*$\\|else.*):?$\\|endif;[\t ]*$\\|endfor;[\t ]*$\\|endforeach;[\t ]*$\\|endwhile;[\t ]*$\\)"
+                       current-line-string)
+                  (setq
+                   new-indentation
+                   (- new-indentation tab-width)))
 
                 ;; if (true)
                 ;;     echo 'Something';
@@ -295,18 +358,16 @@
                 ;; when (true)
                 ;;     echo 'Something';
                 ;; echo 'Afterwards';
-                (when (and
-                       (not
-                        (phps-mode-indent--string-ends-with-regexp
-                         previous2-line-string "{[\t ]*"))
-                       (or
-                        (phps-mode-indent--string-starts-with-regexp
-                         previous2-line-string "[\t ]*else")
-                        (phps-mode-indent--string-starts-with-regexp
-                         previous2-line-string "[\t ]*if[\t ]*(")
-                        (phps-mode-indent--string-starts-with-regexp
-                         previous2-line-string "[\t ]*while[\t ]*(")))
-                  (setq new-indentation (- new-indentation tab-width)))
+                ;; or
+                ;; elseif (true)
+                ;;     echo 'Something';
+                ;; echo 'Afterwards';
+                (when (string-match-p
+                       "[\t ]*\\(else[\t ]*$\\|else.*)[\t ]*$\\|if.*)$\\|while.*)$\\)"
+                       previous2-line-string)
+                  (setq
+                   new-indentation
+                   (- new-indentation tab-width)))
 
                 )
 

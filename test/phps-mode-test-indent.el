@@ -379,7 +379,19 @@
 
   (phps-mode-test-indent--should-equal
    "<?php\nif (true):\n    echo 'Something';\nelseif (true):\n    echo 'Something';\nelse:\n    echo 'Something else';\n    echo 'Something else again';\nendif;\necho true;\n"
-   "Alternative control structures")
+   "Alternative control structures basic if-elseif-else flow")
+
+  (phps-mode-test-indent--should-equal
+   "<?php\nwhile (true):\n    echo 'Something';\n    echo 'Something';\nendwhile;\necho 'Something else';\n"
+   "Alternative control structures basic while-endwhile flow")
+
+  (phps-mode-test-indent--should-equal
+   "<?php\nfor ($i = 0; $i < 10; $i++):\n    echo 'Something';\n    echo 'Something';\nendfor;\necho 'Something else';\n"
+   "Alternative control structures basic for-endfor flow")
+
+  (phps-mode-test-indent--should-equal
+   "<?php\nforeach ($array as $value):\n    echo 'Something';\n    echo 'Something';\nendforeach;\necho 'Something else';\n"
+   "Alternative control structures basic foreach-endforeach flow")
 
   (phps-mode-test-indent--should-equal
    "<?php\nif (true):\n    echo 'Something';\nelseif (true\n    && true\n):\n    echo 'Something';\nelse:\n    echo 'Something else';\n    echo 'Something else again';\nendif;\necho true;\n"
