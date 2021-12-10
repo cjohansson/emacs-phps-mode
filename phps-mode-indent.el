@@ -371,6 +371,58 @@
 
                 )
 
+              (when
+                  (string-match-p
+                   "[\t ]*\\()\\|]\\);[\t ]*$"
+                   current-line-string)
+
+                ;; $variable = array(
+                ;;     'random' =>
+                ;;         'hello'
+                ;; );
+                ;; or
+                ;; $variable = [
+                ;;     'random' =>
+                ;;         'hello'
+                ;; ];
+                (let ((old-point (point))
+                      (still-looking t)
+                      (bracket-count -1))
+
+                  ;; Try to backtrack buffer until we reach start of bracket
+                  (while
+                      (and
+                       still-looking
+                       (search-backward-regexp
+                        "\\((\\|]\\|\\[\\|)\\)" nil t))
+                    (let ((match-string (match-string-no-properties 0)))
+                      (cond
+                       ((or
+                         (string= match-string "(")
+                         (string= match-string "["))
+                        (setq bracket-count (1+ bracket-count)))
+                       ((or
+                         (string= match-string ")")
+                         (string= match-string "]"))
+                        (setq bracket-count (1- bracket-count)))))
+                    (when (= bracket-count 0)
+                      (setq still-looking nil)))
+
+                  ;; Did we find bracket start line?
+                  (unless still-looking
+                    (let ((bracket-start-indentation
+                           (phps-mode-indent--string-indentation
+                            (buffer-substring-no-properties
+                             (line-beginning-position)
+                             (line-end-position)))))
+                      ;; Use its indentation for this line as well
+                      (setq new-indentation bracket-start-indentation)))
+
+                  ;; Reset point
+                  (goto-char old-point))
+
+                )
+
               (when (> previous-bracket-level 0)
                 (if (< previous-bracket-level tab-width)
                     (setq new-indentation (+ new-indentation 1))

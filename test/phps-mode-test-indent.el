@@ -317,11 +317,19 @@
 
   (phps-mode-test-indent--should-equal
    "<?php\n$variable = array(\n    'random4'\n);\n$variable = true;\n"
-   "Array assignment on three lines")
+   "Array assignment on three lines without trailing comma")
+
+  (phps-mode-test-indent--should-equal
+   "<?php\n$variable = array(\n    'random4',\n);\n$variable = true;\n"
+   "Array assignment on three lines with trailing comma")
 
   (phps-mode-test-indent--should-equal
    "<?php\n$variable = array(\n    'random4' =>\n        'hello'\n);"
-   "Array assignment with double arrow elements on four lines")
+   "Array assignment with double arrow elements on four lines without trailing comma")
+
+  (phps-mode-test-indent--should-equal
+   "<?php\n$variable = array(\n    'random4' =>\n        'hello',\n);"
+   "Array assignment with double arrow elements on four lines with trailing comma")
 
   (phps-mode-test-indent--should-equal
    "<?php\n$variable = array(\n    'random4');\n$variable = true;\n"
@@ -392,14 +400,6 @@
   (phps-mode-test-indent--should-equal
    "<?php\nforeach ($array as $value):\n    echo 'Something';\n    echo 'Something';\nendforeach;\necho 'Something else';\n"
    "Alternative control structures basic foreach-endforeach flow")
-
-  (phps-mode-test-indent--should-equal
-   "<?php\nif (true):\n    echo 'Something';\nelseif (true\n    && true\n):\n    echo 'Something';\nelse:\n    echo 'Something else';\n    echo 'Something else again';\nendif;\necho true;\n"
-   "Alternative control structures with multi-line elseif 1")
-
-  (phps-mode-test-indent--should-equal
-   "<?php\nif (true):\n    echo 'Something';\nelseif (true\n    && true):\n    echo 'Something';\nelse:\n    echo 'Something else';\n    echo 'Something else again';\nendif;\necho true;\n"
-   "Alternative control structures with multi-line elseif 2")
 
   )
 
