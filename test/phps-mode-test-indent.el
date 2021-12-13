@@ -348,19 +348,35 @@
    "Array assignment with double arrow elements on four lines with trailing comma #2")
 
   (phps-mode-test-indent--should-equal
-   "<?php\n$variable = array(\n    'random4');\n$variable = true;\n"
-   "Array assignment on two lines")
-
-  (phps-mode-test-indent--should-equal
-   "<?php\n$var = 'A line' .\n    'more text here' .\n    'last line here';"
+   "<?php\n$var = 'A line' \n    . 'last line here';\necho 'was here';"
    "Concatenated single-quoted-string multiple-lines in assignment")
 
   (phps-mode-test-indent--should-equal
-   "<?php\n$var .=\n    'A line';"
+   "<?php\n$var = 'A line' .\n    'last line here';\necho 'was here';"
+   "Concatenated single-quoted-string multiple-lines in assignment #2")
+
+  (phps-mode-test-indent--should-equal
+   "<?php\n$var = 'A line' \n    . 'more text here'\n    . 'last line here';\necho 'was here';"
+   "Concatenated single-quoted-string multiple-lines in assignment #3")
+
+  (phps-mode-test-indent--should-equal
+   "<?php\n$var = 'A line' .\n    'more text here' .\n    'last line here';\necho 'was here';"
+   "Concatenated single-quoted-string multiple-lines in assignment #4")
+
+  (phps-mode-test-indent--should-equal
+   "<?php\n$var = 'A line' \n    . 'more text here'\n    . 'even more text'\n    . 'last line here';\necho 'was here';"
+   "Concatenated single-quoted-string multiple-lines in assignment #5")
+
+  (phps-mode-test-indent--should-equal
+   "<?php\n$var = 'A line' .\n    'more text here' .\n    'even more text' .\n    'last line here';\necho 'was here';"
+   "Concatenated single-quoted-string multiple-lines in assignment #6")
+
+  (phps-mode-test-indent--should-equal
+   "<?php\n$var .=\n    'A line';\necho 'was here';"
    "Concatenated equal single-quoted-string on multiple-lines in assignment")
 
   (phps-mode-test-indent--should-equal
-   "<?php\n$var *=\n    25;"
+   "<?php\n$var *=\n    25;\necho 'was here';"
    "Multiplication equal assignment on multiple-lines")
 
   (phps-mode-test-indent--should-equal

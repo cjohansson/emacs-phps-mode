@@ -85,7 +85,7 @@
   "If STRING end with closing bracket, return it, otherwise nil."
   (phps-mode-indent--string-ends-with-regexp
    string
-   "\\([\]})[]\\)[\t ]*"))
+   "\\([\]})]\\)[\t ]*"))
 
 (defun phps-mode-indent--string-ends-with-opening-bracket (string)
   "If STRING end with opening bracket, return it, otherwise nil."
@@ -131,7 +131,7 @@
 
           ;; (message "\nCurrent line: %S" current-line-string)
 
-          ;; TODO Try to find previous 2 non-empty lines
+          ;; Try to find previous 2 non-empty lines
           (let ((line-is-empty-p t)
                 (searching-previous-lines 2))
             (while (and
@@ -371,20 +371,19 @@
 
                 )
 
+              ;; $variable = array(
+              ;;     'random' =>
+              ;;         'hello'
+              ;; );
+              ;; or
+              ;; $variable = [
+              ;;     'random' =>
+              ;;         'hello'
+              ;; ];
               (when
                   (string-match-p
                    "[\t ]*\\()\\|]\\);[\t ]*$"
                    current-line-string)
-
-                ;; $variable = array(
-                ;;     'random' =>
-                ;;         'hello'
-                ;; );
-                ;; or
-                ;; $variable = [
-                ;;     'random' =>
-                ;;         'hello'
-                ;; ];
                 (let ((old-point (point))
                       (still-looking t)
                       (bracket-count -1))
@@ -422,6 +421,86 @@
                   (goto-char old-point))
 
                 )
+
+              ;; echo 'Something'
+              ;;     . 'more';
+              ;; or
+              ;; echo 'Something' .
+              ;;     'more';
+              (when (or
+                     (string-match-p
+                      "^[\t ]*\\."
+                      current-line-string)
+                     (string-match-p
+                      "\\.[\t ]*$"
+                      previous-line-string))
+
+                ;; If previous line matched ending .
+                ;; we must backtrack at least two lines
+                ;; to find a good reference indentation
+                (let ((old-point (point))
+                      (match-string)
+                      (previous-concatenation)
+                      (keep-searching 1)
+                      (concat-was-trailing-p
+                       (string-match-p
+                        "\\.[\t ]*$"
+                        previous-line-string))
+                      (previous-concatenation2))
+                  (when concat-was-trailing-p
+                    (setq
+                     keep-searching
+                     2))
+                  (while keep-searching
+                    (let ((previous-expression
+                           (search-backward-regexp
+                            "\\(^[\t ]*\\.\\|\\.[\t ]*$\\|[{}=;]\\)" nil t)))
+                      (if previous-expression
+                          (progn
+                            (setq
+                             match-string
+                             (match-string-no-properties 0))
+                            (if (string-match-p
+                                 "[{}=;]"
+                                 match-string)
+                                (setq
+                                 keep-searching
+                                 nil)
+                              (setq
+                               keep-searching
+                               (1- keep-searching))
+                              (when (= keep-searching 0)
+                                (setq
+                                 keep-searching
+                                 nil)
+                                (when concat-was-trailing-p
+                                  (goto-char previous-concatenation2))
+                                (setq
+                                 previous-concatenation
+                                 match-string))
+                              (setq
+                               previous-concatenation2
+                               (point))))
+                        keep-searching
+                        nil)))
+
+                  (if previous-concatenation
+                      (let ((first-concatenated-line-indent
+                             (phps-mode-indent--string-indentation
+                              (buffer-substring-no-properties
+                               (line-beginning-position)
+                               (line-end-position)))))
+                        ;; We use previous concatenated lines indent
+                        (setq
+                         new-indentation
+                         first-concatenated-line-indent))
+                    ;; This is the first concatenated line so we indent it
+                    (setq
+                     new-indentation
+                     (+ new-indentation tab-width)))
+
+                  ;; Reset point
+                  (goto-char old-point)))
 
               (when (> previous-bracket-level 0)
                 (if (< previous-bracket-level tab-width)
