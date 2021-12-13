@@ -114,6 +114,8 @@
           (point-at-end-of-line (equal point (line-end-position))))
       (save-excursion
         (let ((move-length 0)
+              (move-length1 0)
+              (move-length2 0)
               (current-line-string "")
               (previous-line-string "")
               (previous-line-is-empty-p)
@@ -151,9 +153,15 @@
                   (cond
                    ((= searching-previous-lines 2)
                     (setq
+                     move-length1
+                     (1+ move-length))
+                    (setq
                      previous-line-string
                      line-string))
                    ((= searching-previous-lines 1)
+                    (setq
+                     move-length2
+                     (1+ move-length))
                     (setq
                      previous2-line-string
                      line-string)))
@@ -530,15 +538,24 @@
                      (< previous-bracket-level 0))
                 (setq new-indentation (+ new-indentation tab-width)))
 
+              ;; $var .=
+              ;;     'hello';
+              ;; echo 'here';
+              ;; or
+              ;; $var =
+              ;;     25;
+              ;; echo 'here';
               (when (and
                      previous-line-ends-with-terminus
                      (not (string-match-p "^[\t ]*\\(echo[\t ]+\\|print[\t ]+\\)" previous-line-string)))
+
                 ;; Back-trace buffer from previous line
                 ;; Determine if semi-colon ended an multi-line assignment or bracket-less command or not
                 ;; If it's on the same line we ignore it
-                (forward-line (* -1 move-length))
+                (forward-line (* -1 move-length1))
                 (end-of-line)
                 (forward-char -1)
+
                 (let ((not-found t)
                       (is-assignment nil)
                       (parenthesis-level 0)
@@ -562,12 +579,11 @@
 
                   ;; If it ended an assignment on a previous line, decrease indentation
                   (when
-                      (and
-                       (or
-                        (and
-                         is-assignment
-                         (> previous-bracket-level -1))
-                        is-bracket-less-command))
+                      (or
+                       (and
+                        is-assignment
+                        (> previous-bracket-level -1))
+                       is-bracket-less-command)
 
                     ;; NOTE stuff like $var = array(\n    4\n);\n
                     ;; will end assignment but also decrease previous-bracket-level
