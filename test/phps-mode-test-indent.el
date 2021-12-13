@@ -384,7 +384,7 @@
    "Multiplication assignment on three-lines")
 
   (phps-mode-test-indent--should-equal
-   "<?php\n$str = <<<EOD\nExample of string\nspanning multiple lines\nusing heredoc syntax.\nEOD;\n"
+   "<?php\n$str = <<<EOD\nExample of string\nspanning multiple lines\nusing heredoc syntax\nEOD;\n"
    "Multi-line HEREDOC string in assignment")
 
   (phps-mode-test-indent--should-equal
