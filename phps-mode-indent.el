@@ -433,7 +433,15 @@
               ;; echo 'Something'
               ;;     . 'more';
               ;; or
+              ;; echo
+              ;;     'Something'
+              ;;     . 'more';
+              ;; or
               ;; echo 'Something' .
+              ;;     'more';
+              ;; or
+              ;; echo
+              ;;     'Something' .
               ;;     'more';
               (when (or
                      (string-match-p
