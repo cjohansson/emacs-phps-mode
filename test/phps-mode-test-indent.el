@@ -377,7 +377,11 @@
 
   (phps-mode-test-indent--should-equal
    "<?php\n$var *=\n    25;\necho 'was here';"
-   "Multiplication equal assignment on multiple-lines")
+   "Multiplication equal assignment on two-lines")
+
+  (phps-mode-test-indent--should-equal
+   "<?php\n$var =\n    25\n    * 35;\necho 'was here';"
+   "Multiplication assignment on three-lines")
 
   (phps-mode-test-indent--should-equal
    "<?php\n$str = <<<EOD\nExample of string\nspanning multiple lines\nusing heredoc syntax.\nEOD;\n"
@@ -385,7 +389,7 @@
 
   (phps-mode-test-indent--should-equal
    "<?php\n$var =\n    500 .\n    \"200\" .\n    100.0 .\n    '200' .\n    $this->getTail()\n    ->getBottom();"
-   "Multi-line assignments")
+   "Multi-line assignments with string concatenation and object-method chaining")
 
   )
 
