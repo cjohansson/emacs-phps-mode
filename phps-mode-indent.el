@@ -518,6 +518,76 @@
                   ;; Reset point
                   (goto-char old-point)))
 
+              ;; case true:
+              ;;     echo 'here';
+              ;; or
+              ;; case true;
+              ;;     echo 'here';
+              ;; or
+              ;; default:
+              ;;     echo 'here';
+              ;; or
+              ;; default;
+              ;;     echo 'here';
+              (when (or
+                     (string-match-p
+                      "^[\t ]*case[\t ]+.*\\(;\\|:\\)[\t ]*$"
+                      previous-line-string)
+                     (string-match-p
+                      "^[\t ]*default.*\\(;\\|:\\)[\t ]*$"
+                      previous-line-string))
+                (setq
+                 previous-bracket-level
+                 (+ previous-bracket-level tab-width)))
+
+              ;; case true:
+              ;;     echo 'here';
+              ;; case false:
+              ;; or
+              ;; case true:
+              ;;     echo 'here';
+              ;; default:
+              (when (and
+                     (not previous-line-ends-with-opening-bracket)
+                     (or
+                      (string-match-p
+                       "^[\t ]*case[\t ]+.*\\(;\\|:\\)[\t ]*$"
+                       current-line-string)
+                      (string-match-p
+                       "^[\t ]*default.*\\(;\\|:\\)[\t ]*$"
+                       current-line-string)))
+                (setq
+                 new-indentation
+                 (- new-indentation tab-width)))
+
+              ;; switch ($condition) {
+              ;;     case true:
+              ;;         echo 'here';
+              ;; }
+              (when (and
+                     current-line-starts-with-closing-bracket
+                     (string= current-line-starts-with-closing-bracket "}"))
+                (let ((old-point (point))
+                      (end-of-switch-statement))
+                  (when (search-backward-regexp "{" nil t)
+                    (let ((bracket-start-line
+                           (buffer-substring-no-properties
+                            (line-beginning-position)
+                            (line-end-position))))
+                      (when (string-match-p
+                             "[\t ]*switch[\t ]*("
+                             bracket-start-line)
+                        (setq
+                         end-of-switch-statement
+                         t)))
+                    (goto-char old-point)
+                    (when end-of-switch-statement
+                      (setq
+                       new-indentation
+                       (- new-indentation tab-width))))))
+
+
+
               (when (> previous-bracket-level 0)
                 (if (< previous-bracket-level tab-width)
                     (setq new-indentation (+ new-indentation 1))
