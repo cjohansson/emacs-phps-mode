@@ -372,14 +372,6 @@
    "Concatenated single-quoted-string multiple-lines in assignment #6")
 
   (phps-mode-test-indent--should-equal
-   "<?php\n$var =\n    'A line' \n    . 'more text here'\n    . 'last line here';\necho 'was here';"
-   "Concatenated single-quoted-string multiple-lines in assignment #7")
-
-  (phps-mode-test-indent--should-equal
-   "<?php\n$var =\n    'A line' .\n    'more text here' .\n    'even more text' .\n    'last line here';\necho 'was here';"
-   "Concatenated single-quoted-string multiple-lines in assignment #8")
-
-  (phps-mode-test-indent--should-equal
    "<?php\n$var .=\n    'A line';\necho 'was here';"
    "Concatenated equal single-quoted-string on multiple-lines in assignment")
 
@@ -396,7 +388,7 @@
    "Multi-line HEREDOC string in assignment")
 
   (phps-mode-test-indent--should-equal
-   "<?php\n$var =\n    500 .\n    \"200\" .\n    100.0 .\n    '200' .\n    $this->getTail()\n    ->getBottom();"
+   "<?php\n$var = 500 .\n    \"200\" .\n    100.0 .\n    '200' .\n    $this->getTail()\n    ->getBottom();"
    "Multi-line assignments with string concatenation and object-method chaining")
 
   )
