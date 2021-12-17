@@ -227,7 +227,7 @@
   "Test PSR-2 examples from: https://www.php-fig.org/psr/psr-2/."
 
   (phps-mode-test-indent--should-equal
-   "<?php\nnamespace Vendor\\Package;\n\nuse FooInterface;\nuse BarClass as Bar;\nuse OtherVendor\\OtherPackage\\BazClass;\n\nclass Foo extends Bar implements FooInterface\n{\n    public function sampleMethod($a, $b = null)\n    {\n        if ($a === $b) {\n            bar();\n        } elseif ($a > $b) {\n            $foo->bar($arg1);\n        } else {\n            BazClass::bar($arg2, $arg3);\n        }\n    }\n\n    final public static function bar()\n    {\n        // method body\n    }\n}\n"
+   "<?php\nnamespace Vendor\\Package;\n\nuse FooInterface;\nuse BarClass as Bar;\nuse OtherVendor\\OtherPackage\\BazClass;\n\nclass Foo extends Bar implements FooInterface\n{\n    public function sampleMethod($a, $b = null)\n    {\n        if ($a === $b) {\n            bar();\n        } elseif ($a > $b) {\n            $foo->bar($arg1);\n        } else {\n            BazClass::bar($arg2, $arg3);\n        }\n    }\n    \n    final public static function bar()\n    {\n        // method body\n    }\n}\n"
    "PSR-2 : 1.1. Example")
 
   (phps-mode-test-indent--should-equal
@@ -259,7 +259,7 @@
    "PSR-2 : 4.4. Method Arguments : Example 2")
 
   (phps-mode-test-indent--should-equal
-   "<?php\nnamespace Vendor\\Package;\n\nabstract class ClassName\n{\n    protected static $foo;\n\n    abstract protected function zim();\n\n    final public static function bar()\n    {\n        // method body\n    }\n}"
+   "<?php\nnamespace Vendor\\Package;\n\nabstract class ClassName\n{\n    protected static $foo;\n    \n    abstract protected function zim();\n    \n    final public static function bar()\n    {\n        // method body\n    }\n}"
    "PSR-2 ; 4.5. abstract, final, and static")
 
   (phps-mode-test-indent--should-equal
