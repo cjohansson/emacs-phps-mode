@@ -553,13 +553,18 @@
               ;; or
               ;; default;
               ;;     echo 'here';
-              (when (or
-                     (string-match-p
-                      "^[\t ]*case[\t ]+.*\\(;\\|:\\)[\t ]*$"
-                      previous-line-string)
-                     (string-match-p
-                      "^[\t ]*default.*\\(;\\|:\\)[\t ]*$"
-                      previous-line-string))
+              (when (and
+                     (not
+                      (string-match-p
+                       "^[\t ]*\\(case[\t ]+\\|default\\)"
+                       current-line-string))
+                     (or
+                      (string-match-p
+                       "^[\t ]*case[\t ]+.*\\(;\\|:\\)[\t ]*$"
+                       previous-line-string)
+                      (string-match-p
+                       "^[\t ]*default.*\\(;\\|:\\)[\t ]*$"
+                       previous-line-string)))
                 (setq
                  previous-bracket-level
                  (+ previous-bracket-level tab-width)))
