@@ -34,23 +34,27 @@
           backward-string
         nil))))
 
-(defun phps-mode-indent--string-starts-with-regexp (string regexp)
-  "If STRING start with REGEXP, return it, otherwise nil."
+(defun phps-mode-indent--string-starts-with-regexp (string regexp &optional match-index)
+  "If STRING start with REGEXP, return it, otherwise nil.  With optional MATCH-INDEX."
   (phps-mode-indent--string-match-regexp
    string
-   (concat "^" regexp)))
+   (concat "^" regexp)
+   match-index))
 
-(defun phps-mode-indent--string-ends-with-regexp (string regexp)
-  "If STRING end with REGEXP, return it, otherwise nil."
+(defun phps-mode-indent--string-ends-with-regexp (string regexp &optional match-index)
+  "If STRING end with REGEXP, return it, otherwise nil.  With optional MATCH-INDEX."
   (phps-mode-indent--string-match-regexp
    string
-   (concat regexp "$")))
+   (concat regexp "$")
+   match-index))
 
-(defun phps-mode-indent--string-match-regexp (string regexp)
-  "If STRING match REGEXP, return it, otherwise nil."
+(defun phps-mode-indent--string-match-regexp (string regexp &optional match-index)
+  "If STRING match REGEXP, return it, otherwise nil.  With optional MATCH-INDEX."
+  (unless match-index
+    (setq match-index 0))
   (if
       (string-match regexp string)
-      (match-string 0 string)
+      (match-string match-index string)
     nil))
 
 
@@ -61,43 +65,50 @@
   "If STRING start with closing bracket, return it, otherwise return nil."
   (phps-mode-indent--string-starts-with-regexp
    string
-   "[\t ]*\\([\]})[]\\)"))
+   "[\t ]*\\([\]})[]\\)"
+   1))
 
 (defun phps-mode-indent--string-starts-with-opening-bracket (string)
   "If STRING start with opening bracket return it otherwise nil."
   (phps-mode-indent--string-starts-with-regexp
    string
-   "[\t ]*\\([\[{(]\\)"))
+   "[\t ]*\\([\[{(]\\)"
+   1))
 
 (defun phps-mode-indent--string-starts-with-opening-doc-comment (string)
   "Does STRING start with opening doc comment?"
   (phps-mode-indent--string-starts-with-regexp
    string
-   "[\t ]*/\\*\\*"))
+   "[\t ]*\\(/\\*\\*\\)"
+   1))
 
 (defun phps-mode-indent--string-ends-with-assignment (string)
   "If STRING end with terminus, return it, otherwise return nil."
   (phps-mode-indent--string-ends-with-regexp
    string
-   "=>?[\t ]*"))
+   "\\(=>?\\)[\t ]*"
+   1))
 
 (defun phps-mode-indent--string-ends-with-closing-bracket (string)
   "If STRING end with closing bracket, return it, otherwise nil."
   (phps-mode-indent--string-ends-with-regexp
    string
-   "\\([\]})]\\)[\t ]*"))
+   "\\([\]})]\\)[\t ]*"
+   1))
 
 (defun phps-mode-indent--string-ends-with-opening-bracket (string)
   "If STRING end with opening bracket, return it, otherwise nil."
   (phps-mode-indent--string-ends-with-regexp
    string
-   "\\([\[{(]\\)[\t ]*"))
+   "\\([\[{(]\\)[\t ]*"
+   1))
 
 (defun phps-mode-indent--string-ends-with-terminus (string)
   "If STRING end with terminus, return it, otherwise return nil."
   (phps-mode-indent--string-ends-with-regexp
    string
-   "\\(;\\|,\\)[\t ]*"))
+   "\\(;\\|,\\)[\t ]*"
+   1))
 
 
 ;; Main functions
@@ -224,7 +235,9 @@
               ;; or
               ;; class MyClass extends
               ;;     myParent
-              (when (string-match-p "[\t ]+\\(extends\\|implements\\)$" previous-line-string)
+              (when (string-match-p
+                     "[\t ]+\\(extends\\|implements\\)$"
+                     previous-line-string)
                 (setq previous-bracket-level (+ tab-width)))
 
               ;; class MyClass
@@ -371,7 +384,7 @@
                 ;;     echo 'Something';
                 ;; echo 'Afterwards';
                 (when (string-match-p
-                       "[\t ]*\\(else[\t ]*$\\|else.*)[\t ]*$\\|if.*)$\\|while.*)$\\)"
+                       "^[\t ]*\\(else[\t ]*$\\|else.*)[\t ]*$\\|if.*)$\\|while.*)$\\)"
                        previous2-line-string)
                   (setq
                    new-indentation
@@ -390,7 +403,7 @@
               ;; ];
               (when
                   (string-match-p
-                   "[\t ]*\\()\\|]\\);[\t ]*$"
+                   "^[\t ]*\\()\\|]\\);[\t ]*$"
                    current-line-string)
                 (let ((old-point (point))
                       (still-looking t)
@@ -549,6 +562,7 @@
               ;; default:
               (when (and
                      (not previous-line-ends-with-opening-bracket)
+                     (not (string-match-p ":[\t ]*$" previous-line-string))
                      (or
                       (string-match-p
                        "^[\t ]*case[\t ]+.*\\(;\\|:\\)[\t ]*$"
@@ -560,6 +574,14 @@
                  new-indentation
                  (- new-indentation tab-width)))
 
+              ;; (message "\ncurrent-line-string: %S" current-line-string)
+              ;; ;; (message "current-line-starts-with-closing-bracket: %S" current-line-starts-with-closing-bracket)
+              ;; (message "previous-line-string: %S" previous-line-string)
+              ;; ;; (message "previous-line-starts-with-opening-doc-comment: %S" previous-line-starts-with-opening-doc-comment)
+              ;; (message "previous-bracket-level: %S" previous-bracket-level)
+              ;; (message "previous-indentation: %S" previous-indentation)
+              ;; (message "new-indentation: %S" new-indentation)
+
               ;; switch ($condition) {
               ;;     case true:
               ;;         echo 'here';
@@ -569,23 +591,50 @@
                      (string= current-line-starts-with-closing-bracket "}"))
                 (let ((old-point (point))
                       (end-of-switch-statement))
-                  (when (search-backward-regexp "{" nil t)
-                    (let ((bracket-start-line
-                           (buffer-substring-no-properties
-                            (line-beginning-position)
-                            (line-end-position))))
-                      (when (string-match-p
-                             "[\t ]*switch[\t ]*("
-                             bracket-start-line)
-                        (setq
-                         end-of-switch-statement
-                         t)))
+                  (when (search-backward-regexp "[{}]" nil t)
+                    (when (looking-at-p "{")
+                      (let ((bracket-start-line
+                             (buffer-substring-no-properties
+                              (line-beginning-position)
+                              (line-end-position))))
+                        (when (string-match-p
+                               "^[\t ]*switch[\t ]*("
+                               bracket-start-line)
+                          (setq
+                           end-of-switch-statement
+                           t))))
                     (goto-char old-point)
                     (when end-of-switch-statement
                       (setq
                        new-indentation
                        (- new-indentation tab-width))))))
 
+              ;; switch (blala):
+              ;;     case bla:
+              ;;         echo 'bla';
+              ;; endswitch;
+              (when (and
+                     (string-match-p
+                      "^[\t ]*endswitch[\t ]*;[\t ]*$"
+                      current-line-string)
+                     (not
+                      (string-match-p
+                       "[\t ]*switch"
+                       previous-line-string)))
+                (setq
+                 new-indentation
+                 (- new-indentation tab-width tab-width)))
+
+              ;; switch ($array):
+              ;;     case 'Something';
+              (when (and
+                     (string-match-p
+                      "^[\t ]*\\(case.+\\|default\\)\\(;\\|:\\)[\t ]*$"
+                      current-line-string)
+                     (string-match-p
+                      "^[\t ]*\\(switch\\)[\t ]*(.+):$"
+                      previous-line-string))
+                (setq new-indentation (+ new-indentation tab-width)))
 
 
               (when (> previous-bracket-level 0)

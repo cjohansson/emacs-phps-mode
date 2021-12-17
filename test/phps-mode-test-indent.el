@@ -517,12 +517,16 @@
    "Switch, case, default with alternative control structure")
 
   (phps-mode-test-indent--should-equal
-   "<?php\nif (true) {\n    switch ($condition):\n        case true:\n            echo 'here';\n            echo 'here 2';\n        case false:\n            echo 'here 4';\n        default:\n            echo 'here 3';\n    endswitch;\n    sprintf(__(\n        'Error: %s',\n        $error\n    ));\n}\n"
-   "Alternative switch, case, default with exception after it")
+   "<?php\nif (true) {\n    switch ($condition) {\n        case true:\n            echo 'here';\n            echo 'here 2';\n        case false:\n            echo 'here 4';\n        default:\n            echo 'here 3';\n    }\n}\n"
+   "Curly switch, case, default inside if expression body")
 
   (phps-mode-test-indent--should-equal
    "<?php\nif (true) {\n    switch ($condition) {\n        case true:\n            echo 'here';\n            echo 'here 2';\n        case false:\n            echo 'here 4';\n        default:\n            echo 'here 3';\n    }\n    sprintf(__(\n        'Error: %s',\n        $error\n    ));\n}\n"
-   "Curly switch, case, default with exception after it")
+   "Curly switch, case, default with expression after it")
+
+  (phps-mode-test-indent--should-equal
+   "<?php\nif (true) {\n    switch ($condition):\n        case true:\n            echo 'here';\n            echo 'here 2';\n        case false:\n            echo 'here 4';\n        default:\n            echo 'here 3';\n    endswitch;\n    sprintf(__(\n        'Error: %s',\n        $error\n    ));\n}\n"
+   "Alternative switch, case, default with expression after it")
 
   (phps-mode-test-indent--should-equal
    "<?php\n$product_path = \"${filename[0]}/${filename[1]}/\";\necho 'here';\n"
