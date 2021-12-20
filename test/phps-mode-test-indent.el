@@ -70,7 +70,7 @@
    "DOC-COMMENT")
 
   (phps-mode-test-indent--should-equal
-   "<?php\nmyFunction(array(\n    23,\n    [\n        25\n    ]\n    )\n);"
+   "<?php\nmyFunction(array(\n    23,\n    [\n        25\n    ]\n));"
    "Round and square bracket expressions")
 
   (phps-mode-test-indent--should-equal

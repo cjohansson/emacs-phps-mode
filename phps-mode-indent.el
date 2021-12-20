@@ -68,7 +68,7 @@
   "If STRING start with closing bracket, return it, otherwise return nil."
   (phps-mode-indent--string-starts-with-regexp
    string
-   "[\t ]*\\([\]})[]\\)"
+   "[\t ]*\\([\]})]\\)"
    1))
 
 (defun phps-mode-indent--string-starts-with-opening-bracket (string)
@@ -258,8 +258,6 @@
                             (phps-mode-indent--backwards-looking-at
                              "\r+\\([\t ]*\\)class[\r\t ]+[a-zA-Z0-9_]+[\r\t ]+\\(extends[\r\t ]+[a-zA-Z0-9_]+\\)?[\r\t ]*\\(implements[\r\t ]+[a-zA-Z0-9_]+\\)?$")))
                   (let ((old-indentation (length (match-string 1 backwards-string))))
-                    ;; TODO Need to find away to prevent this matching <?php class
-                    (message "backwards-string: %S = %S" backwards-string old-indentation)
                     (setq new-indentation (+ old-indentation tab-width)))))
 
               ;; class MyClass implements
@@ -326,7 +324,7 @@
                 (setq
                  new-indentation
                  (+ new-indentation tab-width)))
-
+              
               (when (and
                      previous-line-ends-with-terminus
                      (string=
@@ -590,14 +588,6 @@
                  new-indentation
                  (- new-indentation tab-width)))
 
-              ;; (message "\ncurrent-line-string: %S" current-line-string)
-              ;; ;; (message "current-line-starts-with-closing-bracket: %S" current-line-starts-with-closing-bracket)
-              ;; (message "previous-line-string: %S" previous-line-string)
-              ;; ;; (message "previous-line-starts-with-opening-doc-comment: %S" previous-line-starts-with-opening-doc-comment)
-              ;; (message "previous-bracket-level: %S" previous-bracket-level)
-              ;; (message "previous-indentation: %S" previous-indentation)
-              ;; (message "new-indentation: %S" new-indentation)
-
               ;; switch ($condition) {
               ;;     case true:
               ;;         echo 'here';
@@ -653,6 +643,7 @@
                 (setq new-indentation (+ new-indentation tab-width)))
 
 
+
               (when (> previous-bracket-level 0)
                 (if (< previous-bracket-level tab-width)
                     (setq new-indentation (+ new-indentation 1))
@@ -681,6 +672,7 @@
                      (< previous-bracket-level 0))
                 (setq new-indentation (+ new-indentation tab-width)))
 
+
               ;; $var .=
               ;;     'hello';
               ;; echo 'here';
@@ -690,6 +682,7 @@
               ;; echo 'here';
               (when (and
                      previous-line-ends-with-terminus
+                     (string= previous-line-ends-with-terminus ";")
                      (not (string-match-p "^[\t ]*\\(echo[\t ]+\\|print[\t ]+\\)" previous-line-string)))
 
                 ;; Back-trace buffer from previous line
@@ -738,6 +731,14 @@
               (when (< new-indentation 0)
                 (setq new-indentation 0))
               ;; (message "new-indentation: %S previous-bracket-level: %S old-indentation: %S" new-indentation previous-bracket-level old-indentation)
+
+              ;; (message "\ncurrent-line-string: %S" current-line-string)
+              ;; ;; (message "current-line-starts-with-closing-bracket: %S" current-line-starts-with-closing-bracket)
+              ;; (message "previous-line-string: %S" previous-line-string)
+              ;; ;; (message "previous-line-starts-with-opening-doc-comment: %S" previous-line-starts-with-opening-doc-comment)
+              ;; (message "previous-bracket-level: %S" previous-bracket-level)
+              ;; (message "previous-indentation: %S" previous-indentation)
+              ;; (message "new-indentation: %S" new-indentation)
 
               (indent-line-to new-indentation)))))
       ;; Only move to end of line if point is the current point and is at end of line
