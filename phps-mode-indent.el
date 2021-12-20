@@ -728,13 +728,10 @@
                         (setq parenthesis-level (1+ parenthesis-level)))))
 
                   ;; If it ended an assignment on a previous line, decrease indentation
-                  (when
-                      (or
-                       (and
-                        is-assignment
-                        (> previous-bracket-level -1))
-                       is-bracket-less-command)
-
+                  (when (or
+                         is-assignment
+                         is-bracket-less-command)
+                    
                     ;; NOTE stuff like $var = array(\n    4\n);\n
                     ;; will end assignment but also decrease previous-bracket-level
                     (setq new-indentation (- new-indentation tab-width))))
@@ -759,12 +756,12 @@
               ;; Decrease indentation if current line decreases in bracket level
               (when (< new-indentation 0)
                 (setq new-indentation 0))
-              ;; (message "new-indentation: %S previous-bracket-level: %S old-indentation: %S" new-indentation previous-bracket-level old-indentation)
+
 
               ;; (message "\ncurrent-line-string: %S" current-line-string)
-              ;; ;; (message "current-line-starts-with-closing-bracket: %S" current-line-starts-with-closing-bracket)
+              ;; (message "current-line-starts-with-closing-bracket: %S" current-line-starts-with-closing-bracket)
               ;; (message "previous-line-string: %S" previous-line-string)
-              ;; ;; (message "previous-line-starts-with-opening-doc-comment: %S" previous-line-starts-with-opening-doc-comment)
+              ;; (message "previous-line-starts-with-opening-doc-comment: %S" previous-line-starts-with-opening-doc-comment)
               ;; (message "previous-bracket-level: %S" previous-bracket-level)
               ;; (message "previous-indentation: %S" previous-indentation)
               ;; (message "new-indentation: %S" new-indentation)
