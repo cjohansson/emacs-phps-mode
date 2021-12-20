@@ -82,11 +82,11 @@
    "Multi-line NOWDOC string")
 
   (phps-mode-test-indent--should-equal
-   "<?php\n$var = \"A line\nmore text here\nlast line here\";"
+   "<?php\n$var = \"A line\n    more text here\n    last line here\";"
    "Multi-line double-quoted string")
 
   (phps-mode-test-indent--should-equal
-   "<?php\n$var = 'A line\nmore text here\nlast line here';"
+   "<?php\n$var = 'A line\n    more text here\n    last line here';"
    "Multi-line single-quoted string")
 
   (phps-mode-test-indent--should-equal
@@ -170,7 +170,7 @@
    "Assignment with square bracketed array")
 
   (phps-mode-test-indent--should-equal
-   "<?php\n$options = array(\n    'blaha' .\n        'blaha',\n    123,\n    'blaha'\n);"
+   "<?php\n$options = array(\n    'blaha' .\n    'blaha',\n    123,\n    'blaha'\n);"
    "Assignment with square bracketed array")
 
   (phps-mode-test-indent--should-equal

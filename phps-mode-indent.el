@@ -306,6 +306,34 @@
                       previous-line-string))
                 (setq new-indentation (+ new-indentation tab-width)))
 
+              ;; $var = 'A line' .
+              ;;     'something';
+              (when (and
+                     (string-match-p
+                      "^[\t ]*$[a-zA-Z0-9]+[\t ]*="
+                      previous-line-string)
+                     (not
+                      (string-match-p
+                       ";[\t ]*$"
+                       previous-line-string)))
+                (setq
+                 previous-bracket-level
+                 (+ previous-bracket-level tab-width)))
+
+              ;; echo 'Something' .
+              ;;     'something';
+              (when (and
+                     (string-match-p
+                      "^[\t ]*\\(echo\\|print\\|return\\|die\\)"
+                      previous-line-string)
+                     (not
+                      (string-match-p
+                       ";[\t ]*$"
+                       previous-line-string)))
+                (setq
+                 previous-bracket-level
+                 (+ previous-bracket-level tab-width)))
+
               ;; else
               ;;     echo 'Something';
               ;; or
@@ -542,12 +570,7 @@
                         ;; We use previous concatenated lines indent
                         (setq
                          new-indentation
-                         first-concatenated-line-indent))
-                    (unless (= previous-bracket-level tab-width)
-                      ;; This is the first concatenated line so we indent it
-                      (setq
-                       new-indentation
-                       (+ new-indentation tab-width))))
+                         first-concatenated-line-indent)))
 
                   ;; Reset point
                   (goto-char old-point)))
