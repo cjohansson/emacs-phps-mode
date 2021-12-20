@@ -68,49 +68,56 @@
   "If STRING start with closing bracket, return it, otherwise return nil."
   (phps-mode-indent--string-starts-with-regexp
    string
-   "[\t ]*\\([\]})]\\)"
-   1))
+   "[\t ]*\\(<\\?php[\t\n ]*\\)?\\([\]})]\\)"
+   2))
 
 (defun phps-mode-indent--string-starts-with-opening-bracket (string)
   "If STRING start with opening bracket return it otherwise nil."
   (phps-mode-indent--string-starts-with-regexp
    string
-   "[\t ]*\\([\[{(]\\)"
-   1))
+   "[\t ]*\\(<\\?php[\t\n ]*\\)?\\([\[{(]\\)"
+   2))
 
 (defun phps-mode-indent--string-starts-with-opening-doc-comment (string)
   "Does STRING start with opening doc comment?"
   (phps-mode-indent--string-starts-with-regexp
    string
-   "[\t ]*\\(/\\*\\*\\)"
-   1))
+   "[\t ]*\\(<\\?php[\t\n ]*\\)?\\(/\\*\\*\\)"
+   2))
 
 (defun phps-mode-indent--string-ends-with-assignment (string)
   "If STRING end with terminus, return it, otherwise return nil."
   (phps-mode-indent--string-ends-with-regexp
    string
-   "\\(=>?\\)[\t ]*"
+   "\\(=>?\\)[\t ]*\\(\\?>[\t\n ]*\\)?"
    1))
 
 (defun phps-mode-indent--string-ends-with-closing-bracket (string)
   "If STRING end with closing bracket, return it, otherwise nil."
   (phps-mode-indent--string-ends-with-regexp
    string
-   "\\([\]})]\\)[\t ]*"
+   "\\([\]})]\\)[\t ]*\\(\\?>[\t\n ]*\\)?"
+   1))
+
+(defun phps-mode-indent--string-ends-with-closing-doc-comment (string)
+  "If STRING end with closing doc comment, return it, otherwise nil."
+  (phps-mode-indent--string-ends-with-regexp
+   string
+   "\\(\\*/\\)[\t ]*\\(\\?>[\t\n ]*\\)?"
    1))
 
 (defun phps-mode-indent--string-ends-with-opening-bracket (string)
   "If STRING end with opening bracket, return it, otherwise nil."
   (phps-mode-indent--string-ends-with-regexp
    string
-   "\\([\[{(]\\)[\t ]*"
+   "\\([\[{(]\\)[\t ]*\\(\\?>[\t\n ]*\\)?"
    1))
 
 (defun phps-mode-indent--string-ends-with-terminus (string)
   "If STRING end with terminus, return it, otherwise return nil."
   (phps-mode-indent--string-ends-with-regexp
    string
-   "\\(;\\|,\\)[\t ]*"
+   "\\(;\\|,\\)[\t ]*\\(\\?>[\t\n ]*\\)?"
    1))
 
 
@@ -214,6 +221,9 @@
                      previous-line-string))
                    (previous-line-starts-with-opening-doc-comment
                     (phps-mode-indent--string-starts-with-opening-doc-comment
+                     previous-line-string))
+                   (previous-line-starts-with-closing-doc-comment
+                    (phps-mode-indent--string-ends-with-closing-doc-comment
                      previous-line-string))
                    (previous-line-ends-with-assignment
                     (phps-mode-indent--string-ends-with-assignment
@@ -533,10 +543,11 @@
                         (setq
                          new-indentation
                          first-concatenated-line-indent))
-                    ;; This is the first concatenated line so we indent it
-                    (setq
-                     new-indentation
-                     (+ new-indentation tab-width)))
+                    (unless (= previous-bracket-level tab-width)
+                      ;; This is the first concatenated line so we indent it
+                      (setq
+                       new-indentation
+                       (+ new-indentation tab-width))))
 
                   ;; Reset point
                   (goto-char old-point)))
@@ -660,7 +671,9 @@
               (when current-line-starts-with-closing-bracket
                 (setq new-indentation (- new-indentation tab-width)))
 
-              (when previous-line-starts-with-opening-doc-comment
+              (when (and
+                     previous-line-starts-with-opening-doc-comment
+                     (not previous-line-starts-with-closing-doc-comment))
                 (setq new-indentation (+ new-indentation 1)))
 
               (when (and

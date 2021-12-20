@@ -122,7 +122,7 @@
    "Concatenated single-quoted-string spanning multiple-lines inside function 2")
 
   (phps-mode-test-indent--should-equal
-   "<?php\necho <<<EOD\nExample of string\nspanning multiple lines\nusing heredoc syntax.\nEOD;\n"
+   "<?php\necho <<<EOD\nExample of string\nspanning multiple lines\nusing heredoc syntax\nEOD;\n"
    "Multi-line HEREDOC string outside assignment")
 
   (phps-mode-test-indent--should-equal
