@@ -78,7 +78,7 @@
    "HEREDOC in arguments example")
 
   (phps-mode-test-indent--should-equal
-   "<?php\n$str = <<<'EOD'\nExample of string\nspanning multiple lines\nusing nowdoc syntax.\nEOD;\n"
+   "<?php\n$str = <<<'EOD'\nExample of string\nspanning multiple lines\nusing nowdoc syntax\nEOD;\n"
    "Multi-line NOWDOC string")
 
   (phps-mode-test-indent--should-equal

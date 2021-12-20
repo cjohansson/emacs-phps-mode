@@ -519,8 +519,9 @@
                               (setq
                                previous-concatenation2
                                (point))))
-                        keep-searching
-                        nil)))
+                        (setq
+                         keep-searching
+                         nil))))
 
                   (if previous-concatenation
                       (let ((first-concatenated-line-indent
@@ -726,6 +727,21 @@
                     (setq new-indentation (- new-indentation tab-width))))
 
                 (goto-char point))
+
+              ;; echo <<<VAR
+              ;; abc
+              ;; or
+              ;; echo <<<'VAR'
+              ;; abc
+              ;; or
+              ;; echo <<<"VAR"
+              ;; abc
+              (when
+                  (string-match-p
+                   "<<<'?\"?[a-zA-Z0-9]+'?\"?$"
+                   previous-line-string)
+                (setq new-indentation 0))
+
 
               ;; Decrease indentation if current line decreases in bracket level
               (when (< new-indentation 0)
