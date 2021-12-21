@@ -713,7 +713,16 @@
                       (when end-of-switch-statement
                         (setq
                          new-indentation
-                         (- new-indentation tab-width)))))))
+                         (- new-indentation tab-width)))
+
+                      ;; TODO should indent double if previous
+                      ;; line ended a multi-line assignment
+                      ;; if (true) {
+                      ;;     $var =
+                      ;;         'abc';
+                      ;; }
+
+                      ))))
 
                ;; switch (blala):
                ;;     case bla:
@@ -763,13 +772,13 @@
                 (end-of-line)
                 (forward-char -1)
 
-                ;; TODO Need to determine if bracket started on assignment line or not
                 (let ((not-found t)
                       (is-assignment nil)
                       (is-string-doc)
                       (parenthesis-level 0)
                       (is-bracket-less-command nil)
-                      (is-same-line-p t))
+                      (is-same-line-p t)
+                      (bracket-opened-on-first-line))
                   (while
                       (and
                        not-found
@@ -818,6 +827,20 @@
                        (line-beginning-position)
                        (line-end-position)))))
 
+                  ;; When we have an assignment
+                  ;; keep track if bracket was opened on first
+                  ;; line
+                  (when (and
+                         is-assignment
+                         (string-match-p
+                          "[([]"
+                          (buffer-substring-no-properties
+                       (line-beginning-position)
+                       (line-end-position))))
+                    (setq
+                     bracket-opened-on-first-line
+                     t))
+
                   ;; echo 'there' .
                   ;;     'here';
                   ;; echo 'here';
@@ -835,16 +858,21 @@
                   ;;     'here'
                   ;; );
                   ;; echo 'here';
+                  ;; but not cases like
+                  ;; $var = 'abc'
+                  ;;     . 'def' . __(
+                  ;;         'okeoke'
+                  ;;     ) . 'ere';
+                  ;; echo 'here';
+                  ;; NOTE stuff like $var = array(\n    4\n);\n
+                  ;; will end assignment but also decrease previous-bracket-level
                   (when (and
                          (not is-same-line-p)
                          (or
                           (and
                            is-assignment
-                           (= previous-bracket-level 0))
+                           (not bracket-opened-on-first-line))
                           is-bracket-less-command))
-                    
-                    ;; NOTE stuff like $var = array(\n    4\n);\n
-                    ;; will end assignment but also decrease previous-bracket-level
                     (setq
                      new-indentation
                      (- new-indentation tab-width))))
