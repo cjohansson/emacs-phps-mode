@@ -721,6 +721,73 @@
                       ;;     $var =
                       ;;         'abc';
                       ;; }
+                      (when (and
+                             previous-line-ends-with-terminus
+                             (string= previous-line-ends-with-terminus ";")
+                             (not
+                              (string-match-p
+                               "^[\t ]*\\(echo[\t ]+\\|print[\t ]+\\)"
+                               previous-line-string)))
+                        ;; Back-trace buffer from previous line
+                        ;; Determine if semi-colon ended an multi-line assignment or bracket-less command or not
+                        ;; If it's on the same line we ignore it
+                        (forward-line (* -1 move-length1))
+                        (end-of-line)
+                        (forward-char -1)
+
+                        (let ((not-found t)
+                              (is-assignment nil)
+                              (is-string-doc)
+                              (parenthesis-level 0)
+                              (is-bracket-less-command nil)
+                              (is-same-line-p t)
+                              (bracket-opened-on-first-line))
+                          (while
+                              (and
+                               not-found
+                               (search-backward-regexp
+                                "\\(;\\|{\\|(\\|)\\|=\\|echo[\t ]+\\|print[\t ]+\\|\n\\|<<<'?\"?[a-zA-Z0-9]+'?\"?\\)"
+                                nil
+                                t))
+                            (let ((match (match-string-no-properties 0)))
+                              (cond
+                               ((string= match "\n")
+                                (setq is-same-line-p nil))
+                               ((string-match-p
+                                 "<<<'?\"?[a-zA-Z0-9]+'?\"?"
+                                 match)
+                                (setq
+                                 is-string-doc
+                                 t)
+                                (setq
+                                 not-found
+                                 nil))
+                               ((string= match "(")
+                                (setq
+                                 parenthesis-level
+                                 (1+ parenthesis-level)))
+                               ((string= match ")")
+                                (setq
+                                 parenthesis-level
+                                 (1- parenthesis-level)))
+                               ((= parenthesis-level 0)
+                                (setq is-assignment (string= match "="))
+                                (setq is-bracket-less-command
+                                      (string-match-p
+                                       "\\(echo[\t ]+\\|print[\t ]+\\)"
+                                       match))
+                                (setq not-found nil)))))
+
+                          (when (and
+                                 (not is-same-line-p)
+                                 (and
+                                  is-assignment
+                                  (not bracket-opened-on-first-line)))
+                            (setq
+                             new-indentation
+                             (- new-indentation tab-width)))
+
+                          (goto-char point)))
 
                       ))))
 
