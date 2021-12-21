@@ -222,7 +222,7 @@
                    (previous-line-starts-with-opening-doc-comment
                     (phps-mode-indent--string-starts-with-opening-doc-comment
                      previous-line-string))
-                   (previous-line-starts-with-closing-doc-comment
+                   (previous-line-ends-with-closing-doc-comment
                     (phps-mode-indent--string-ends-with-closing-doc-comment
                      previous-line-string))
                    (previous-line-ends-with-assignment
@@ -735,6 +735,11 @@
                ;;     'here'
                ;; );
                ;; echo 'here';
+               ;; or
+               ;;     $var = <<<EOD
+               ;; OKASDOKASD
+               ;; EOD;
+               ;;     echo 'here';
                ((and
                  previous-line-ends-with-terminus
                  (string= previous-line-ends-with-terminus ";")
@@ -752,18 +757,30 @@
 
                 (let ((not-found t)
                       (is-assignment nil)
+                      (is-string-doc)
                       (parenthesis-level 0)
                       (is-bracket-less-command nil)
                       (is-same-line-p t))
-                  (while (and
-                          not-found
-                          (search-backward-regexp "\\(;\\|{\\|(\\|)\\|=\\|echo[\t ]+\\|print[\t ]+\\|\n\\)" nil t))
-                    (let ((match
-                           (buffer-substring-no-properties
-                            (match-beginning 0) (match-end 0))))
+                  (while
+                      (and
+                       not-found
+                       (search-backward-regexp
+                        "\\(;\\|{\\|(\\|)\\|=\\|echo[\t ]+\\|print[\t ]+\\|\n\\|<<<'?\"?[a-zA-Z0-9]+'?\"?\\)"
+                        nil
+                        t))
+                    (let ((match (match-string-no-properties 0)))
                       (cond
                        ((string= match "\n")
                         (setq is-same-line-p nil))
+                       ((string-match-p
+                         "<<<'?\"?[a-zA-Z0-9]+'?\"?"
+                         match)
+                        (setq
+                         is-string-doc
+                         t)
+                        (setq
+                         not-found
+                         nil))
                        (t
                         (when (string= match ")")
                           (setq parenthesis-level (1- parenthesis-level)))
@@ -779,6 +796,18 @@
                           (setq
                            parenthesis-level
                            (1+ parenthesis-level)))))))
+
+                  ;;     $var = <<<EOD
+                  ;; OKASDOKASD
+                  ;; EOD;
+                  ;;     echo 'here';
+                  (when is-string-doc
+                    (setq
+                     new-indentation
+                     (phps-mode-indent--string-indentation
+                      (buffer-substring-no-properties
+                       (line-beginning-position)
+                       (line-end-position)))))
 
                   ;; echo 'there' .
                   ;;     'here';
@@ -868,6 +897,12 @@
                ;; array(
                ;;     'hello'
                ;; )
+               ;; but ignore
+               ;; [
+               ;; ]
+               ;; or
+               ;; array(
+               ;; )
                ((and
                  current-line-starts-with-closing-bracket
                  (not previous-line-ends-with-opening-bracket))
@@ -875,13 +910,19 @@
                  new-indentation
                  (- new-indentation tab-width)))
 
+               ;; /**
+               ;;  * here
+               ;; but ignore
+               ;; /** */
+               ;; here
                ((and
                  previous-line-starts-with-opening-doc-comment
-                 (not previous-line-starts-with-closing-doc-comment))
+                 (not previous-line-ends-with-closing-doc-comment))
                 (setq
                  new-indentation
                  (+ new-indentation 1)))
 
+               ;; $var =
                ((and
                  previous-line-ends-with-assignment
                  (<= previous-bracket-level 0))
@@ -889,6 +930,11 @@
                  new-indentation
                  (+ new-indentation tab-width)))
 
+               ;; )) {
+               ;;     echo 'here';
+               ;; or
+               ;; ]][
+               ;;     25
                ((and
                  previous-line-ends-with-opening-bracket
                  (< previous-bracket-level 0))
