@@ -763,6 +763,7 @@
                 (end-of-line)
                 (forward-char -1)
 
+                ;; TODO Need to determine if bracket started on assignment line or not
                 (let ((not-found t)
                       (is-assignment nil)
                       (is-string-doc)
@@ -789,21 +790,21 @@
                         (setq
                          not-found
                          nil))
-                       (t
-                        (when (string= match ")")
-                          (setq parenthesis-level (1- parenthesis-level)))
-                        (when (= parenthesis-level 0)
-                          (setq is-assignment (string= match "="))
-                          (setq is-bracket-less-command
-                                (string-match-p
-                                 "\\(echo[\t ]+\\|print[\t ]+\\)"
-                                 match))
-                          (setq not-found nil))
-
-                        (when (string= match "(")
-                          (setq
-                           parenthesis-level
-                           (1+ parenthesis-level)))))))
+                       ((string= match "(")
+                        (setq
+                         parenthesis-level
+                         (1+ parenthesis-level)))
+                       ((string= match ")")
+                        (setq
+                         parenthesis-level
+                         (1- parenthesis-level)))
+                       ((= parenthesis-level 0)
+                        (setq is-assignment (string= match "="))
+                        (setq is-bracket-less-command
+                              (string-match-p
+                               "\\(echo[\t ]+\\|print[\t ]+\\)"
+                               match))
+                        (setq not-found nil)))))
 
                   ;;     $var = <<<EOD
                   ;; OKASDOKASD
