@@ -245,13 +245,13 @@
                previous-indentation)
               (goto-char point)
 
-              (message "\ncurrent-line-string: %S" current-line-string)
-              (message "previous-line-string: %S" previous-line-string)
-              (message "current-line-starts-with-closing-bracket: %S" current-line-starts-with-closing-bracket)
-              (message "current-line-starts-with-opening-bracket: %S" current-line-starts-with-opening-bracket)
-              (message "previous-line-ends-with-opening-bracket: %S" previous-line-ends-with-opening-bracket)
-              (message "previous-bracket-level: %S" previous-bracket-level)
-              (message "previous-indentation: %S" previous-indentation)
+              ;; (message "\ncurrent-line-string: %S" current-line-string)
+              ;; (message "previous-line-string: %S" previous-line-string)
+              ;; (message "current-line-starts-with-closing-bracket: %S" current-line-starts-with-closing-bracket)
+              ;; (message "current-line-starts-with-opening-bracket: %S" current-line-starts-with-opening-bracket)
+              ;; (message "previous-line-ends-with-opening-bracket: %S" previous-line-ends-with-opening-bracket)
+              ;; (message "previous-bracket-level: %S" previous-bracket-level)
+              ;; (message "previous-indentation: %S" previous-indentation)
 
 
               ;; Case by case logic below - most specific to most general
@@ -677,9 +677,29 @@
                  current-line-starts-with-closing-bracket
                  (string= current-line-starts-with-closing-bracket "}"))
                 (let ((old-point (point))
-                      (end-of-switch-statement))
-                  (when (search-backward-regexp "[{}]" nil t)
-                    (when (looking-at-p "{")
+                      (end-of-switch-statement)
+                      (still-looking t)
+                      (curly-bracket-balance -1))
+
+                  ;; Should keep track of brackets
+                  ;; and stop when we reach the correct bracket
+                  (while (and
+                          still-looking
+                          (search-backward-regexp "[{}]" nil t))
+                    (cond
+                     ((looking-at-p "{")
+                      (setq
+                       curly-bracket-balance
+                       (1+ curly-bracket-balance)))
+                     ((looking-at-p "}")
+                      (setq
+                       curly-bracket-balance
+                       (1- curly-bracket-balance))))
+
+                    (when (= curly-bracket-balance 0)
+                      (setq
+                       still-looking
+                       nil)
                       (let ((bracket-start-line
                              (buffer-substring-no-properties
                               (line-beginning-position)
@@ -689,107 +709,108 @@
                                bracket-start-line)
                           (setq
                            end-of-switch-statement
-                           t))))
-                    (goto-char old-point)
+                           t)))))
 
-                    ;; Ignore cases like
+                  (goto-char old-point)
+
+                  ;; Ignore cases like
+                  ;; if (true) {
+                  ;; }
+                  ;; or
+                  ;; switch($var) {
+                  ;; }
+                  (unless previous-line-ends-with-opening-bracket
+
                     ;; if (true) {
-                    ;; }
-                    ;; or
-                    ;; switch($var) {
-                    ;; }
-                    (unless previous-line-ends-with-opening-bracket
+                    ;;     echo 'here';
+                    (setq
+                     new-indentation
+                     (- new-indentation tab-width))
 
-                      ;; if (true) {
-                      ;;     echo 'here';
+                    ;; switch($match) {
+                    ;;     case 'here':
+                    ;;         echo 'there';
+                    ;; }
+                    (when end-of-switch-statement
                       (setq
                        new-indentation
-                       (- new-indentation tab-width))
+                       (- new-indentation tab-width)))
 
-                      ;; switch($match) {
-                      ;;     case 'here':
-                      ;;         echo 'there';
-                      ;; }
-                      (when end-of-switch-statement
-                        (setq
-                         new-indentation
-                         (- new-indentation tab-width)))
+                    ;; should indent double if previous
+                    ;; line ended a multi-line assignment:
+                    ;; if (true) {
+                    ;;     $var =
+                    ;;         'abc';
+                    ;; }
+                    (when (and
+                           previous-line-ends-with-terminus
+                           (string= previous-line-ends-with-terminus ";")
+                           (not
+                            (string-match-p
+                             "^[\t ]*\\(echo[\t ]+\\|print[\t ]+\\)"
+                             previous-line-string)))
+                      ;; Back-trace buffer from previous line
+                      ;; Determine if semi-colon ended an multi-line assignment or bracket-less command or not
+                      ;; If it's on the same line we ignore it
+                      (forward-line (* -1 move-length1))
+                      (end-of-line)
+                      (forward-char -1)
 
-                      ;; TODO should indent double if previous
-                      ;; line ended a multi-line assignment
-                      ;; if (true) {
-                      ;;     $var =
-                      ;;         'abc';
-                      ;; }
-                      (when (and
-                             previous-line-ends-with-terminus
-                             (string= previous-line-ends-with-terminus ";")
-                             (not
-                              (string-match-p
-                               "^[\t ]*\\(echo[\t ]+\\|print[\t ]+\\)"
-                               previous-line-string)))
-                        ;; Back-trace buffer from previous line
-                        ;; Determine if semi-colon ended an multi-line assignment or bracket-less command or not
-                        ;; If it's on the same line we ignore it
-                        (forward-line (* -1 move-length1))
-                        (end-of-line)
-                        (forward-char -1)
-
-                        (let ((not-found t)
-                              (is-assignment nil)
-                              (is-string-doc)
-                              (parenthesis-level 0)
-                              (is-bracket-less-command nil)
-                              (is-same-line-p t)
-                              (bracket-opened-on-first-line))
-                          (while
-                              (and
+                      (let ((not-found t)
+                            (is-assignment nil)
+                            (is-string-doc)
+                            (parenthesis-level 0)
+                            (is-bracket-less-command nil)
+                            (is-same-line-p t)
+                            (bracket-opened-on-first-line))
+                        (while
+                            (and
+                             not-found
+                             (search-backward-regexp
+                              "\\(;\\|{\\|(\\|)\\|=\\|echo[\t ]+\\|print[\t ]+\\|\n\\|<<<'?\"?[a-zA-Z0-9]+'?\"?\\)"
+                              nil
+                              t))
+                          (let ((match (match-string-no-properties 0)))
+                            (cond
+                             ((string= match "\n")
+                              (setq is-same-line-p nil))
+                             ((string-match-p
+                               "<<<'?\"?[a-zA-Z0-9]+'?\"?"
+                               match)
+                              (setq
+                               is-string-doc
+                               t)
+                              (setq
                                not-found
-                               (search-backward-regexp
-                                "\\(;\\|{\\|(\\|)\\|=\\|echo[\t ]+\\|print[\t ]+\\|\n\\|<<<'?\"?[a-zA-Z0-9]+'?\"?\\)"
-                                nil
-                                t))
-                            (let ((match (match-string-no-properties 0)))
-                              (cond
-                               ((string= match "\n")
-                                (setq is-same-line-p nil))
-                               ((string-match-p
-                                 "<<<'?\"?[a-zA-Z0-9]+'?\"?"
-                                 match)
-                                (setq
-                                 is-string-doc
-                                 t)
-                                (setq
-                                 not-found
-                                 nil))
-                               ((string= match "(")
-                                (setq
-                                 parenthesis-level
-                                 (1+ parenthesis-level)))
-                               ((string= match ")")
-                                (setq
-                                 parenthesis-level
-                                 (1- parenthesis-level)))
-                               ((= parenthesis-level 0)
-                                (setq is-assignment (string= match "="))
-                                (setq is-bracket-less-command
-                                      (string-match-p
-                                       "\\(echo[\t ]+\\|print[\t ]+\\)"
-                                       match))
-                                (setq not-found nil)))))
+                               nil))
+                             ((string= match "(")
+                              (setq
+                               parenthesis-level
+                               (1+ parenthesis-level)))
+                             ((string= match ")")
+                              (setq
+                               parenthesis-level
+                               (1- parenthesis-level)))
+                             ((= parenthesis-level 0)
+                              (setq is-assignment (string= match "="))
+                              (setq is-bracket-less-command
+                                    (string-match-p
+                                     "\\(echo[\t ]+\\|print[\t ]+\\)"
+                                     match))
+                              (setq not-found nil)))))
 
-                          (when (and
-                                 (not is-same-line-p)
-                                 (and
-                                  is-assignment
-                                  (not bracket-opened-on-first-line)))
-                            (setq
-                             new-indentation
-                             (- new-indentation tab-width)))
+                        (when (and
+                               (not is-same-line-p)
+                               (and
+                                is-assignment
+                                (not bracket-opened-on-first-line)))
+                          (setq
+                           new-indentation
+                           (- new-indentation tab-width)))
 
-                          (goto-char point)))
+                        (goto-char point)))
 
-                      ))))
+                    )))
 
                ;; switch (blala):
                ;;     case bla:

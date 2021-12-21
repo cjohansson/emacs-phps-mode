@@ -190,7 +190,7 @@
    "Assignment with three-dimensional array with double arrow assignment")
 
   (phps-mode-test-indent--should-equal
-   "<?php\nif ($myCondition) {\n    $myObject->myMethod(myClass::class)\n        ->myMethod2($myArgument2);\n    }"
+   "<?php\nif ($myCondition) {\n    $myObject->myMethod(myClass::class)\n        ->myMethod2($myArgument2);\n}"
    "Object-oriented file with bracket-less namespace with multiple levels, class that extends and implements and functions with optional arguments")
 
   (phps-mode-test-indent--should-equal
