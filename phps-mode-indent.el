@@ -245,12 +245,13 @@
                previous-indentation)
               (goto-char point)
 
-              ;; (message "\ncurrent-line-string: %S" current-line-string)
-              ;; (message "previous-line-string: %S" previous-line-string)
-              ;; (message "current-line-starts-with-closing-bracket: %S" current-line-starts-with-closing-bracket)
-              ;; (message "previous-line-ends-with-opening-bracket: %S" previous-line-ends-with-opening-bracket)
-              ;; (message "previous-bracket-level: %S" previous-bracket-level)
-              ;; (message "previous-indentation: %S" previous-indentation)
+              (message "\ncurrent-line-string: %S" current-line-string)
+              (message "previous-line-string: %S" previous-line-string)
+              (message "current-line-starts-with-closing-bracket: %S" current-line-starts-with-closing-bracket)
+              (message "current-line-starts-with-opening-bracket: %S" current-line-starts-with-opening-bracket)
+              (message "previous-line-ends-with-opening-bracket: %S" previous-line-ends-with-opening-bracket)
+              (message "previous-bracket-level: %S" previous-bracket-level)
+              (message "previous-indentation: %S" previous-indentation)
 
 
               ;; Case by case logic below - most specific to most general
@@ -295,11 +296,18 @@
                ;;     myInterface,
                ;;     myInterface2
                ;; {
+               ;; ignore case
+               ;; class MyClass implements myInterface, myInterface2
+               ;; {
                ((and
                  current-line-starts-with-opening-bracket
                  (string= current-line-starts-with-opening-bracket "{")
                  (phps-mode-indent--backwards-looking-at
-                  "[\r\t ]*implements[\r\t ]+\\([\r\t ]*[\\a-zA-Z_0-9]+,?\\)+[\r\t ]*{$"))
+                  "[\r\t ]*implements[\r\t ]+\\([\r\t ]*[\\a-zA-Z_0-9]+,?\\)+[\r\t ]*{$")
+                 (not
+                  (string-match-p
+                   "[\t ]*\\(class\\|interface\\)[\t ]+"
+                   previous-line-string)))
                 (setq
                  new-indentation
                  (- new-indentation tab-width)))
@@ -903,9 +911,15 @@
                ;; or
                ;; array(
                ;; )
+               ;; but ignore
+               ;; var_dump(array(<<<EOD
+               ;; ölöas
+               ;; EOD
+               ;; ));
                ((and
                  current-line-starts-with-closing-bracket
-                 (not previous-line-ends-with-opening-bracket))
+                 (not previous-line-ends-with-opening-bracket)
+                 (>= previous-indentation tab-width))
                 (setq
                  new-indentation
                  (- new-indentation tab-width)))
