@@ -480,10 +480,6 @@
    "If expression spanning multiple lines 3")
 
   (phps-mode-test-indent--should-equal
-   "<?php\nif (myFunction(true)\n) {\n    echo 'was here';\n}\n"
-   "If expression spanning multiple lines 4")
-
-  (phps-mode-test-indent--should-equal
    "<?php\nif (myFunction(\n    true)\n) {\n    echo 'was here';\n}\n"
    "If expression spanning multiple lines 5")
 

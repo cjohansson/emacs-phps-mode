@@ -240,216 +240,256 @@
               ;; (message "Previous non-empty line: %S with indentation: %S" previous-line-string old-indentation)
               ;; (message "previous-line-ends-with-terminus: %S" previous-line-ends-with-terminus)
 
-              (setq new-indentation previous-indentation)
+              (setq
+               new-indentation
+               previous-indentation)
               (goto-char point)
 
-              ;; class MyClass implements
-              ;;     myInterface
-              ;; or
-              ;; class MyClass extends
-              ;;     myParent
-              (when (string-match-p
-                     "[\t ]+\\(extends\\|implements\\)$"
-                     previous-line-string)
-                (setq previous-bracket-level (+ tab-width)))
+              ;; (message "\ncurrent-line-string: %S" current-line-string)
+              ;; (message "previous-line-string: %S" previous-line-string)
+              ;; (message "current-line-starts-with-closing-bracket: %S" current-line-starts-with-closing-bracket)
+              ;; (message "previous-line-ends-with-opening-bracket: %S" previous-line-ends-with-opening-bracket)
+              ;; (message "previous-bracket-level: %S" previous-bracket-level)
+              ;; (message "previous-indentation: %S" previous-indentation)
 
-              ;; class MyClass
-              ;;     implements myInterface
-              ;; or
-              ;; class MyClass
-              ;;     extends myParent
-              ;; or
-              ;; class MyClass
-              ;;     extends myParent
-              ;;     implements MyInterface
-              (when
-                  (string-match "^[\t ]*\\(extends\\|implements\\)" current-line-string)
-                (when-let ((backwards-string
-                            (phps-mode-indent--backwards-looking-at
-                             "\r+\\([\t ]*\\)class[\r\t ]+[a-zA-Z0-9_]+[\r\t ]+\\(extends[\r\t ]+[a-zA-Z0-9_]+\\)?[\r\t ]*\\(implements[\r\t ]+[a-zA-Z0-9_]+\\)?$")))
-                  (let ((old-indentation (length (match-string 1 backwards-string))))
-                    (setq new-indentation (+ old-indentation tab-width)))))
 
-              ;; class MyClass implements
-              ;;     myInterface,
-              ;;     myInterface2
-              ;; {
-              (when (and
-                     current-line-starts-with-opening-bracket
-                     (string= current-line-starts-with-opening-bracket "{")
-                     (phps-mode-indent--backwards-looking-at
-                      "[\r\t ]*implements[\r\t ]+\\([\r\t ]*[\\a-zA-Z_0-9]+,?\\)+[\r\t ]*{$"))
-                (setq new-indentation (- new-indentation tab-width)))
+              ;; Case by case logic below - most specific to most general
 
-              ;; if (true)
-              ;;     echo 'Something';
-              ;; or
-              ;; while (true)
-              ;;     echo 'Something';
-              ;; or
-              ;; if (true):
-              ;;     echo 'Something';
-              ;; or
-              ;; while (true):
-              ;;     echo 'Something';
-              ;; or
-              ;; for ($i = 0; $i < 10; $i++):
-              ;;     echo 'Something';
-              ;; or
-              ;; foreach ($array as $value):
-              ;;     echo 'Something';
-              (when (and
-                     current-line-ends-with-terminus
-                     (string= current-line-ends-with-terminus ";")
-                     (string-match-p
-                      "^[\t ]*\\(if\\|while\\|for\\|foreach\\)[\t ]*(.+):?$"
-                      previous-line-string))
-                (setq new-indentation (+ new-indentation tab-width)))
+              (cond
 
-              ;; $var = 'A line' .
-              ;;     'something';
-              (when (and
-                     (string-match-p
-                      "^[\t ]*$[a-zA-Z0-9]+[\t ]*="
-                      previous-line-string)
-                     (not
-                      (string-match-p
-                       ";[\t ]*$"
-                       previous-line-string)))
-                (setq
-                 previous-bracket-level
-                 (+ previous-bracket-level tab-width)))
-
-              ;; echo 'Something' .
-              ;;     'something';
-              (when (and
-                     (string-match-p
-                      "^[\t ]*\\(echo\\|print\\|return\\|die\\)"
-                      previous-line-string)
-                     (not
-                      (string-match-p
-                       ";[\t ]*$"
-                       previous-line-string)))
-                (setq
-                 previous-bracket-level
-                 (+ previous-bracket-level tab-width)))
-
-              ;; else
-              ;;     echo 'Something';
-              ;; or
-              ;; else if (true)
-              ;;     echo 'Something';
-              ;; or
-              ;; elseif (true)
-              ;;     echo 'Something';
-              ;; or
-              ;; else:
-              ;;     echo 'Something';
-              ;; or
-              ;; else if (true):
-              ;;     echo 'Something';
-              ;; or
-              ;; elseif (true):
-              ;;     echo 'Something';
-              (when (and
-                     current-line-ends-with-terminus
-                     (string=
-                      current-line-ends-with-terminus
-                      ";")
-                     (string-match-p
-                      "^[\t ]*else\\([\t ]*$\\|.*\\()\\|:\\)$\\)"
-                      previous-line-string))
+               ;; class MyClass implements
+               ;;     myInterface
+               ;; or
+               ;; class MyClass extends
+               ;;     myParent
+               ((string-match-p
+                 "[\t ]+\\(extends\\|implements\\)$"
+                 previous-line-string)
                 (setq
                  new-indentation
                  (+ new-indentation tab-width)))
-              
-              (when (and
-                     previous-line-ends-with-terminus
-                     (string=
-                      previous-line-ends-with-terminus
-                      ";"))
 
-                ;; if (true)
-                ;;     echo 'Something';
-                ;; else
-                ;; or
-                ;; if (true):
-                ;;     echo 'Something';
-                ;; else:
-                ;; or
-                ;; if (true)
-                ;;     echo 'Something';
-                ;; elseif (false)
-                ;; or
-                ;; if (true):
-                ;;     echo 'Something';
-                ;; elseif (false):
-                ;; or
-                ;; if (true):
-                ;;     echo 'Something';
-                ;; endif;
-                ;; or
-                ;; while (true):
-                ;;     echo 'Something';
-                ;; endwhile;
-                ;; or
-                ;; for ($i = 0; $i < 10; $i++):
-                ;;     echo 'Something';
-                ;; endfor;
-                ;; or
-                ;; foreach ($array as $value):
-                ;;     echo 'Something';
-                ;; endforeach;
-                (when (string-match-p
-                       "^[\t ]*\\(else:?[\t ]*$\\|else.*):?$\\|endif;[\t ]*$\\|endfor;[\t ]*$\\|endforeach;[\t ]*$\\|endwhile;[\t ]*$\\)"
-                       current-line-string)
-                  (setq
-                   new-indentation
-                   (-
-                    new-indentation
-                    tab-width)))
+               ;; class MyClass
+               ;;     implements myInterface
+               ;; or
+               ;; class MyClass
+               ;;     extends myParent
+               ;; or
+               ;; class MyClass
+               ;;     extends myParent
+               ;;     implements MyInterface
+               ((string-match-p
+                 "^[\t ]*\\(extends\\|implements\\)"
+                 current-line-string)
+                (when-let ((backwards-string
+                            (phps-mode-indent--backwards-looking-at
+                             "\r+\\([\t ]*\\)class[\r\t ]+[a-zA-Z0-9_]+[\r\t ]+\\(extends[\r\t ]+[a-zA-Z0-9_]+\\)?[\r\t ]*\\(implements[\r\t ]+[a-zA-Z0-9_]+\\)?$")))
+                  (let ((old-indentation
+                         (length
+                          (match-string 1 backwards-string))))
+                    (setq
+                     new-indentation
+                     (+ old-indentation tab-width)))))
 
-                ;; if (true)
-                ;;     echo 'Something';
-                ;; else
-                ;;     echo 'Something else';
-                ;; echo true;
-                ;; or
-                ;; if (true)
-                ;;     echo 'Something';
-                ;; echo 'Something else';
-                ;; or
-                ;; when (true)
-                ;;     echo 'Something';
-                ;; echo 'Afterwards';
-                ;; or
-                ;; elseif (true)
-                ;;     echo 'Something';
-                ;; echo 'Afterwards';
-                (when (string-match-p
-                       "^[\t ]*\\(else[\t ]*$\\|else.*)[\t ]*$\\|if.*)$\\|while.*)$\\)"
-                       previous2-line-string)
-                  (setq
-                   new-indentation
-                   (-
-                    new-indentation
-                    tab-width)))
+               ;; class MyClass implements
+               ;;     myInterface,
+               ;;     myInterface2
+               ;; {
+               ((and
+                 current-line-starts-with-opening-bracket
+                 (string= current-line-starts-with-opening-bracket "{")
+                 (phps-mode-indent--backwards-looking-at
+                  "[\r\t ]*implements[\r\t ]+\\([\r\t ]*[\\a-zA-Z_0-9]+,?\\)+[\r\t ]*{$"))
+                (setq
+                 new-indentation
+                 (- new-indentation tab-width)))
 
-                )
+               ;; if (true)
+               ;;     echo 'Something';
+               ;; or
+               ;; while (true)
+               ;;     echo 'Something';
+               ;; or
+               ;; if (true):
+               ;;     echo 'Something';
+               ;; or
+               ;; while (true):
+               ;;     echo 'Something';
+               ;; or
+               ;; for ($i = 0; $i < 10; $i++):
+               ;;     echo 'Something';
+               ;; or
+               ;; foreach ($array as $value):
+               ;;     echo 'Something';
+               ((and
+                 current-line-ends-with-terminus
+                 (string= current-line-ends-with-terminus ";")
+                 (string-match-p
+                  "^[\t ]*\\(if\\|while\\|for\\|foreach\\)[\t ]*(.+):?$"
+                  previous-line-string))
+                (setq new-indentation
+                      (+ new-indentation tab-width)))
 
-              ;; $variable = array(
-              ;;     'random' =>
-              ;;         'hello'
-              ;; );
-              ;; or
-              ;; $variable = [
-              ;;     'random' =>
-              ;;         'hello'
-              ;; ];
-              (when
+               ;; echo <<<VAR
+               ;; abc
+               ;; or
+               ;; echo <<<'VAR'
+               ;; abc
+               ;; or
+               ;; echo <<<"VAR"
+               ;; abc
+               ((string-match-p
+                 "<<<'?\"?[a-zA-Z0-9]+'?\"?$"
+                 previous-line-string)
+                (setq
+                 new-indentation
+                 0))
+
+               ;; $var = 'A line' .
+               ;;     'something';
+               ((and
+                 (string-match-p
+                  "^[\t ]*$[a-zA-Z0-9]+[\t ]*="
+                  previous-line-string)
+                 (not
                   (string-match-p
-                   "^[\t ]*\\()\\|]\\);[\t ]*$"
-                   current-line-string)
+                   ";[\t ]*$"
+                   previous-line-string)))
+                (setq
+                 new-indentation
+                 (+ new-indentation tab-width)))
+
+               ;; echo 'Something' .
+               ;;     'something';
+               ((and
+                 (string-match-p
+                  "^[\t ]*\\(echo\\|print\\|return\\|die\\)"
+                  previous-line-string)
+                 (not
+                  (string-match-p
+                   ";[\t ]*$"
+                   previous-line-string)))
+                (setq
+                 new-indentation
+                 (+ new-indentation tab-width)))
+
+               ;; else
+               ;;     echo 'Something';
+               ;; or
+               ;; else if (true)
+               ;;     echo 'Something';
+               ;; or
+               ;; elseif (true)
+               ;;     echo 'Something';
+               ;; or
+               ;; else:
+               ;;     echo 'Something';
+               ;; or
+               ;; else if (true):
+               ;;     echo 'Something';
+               ;; or
+               ;; elseif (true):
+               ;;     echo 'Something';
+               ((and
+                 current-line-ends-with-terminus
+                 (string=
+                  current-line-ends-with-terminus
+                  ";")
+                 (string-match-p
+                  "^[\t ]*else\\([\t ]*$\\|.*\\()\\|:\\)$\\)"
+                  previous-line-string))
+                (setq
+                 new-indentation
+                 (+ new-indentation tab-width)))
+
+               ;; if (true)
+               ;;     echo 'Something';
+               ;; else
+               ;; or
+               ;; if (true):
+               ;;     echo 'Something';
+               ;; else:
+               ;; or
+               ;; if (true)
+               ;;     echo 'Something';
+               ;; elseif (false)
+               ;; or
+               ;; if (true):
+               ;;     echo 'Something';
+               ;; elseif (false):
+               ;; or
+               ;; if (true):
+               ;;     echo 'Something';
+               ;; endif;
+               ;; or
+               ;; while (true):
+               ;;     echo 'Something';
+               ;; endwhile;
+               ;; or
+               ;; for ($i = 0; $i < 10; $i++):
+               ;;     echo 'Something';
+               ;; endfor;
+               ;; or
+               ;; foreach ($array as $value):
+               ;;     echo 'Something';
+               ;; endforeach;
+               ((and
+                 previous-line-ends-with-terminus
+                 (string=
+                  previous-line-ends-with-terminus
+                  ";")
+                 (string-match-p
+                  "^[\t ]*\\(else:?[\t ]*$\\|else.*):?$\\|endif;[\t ]*$\\|endfor;[\t ]*$\\|endforeach;[\t ]*$\\|endwhile;[\t ]*$\\)"
+                  current-line-string))
+                (setq
+                 new-indentation
+                 (-
+                  new-indentation
+                  tab-width)))
+
+               ;; if (true)
+               ;;     echo 'Something';
+               ;; else
+               ;;     echo 'Something else';
+               ;; echo true;
+               ;; or
+               ;; if (true)
+               ;;     echo 'Something';
+               ;; echo 'Something else';
+               ;; or
+               ;; when (true)
+               ;;     echo 'Something';
+               ;; echo 'Afterwards';
+               ;; or
+               ;; elseif (true)
+               ;;     echo 'Something';
+               ;; echo 'Afterwards';
+               ((and
+                 previous-line-ends-with-terminus
+                 (string=
+                  previous-line-ends-with-terminus
+                  ";")
+                 (string-match-p
+                  "^[\t ]*\\(else[\t ]*$\\|else.*)[\t ]*$\\|if.*)$\\|while.*)$\\)"
+                  previous2-line-string))
+                (setq
+                 new-indentation
+                 (-
+                  new-indentation
+                  tab-width)))
+
+               ;; $variable = array(
+               ;;     'random' =>
+               ;;         'hello'
+               ;; );
+               ;; or
+               ;; $variable = [
+               ;;     'random' =>
+               ;;         'hello'
+               ;; ];
+               ((string-match-p
+                 "^[\t ]*\\()\\|]\\);[\t ]*$"
+                 current-line-string)
                 (let ((old-point (point))
                       (still-looking t)
                       (bracket-count -1))
@@ -486,30 +526,28 @@
                        bracket-start-indentation)))
 
                   ;; Reset point
-                  (goto-char old-point))
+                  (goto-char old-point)))
 
-                )
-
-              ;; echo 'Something'
-              ;;     . 'more';
-              ;; or
-              ;; echo
-              ;;     'Something'
-              ;;     . 'more';
-              ;; or
-              ;; echo 'Something' .
-              ;;     'more';
-              ;; or
-              ;; echo
-              ;;     'Something' .
-              ;;     'more';
-              (when (or
-                     (string-match-p
-                      "^[\t ]*\\."
-                      current-line-string)
-                     (string-match-p
-                      "\\.[\t ]*$"
-                      previous-line-string))
+               ;; echo 'Something'
+               ;;     . 'more';
+               ;; or
+               ;; echo
+               ;;     'Something'
+               ;;     . 'more';
+               ;; or
+               ;; echo 'Something' .
+               ;;     'more';
+               ;; or
+               ;; echo
+               ;;     'Something' .
+               ;;     'more';
+               ((or
+                 (string-match-p
+                  "^[\t ]*\\."
+                  current-line-string)
+                 (string-match-p
+                  "\\.[\t ]*$"
+                  previous-line-string))
 
                 ;; If previous line matched ending .
                 ;; we must backtrack at least two lines
@@ -575,61 +613,61 @@
                   ;; Reset point
                   (goto-char old-point)))
 
-              ;; case true:
-              ;;     echo 'here';
-              ;; or
-              ;; case true;
-              ;;     echo 'here';
-              ;; or
-              ;; default:
-              ;;     echo 'here';
-              ;; or
-              ;; default;
-              ;;     echo 'here';
-              (when (and
-                     (not
-                      (string-match-p
-                       "^[\t ]*\\(case[\t ]+\\|default\\)"
-                       current-line-string))
-                     (or
-                      (string-match-p
-                       "^[\t ]*case[\t ]+.*\\(;\\|:\\)[\t ]*$"
-                       previous-line-string)
-                      (string-match-p
-                       "^[\t ]*default.*\\(;\\|:\\)[\t ]*$"
-                       previous-line-string)))
+               ;; case true:
+               ;;     echo 'here';
+               ;; or
+               ;; case true;
+               ;;     echo 'here';
+               ;; or
+               ;; default:
+               ;;     echo 'here';
+               ;; or
+               ;; default;
+               ;;     echo 'here';
+               ((and
+                 (not
+                  (string-match-p
+                   "^[\t ]*\\(case[\t ]+\\|default\\)"
+                   current-line-string))
+                 (or
+                  (string-match-p
+                   "^[\t ]*case[\t ]+.*\\(;\\|:\\)[\t ]*$"
+                   previous-line-string)
+                  (string-match-p
+                   "^[\t ]*default.*\\(;\\|:\\)[\t ]*$"
+                   previous-line-string)))
                 (setq
-                 previous-bracket-level
-                 (+ previous-bracket-level tab-width)))
+                 new-indentation
+                 (+ new-indentation tab-width)))
 
-              ;; case true:
-              ;;     echo 'here';
-              ;; case false:
-              ;; or
-              ;; case true:
-              ;;     echo 'here';
-              ;; default:
-              (when (and
-                     (not previous-line-ends-with-opening-bracket)
-                     (not (string-match-p ":[\t ]*$" previous-line-string))
-                     (or
-                      (string-match-p
-                       "^[\t ]*case[\t ]+.*\\(;\\|:\\)[\t ]*$"
-                       current-line-string)
-                      (string-match-p
-                       "^[\t ]*default.*\\(;\\|:\\)[\t ]*$"
-                       current-line-string)))
+               ;; case true:
+               ;;     echo 'here';
+               ;; case false:
+               ;; or
+               ;; case true:
+               ;;     echo 'here';
+               ;; default:
+               ((and
+                 (not previous-line-ends-with-opening-bracket)
+                 (not (string-match-p ":[\t ]*$" previous-line-string))
+                 (or
+                  (string-match-p
+                   "^[\t ]*case[\t ]+.*\\(;\\|:\\)[\t ]*$"
+                   current-line-string)
+                  (string-match-p
+                   "^[\t ]*default.*\\(;\\|:\\)[\t ]*$"
+                   current-line-string)))
                 (setq
                  new-indentation
                  (- new-indentation tab-width)))
 
-              ;; switch ($condition) {
-              ;;     case true:
-              ;;         echo 'here';
-              ;; }
-              (when (and
-                     current-line-starts-with-closing-bracket
-                     (string= current-line-starts-with-closing-bracket "}"))
+               ;; switch ($condition) {
+               ;;     case true:
+               ;;         echo 'here';
+               ;; }
+               ((and
+                 current-line-starts-with-closing-bracket
+                 (string= current-line-starts-with-closing-bracket "}"))
                 (let ((old-point (point))
                       (end-of-switch-statement))
                   (when (search-backward-regexp "[{}]" nil t)
@@ -645,82 +683,65 @@
                            end-of-switch-statement
                            t))))
                     (goto-char old-point)
-                    (when end-of-switch-statement
+
+                    ;; Ignore cases like
+                    ;; if (true) {
+                    ;; }
+                    ;; or
+                    ;; switch($var) {
+                    ;; }
+                    (unless previous-line-ends-with-opening-bracket
+
+                      ;; if (true) {
+                      ;;     echo 'here';
                       (setq
                        new-indentation
-                       (- new-indentation tab-width))))))
+                       (- new-indentation tab-width))
 
-              ;; switch (blala):
-              ;;     case bla:
-              ;;         echo 'bla';
-              ;; endswitch;
-              (when (and
-                     (string-match-p
-                      "^[\t ]*endswitch[\t ]*;[\t ]*$"
-                      current-line-string)
-                     (not
-                      (string-match-p
-                       "^[\t ]*switch"
-                       previous-line-string)))
+                      ;; switch($match) {
+                      ;;     case 'here':
+                      ;;         echo 'there';
+                      ;; }
+                      (when end-of-switch-statement
+                        (setq
+                         new-indentation
+                         (- new-indentation tab-width)))))))
+
+               ;; switch (blala):
+               ;;     case bla:
+               ;;         echo 'bla';
+               ;; endswitch;
+               ((and
+                 (string-match-p
+                  "^[\t ]*endswitch[\t ]*;[\t ]*$"
+                  current-line-string)
+                 (not
+                  (string-match-p
+                   "^[\t ]*switch"
+                   previous-line-string)))
                 (setq
                  new-indentation
                  (- new-indentation tab-width tab-width)))
 
-              ;; switch ($array):
-              ;;     case 'Something';
-              (when (and
-                     (string-match-p
-                      "^[\t ]*\\(case.+\\|default\\)\\(;\\|:\\)[\t ]*$"
-                      current-line-string)
-                     (string-match-p
-                      "^[\t ]*\\(switch\\)[\t ]*(.+):$"
-                      previous-line-string))
-                (setq new-indentation (+ new-indentation tab-width)))
-
-
-
-              (when (> previous-bracket-level 0)
-                (if (< previous-bracket-level tab-width)
-                    (setq new-indentation (+ new-indentation 1))
-                  (setq new-indentation (+ new-indentation tab-width))))
-
-              (when (= previous-bracket-level -1)
-                (setq new-indentation (1- new-indentation)))
-
-              (when (and (= previous-bracket-level 0)
-                         previous-line-starts-with-closing-bracket)
-                (setq new-indentation (+ new-indentation tab-width)))
-
-              (when current-line-starts-with-closing-bracket
-                (setq new-indentation (- new-indentation tab-width)))
-
-              (when (and
-                     previous-line-starts-with-opening-doc-comment
-                     (not previous-line-starts-with-closing-doc-comment))
-                (setq new-indentation (+ new-indentation 1)))
-
-              (when (and
-                     previous-line-ends-with-assignment
-                     (<= previous-bracket-level 0))
-                (setq new-indentation (+ new-indentation tab-width)))
-
-              (when (and
-                     previous-line-ends-with-opening-bracket
-                     (< previous-bracket-level 0))
-                (setq new-indentation (+ new-indentation tab-width)))
-
-
-              ;; $var .=
-              ;;     'hello';
-              ;; echo 'here';
-              ;; or
-              ;; $var =
-              ;;     25;
-              ;; echo 'here';
-              (when (and
-                     previous-line-ends-with-terminus
-                     (string= previous-line-ends-with-terminus ";")
-                     (not (string-match-p "^[\t ]*\\(echo[\t ]+\\|print[\t ]+\\)" previous-line-string)))
+               ;; $var .=
+               ;;     'hello';
+               ;; echo 'here';
+               ;; or
+               ;; $var =
+               ;;     25;
+               ;; echo 'here';
+               ;; or
+               ;; $var = array(
+               ;;     'here'
+               ;; );
+               ;; echo 'here';
+               ((and
+                 previous-line-ends-with-terminus
+                 (string= previous-line-ends-with-terminus ";")
+                 (not
+                  (string-match-p
+                   "^[\t ]*\\(echo[\t ]+\\|print[\t ]+\\)"
+                   previous-line-string)))
 
                 ;; Back-trace buffer from previous line
                 ;; Determine if semi-colon ended an multi-line assignment or bracket-less command or not
@@ -732,62 +753,150 @@
                 (let ((not-found t)
                       (is-assignment nil)
                       (parenthesis-level 0)
-                      (is-bracket-less-command nil))
+                      (is-bracket-less-command nil)
+                      (is-same-line-p t))
                   (while (and
                           not-found
-                          (search-backward-regexp "\\(;\\|{\\|(\\|)\\|=\\|echo[\t ]+\\|print[\t ]+\\)" nil t))
-                    (let ((match (buffer-substring-no-properties (match-beginning 0) (match-end 0))))
-                      (when (string= match ")")
-                        (setq parenthesis-level (1- parenthesis-level)))
-                      (when (= parenthesis-level 0)
-                        (setq is-assignment (string= match "="))
-                        (setq is-bracket-less-command
-                              (string-match-p
-                               "\\(echo[\t ]+\\|print[\t ]+\\)"
-                               match))
-                        (setq not-found nil))
+                          (search-backward-regexp "\\(;\\|{\\|(\\|)\\|=\\|echo[\t ]+\\|print[\t ]+\\|\n\\)" nil t))
+                    (let ((match
+                           (buffer-substring-no-properties
+                            (match-beginning 0) (match-end 0))))
+                      (cond
+                       ((string= match "\n")
+                        (setq is-same-line-p nil))
+                       (t
+                        (when (string= match ")")
+                          (setq parenthesis-level (1- parenthesis-level)))
+                        (when (= parenthesis-level 0)
+                          (setq is-assignment (string= match "="))
+                          (setq is-bracket-less-command
+                                (string-match-p
+                                 "\\(echo[\t ]+\\|print[\t ]+\\)"
+                                 match))
+                          (setq not-found nil))
 
-                      (when (string= match "(")
-                        (setq parenthesis-level (1+ parenthesis-level)))))
+                        (when (string= match "(")
+                          (setq
+                           parenthesis-level
+                           (1+ parenthesis-level)))))))
 
-                  ;; If it ended an assignment on a previous line, decrease indentation
-                  (when (or
-                         is-assignment
-                         is-bracket-less-command)
+                  ;; echo 'there' .
+                  ;;     'here';
+                  ;; echo 'here';
+                  ;; or
+                  ;; print 'there' .
+                  ;;     'here';
+                  ;; echo 'here';
+                  ;; or
+                  ;; $var =
+                  ;;     'opkeokoek';
+                  ;; echo 'here'
+
+                  ;; ignore cases like
+                  ;; $var = array(
+                  ;;     'here'
+                  ;; );
+                  ;; echo 'here';
+                  (when (and
+                         (not is-same-line-p)
+                         (or
+                          (and
+                           is-assignment
+                           (= previous-bracket-level 0))
+                          is-bracket-less-command))
                     
                     ;; NOTE stuff like $var = array(\n    4\n);\n
                     ;; will end assignment but also decrease previous-bracket-level
-                    (setq new-indentation (- new-indentation tab-width))))
+                    (setq
+                     new-indentation
+                     (- new-indentation tab-width))))
 
                 (goto-char point))
 
-              ;; echo <<<VAR
-              ;; abc
-              ;; or
-              ;; echo <<<'VAR'
-              ;; abc
-              ;; or
-              ;; echo <<<"VAR"
-              ;; abc
-              (when
-                  (string-match-p
-                   "<<<'?\"?[a-zA-Z0-9]+'?\"?$"
-                   previous-line-string)
-                (setq new-indentation 0))
+               ;; switch ($array):
+               ;;     case 'Something';
+               ((and
+                 (string-match-p
+                  "^[\t ]*\\(case.+\\|default\\)\\(;\\|:\\)[\t ]*$"
+                  current-line-string)
+                 (string-match-p
+                  "^[\t ]*\\(switch\\)[\t ]*(.+):$"
+                  previous-line-string))
+                (setq
+                 new-indentation
+                 (+ new-indentation tab-width)))
 
+               ;; /**
+               ;;  *
+               ;;  */
+               ;; echo 'here';
+               ((= previous-bracket-level -1)
+                (setq
+                 new-indentation
+                 (1- new-indentation)))
 
-              ;; Decrease indentation if current line decreases in bracket level
-              (when (< new-indentation 0)
-                (setq new-indentation 0))
+               ;; /**
+               ;;  *
+               ((= previous-bracket-level 1)
+                (setq
+                 new-indentation
+                 (+ new-indentation 1)))
 
+               ;; array(
+               ;;     'here'
+               ;; or
+               ;; [[
+               ;;     'here'
+               ;; or
+               ;; if (something) {
+               ;;     echo 'here';
+               ((>= previous-bracket-level tab-width)
+                (setq
+                 new-indentation
+                 (+ new-indentation tab-width)))
 
-              ;; (message "\ncurrent-line-string: %S" current-line-string)
-              ;; (message "current-line-starts-with-closing-bracket: %S" current-line-starts-with-closing-bracket)
-              ;; (message "previous-line-string: %S" previous-line-string)
-              ;; (message "previous-line-starts-with-opening-doc-comment: %S" previous-line-starts-with-opening-doc-comment)
-              ;; (message "previous-bracket-level: %S" previous-bracket-level)
-              ;; (message "previous-indentation: %S" previous-indentation)
-              ;; (message "new-indentation: %S" new-indentation)
+               ((and (= previous-bracket-level 0)
+                     previous-line-starts-with-closing-bracket)
+                (setq
+                 new-indentation
+                 (+ new-indentation tab-width)))
+
+               ;; [
+               ;;     'hello'
+               ;; ]
+               ;; or
+               ;; array(
+               ;;     'hello'
+               ;; )
+               ((and
+                 current-line-starts-with-closing-bracket
+                 (not previous-line-ends-with-opening-bracket))
+                (setq
+                 new-indentation
+                 (- new-indentation tab-width)))
+
+               ((and
+                 previous-line-starts-with-opening-doc-comment
+                 (not previous-line-starts-with-closing-doc-comment))
+                (setq
+                 new-indentation
+                 (+ new-indentation 1)))
+
+               ((and
+                 previous-line-ends-with-assignment
+                 (<= previous-bracket-level 0))
+                (setq
+                 new-indentation
+                 (+ new-indentation tab-width)))
+
+               ((and
+                 previous-line-ends-with-opening-bracket
+                 (< previous-bracket-level 0))
+                (setq
+                 new-indentation
+                 (+ new-indentation tab-width)))
+
+               )
 
               (indent-line-to new-indentation)))))
       ;; Only move to end of line if point is the current point and is at end of line
