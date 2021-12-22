@@ -254,12 +254,10 @@
            (setq phps-mode-lex-analyzer--nest-location-stack (nth 6 lex-result))
            (setq phps-mode-lex-analyzer--parse-trail (nth 7 lex-result))
            (setq phps-mode-lex-analyzer--parse-error (nth 8 lex-result))
-
-           ;; Save processed result
-           (setq phps-mode-lex-analyzer--processed-buffer-p t)
            (setq phps-mode-lex-analyzer--ast (nth 9 lex-result))
            (setq phps-mode-lex-analyzer--imenu (nth 10 lex-result))
            (setq phps-mode-lex-analyzer--bookkeeping (nth 11 lex-result))
+           (setq phps-mode-lex-analyzer--processed-buffer-p t)
            (phps-mode-lex-analyzer--reset-imenu)
            (when (fboundp 'thread-yield)
              (thread-yield))
@@ -383,15 +381,15 @@
            (setq phps-mode-lex-analyzer--nest-location-stack (nth 6 lex-result))
            (setq phps-mode-lex-analyzer--parse-trail (nth 7 lex-result))
            (setq phps-mode-lex-analyzer--parse-error (nth 8 lex-result))
+           (setq phps-mode-lex-analyzer--ast (nth 9 lex-result))
+           (setq phps-mode-lex-analyzer--imenu (nth 10 lex-result))
+           (setq phps-mode-lex-analyzer--bookkeeping (nth 11 lex-result))
 
            (phps-mode-debug-message
             (message "Incremental tokens: %s" phps-mode-lex-analyzer--tokens))
 
            ;; Save processed result
            (setq phps-mode-lex-analyzer--processed-buffer-p t)
-           (setq phps-mode-lex-analyzer--ast (nth 9 lex-result))
-           (setq phps-mode-lex-analyzer--imenu (nth 10 lex-result))
-           (setq phps-mode-lex-analyzer--bookkeeping (nth 10 lex-result))
            (phps-mode-lex-analyzer--reset-imenu)
            (when (fboundp 'thread-yield)
              (thread-yield))
@@ -608,6 +606,9 @@
                 (setq phps-mode-lex-analyzer--nest-location-stack nil)
                 (setq phps-mode-lex-analyzer--parse-trail nil)
                 (setq phps-mode-lex-analyzer--parse-error nil)
+                (setq phps-mode-lex-analyzer--ast nil)
+                (setq phps-mode-lex-analyzer--imenu nil)
+                (setq phps-mode-lex-analyzer--bookkeeping nil)
 
                 ;; NOTE Starts are inclusive while ends are exclusive buffer locations
 
