@@ -194,6 +194,8 @@
                  (1+ move-length)))))
           (goto-char point)
 
+          ;; TODO Need to fix issue were indentation differs if you are at the start or end of current line
+
           (if previous-line-is-empty-p
               (indent-line-to
                (phps-mode-indent--string-indentation
