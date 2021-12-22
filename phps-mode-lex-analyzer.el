@@ -1090,7 +1090,11 @@
   ;; to enable nice presentation
   (require 'phps-mode-macros)
   (let* ((buffer (generate-new-buffer "*PHPs Lexer*"))
-         (parse-error))
+         (parse-error)
+         (parse-trail)
+         (ast-tree)
+         (imenu-index)
+         (bookkeeping-index))
 
     ;; Create temporary buffer and run lexer in it
     (when (get-buffer buffer)
@@ -1173,6 +1177,13 @@
            (setq
             parse-error
             conditions)))
+
+        ;; Need to copy buffer-local values before killing buffer
+        (setq parse-trail phps-mode-ast--parse-trail)
+        (setq ast-tree phps-mode-ast--tree)
+        (setq imenu-index phps-mode-ast-imenu--index)
+        (setq bookkeeping-index phps-mode-ast-bookkeeping--index)
+
         (kill-buffer)))
     (list
      tokens
@@ -1182,11 +1193,11 @@
      heredoc-label
      heredoc-label-stack
      nest-location-stack
-     phps-mode-ast--parse-trail
+     parse-trail
      parse-error
-     phps-mode-ast--tree
-     phps-mode-ast-imenu--index
-     phps-mode-ast-bookkeeping--index)))
+     ast-tree
+     imenu-index
+     bookkeeping-index)))
 
 (provide 'phps-mode-lex-analyzer)
 
