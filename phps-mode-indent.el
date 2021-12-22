@@ -136,9 +136,7 @@
       (save-excursion
         (let ((move-length 0)
               (move-length1 0)
-              (move-length2 0)
               (current-line-string "")
-              (current-line-is-empty-p)
               (previous-line-string "")
               (previous-line-is-empty-p)
               (previous2-line-string ""))
@@ -182,9 +180,6 @@
                      line-string))
                    ((= searching-previous-lines 1)
                     (setq
-                     move-length2
-                     (1+ move-length))
-                    (setq
                      previous2-line-string
                      line-string)))
                   (setq
@@ -198,14 +193,6 @@
                  move-length
                  (1+ move-length)))))
           (goto-char point)
-
-          (when
-              (string-match-p
-               "^[ \t\f\r\n]*$"
-               current-line-string)
-          (setq
-           current-line-is-empty-p
-           t))
 
           (if previous-line-is-empty-p
               (indent-line-to
@@ -225,9 +212,6 @@
                      current-line-string))
                    (previous-line-starts-with-closing-bracket
                     (phps-mode-indent--string-starts-with-closing-bracket
-                     previous-line-string))
-                   (previous-line-ends-with-closing-bracket
-                    (phps-mode-indent--string-ends-with-closing-bracket
                      previous-line-string))
                    (previous-line-starts-with-opening-doc-comment
                     (phps-mode-indent--string-starts-with-opening-doc-comment
@@ -768,13 +752,10 @@
 
                       (let ((not-found t)
                             (is-assignment nil)
-                            (is-string-doc)
                             (parenthesis-level 0)
-                            (is-bracket-less-command nil)
                             (is-same-line-p t)
                             (is-object-chaining)
-                            (is-object-chaining-on-same-line)
-                            (bracket-opened-on-first-line))
+                            (is-object-chaining-on-same-line))
                         (while
                             (and
                              not-found
@@ -789,9 +770,6 @@
                              ((string-match-p
                                "<<<'?\"?[a-zA-Z0-9]+'?\"?"
                                match)
-                              (setq
-                               is-string-doc
-                               t)
                               (setq
                                not-found
                                nil))
@@ -813,10 +791,6 @@
                                  is-same-line-p)))
                              ((= parenthesis-level 0)
                               (setq is-assignment (string= match "="))
-                              (setq is-bracket-less-command
-                                    (string-match-p
-                                     "\\(echo[\t ]+\\|print[\t ]+\\)"
-                                     match))
                               (setq not-found nil)))))
 
                         (when (or
@@ -1021,10 +995,8 @@
                       (started-chaining-on-this-line t)
                       (is-assignment)
                       (is-string-concatenation)
-                      (parenthesis-level 0)
                       (is-bracket-less-command)
-                      (is-same-line-p t)
-                      (bracket-opened-on-first-line))
+                      (is-same-line-p t))
                   (while
                       (and
                        not-found
