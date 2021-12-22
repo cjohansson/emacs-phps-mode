@@ -250,6 +250,7 @@
               ;; (message "current-line-starts-with-closing-bracket: %S" current-line-starts-with-closing-bracket)
               ;; (message "current-line-starts-with-opening-bracket: %S" current-line-starts-with-opening-bracket)
               ;; (message "previous-line-ends-with-opening-bracket: %S" previous-line-ends-with-opening-bracket)
+              ;; (message "previous-line-ends-with-terminus: %S" previous-line-ends-with-terminus)
               ;; (message "previous-bracket-level: %S" previous-bracket-level)
               ;; (message "previous-indentation: %S" previous-indentation)
 
@@ -930,16 +931,15 @@
                   ;; When we have an assignment
                   ;; keep track if bracket was opened on first
                   ;; line
-                  (when (and
-                         is-assignment
-                         (string-match-p
-                          "[([]"
-                          (buffer-substring-no-properties
-                       (line-beginning-position)
-                       (line-end-position))))
-                    (setq
-                     bracket-opened-on-first-line
-                     t))
+                  (when is-assignment
+                    (let ((start-bracket-count
+                           (phps-mode-indent--get-string-brackets-count
+                            (buffer-substring-no-properties
+                             (line-beginning-position)
+                             (line-end-position)))))
+                      (setq
+                       bracket-opened-on-first-line
+                       (> start-bracket-count 0))))
 
                   ;; echo 'there' .
                   ;;     'here';
@@ -994,9 +994,14 @@
 
                ;; $myObject->myFunction()
                ;;     ->myFunction2()
-               ((string-match-p
-                 "->"
-                 previous-line-string)
+               ;; but ignore
+               ;; $myObject->test(
+               ;;     'here'
+               ((and
+                 (not previous-line-ends-with-opening-bracket)
+                 (string-match-p
+                  "->"
+                  previous-line-string))
                 (let ((not-found t)
                       (started-chaining-on-this-line t)
                       (is-assignment)

@@ -202,11 +202,11 @@
    "Indentation for chained object operators in assignment with method call with arguments")
 
   (phps-mode-test-indent--should-equal
-   "<?php\n\n$myResult = !empty($myVar->myMethod3)\n    && $myVar->myMethod\n        && $myVar->myMethod2;\n"
+   "<?php\n\n$myResult = !empty($myVar->myMethod3)\n    && $myVar->myMethod\n    && $myVar->myMethod2;\necho 'here';"
    "Indentation for chained object operators in assignment")
 
   (phps-mode-test-indent--should-equal
-   "<?php\n$array = [\n    'second' => [\n        'hello' => true\n        ]\n];\n\n$array = array(\n    'second' => array(\n        'third' => true\n        )\n);"
+   "<?php\n$array = [\n    'second' => [\n        'hello' => true\n    ]\n];\n\n$array = array(\n    'second' => array(\n        'third' => true\n    )\n);"
    "Indent multi-dimensional arrays without trailing commas")
 
   (phps-mode-test-indent--should-equal
