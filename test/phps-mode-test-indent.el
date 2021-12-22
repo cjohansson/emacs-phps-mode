@@ -22,6 +22,13 @@
   (goto-char (point-min))
   (phps-mode-indent-line)
   (while (search-forward "\n" nil t nil)
+    ;; Go to random point on line
+    (let ((line-min-position (line-beginning-position))
+          (line-max-position (line-end-position)))
+      (goto-char
+       (+
+        line-min-position
+        (random (- line-max-position line-min-position)))))
     (phps-mode-indent-line)))
 
 (defun phps-mode-test-indent--should-equal (string name)

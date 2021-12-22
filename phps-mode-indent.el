@@ -143,6 +143,8 @@
 
           (when initial-point
             (goto-char point))
+          (move-beginning-of-line nil)
+          (setq point (point))
 
           ;; Current line is line at initial point
           (setq
