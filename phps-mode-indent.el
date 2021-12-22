@@ -138,6 +138,7 @@
               (move-length1 0)
               (move-length2 0)
               (current-line-string "")
+              (current-line-is-empty-p)
               (previous-line-string "")
               (previous-line-is-empty-p)
               (previous2-line-string ""))
@@ -189,18 +190,27 @@
                   (setq
                    searching-previous-lines
                    (1- searching-previous-lines))
-                  (when (= searching-previous-lines 1)
+                  (when (= searching-previous-lines 2)
                     (setq
                      previous-line-is-empty-p
                      line-is-empty-p)))
                 (setq
                  move-length
                  (1+ move-length)))))
-          ;; (message "previous-line-string: %S" previous-line-string)
-          ;; (message "previous2-line-string: %S" previous2-line-string)
+          (goto-char point)
+
+          (when
+              (string-match-p
+               "^[ \t\f\r\n]*$"
+               current-line-string)
+          (setq
+           current-line-is-empty-p
+           t))
 
           (if previous-line-is-empty-p
-              (indent-line-to 0)
+              (indent-line-to
+               (phps-mode-indent--string-indentation
+                previous-line-string))
             (let* ((previous-indentation
                     (phps-mode-indent--string-indentation
                      previous-line-string))
@@ -243,7 +253,6 @@
               (setq
                new-indentation
                previous-indentation)
-              (goto-char point)
 
               ;; (message "\ncurrent-line-string: %S" current-line-string)
               ;; (message "previous-line-string: %S" previous-line-string)
@@ -884,7 +893,7 @@
                       (and
                        not-found
                        (search-backward-regexp
-                        "\\(;\\|{\\|(\\|)\\|=\\|echo[\t ]+\\|print[\t ]+\\|\n\\|<<<'?\"?[a-zA-Z0-9]+'?\"?\\)"
+                        "\\(;\\|{\\|(\\|)\\|=$\\|=[^>]\\|echo[\t ]+\\|print[\t ]+\\|\n\\|<<<'?\"?[a-zA-Z0-9]+'?\"?\\)"
                         nil
                         t))
                     (let ((match (match-string-no-properties 0)))
@@ -909,7 +918,7 @@
                          parenthesis-level
                          (1- parenthesis-level)))
                        ((= parenthesis-level 0)
-                        (setq is-assignment (string= match "="))
+                        (setq is-assignment (string-match-p "=" match))
                         (setq is-bracket-less-command
                               (string-match-p
                                "\\(echo[\t ]+\\|print[\t ]+\\)"
@@ -937,9 +946,15 @@
                             (buffer-substring-no-properties
                              (line-beginning-position)
                              (line-end-position)))))
+                      ;; (message "start-bracket-count: %S from %S" start-bracket-count (buffer-substring-no-properties
+                      ;;        (line-beginning-position)
+                      ;;        (line-end-position)))
                       (setq
                        bracket-opened-on-first-line
                        (> start-bracket-count 0))))
+
+                  ;; (message "is-assignment: %S" is-assignment)
+                  ;; (message "bracket-opened-on-first-line: %S" bracket-opened-on-first-line)
 
                   ;; echo 'there' .
                   ;;     'here';
@@ -1185,6 +1200,8 @@
                  (+ new-indentation tab-width)))
 
                )
+
+              ;; (message "new-indentation: %S" new-indentation)
 
               (indent-line-to new-indentation)))))
       ;; Only move to end of line if point is the current point and is at end of line
