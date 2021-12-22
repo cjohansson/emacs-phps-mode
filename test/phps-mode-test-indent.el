@@ -198,7 +198,7 @@
    "Indentation of chained class method calls outside of assignments and conditionals")
 
   (phps-mode-test-indent--should-equal
-   "<?php\n\n$myVar = $myClass->meMethod()\n    ->mySecondMethod()\n    ->myThirdMethod()\n->myFourthFunction(\n    $myVariable\n);"
+   "<?php\n\n$myVar = $myClass->meMethod()\n    ->mySecondMethod()\n    ->myThirdMethod()\n    ->myFourthFunction(\n        $myVariable\n    );"
    "Indentation for chained object operators in assignment with method call with arguments")
 
   (phps-mode-test-indent--should-equal

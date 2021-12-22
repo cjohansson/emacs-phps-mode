@@ -762,12 +762,14 @@
                             (parenthesis-level 0)
                             (is-bracket-less-command nil)
                             (is-same-line-p t)
+                            (is-object-chaining)
+                            (is-object-chaining-on-same-line)
                             (bracket-opened-on-first-line))
                         (while
                             (and
                              not-found
                              (search-backward-regexp
-                              "\\(;\\|{\\|(\\|)\\|=\\|echo[\t ]+\\|print[\t ]+\\|\n\\|<<<'?\"?[a-zA-Z0-9]+'?\"?\\)"
+                              "\\(;\\|{\\|(\\|)\\|=\\|echo[\t ]+\\|print[\t ]+\\|\n\\|<<<'?\"?[a-zA-Z0-9]+'?\"?\\|->\\)"
                               nil
                               t))
                           (let ((match (match-string-no-properties 0)))
@@ -791,6 +793,14 @@
                               (setq
                                parenthesis-level
                                (1- parenthesis-level)))
+                             ((string= match "->")
+                              (when (= parenthesis-level 0)
+                                (setq
+                                 is-object-chaining
+                                 t)
+                                (setq
+                                 is-object-chaining-on-same-line
+                                 is-same-line-p)))
                              ((= parenthesis-level 0)
                               (setq is-assignment (string= match "="))
                               (setq is-bracket-less-command
@@ -799,11 +809,13 @@
                                      match))
                               (setq not-found nil)))))
 
-                        (when (and
-                               (not is-same-line-p)
+                        (when (or
                                (and
-                                is-assignment
-                                (not bracket-opened-on-first-line)))
+                                (not is-same-line-p)
+                                is-assignment)
+                               (and
+                                (not is-object-chaining-on-same-line)
+                                is-object-chaining))
                           (setq
                            new-indentation
                            (- new-indentation tab-width)))
@@ -979,6 +991,100 @@
                 (setq
                  new-indentation
                  (+ new-indentation tab-width)))
+
+               ;; $myObject->myFunction()
+               ;;     ->myFunction2()
+               ((string-match-p
+                 "->"
+                 previous-line-string)
+                (let ((not-found t)
+                      (started-chaining-on-this-line t)
+                      (is-assignment)
+                      (is-string-concatenation)
+                      (parenthesis-level 0)
+                      (is-bracket-less-command)
+                      (is-same-line-p t)
+                      (bracket-opened-on-first-line))
+                  (while
+                      (and
+                       not-found
+                       (search-backward-regexp
+                        "\\(;\\|{\\|(\\|)\\|=\\|->\\|echo[\t ]+\\|print[\t ]+\\|\n\\|^[\t ]*\\.\\|\\.[\t ]*$\\)"
+                        nil
+                        t))
+                    (let ((match (match-string-no-properties 0)))
+                      (cond
+
+                       ((string=
+                         "->"
+                         match)
+                        (setq
+                         started-chaining-on-this-line
+                         is-same-line-p))
+
+                       ((string=
+                         "\n"
+                         match)
+                        (setq
+                         is-same-line-p
+                         nil))
+
+                       ((or
+                         (string=
+                          "echo"
+                          match)
+                         (string=
+                          "print"
+                          match))
+                        (setq
+                         is-bracket-less-command
+                         t)
+                        (setq
+                         not-found
+                         nil))
+
+                       ((or
+                         (string=
+                          ";"
+                          match)
+                         (string=
+                          "}"
+                          match))
+                        (setq
+                         not-found
+                         nil))
+
+                       ((string=
+                         "="
+                         match)
+                        (setq
+                         is-assignment
+                         t)
+                        (setq
+                         not-found
+                         nil))
+
+                       ((string-match-p
+                         "\\(^[\t ]*\\.\\|\\.[\t ]*\\)$"
+                         match)
+                        (setq
+                         is-string-concatenation
+                         t)
+                        (setq
+                         not-found
+                         nil))
+
+                       )))
+
+                  (when (and
+                         (not is-assignment)
+                         (not is-string-concatenation)
+                         (not started-chaining-on-this-line)
+                         (not is-bracket-less-command))
+                    (setq
+                     new-indentation
+                     (+ new-indentation tab-width))))
+                (goto-char point))
 
                ;; /**
                ;;  *
