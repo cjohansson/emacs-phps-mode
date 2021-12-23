@@ -228,6 +228,22 @@
    "<?php\n\nif (true) {\n    // Was here\n}"
    "If condition after a mixed newline encoded file")
 
+    (phps-mode-test-indent--should-equal
+     "<?php\n\nif ($you) {\n    if ($here) {\n        if ($true) {\n            if ($a = 23) {\n                $myObject->build(array(\n                    'name' => 'Trueman',\n                    'sku' => 25.0\n                ))\n                ->test()\n                ->validate()\n                ->give();\n            }\n        }\n    }\n}\n"
+     "Tested chaining of object")
+
+    (phps-mode-test-indent--should-equal
+     "<?php\n\nif ($there) {\n    if ($something) {\n        $var = [\n            [\n                [\n                    'abc' => 1,\n                    'def' => 2,\n                ]\n            ]\n        ];\n    }\n}\n"
+     "Nested array with square bracket syntax")
+
+    (phps-mode-test-indent--should-equal
+     "<?php\n\nclass MyClass\n{\n    function myFunction1()\n    {\n        return tester(\n            '123');\n    }\n    function myFunction2()\n    {\n        return (count(self::$stuff) > 0 ?\n            self::$stuff : false);\n    }\n}\n"
+     "Return statements in class")
+
+    (phps-mode-test-indent--should-equal
+     "$var = myFunction(\n    'setting');\necho 'here';\n"
+     "Multi-line assignment from function ending without opening bracket")
+
   )
 
 (defun phps-mode-test-indent--get-lines-indent-psr-2 ()

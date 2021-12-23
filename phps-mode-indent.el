@@ -196,8 +196,6 @@
                  (1+ move-length)))))
           (goto-char point)
 
-          ;; TODO Need to fix issue were indentation differs if you are at the start or end of current line
-
           (if previous-line-is-empty-p
               (indent-line-to
                (phps-mode-indent--string-indentation
@@ -845,6 +843,14 @@
                ;; OKASDOKASD
                ;; EOD;
                ;;     echo 'here';
+               ;; or
+               ;; $var = myFunction(
+               ;;     'expression');
+               ;; echo 'here';
+               ;; or
+               ;; return myFunction(
+               ;;     'expression');
+               ;; echo 'here';
                ((and
                  previous-line-ends-with-terminus
                  (string= previous-line-ends-with-terminus ";")
@@ -871,7 +877,7 @@
                       (and
                        not-found
                        (search-backward-regexp
-                        "\\(;\\|{\\|(\\|)\\|=$\\|=[^>]\\|echo[\t ]+\\|print[\t ]+\\|\n\\|<<<'?\"?[a-zA-Z0-9]+'?\"?\\)"
+                        "\\(;\\|{\\|(\\|)\\|=$\\|=[^>]\\|return\\|echo[\t ]+\\|print[\t ]+\\|\n\\|<<<'?\"?[a-zA-Z0-9]+'?\"?\\)"
                         nil
                         t))
                     (let ((match (match-string-no-properties 0)))
@@ -899,7 +905,7 @@
                         (setq is-assignment (string-match-p "=" match))
                         (setq is-bracket-less-command
                               (string-match-p
-                               "\\(echo[\t ]+\\|print[\t ]+\\)"
+                               "\\(echo[\t ]+\\|print[\t ]+\\|return[\t ]+\\)"
                                match))
                         (setq not-found nil)))))
 
@@ -959,12 +965,15 @@
                   ;; echo 'here';
                   ;; NOTE stuff like $var = array(\n    4\n);\n
                   ;; will end assignment but also decrease previous-bracket-level
+                  ;; NOTE but cases like $var = array(\n    4);\n should pass
                   (when (and
                          (not is-same-line-p)
                          (or
                           (and
                            is-assignment
-                           (not bracket-opened-on-first-line))
+                           (or
+                            (not bracket-opened-on-first-line)
+                            (not previous-line-starts-with-closing-bracket)))
                           is-bracket-less-command))
                     (setq
                      new-indentation
