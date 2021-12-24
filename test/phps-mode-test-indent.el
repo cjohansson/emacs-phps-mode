@@ -20,7 +20,7 @@
 (defun phps-mode-test-indent--indent-whole-buffer ()
   "Use alternative indentation of every line of buffer."
   (goto-char (point-min))
-  (phps-mode-indent-line)
+  (indent-for-tab-command)
   (while (search-forward "\n" nil t nil)
     ;; Go to random point on line
     (let ((line-min-position (line-beginning-position))
@@ -29,7 +29,7 @@
        (+
         line-min-position
         (random (- line-max-position line-min-position)))))
-    (phps-mode-indent-line)))
+    (indent-for-tab-command)))
 
 (defun phps-mode-test-indent--should-equal (string name)
   "Test indent of whole buffer containing STRING with NAME."
@@ -243,6 +243,34 @@
     (phps-mode-test-indent--should-equal
      "$var = myFunction(\n    'setting');\necho 'here';\n"
      "Multi-line assignment from function ending without opening bracket")
+
+    (phps-mode-test-indent--should-equal
+     "<?php\n\nclass MyClass\n{\n    function myFunction()\n    {\n        return 'Text'\n            . 'here';\n    }\n}\n"
+     "Multi-line return statement of concatenated string")
+
+    (phps-mode-test-indent--should-equal
+     "<?php\n\nclass MyClass\n{\n    function myFunction()\n    {\n        return aFunction(\n            'values');\n    }\n}\n"
+     "Multi-line return expression ending at line with starting close bracket")
+
+    (phps-mode-test-indent--should-equal
+     "<?php\n$packageItems[] = [\n    'customs_value' =>\n        $orderItem->getPrice(),\n    'name' =>\n        $orderItem->getName(),\n    'order_item_id' =>\n        $orderItem->getItemId(),\n    'price' =>\n        $orderItem->getPrice(),\n    'product_id' =>\n        $orderItem->getProductId(),\n    'qty' =>\n        $orderItem->getQtyToShip(),\n    'weight' =>\n        $orderItem->getRowWeight(),\n];"
+     "Assignment of square bracket array with element values from object methods")
+
+    (phps-mode-test-indent--should-equal
+     "<?php\n$productId1 = $this->generateProduct([\n    'country_of_origin' =>\n        'SE',\n    'hs_code' =>\n        '0000 1234 5679 0000',\n    'name' =>\n        'Simple Product # 1',\n    'price' =>\n        7,\n    'weight' =>\n        1.2,\n]);\n"
+     "Assignment from object method values with square bracket argument on multiple lines")
+
+    (phps-mode-test-indent--should-equal
+     "<?php\nforeach ($order->getAllItems() as $orderItem) {\n    // Check if order item has qty to ship or is virtual\n    if (\n        !$orderItem->getQtyToShip()\n        || $orderItem->getIsVirtual()\n    ) {\n        continue;\n    }\n}"
+     "Multi-line if expression checking object method values")
+
+    (phps-mode-test-indent--should-equal
+     "<?php\nif (true) {\n    throw new Exception(\n        sprintf(\n            self::systemTranslate(\n                'Invalid parameters for Application. Parameters: \"%s\".'\n            ),\n            print_r(self::$_parameters, true)\n        )\n    );\n}\n"
+     "Throwing exception on multiple lines using sprintf")
+
+    (phps-mode-test-indent--should-equal
+     "<?php\n\nif (false) {\n    if (true) {\n        $conversion = myFunction(\n            $weight,\n            $weightUnit,\n            $toWeightUnit\n        );\n    }\n}"
+     "Nested multi-line assignment from function call")
 
   )
 
