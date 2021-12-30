@@ -272,6 +272,34 @@
      "<?php\n\nif (false) {\n    if (true) {\n        $conversion = myFunction(\n            $weight,\n            $weightUnit,\n            $toWeightUnit\n        );\n    }\n}"
      "Nested multi-line assignment from function call")
 
+    (phps-mode-test-indent--should-equal
+     "<?php\n$var = [\n    1,\n    2,\n    3\n];\n"
+     "Square bracket array definition in assignment")
+
+    (phps-mode-test-indent--should-equal
+     "<?php\n/** @define string _PRIVATE_ROOT_           Absolute root to private */\ndefine('_PRIVATE_ROOT_',\n    dirname($parameters[self::PARAMETER_SITE_PATH]) . DIRECTORY_SEPARATOR);\n"
+     "Mutiline define statement")
+
+    (phps-mode-test-indent--should-equal
+     "<?php\nif ($useRuntimeCache\n    && self::isWritingnabled()\n    && \\Aomebo\\Cache\\System::cacheExists(\n        $cacheParameters,\n        $cacheKey,\n        \\Aomebo\\Cache\\System::CACHE_STORAGE_LOCATION_FILESYSTEM)\n) {\n"
+     "Multiline if condition")
+
+    (phps-mode-test-indent--should-equal
+     "<?php\nif ($data = \\Aomebo\\Cache\\System::loadCache(\n    $cacheParameters,\n    $cacheKey,\n    \\Aomebo\\Cache\\System::FORMAT_SERIALIZE,\n    \\Aomebo\\Cache\\System::CACHE_STORAGE_LOCATION_FILESYSTEM)\n) {\n"
+     "Multiline if-condition with assignment")
+
+    (phps-mode-test-indent--should-equal
+     "<?php\n\nThrow new \\Exception(\n    sprintf(\n        self::systemTranslate(\n            'Something went wrong when including file \"%s\", error: \"%s\".'\n        ),\n        $tryPath,\n        $e->getMessage()\n    )\n);\n"
+     "Multiline exception throwing")
+
+    (phps-mode-test-indent--should-equal
+     "<?php\n/**\n * @param string $key\n * @param bool [$reloadFromFilesystem = false]\n * @return mixed\n */\nfunction getApplicationData($key,\n    $reloadFromFilesystem = false)\n{\n    if (!empty($key)) {\n        if (!empty($reloadFromFilesystem)) {\n            self::loadApplicationData();\n        }\n        if (isset(self::$_applicationData[$key])) {\n            return self::$_applicationData[$key];\n        }\n    }\n    return null;\n}\n"
+     "Function definition not in PSR-2 style")
+
+    (phps-mode-test-indent--should-equal
+     "<?php\nself::addAutoLoadPaths(array(\n    _SYSTEM_ROOT_,\n    _PRIVATE_ROOT_,\n    _PUBLIC_ROOT_,\n    _SITE_ROOT_\n));\n"
+     "Multiline function call with multiline array as argument")
+
   )
 
 (defun phps-mode-test-indent--get-lines-indent-psr-2 ()
