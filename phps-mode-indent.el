@@ -365,9 +365,11 @@
 
                ;; echo 'Something' .
                ;;     'something';
+               ;; but ignore
+               ;; print_r($object)
                ((and
                  (string-match-p
-                  "^[\t ]*\\(echo\\|print\\|return\\|die\\)"
+                  "^[\t ]*\\(echo\\|print$\\|print[\t ]+\\|return\\|die\\)"
                   previous-line-string)
                  (not
                   (string-match-p
