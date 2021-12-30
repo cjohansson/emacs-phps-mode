@@ -20,7 +20,7 @@
 (defun phps-mode-test-indent--indent-whole-buffer ()
   "Use alternative indentation of every line of buffer."
   (goto-char (point-min))
-  (indent-for-tab-command)
+  (execute-kbd-macro (kbd "TAB"))
   (while (search-forward "\n" nil t nil)
     ;; Go to random point on line
     (let ((line-min-position (line-beginning-position))
@@ -29,7 +29,7 @@
        (+
         line-min-position
         (random (- line-max-position line-min-position)))))
-    (indent-for-tab-command)))
+    (execute-kbd-macro (kbd "TAB"))))
 
 (defun phps-mode-test-indent--should-equal (string name)
   "Test indent of whole buffer containing STRING with NAME."

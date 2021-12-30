@@ -851,9 +851,12 @@
                ;; return myFunction(
                ;;     'expression');
                ;; echo 'here';
+               ;; or
+               ;; 'name' =>
+               ;;     $myObject->getName(),
+               ;; 'age' =>
                ((and
                  previous-line-ends-with-terminus
-                 (string= previous-line-ends-with-terminus ";")
                  (not
                   (string-match-p
                    "^[\t ]*\\(echo[\t ]+\\|print[\t ]+\\)"
@@ -877,7 +880,7 @@
                       (and
                        not-found
                        (search-backward-regexp
-                        "\\(;\\|{\\|(\\|)\\|=$\\|=[^>]\\|return\\|echo[\t ]+\\|print[\t ]+\\|\n\\|<<<'?\"?[a-zA-Z0-9]+'?\"?\\)"
+                        "\\(;\\|{\\|(\\|)\\|=\\|return\\|echo[\t ]+\\|print[\t ]+\\|\n\\|<<<'?\"?[a-zA-Z0-9]+'?\"?\\)"
                         nil
                         t))
                     (let ((match (match-string-no-properties 0)))
@@ -977,7 +980,17 @@
                           is-bracket-less-command))
                     (setq
                      new-indentation
-                     (- new-indentation tab-width))))
+                     (- new-indentation tab-width)))
+
+                  (when (and
+                         current-line-starts-with-closing-bracket
+                         (not previous-line-ends-with-opening-bracket)
+                         (>= previous-indentation tab-width))
+                    (setq
+                     new-indentation
+                     (- new-indentation tab-width)))
+
+                  )
 
                 (goto-char point))
 
@@ -1003,7 +1016,10 @@
                  (not previous-line-ends-with-opening-bracket)
                  (string-match-p
                   "->"
-                  previous-line-string))
+                  previous-line-string)
+                 (string-match-p
+                  "^[\t ]*->"
+                  current-line-string))
                 (let ((not-found t)
                       (started-chaining-on-this-line t)
                       (is-assignment)
