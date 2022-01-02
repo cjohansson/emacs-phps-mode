@@ -240,8 +240,8 @@
                new-indentation
                previous-indentation)
 
-              ;; (message "\ncurrent-line-string: %S" current-line-string)
-              ;; (message "previous-line-string: %S" previous-line-string)
+              (message "\ncurrent-line-string: %S" current-line-string)
+              (message "previous-line-string: %S" previous-line-string)
               ;; (message "current-line-starts-with-closing-bracket: %S" current-line-starts-with-closing-bracket)
               ;; (message "current-line-starts-with-opening-bracket: %S" current-line-starts-with-opening-bracket)
               ;; (message "previous-line-ends-with-opening-bracket: %S" previous-line-ends-with-opening-bracket)
@@ -828,6 +828,149 @@
                  new-indentation
                  (- new-indentation tab-width tab-width)))
 
+               ;; TODO Fix this
+               ;; 'name' =>
+               ;;     $myObject->getName(),
+               ;; 'age' =>
+               ;; or
+               ;; myFunction(
+               ;;     'my Argument',
+               ;;     'my second argument'
+               ;; or
+               ;; myFunction(
+               ;;     [
+               ;;         2,
+               ;;         3,
+               ((and
+                 previous-line-ends-with-terminus
+                 (string= previous-line-ends-with-terminus ","))
+
+                ;; Back-trace buffer from previous line
+                ;; Determine if comma was part of array or function argument or bracket-less command
+                ;; If it started on the same line we ignore it
+                (forward-line (* -1 move-length1))
+                (end-of-line)
+                (forward-char -1)
+
+                (let ((not-found t)
+                      (reference-line)
+                      (reference-indentation)
+                      (is-array)
+                      (is-function)
+                      (is-bracket-less-command)
+                      (parenthesis-level 0)
+                      (is-same-line-p t)
+                      (bracket-opened-on-first-line))
+                  (while
+                      (and
+                       not-found
+                       (search-backward-regexp
+                        "\\([a-zA-Z]+[a-zA-Z0-9]*[\t ]*(\\|=>\\|,\\|[\]([]\\|\n\\)"
+                        nil
+                        t))
+                    (let ((match (match-string-no-properties 0)))
+                      (cond
+
+                       ((string= match "\n")
+                        (setq
+                         is-same-line-p
+                         nil))
+
+                       ((string-match-p
+                         "[a-zA-Z]+[a-zA-Z0-9]*[\t ]*("
+                         match)
+                        (setq
+                         parenthesis-level
+                         (1+ parenthesis-level))
+                        (if (string-match-p
+                             "^array[\t ]*("
+                             match)
+                            (setq
+                             is-array
+                             t)
+                          (setq
+                           is-function
+                           t))
+                        (setq
+                         not-found
+                         nil))
+
+                       ((string= match "[")
+                        (setq
+                         parenthesis-level
+                         (1+ parenthesis-level))
+                        (when (= parenthesis-level 1)
+                          (setq
+                           is-array
+                           t)
+                          (setq
+                           not-found
+                           nil)))
+
+                       ((string= match "(")
+                        (setq
+                         parenthesis-level
+                         (1+ parenthesis-level)))
+
+                       ((or
+                         (string= match ")")
+                         (string= match "]"))
+                        (setq
+                         parenthesis-level
+                         (1- parenthesis-level)))
+
+                       ((= parenthesis-level 0)
+                        (when (string-match-p "=>" match)
+                          (setq
+                           is-array
+                           t))
+                        (setq
+                         is-bracket-less-command
+                         (string-match-p
+                          "echo[\t ]+"
+                          match))
+                        (setq
+                         not-found
+                         nil)))))
+
+                  (unless not-found
+                    (setq
+                     reference-line
+                     (buffer-substring-no-properties
+                      (line-beginning-position)
+                      (line-end-position)))
+                    (setq
+                     reference-indentation
+                     (phps-mode-indent--string-indentation
+                      reference-line)))
+
+                  (message "is-array: %S" is-array)
+                  (message "is-function: %S" is-function)
+                  (message "not-found: %S" not-found)
+                  (message "reference-line: %S" reference-line)
+                  (message "reference-indentation: %S" reference-indentation)
+
+                  (when (and
+                         reference-indentation
+                         (not current-line-starts-with-closing-bracket))
+                    (setq
+                     new-indentation
+                     reference-indentation))
+
+                  ;; myFunction(
+                  ;;     'arg',
+                  ;; );
+                  (when current-line-starts-with-closing-bracket
+                    (setq
+                     new-indentation
+                     (- new-indentation tab-width)))
+
+                  (goto-char point)
+
+
+                  ))
+
+
                ;; $var .=
                ;;     'hello';
                ;; echo 'here';
@@ -853,12 +996,9 @@
                ;; return myFunction(
                ;;     'expression');
                ;; echo 'here';
-               ;; or
-               ;; 'name' =>
-               ;;     $myObject->getName(),
-               ;; 'age' =>
                ((and
                  previous-line-ends-with-terminus
+                 (string= previous-line-ends-with-terminus ";")
                  (not
                   (string-match-p
                    "^[\t ]*\\(echo[\t ]+\\|print[\t ]+\\)"
@@ -882,7 +1022,7 @@
                       (and
                        not-found
                        (search-backward-regexp
-                        "\\(;\\|{\\|(\\|)\\|=\\|return\\|echo[\t ]+\\|print[\t ]+\\|\n\\|<<<'?\"?[a-zA-Z0-9]+'?\"?\\)"
+                        "\\(;\\|{\\|(\\|)\\|=$\\|=[^>]\\|return\\|echo[\t ]+\\|print[\t ]+\\|\n\\|<<<'?\"?[a-zA-Z0-9]+'?\"?\\)"
                         nil
                         t))
                     (let ((match (match-string-no-properties 0)))
@@ -980,14 +1120,6 @@
                             (not bracket-opened-on-first-line)
                             (not previous-line-starts-with-closing-bracket)))
                           is-bracket-less-command))
-                    (setq
-                     new-indentation
-                     (- new-indentation tab-width)))
-
-                  (when (and
-                         current-line-starts-with-closing-bracket
-                         (not previous-line-ends-with-opening-bracket)
-                         (>= previous-indentation tab-width))
                     (setq
                      new-indentation
                      (- new-indentation tab-width)))
@@ -1164,8 +1296,7 @@
                ;; ));
                ((and
                  current-line-starts-with-closing-bracket
-                 (not previous-line-ends-with-opening-bracket)
-                 (>= previous-indentation tab-width))
+                 (not previous-line-ends-with-opening-bracket))
                 (setq
                  new-indentation
                  (- new-indentation tab-width)))
@@ -1205,6 +1336,11 @@
                )
 
               ;; (message "new-indentation: %S" new-indentation)
+
+              (when (< new-indentation 0)
+                (setq
+                 new-indentation
+                 0))
 
               (indent-line-to new-indentation)))))
       ;; Only move to end of line if point is the current point and is at end of line
