@@ -215,6 +215,9 @@
                    (previous-line-starts-with-closing-bracket
                     (phps-mode-indent--string-starts-with-closing-bracket
                      previous-line-string))
+                   (previous-line-ends-with-closing-bracket
+                    (phps-mode-indent--string-ends-with-closing-bracket
+                     previous-line-string))
                    (previous-line-starts-with-opening-doc-comment
                     (phps-mode-indent--string-starts-with-opening-doc-comment
                      previous-line-string))
@@ -828,7 +831,6 @@
                  new-indentation
                  (- new-indentation tab-width tab-width)))
 
-               ;; TODO Fix this
                ;; 'name' =>
                ;;     $myObject->getName(),
                ;; 'age' =>
@@ -852,11 +854,11 @@
                 (end-of-line)
                 (forward-char -1)
 
-                (message
-                 "at-line-start: %S"
-                 (buffer-substring-no-properties
-                  (line-beginning-position)
-                  (line-end-position)))
+                ;; (message
+                ;;  "at-line-start: %S"
+                ;;  (buffer-substring-no-properties
+                ;;   (line-beginning-position)
+                ;;   (line-end-position)))
 
                 (let ((not-found t)
                       (reference-line)
@@ -969,17 +971,17 @@
                      (phps-mode-indent--string-indentation
                       reference-line)))
 
-                  (message "is-array: %S" is-array)
-                  (message "is-function: %S" is-function)
-                  (message "not-found: %S" not-found)
-                  (message "reference-line: %S" reference-line)
-                  (message "reference-indentation: %S" reference-indentation)
-                  (message
-                   "at-line-end: %S"
-                   (buffer-substring-no-properties
-                    (line-beginning-position)
-                    (line-end-position)))
-                  (message "is-declared-on-same-line-p: %S" is-declared-on-same-line-p)
+                  ;; (message "is-array: %S" is-array)
+                  ;; (message "is-function: %S" is-function)
+                  ;; (message "not-found: %S" not-found)
+                  ;; (message "reference-line: %S" reference-line)
+                  ;; (message "reference-indentation: %S" reference-indentation)
+                  ;; (message
+                  ;;  "at-line-end: %S"
+                  ;;  (buffer-substring-no-properties
+                  ;;   (line-beginning-position)
+                  ;;   (line-end-position)))
+                  ;; (message "is-declared-on-same-line-p: %S" is-declared-on-same-line-p)
 
                   (when reference-indentation
                     (setq
@@ -1364,12 +1366,25 @@
                ;; ölöas
                ;; EOD
                ;; ));
+               ;; TODO Should backtrack to were bracket started
+               ;; TODO and use indentation from that line
                ((and
                  current-line-starts-with-closing-bracket
                  (not previous-line-ends-with-opening-bracket))
                 (setq
                  new-indentation
-                 (- new-indentation tab-width)))
+                 (- new-indentation tab-width))
+
+                ;; if (
+                ;;     myFunction(
+                ;;         'random')
+                ;; ) {
+                (when (and
+                       previous-line-ends-with-closing-bracket
+                       (not previous-line-starts-with-closing-bracket))
+                  (setq
+                   new-indentation
+                   (- new-indentation tab-width))))
 
                ;; /**
                ;;  * here
