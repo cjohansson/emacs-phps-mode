@@ -299,7 +299,7 @@
                  current-line-starts-with-opening-bracket
                  (string= current-line-starts-with-opening-bracket "{")
                  (phps-mode-indent--backwards-looking-at
-                  "[\r\t ]*implements[\r\t ]+\\([\r\t ]*[\\a-zA-Z_0-9]+,?\\)+[\r\t ]*{$")
+                  "[\r\t ]*implements[\r\t ]+\\([\r\t ]*[\\a-zA-Z_0-9_]+,?\\)+[\r\t ]*{$")
                  (not
                   (string-match-p
                    "[\t ]*\\(class\\|interface\\)[\t ]+"
@@ -343,7 +343,7 @@
                ;; echo <<<"VAR"
                ;; abc
                ((string-match-p
-                 "<<<'?\"?[a-zA-Z0-9]+'?\"?$"
+                 "<<<'?\"?[a-zA-Z0-9_]+'?\"?$"
                  previous-line-string)
                 (setq
                  new-indentation
@@ -353,7 +353,7 @@
                ;;     'something';
                ((and
                  (string-match-p
-                  "^[\t ]*$[a-zA-Z0-9]+[\t ]*="
+                  "^[\t ]*$[a-zA-Z0-9_]+[\t ]*="
                   previous-line-string)
                  (not
                   (string-match-p
@@ -764,7 +764,7 @@
                             (and
                              not-found
                              (search-backward-regexp
-                              "\\(;\\|{\\|(\\|)\\|=\\|echo[\t ]+\\|print[\t ]+\\|\n\\|<<<'?\"?[a-zA-Z0-9]+'?\"?\\|->\\)"
+                              "\\(;\\|{\\|(\\|)\\|=\\|echo[\t ]+\\|print[\t ]+\\|\n\\|<<<'?\"?[a-zA-Z0-9_]+'?\"?\\|->\\)"
                               nil
                               t))
                           (let ((match (match-string-no-properties 0)))
@@ -772,7 +772,7 @@
                              ((string= match "\n")
                               (setq is-same-line-p nil))
                              ((string-match-p
-                               "<<<'?\"?[a-zA-Z0-9]+'?\"?"
+                               "<<<'?\"?[a-zA-Z0-9_]+'?\"?"
                                match)
                               (setq
                                not-found
@@ -852,6 +852,12 @@
                 (end-of-line)
                 (forward-char -1)
 
+                (message
+                 "at-line-start: %S"
+                 (buffer-substring-no-properties
+                  (line-beginning-position)
+                  (line-end-position)))
+
                 (let ((not-found t)
                       (reference-line)
                       (reference-indentation)
@@ -859,13 +865,14 @@
                       (is-function)
                       (is-bracket-less-command)
                       (parenthesis-level 0)
+                      (is-declared-on-same-line-p)
                       (is-same-line-p t)
                       (bracket-opened-on-first-line))
                   (while
                       (and
                        not-found
                        (search-backward-regexp
-                        "\\([a-zA-Z]+[a-zA-Z0-9]*[\t ]*(\\|=>\\|,\\|[\]([]\\|\n\\)"
+                        "\\([a-zA-Z_]+[a-zA-Z0-9_]*[\t ]*(\\|=>\\|,\\|[\])[]\\|\n\\)"
                         nil
                         t))
                     (let ((match (match-string-no-properties 0)))
@@ -877,23 +884,27 @@
                          nil))
 
                        ((string-match-p
-                         "[a-zA-Z]+[a-zA-Z0-9]*[\t ]*("
+                         "[a-zA-Z_]+[a-zA-Z0-9_]*[\t ]*("
                          match)
                         (setq
                          parenthesis-level
                          (1+ parenthesis-level))
-                        (if (string-match-p
-                             "^array[\t ]*("
-                             match)
+                        (when (= parenthesis-level 1)
+                          (if (string-match-p
+                               "^array[\t ]*("
+                               match)
+                              (setq
+                               is-array
+                               t)
                             (setq
-                             is-array
-                             t)
+                             is-function
+                             t))
                           (setq
-                           is-function
-                           t))
-                        (setq
-                         not-found
-                         nil))
+                           is-declared-on-same-line-p
+                           is-same-line-p)
+                          (setq
+                           not-found
+                           nil)))
 
                        ((string= match "[")
                         (setq
@@ -904,13 +915,11 @@
                            is-array
                            t)
                           (setq
+                           is-declared-on-same-line-p
+                           is-same-line-p)
+                          (setq
                            not-found
                            nil)))
-
-                       ((string= match "(")
-                        (setq
-                         parenthesis-level
-                         (1+ parenthesis-level)))
 
                        ((or
                          (string= match ")")
@@ -939,6 +948,22 @@
                      (buffer-substring-no-properties
                       (line-beginning-position)
                       (line-end-position)))
+
+                    ;; sprintf(__(
+                    ;;     'Error %s', <-- use this indentation as reference instead
+                    ;;     $error
+                    (when (and
+                           (not is-same-line-p)
+                           (string-match-p
+                            "[[(][\t ]*$"
+                            reference-line))
+                      (forward-line 1)
+                      (setq
+                       reference-line
+                       (buffer-substring-no-properties
+                        (line-beginning-position)
+                        (line-end-position))))
+
                     (setq
                      reference-indentation
                      (phps-mode-indent--string-indentation
@@ -949,10 +974,14 @@
                   (message "not-found: %S" not-found)
                   (message "reference-line: %S" reference-line)
                   (message "reference-indentation: %S" reference-indentation)
+                  (message
+                   "at-line-end: %S"
+                   (buffer-substring-no-properties
+                    (line-beginning-position)
+                    (line-end-position)))
+                  (message "is-declared-on-same-line-p: %S" is-declared-on-same-line-p)
 
-                  (when (and
-                         reference-indentation
-                         (not current-line-starts-with-closing-bracket))
+                  (when reference-indentation
                     (setq
                      new-indentation
                      reference-indentation))
@@ -960,13 +989,28 @@
                   ;; myFunction(
                   ;;     'arg',
                   ;; );
+                  ;; or
+                  ;;     'weight' =>
+                  ;;         1.2,
+                  ;; ]);
                   (when current-line-starts-with-closing-bracket
                     (setq
                      new-indentation
                      (- new-indentation tab-width)))
 
-                  (goto-char point)
+                  ;; define('_PRIVATE_ROOT',
+                  ;;     'here');
+                  ;; or
+                  ;; ['abc',
+                  ;;     'def'];
+                  (when (and
+                         (not current-line-starts-with-closing-bracket)
+                         is-declared-on-same-line-p)
+                    (setq
+                     new-indentation
+                     (+ new-indentation tab-width)))
 
+                  (goto-char point)
 
                   ))
 
@@ -1022,7 +1066,7 @@
                       (and
                        not-found
                        (search-backward-regexp
-                        "\\(;\\|{\\|(\\|)\\|=$\\|=[^>]\\|return\\|echo[\t ]+\\|print[\t ]+\\|\n\\|<<<'?\"?[a-zA-Z0-9]+'?\"?\\)"
+                        "\\(;\\|{\\|(\\|)\\|=$\\|=[^>]\\|return\\|echo[\t ]+\\|print[\t ]+\\|\n\\|<<<'?\"?[a-zA-Z0-9_]+'?\"?\\)"
                         nil
                         t))
                     (let ((match (match-string-no-properties 0)))
@@ -1030,7 +1074,7 @@
                        ((string= match "\n")
                         (setq is-same-line-p nil))
                        ((string-match-p
-                         "<<<'?\"?[a-zA-Z0-9]+'?\"?"
+                         "<<<'?\"?[a-zA-Z0-9_]+'?\"?"
                          match)
                         (setq
                          is-string-doc

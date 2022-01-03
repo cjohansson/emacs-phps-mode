@@ -277,6 +277,14 @@
      "Square bracket array definition in assignment")
 
     (phps-mode-test-indent--should-equal
+     "<?php\n$var = [\n    1,\n    [\n        2,\n        [\n            3,\n            4\n        ]\n    ],\n    [\n        5,\n        6,\n    ],\n    7,\n];\n"
+     "Multi-dimensional square bracket array definition in assignment")
+
+    (phps-mode-test-indent--should-equal
+     "<?php\n$var = array(\n    1,\n    array(\n        2,\n        array(\n            3,\n            4\n        )\n    ),\n    array(\n        5,\n        6,\n    ),\n    7,\n);\n"
+     "Multi-dimensional round bracket array definition in assignment")
+
+    (phps-mode-test-indent--should-equal
      "<?php\n/** @define string _PRIVATE_ROOT_           Absolute root to private */\ndefine('_PRIVATE_ROOT_',\n    dirname($parameters[self::PARAMETER_SITE_PATH]) . DIRECTORY_SEPARATOR);\n"
      "Mutiline define statement")
 
