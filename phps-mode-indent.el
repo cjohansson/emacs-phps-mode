@@ -1040,6 +1040,9 @@
                ;; return myFunction(
                ;;     'expression');
                ;; echo 'here';
+               ;; or
+               ;; define('_PRIVATE_ROOT_',
+               ;;     'here');
                ((and
                  previous-line-ends-with-terminus
                  (string= previous-line-ends-with-terminus ";")
@@ -1058,6 +1061,7 @@
                 (let ((not-found t)
                       (is-assignment nil)
                       (is-string-doc)
+                      (is-function-call)
                       (parenthesis-level 0)
                       (is-bracket-less-command nil)
                       (is-same-line-p t)
@@ -1066,13 +1070,15 @@
                       (and
                        not-found
                        (search-backward-regexp
-                        "\\(;\\|{\\|(\\|)\\|=$\\|=[^>]\\|return\\|echo[\t ]+\\|print[\t ]+\\|\n\\|<<<'?\"?[a-zA-Z0-9_]+'?\"?\\)"
+                        "\\(;\\|{\\|[a-zA-Z_]+[a-zA-Z0-9_]*[\t ]*(\\|)\\|=$\\|=[^>]\\|return\\|echo[\t ]+\\|print[\t ]+\\|\n\\|<<<'?\"?[a-zA-Z0-9_]+'?\"?\\)"
                         nil
                         t))
                     (let ((match (match-string-no-properties 0)))
                       (cond
+
                        ((string= match "\n")
                         (setq is-same-line-p nil))
+
                        ((string-match-p
                          "<<<'?\"?[a-zA-Z0-9_]+'?\"?"
                          match)
@@ -1082,14 +1088,26 @@
                         (setq
                          not-found
                          nil))
-                       ((string= match "(")
+
+                       ((string-match-p
+                         "[a-zA-Z_]+[a-zA-Z0-9_]*[\t ]*("
+                         match)
                         (setq
                          parenthesis-level
-                         (1+ parenthesis-level)))
+                         (1+ parenthesis-level))
+                        (when (= parenthesis-level 0)
+                          (setq
+                           is-function-call
+                           t)
+                          (setq
+                           not-found
+                           nil)))
+
                        ((string= match ")")
                         (setq
                          parenthesis-level
                          (1- parenthesis-level)))
+
                        ((= parenthesis-level 0)
                         (setq is-assignment (string-match-p "=" match))
                         (setq is-bracket-less-command
@@ -1164,6 +1182,14 @@
                             (not bracket-opened-on-first-line)
                             (not previous-line-starts-with-closing-bracket)))
                           is-bracket-less-command))
+                    (setq
+                     new-indentation
+                     (- new-indentation tab-width)))
+
+                  ;; define('_PRIVATE_ROOT',
+                  ;;     'here');
+                  ;; echo 'here';
+                  (when is-function-call
                     (setq
                      new-indentation
                      (- new-indentation tab-width)))
