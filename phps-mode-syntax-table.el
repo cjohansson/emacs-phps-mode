@@ -1,6 +1,6 @@
 ;;; phps-mode-syntax-table.el --- Syntax table for PHPs -*- lexical-binding: t -*-
 
-;; Copyright (C) 2018-2021  Free Software Foundation, Inc.
+;; Copyright (C) 2018-2022  Free Software Foundation, Inc.
 
 ;; This file is not part of GNU Emacs.
 
