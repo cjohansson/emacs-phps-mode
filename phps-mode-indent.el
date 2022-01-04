@@ -243,8 +243,8 @@
                new-indentation
                previous-indentation)
 
-              (message "\ncurrent-line-string: %S" current-line-string)
-              (message "previous-line-string: %S" previous-line-string)
+              ;; (message "\ncurrent-line-string: %S" current-line-string)
+              ;; (message "previous-line-string: %S" previous-line-string)
               ;; (message "current-line-starts-with-closing-bracket: %S" current-line-starts-with-closing-bracket)
               ;; (message "current-line-starts-with-opening-bracket: %S" current-line-starts-with-opening-bracket)
               ;; (message "previous-line-ends-with-opening-bracket: %S" previous-line-ends-with-opening-bracket)
@@ -310,6 +310,76 @@
                 (setq
                  new-indentation
                  (- new-indentation tab-width)))
+
+               ;; function myFunction($key,
+               ;;     $value)
+               ;; {
+               ((and
+                 current-line-starts-with-opening-bracket
+                 (string= current-line-starts-with-opening-bracket "{")
+                 previous-line-ends-with-closing-bracket)
+                ;; Backtrack to line were bracket started
+                ;; and use indentation from that line for this line
+                (forward-line (* -1 move-length1))
+                (end-of-line)
+                (let ((not-found t)
+                      (reference-line)
+                      (reference-indentation)
+                      (parenthesis-level 0))
+                  (while
+                      (and
+                       not-found
+                       (search-backward-regexp
+                        "[][(){}]"
+                        nil
+                        t))
+                    (let ((match (match-string-no-properties 0)))
+                      (cond
+
+                       ((or
+                         (string= "(" match)
+                         (string= "[" match)
+                         (string= "{" match))
+                        (setq
+                         parenthesis-level
+                         (1+ parenthesis-level))
+                        (when (= parenthesis-level 0)
+                          (setq
+                           not-found
+                           nil)))
+
+                       ((or
+                         (string= ")" match)
+                         (string= "]" match)
+                         (string= "}" match))
+                        (setq
+                         parenthesis-level
+                         (1- parenthesis-level))
+                        (when (= parenthesis-level 0)
+                          (setq
+                           not-found
+                           nil)))
+
+                       )))
+                  (unless not-found
+                    (setq
+                     reference-line
+                     (buffer-substring-no-properties
+                      (line-beginning-position)
+                      (line-end-position)))
+                    (setq
+                     reference-indentation
+                     (phps-mode-indent--string-indentation
+                      reference-line)))
+
+                  (goto-char point)
+
+                  (when reference-indentation
+                    (setq
+                     new-indentation
+                     reference-indentation)))
+
+                )
 
                ;; if (true)
                ;;     echo 'Something';
@@ -863,13 +933,9 @@
                 (let ((not-found t)
                       (reference-line)
                       (reference-indentation)
-                      (is-array)
-                      (is-function)
-                      (is-bracket-less-command)
                       (parenthesis-level 0)
                       (is-declared-on-same-line-p)
-                      (is-same-line-p t)
-                      (bracket-opened-on-first-line))
+                      (is-same-line-p t))
                   (while
                       (and
                        not-found
@@ -892,15 +958,6 @@
                          parenthesis-level
                          (1+ parenthesis-level))
                         (when (= parenthesis-level 1)
-                          (if (string-match-p
-                               "^array[\t ]*("
-                               match)
-                              (setq
-                               is-array
-                               t)
-                            (setq
-                             is-function
-                             t))
                           (setq
                            is-declared-on-same-line-p
                            is-same-line-p)
@@ -913,9 +970,6 @@
                          parenthesis-level
                          (1+ parenthesis-level))
                         (when (= parenthesis-level 1)
-                          (setq
-                           is-array
-                           t)
                           (setq
                            is-declared-on-same-line-p
                            is-same-line-p)
@@ -931,15 +985,6 @@
                          (1- parenthesis-level)))
 
                        ((= parenthesis-level 0)
-                        (when (string-match-p "=>" match)
-                          (setq
-                           is-array
-                           t))
-                        (setq
-                         is-bracket-less-command
-                         (string-match-p
-                          "echo[\t ]+"
-                          match))
                         (setq
                          not-found
                          nil)))))
@@ -971,8 +1016,6 @@
                      (phps-mode-indent--string-indentation
                       reference-line)))
 
-                  ;; (message "is-array: %S" is-array)
-                  ;; (message "is-function: %S" is-function)
                   ;; (message "not-found: %S" not-found)
                   ;; (message "reference-line: %S" reference-line)
                   ;; (message "reference-indentation: %S" reference-indentation)
