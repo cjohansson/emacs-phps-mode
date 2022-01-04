@@ -825,7 +825,7 @@
                       ;; If it's on the same line we ignore it
                       (forward-line (* -1 move-length1))
                       (end-of-line)
-                      (forward-char -1)
+                      (search-backward-regexp ";" nil t) ;; Skip the semi-colon
 
                       (let ((not-found t)
                             (is-assignment nil)
@@ -922,7 +922,7 @@
                 ;; If it started on the same line we ignore it
                 (forward-line (* -1 move-length1))
                 (end-of-line)
-                (forward-char -1)
+                (search-backward-regexp "," nil t) ;; Skip the colon
 
                 ;; (message
                 ;;  "at-line-start: %S"
@@ -1101,7 +1101,7 @@
                 ;; If it's on the same line we ignore it
                 (forward-line (* -1 move-length1))
                 (end-of-line)
-                (forward-char -1)
+                (search-backward-regexp ";" nil t) ;; Skip the semi-colon
 
                 (let ((not-found t)
                       (is-assignment nil)
@@ -1234,7 +1234,13 @@
                   ;; define('_PRIVATE_ROOT',
                   ;;     'here');
                   ;; echo 'here';
-                  (when is-function-call
+                  ;; but ignore
+                  ;; if (true) {
+                  ;;     define('_PRIVATE_ROOT', 'here');
+                  ;;     echo 'here';
+                  (when (and
+                         is-function-call
+                         (not is-same-line-p))
                     (setq
                      new-indentation
                      (- new-indentation tab-width)))
@@ -1417,6 +1423,7 @@
                ((and
                  current-line-starts-with-closing-bracket
                  (not previous-line-ends-with-opening-bracket))
+
                 ;; Backtrack to line were bracket started
                 ;; and use indentation from that line for this line
                 (forward-line (* -1 move-length1))

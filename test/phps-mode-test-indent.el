@@ -324,6 +324,10 @@
      "<?php\nself::addAutoLoadPaths(array(\n    _SYSTEM_ROOT_,\n    _PRIVATE_ROOT_,\n    _PUBLIC_ROOT_,\n    _SITE_ROOT_\n));\n"
      "Multiline function call with multiline array as argument")
 
+    (phps-mode-test-indent--should-equal
+     "<?php\nif (true) {\n    $random = self::getData();\n    // My random comment\n}\n"
+     "Comment after assignment from method call on same line")
+
   )
 
 (defun phps-mode-test-indent--get-lines-indent-psr-2 ()
