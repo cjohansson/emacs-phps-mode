@@ -1361,30 +1361,79 @@
                ;; or
                ;; array(
                ;; )
+               ;; or
+               ;; if (
+               ;;     myFunction(
+               ;;         'random')
+               ;; ) {
                ;; but ignore
                ;; var_dump(array(<<<EOD
                ;; ölöas
                ;; EOD
                ;; ));
-               ;; TODO Should backtrack to were bracket started
-               ;; TODO and use indentation from that line
                ((and
                  current-line-starts-with-closing-bracket
                  (not previous-line-ends-with-opening-bracket))
-                (setq
-                 new-indentation
-                 (- new-indentation tab-width))
+                ;; Backtrack to line were bracket started
+                ;; and use indentation from that line for this line
+                (forward-line (* -1 move-length1))
+                (end-of-line)
+                (let ((not-found t)
+                      (reference-line)
+                      (reference-indentation)
+                      (parenthesis-level -1))
+                  (while
+                      (and
+                       not-found
+                       (search-backward-regexp
+                        "[][(){}]"
+                        nil
+                        t))
+                    (let ((match (match-string-no-properties 0)))
+                      (cond
 
-                ;; if (
-                ;;     myFunction(
-                ;;         'random')
-                ;; ) {
-                (when (and
-                       previous-line-ends-with-closing-bracket
-                       (not previous-line-starts-with-closing-bracket))
-                  (setq
-                   new-indentation
-                   (- new-indentation tab-width))))
+                       ((or
+                         (string= "(" match)
+                         (string= "[" match)
+                         (string= "{" match))
+                        (setq
+                         parenthesis-level
+                         (1+ parenthesis-level))
+                        (when (= parenthesis-level 0)
+                          (setq
+                           not-found
+                           nil)))
+
+                       ((or
+                         (string= ")" match)
+                         (string= "]" match)
+                         (string= "}" match))
+                        (setq
+                         parenthesis-level
+                         (1- parenthesis-level))
+                        (when (= parenthesis-level 0)
+                          (setq
+                           not-found
+                           nil)))
+
+                       )))
+                  (unless not-found
+                    (setq
+                     reference-line
+                     (buffer-substring-no-properties
+                      (line-beginning-position)
+                      (line-end-position)))
+                    (setq
+                     reference-indentation
+                     (phps-mode-indent--string-indentation
+                      reference-line)))
+
+                  (goto-char point)
+
+                  (when reference-indentation
+                    (setq
+                     new-indentation
+                     reference-indentation))))
 
                ;; /**
                ;;  * here

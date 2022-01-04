@@ -305,11 +305,11 @@
      "Mutiline define statement")
 
     (phps-mode-test-indent--should-equal
-     "<?php\nif ($useRuntimeCache\n    && self::isWritingnabled()\n    && \\Aomebo\\Cache\\System::cacheExists(\n        $cacheParameters,\n        $cacheKey,\n        \\Aomebo\\Cache\\System::CACHE_STORAGE_LOCATION_FILESYSTEM)\n) {\n"
+     "<?php\nif ($useRuntimeCache\n    && self::isWritingnabled()\n    && \\Aomebo\\Cache\\System::cacheExists(\n        $cacheParameters,\n        $cacheKey,\n        \\Aomebo\\Cache\\System::CACHE_STORAGE_LOCATION_FILESYSTEM)\n) {    "
      "Multiline if condition")
 
     (phps-mode-test-indent--should-equal
-     "<?php\nif ($data = \\Aomebo\\Cache\\System::loadCache(\n    $cacheParameters,\n    $cacheKey,\n    \\Aomebo\\Cache\\System::FORMAT_SERIALIZE,\n    \\Aomebo\\Cache\\System::CACHE_STORAGE_LOCATION_FILESYSTEM)\n) {\n"
+     "<?php\nif ($data = \\Aomebo\\Cache\\System::loadCache(\n    $cacheParameters,\n    $cacheKey,\n    \\Aomebo\\Cache\\System::FORMAT_SERIALIZE,\n    \\Aomebo\\Cache\\System::CACHE_STORAGE_LOCATION_FILESYSTEM)\n) {    "
      "Multiline if-condition with assignment")
 
     (phps-mode-test-indent--should-equal
