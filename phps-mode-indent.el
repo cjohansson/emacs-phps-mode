@@ -1088,6 +1088,14 @@
                ;; or
                ;; define('_PRIVATE_ROOT_',
                ;;     'here');
+
+               ;; TODO Handle cases like
+               ;; if (true) {
+               ;;     $cacheKey = sprintf(
+               ;;         'key_%s',
+               ;;         md5(json_encode($key))
+               ;;     );
+               ;;     $cache =
                ((and
                  previous-line-ends-with-terminus
                  (string= previous-line-ends-with-terminus ";")

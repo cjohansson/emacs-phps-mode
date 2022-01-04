@@ -328,6 +328,10 @@
      "<?php\nif (true) {\n    $random = self::getData();\n    // My random comment\n}\n"
      "Comment after assignment from method call on same line")
 
+    (phps-mode-test-indent--should-equal
+     "<?php\nif (true) {\n    // My comment\n    $cacheKey = sprintf(\n        'key_%s',\n        md5(json_encode($key))\n    );\n    $cache =\n        Cache::getInstance();\n"
+     "Line after assignment from multi-line function-call")
+
   )
 
 (defun phps-mode-test-indent--get-lines-indent-psr-2 ()
