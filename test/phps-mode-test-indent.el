@@ -340,6 +340,18 @@
      "<?php\nif (true) {\n    foreach ($explode as $exploded) {\n        if ($i == 0) {\n            $lastName = trim($exploded);\n        } elseif ($i == $lastIndex) {\n            $lastQuantity = (int) $exploded;\n            $matches[] = array(\n                'name' => $lastName,\n                'quantity' => $lastQuantity\n            );\n        }\n    }\n}\n"
      "Closing bracket on new line after ending statement / expression with closing bracket")
 
+    (phps-mode-test-indent--should-equal
+     "<?php\nclass MyClass\n{\n    public function log(\n        $message,\n        $level = _INFO_\n    ) {\n    }"
+     "Opening method body after argument with default value")
+
+    (phps-mode-test-indent--should-equal
+     "<?php\nclass MyClass\n{\n    public function log(\n        $message,\n        $level = _INFO_,\n        $rate = _BASE_RATE_\n    ) {\n    }"
+     "Opening method body after 2 arguments with default values")
+
+    (phps-mode-test-indent--should-equal
+     "<?php\nclass MyClass\n{\n    public function getOperators()\n    {\n        return array(\n            '' => __(\n                'None',\n                'domain'\n            ),\n            '-' => __(\n                'Subtraction',\n                'domain'\n            ),\n            '+' => __(\n                'Addition',\n                'domain'\n            ),\n        );\n    }\n}\n"
+     "Method that returns multi-line array")
+
   )
 
 (defun phps-mode-test-indent--get-lines-indent-psr-2 ()

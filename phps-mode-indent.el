@@ -435,14 +435,19 @@
                ;; $var === true
                ;; or
                ;; $var == 3
+               ;; or
+               ;; $argument1 = 3,
+               ;; $argument2 = 4
+               ;; or
+               ;; function myFunction(
+               ;;     $abc = 3
+               ;; ) {
                ((and
                  (string-match-p
-                  "^[\t ]*$[a-zA-Z0-9_]+[\t ]*[^=]*=\\($\\|[\t ]+\\)"
+                  "^[\t ]*$[a-zA-Z0-9_]+[\t ]*[^=]*=\\($\\|[\t ]+.*[^,;]$\\)"
                   previous-line-string)
                  (not
-                  (string-match-p
-                   ";[\t ]*$"
-                   previous-line-string)))
+                  current-line-starts-with-closing-bracket))
                 (setq
                  new-indentation
                  (+ new-indentation tab-width)))
