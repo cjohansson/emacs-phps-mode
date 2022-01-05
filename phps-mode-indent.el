@@ -751,6 +751,121 @@
                  new-indentation
                  (- new-indentation tab-width)))
 
+;; if (true) {
+               ;;     $cacheKey = sprintf(
+               ;;         'key_%s',
+               ;;         md5(json_encode($key))
+               ;;     );
+               ;;     $cache =
+               ;; or
+               ;; if (true) {
+               ;;     $cache =
+               ;;         Cache::getInstance();
+               ;;     echo 'here';
+               ((string-match-p
+                 "[])][\t ]*;[\t ]*\\(\\?>[\t\n ]*\\)?$"
+                 previous-line-string)
+
+                ;; Backtrack first to line were bracket started
+                ;; and then backwards until the line were statement / expression
+                ;; started and use indentation from that line from that line
+                (forward-line (* -1 move-length1))
+                (end-of-line)
+                (search-backward-regexp ";" nil t) ;; Skip trailing comma
+                (let ((not-found-bracket-start t)
+                      (reference-line)
+                      (parenthesis-level 0))
+                  (while
+                      (and
+                       not-found-bracket-start
+                       (search-backward-regexp
+                        "[][()]"
+                        nil
+                        t))
+                    (let ((match (match-string-no-properties 0)))
+                      (cond
+
+                       ((or
+                         (string= "(" match)
+                         (string= "[" match))
+                        (setq
+                         parenthesis-level
+                         (1+ parenthesis-level))
+                        (when (= parenthesis-level 0)
+                          (setq
+                           not-found-bracket-start
+                           nil)))
+
+                       ((or
+                         (string= ")" match)
+                         (string= "]" match))
+                        (setq
+                         parenthesis-level
+                         (1- parenthesis-level))
+                        (when (= parenthesis-level 0)
+                          (setq
+                           not-found-bracket-start
+                           nil)))
+
+                       )))
+
+                  ;; Found line were bracket started?
+                  (unless not-found-bracket-start
+                    (setq
+                     reference-line
+                     (buffer-substring-no-properties
+                      (line-beginning-position)
+                      (line-end-position)))
+                    ;; (message "reference-line-1: %S" reference-line)
+
+                    ;; Search for first line of statement / expression here
+                    (let ((not-found-command-start t))
+                      (while
+                          (and
+                           not-found-command-start
+                           (search-backward-regexp
+                            "\\(;\\|}\\|{\\|[\t ]*[^\t ]+[\t ]*$\\)"
+                            nil
+                            t))
+                        (let ((match (match-string-no-properties 0)))
+                          (cond
+
+                           ;; End of expression / statement
+                           ((or
+                             (string= ";" match)
+                             (string= "}" match)
+                             (string= "{" match))
+                            (setq
+                             not-found-command-start
+                             nil))
+
+                           ;; Non-empty line
+                           (t
+                            (setq
+                             reference-line
+                             (buffer-substring-no-properties
+                              (line-beginning-position)
+                              (line-end-position))))
+
+                           )))))
+
+                  (when reference-line
+                    ;; (message "reference-line-2: %S" reference-line)
+                    (setq
+                     new-indentation
+                     (phps-mode-indent--string-indentation
+                      reference-line)))
+
+                  (when
+                      (and
+                       current-line-starts-with-closing-bracket
+                       (string= current-line-starts-with-closing-bracket "}"))
+                    (setq
+                     new-indentation
+                     (- new-indentation tab-width))))
+
+                (goto-char point))
+
                ;; switch ($condition) {
                ;;     case true:
                ;;         echo 'here';
@@ -1069,111 +1184,6 @@
                   (goto-char point)
 
                   ))
-
-               ;; if (true) {
-               ;;     $cacheKey = sprintf(
-               ;;         'key_%s',
-               ;;         md5(json_encode($key))
-               ;;     );
-               ;;     $cache =
-               ;; or
-               ;; if (true) {
-               ;;     $cache =
-               ;;         Cache::getInstance();
-               ;;     echo 'here';
-               ((string-match-p
-                 "[])][\t ]*;[\t ]*\\(\\?>[\t\n ]*\\)?$"
-                 previous-line-string)
-
-                ;; Backtrack first to line were bracket started
-                ;; and then backwards until the line were statement / expression
-                ;; started and use indentation from that line from that line
-                (forward-line (* -1 move-length1))
-                (end-of-line)
-                (search-backward-regexp ";" nil t) ;; Skip trailing comma
-                (let ((not-found-bracket-start t)
-                      (reference-line)
-                      (parenthesis-level 0))
-                  (while
-                      (and
-                       not-found-bracket-start
-                       (search-backward-regexp
-                        "[][()]"
-                        nil
-                        t))
-                    (let ((match (match-string-no-properties 0)))
-                      (cond
-
-                       ((or
-                         (string= "(" match)
-                         (string= "[" match))
-                        (setq
-                         parenthesis-level
-                         (1+ parenthesis-level))
-                        (when (= parenthesis-level 0)
-                          (setq
-                           not-found-bracket-start
-                           nil)))
-
-                       ((or
-                         (string= ")" match)
-                         (string= "]" match))
-                        (setq
-                         parenthesis-level
-                         (1- parenthesis-level))
-                        (when (= parenthesis-level 0)
-                          (setq
-                           not-found-bracket-start
-                           nil)))
-
-                       )))
-
-                  ;; Found line were bracket started?
-                  (unless not-found-bracket-start
-                    (setq
-                     reference-line
-                     (buffer-substring-no-properties
-                      (line-beginning-position)
-                      (line-end-position)))
-
-                    ;; Search for first line of statement / expression here
-                    (let ((not-found-command-start t))
-                      (while
-                          (and
-                           not-found-command-start
-                           (search-backward-regexp
-                            "\\(;\\|}\\|{\\|[\t ]*[^\t ]+[\t ]*$\\)"
-                            nil
-                            t))
-                        (let ((match (match-string-no-properties 0)))
-                          (cond
-
-                           ;; End of expression / statement
-                           ((or
-                             (string= ";" match)
-                             (string= "}" match)
-                             (string= "{" match))
-                            (setq
-                             not-found-command-start
-                             nil))
-
-                           ;; Non-empty line
-                           (t
-                            (setq
-                             reference-line
-                             (buffer-substring-no-properties
-                              (line-beginning-position)
-                              (line-end-position))))
-
-                           )))))
-
-                  (when reference-line
-                    (setq
-                     new-indentation
-                     (phps-mode-indent--string-indentation
-                      reference-line))))
-
-                (goto-char point))
 
                ;; $var .=
                ;;     'hello';
