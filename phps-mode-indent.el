@@ -425,9 +425,19 @@
 
                ;; $var = 'A line' .
                ;;     'something';
+               ;; or
+               ;; $var .= 'A line' .
+               ;;     'something'
+               ;; or
+               ;; $var += 35 +
+               ;;     77
+               ;; but ignore
+               ;; $var === true
+               ;; or
+               ;; $var == 3
                ((and
                  (string-match-p
-                  "^[\t ]*$[a-zA-Z0-9_]+[\t ]*="
+                  "^[\t ]*$[a-zA-Z0-9_]+[\t ]*[^=]*=\\($\\|[\t ]+\\)"
                   previous-line-string)
                  (not
                   (string-match-p
@@ -1496,6 +1506,11 @@
                  new-indentation
                  (+ new-indentation tab-width)))
 
+               ;; ) {
+               ;;     echo 'here'
+               ;; or
+               ;; ][
+               ;;     25
                ((and (= previous-bracket-level 0)
                      previous-line-starts-with-closing-bracket)
                 (setq
