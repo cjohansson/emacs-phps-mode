@@ -332,6 +332,14 @@
      "<?php\nif (true) {\n    // My comment\n    $cacheKey = sprintf(\n        'key_%s',\n        md5(json_encode($key))\n    );\n    $cache =\n        Cache::getInstance();\n    "
      "Line after assignment from multi-line function-call")
 
+    (phps-mode-test-indent--should-equal
+     "<?php\nif (\n    $responseStatusCode === 200\n    || $responseStatusCode === 400\n) {\n    \n}\n"
+     "Multi-line conditions with OR operators")
+
+    (phps-mode-test-indent--should-equal
+     "<?php\nif (true) {\n    foreach ($explode as $exploded) {\n        if ($i == 0) {\n            $lastName = trim($exploded);\n        } elseif ($i == $lastIndex) {\n            $lastQuantity = (int) $exploded;\n            $matches[] = array(\n                'name' => $lastName,\n                'quantity' => $lastQuantity\n            );\n        }\n    }\n}\n"
+     "Closing bracket on new line after ending statement / expression with closing bracket")
+
   )
 
 (defun phps-mode-test-indent--get-lines-indent-psr-2 ()
