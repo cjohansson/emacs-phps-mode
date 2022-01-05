@@ -244,14 +244,15 @@
                previous-indentation)
 
               ;; debug stuff
-              ;; (message "\ncurrent-line-string: %S" current-line-string)
-              ;; (message "previous-line-string: %S" previous-line-string)
-              ;; (message "current-line-starts-with-closing-bracket: %S" current-line-starts-with-closing-bracket)
-              ;; (message "current-line-starts-with-opening-bracket: %S" current-line-starts-with-opening-bracket)
-              ;; (message "previous-line-ends-with-opening-bracket: %S" previous-line-ends-with-opening-bracket)
-              ;; (message "previous-line-ends-with-terminus: %S" previous-line-ends-with-terminus)
-              ;; (message "previous-bracket-level: %S" previous-bracket-level)
-              ;; (message "previous-indentation: %S" previous-indentation)
+              (message "\ncurrent-line-string: %S" current-line-string)
+              (message "previous-line-string: %S" previous-line-string)
+
+              (message "current-line-starts-with-closing-bracket: %S" current-line-starts-with-closing-bracket)
+              (message "current-line-starts-with-opening-bracket: %S" current-line-starts-with-opening-bracket)
+              (message "previous-line-ends-with-opening-bracket: %S" previous-line-ends-with-opening-bracket)
+              (message "previous-line-ends-with-terminus: %S" previous-line-ends-with-terminus)
+              (message "previous-bracket-level: %S" previous-bracket-level)
+              (message "previous-indentation: %S" previous-indentation)
 
 
               ;; Case by case logic below - most specific to most general
@@ -1044,6 +1045,13 @@
                ;;     [
                ;;         2,
                ;;         3,
+               ;; or TODO
+               ;; return array(
+               ;;     '' => __(
+               ;;         'None',
+               ;;         'domain'
+               ;;     ),
+               ;;     '-' =>
                ((and
                  previous-line-ends-with-terminus
                  (string= previous-line-ends-with-terminus ","))
