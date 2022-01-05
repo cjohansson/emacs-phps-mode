@@ -1138,6 +1138,13 @@
                     ;; sprintf(__(
                     ;;     'Error %s', <-- use this indentation as reference instead
                     ;;     $error
+                    ;; but ignore
+                    ;; return array(
+                    ;;     '' => __(
+                    ;;         'None',
+                    ;;         'domain'
+                    ;;     ),
+                    ;;     '-' =>
                     (when (and
                            (not is-same-line-p)
                            (string-match-p
