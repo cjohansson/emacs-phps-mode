@@ -329,7 +329,7 @@
      "Comment after assignment from method call on same line")
 
     (phps-mode-test-indent--should-equal
-     "<?php\nif (true) {\n    // My comment\n    $cacheKey = sprintf(\n        'key_%s',\n        md5(json_encode($key))\n    );\n    $cache =\n        Cache::getInstance();\n"
+     "<?php\nif (true) {\n    // My comment\n    $cacheKey = sprintf(\n        'key_%s',\n        md5(json_encode($key))\n    );\n    $cache =\n        Cache::getInstance();\n    "
      "Line after assignment from multi-line function-call")
 
   )
