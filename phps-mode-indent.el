@@ -244,15 +244,15 @@
                previous-indentation)
 
               ;; debug stuff
-              (message "\ncurrent-line-string: %S" current-line-string)
-              (message "previous-line-string: %S" previous-line-string)
+              ;; (message "\ncurrent-line-string: %S" current-line-string)
+              ;; (message "previous-line-string: %S" previous-line-string)
 
-              (message "current-line-starts-with-closing-bracket: %S" current-line-starts-with-closing-bracket)
-              (message "current-line-starts-with-opening-bracket: %S" current-line-starts-with-opening-bracket)
-              (message "previous-line-ends-with-opening-bracket: %S" previous-line-ends-with-opening-bracket)
-              (message "previous-line-ends-with-terminus: %S" previous-line-ends-with-terminus)
-              (message "previous-bracket-level: %S" previous-bracket-level)
-              (message "previous-indentation: %S" previous-indentation)
+              ;; (message "current-line-starts-with-closing-bracket: %S" current-line-starts-with-closing-bracket)
+              ;; (message "current-line-starts-with-opening-bracket: %S" current-line-starts-with-opening-bracket)
+              ;; (message "previous-line-ends-with-opening-bracket: %S" previous-line-ends-with-opening-bracket)
+              ;; (message "previous-line-ends-with-terminus: %S" previous-line-ends-with-terminus)
+              ;; (message "previous-bracket-level: %S" previous-bracket-level)
+              ;; (message "previous-indentation: %S" previous-indentation)
 
 
               ;; Case by case logic below - most specific to most general
@@ -757,7 +757,7 @@
                  new-indentation
                  (- new-indentation tab-width)))
 
-;; if (true) {
+               ;; if (true) {
                ;;     $cacheKey = sprintf(
                ;;         'key_%s',
                ;;         md5(json_encode($key))
@@ -1033,6 +1033,92 @@
                  new-indentation
                  (- new-indentation tab-width tab-width)))
 
+               ;; return array(
+               ;;     '' => __(
+               ;;         'None',
+               ;;         'domain'
+               ;;     ),
+               ;;     '-' =>
+               ;; or
+               ;; return [
+               ;;     [
+               ;;         '25'
+               ;;     ],
+               ;;     25
+               ((string-match-p
+                 "[])][\t ]*,[\t ]*\\(\\?>[\t\n ]*\\)?$"
+                 previous-line-string)
+
+                ;; Backtrack first to line were bracket started
+                ;; and use indentation from that line from that line
+                (forward-line (* -1 move-length1))
+                (end-of-line)
+                (search-backward-regexp "," nil t) ;; Skip trailing comma
+                (let ((not-found-bracket-start t)
+                      (reference-line)
+                      (parenthesis-level 1))
+                  (while
+                      (and
+                       not-found-bracket-start
+                       (search-backward-regexp
+                        "\\()[][(),]\\|=>\\)"
+                        nil
+                        t))
+                    (let ((match (match-string-no-properties 0)))
+                      (cond
+
+                       ((or
+                         (string= "(" match)
+                         (string= "[" match))
+                        (setq
+                         parenthesis-level
+                         (1+ parenthesis-level))
+                        (when (= parenthesis-level 0)
+                          (setq
+                           not-found-bracket-start
+                           nil)))
+
+                       ((or
+                         (string= ")" match)
+                         (string= "]" match))
+                        (setq
+                         parenthesis-level
+                         (1- parenthesis-level))
+                        (when (= parenthesis-level 0)
+                          (setq
+                           not-found-bracket-start
+                           nil)))
+
+                       (t
+                        (when (= parenthesis-level 1)
+                          (setq
+                           not-found-bracket-start
+                           nil)))
+
+                       )))
+
+                  ;; Found line were bracket started?
+                  (unless not-found-bracket-start
+                    (setq
+                     reference-line
+                     (buffer-substring-no-properties
+                      (line-beginning-position)
+                      (line-end-position))))
+
+                  (when reference-line
+                    ;; (message "reference-line-2: %S" reference-line)
+                    (setq
+                     new-indentation
+                     (phps-mode-indent--string-indentation
+                      reference-line)))
+
+                  (when current-line-starts-with-closing-bracket
+                    (setq
+                     new-indentation
+                     (- new-indentation tab-width))))
+
+                (goto-char point))
+
                ;; 'name' =>
                ;;     $myObject->getName(),
                ;; 'age' =>
@@ -1045,13 +1131,6 @@
                ;;     [
                ;;         2,
                ;;         3,
-               ;; or TODO
-               ;; return array(
-               ;;     '' => __(
-               ;;         'None',
-               ;;         'domain'
-               ;;     ),
-               ;;     '-' =>
                ((and
                  previous-line-ends-with-terminus
                  (string= previous-line-ends-with-terminus ","))
