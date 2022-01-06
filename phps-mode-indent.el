@@ -1045,6 +1045,10 @@
                ;;         '25'
                ;;     ],
                ;;     25
+               ;; or
+               ;; if (myFunction(
+               ;;     random(),
+               ;;     heredom(),
                ((string-match-p
                  "[])][\t ]*,[\t ]*\\(\\?>[\t\n ]*\\)?$"
                  previous-line-string)
@@ -1056,12 +1060,13 @@
                 (search-backward-regexp "," nil t) ;; Skip trailing comma
                 (let ((not-found-bracket-start t)
                       (reference-line)
-                      (parenthesis-level 1))
+                      (found-colon)
+                      (parenthesis-level 0))
                   (while
                       (and
                        not-found-bracket-start
                        (search-backward-regexp
-                        "\\()[][(),]\\|=>\\)"
+                        "\\([][(),]\\|=>\\)"
                         nil
                         t))
                     (let ((match (match-string-no-properties 0)))
@@ -1073,7 +1078,9 @@
                         (setq
                          parenthesis-level
                          (1+ parenthesis-level))
-                        (when (= parenthesis-level 0)
+                        (when (and
+                               (= parenthesis-level 1)
+                               found-colon)
                           (setq
                            not-found-bracket-start
                            nil)))
@@ -1083,27 +1090,41 @@
                          (string= "]" match))
                         (setq
                          parenthesis-level
-                         (1- parenthesis-level))
+                         (1- parenthesis-level)))
+
+                       ;; The second occurence of a colon
+                       ;; is a significant marker of
+                       ;; a starting bracket row
+                       ((string= "," match)
+                        (when (= parenthesis-level 0)
+                          (if found-colon
+                              (setq
+                               not-found-bracket-start
+                               nil)
+                            (setq
+                             found-colon
+                             t)
+                            (setq
+                             reference-line
+                             (buffer-substring-no-properties
+                              (line-beginning-position)
+                              (line-end-position))))))
+
+                       ;; The first occurrence of a =>
+                       ;; is a significant marker of
+                       ;; a starting bracket row
+                       ((string= "=>" match)
                         (when (= parenthesis-level 0)
                           (setq
-                           not-found-bracket-start
-                           nil)))
-
-                       (t
-                        (when (= parenthesis-level 1)
+                           reference-line
+                           (buffer-substring-no-properties
+                            (line-beginning-position)
+                            (line-end-position)))
                           (setq
                            not-found-bracket-start
                            nil)))
 
                        )))
-
-                  ;; Found line were bracket started?
-                  (unless not-found-bracket-start
-                    (setq
-                     reference-line
-                     (buffer-substring-no-properties
-                      (line-beginning-position)
-                      (line-end-position))))
 
                   (when reference-line
                     ;; (message "reference-line-2: %S" reference-line)

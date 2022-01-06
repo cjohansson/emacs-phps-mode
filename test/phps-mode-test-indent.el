@@ -352,6 +352,10 @@
      "<?php\nclass MyClass\n{\n    public function getOperators()\n    {\n        return array(\n            '' => __(\n                'None',\n                'domain'\n            ),\n            '-' => __(\n                'Subtraction',\n                'domain'\n            ),\n            '+' => __(\n                'Addition',\n                'domain'\n            ),\n        );\n    }\n}\n"
      "Method that returns multi-line array")
 
+    (phps-mode-test-indent--should-equal
+     "<?php\nfunction myFunction()\n{\n    if (!isset($randomize)) {\n        if (true) {\n            throw new \Exception(sprintf(\n                __(\n                    'Library not found at %s',\n                    'domain'\n                ),\n                $path\n            ));\n        }\n    }\n    return false;\n}\n"
+     "Multi-line throw statement")
+
   )
 
 (defun phps-mode-test-indent--get-lines-indent-psr-2 ()
