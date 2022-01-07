@@ -443,9 +443,11 @@
                ;; function myFunction(
                ;;     $abc = 3
                ;; ) {
+               ;; or
+               ;; $abc != 3
                ((and
                  (string-match-p
-                  "^[\t ]*$[a-zA-Z0-9_]+[\t ]*[^=]*=\\($\\|[\t ]+.*[^,;]$\\)"
+                  "^[\t ]*$[a-zA-Z0-9_]+[\t ]*[^=!]*=\\($\\|[\t ]+.*[^,;]$\\)"
                   previous-line-string)
                  (not
                   current-line-starts-with-closing-bracket))
