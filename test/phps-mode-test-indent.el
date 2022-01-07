@@ -360,6 +360,18 @@
      "<?php\n\nforeach ($datas as $data) {\n    if (\n        stripos(\n            $data,\n            ' , '\n        ) !== false\n    ) {\n        $explode = explode(\n            ' , ',\n            $data\n        );\n        if (\n            !empty($explode)\n            && is_array($explode)\n            && isset(\n                $explode[0],\n                $explode[1]\n            )\n        ) {\n            $name = trim($explode[1]);\n        }\n    }\n}\n"
      "Line after multi-line function call inside if condition list")
 
+    (phps-mode-test-indent--should-equal
+     "<?php\n\nif (\n    (!isset(Meta()->login)\n        || !$name = Meta()->login->name())\n        && $override\n) {\n    echo 'here';\n}\n"
+     "Line after multi-line condition in parenthesis")
+
+    (phps-mode-test-indent--should-equal
+    "<?php\nif (\n    $first != false\n    || $second != false\n    || $third != false\n) {\n}\n"
+    "Line after variable not equal condition")
+
+    (phps-mode-test-indent--should-equal
+     "<?php\n\nif (\n    (is_array($data)\n        && !empty($data['index'])\n        && (is_a($data['index'], 'Index')\n            || is_a($data['Index'], 'Index2')))\n    || is_a($data, 'WC_Index')\n) {\n\n}\n"
+     "Line after multi-line condition in parenthesis 2")
+
   )
 
 (defun phps-mode-test-indent--get-lines-indent-psr-2 ()
