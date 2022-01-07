@@ -249,6 +249,7 @@
 
               ;; (message "current-line-starts-with-closing-bracket: %S" current-line-starts-with-closing-bracket)
               ;; (message "current-line-starts-with-opening-bracket: %S" current-line-starts-with-opening-bracket)
+              ;; (message "previous-line-ends-with-closing-bracket: %S" previous-line-ends-with-closing-bracket)
               ;; (message "previous-line-ends-with-opening-bracket: %S" previous-line-ends-with-opening-bracket)
               ;; (message "previous-line-ends-with-terminus: %S" previous-line-ends-with-terminus)
               ;; (message "previous-bracket-level: %S" previous-bracket-level)
@@ -258,6 +259,17 @@
               ;; Case by case logic below - most specific to most general
 
               (cond
+
+               ;; // die(
+               ;; echo 'here';
+               ((string-match-p
+                 "^[\t ]*//"
+                 previous-line-string)
+                (when current-line-starts-with-closing-bracket
+                  (setq
+                   new-indentation
+                   (- new-indentation tab-width))
+                  ))
 
                ;; class MyClass implements
                ;;     myInterface
@@ -967,10 +979,11 @@
                           (and
                            not-found-command-start
                            (search-backward-regexp
-                            "\\(;\\|}\\|{\\|[\t ]*[^\t ]+[\t ]*$\\)"
+                            "\\(;\\|}\\|{\\|^[\t ]*[^\t\n ]+[\t ]*$\\)"
                             nil
                             t))
-                        (let ((match (match-string-no-properties 0)))
+                        (let ((match (match-string-no-properties 1)))
+                          ;; (message "match: %S" match)
                           (cond
 
                            ;; End of expression / statement

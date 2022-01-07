@@ -189,6 +189,10 @@
    "Assignment with double-dimensional array with double arrow assignment inside function call")
 
   (phps-mode-test-indent--should-equal
+   "<?php\n// die('debug: ' . $debug\nif ($debug) {\n    \n}\n"
+   "Line after commented out opening bracket line")
+
+  (phps-mode-test-indent--should-equal
    "<?php\nswitch ($condition) {\n    case 34:\n        if ($item['Random'] % 10 == 0) {\n            $attributes['item'] = ($item['IntegerValue'] / 10);\n        } else {\n            $attributes['item'] =\n                number_format(($item['IntegerValue'] / 10), 1, '.', '');\n        }\n        break;\n}\n"
    "Switch case with conditional modulo expression")
 
