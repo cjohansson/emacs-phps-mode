@@ -313,76 +313,6 @@
                  new-indentation
                  (- new-indentation tab-width)))
 
-               ;; function myFunction($key,
-               ;;     $value)
-               ;; {
-               ((and
-                 current-line-starts-with-opening-bracket
-                 (string= current-line-starts-with-opening-bracket "{")
-                 previous-line-ends-with-closing-bracket)
-                ;; Backtrack to line were bracket started
-                ;; and use indentation from that line for this line
-                (forward-line (* -1 move-length1))
-                (end-of-line)
-                (let ((not-found t)
-                      (reference-line)
-                      (reference-indentation)
-                      (parenthesis-level 0))
-                  (while
-                      (and
-                       not-found
-                       (search-backward-regexp
-                        "[][(){}]"
-                        nil
-                        t))
-                    (let ((match (match-string-no-properties 0)))
-                      (cond
-
-                       ((or
-                         (string= "(" match)
-                         (string= "[" match)
-                         (string= "{" match))
-                        (setq
-                         parenthesis-level
-                         (1+ parenthesis-level))
-                        (when (= parenthesis-level 0)
-                          (setq
-                           not-found
-                           nil)))
-
-                       ((or
-                         (string= ")" match)
-                         (string= "]" match)
-                         (string= "}" match))
-                        (setq
-                         parenthesis-level
-                         (1- parenthesis-level))
-                        (when (= parenthesis-level 0)
-                          (setq
-                           not-found
-                           nil)))
-
-                       )))
-                  (unless not-found
-                    (setq
-                     reference-line
-                     (buffer-substring-no-properties
-                      (line-beginning-position)
-                      (line-end-position)))
-                    (setq
-                     reference-indentation
-                     (phps-mode-indent--string-indentation
-                      reference-line)))
-
-                  (goto-char point)
-
-                  (when reference-indentation
-                    (setq
-                     new-indentation
-                     reference-indentation)))
-
-                )
-
                ;; if (true)
                ;;     echo 'Something';
                ;; or
@@ -408,68 +338,6 @@
                   previous-line-string))
                 (setq new-indentation
                       (+ new-indentation tab-width)))
-
-               ;; echo <<<VAR
-               ;; abc
-               ;; or
-               ;; echo <<<'VAR'
-               ;; abc
-               ;; or
-               ;; echo <<<"VAR"
-               ;; abc
-               ((string-match-p
-                 "<<<'?\"?[a-zA-Z0-9_]+'?\"?$"
-                 previous-line-string)
-                (setq
-                 new-indentation
-                 0))
-
-               ;; $var = 'A line' .
-               ;;     'something';
-               ;; or
-               ;; $var .= 'A line' .
-               ;;     'something'
-               ;; or
-               ;; $var += 35 +
-               ;;     77
-               ;; but ignore
-               ;; $var === true
-               ;; or
-               ;; $var == 3
-               ;; or
-               ;; $argument1 = 3,
-               ;; $argument2 = 4
-               ;; or
-               ;; function myFunction(
-               ;;     $abc = 3
-               ;; ) {
-               ;; or
-               ;; $abc != 3
-               ((and
-                 (string-match-p
-                  "^[\t ]*$[a-zA-Z0-9_]+[\t ]*[^=!]*=\\($\\|[\t ]+.*[^,;]$\\)"
-                  previous-line-string)
-                 (not
-                  current-line-starts-with-closing-bracket))
-                (setq
-                 new-indentation
-                 (+ new-indentation tab-width)))
-
-               ;; echo 'Something' .
-               ;;     'something';
-               ;; but ignore
-               ;; print_r($object)
-               ((and
-                 (string-match-p
-                  "^[\t ]*\\(echo\\|print$\\|print[\t ]+\\|return\\|die\\)"
-                  previous-line-string)
-                 (not
-                  (string-match-p
-                   ";[\t ]*$"
-                   previous-line-string)))
-                (setq
-                 new-indentation
-                 (+ new-indentation tab-width)))
 
                ;; else
                ;;     echo 'Something';
@@ -575,6 +443,273 @@
                  (-
                   new-indentation
                   tab-width)))
+
+               ;; $myObject->myFunction()
+               ;;     ->myFunction2()
+               ;; but ignore
+               ;; $myObject->test(
+               ;;     'here'
+               ((and
+                 (not previous-line-ends-with-opening-bracket)
+                 (string-match-p
+                  "->"
+                  previous-line-string)
+                 (string-match-p
+                  "^[\t ]*->"
+                  current-line-string))
+                (let ((not-found t)
+                      (started-chaining-on-this-line t)
+                      (is-assignment)
+                      (is-string-concatenation)
+                      (is-bracket-less-command)
+                      (is-same-line-p t))
+                  (while
+                      (and
+                       not-found
+                       (search-backward-regexp
+                        "\\(;\\|{\\|(\\|)\\|=\\|->\\|echo[\t ]+\\|print[\t ]+\\|\n\\|^[\t ]*\\.\\|\\.[\t ]*$\\)"
+                        nil
+                        t))
+                    (let ((match (match-string-no-properties 0)))
+                      (cond
+
+                       ((string=
+                         "->"
+                         match)
+                        (setq
+                         started-chaining-on-this-line
+                         is-same-line-p))
+
+                       ((string=
+                         "\n"
+                         match)
+                        (setq
+                         is-same-line-p
+                         nil))
+
+                       ((or
+                         (string=
+                          "echo"
+                          match)
+                         (string=
+                          "print"
+                          match))
+                        (setq
+                         is-bracket-less-command
+                         t)
+                        (setq
+                         not-found
+                         nil))
+
+                       ((or
+                         (string=
+                          ";"
+                          match)
+                         (string=
+                          "}"
+                          match))
+                        (setq
+                         not-found
+                         nil))
+
+                       ((string=
+                         "="
+                         match)
+                        (setq
+                         is-assignment
+                         t)
+                        (setq
+                         not-found
+                         nil))
+
+                       ((string-match-p
+                         "\\(^[\t ]*\\.\\|\\.[\t ]*\\)$"
+                         match)
+                        (setq
+                         is-string-concatenation
+                         t)
+                        (setq
+                         not-found
+                         nil))
+
+                       )))
+
+                  (when (and
+                         (not is-assignment)
+                         (not is-string-concatenation)
+                         (not started-chaining-on-this-line)
+                         (not is-bracket-less-command))
+                    (setq
+                     new-indentation
+                     (+ new-indentation tab-width))))
+                (goto-char point))
+
+               ;; function myFunction($key,
+               ;;     $value)
+               ;; {
+               ;; or
+               ;; (is_array($data)
+               ;;     && !empty($data['index'])
+               ;;     && (is_a($data['index'], 'Index')
+               ;;     || is_a($data['Index'], 'Index2')))
+               ;; || is_a($data, 'WC_Index')
+               (previous-line-ends-with-closing-bracket
+
+                ;; Backtrack to line were bracket started
+                ;; and use indentation from that line for this line
+                (forward-line (* -1 move-length1))
+                (end-of-line)
+                (let ((not-found t)
+                      (reference-line)
+                      (reference-line2)
+                      (reference-indentation)
+                      (parenthesis-level 0))
+                  (while
+                      (and
+                       not-found
+                       (search-backward-regexp
+                        "[][(){}]"
+                        nil
+                        t))
+                    (let ((match (match-string-no-properties 0)))
+                      (cond
+
+                       ((or
+                         (string= "(" match)
+                         (string= "[" match)
+                         (string= "{" match))
+                        (setq
+                         parenthesis-level
+                         (1+ parenthesis-level))
+                        (when (= parenthesis-level 0)
+                          (setq
+                           not-found
+                           nil)))
+
+                       ((or
+                         (string= ")" match)
+                         (string= "]" match)
+                         (string= "}" match))
+                        (setq
+                         parenthesis-level
+                         (1- parenthesis-level))
+                        (when (= parenthesis-level 0)
+                          (setq
+                           not-found
+                           nil)))
+
+                       )))
+                  (unless not-found
+                    (setq
+                     reference-line
+                     (buffer-substring-no-properties
+                      (line-beginning-position)
+                      (line-end-position)))
+                    (setq
+                     reference-line2
+                     (buffer-substring-no-properties
+                      (point)
+                      (line-end-position)))
+                    (setq
+                     reference-indentation
+                     (phps-mode-indent--string-indentation
+                      reference-line))
+                    (setq
+                     new-indentation
+                     reference-indentation)
+                    (let ((reference-bracket-level
+                           (phps-mode-indent--get-string-brackets-count
+                            reference-line))
+                          (reference-bracket-level2
+                           (phps-mode-indent--get-string-brackets-count
+                            reference-line2)))
+                      ;; if (
+                      ;;     (is_array($data)
+                      ;;     && !empty($data['index'])
+                      ;;         && (is_a($data['index'], 'Index')
+                      ;;         || is_a($data['Index'], 'Index2')))
+                      ;;     || is_a($data, 'WC_Index')
+                      ;; (message "reference-bracket-level: %S" reference-bracket-level)
+                      ;; (message "reference-bracket-level2: %S" reference-bracket-level2)
+                      (when (and
+                             (> reference-bracket-level 0)
+                             (> reference-bracket-level reference-bracket-level2))
+                        (setq
+                         new-indentation
+                         (+ new-indentation tab-width))))
+
+                    (when current-line-starts-with-closing-bracket
+                      (setq
+                       new-indentation
+                       (- new-indentation tab-width)))
+
+                    )
+
+                  (goto-char point))
+
+                )
+
+               ;; echo <<<VAR
+               ;; abc
+               ;; or
+               ;; echo <<<'VAR'
+               ;; abc
+               ;; or
+               ;; echo <<<"VAR"
+               ;; abc
+               ((string-match-p
+                 "<<<'?\"?[a-zA-Z0-9_]+'?\"?$"
+                 previous-line-string)
+                (setq
+                 new-indentation
+                 0))
+
+               ;; $var = 'A line' .
+               ;;     'something';
+               ;; or
+               ;; $var .= 'A line' .
+               ;;     'something'
+               ;; or
+               ;; $var += 35 +
+               ;;     77
+               ;; but ignore
+               ;; $var === true
+               ;; or
+               ;; $var == 3
+               ;; or
+               ;; $argument1 = 3,
+               ;; $argument2 = 4
+               ;; or
+               ;; function myFunction(
+               ;;     $abc = 3
+               ;; ) {
+               ;; or
+               ;; $abc != 3
+               ((and
+                 (string-match-p
+                  "^[\t ]*$[a-zA-Z0-9_]+[\t ]*[^=!]*=\\($\\|[\t ]+.*[^,;]$\\)"
+                  previous-line-string)
+                 (not
+                  current-line-starts-with-closing-bracket))
+                (setq
+                 new-indentation
+                 (+ new-indentation tab-width)))
+
+               ;; echo 'Something' .
+               ;;     'something';
+               ;; but ignore
+               ;; print_r($object)
+               ((and
+                 (string-match-p
+                  "^[\t ]*\\(echo\\|print$\\|print[\t ]+\\|return\\|die\\)"
+                  previous-line-string)
+                 (not
+                  (string-match-p
+                   ";[\t ]*$"
+                   previous-line-string)))
+                (setq
+                 new-indentation
+                 (+ new-indentation tab-width)))
 
                ;; $variable = array(
                ;;     'random' =>
@@ -1379,106 +1514,6 @@
                 (setq
                  new-indentation
                  (+ new-indentation tab-width)))
-
-               ;; $myObject->myFunction()
-               ;;     ->myFunction2()
-               ;; but ignore
-               ;; $myObject->test(
-               ;;     'here'
-               ((and
-                 (not previous-line-ends-with-opening-bracket)
-                 (string-match-p
-                  "->"
-                  previous-line-string)
-                 (string-match-p
-                  "^[\t ]*->"
-                  current-line-string))
-                (let ((not-found t)
-                      (started-chaining-on-this-line t)
-                      (is-assignment)
-                      (is-string-concatenation)
-                      (is-bracket-less-command)
-                      (is-same-line-p t))
-                  (while
-                      (and
-                       not-found
-                       (search-backward-regexp
-                        "\\(;\\|{\\|(\\|)\\|=\\|->\\|echo[\t ]+\\|print[\t ]+\\|\n\\|^[\t ]*\\.\\|\\.[\t ]*$\\)"
-                        nil
-                        t))
-                    (let ((match (match-string-no-properties 0)))
-                      (cond
-
-                       ((string=
-                         "->"
-                         match)
-                        (setq
-                         started-chaining-on-this-line
-                         is-same-line-p))
-
-                       ((string=
-                         "\n"
-                         match)
-                        (setq
-                         is-same-line-p
-                         nil))
-
-                       ((or
-                         (string=
-                          "echo"
-                          match)
-                         (string=
-                          "print"
-                          match))
-                        (setq
-                         is-bracket-less-command
-                         t)
-                        (setq
-                         not-found
-                         nil))
-
-                       ((or
-                         (string=
-                          ";"
-                          match)
-                         (string=
-                          "}"
-                          match))
-                        (setq
-                         not-found
-                         nil))
-
-                       ((string=
-                         "="
-                         match)
-                        (setq
-                         is-assignment
-                         t)
-                        (setq
-                         not-found
-                         nil))
-
-                       ((string-match-p
-                         "\\(^[\t ]*\\.\\|\\.[\t ]*\\)$"
-                         match)
-                        (setq
-                         is-string-concatenation
-                         t)
-                        (setq
-                         not-found
-                         nil))
-
-                       )))
-
-                  (when (and
-                         (not is-assignment)
-                         (not is-string-concatenation)
-                         (not started-chaining-on-this-line)
-                         (not is-bracket-less-command))
-                    (setq
-                     new-indentation
-                     (+ new-indentation tab-width))))
-                (goto-char point))
 
                ;; /**
                ;;  *
