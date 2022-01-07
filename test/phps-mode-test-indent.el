@@ -372,6 +372,10 @@
      "<?php\n\nif (\n    (is_array($data)\n        && !empty($data['index'])\n        && (is_a($data['index'], 'Index')\n            || is_a($data['Index'], 'Index2')))\n    || is_a($data, 'WC_Index')\n) {\n\n}\n"
      "Line after multi-line condition in parenthesis 2")
 
+    (phps-mode-test-indent--should-equal
+     "<?php\nfunction myFunction()\n{\n    return self::getOption('username')\n        && self::getOption('password');\n}\n"
+     "Line after line that started a multi-line return expression")
+
   )
 
 (defun phps-mode-test-indent--get-lines-indent-psr-2 ()

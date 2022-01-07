@@ -544,6 +544,37 @@
                      (+ new-indentation tab-width))))
                 (goto-char point))
 
+               ;; echo <<<VAR
+               ;; abc
+               ;; or
+               ;; echo <<<'VAR'
+               ;; abc
+               ;; or
+               ;; echo <<<"VAR"
+               ;; abc
+               ((string-match-p
+                 "<<<'?\"?[a-zA-Z0-9_]+'?\"?$"
+                 previous-line-string)
+                (setq
+                 new-indentation
+                 0))
+
+               ;; echo 'Something' .
+               ;;     'something';
+               ;; but ignore
+               ;; print_r($object)
+               ((and
+                 (string-match-p
+                  "^[\t ]*\\(echo\\|print$\\|print[\t ]+\\|return\\|die\\)"
+                  previous-line-string)
+                 (not
+                  (string-match-p
+                   ";[\t ]*$"
+                   previous-line-string)))
+                (setq
+                 new-indentation
+                 (+ new-indentation tab-width)))
+
                ;; function myFunction($key,
                ;;     $value)
                ;; {
@@ -649,21 +680,6 @@
 
                 )
 
-               ;; echo <<<VAR
-               ;; abc
-               ;; or
-               ;; echo <<<'VAR'
-               ;; abc
-               ;; or
-               ;; echo <<<"VAR"
-               ;; abc
-               ((string-match-p
-                 "<<<'?\"?[a-zA-Z0-9_]+'?\"?$"
-                 previous-line-string)
-                (setq
-                 new-indentation
-                 0))
-
                ;; $var = 'A line' .
                ;;     'something';
                ;; or
@@ -691,22 +707,6 @@
                   previous-line-string)
                  (not
                   current-line-starts-with-closing-bracket))
-                (setq
-                 new-indentation
-                 (+ new-indentation tab-width)))
-
-               ;; echo 'Something' .
-               ;;     'something';
-               ;; but ignore
-               ;; print_r($object)
-               ((and
-                 (string-match-p
-                  "^[\t ]*\\(echo\\|print$\\|print[\t ]+\\|return\\|die\\)"
-                  previous-line-string)
-                 (not
-                  (string-match-p
-                   ";[\t ]*$"
-                   previous-line-string)))
                 (setq
                  new-indentation
                  (+ new-indentation tab-width)))
@@ -1341,6 +1341,7 @@
                ;; or
                ;; define('_PRIVATE_ROOT_',
                ;;     'here');
+               ;; echo 'here';
                ((and
                  previous-line-ends-with-terminus
                  (string= previous-line-ends-with-terminus ";")
