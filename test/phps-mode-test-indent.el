@@ -376,6 +376,14 @@
      "<?php\nfunction myFunction()\n{\n    return self::getOption('username')\n        && self::getOption('password');\n}\n"
      "Line after line that started a multi-line return expression")
 
+    (phps-mode-test-indent--should-equal
+     "<?php\n$debug = ($debug1\n    && ($debug2 || $debug3)\n    && ($debug4 || $debug5));\n\n// die('debug: ' . $debug);\nif ($debug) {\n}\n"
+     "Line after a commented die statement after a multi-line logical assignment to variable")
+
+    (phps-mode-test-indent--should-equal
+     "<?php\n$debug = ($debug1\n    && ($debug2 || $debug3)\n    && ($debug4 || $debug5));\n\ndie('debug: ' . $debug);\nif ($debug) {\n}\n"
+     "Line after a die statement after a multi-line logical assignment to variable")
+
   )
 
 (defun phps-mode-test-indent--get-lines-indent-psr-2 ()
