@@ -356,6 +356,10 @@
      "<?php\nfunction myFunction()\n{\n    if (!isset($randomize)) {\n        if (true) {\n            throw new \Exception(sprintf(\n                __(\n                    'Library not found at %s',\n                    'domain'\n                ),\n                $path\n            ));\n        }\n    }\n    return false;\n}\n"
      "Multi-line throw statement")
 
+    (phps-mode-test-indent--should-equal
+     "<?php\n\nforeach ($datas as $data) {\n    if (\n        stripos(\n            $data,\n            ' , '\n        ) !== false\n    ) {\n        $explode = explode(\n            ' , ',\n            $data\n        );\n        if (\n            !empty($explode)\n            && is_array($explode)\n            && isset(\n                $explode[0],\n                $explode[1]\n            )\n        ) {\n            $name = trim($explode[1]);\n        }\n    }\n}\n"
+     "Line after multi-line function call inside if condition list")
+
   )
 
 (defun phps-mode-test-indent--get-lines-indent-psr-2 ()

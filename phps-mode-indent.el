@@ -1049,8 +1049,21 @@
                ;; if (myFunction(
                ;;     random(),
                ;;     heredom(),
+               ;; or
+               ;; 'name' =>
+               ;;     $myObject->getName(),
+               ;; 'age' =>
+               ;; or
+               ;; myFunction(
+               ;;     'my Argument',
+               ;;     'my second argument'
+               ;; or
+               ;; myFunction(
+               ;;     [
+               ;;         2,
+               ;;         3,
                ((string-match-p
-                 "[])][\t ]*,[\t ]*\\(\\?>[\t\n ]*\\)?$"
+                 ",[\t ]*\\(\\?>[\t\n ]*\\)?$"
                  previous-line-string)
 
                 ;; Backtrack first to line were bracket started
@@ -1061,6 +1074,7 @@
                 (let ((not-found-bracket-start t)
                       (reference-line)
                       (found-colon)
+                      (reference-line-started-bracket)
                       (parenthesis-level 0))
                   (while
                       (and
@@ -1078,9 +1092,16 @@
                         (setq
                          parenthesis-level
                          (1+ parenthesis-level))
-                        (when (and
-                               (= parenthesis-level 1)
-                               found-colon)
+                        (when (= parenthesis-level 1)
+                          (unless found-colon
+                            (setq
+                             reference-line-started-bracket
+                             t)
+                            (setq
+                             reference-line
+                             (buffer-substring-no-properties
+                              (line-beginning-position)
+                              (line-end-position))))
                           (setq
                            not-found-bracket-start
                            nil)))
@@ -1131,7 +1152,22 @@
                     (setq
                      new-indentation
                      (phps-mode-indent--string-indentation
-                      reference-line)))
+                      reference-line))
+                    (when reference-line-started-bracket
+                      (let ((reference-bracket-level
+                             (phps-mode-indent--get-string-brackets-count
+                              reference-line)))
+                        ;; (message "reference-bracket-level: %S" reference-bracket-level)
+                        ;; define('_PRIVATE_ROOT',
+                        ;;     'here');
+                        ;; or
+                        ;; ['abc',
+                        ;;     'def'];
+                        (when (> reference-bracket-level 0)
+                          (setq
+                           new-indentation
+                           (+ new-indentation tab-width)))))
+                    )
 
                   (when current-line-starts-with-closing-bracket
                     (setq
@@ -1139,171 +1175,6 @@
                      (- new-indentation tab-width))))
 
                 (goto-char point))
-
-               ;; 'name' =>
-               ;;     $myObject->getName(),
-               ;; 'age' =>
-               ;; or
-               ;; myFunction(
-               ;;     'my Argument',
-               ;;     'my second argument'
-               ;; or
-               ;; myFunction(
-               ;;     [
-               ;;         2,
-               ;;         3,
-               ((and
-                 previous-line-ends-with-terminus
-                 (string= previous-line-ends-with-terminus ","))
-
-                ;; Back-trace buffer from previous line
-                ;; Determine if comma was part of array or function argument or bracket-less command
-                ;; If it started on the same line we ignore it
-                (forward-line (* -1 move-length1))
-                (end-of-line)
-                (search-backward-regexp "," nil t) ;; Skip the colon
-
-                ;; (message
-                ;;  "at-line-start: %S"
-                ;;  (buffer-substring-no-properties
-                ;;   (line-beginning-position)
-                ;;   (line-end-position)))
-
-                (let ((not-found t)
-                      (reference-line)
-                      (reference-indentation)
-                      (parenthesis-level 0)
-                      (is-declared-on-same-line-p)
-                      (is-same-line-p t))
-                  (while
-                      (and
-                       not-found
-                       (search-backward-regexp
-                        "\\([a-zA-Z_]+[a-zA-Z0-9_]*[\t ]*(\\|=>\\|,\\|[\])[]\\|\n\\)"
-                        nil
-                        t))
-                    (let ((match (match-string-no-properties 0)))
-                      (cond
-
-                       ((string= match "\n")
-                        (setq
-                         is-same-line-p
-                         nil))
-
-                       ((string-match-p
-                         "[a-zA-Z_]+[a-zA-Z0-9_]*[\t ]*("
-                         match)
-                        (setq
-                         parenthesis-level
-                         (1+ parenthesis-level))
-                        (when (= parenthesis-level 1)
-                          (setq
-                           is-declared-on-same-line-p
-                           is-same-line-p)
-                          (setq
-                           not-found
-                           nil)))
-
-                       ((string= match "[")
-                        (setq
-                         parenthesis-level
-                         (1+ parenthesis-level))
-                        (when (= parenthesis-level 1)
-                          (setq
-                           is-declared-on-same-line-p
-                           is-same-line-p)
-                          (setq
-                           not-found
-                           nil)))
-
-                       ((or
-                         (string= match ")")
-                         (string= match "]"))
-                        (setq
-                         parenthesis-level
-                         (1- parenthesis-level)))
-
-                       ((= parenthesis-level 0)
-                        (setq
-                         not-found
-                         nil)))))
-
-                  (unless not-found
-                    (setq
-                     reference-line
-                     (buffer-substring-no-properties
-                      (line-beginning-position)
-                      (line-end-position)))
-
-                    ;; sprintf(__(
-                    ;;     'Error %s', <-- use this indentation as reference instead
-                    ;;     $error
-                    ;; but ignore
-                    ;; return array(
-                    ;;     '' => __(
-                    ;;         'None',
-                    ;;         'domain'
-                    ;;     ),
-                    ;;     '-' =>
-                    (when (and
-                           (not is-same-line-p)
-                           (string-match-p
-                            "[[(][\t ]*$"
-                            reference-line))
-                      (forward-line 1)
-                      (setq
-                       reference-line
-                       (buffer-substring-no-properties
-                        (line-beginning-position)
-                        (line-end-position))))
-
-                    (setq
-                     reference-indentation
-                     (phps-mode-indent--string-indentation
-                      reference-line)))
-
-                  ;; (message "not-found: %S" not-found)
-                  ;; (message "reference-line: %S" reference-line)
-                  ;; (message "reference-indentation: %S" reference-indentation)
-                  ;; (message
-                  ;;  "at-line-end: %S"
-                  ;;  (buffer-substring-no-properties
-                  ;;   (line-beginning-position)
-                  ;;   (line-end-position)))
-                  ;; (message "is-declared-on-same-line-p: %S" is-declared-on-same-line-p)
-
-                  (when reference-indentation
-                    (setq
-                     new-indentation
-                     reference-indentation))
-
-                  ;; myFunction(
-                  ;;     'arg',
-                  ;; );
-                  ;; or
-                  ;;     'weight' =>
-                  ;;         1.2,
-                  ;; ]);
-                  (when current-line-starts-with-closing-bracket
-                    (setq
-                     new-indentation
-                     (- new-indentation tab-width)))
-
-                  ;; define('_PRIVATE_ROOT',
-                  ;;     'here');
-                  ;; or
-                  ;; ['abc',
-                  ;;     'def'];
-                  (when (and
-                         (not current-line-starts-with-closing-bracket)
-                         is-declared-on-same-line-p)
-                    (setq
-                     new-indentation
-                     (+ new-indentation tab-width)))
-
-                  (goto-char point)
-
-                  ))
 
                ;; $var .=
                ;;     'hello';
