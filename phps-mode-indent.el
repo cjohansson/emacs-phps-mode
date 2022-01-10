@@ -10,6 +10,9 @@
 ;;; Code:
 
 
+(require 'phps-mode-macros)
+
+
 ;; General helper functions
 
 
@@ -243,7 +246,8 @@
                      previous-line-string))
                    (previous-bracket-level
                     (phps-mode-indent--get-string-brackets-count
-                     previous-line-string)))
+                     previous-line-string))
+                   (match-type 'none))
               ;; (message "Previous non-empty line: %S with indentation: %S" previous-line-string old-indentation)
               ;; (message "previous-line-ends-with-terminus: %S" previous-line-ends-with-terminus)
 
@@ -268,6 +272,7 @@
 
               (cond
 
+               ;; LINE AFTER EXTENDS / IMPLEMENTS
                ;; class MyClass implements
                ;;     myInterface
                ;; or
@@ -277,9 +282,13 @@
                  "[\t ]+\\(extends\\|implements\\)$"
                  previous-line-string)
                 (setq
+                 match-type
+                 'line-after-extends-or-implements)
+                (setq
                  new-indentation
                  (+ new-indentation tab-width)))
 
+               ;; LINE AFTER EXTENDS / IMPLEMENTS that starts on new line
                ;; class MyClass
                ;;     implements myInterface
                ;; or
@@ -292,6 +301,9 @@
                ((string-match-p
                  "^[\t ]*\\(extends\\|implements\\)"
                  current-line-string)
+                (setq
+                 match-type
+                 'line-after-extends-or-implements2)
                 (when-let ((backwards-string
                             (phps-mode-indent--backwards-looking-at
                              "\r+\\([\t ]*\\)class[\r\t ]+[a-zA-Z0-9_]+[\r\t ]+\\(extends[\r\t ]+[a-zA-Z0-9_]+\\)?[\r\t ]*\\(implements[\r\t ]+[a-zA-Z0-9_]+\\)?$")))
@@ -302,6 +314,7 @@
                      new-indentation
                      (+ old-indentation tab-width)))))
 
+               ;; CLASS BODY AFTER implements and extends
                ;; class MyClass implements
                ;;     myInterface,
                ;;     myInterface2
@@ -319,9 +332,13 @@
                    "[\t ]*\\(class\\|interface\\)[\t ]+"
                    previous-line-string)))
                 (setq
+                 match-type
+                 'class-body-after-extends-or-implements)
+                (setq
                  new-indentation
                  (- new-indentation tab-width)))
 
+               ;; LINE AFTER OPENING INLINE OR ALTERNATIVE CONTROL STRUCTURE
                ;; if (true)
                ;;     echo 'Something';
                ;; or
@@ -345,9 +362,14 @@
                  (string-match-p
                   "^[\t ]*\\(if\\|while\\|for\\|foreach\\)[\t ]*(.+):?$"
                   previous-line-string))
-                (setq new-indentation
-                      (+ new-indentation tab-width)))
+                (setq
+                 match-type
+                 'line-after-inline-or-alternative-control-structure)
+                (setq
+                 new-indentation
+                 (+ new-indentation tab-width)))
 
+               ;; LINE AFTER INLINE OR ALTERNATIVE ELSE / ELSEIF CONTROL STRUCTURE
                ;; else
                ;;     echo 'Something';
                ;; or
@@ -374,9 +396,13 @@
                   "^[\t ]*else\\([\t ]*$\\|.*\\()\\|:\\)$\\)"
                   previous-line-string))
                 (setq
+                 match-type
+                 'line-after-inline-or-alternative-else)
+                (setq
                  new-indentation
                  (+ new-indentation tab-width)))
 
+               ;; LINE AFTER LINE INSIDE INLINE OR ALTERNATIVE CONTROL STRUCTURE
                ;; if (true)
                ;;     echo 'Something';
                ;; else
@@ -417,11 +443,15 @@
                   "^[\t ]*\\(else:?[\t ]*$\\|else.*):?$\\|endif;[\t ]*$\\|endfor;[\t ]*$\\|endforeach;[\t ]*$\\|endwhile;[\t ]*$\\)"
                   current-line-string))
                 (setq
+                 match-type
+                 'line-after-line-inside-inline-or-alternative-control-structure)
+                (setq
                  new-indentation
                  (-
                   new-indentation
                   tab-width)))
 
+               ;; LINE AFTER LINE INSIDE INLINE CONTROL STRUCTURE
                ;; if (true)
                ;;     echo 'Something';
                ;; else
@@ -448,11 +478,16 @@
                   "^[\t ]*\\(else[\t ]*$\\|else.*)[\t ]*$\\|if.*)$\\|while.*)$\\)"
                   previous2-line-string))
                 (setq
+                 match-type
+                 'line-after-line-inside-inline-control-structure)
+                (setq
                  new-indentation
                  (-
                   new-indentation
                   tab-width)))
 
+               ;; TODO Add :: as well
+               ;; LINE CONTINUING CHAINING OBJECT OPERATORS
                ;; $myObject->myFunction()
                ;;     ->myFunction2()
                ;; but ignore
@@ -466,6 +501,9 @@
                  (string-match-p
                   "^[\t ]*->"
                   current-line-string))
+                (setq
+                 match-type
+                 'line-continuing-object-operators)
                 (let ((not-found t)
                       (started-chaining-on-this-line t)
                       (is-assignment)
@@ -553,6 +591,7 @@
                      (+ new-indentation tab-width))))
                 (goto-char point))
 
+               ;; LINE AFTER OPENING HEREDOC/NOWDOC
                ;; echo <<<VAR
                ;; abc
                ;; or
@@ -565,9 +604,13 @@
                  "<<<'?\"?[a-zA-Z0-9_]+'?\"?$"
                  previous-line-string)
                 (setq
+                 match-type
+                 'line-after-opening-heredoc-nowdoc)
+                (setq
                  new-indentation
                  0))
 
+               ;; LINE AFTER STARTING MULTI-LINE CONCATENATING COMMAND
                ;; echo 'Something' .
                ;;     'something';
                ;; but ignore
@@ -581,9 +624,13 @@
                    ";[\t ]*$"
                    previous-line-string)))
                 (setq
+                 match-type
+                 'line-after-starting-multiline-concatenating-command)
+                (setq
                  new-indentation
                  (+ new-indentation tab-width)))
 
+               ;; LINE AFTER LINE THAT ENDS WITH CLOSING BRACKET
                ;; function myFunction($key,
                ;;     $value)
                ;; {
@@ -594,7 +641,9 @@
                ;;     || is_a($data['Index'], 'Index2')))
                ;; || is_a($data, 'WC_Index')
                (previous-line-ends-with-closing-bracket
-
+                (setq
+                 match-type
+                 'line-after-line-that-ends-with-closing-bracket)
                 ;; Backtrack to line were bracket started
                 ;; and use indentation from that line for this line
                 (forward-line (* -1 move-length1))
@@ -689,6 +738,7 @@
 
                 )
 
+               ;; LINE AFTER OPENING MULTI-LINE ASSIGNMENT
                ;; $var = 'A line' .
                ;;     'something';
                ;; or
@@ -717,9 +767,13 @@
                  (not
                   current-line-starts-with-closing-bracket))
                 (setq
+                 match-type
+                 'line-after-opening-multiline-assignment)
+                (setq
                  new-indentation
                  (+ new-indentation tab-width)))
 
+               ;; LINE THAT ENDS BRACKET AND COMMAND
                ;; $variable = array(
                ;;     'random' =>
                ;;         'hello'
@@ -732,6 +786,9 @@
                ((string-match-p
                  "^[\t ]*\\()\\|]\\);[\t ]*$"
                  current-line-string)
+                (setq
+                 match-type
+                 'line-that-ends-bracket-and-command)
                 (let ((old-point (point))
                       (still-looking t)
                       (bracket-count -1))
@@ -770,6 +827,7 @@
                   ;; Reset point
                   (goto-char old-point)))
 
+               ;; LINE THAT CONTINUES MULTI-LINE CONCATENATION
                ;; echo 'Something'
                ;;     . 'more';
                ;; or
@@ -790,6 +848,9 @@
                  (string-match-p
                   "\\.[\t ]*$"
                   previous-line-string))
+                (setq
+                 match-type
+                 'line-that-continues-multi-line-concatenation)
 
                 ;; If previous line matched ending .
                 ;; we must backtrack at least two lines
@@ -855,6 +916,7 @@
                   ;; Reset point
                   (goto-char old-point)))
 
+               ;; LINE AFTER CASE DEFINITION
                ;; case true:
                ;;     echo 'here';
                ;; or
@@ -879,9 +941,13 @@
                    "^[\t ]*default.*\\(;\\|:\\)[\t ]*$"
                    previous-line-string)))
                 (setq
+                 match-type
+                 'line-after-case-definition)
+                (setq
                  new-indentation
                  (+ new-indentation tab-width)))
 
+               ;; NEW CASE AFTER CASE DEFINITION
                ;; case true:
                ;;     echo 'here';
                ;; case false:
@@ -900,9 +966,13 @@
                    "^[\t ]*default.*\\(;\\|:\\)[\t ]*$"
                    current-line-string)))
                 (setq
+                 match-type
+                 'line-after-case-definition)
+                (setq
                  new-indentation
                  (- new-indentation tab-width)))
 
+               ;; LINE AFTER ENDING OF BRACKET AND COMMAND
                ;; if (true) {
                ;;     $cacheKey = sprintf(
                ;;         'key_%s',
@@ -917,6 +987,9 @@
                ((string-match-p
                  "[])][\t ]*;[\t ]*\\(\\?>[\t\n ]*\\)?$"
                  previous-line-string)
+                (setq
+                 match-type
+                 'line-after-ending-of-bracket-and-command)
 
                 ;; Backtrack first to line were bracket started
                 ;; and then backwards until the line were statement / expression
@@ -976,7 +1049,7 @@
                           (and
                            not-found-command-start
                            (search-backward-regexp
-                            "\\(;\\|}\\|{\\|^[\t ]*[^\t\n ]+[\t ]*$\\)"
+                            "\\(;\\|}\\|{\\|^[\t ]*[^\t\n ]+.*$\\)"
                             nil
                             t))
                         (let ((match (match-string-no-properties 1)))
@@ -1019,6 +1092,7 @@
 
                 (goto-char point))
 
+               ;; LINE THAT ENDS CURLY BRACKET
                ;; switch ($condition) {
                ;;     case true:
                ;;         echo 'here';
@@ -1026,6 +1100,9 @@
                ((and
                  current-line-starts-with-closing-bracket
                  (string= current-line-starts-with-closing-bracket "}"))
+                (setq
+                 match-type
+                 'line-that-ends-curly-bracket)
                 (let ((old-point (point))
                       (end-of-switch-statement)
                       (still-looking t)
@@ -1164,6 +1241,7 @@
 
                     )))
 
+               ;; LINE THAT ENDS ALTERNATIVE SWITCH BLOCK
                ;; switch (blala):
                ;;     case bla:
                ;;         echo 'bla';
@@ -1177,9 +1255,13 @@
                    "^[\t ]*switch"
                    previous-line-string)))
                 (setq
+                 match-type
+                 'line-that-ends-alternative-switch-block)
+                (setq
                  new-indentation
                  (- new-indentation tab-width tab-width)))
 
+               ;; LINE AFTER ENDING OF BRACKET AND COMMA
                ;; return array(
                ;;     '' => __(
                ;;         'None',
@@ -1212,6 +1294,9 @@
                ((string-match-p
                  ",[\t ]*\\(\\?>[\t\n ]*\\)?$"
                  previous-line-string)
+                (setq
+                 match-type
+                 'line-after-ending-of-bracket-and-comma)
 
                 ;; Backtrack first to line were bracket started
                 ;; and use indentation from that line from that line
@@ -1323,6 +1408,7 @@
 
                 (goto-char point))
 
+               ;; LINE AFTER ENDING OF COMMAND
                ;; $var .=
                ;;     'hello';
                ;; echo 'here';
@@ -1359,6 +1445,9 @@
                   (string-match-p
                    "^[\t ]*\\(echo[\t ]+\\|print[\t ]+\\)"
                    previous-line-string)))
+                (setq
+                 match-type
+                 'line-after-ending-of-command)
 
                 ;; Back-trace buffer from previous line
                 ;; Determine if semi-colon ended an multi-line assignment or bracket-less command or not
@@ -1513,6 +1602,7 @@
 
                 (goto-char point))
 
+               ;; LINE AFTER ALTERNATIVE CASE DEFINITION
                ;; switch ($array):
                ;;     case 'Something';
                ((and
@@ -1523,25 +1613,37 @@
                   "^[\t ]*\\(switch\\)[\t ]*(.+):$"
                   previous-line-string))
                 (setq
+                 match-type
+                 'line-after-alternative-case-definition)
+                (setq
                  new-indentation
                  (+ new-indentation tab-width)))
 
+               ;; LINE AFTER ENDING OF DOC-COMMENT
                ;; /**
                ;;  *
                ;;  */
                ;; echo 'here';
                ((= previous-bracket-level -1)
                 (setq
+                 match-type
+                 'line-after-ending-of-doc-comment)
+                (setq
                  new-indentation
                  (1- new-indentation)))
 
+               ;; LINE AFTER STARTING DOC-COMMENT
                ;; /**
                ;;  *
                ((= previous-bracket-level 1)
                 (setq
+                 match-type
+                 'line-after-opening-doc-comment)
+                (setq
                  new-indentation
                  (+ new-indentation 1)))
 
+               ;; LINE AFTER INCREASE IN BRACKETS
                ;; array(
                ;;     'here'
                ;; or
@@ -1552,9 +1654,13 @@
                ;;     echo 'here';
                ((>= previous-bracket-level tab-width)
                 (setq
+                 match-type
+                 'line-after-increase-in-brackets)
+                (setq
                  new-indentation
                  (+ new-indentation tab-width)))
 
+               ;; LINE AFTER LINE THAT ENDS AND STARTS A BRACKET BLOCK
                ;; ) {
                ;;     echo 'here'
                ;; or
@@ -1563,9 +1669,13 @@
                ((and (= previous-bracket-level 0)
                      previous-line-starts-with-closing-bracket)
                 (setq
+                 match-type
+                 'line-after-line-that-ends-and-starts-a-bracket-block)
+                (setq
                  new-indentation
                  (+ new-indentation tab-width)))
 
+               ;; LINE THAT STARTS WITH CLOSING BRACKET
                ;; [
                ;;     'hello'
                ;; ]
@@ -1592,6 +1702,9 @@
                ((and
                  current-line-starts-with-closing-bracket
                  (not previous-line-ends-with-opening-bracket))
+                (setq
+                 match-type
+                 'line-that-starts-with-closing-bracket)
 
                 ;; Backtrack to line were bracket started
                 ;; and use indentation from that line for this line
@@ -1654,6 +1767,7 @@
                      new-indentation
                      reference-indentation))))
 
+               ;; LINE AFTER LINE INSIDE DOC-COMMENT
                ;; /**
                ;;  * here
                ;; but ignore
@@ -1663,17 +1777,25 @@
                  previous-line-starts-with-opening-doc-comment
                  (not previous-line-ends-with-closing-doc-comment))
                 (setq
+                 match-type
+                 'line-after-line-inside-doc-comment)
+                (setq
                  new-indentation
                  (+ new-indentation 1)))
 
+               ;; LINE AFTER LINE THAT ENDS WITH ASSIGNMENT
                ;; $var =
                ((and
                  previous-line-ends-with-assignment
                  (<= previous-bracket-level 0))
                 (setq
+                 match-type
+                 'line-after-line-that-ends-with-assignment)
+                (setq
                  new-indentation
                  (+ new-indentation tab-width)))
 
+               ;; LINE AFTER LINE THAT ENDS WITH OPENING BRACKET
                ;; )) {
                ;;     echo 'here';
                ;; or
@@ -1683,12 +1805,17 @@
                  previous-line-ends-with-opening-bracket
                  (< previous-bracket-level 0))
                 (setq
+                 match-type
+                 'line-after-line-that-ends-with-opening-bracket)
+                (setq
                  new-indentation
                  (+ new-indentation tab-width)))
 
                )
 
-              ;; (message "new-indentation: %S" new-indentation)
+              (phps-mode-debug-message
+               (message "new-indentation: %S" new-indentation)
+               (message "match-type: %S" match-type))
 
               (when (< new-indentation 0)
                 (setq
