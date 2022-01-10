@@ -1151,6 +1151,8 @@
 
                   (goto-char old-point)
 
+                  ;; TODO Should use reference line indentation instead of decrementing
+
                   ;; Ignore cases like
                   ;; if (true) {
                   ;; }
