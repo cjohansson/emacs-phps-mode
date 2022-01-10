@@ -157,6 +157,7 @@
 
           ;; Try to find previous 2 non-empty lines
           (let ((line-is-empty-p t)
+                (line-is-comment-p t)
                 (searching-previous-lines 2))
             (while (and
                     (= (forward-line -1) 0)
@@ -171,7 +172,14 @@
                  (string-match-p
                   "^[ \t\f\r\n]*$"
                   line-string))
-                (unless line-is-empty-p
+                (setq
+                 line-is-comment-p
+                 (string-match-p
+                 "^[\t ]*\\(//\\|#\\)"
+                 line-string))
+                (unless (or
+                         line-is-empty-p
+                         line-is-comment-p)
                   (cond
                    ((= searching-previous-lines 2)
                     (setq
@@ -259,17 +267,6 @@
               ;; Case by case logic below - most specific to most general
 
               (cond
-
-               ;; // die(
-               ;; echo 'here';
-               ((string-match-p
-                 "^[\t ]*//"
-                 previous-line-string)
-                (when current-line-starts-with-closing-bracket
-                  (setq
-                   new-indentation
-                   (- new-indentation tab-width))
-                  ))
 
                ;; class MyClass implements
                ;;     myInterface
