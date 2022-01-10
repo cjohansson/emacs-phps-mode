@@ -256,8 +256,9 @@
                previous-indentation)
 
               ;; debug stuff
-              ;; (message "\ncurrent-line-string: %S" current-line-string)
-              ;; (message "previous-line-string: %S" previous-line-string)
+              (phps-mode-debug-message
+               (message "\ncurrent-line-string: %S" current-line-string)
+               (message "previous-line-string: %S" previous-line-string))
 
               ;; (message "current-line-starts-with-closing-bracket: %S" current-line-starts-with-closing-bracket)
               ;; (message "current-line-starts-with-opening-bracket: %S" current-line-starts-with-opening-bracket)

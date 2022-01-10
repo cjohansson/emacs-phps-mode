@@ -232,161 +232,173 @@
    "<?php\n\nif (true) {\n    // Was here\n}"
    "If condition after a mixed newline encoded file")
 
-    (phps-mode-test-indent--should-equal
-     "<?php\n\nif ($you) {\n    if ($here) {\n        if ($true) {\n            if ($a = 23) {\n                $myObject->build(array(\n                    'name' => 'Trueman',\n                    'sku' => 25.0\n                ))\n                ->test()\n                ->validate()\n                ->give();\n            }\n        }\n    }\n}\n"
-     "Tested chaining of object")
+  (phps-mode-test-indent--should-equal
+   "<?php\n\nif ($you) {\n    if ($here) {\n        if ($true) {\n            if ($a = 23) {\n                $myObject->build(array(\n                    'name' => 'Trueman',\n                    'sku' => 25.0\n                ))\n                ->test()\n                ->validate()\n                ->give();\n            }\n        }\n    }\n}\n"
+   "Tested chaining of object")
 
-    (phps-mode-test-indent--should-equal
-     "<?php\n\nif ($there) {\n    if ($something) {\n        $var = [\n            [\n                [\n                    'abc' => 1,\n                    'def' => 2,\n                ]\n            ]\n        ];\n    }\n}\n"
-     "Nested array with square bracket syntax")
+  (phps-mode-test-indent--should-equal
+   "<?php\n\nif ($there) {\n    if ($something) {\n        $var = [\n            [\n                [\n                    'abc' => 1,\n                    'def' => 2,\n                ]\n            ]\n        ];\n    }\n}\n"
+   "Nested array with square bracket syntax")
 
-    (phps-mode-test-indent--should-equal
-     "<?php\n\nclass MyClass\n{\n    function myFunction1()\n    {\n        return tester(\n            '123');\n    }\n    function myFunction2()\n    {\n        return (count(self::$stuff) > 0 ?\n            self::$stuff : false);\n    }\n}\n"
-     "Return statements in class")
+  (phps-mode-test-indent--should-equal
+   "<?php\n\nclass MyClass\n{\n    function myFunction1()\n    {\n        return tester(\n            '123');\n    }\n    function myFunction2()\n    {\n        return (count(self::$stuff) > 0 ?\n            self::$stuff : false);\n    }\n}\n"
+   "Return statements in class")
 
-    (phps-mode-test-indent--should-equal
-     "$var = myFunction(\n    'setting');\necho 'here';\n"
-     "Multi-line assignment from function ending without opening bracket")
+  (phps-mode-test-indent--should-equal
+   "$var = myFunction(\n    'setting');\necho 'here';\n"
+   "Multi-line assignment from function ending without opening bracket")
 
-    (phps-mode-test-indent--should-equal
-     "<?php\n\nclass MyClass\n{\n    function myFunction()\n    {\n        return 'Text'\n            . 'here';\n    }\n}\n"
-     "Multi-line return statement of concatenated string")
+  (phps-mode-test-indent--should-equal
+   "<?php\n\nclass MyClass\n{\n    function myFunction()\n    {\n        return 'Text'\n            . 'here';\n    }\n}\n"
+   "Multi-line return statement of concatenated string")
 
-    (phps-mode-test-indent--should-equal
-     "<?php\n\nclass MyClass\n{\n    function myFunction()\n    {\n        return aFunction(\n            'values');\n    }\n}\n"
-     "Multi-line return expression ending at line with starting close bracket")
+  (phps-mode-test-indent--should-equal
+   "<?php\n\nclass MyClass\n{\n    function myFunction()\n    {\n        return aFunction(\n            'values');\n    }\n}\n"
+   "Multi-line return expression ending at line with starting close bracket")
 
-    (phps-mode-test-indent--should-equal
-     "<?php\n$packageItems[] = [\n    'customs_value' =>\n        $orderItem->getPrice(),\n    'name' =>\n        $orderItem->getName(),\n    'order_item_id' =>\n        $orderItem->getItemId(),\n    'price' =>\n        $orderItem->getPrice(),\n    'product_id' =>\n        $orderItem->getProductId(),\n    'qty' =>\n        $orderItem->getQtyToShip(),\n    'weight' =>\n        $orderItem->getRowWeight(),\n];"
-     "Assignment of square bracket array with element values from object methods")
+  (phps-mode-test-indent--should-equal
+   "<?php\n$packageItems[] = [\n    'customs_value' =>\n        $orderItem->getPrice(),\n    'name' =>\n        $orderItem->getName(),\n    'order_item_id' =>\n        $orderItem->getItemId(),\n    'price' =>\n        $orderItem->getPrice(),\n    'product_id' =>\n        $orderItem->getProductId(),\n    'qty' =>\n        $orderItem->getQtyToShip(),\n    'weight' =>\n        $orderItem->getRowWeight(),\n];"
+   "Assignment of square bracket array with element values from object methods")
 
-    (phps-mode-test-indent--should-equal
-     "<?php\n$productId1 = $this->generateProduct([\n    'country_of_origin' =>\n        'SE',\n    'hs_code' =>\n        '0000 1234 5679 0000',\n    'name' =>\n        'Simple Product # 1',\n    'price' =>\n        7,\n    'weight' =>\n        1.2,\n]);\n"
-     "Assignment from object method values with square bracket argument on multiple lines")
+  (phps-mode-test-indent--should-equal
+   "<?php\n$productId1 = $this->generateProduct([\n    'country_of_origin' =>\n        'SE',\n    'hs_code' =>\n        '0000 1234 5679 0000',\n    'name' =>\n        'Simple Product # 1',\n    'price' =>\n        7,\n    'weight' =>\n        1.2,\n]);\n"
+   "Assignment from object method values with square bracket argument on multiple lines")
 
-    (phps-mode-test-indent--should-equal
-     "<?php\nforeach ($order->getAllItems() as $orderItem) {\n    // Check if order item has qty to ship or is virtual\n    if (\n        !$orderItem->getQtyToShip()\n        || $orderItem->getIsVirtual()\n    ) {\n        continue;\n    }\n}"
-     "Multi-line if expression checking object method values")
+  (phps-mode-test-indent--should-equal
+   "<?php\nforeach ($order->getAllItems() as $orderItem) {\n    // Check if order item has qty to ship or is virtual\n    if (\n        !$orderItem->getQtyToShip()\n        || $orderItem->getIsVirtual()\n    ) {\n        continue;\n    }\n}"
+   "Multi-line if expression checking object method values")
 
-    (phps-mode-test-indent--should-equal
-     "<?php\nif (true) {\n    throw new Exception(\n        sprintf(\n            self::systemTranslate(\n                'Invalid parameters for Application. Parameters: \"%s\".'\n            ),\n            print_r(self::$_parameters, true)\n        )\n    );\n}\n"
-     "Throwing exception on multiple lines using sprintf")
+  (phps-mode-test-indent--should-equal
+   "<?php\nif (true) {\n    throw new Exception(\n        sprintf(\n            self::systemTranslate(\n                'Invalid parameters for Application. Parameters: \"%s\".'\n            ),\n            print_r(self::$_parameters, true)\n        )\n    );\n}\n"
+   "Throwing exception on multiple lines using sprintf")
 
-    (phps-mode-test-indent--should-equal
-     "<?php\n\nif (false) {\n    if (true) {\n        $conversion = myFunction(\n            $weight,\n            $weightUnit,\n            $toWeightUnit\n        );\n    }\n}"
-     "Nested multi-line assignment from function call")
+  (phps-mode-test-indent--should-equal
+   "<?php\n\nif (false) {\n    if (true) {\n        $conversion = myFunction(\n            $weight,\n            $weightUnit,\n            $toWeightUnit\n        );\n    }\n}"
+   "Nested multi-line assignment from function call")
 
-    (phps-mode-test-indent--should-equal
-     "<?php\n$var = [\n    1,\n    2,\n    3\n];\n"
-     "Square bracket array definition in assignment")
+  (phps-mode-test-indent--should-equal
+   "<?php\n$var = [\n    1,\n    2,\n    3\n];\n"
+   "Square bracket array definition in assignment")
 
-    (phps-mode-test-indent--should-equal
-     "<?php\n[\n    1,\n    [\n        2,\n        [\n            3,\n            4\n        ]\n    ],\n    [\n        5,\n        6,\n    ],\n    7,\n];\n"
-     "Multi-dimensional square bracket array definition")
+  (phps-mode-test-indent--should-equal
+   "<?php\n[\n    1,\n    [\n        2,\n        [\n            3,\n            4\n        ]\n    ],\n    [\n        5,\n        6,\n    ],\n    7,\n];\n"
+   "Multi-dimensional square bracket array definition")
 
-    (phps-mode-test-indent--should-equal
-     "<?php\n$var = [\n    1,\n    [\n        2,\n        [\n            3,\n            4\n        ]\n    ],\n    [\n        5,\n        6,\n    ],\n    7,\n];\n"
-     "Multi-dimensional square bracket array definition in assignment")
+  (phps-mode-test-indent--should-equal
+   "<?php\n$var = [\n    1,\n    [\n        2,\n        [\n            3,\n            4\n        ]\n    ],\n    [\n        5,\n        6,\n    ],\n    7,\n];\n"
+   "Multi-dimensional square bracket array definition in assignment")
 
-    (phps-mode-test-indent--should-equal
-     "<?php\narray(\n    1,\n    array(\n        2,\n        array(\n            3,\n            4\n        )\n    ),\n    array(\n        5,\n        6,\n    ),\n    7,\n);\n"
-     "Multi-dimensional round bracket array definition")
+  (phps-mode-test-indent--should-equal
+   "<?php\narray(\n    1,\n    array(\n        2,\n        array(\n            3,\n            4\n        )\n    ),\n    array(\n        5,\n        6,\n    ),\n    7,\n);\n"
+   "Multi-dimensional round bracket array definition")
 
-    (phps-mode-test-indent--should-equal
-     "<?php\n$var = array(\n    1,\n    array(\n        2,\n        array(\n            3,\n            4\n        )\n    ),\n    array(\n        5,\n        6,\n    ),\n    7,\n);\n"
-     "Multi-dimensional round bracket array definition in assignment")
+  (phps-mode-test-indent--should-equal
+   "<?php\n$var = array(\n    1,\n    array(\n        2,\n        array(\n            3,\n            4\n        )\n    ),\n    array(\n        5,\n        6,\n    ),\n    7,\n);\n"
+   "Multi-dimensional round bracket array definition in assignment")
 
-    (phps-mode-test-indent--should-equal
-     "<?php\nmyFunctionA(\n    1,\n    myFunctionB(\n        2,\n        myFunctionC(\n            3,\n            4\n        )\n    ),\n    myFunctionD(\n        5,\n        6\n    ),\n    7\n);\n"
-     "Multi-dimensional function calls")
+  (phps-mode-test-indent--should-equal
+   "<?php\nmyFunctionA(\n    1,\n    myFunctionB(\n        2,\n        myFunctionC(\n            3,\n            4\n        )\n    ),\n    myFunctionD(\n        5,\n        6\n    ),\n    7\n);\n"
+   "Multi-dimensional function calls")
 
-    (phps-mode-test-indent--should-equal
-     "<?php\n$var = myFunctionA(\n    1,\n    myFunctionB(\n        2,\n        myFunctionC(\n            3,\n            4\n        )\n    ),\n    myFunctionD(\n        5,\n        6\n    ),\n    7\n);\n"
-     "Multi-dimensional function calls in assignment")
+  (phps-mode-test-indent--should-equal
+   "<?php\n$var = myFunctionA(\n    1,\n    myFunctionB(\n        2,\n        myFunctionC(\n            3,\n            4\n        )\n    ),\n    myFunctionD(\n        5,\n        6\n    ),\n    7\n);\n"
+   "Multi-dimensional function calls in assignment")
 
-    (phps-mode-test-indent--should-equal
-     "<?php\n/** @define string _PRIVATE_ROOT_           Absolute root to private */\ndefine('_PRIVATE_ROOT_',\n    dirname($parameters[self::PARAMETER_SITE_PATH]) . DIRECTORY_SEPARATOR);\n"
-     "Mutiline define statement")
+  (phps-mode-test-indent--should-equal
+   "<?php\n/** @define string _PRIVATE_ROOT_           Absolute root to private */\ndefine('_PRIVATE_ROOT_',\n    dirname($parameters[self::PARAMETER_SITE_PATH]) . DIRECTORY_SEPARATOR);\n"
+   "Mutiline define statement")
 
-    (phps-mode-test-indent--should-equal
-     "<?php\nif ($useRuntimeCache\n    && self::isWritingnabled()\n    && \\Aomebo\\Cache\\System::cacheExists(\n        $cacheParameters,\n        $cacheKey,\n        \\Aomebo\\Cache\\System::CACHE_STORAGE_LOCATION_FILESYSTEM)\n) {    "
-     "Multiline if condition")
+  (phps-mode-test-indent--should-equal
+   "<?php\nif ($useRuntimeCache\n    && self::isWritingnabled()\n    && \\Aomebo\\Cache\\System::cacheExists(\n        $cacheParameters,\n        $cacheKey,\n        \\Aomebo\\Cache\\System::CACHE_STORAGE_LOCATION_FILESYSTEM)\n) {    "
+   "Multiline if condition")
 
-    (phps-mode-test-indent--should-equal
-     "<?php\nif ($data = \\Aomebo\\Cache\\System::loadCache(\n    $cacheParameters,\n    $cacheKey,\n    \\Aomebo\\Cache\\System::FORMAT_SERIALIZE,\n    \\Aomebo\\Cache\\System::CACHE_STORAGE_LOCATION_FILESYSTEM)\n) {    "
-     "Multiline if-condition with assignment")
+  (phps-mode-test-indent--should-equal
+   "<?php\nif ($data = \\Aomebo\\Cache\\System::loadCache(\n    $cacheParameters,\n    $cacheKey,\n    \\Aomebo\\Cache\\System::FORMAT_SERIALIZE,\n    \\Aomebo\\Cache\\System::CACHE_STORAGE_LOCATION_FILESYSTEM)\n) {    "
+   "Multiline if-condition with assignment")
 
-    (phps-mode-test-indent--should-equal
-     "<?php\n\nThrow new \\Exception(\n    sprintf(\n        self::systemTranslate(\n            'Something went wrong when including file \"%s\", error: \"%s\".'\n        ),\n        $tryPath,\n        $e->getMessage()\n    )\n);\n"
-     "Multiline exception throwing")
+  (phps-mode-test-indent--should-equal
+   "<?php\n\nThrow new \\Exception(\n    sprintf(\n        self::systemTranslate(\n            'Something went wrong when including file \"%s\", error: \"%s\".'\n        ),\n        $tryPath,\n        $e->getMessage()\n    )\n);\n"
+   "Multiline exception throwing")
 
-    (phps-mode-test-indent--should-equal
-     "<?php\n/**\n * @param string $key\n * @param bool [$reloadFromFilesystem = false]\n * @return mixed\n */\nfunction getApplicationData($key,\n    $reloadFromFilesystem = false)\n{\n    if (!empty($key)) {\n        if (!empty($reloadFromFilesystem)) {\n            self::loadApplicationData();\n        }\n        if (isset(self::$_applicationData[$key])) {\n            return self::$_applicationData[$key];\n        }\n    }\n    return null;\n}\n"
-     "Function definition not in PSR-2 style")
+  (phps-mode-test-indent--should-equal
+   "<?php\n/**\n * @param string $key\n * @param bool [$reloadFromFilesystem = false]\n * @return mixed\n */\nfunction getApplicationData($key,\n    $reloadFromFilesystem = false)\n{\n    if (!empty($key)) {\n        if (!empty($reloadFromFilesystem)) {\n            self::loadApplicationData();\n        }\n        if (isset(self::$_applicationData[$key])) {\n            return self::$_applicationData[$key];\n        }\n    }\n    return null;\n}\n"
+   "Function definition not in PSR-2 style")
 
-    (phps-mode-test-indent--should-equal
-     "<?php\nself::addAutoLoadPaths(array(\n    _SYSTEM_ROOT_,\n    _PRIVATE_ROOT_,\n    _PUBLIC_ROOT_,\n    _SITE_ROOT_\n));\n"
-     "Multiline function call with multiline array as argument")
+  (phps-mode-test-indent--should-equal
+   "<?php\nself::addAutoLoadPaths(array(\n    _SYSTEM_ROOT_,\n    _PRIVATE_ROOT_,\n    _PUBLIC_ROOT_,\n    _SITE_ROOT_\n));\n"
+   "Multiline function call with multiline array as argument")
 
-    (phps-mode-test-indent--should-equal
-     "<?php\nif (true) {\n    $random = self::getData();\n    // My random comment\n}\n"
-     "Comment after assignment from method call on same line")
+  (phps-mode-test-indent--should-equal
+   "<?php\nif (true) {\n    $random = self::getData();\n    // My random comment\n}\n"
+   "Comment after assignment from method call on same line")
 
-    (phps-mode-test-indent--should-equal
-     "<?php\nif (true) {\n    // My comment\n    $cacheKey = sprintf(\n        'key_%s',\n        md5(json_encode($key))\n    );\n    $cache =\n        Cache::getInstance();\n    "
-     "Line after assignment from multi-line function-call")
+  (phps-mode-test-indent--should-equal
+   "<?php\nif (true) {\n    // My comment\n    $cacheKey = sprintf(\n        'key_%s',\n        md5(json_encode($key))\n    );\n    $cache =\n        Cache::getInstance();\n    "
+   "Line after assignment from multi-line function-call")
 
-    (phps-mode-test-indent--should-equal
-     "<?php\nif (\n    $responseStatusCode === 200\n    || $responseStatusCode === 400\n) {\n    \n}\n"
-     "Multi-line conditions with OR operators")
+  (phps-mode-test-indent--should-equal
+   "<?php\nif (\n    $responseStatusCode === 200\n    || $responseStatusCode === 400\n) {\n    \n}\n"
+   "Multi-line conditions with OR operators")
 
-    (phps-mode-test-indent--should-equal
-     "<?php\nif (true) {\n    foreach ($explode as $exploded) {\n        if ($i == 0) {\n            $lastName = trim($exploded);\n        } elseif ($i == $lastIndex) {\n            $lastQuantity = (int) $exploded;\n            $matches[] = array(\n                'name' => $lastName,\n                'quantity' => $lastQuantity\n            );\n        }\n    }\n}\n"
-     "Closing bracket on new line after ending statement / expression with closing bracket")
+  (phps-mode-test-indent--should-equal
+   "<?php\nif (true) {\n    foreach ($explode as $exploded) {\n        if ($i == 0) {\n            $lastName = trim($exploded);\n        } elseif ($i == $lastIndex) {\n            $lastQuantity = (int) $exploded;\n            $matches[] = array(\n                'name' => $lastName,\n                'quantity' => $lastQuantity\n            );\n        }\n    }\n}\n"
+   "Closing bracket on new line after ending statement / expression with closing bracket")
 
-    (phps-mode-test-indent--should-equal
-     "<?php\nclass MyClass\n{\n    public function log(\n        $message,\n        $level = _INFO_\n    ) {\n    }"
-     "Opening method body after argument with default value")
+  (phps-mode-test-indent--should-equal
+   "<?php\nclass MyClass\n{\n    public function log(\n        $message,\n        $level = _INFO_\n    ) {\n    }"
+   "Opening method body after argument with default value")
 
-    (phps-mode-test-indent--should-equal
-     "<?php\nclass MyClass\n{\n    public function log(\n        $message,\n        $level = _INFO_,\n        $rate = _BASE_RATE_\n    ) {\n    }"
-     "Opening method body after 2 arguments with default values")
+  (phps-mode-test-indent--should-equal
+   "<?php\nclass MyClass\n{\n    public function log(\n        $message,\n        $level = _INFO_,\n        $rate = _BASE_RATE_\n    ) {\n    }"
+   "Opening method body after 2 arguments with default values")
 
-    (phps-mode-test-indent--should-equal
-     "<?php\nclass MyClass\n{\n    public function getOperators()\n    {\n        return array(\n            '' => __(\n                'None',\n                'domain'\n            ),\n            '-' => __(\n                'Subtraction',\n                'domain'\n            ),\n            '+' => __(\n                'Addition',\n                'domain'\n            ),\n        );\n    }\n}\n"
-     "Method that returns multi-line array")
+  (phps-mode-test-indent--should-equal
+   "<?php\nclass MyClass\n{\n    public function getOperators()\n    {\n        return array(\n            '' => __(\n                'None',\n                'domain'\n            ),\n            '-' => __(\n                'Subtraction',\n                'domain'\n            ),\n            '+' => __(\n                'Addition',\n                'domain'\n            ),\n        );\n    }\n}\n"
+   "Method that returns multi-line array")
 
-    (phps-mode-test-indent--should-equal
-     "<?php\nfunction myFunction()\n{\n    if (!isset($randomize)) {\n        if (true) {\n            throw new \Exception(sprintf(\n                __(\n                    'Library not found at %s',\n                    'domain'\n                ),\n                $path\n            ));\n        }\n    }\n    return false;\n}\n"
-     "Multi-line throw statement")
+  (phps-mode-test-indent--should-equal
+   "<?php\nfunction myFunction()\n{\n    if (!isset($randomize)) {\n        if (true) {\n            throw new \Exception(sprintf(\n                __(\n                    'Library not found at %s',\n                    'domain'\n                ),\n                $path\n            ));\n        }\n    }\n    return false;\n}\n"
+   "Multi-line throw statement")
 
-    (phps-mode-test-indent--should-equal
-     "<?php\n\nforeach ($datas as $data) {\n    if (\n        stripos(\n            $data,\n            ' , '\n        ) !== false\n    ) {\n        $explode = explode(\n            ' , ',\n            $data\n        );\n        if (\n            !empty($explode)\n            && is_array($explode)\n            && isset(\n                $explode[0],\n                $explode[1]\n            )\n        ) {\n            $name = trim($explode[1]);\n        }\n    }\n}\n"
-     "Line after multi-line function call inside if condition list")
+  (phps-mode-test-indent--should-equal
+   "<?php\n\nforeach ($datas as $data) {\n    if (\n        stripos(\n            $data,\n            ' , '\n        ) !== false\n    ) {\n        $explode = explode(\n            ' , ',\n            $data\n        );\n        if (\n            !empty($explode)\n            && is_array($explode)\n            && isset(\n                $explode[0],\n                $explode[1]\n            )\n        ) {\n            $name = trim($explode[1]);\n        }\n    }\n}\n"
+   "Line after multi-line function call inside if condition list")
 
-    (phps-mode-test-indent--should-equal
-     "<?php\n\nif (\n    (!isset(Meta()->login)\n        || !$name = Meta()->login->name())\n        && $override\n) {\n    echo 'here';\n}\n"
-     "Line after multi-line condition in parenthesis")
+  (phps-mode-test-indent--should-equal
+   "<?php\n\nif (\n    (!isset(Meta()->login)\n        || !$name = Meta()->login->name())\n        && $override\n) {\n    echo 'here';\n}\n"
+   "Line after multi-line condition in parenthesis")
 
-    (phps-mode-test-indent--should-equal
-    "<?php\nif (\n    $first != false\n    || $second != false\n    || $third != false\n) {\n}\n"
-    "Line after variable not equal condition")
+  (phps-mode-test-indent--should-equal
+   "<?php\nif (\n    $first != false\n    || $second != false\n    || $third != false\n) {\n}\n"
+   "Line after variable not equal condition")
 
-    (phps-mode-test-indent--should-equal
-     "<?php\n\nif (\n    (is_array($data)\n        && !empty($data['index'])\n        && (is_a($data['index'], 'Index')\n            || is_a($data['Index'], 'Index2')))\n    || is_a($data, 'WC_Index')\n) {\n\n}\n"
-     "Line after multi-line condition in parenthesis 2")
+  (phps-mode-test-indent--should-equal
+   "<?php\n\nif (\n    (is_array($data)\n        && !empty($data['index'])\n        && (is_a($data['index'], 'Index')\n            || is_a($data['Index'], 'Index2')))\n    || is_a($data, 'WC_Index')\n) {\n\n}\n"
+   "Line after multi-line condition in parenthesis 2")
 
-    (phps-mode-test-indent--should-equal
-     "<?php\nfunction myFunction()\n{\n    return self::getOption('username')\n        && self::getOption('password');\n}\n"
-     "Line after line that started a multi-line return expression")
+  (phps-mode-test-indent--should-equal
+   "<?php\nfunction myFunction()\n{\n    return self::getOption('username')\n        && self::getOption('password');\n}\n"
+   "Line after line that started a multi-line return expression")
 
-    (phps-mode-test-indent--should-equal
-     "<?php\n$debug = ($debug1\n    && ($debug2 || $debug3)\n    && ($debug4 || $debug5));\n\n// die('debug: ' . $debug);\nif ($debug) {\n}\n"
-     "Line after a commented die statement after a multi-line logical assignment to variable")
+  (phps-mode-test-indent--should-equal
+   "<?php\n$debug = ($debug1\n    && ($debug2 || $debug3)\n    && ($debug4 || $debug5));\n\n// die('debug: ' . $debug);\nif ($debug) {\n}\n"
+   "Line after a commented die statement after a multi-line logical assignment to variable")
 
-    (phps-mode-test-indent--should-equal
-     "<?php\n$debug = ($debug1\n    && ($debug2 || $debug3)\n    && ($debug4 || $debug5));\n\ndie('debug: ' . $debug);\nif ($debug) {\n}\n"
-     "Line after a die statement after a multi-line logical assignment to variable")
+  (phps-mode-test-indent--should-equal
+   "<?php\n$debug = ($debug1\n    && ($debug2 || $debug3)\n    && ($debug4 || $debug5));\n\ndie('debug: ' . $debug);\nif ($debug) {\n}\n"
+   "Line after a die statement after a multi-line logical assignment to variable")
+
+  (phps-mode-test-indent--should-equal
+   "<?php\nif (true) {\n    $copies = method_exists($object, 'get_copies')\n        ? $object->get_copies()\n        : $object->copies;\n    $vol = ($object->get_vol()\n        ? $object->get_vol()\n        : $object->vol);\n}\n"
+   "Line after ending a ternary assignment block")
+
+  (phps-mode-test-indent--should-equal
+   "<?php\nif (true) {\n    $myFlag = $this->settings['my_flag']\n        && $this->settings['my_flag'] == 'yes';\n}\n"
+   "Multi-line boolean assignment")
+
+  (phps-mode-test-indent--should-equal
+   "<?php\nif (true) {\n    $replacements = array(\n        '$object_address_1' =>\n            $object->get_shipping_address_1(),\n        '$object_address_2' =>\n            $object->get_shipping_address_2(),\n        '$object_name' =>\n            $object->get_shipping_first_name()\n            . ' ' . $object->get_shipping_last_name(),\n        '$object_city' =>\n            $object->get_shipping_city(),\n        '$object_company' =>\n            $object->get_shipping_company(),\n        '$object_country' =>\n            $object->get_shipping_country(),\n        '$object_postcode' =>\n            $object->get_shipping_postcode(),\n        '$object_state' =>\n            $object->get_shipping_state(),\n        '$object_email' =>\n            $object->get_billing_email(),\n        '$object_mobile' =>\n            $object->get_billing_phone(),\n        '$object_id' =>\n            $object->ID,\n        '$object_number' =>\n            $object->get_order_number(),\n        '$object_subtotal' =>\n            $object->get_subtotal()\n    );\n}\n"
+   "Multi-dimensional array with assignment from object methods")
 
   )
 
