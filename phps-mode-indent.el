@@ -712,18 +712,28 @@
                             reference-line))
                           (reference-bracket-level2
                            (phps-mode-indent--get-string-brackets-count
-                            reference-line2)))
+                            reference-line2))
+                          (reference-contains-assignment
+                           (string-match-p
+                            "^[\t ]*$[a-zA-Z0-9_]+[\t ]*[^=!]*=\\($\\|[\t ]+.*[^,;]$\\)"
+                            reference-line)))
                       ;; if (
                       ;;     (is_array($data)
                       ;;     && !empty($data['index'])
                       ;;         && (is_a($data['index'], 'Index')
                       ;;         || is_a($data['Index'], 'Index2')))
                       ;;     || is_a($data, 'WC_Index')
+                      ;; or
+                      ;; $copies = method_exists($object, 'get_copies')
+                      ;;     ? true
                       ;; (message "reference-bracket-level: %S" reference-bracket-level)
                       ;; (message "reference-bracket-level2: %S" reference-bracket-level2)
-                      (when (and
-                             (> reference-bracket-level 0)
-                             (> reference-bracket-level reference-bracket-level2))
+                      
+                      (when (or
+                             reference-contains-assignment
+                             (and
+                              (> reference-bracket-level 0)
+                              (> reference-bracket-level reference-bracket-level2)))
                         (setq
                          new-indentation
                          (+ new-indentation tab-width))))
