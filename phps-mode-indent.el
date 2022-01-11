@@ -1115,8 +1115,8 @@
                  match-type
                  'line-that-ends-curly-bracket)
                 (let ((old-point (point))
-                      (end-of-switch-statement)
                       (still-looking t)
+                      (bracket-start-line)
                       (curly-bracket-balance -1))
 
                   ;; Should keep track of brackets
@@ -1138,121 +1138,21 @@
                       (setq
                        still-looking
                        nil)
-                      (let ((bracket-start-line
-                             (buffer-substring-no-properties
-                              (line-beginning-position)
-                              (line-end-position))))
-                        (when (string-match-p
-                               "^[\t ]*switch[\t ]*("
-                               bracket-start-line)
-                          (setq
-                           end-of-switch-statement
-                           t)))))
+                      (setq
+                       bracket-start-line
+                       (buffer-substring-no-properties
+                        (line-beginning-position)
+                        (line-end-position)))))
 
                   (goto-char old-point)
 
-                  ;; TODO Should use reference line indentation instead of decrementing
-
-                  ;; Ignore cases like
-                  ;; if (true) {
-                  ;; }
-                  ;; or
-                  ;; switch($var) {
-                  ;; }
-                  (unless previous-line-ends-with-opening-bracket
-
-                    ;; if (true) {
-                    ;;     echo 'here';
-                    (setq
-                     new-indentation
-                     (- new-indentation tab-width))
-
-                    ;; switch($match) {
-                    ;;     case 'here':
-                    ;;         echo 'there';
-                    ;; }
-                    (when end-of-switch-statement
+                  (unless still-looking
+                    (let ((reference-indentation
+                           (phps-mode-indent--string-indentation
+                            bracket-start-line)))
                       (setq
                        new-indentation
-                       (- new-indentation tab-width)))
-
-                    ;; should indent double if previous
-                    ;; line ended a multi-line assignment:
-                    ;; if (true) {
-                    ;;     $var =
-                    ;;         'abc';
-                    ;; }
-                    (when (and
-                           previous-line-ends-with-terminus
-                           (string= previous-line-ends-with-terminus ";")
-                           (not
-                            (string-match-p
-                             "^[\t ]*\\(echo[\t ]+\\|print[\t ]+\\)"
-                             previous-line-string)))
-                      ;; Back-trace buffer from previous line
-                      ;; Determine if semi-colon ended an multi-line assignment or bracket-less command or not
-                      ;; If it's on the same line we ignore it
-                      (forward-line (* -1 move-length1))
-                      (end-of-line)
-                      (search-backward-regexp ";" nil t) ;; Skip the semi-colon
-
-                      (let ((not-found t)
-                            (is-assignment nil)
-                            (parenthesis-level 0)
-                            (is-same-line-p t)
-                            (is-object-chaining)
-                            (is-object-chaining-on-same-line))
-                        (while
-                            (and
-                             not-found
-                             (search-backward-regexp
-                              "\\(;\\|{\\|(\\|)\\|=\\|echo[\t ]+\\|print[\t ]+\\|\n\\|<<<'?\"?[a-zA-Z0-9_]+'?\"?\\|->\\)"
-                              nil
-                              t))
-                          (let ((match (match-string-no-properties 0)))
-                            (cond
-                             ((string= match "\n")
-                              (setq is-same-line-p nil))
-                             ((string-match-p
-                               "<<<'?\"?[a-zA-Z0-9_]+'?\"?"
-                               match)
-                              (setq
-                               not-found
-                               nil))
-                             ((string= match "(")
-                              (setq
-                               parenthesis-level
-                               (1+ parenthesis-level)))
-                             ((string= match ")")
-                              (setq
-                               parenthesis-level
-                               (1- parenthesis-level)))
-                             ((string= match "->")
-                              (when (= parenthesis-level 0)
-                                (setq
-                                 is-object-chaining
-                                 t)
-                                (setq
-                                 is-object-chaining-on-same-line
-                                 is-same-line-p)))
-                             ((= parenthesis-level 0)
-                              (setq is-assignment (string= match "="))
-                              (setq not-found nil)))))
-
-                        (when (or
-                               (and
-                                (not is-same-line-p)
-                                is-assignment)
-                               (and
-                                (not is-object-chaining-on-same-line)
-                                is-object-chaining))
-                          (setq
-                           new-indentation
-                           (- new-indentation tab-width)))
-
-                        (goto-char point)))
-
-                    )))
+                       reference-indentation)))))
 
                ;; LINE THAT ENDS ALTERNATIVE SWITCH BLOCK
                ;; switch (blala):
