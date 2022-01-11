@@ -631,332 +631,76 @@
                  new-indentation
                  (+ new-indentation tab-width)))
 
-               ;; LINE AFTER LINE THAT ENDS WITH CLOSING BRACKET
-               ;; function myFunction($key,
-               ;;     $value)
-               ;; {
-               ;; or
-               ;; (is_array($data)
-               ;;     && !empty($data['index'])
-               ;;     && (is_a($data['index'], 'Index')
-               ;;     || is_a($data['Index'], 'Index2')))
-               ;; || is_a($data, 'WC_Index')
-               (previous-line-ends-with-closing-bracket
+               ;; LINE THAT ENDS BRACKET
+               ;; switch ($condition) {
+               ;;     case true:
+               ;;         echo 'here';
+               ;; }
+               (current-line-starts-with-closing-bracket
                 (setq
                  match-type
-                 'line-after-line-that-ends-with-closing-bracket)
-                ;; Backtrack to line were bracket started
-                ;; and use indentation from that line for this line
-                (forward-line (* -1 move-length1))
-                (end-of-line)
-                (let ((not-found t)
-                      (reference-line)
-                      (reference-line2)
-                      (reference-indentation)
-                      (parenthesis-level 0))
-                  (while
-                      (and
-                       not-found
-                       (search-backward-regexp
-                        "[][(){}]"
-                        nil
-                        t))
-                    (let ((match (match-string-no-properties 0)))
-                      (cond
-
-                       ((or
-                         (string= "(" match)
-                         (string= "[" match)
-                         (string= "{" match))
-                        (setq
-                         parenthesis-level
-                         (1+ parenthesis-level))
-                        (when (= parenthesis-level 0)
-                          (setq
-                           not-found
-                           nil)))
-
-                       ((or
-                         (string= ")" match)
-                         (string= "]" match)
-                         (string= "}" match))
-                        (setq
-                         parenthesis-level
-                         (1- parenthesis-level))
-                        (when (= parenthesis-level 0)
-                          (setq
-                           not-found
-                           nil)))
-
-                       )))
-                  (unless not-found
-                    (setq
-                     reference-line
-                     (buffer-substring-no-properties
-                      (line-beginning-position)
-                      (line-end-position)))
-                    (setq
-                     reference-line2
-                     (buffer-substring-no-properties
-                      (point)
-                      (line-end-position)))
-                    (setq
-                     reference-indentation
-                     (phps-mode-indent--string-indentation
-                      reference-line))
-                    (setq
-                     new-indentation
-                     reference-indentation)
-                    (let ((reference-bracket-level
-                           (phps-mode-indent--get-string-brackets-count
-                            reference-line))
-                          (reference-bracket-level2
-                           (phps-mode-indent--get-string-brackets-count
-                            reference-line2))
-                          (reference-contains-assignment
-                           (string-match-p
-                            "^[\t ]*$[a-zA-Z0-9_]+[\t ]*[^=!]*=\\($\\|[\t ]+.*[^,;]$\\)"
-                            reference-line)))
-                      ;; if (
-                      ;;     (is_array($data)
-                      ;;     && !empty($data['index'])
-                      ;;         && (is_a($data['index'], 'Index')
-                      ;;         || is_a($data['Index'], 'Index2')))
-                      ;;     || is_a($data, 'WC_Index')
-                      ;; or
-                      ;; $copies = method_exists($object, 'get_copies')
-                      ;;     ? true
-                      ;; (message "reference-bracket-level: %S" reference-bracket-level)
-                      ;; (message "reference-bracket-level2: %S" reference-bracket-level2)
-                      
-                      (when (or
-                             reference-contains-assignment
-                             (and
-                              (> reference-bracket-level 0)
-                              (> reference-bracket-level reference-bracket-level2)))
-                        (setq
-                         new-indentation
-                         (+ new-indentation tab-width))))
-
-                    (when current-line-starts-with-closing-bracket
-                      (setq
-                       new-indentation
-                       (- new-indentation tab-width)))
-
-                    )
-
-                  (goto-char point))
-
-                )
-
-               ;; LINE AFTER OPENING MULTI-LINE ASSIGNMENT
-               ;; $var = 'A line' .
-               ;;     'something';
-               ;; or
-               ;; $var .= 'A line' .
-               ;;     'something'
-               ;; or
-               ;; $var += 35 +
-               ;;     77
-               ;; but ignore
-               ;; $var === true
-               ;; or
-               ;; $var == 3
-               ;; or
-               ;; $argument1 = 3,
-               ;; $argument2 = 4
-               ;; or
-               ;; function myFunction(
-               ;;     $abc = 3
-               ;; ) {
-               ;; or
-               ;; $abc != 3
-               ((and
-                 (string-match-p
-                  "^[\t ]*$[a-zA-Z0-9_]+[\t ]*[^=!]*=\\($\\|[\t ]+.*[^,;]$\\)"
-                  previous-line-string)
-                 (not
-                  current-line-starts-with-closing-bracket))
-                (setq
-                 match-type
-                 'line-after-opening-multiline-assignment)
-                (setq
-                 new-indentation
-                 (+ new-indentation tab-width)))
-
-               ;; LINE THAT ENDS BRACKET AND COMMAND
-               ;; $variable = array(
-               ;;     'random' =>
-               ;;         'hello'
-               ;; );
-               ;; or
-               ;; $variable = [
-               ;;     'random' =>
-               ;;         'hello'
-               ;; ];
-               ((string-match-p
-                 "^[\t ]*\\()\\|]\\);[\t ]*$"
-                 current-line-string)
-                (setq
-                 match-type
-                 'line-that-ends-bracket-and-command)
+                 'line-that-ends-bracket)
                 (let ((old-point (point))
                       (still-looking t)
-                      (bracket-count -1))
+                      (bracket-start-line)
+                      (bracket-level -1))
 
-                  ;; Try to backtrack buffer until we reach start of bracket
-                  (while
-                      (and
-                       still-looking
-                       (search-backward-regexp
-                        "\\((\\|]\\|\\[\\|)\\)" nil t))
-                    (let ((match-string (match-string-no-properties 0)))
+                  ;; Should keep track of brackets
+                  ;; and stop when we reach the correct bracket
+                  (while (and
+                          still-looking
+                          (search-backward-regexp "[][{}()]" nil t))
+                    (let ((match (match-string-no-properties 0)))
                       (cond
                        ((or
-                         (string= match-string "(")
-                         (string= match-string "["))
-                        (setq bracket-count (1+ bracket-count)))
-                       ((or
-                         (string= match-string ")")
-                         (string= match-string "]"))
-                        (setq bracket-count (1- bracket-count)))))
-                    (when (= bracket-count 0)
-                      (setq still-looking nil)))
+                         (string= "{" match)
+                         (string= "(" match)
+                         (string= "[" match))
+                        (setq
+                         bracket-level
+                         (1+ bracket-level)))
+                       (t
+                        (setq
+                         bracket-level
+                         (1- bracket-level))))
 
-                  ;; Did we find bracket start line?
+                      (when (= bracket-level 0)
+                        (setq
+                         still-looking
+                         nil)
+                        (setq
+                         bracket-start-line
+                         (buffer-substring-no-properties
+                          (line-beginning-position)
+                          (line-end-position))))))
+
+                  (goto-char old-point)
+
                   (unless still-looking
-                    (let ((bracket-start-indentation
-                           (phps-mode-indent--string-indentation
-                            (buffer-substring-no-properties
-                             (line-beginning-position)
-                             (line-end-position)))))
-                      ;; Use its indentation for this line as well
-                      (setq
-                       new-indentation
-                       bracket-start-indentation)))
-
-                  ;; Reset point
-                  (goto-char old-point)))
-
-               ;; LINE THAT CONTINUES MULTI-LINE CONCATENATION
-               ;; echo 'Something'
-               ;;     . 'more';
-               ;; or
-               ;; echo
-               ;;     'Something'
-               ;;     . 'more';
-               ;; or
-               ;; echo 'Something' .
-               ;;     'more';
-               ;; or
-               ;; echo
-               ;;     'Something' .
-               ;;     'more';
-               ((or
-                 (string-match-p
-                  "^[\t ]*\\."
-                  current-line-string)
-                 (string-match-p
-                  "\\.[\t ]*$"
-                  previous-line-string))
-                (setq
-                 match-type
-                 'line-that-continues-multi-line-concatenation)
-
-                ;; If previous line matched ending .
-                ;; we must backtrack at least two lines
-                ;; to find a good reference indentation
-                (let ((old-point (point))
-                      (match-string)
-                      (previous-concatenation)
-                      (keep-searching 1)
-                      (concat-was-trailing-p
-                       (string-match-p
-                        "\\.[\t ]*$"
-                        previous-line-string))
-                      (previous-concatenation2))
-                  (when concat-was-trailing-p
                     (setq
-                     keep-searching
-                     2))
-                  (while keep-searching
-                    (let ((previous-expression
-                           (search-backward-regexp
-                            "\\(^[\t ]*\\.\\|\\.[\t ]*$\\|[{}=;]\\)" nil t)))
-                      (if previous-expression
-                          (progn
-                            (setq
-                             match-string
-                             (match-string-no-properties 0))
-                            (if (string-match-p
-                                 "[{}=;]"
-                                 match-string)
-                                (setq
-                                 keep-searching
-                                 nil)
-                              (setq
-                               keep-searching
-                               (1- keep-searching))
-                              (when (= keep-searching 0)
-                                (setq
-                                 keep-searching
-                                 nil)
-                                (when concat-was-trailing-p
-                                  (goto-char previous-concatenation2))
-                                (setq
-                                 previous-concatenation
-                                 match-string))
-                              (setq
-                               previous-concatenation2
-                               (point))))
-                        (setq
-                         keep-searching
-                         nil))))
+                     new-indentation
+                     (phps-mode-indent--string-indentation
+                      bracket-start-line)))))
 
-                  (if previous-concatenation
-                      (let ((first-concatenated-line-indent
-                             (phps-mode-indent--string-indentation
-                              (buffer-substring-no-properties
-                               (line-beginning-position)
-                               (line-end-position)))))
-                        ;; We use previous concatenated lines indent
-                        (setq
-                         new-indentation
-                         first-concatenated-line-indent)))
-
-                  ;; Reset point
-                  (goto-char old-point)))
-
-               ;; LINE AFTER CASE DEFINITION
-               ;; case true:
-               ;;     echo 'here';
-               ;; or
-               ;; case true;
-               ;;     echo 'here';
-               ;; or
-               ;; default:
-               ;;     echo 'here';
-               ;; or
-               ;; default;
-               ;;     echo 'here';
+               ;; LINE THAT ENDS ALTERNATIVE SWITCH BLOCK
+               ;; switch (blala):
+               ;;     case bla:
+               ;;         echo 'bla';
+               ;; endswitch;
                ((and
+                 (string-match-p
+                  "^[\t ]*endswitch[\t ]*;[\t ]*$"
+                  current-line-string)
                  (not
                   (string-match-p
-                   "^[\t ]*\\(case[\t ]+\\|default\\)"
-                   current-line-string))
-                 (or
-                  (string-match-p
-                   "^[\t ]*case[\t ]+.*\\(;\\|:\\)[\t ]*$"
-                   previous-line-string)
-                  (string-match-p
-                   "^[\t ]*default.*\\(;\\|:\\)[\t ]*$"
+                   "^[\t ]*switch"
                    previous-line-string)))
                 (setq
                  match-type
-                 'line-after-case-definition)
+                 'line-that-ends-alternative-switch-block)
                 (setq
                  new-indentation
-                 (+ new-indentation tab-width)))
+                 (- new-indentation tab-width tab-width)))
 
                ;; NEW CASE AFTER CASE DEFINITION
                ;; case true:
@@ -982,197 +726,6 @@
                 (setq
                  new-indentation
                  (- new-indentation tab-width)))
-
-               ;; LINE AFTER ENDING OF BRACKET AND COMMAND
-               ;; if (true) {
-               ;;     $cacheKey = sprintf(
-               ;;         'key_%s',
-               ;;         md5(json_encode($key))
-               ;;     );
-               ;;     $cache =
-               ;; or
-               ;; if (true) {
-               ;;     $cache =
-               ;;         Cache::getInstance();
-               ;;     echo 'here';
-               ((string-match-p
-                 "[])][\t ]*;[\t ]*\\(\\?>[\t\n ]*\\)?$"
-                 previous-line-string)
-                (setq
-                 match-type
-                 'line-after-ending-of-bracket-and-command)
-
-                ;; Backtrack first to line were bracket started
-                ;; and then backwards until the line were statement / expression
-                ;; started and use indentation from that line from that line
-                (forward-line (* -1 move-length1))
-                (end-of-line)
-                (search-backward-regexp ";" nil t) ;; Skip trailing comma
-                (let ((not-found-bracket-start t)
-                      (reference-line)
-                      (parenthesis-level 0))
-                  (while
-                      (and
-                       not-found-bracket-start
-                       (search-backward-regexp
-                        "[][()]"
-                        nil
-                        t))
-                    (let ((match (match-string-no-properties 0)))
-                      (cond
-
-                       ((or
-                         (string= "(" match)
-                         (string= "[" match))
-                        (setq
-                         parenthesis-level
-                         (1+ parenthesis-level))
-                        (when (= parenthesis-level 0)
-                          (setq
-                           not-found-bracket-start
-                           nil)))
-
-                       ((or
-                         (string= ")" match)
-                         (string= "]" match))
-                        (setq
-                         parenthesis-level
-                         (1- parenthesis-level))
-                        (when (= parenthesis-level 0)
-                          (setq
-                           not-found-bracket-start
-                           nil)))
-
-                       )))
-
-                  ;; Found line were bracket started?
-                  (unless not-found-bracket-start
-                    (setq
-                     reference-line
-                     (buffer-substring-no-properties
-                      (line-beginning-position)
-                      (line-end-position)))
-                    ;; (message "reference-line-1: %S" reference-line)
-
-                    ;; Search for first line of statement / expression here
-                    (let ((not-found-command-start t))
-                      (while
-                          (and
-                           not-found-command-start
-                           (search-backward-regexp
-                            "\\(;\\|}\\|{\\|^[\t ]*[^\t\n ]+.*$\\)"
-                            nil
-                            t))
-                        (let ((match (match-string-no-properties 1)))
-                          ;; (message "match: %S" match)
-                          (cond
-
-                           ;; End of expression / statement
-                           ((or
-                             (string= ";" match)
-                             (string= "}" match)
-                             (string= "{" match))
-                            (setq
-                             not-found-command-start
-                             nil))
-
-                           ;; Non-empty line
-                           (t
-                            (setq
-                             reference-line
-                             (buffer-substring-no-properties
-                              (line-beginning-position)
-                              (line-end-position))))
-
-                           )))))
-
-                  (when reference-line
-                    ;; (message "reference-line-2: %S" reference-line)
-                    (setq
-                     new-indentation
-                     (phps-mode-indent--string-indentation
-                      reference-line)))
-
-                  (when
-                      (and
-                       current-line-starts-with-closing-bracket
-                       (string= current-line-starts-with-closing-bracket "}"))
-                    (setq
-                     new-indentation
-                     (- new-indentation tab-width))))
-
-                (goto-char point))
-
-               ;; LINE THAT ENDS CURLY BRACKET
-               ;; switch ($condition) {
-               ;;     case true:
-               ;;         echo 'here';
-               ;; }
-               ((and
-                 current-line-starts-with-closing-bracket
-                 (string= current-line-starts-with-closing-bracket "}"))
-                (setq
-                 match-type
-                 'line-that-ends-curly-bracket)
-                (let ((old-point (point))
-                      (still-looking t)
-                      (bracket-start-line)
-                      (curly-bracket-balance -1))
-
-                  ;; Should keep track of brackets
-                  ;; and stop when we reach the correct bracket
-                  (while (and
-                          still-looking
-                          (search-backward-regexp "[{}]" nil t))
-                    (cond
-                     ((looking-at-p "{")
-                      (setq
-                       curly-bracket-balance
-                       (1+ curly-bracket-balance)))
-                     ((looking-at-p "}")
-                      (setq
-                       curly-bracket-balance
-                       (1- curly-bracket-balance))))
-
-                    (when (= curly-bracket-balance 0)
-                      (setq
-                       still-looking
-                       nil)
-                      (setq
-                       bracket-start-line
-                       (buffer-substring-no-properties
-                        (line-beginning-position)
-                        (line-end-position)))))
-
-                  (goto-char old-point)
-
-                  (unless still-looking
-                    (let ((reference-indentation
-                           (phps-mode-indent--string-indentation
-                            bracket-start-line)))
-                      (setq
-                       new-indentation
-                       reference-indentation)))))
-
-               ;; LINE THAT ENDS ALTERNATIVE SWITCH BLOCK
-               ;; switch (blala):
-               ;;     case bla:
-               ;;         echo 'bla';
-               ;; endswitch;
-               ((and
-                 (string-match-p
-                  "^[\t ]*endswitch[\t ]*;[\t ]*$"
-                  current-line-string)
-                 (not
-                  (string-match-p
-                   "^[\t ]*switch"
-                   previous-line-string)))
-                (setq
-                 match-type
-                 'line-that-ends-alternative-switch-block)
-                (setq
-                 new-indentation
-                 (- new-indentation tab-width tab-width)))
 
                ;; LINE AFTER ENDING OF BRACKET AND COMMA
                ;; return array(
@@ -1723,6 +1276,453 @@
                 (setq
                  new-indentation
                  (+ new-indentation tab-width)))
+
+               ;; LINE AFTER LINE THAT ENDS WITH CLOSING BRACKET
+               ;; function myFunction($key,
+               ;;     $value)
+               ;; {
+               ;; or
+               ;; (is_array($data)
+               ;;     && !empty($data['index'])
+               ;;     && (is_a($data['index'], 'Index')
+               ;;     || is_a($data['Index'], 'Index2')))
+               ;; || is_a($data, 'WC_Index')
+               (previous-line-ends-with-closing-bracket
+                (setq
+                 match-type
+                 'line-after-line-that-ends-with-closing-bracket)
+                ;; Backtrack to line were bracket started
+                ;; and use indentation from that line for this line
+                (forward-line (* -1 move-length1))
+                (end-of-line)
+                (let ((not-found t)
+                      (reference-line)
+                      (reference-line2)
+                      (reference-indentation)
+                      (parenthesis-level 0))
+                  (while
+                      (and
+                       not-found
+                       (search-backward-regexp
+                        "[][(){}]"
+                        nil
+                        t))
+                    (let ((match (match-string-no-properties 0)))
+                      (cond
+
+                       ((or
+                         (string= "(" match)
+                         (string= "[" match)
+                         (string= "{" match))
+                        (setq
+                         parenthesis-level
+                         (1+ parenthesis-level))
+                        (when (= parenthesis-level 0)
+                          (setq
+                           not-found
+                           nil)))
+
+                       ((or
+                         (string= ")" match)
+                         (string= "]" match)
+                         (string= "}" match))
+                        (setq
+                         parenthesis-level
+                         (1- parenthesis-level))
+                        (when (= parenthesis-level 0)
+                          (setq
+                           not-found
+                           nil)))
+
+                       )))
+                  (unless not-found
+                    (setq
+                     reference-line
+                     (buffer-substring-no-properties
+                      (line-beginning-position)
+                      (line-end-position)))
+                    (setq
+                     reference-line2
+                     (buffer-substring-no-properties
+                      (point)
+                      (line-end-position)))
+                    (setq
+                     reference-indentation
+                     (phps-mode-indent--string-indentation
+                      reference-line))
+                    (setq
+                     new-indentation
+                     reference-indentation)
+                    (let ((reference-bracket-level
+                           (phps-mode-indent--get-string-brackets-count
+                            reference-line))
+                          (reference-bracket-level2
+                           (phps-mode-indent--get-string-brackets-count
+                            reference-line2))
+                          (reference-contains-assignment
+                           (string-match-p
+                            "^[\t ]*$[a-zA-Z0-9_]+[\t ]*[^=!]*=\\($\\|[\t ]+.*[^,;]$\\)"
+                            reference-line)))
+                      ;; if (
+                      ;;     (is_array($data)
+                      ;;     && !empty($data['index'])
+                      ;;         && (is_a($data['index'], 'Index')
+                      ;;         || is_a($data['Index'], 'Index2')))
+                      ;;     || is_a($data, 'WC_Index')
+                      ;; or
+                      ;; $copies = method_exists($object, 'get_copies')
+                      ;;     ? true
+                      ;; (message "reference-bracket-level: %S" reference-bracket-level)
+                      ;; (message "reference-bracket-level2: %S" reference-bracket-level2)
+                      
+                      (when (or
+                             reference-contains-assignment
+                             (and
+                              (> reference-bracket-level 0)
+                              (> reference-bracket-level reference-bracket-level2)))
+                        (setq
+                         new-indentation
+                         (+ new-indentation tab-width))))
+
+                    (when current-line-starts-with-closing-bracket
+                      (setq
+                       new-indentation
+                       (- new-indentation tab-width)))
+
+                    )
+
+                  (goto-char point))
+
+                )
+
+               ;; LINE AFTER OPENING MULTI-LINE ASSIGNMENT
+               ;; $var = 'A line' .
+               ;;     'something';
+               ;; or
+               ;; $var .= 'A line' .
+               ;;     'something'
+               ;; or
+               ;; $var += 35 +
+               ;;     77
+               ;; but ignore
+               ;; $var === true
+               ;; or
+               ;; $var == 3
+               ;; or
+               ;; $argument1 = 3,
+               ;; $argument2 = 4
+               ;; or
+               ;; function myFunction(
+               ;;     $abc = 3
+               ;; ) {
+               ;; or
+               ;; $abc != 3
+               ((and
+                 (string-match-p
+                  "^[\t ]*$[a-zA-Z0-9_]+[\t ]*[^=!]*=\\($\\|[\t ]+.*[^,;]$\\)"
+                  previous-line-string)
+                 (not
+                  current-line-starts-with-closing-bracket))
+                (setq
+                 match-type
+                 'line-after-opening-multiline-assignment)
+                (setq
+                 new-indentation
+                 (+ new-indentation tab-width)))
+
+               ;; LINE THAT ENDS BRACKET AND COMMAND
+               ;; $variable = array(
+               ;;     'random' =>
+               ;;         'hello'
+               ;; );
+               ;; or
+               ;; $variable = [
+               ;;     'random' =>
+               ;;         'hello'
+               ;; ];
+               ((string-match-p
+                 "^[\t ]*\\()\\|]\\);[\t ]*$"
+                 current-line-string)
+                (setq
+                 match-type
+                 'line-that-ends-bracket-and-command)
+                (let ((old-point (point))
+                      (still-looking t)
+                      (bracket-count -1))
+
+                  ;; Try to backtrack buffer until we reach start of bracket
+                  (while
+                      (and
+                       still-looking
+                       (search-backward-regexp
+                        "\\((\\|]\\|\\[\\|)\\)" nil t))
+                    (let ((match-string (match-string-no-properties 0)))
+                      (cond
+                       ((or
+                         (string= match-string "(")
+                         (string= match-string "["))
+                        (setq bracket-count (1+ bracket-count)))
+                       ((or
+                         (string= match-string ")")
+                         (string= match-string "]"))
+                        (setq bracket-count (1- bracket-count)))))
+                    (when (= bracket-count 0)
+                      (setq still-looking nil)))
+
+                  ;; Did we find bracket start line?
+                  (unless still-looking
+                    (let ((bracket-start-indentation
+                           (phps-mode-indent--string-indentation
+                            (buffer-substring-no-properties
+                             (line-beginning-position)
+                             (line-end-position)))))
+                      ;; Use its indentation for this line as well
+                      (setq
+                       new-indentation
+                       bracket-start-indentation)))
+
+                  ;; Reset point
+                  (goto-char old-point)))
+
+               ;; LINE THAT CONTINUES MULTI-LINE CONCATENATION
+               ;; echo 'Something'
+               ;;     . 'more';
+               ;; or
+               ;; echo
+               ;;     'Something'
+               ;;     . 'more';
+               ;; or
+               ;; echo 'Something' .
+               ;;     'more';
+               ;; or
+               ;; echo
+               ;;     'Something' .
+               ;;     'more';
+               ((or
+                 (string-match-p
+                  "^[\t ]*\\."
+                  current-line-string)
+                 (string-match-p
+                  "\\.[\t ]*$"
+                  previous-line-string))
+                (setq
+                 match-type
+                 'line-that-continues-multi-line-concatenation)
+
+                ;; If previous line matched ending .
+                ;; we must backtrack at least two lines
+                ;; to find a good reference indentation
+                (let ((old-point (point))
+                      (match-string)
+                      (previous-concatenation)
+                      (keep-searching 1)
+                      (concat-was-trailing-p
+                       (string-match-p
+                        "\\.[\t ]*$"
+                        previous-line-string))
+                      (previous-concatenation2))
+                  (when concat-was-trailing-p
+                    (setq
+                     keep-searching
+                     2))
+                  (while keep-searching
+                    (let ((previous-expression
+                           (search-backward-regexp
+                            "\\(^[\t ]*\\.\\|\\.[\t ]*$\\|[{}=;]\\)" nil t)))
+                      (if previous-expression
+                          (progn
+                            (setq
+                             match-string
+                             (match-string-no-properties 0))
+                            (if (string-match-p
+                                 "[{}=;]"
+                                 match-string)
+                                (setq
+                                 keep-searching
+                                 nil)
+                              (setq
+                               keep-searching
+                               (1- keep-searching))
+                              (when (= keep-searching 0)
+                                (setq
+                                 keep-searching
+                                 nil)
+                                (when concat-was-trailing-p
+                                  (goto-char previous-concatenation2))
+                                (setq
+                                 previous-concatenation
+                                 match-string))
+                              (setq
+                               previous-concatenation2
+                               (point))))
+                        (setq
+                         keep-searching
+                         nil))))
+
+                  (if previous-concatenation
+                      (let ((first-concatenated-line-indent
+                             (phps-mode-indent--string-indentation
+                              (buffer-substring-no-properties
+                               (line-beginning-position)
+                               (line-end-position)))))
+                        ;; We use previous concatenated lines indent
+                        (setq
+                         new-indentation
+                         first-concatenated-line-indent)))
+
+                  ;; Reset point
+                  (goto-char old-point)))
+
+               ;; LINE AFTER CASE DEFINITION
+               ;; case true:
+               ;;     echo 'here';
+               ;; or
+               ;; case true;
+               ;;     echo 'here';
+               ;; or
+               ;; default:
+               ;;     echo 'here';
+               ;; or
+               ;; default;
+               ;;     echo 'here';
+               ((and
+                 (not
+                  (string-match-p
+                   "^[\t ]*\\(case[\t ]+\\|default\\)"
+                   current-line-string))
+                 (or
+                  (string-match-p
+                   "^[\t ]*case[\t ]+.*\\(;\\|:\\)[\t ]*$"
+                   previous-line-string)
+                  (string-match-p
+                   "^[\t ]*default.*\\(;\\|:\\)[\t ]*$"
+                   previous-line-string)))
+                (setq
+                 match-type
+                 'line-after-case-definition)
+                (setq
+                 new-indentation
+                 (+ new-indentation tab-width)))
+
+               ;; LINE AFTER ENDING OF BRACKET AND COMMAND
+               ;; if (true) {
+               ;;     $cacheKey = sprintf(
+               ;;         'key_%s',
+               ;;         md5(json_encode($key))
+               ;;     );
+               ;;     $cache =
+               ;; or
+               ;; if (true) {
+               ;;     $cache =
+               ;;         Cache::getInstance();
+               ;;     echo 'here';
+               ((string-match-p
+                 "[])][\t ]*;[\t ]*\\(\\?>[\t\n ]*\\)?$"
+                 previous-line-string)
+                (setq
+                 match-type
+                 'line-after-ending-of-bracket-and-command)
+
+                ;; Backtrack first to line were bracket started
+                ;; and then backwards until the line were statement / expression
+                ;; started and use indentation from that line from that line
+                (forward-line (* -1 move-length1))
+                (end-of-line)
+                (search-backward-regexp ";" nil t) ;; Skip trailing comma
+                (let ((not-found-bracket-start t)
+                      (reference-line)
+                      (parenthesis-level 0))
+                  (while
+                      (and
+                       not-found-bracket-start
+                       (search-backward-regexp
+                        "[][()]"
+                        nil
+                        t))
+                    (let ((match (match-string-no-properties 0)))
+                      (cond
+
+                       ((or
+                         (string= "(" match)
+                         (string= "[" match))
+                        (setq
+                         parenthesis-level
+                         (1+ parenthesis-level))
+                        (when (= parenthesis-level 0)
+                          (setq
+                           not-found-bracket-start
+                           nil)))
+
+                       ((or
+                         (string= ")" match)
+                         (string= "]" match))
+                        (setq
+                         parenthesis-level
+                         (1- parenthesis-level))
+                        (when (= parenthesis-level 0)
+                          (setq
+                           not-found-bracket-start
+                           nil)))
+
+                       )))
+
+                  ;; Found line were bracket started?
+                  (unless not-found-bracket-start
+                    (setq
+                     reference-line
+                     (buffer-substring-no-properties
+                      (line-beginning-position)
+                      (line-end-position)))
+                    ;; (message "reference-line-1: %S" reference-line)
+
+                    ;; Search for first line of statement / expression here
+                    (let ((not-found-command-start t))
+                      (while
+                          (and
+                           not-found-command-start
+                           (search-backward-regexp
+                            "\\(;\\|}\\|{\\|^[\t ]*[^\t\n ]+.*$\\)"
+                            nil
+                            t))
+                        (let ((match (match-string-no-properties 1)))
+                          ;; (message "match: %S" match)
+                          (cond
+
+                           ;; End of expression / statement
+                           ((or
+                             (string= ";" match)
+                             (string= "}" match)
+                             (string= "{" match))
+                            (setq
+                             not-found-command-start
+                             nil))
+
+                           ;; Non-empty line
+                           (t
+                            (setq
+                             reference-line
+                             (buffer-substring-no-properties
+                              (line-beginning-position)
+                              (line-end-position))))
+
+                           )))))
+
+                  (when reference-line
+                    ;; (message "reference-line-2: %S" reference-line)
+                    (setq
+                     new-indentation
+                     (phps-mode-indent--string-indentation
+                      reference-line)))
+
+                  (when
+                      (and
+                       current-line-starts-with-closing-bracket
+                       (string= current-line-starts-with-closing-bracket "}"))
+                    (setq
+                     new-indentation
+                     (- new-indentation tab-width))))
+
+                (goto-char point))
 
                )
 
