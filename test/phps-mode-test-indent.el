@@ -400,6 +400,18 @@
    "<?php\nif (true) {\n    $replacements = array(\n        '$object_address_1' =>\n            $object->get_shipping_address_1(),\n        '$object_address_2' =>\n            $object->get_shipping_address_2(),\n        '$object_name' =>\n            $object->get_shipping_first_name()\n            . ' ' . $object->get_shipping_last_name(),\n        '$object_city' =>\n            $object->get_shipping_city(),\n        '$object_company' =>\n            $object->get_shipping_company(),\n        '$object_country' =>\n            $object->get_shipping_country(),\n        '$object_postcode' =>\n            $object->get_shipping_postcode(),\n        '$object_state' =>\n            $object->get_shipping_state(),\n        '$object_email' =>\n            $object->get_billing_email(),\n        '$object_mobile' =>\n            $object->get_billing_phone(),\n        '$object_id' =>\n            $object->ID,\n        '$object_number' =>\n            $object->get_order_number(),\n        '$object_subtotal' =>\n            $object->get_subtotal()\n    );\n}\n"
    "Multi-dimensional array with assignment from object methods")
 
+  (phps-mode-test-indent--should-equal
+   "<?php\nif (true) {\n    $true = (true\n        && (true || false)\n        && (true || false));\n    echo 'here';\n}"
+   "Line after multi-line parenthesized logical expression")
+
+  (phps-mode-test-indent--should-equal
+   "<?php\nif (true) {\n    echo 'here';\n/* something */\n    echo 'there';\n}\n"
+   "Line after commented out lines with wrong indentation")
+
+  (phps-mode-test-indent--should-equal
+   "<?php\nif (true) {\n    $variable1 = (true\n        ? true\n        : false);\n\n    $variable2 = (true\n        ? true\n        : false);\n\n    $variable3 = myFunction(true);\n    echo 'here';\n\n}\n"
+   "Line after multi-line parenthesized logical expression in assignment")
+
   )
 
 (defun phps-mode-test-indent--get-lines-indent-psr-2 ()
