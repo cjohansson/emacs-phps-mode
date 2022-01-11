@@ -911,73 +911,67 @@
                  match-type
                  'line-after-line-that-ends-with-semicolon)
 
-                ;; Back-trace buffer from previous line
-                ;; Determine if semi-colon ended an multi-line assignment or bracket-less command or not
-                ;; If it's on the same line we ignore it
+                ;; Back-trace buffer from previous line semi-colon
+                ;; find line where command started
+                ;; use that lines indentation for this line
                 (forward-line (* -1 move-length1))
                 (end-of-line)
                 (search-backward-regexp ";" nil t) ;; Skip the semi-colon
 
                 (let ((not-found t)
-                      (reference-line)
-                      (reference-indentation)
-                      (parenthesis-level 0))
+                      (reference-line
+                       (buffer-substring-no-properties
+                        (line-beginning-position)
+                        (line-end-position)))
+                      (reference-indentation))
                   (while
                       (and
                        not-found
                        (search-backward-regexp
-                        "\\(;\\|{\\|[a-zA-Z_]+[a-zA-Z0-9_]*[\t ]*(\\|)\\|=$\\|=[^>]\\|return\\|echo[\t ]+\\|print[\t ]+\\|\n\\|<<<'?\"?[a-zA-Z0-9_]+'?\"?\\)"
+                        "^[\t ]*[^\t ]+.*$"
                         nil
                         t))
                     (let ((match (match-string-no-properties 0)))
                       (cond
 
-                       ((string= match "\n"))
-
-                       ;; Start of HEREDOC / NOWDOC
+                       ;; Commented out line
                        ((string-match-p
-                         "<<<'?\"?[a-zA-Z0-9_]+'?\"?"
-                         match)
+                         "^[\t ]*//"
+                         match))
+
+                       ;; A separate command
+                       ((or
+                         (string-match-p
+                          "{[\t ]*$"
+                          match)
+                         (string-match-p
+                          "\\(;\\|:\\)[\t ]*$"
+                          match)
+                         (string-match-p
+                          "[\t ]*<\\?"
+                          match))
                         (setq
                          not-found
                          nil))
 
-                       ;; Function call
-                       ((string-match-p
-                         "[a-zA-Z_]+[a-zA-Z0-9_]*[\t ]*("
-                         match)
+                       (t
                         (setq
-                         parenthesis-level
-                         (1+ parenthesis-level))
-                        (when (= parenthesis-level 0)
-                          (setq
-                           not-found
-                           nil)))
+                         reference-line
+                         (buffer-substring-no-properties
+                          (line-beginning-position)
+                          (line-end-position))))
 
-                       ((string= match ")")
-                        (setq
-                         parenthesis-level
-                         (1- parenthesis-level)))
+                       )))
 
-                       ((= parenthesis-level 0)
-                        (setq
-                         not-found
-                         nil)))))
                   (goto-char point)
 
                   (unless not-found
-                    (setq
-                     reference-line
-                     (buffer-substring-no-properties
-                      (line-beginning-position)
-                      (line-end-position)))
+                    ;; (message "reference-line: %S" reference-line)
                     (setq
                      reference-indentation
                      (phps-mode-indent--string-indentation
                       reference-line))
-                    ;; TODO The line after should use the same indentation
-                    ;; as the line starting the command
-                   (setq
+                    (setq
                      new-indentation
                      reference-indentation))))
 

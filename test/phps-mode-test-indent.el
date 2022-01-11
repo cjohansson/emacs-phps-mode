@@ -31,18 +31,23 @@
         (random (- line-max-position line-min-position)))))
     (execute-kbd-macro (kbd "TAB"))))
 
-(defun phps-mode-test-indent--should-equal (string name)
-  "Test indent of whole buffer containing STRING with NAME."
+(defun phps-mode-test-indent--should-equal (string name &optional new-string)
+  "Test indent of whole buffer containing STRING with NAME with optional NEW-STRING."
   (phps-mode-test--with-buffer
    string
    name
    (message "Initial buffer:\n%S" string)
    (phps-mode-test-indent--indent-whole-buffer)
-   (let ((buffer-contents (buffer-substring-no-properties (point-min) (point-max))))
+   (let ((buffer-contents (buffer-substring-no-properties (point-min) (point-max)))
+         (test-string string))
+     (when new-string
+       (setq
+        test-string
+        new-string))
      (message "\nIndented buffer:\n%S" buffer-contents)
      (should (equal
               buffer-contents
-              string)))))
+              test-string)))))
 
 (defun phps-mode-test-indent--helpers ()
   "Test helper functions."
@@ -245,7 +250,7 @@
    "Return statements in class")
 
   (phps-mode-test-indent--should-equal
-   "$var = myFunction(\n    'setting');\necho 'here';\n"
+   "<?php\n$var = myFunction(\n    'setting');\necho 'here';\n"
    "Multi-line assignment from function ending without opening bracket")
 
   (phps-mode-test-indent--should-equal
@@ -406,7 +411,8 @@
 
   (phps-mode-test-indent--should-equal
    "<?php\nif (true) {\n    echo 'here';\n/* something */\n    echo 'there';\n}\n"
-   "Line after commented out lines with wrong indentation")
+   "Line after commented out lines with wrong indentation"
+   "<?php\nif (true) {\n    echo 'here';\n    /* something */\n    echo 'there';\n}\n")
 
   (phps-mode-test-indent--should-equal
    "<?php\nif (true) {\n    $variable1 = (true\n        ? true\n        : false);\n\n    $variable2 = (true\n        ? true\n        : false);\n\n    $variable3 = myFunction(true);\n    echo 'here';\n\n}\n"
