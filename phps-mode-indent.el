@@ -727,7 +727,7 @@
                  new-indentation
                  (- new-indentation tab-width)))
 
-               ;; LINE AFTER ENDING OF BRACKET AND COMMA
+               ;; LINE AFTER LINE ENDING WITH COMMA
                ;; return array(
                ;;     '' => __(
                ;;         'None',
@@ -762,7 +762,7 @@
                  previous-line-string)
                 (setq
                  match-type
-                 'line-after-ending-of-bracket-and-comma)
+                 'line-after-line-ending-with-comma)
 
                 ;; Backtrack first to line were bracket started
                 ;; and use indentation from that line from that line
@@ -874,7 +874,7 @@
 
                 (goto-char point))
 
-               ;; LINE AFTER ENDING OF COMMAND
+               ;; LINE AFTER LINE THATS ENDS WITH SEMICOLON
                ;; $var .=
                ;;     'hello';
                ;; echo 'here';
@@ -906,14 +906,10 @@
                ;; echo 'here';
                ((and
                  previous-line-ends-with-terminus
-                 (string= previous-line-ends-with-terminus ";")
-                 (not
-                  (string-match-p
-                   "^[\t ]*\\(echo[\t ]+\\|print[\t ]+\\)"
-                   previous-line-string)))
+                 (string= previous-line-ends-with-terminus ";"))
                 (setq
                  match-type
-                 'line-after-ending-of-command)
+                 'line-after-line-that-ends-with-semicolon)
 
                 ;; Back-trace buffer from previous line
                 ;; Determine if semi-colon ended an multi-line assignment or bracket-less command or not
@@ -923,13 +919,9 @@
                 (search-backward-regexp ";" nil t) ;; Skip the semi-colon
 
                 (let ((not-found t)
-                      (is-assignment nil)
-                      (is-string-doc)
-                      (is-function-call)
-                      (parenthesis-level 0)
-                      (is-bracket-less-command nil)
-                      (is-same-line-p t)
-                      (bracket-opened-on-first-line))
+                      (reference-line)
+                      (reference-indentation)
+                      (parenthesis-level 0))
                   (while
                       (and
                        not-found
@@ -940,19 +932,17 @@
                     (let ((match (match-string-no-properties 0)))
                       (cond
 
-                       ((string= match "\n")
-                        (setq is-same-line-p nil))
+                       ((string= match "\n"))
 
+                       ;; Start of HEREDOC / NOWDOC
                        ((string-match-p
                          "<<<'?\"?[a-zA-Z0-9_]+'?\"?"
                          match)
                         (setq
-                         is-string-doc
-                         t)
-                        (setq
                          not-found
                          nil))
 
+                       ;; Function call
                        ((string-match-p
                          "[a-zA-Z_]+[a-zA-Z0-9_]*[\t ]*("
                          match)
@@ -960,9 +950,6 @@
                          parenthesis-level
                          (1+ parenthesis-level))
                         (when (= parenthesis-level 0)
-                          (setq
-                           is-function-call
-                           t)
                           (setq
                            not-found
                            nil)))
@@ -973,100 +960,26 @@
                          (1- parenthesis-level)))
 
                        ((= parenthesis-level 0)
-                        (setq is-assignment (string-match-p "=" match))
-                        (setq is-bracket-less-command
-                              (string-match-p
-                               "\\(echo[\t ]+\\|print[\t ]+\\|return[\t ]+\\)"
-                               match))
-                        (setq not-found nil)))))
+                        (setq
+                         not-found
+                         nil)))))
+                  (goto-char point)
 
-                  ;;     $var = <<<EOD
-                  ;; OKASDOKASD
-                  ;; EOD;
-                  ;;     echo 'here';
-                  (when is-string-doc
+                  (unless not-found
                     (setq
-                     new-indentation
+                     reference-line
+                     (buffer-substring-no-properties
+                      (line-beginning-position)
+                      (line-end-position)))
+                    (setq
+                     reference-indentation
                      (phps-mode-indent--string-indentation
-                      (buffer-substring-no-properties
-                       (line-beginning-position)
-                       (line-end-position)))))
-
-                  ;; When we have an assignment
-                  ;; keep track if bracket was opened on first
-                  ;; line
-                  (when is-assignment
-                    (let ((start-bracket-count
-                           (phps-mode-indent--get-string-brackets-count
-                            (buffer-substring-no-properties
-                             (line-beginning-position)
-                             (line-end-position)))))
-                      ;; (message "start-bracket-count: %S from %S" start-bracket-count (buffer-substring-no-properties
-                      ;;        (line-beginning-position)
-                      ;;        (line-end-position)))
-                      (setq
-                       bracket-opened-on-first-line
-                       (> start-bracket-count 0))))
-
-                  ;; (message "is-assignment: %S" is-assignment)
-                  ;; (message "bracket-opened-on-first-line: %S" bracket-opened-on-first-line)
-
-                  ;; echo 'there' .
-                  ;;     'here';
-                  ;; echo 'here';
-                  ;; or
-                  ;; print 'there' .
-                  ;;     'here';
-                  ;; echo 'here';
-                  ;; or
-                  ;; $var =
-                  ;;     'opkeokoek';
-                  ;; echo 'here'
-
-                  ;; ignore cases like
-                  ;; $var = array(
-                  ;;     'here'
-                  ;; );
-                  ;; echo 'here';
-                  ;; but not cases like
-                  ;; $var = 'abc'
-                  ;;     . 'def' . __(
-                  ;;         'okeoke'
-                  ;;     ) . 'ere';
-                  ;; echo 'here';
-                  ;; NOTE stuff like $var = array(\n    4\n);\n
-                  ;; will end assignment but also decrease previous-bracket-level
-                  ;; NOTE but cases like $var = array(\n    4);\n should pass
-                  (when (and
-                         (not is-same-line-p)
-                         (or
-                          (and
-                           is-assignment
-                           (or
-                            (not bracket-opened-on-first-line)
-                            (not previous-line-starts-with-closing-bracket)))
-                          is-bracket-less-command))
-                    (setq
+                      reference-line))
+                    ;; TODO The line after should use the same indentation
+                    ;; as the line starting the command
+                   (setq
                      new-indentation
-                     (- new-indentation tab-width)))
-
-                  ;; define('_PRIVATE_ROOT',
-                  ;;     'here');
-                  ;; echo 'here';
-                  ;; but ignore
-                  ;; if (true) {
-                  ;;     define('_PRIVATE_ROOT', 'here');
-                  ;;     echo 'here';
-                  (when (and
-                         is-function-call
-                         (not is-same-line-p))
-                    (setq
-                     new-indentation
-                     (- new-indentation tab-width)))
-
-                  )
-
-                (goto-char point))
+                     reference-indentation))))
 
                ;; LINE AFTER ALTERNATIVE CASE DEFINITION
                ;; switch ($array):
