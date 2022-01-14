@@ -123,6 +123,193 @@
    "\\(;\\|,\\)[\t ]*\\(\\?>[\t\n ]*\\)?"
    1))
 
+(defun phps-mode-indent--get-string-brackets-count
+    (string &optional html-mode)
+  "Get bracket count for STRING optionally in HTML-MODE."
+  (let ((bracket-level 0)
+        (start 0)
+        (line-is-empty
+         (string-match-p "^[ \t\f\r\n]*$" string))
+        (test-string "\\([\]{}()[]\\|^[\t ]/\\*\\*\\|^[\t\\* ]*\\*/\\)"))
+    (when html-mode
+      (setq
+       test-string
+       "\\([\]{}()[]\\|<[a-zA-Z]+\\|</[a-zA-Z]+\\|/>\\|^[\t ]/\\*\\*\\|^[\t\\* ]*\\*/\\)"))
+    (unless line-is-empty
+      ;; (message "string: %S" string)
+      (while
+          (string-match
+           test-string
+           string
+           start)
+        (setq
+         start
+         (match-end 0))
+        (let ((bracket (substring string (match-beginning 0) (match-end 0))))
+          ;; (message "bracket: %S from %S" bracket string)
+          (cond
+           ((or
+             (string= bracket "{")
+             (string= bracket "[")
+             (string= bracket "(")
+             (string= bracket "<"))
+            (setq bracket-level (+ bracket-level tab-width)))
+           ((string-match "^[\t\\* ]*\\*/" bracket)
+            (setq bracket-level (- bracket-level 1)))
+           ((string-match "^[\t ]/\\*\\*" bracket)
+            (setq bracket-level (+ bracket-level 1)))
+           (t
+            (setq bracket-level (- bracket-level tab-width)))))))
+    bracket-level))
+
+(defun phps-mode-indent--get-previous-reference-index-line ()
+  "Get previous index line as reference, if any exist."
+  (let ((reference-line)
+        (old-point (point)))
+    (let ((not-found-bracket-start t)
+          (found-colon)
+          (reference-line-started-bracket)
+          (parenthesis-level 0))
+      (while
+          (and
+           not-found-bracket-start
+           (search-backward-regexp
+            "\\([][(),]\\|=>\\)"
+            nil
+            t))
+        (let ((match (match-string-no-properties 0)))
+          (cond
+
+           ((or
+             (string= "(" match)
+             (string= "[" match))
+            (setq
+             parenthesis-level
+             (1+ parenthesis-level))
+            (when (= parenthesis-level 1)
+              (unless found-colon
+                (setq
+                 reference-line-started-bracket
+                 t)
+                (setq
+                 reference-line
+                 (buffer-substring-no-properties
+                  (line-beginning-position)
+                  (line-end-position))))
+              (setq
+               not-found-bracket-start
+               nil)))
+
+           ((or
+             (string= ")" match)
+             (string= "]" match))
+            (setq
+             parenthesis-level
+             (1- parenthesis-level)))
+
+           ;; The second occurrence of a colon
+           ;; is a significant marker of
+           ;; a starting bracket row
+           ((string= "," match)
+            (when (= parenthesis-level 0)
+              (if found-colon
+                  (setq
+                   not-found-bracket-start
+                   nil)
+                (setq
+                 found-colon
+                 t)
+                (setq
+                 reference-line
+                 (buffer-substring-no-properties
+                  (line-beginning-position)
+                  (line-end-position))))))
+
+           ;; The first occurrence of a =>
+           ;; is a significant marker of
+           ;; a starting bracket row
+           ((string= "=>" match)
+            (when (= parenthesis-level 0)
+              (setq
+               reference-line
+               (buffer-substring-no-properties
+                (line-beginning-position)
+                (line-end-position)))
+              (setq
+               not-found-bracket-start
+               nil)))
+
+           )))
+
+      (goto-char old-point)
+      reference-line)))
+
+(defun phps-mode-indent--get-previous-reference-command-line ()
+  "Get previous line that is a command (if any)."
+  (let ((not-found t)
+        (old-point (point))
+        (reference-line)
+        (found-semi-colon))
+    (search-backward-regexp ";" nil t) ;; Skip previous semi-colon
+
+    (while
+        (and
+         not-found
+         (search-backward-regexp
+          "^[\t ]*[^\t ]+.*$"
+          nil
+          t))
+      (let ((match (match-string-no-properties 0)))
+        (message "match: %S" match)
+        (cond
+
+         ;; Commented out line
+         ((string-match-p
+           "^[\t ]*//"
+           match))
+
+         ;; A separate command
+         ((or
+           (string-match-p
+            "{[\t ]*$"
+            match)
+           (string-match-p
+            "^[\t ]*<\\?"
+            match))
+          (setq
+           not-found
+           nil))
+
+         ;; A second semi-colon is always a indicator of
+         ;; a end of a previous command
+         ((string-match-p
+           "\\(;\\|:\\)[\t ]*$"
+           match)
+          (if found-semi-colon
+              (setq
+               not-found
+               nil)
+            (setq
+             reference-line
+             (buffer-substring-no-properties
+              (line-beginning-position)
+              (line-end-position)))
+            (setq
+             found-semi-colon
+             t)))
+
+         (t
+          (setq
+           reference-line
+           (buffer-substring-no-properties
+            (line-beginning-position)
+            (line-end-position))))
+
+         )))
+
+    (goto-char old-point)
+    reference-line))
+
 
 ;; Main functions
 
@@ -832,10 +1019,6 @@
                  match-type
                  'line-after-line-that-ends-with-semicolon)
 
-                (forward-line (* -1 move-length1))
-                (end-of-line)
-                (search-backward-regexp ";" nil t) ;; Skip the semi-colon
-
                 (when-let
                     ((reference-line
                       (phps-mode-indent--get-previous-reference-command-line)))
@@ -1304,175 +1487,6 @@
             (end-of-line)
           (back-to-indentation)))
       new-indentation)))
-
-(defun phps-mode-indent--get-string-brackets-count
-    (string &optional html-mode)
-  "Get bracket count for STRING optionally in HTML-MODE."
-  (let ((bracket-level 0)
-        (start 0)
-        (line-is-empty
-         (string-match-p "^[ \t\f\r\n]*$" string))
-        (test-string "\\([\]{}()[]\\|^[\t ]/\\*\\*\\|^[\t\\* ]*\\*/\\)"))
-    (when html-mode
-      (setq
-       test-string
-       "\\([\]{}()[]\\|<[a-zA-Z]+\\|</[a-zA-Z]+\\|/>\\|^[\t ]/\\*\\*\\|^[\t\\* ]*\\*/\\)"))
-    (unless line-is-empty
-      ;; (message "string: %S" string)
-      (while
-          (string-match
-           test-string
-           string
-           start)
-        (setq
-         start
-         (match-end 0))
-        (let ((bracket (substring string (match-beginning 0) (match-end 0))))
-          ;; (message "bracket: %S from %S" bracket string)
-          (cond
-           ((or
-             (string= bracket "{")
-             (string= bracket "[")
-             (string= bracket "(")
-             (string= bracket "<"))
-            (setq bracket-level (+ bracket-level tab-width)))
-           ((string-match "^[\t\\* ]*\\*/" bracket)
-            (setq bracket-level (- bracket-level 1)))
-           ((string-match "^[\t ]/\\*\\*" bracket)
-            (setq bracket-level (+ bracket-level 1)))
-           (t
-            (setq bracket-level (- bracket-level tab-width)))))))
-    bracket-level))
-
-(defun phps-mode-indent--get-previous-reference-index-line ()
-  "Get previous index line as reference, if any exist."
-  (let ((reference-line)
-        (old-point (point)))
-    (let ((not-found-bracket-start t)
-          (found-colon)
-          (reference-line-started-bracket)
-          (parenthesis-level 0))
-      (while
-          (and
-           not-found-bracket-start
-           (search-backward-regexp
-            "\\([][(),]\\|=>\\)"
-            nil
-            t))
-        (let ((match (match-string-no-properties 0)))
-          (cond
-
-           ((or
-             (string= "(" match)
-             (string= "[" match))
-            (setq
-             parenthesis-level
-             (1+ parenthesis-level))
-            (when (= parenthesis-level 1)
-              (unless found-colon
-                (setq
-                 reference-line-started-bracket
-                 t)
-                (setq
-                 reference-line
-                 (buffer-substring-no-properties
-                  (line-beginning-position)
-                  (line-end-position))))
-              (setq
-               not-found-bracket-start
-               nil)))
-
-           ((or
-             (string= ")" match)
-             (string= "]" match))
-            (setq
-             parenthesis-level
-             (1- parenthesis-level)))
-
-           ;; The second occurrence of a colon
-           ;; is a significant marker of
-           ;; a starting bracket row
-           ((string= "," match)
-            (when (= parenthesis-level 0)
-              (if found-colon
-                  (setq
-                   not-found-bracket-start
-                   nil)
-                (setq
-                 found-colon
-                 t)
-                (setq
-                 reference-line
-                 (buffer-substring-no-properties
-                  (line-beginning-position)
-                  (line-end-position))))))
-
-           ;; The first occurrence of a =>
-           ;; is a significant marker of
-           ;; a starting bracket row
-           ((string= "=>" match)
-            (when (= parenthesis-level 0)
-              (setq
-               reference-line
-               (buffer-substring-no-properties
-                (line-beginning-position)
-                (line-end-position)))
-              (setq
-               not-found-bracket-start
-               nil)))
-
-           )))
-
-      (goto-char old-point)
-      reference-line)))
-
-(defun phps-mode-indent--get-previous-reference-command-line ()
-  "Get previous line that is a command (if any)."
-  (let ((not-found t)
-        (old-point (point))
-        (reference-line))
-
-    (while
-        (and
-         not-found
-         (search-backward-regexp
-          "^[\t ]*[^\t ]+.*$"
-          nil
-          t))
-      (let ((match (match-string-no-properties 0)))
-        (cond
-
-         ;; Commented out line
-         ((string-match-p
-           "^[\t ]*//"
-           match))
-
-         ;; A separate command
-         ((or
-           (string-match-p
-            "{[\t ]*$"
-            match)
-           (string-match-p
-            "\\(;\\|:\\)[\t ]*$"
-            match)
-           (string-match-p
-            "[\t ]*<\\?"
-            match))
-          (setq
-           not-found
-           nil))
-
-         (t
-          (setq
-           reference-line
-           (buffer-substring-no-properties
-            (line-beginning-position)
-            (line-end-position))))
-
-         )))
-
-    (goto-char old-point)
-    reference-line))
 
 
 (provide 'phps-mode-indent)

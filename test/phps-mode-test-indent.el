@@ -72,6 +72,50 @@
     (phps-mode-indent--string-starts-with-regexp "if (something) {" "if  ")
     nil))
 
+  (should
+   (equal
+    (phps-mode-indent--string-starts-with-closing-bracket "<?php   }")
+    "}"))
+
+  (should
+   (equal
+    (phps-mode-indent--string-starts-with-closing-bracket "    ]")
+    "]"))
+
+  (should
+   (equal
+    (phps-mode-indent--string-starts-with-closing-bracket "    )")
+    ")"))
+
+  (should
+   (equal
+    (phps-mode-indent--string-starts-with-closing-bracket "    ,)")
+    nil))
+
+  (with-temp-buffer
+    (insert "<?php\nmyFunction(\n    'element 1',\n    'element 2',\n);")
+    (goto-char 45)
+    (should
+     (string=
+      (phps-mode-indent--get-previous-reference-index-line)
+      "    'element 1',")))
+
+  (with-temp-buffer
+    (insert "<?php\necho 'command 1';\necho 'command 2';")
+    (goto-char (point-max))
+    (should
+     (string=
+      (phps-mode-indent--get-previous-reference-command-line)
+      "echo 'command 1';")))
+
+    (with-temp-buffer
+    (insert "<?php\n$var = 'command'\n    . '1';\necho 'command 2';")
+    (goto-char (point-max))
+    (should
+     (string=
+      (phps-mode-indent--get-previous-reference-command-line)
+      "$var = 'command'")))
+
   )
 
 (defun phps-mode-test-indent--get-lines-indent ()
