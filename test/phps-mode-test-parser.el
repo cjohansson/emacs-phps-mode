@@ -287,6 +287,12 @@
    (lambda()
      (phps-mode-parser-parse)))
 
+  (phps-mode-test-parser--buffer-contents
+   "<?php\n$case = 'First';\nswitch ($case)\n{\n    case 'First':\n    case 'Second':\n        echo 'was here';\n}"
+   "Switch case with multiple conditions for same case"
+   (lambda()
+     (phps-mode-parser-parse)))
+
   (message "\n-- Ran tests for parser parse. --"))
 
 (defun phps-mode-test-parser ()
