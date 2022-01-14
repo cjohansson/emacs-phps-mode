@@ -166,6 +166,10 @@
   "Get previous index line as reference, if any exist."
   (let ((reference-line)
         (old-point (point)))
+    (end-of-line)
+    (search-backward-regexp "\\(,\\|[^[({\t ]\\)" nil t)
+    (unless (string= (match-string-no-properties 0) ",")
+      (forward-char 1))
     (let ((not-found-bracket-start t)
           (found-colon)
           (reference-line-started-bracket)
@@ -174,15 +178,17 @@
           (and
            not-found-bracket-start
            (search-backward-regexp
-            "\\([][(),]\\|=>\\)"
+            "\\([][{}(),]\\|=>\\)"
             nil
             t))
         (let ((match (match-string-no-properties 0)))
+          (message "match: %S" match)
           (cond
 
            ((or
              (string= "(" match)
-             (string= "[" match))
+             (string= "[" match)
+             (string= "{" match))
             (setq
              parenthesis-level
              (1+ parenthesis-level))
@@ -202,7 +208,8 @@
 
            ((or
              (string= ")" match)
-             (string= "]" match))
+             (string= "]" match)
+             (string= "}" match))
             (setq
              parenthesis-level
              (1- parenthesis-level)))
@@ -260,7 +267,6 @@
           nil
           t))
       (let ((match (match-string-no-properties 0)))
-        (message "match: %S" match)
         (cond
 
          ;; Commented out line
@@ -827,47 +833,14 @@
                 (setq
                  match-type
                  'line-that-ends-bracket)
-                (let ((old-point (point))
-                      (still-looking t)
-                      (bracket-start-line)
-                      (bracket-level -1))
-
-                  ;; Should keep track of brackets
-                  ;; and stop when we reach the correct bracket
-                  (while (and
-                          still-looking
-                          (search-backward-regexp "[][{}()]" nil t))
-                    (let ((match (match-string-no-properties 0)))
-                      (cond
-                       ((or
-                         (string= "{" match)
-                         (string= "(" match)
-                         (string= "[" match))
-                        (setq
-                         bracket-level
-                         (1+ bracket-level)))
-                       (t
-                        (setq
-                         bracket-level
-                         (1- bracket-level))))
-
-                      (when (= bracket-level 0)
-                        (setq
-                         still-looking
-                         nil)
-                        (setq
-                         bracket-start-line
-                         (buffer-substring-no-properties
-                          (line-beginning-position)
-                          (line-end-position))))))
-
-                  (goto-char old-point)
-
-                  (unless still-looking
-                    (setq
-                     new-indentation
-                     (phps-mode-indent--string-indentation
-                      bracket-start-line)))))
+                (when-let
+                    ((reference-line
+                      (phps-mode-indent--get-previous-reference-index-line)))
+                  (message "reference-line: %S" reference-line)
+                  (setq
+                   new-indentation
+                   (phps-mode-indent--string-indentation
+                    reference-line))))
 
                ;; LINE THAT ENDS ALTERNATIVE SWITCH BLOCK
                ;; switch (blala):
