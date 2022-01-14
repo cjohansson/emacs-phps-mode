@@ -418,6 +418,14 @@
    "<?php\nif (true) {\n    $variable1 = (true\n        ? true\n        : false);\n\n    $variable2 = (true\n        ? true\n        : false);\n\n    $variable3 = myFunction(true);\n    echo 'here';\n\n}\n"
    "Line after multi-line parenthesized logical expression in assignment")
 
+  (phps-mode-test-indent--should-equal
+   "<?php\nif (true) {\n    return [\n        'data' => Object\n            ::myMethod($data)\n            ->myMethod2($data),\n    ];\n}\n"
+   "Chaining object operators and double-colon on multiple lines")
+
+  (phps-mode-test-indent--should-equal
+   "<?php\nif ($random) {\n    if ($random) {\n        if ($random) {\n        }\n    }\n    apply_filters(\n        'my_filter',\n        $random\n    );\n    return $random;\n}\n"
+   "Line after line that ends a multi-line function call")
+
   )
 
 (defun phps-mode-test-indent--get-lines-indent-psr-2 ()
