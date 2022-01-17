@@ -1403,7 +1403,7 @@
   (- (match-end 0) 1)))
 
 (phps-mode-lexer--match-macro
- '(
+ (
    ST_IN_SCRIPTING
    ST_DOUBLE_QUOTES
    ST_HEREDOC
@@ -1794,10 +1794,10 @@
    (let ((string-start (search-forward-regexp "\\([^\\\\]`\\|\\$\\|{\\)" nil t)))
      (if string-start
          (let ((start (- (match-end 0) 1)))
-           ;; (message "Skipping backquote forward over %s" (buffer-substring-no-properties old-start start))
+           ;; (message "Skipping backquote forward over %s" (buffer-substring-no-properties phps-mode-lexer--generated-new-tokens-index start))
            (phps-mode-lexer--return-token-with-val
             'T_ENCAPSED_AND_WHITESPACE
-            old-start
+            phps-mode-lexer--generated-new-tokens-index
             start))
        (progn
          (signal
@@ -1882,7 +1882,7 @@
            ;; (message "Found nowdoc end at %s-%s" start end)
            (phps-mode-lexer--return-token-with-val
             'T_ENCAPSED_AND_WHITESPACE
-            old-start
+            phps-mode-lexer--generated-new-tokens-index
             start)
            (phps-mode-lexer--begin
             'ST_END_HEREDOC))
