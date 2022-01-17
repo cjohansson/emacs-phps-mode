@@ -132,11 +132,12 @@
       (setq
        bookkeeping-index
        (list start end))
-      (setq
-       bookkeeping-value
-       (gethash
-        bookkeeping-index
-        phps-mode-lex-analyzer--bookkeeping)))
+      (when phps-mode-lex-analyzer--bookkeeping
+        (setq
+         bookkeeping-value
+         (gethash
+          bookkeeping-index
+          phps-mode-lex-analyzer--bookkeeping))))
 
     (cond
 
@@ -256,7 +257,6 @@
                      (phps-mode-lex-analyzer--set-region-syntax-color start end (list 'font-lock-face token-syntax-color))
                    (phps-mode-lex-analyzer--clear-region-syntax-color start end)))))
 
-
            ;; Signal parser error (if any)
            (when phps-mode-lex-analyzer--parse-error
 
@@ -278,7 +278,9 @@
               'phps-parser-error
               (list
                (nth 1 phps-mode-lex-analyzer--parse-error)
-               (nth 4 phps-mode-lex-analyzer--parse-error)))))))
+               (nth 4 phps-mode-lex-analyzer--parse-error))))
+
+           )))
 
      (lambda(result)
        (when (get-buffer buffer-name)
@@ -317,7 +319,9 @@
 
                 )
 
-               )))))
+               )
+
+))))
 
      nil
      async
