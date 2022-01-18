@@ -108,13 +108,55 @@
       (phps-mode-indent--get-previous-reference-command-line)
       "echo 'command 1';")))
 
-    (with-temp-buffer
+  (with-temp-buffer
     (insert "<?php\n$var = 'command'\n    . '1';\necho 'command 2';")
     (goto-char (point-max))
     (should
      (string=
       (phps-mode-indent--get-previous-reference-command-line)
       "$var = 'command'")))
+
+  (with-temp-buffer
+    (insert "<?php\nif (true) {\n    array(\n        8,\n    );")
+    (goto-char (point-max))
+    (should
+     (string=
+      (phps-mode-indent--get-previous-start-of-bracket-line)
+      "    array(")))
+
+  (with-temp-buffer
+    (insert "<?php\nif (true) {\n    array(\n        [array(\n            8,\n            16,\n        )]\n    );")
+    (goto-char (point-max))
+    (should
+     (string=
+      (phps-mode-indent--get-previous-start-of-bracket-line)
+      "    array(")))
+
+  (with-temp-buffer
+    (insert "<?php\nif (true) {\n    array(\n        [array(\n            8,\n            16,\n        )]\n    );")
+    (goto-char 87)
+    (should
+     (string=
+      (phps-mode-indent--get-previous-start-of-bracket-line)
+      "        [array(")))
+
+  (with-temp-buffer
+    (insert "<?php\nif (true) {\n    array(\n        [array(\n            8,\n            16,\n            32)]\n    );")
+    (goto-char 89)
+    (should
+     (equal
+      (phps-mode-indent--get-previous-start-of-bracket-line)
+      nil)))
+
+  (with-temp-buffer
+    (insert "<?php\nif (true) {\n    array(\n        [array(\n            8,\n            16,\n            32)]\n    );")
+    (goto-char 89)
+    (should
+     (equal
+      (phps-mode-indent--get-previous-start-of-bracket-line t)
+      "        [array(")))
+
+  (message "Passed tests for indentation helper functions")
 
   )
 
