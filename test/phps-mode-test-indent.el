@@ -117,6 +117,14 @@
       "$var = 'command'")))
 
   (with-temp-buffer
+    (insert "<?php\nif(true):\n    echo 'here';\nelse:\n    echo 'Something else';\n    echo 'Something else again';")
+    (goto-char (point-max))
+    (should
+     (string=
+      (phps-mode-indent--get-previous-reference-command-line)
+      "    echo 'Something else';")))
+
+  (with-temp-buffer
     (insert "<?php\nif (true) {\n    array(\n        8,\n    );")
     (goto-char (point-max))
     (should

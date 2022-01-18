@@ -1041,12 +1041,13 @@
                 (setq
                  match-type
                  'line-after-line-that-ends-with-semicolon)
+                (end-of-line)
 
                 (when-let
                     ((reference-line
                       (phps-mode-indent--get-previous-reference-command-line)))
 
-                  ;; (message "reference-line: %S" reference-line)
+                  (message "reference-line: %S" reference-line)
                   (let ((reference-indentation
                          (phps-mode-indent--string-indentation
                           reference-line)))
