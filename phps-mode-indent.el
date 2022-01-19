@@ -259,6 +259,11 @@
       (if from-end-of-line
           (end-of-line)
         (beginning-of-line)
+
+        ;; Step over optional PHP starting tag
+        (when (looking-at-p "^[\t ]*<\\?php[\t ]+")
+          (search-forward-regexp "^[\t ]*<\\?php[\t ]+" nil t))
+
         (if (search-forward-regexp "[^])}\t ]" nil t)
             (forward-char -1)
           (end-of-line)))
@@ -917,7 +922,7 @@
                 (when-let
                     ((reference-line
                       (phps-mode-indent--get-previous-start-of-bracket-line)))
-                  (message "reference-line: %S" reference-line)
+                  ;; (message "reference-line: %S" reference-line)
                   (setq
                    new-indentation
                    (phps-mode-indent--string-indentation
