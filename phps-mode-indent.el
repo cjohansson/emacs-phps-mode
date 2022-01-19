@@ -259,8 +259,9 @@
       (if from-end-of-line
           (end-of-line)
         (beginning-of-line)
-        (when (search-forward-regexp "[^])}\t ]")
-          (forward-char -1)))
+        (if (search-forward-regexp "[^])}\t ]" nil t)
+            (forward-char -1)
+          (end-of-line)))
       (let ((not-found-bracket-start t)
             (parenthesis-level 0))
         (while
@@ -307,7 +308,6 @@
         (old-point (point))
         (reference-line)
         (found-semi-colon))
-    (search-backward-regexp ";" nil t) ;; Skip previous semi-colon
 
     (while
         (and
@@ -336,23 +336,54 @@
            not-found
            nil))
 
+         ;; Alternative control structures are always
+         ;; indication of start of command
+         ((string-match-p
+           "\\:[\t ]*$"
+           match)
+          (setq
+           not-found
+           nil)
+          (setq
+           reference-line
+           (buffer-substring-no-properties
+            (line-beginning-position)
+            (line-end-position))))
+
          ;; A second semi-colon is always a indicator of
          ;; a end of a previous command
+         ;; Some keywords always indicate a start of command
          ((string-match-p
-           "\\(;\\|:\\)[\t ]*$"
+           "\\;[\t ]*$"
            match)
-          (if found-semi-colon
-              (setq
-               not-found
-               nil)
-            (setq
-             reference-line
-             (buffer-substring-no-properties
-              (line-beginning-position)
-              (line-end-position)))
-            (setq
-             found-semi-colon
-             t)))
+          (let ((is-statement
+                 (string-match-p
+                  "^[\t ]*\\(endswitch\\|endforeach\\|endwhile\\|exit\\|die\\|echo[\t ]+.*\\)[\t ]*;$"
+                  (buffer-substring-no-properties
+                   (line-beginning-position)
+                   (line-end-position)))))
+            (if is-statement
+                (progn
+                  (setq
+                   not-found
+                   nil)
+                  (setq
+                   reference-line
+                   (buffer-substring-no-properties
+                    (line-beginning-position)
+                    (line-end-position))))
+              (if found-semi-colon
+                  (setq
+                   not-found
+                   nil)
+                (setq
+                 reference-line
+                 (buffer-substring-no-properties
+                  (line-beginning-position)
+                  (line-end-position)))
+                (setq
+                 found-semi-colon
+                 t)))))
 
          (t
           (setq
