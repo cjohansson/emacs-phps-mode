@@ -99,10 +99,19 @@
      (string=
       (phps-mode-indent--get-previous-reference-index-line)
       "    'element 1',")))
+  (message "Passed reference index line 1")
+
+  (with-temp-buffer
+    (insert "<?php\nthrow new Exception(\n    sprintf(\n        self::systemTranslate(\n            'Invalid parameters for Application. Parameters: \"%s\".'\n        ),\n        print_r(self::$_parameters, true)\n    )\n);\n")
+    (goto-char 144)
+    (should
+     (string=
+      (phps-mode-indent--get-previous-reference-index-line)
+      "        self::systemTranslate(")))
 
   (with-temp-buffer
     (insert "<?php\necho 'command 1';\necho 'command 2';")
-    (goto-char (point-max))
+    (goto-char (1- (point-max)))
     (should
      (string=
       (phps-mode-indent--get-previous-reference-command-line)
@@ -110,7 +119,7 @@
 
   (with-temp-buffer
     (insert "<?php\n$var = 'command'\n    . '1';\necho 'command 2';")
-    (goto-char (point-max))
+    (goto-char (1- (point-max)))
     (should
      (string=
       (phps-mode-indent--get-previous-reference-command-line)
@@ -118,11 +127,27 @@
 
   (with-temp-buffer
     (insert "<?php\nif(true):\n    echo 'here';\nelse:\n    echo 'Something else';\n    echo 'Something else again';")
-    (goto-char (point-max))
+    (goto-char (1- (point-max)))
     (should
      (string=
       (phps-mode-indent--get-previous-reference-command-line)
       "    echo 'Something else';")))
+
+  (with-temp-buffer
+    (insert "<?php\nif(true):\n    echo 'here';\nelse:\n    echo 'Something else';\n    echo 'Something else again';")
+    (goto-char (1- (point-max)))
+    (should
+     (string=
+      (phps-mode-indent--get-previous-reference-command-line)
+      "    echo 'Something else';")))
+
+  (with-temp-buffer
+    (insert "<?php\n\nif (true) {\n    switch ($var):\n        case true:\n            echo 'here';\n    endswitch;\n    echo 'was here';\n}")
+    (goto-char 105)
+    (should
+     (string=
+      (phps-mode-indent--get-previous-reference-command-line)
+      "    endswitch;")))
 
   (with-temp-buffer
     (insert "<?php\nif (true) {\n    array(\n        8,\n    );")
