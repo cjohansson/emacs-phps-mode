@@ -469,6 +469,11 @@
 
 
 ;; Setup lexer rules
+
+(eval-when-compile
+  (setq
+   phps-mode-lexer--lambdas-by-state
+   (make-hash-table :test 'equal)))
 (phps-mode-lexer--match-macro
  ST_IN_SCRIPTING
  (looking-at "exit")

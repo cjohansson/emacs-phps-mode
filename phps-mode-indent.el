@@ -308,96 +308,95 @@
 (defun phps-mode-indent--get-previous-reference-command-line ()
   "Get previous line that is a command (if any)."
   (let ((not-found t)
-        (old-point (point))
         (reference-line)
         (found-semi-colon))
 
-    (while
-        (and
-         not-found
-         (search-backward-regexp
-          "^[\t ]*[^\t ]+.*$"
-          nil
-          t))
-      (let ((match (match-string-no-properties 0)))
-        (cond
-
-         ;; Commented out line
-         ((string-match-p
-           "^[\t ]*//"
-           match))
-
-         ;; A separate command
-         ((or
-           (string-match-p
-            "{[\t ]*$"
-            match)
-           (string-match-p
-            "^[\t ]*<\\?"
-            match))
-          (setq
+    (save-excursion
+      (while
+          (and
            not-found
-           nil))
+           (search-backward-regexp
+            "^[\t ]*[^\t ]+.*$"
+            nil
+            t))
+        (let ((match (match-string-no-properties 0)))
+          (cond
 
-         ;; Alternative control structures are always
-         ;; indication of start of command
-         ((string-match-p
-           "\\:[\t ]*$"
-           match)
-          (setq
-           not-found
-           nil)
-          (setq
-           reference-line
-           (buffer-substring-no-properties
-            (line-beginning-position)
-            (line-end-position))))
+           ;; Commented out line
+           ((string-match-p
+             "^[\t ]*//"
+             match))
 
-         ;; A second semi-colon is always a indicator of
-         ;; a end of a previous command
-         ;; Some keywords always indicate a start of command
-         ((string-match-p
-           "\\;[\t ]*$"
-           match)
-          (let ((is-statement
-                 (string-match-p
-                  "^[\t ]*\\(endswitch\\|endforeach\\|endwhile\\|exit\\|die\\|echo[\t ]+.*\\)[\t ]*;$"
-                  (buffer-substring-no-properties
-                   (line-beginning-position)
-                   (line-end-position)))))
-            (if is-statement
-                (progn
-                  (setq
-                   not-found
-                   nil)
+           ;; A separate command
+           ((or
+             (string-match-p
+              "{[\t ]*$"
+              match)
+             (string-match-p
+              "^[\t ]*<\\?"
+              match))
+            (setq
+             not-found
+             nil))
+
+           ;; Alternative control structures are always
+           ;; indication of start of command
+           ((string-match-p
+             "\\:[\t ]*$"
+             match)
+            (setq
+             not-found
+             nil)
+            (setq
+             reference-line
+             (buffer-substring-no-properties
+              (line-beginning-position)
+              (line-end-position))))
+
+           ;; A second semi-colon is always a indicator of
+           ;; a end of a previous command
+           ;; Some keywords always indicate a start of command
+           ((string-match-p
+             "\\;[\t ]*$"
+             match)
+            (let ((is-statement
+                   (string-match-p
+                    "^[\t ]*\\(endswitch\\|endforeach\\|endwhile\\|exit\\|die\\|echo[\t ]+.*\\)[\t ]*;$"
+                    (buffer-substring-no-properties
+                     (line-beginning-position)
+                     (line-end-position)))))
+              (if is-statement
+                  (progn
+                    (setq
+                     not-found
+                     nil)
+                    (setq
+                     reference-line
+                     (buffer-substring-no-properties
+                      (line-beginning-position)
+                      (line-end-position))))
+                (if found-semi-colon
+                    (setq
+                     not-found
+                     nil)
                   (setq
                    reference-line
                    (buffer-substring-no-properties
                     (line-beginning-position)
-                    (line-end-position))))
-              (if found-semi-colon
+                    (line-end-position)))
                   (setq
-                   not-found
-                   nil)
-                (setq
-                 reference-line
-                 (buffer-substring-no-properties
-                  (line-beginning-position)
-                  (line-end-position)))
-                (setq
-                 found-semi-colon
-                 t)))))
+                   found-semi-colon
+                   t)))))
 
-         (t
-          (setq
-           reference-line
-           (buffer-substring-no-properties
-            (line-beginning-position)
-            (line-end-position))))
+           (t
+            (setq
+             reference-line
+             (buffer-substring-no-properties
+              (line-beginning-position)
+              (line-end-position))))
 
-         )))
+           ))))
 
-    (goto-char old-point)
     reference-line))
 
 
@@ -1339,8 +1338,7 @@
                 (setq
                  match-type
                  'line-that-ends-bracket-and-command)
-                (let ((old-point (point))
-                      (still-looking t)
+                (let ((still-looking t)
                       (bracket-count -1))
 
                   ;; TODO Re-use existing helper functions for backtracking
@@ -1404,8 +1402,7 @@
                 ;; If previous line matched ending .
                 ;; we must backtrack at least two lines
                 ;; to find a good reference indentation
-                (let ((old-point (point))
-                      (match-string)
+                (let ((match-string)
                       (previous-concatenation)
                       (keep-searching 1)
                       (concat-was-trailing-p
