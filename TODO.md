@@ -3,6 +3,7 @@
 * Move bookkeeping and imenu generation to main thread to be able to populate Sematic Subsystem
 * Catch signaling from AST-generation, bookkeeping and imenu generation
 * Fix HTML/XML indentation support
+* Remove support for incremental parsing
 
 # Bugs
 
