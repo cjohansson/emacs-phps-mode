@@ -1014,7 +1014,7 @@
                        (phps-mode-indent--get-previous-reference-index-line)))
                   (if reference-line
                       (progn
-                        (message "reference-line-2: %S" reference-line)
+                        ;; (message "reference-line-2: %S" reference-line)
                         (setq
                          new-indentation
                          (phps-mode-indent--string-indentation
@@ -1087,7 +1087,7 @@
                     ((reference-line
                       (phps-mode-indent--get-previous-reference-command-line)))
 
-                  (message "reference-line: %S" reference-line)
+                  ;; (message "reference-line: %S" reference-line)
                   (let ((reference-indentation
                          (phps-mode-indent--string-indentation
                           reference-line)))
@@ -1272,7 +1272,16 @@
                   (setq
                    new-indentation
                    (phps-mode-indent--string-indentation
-                    reference-line))))
+                    reference-line))
+
+                  ;;$copies = method_exists($object, 'get_copies')
+                  ;;     ? $object->get_copies()
+                  (when (string-match-p
+                         "^[\t ]*$[a-zA-Z0-9_]+[\t ]*[^=!]*=\\($\\|[\t ]+.*[^,;]$\\)"
+                         reference-line)
+                    (setq
+                     new-indentation
+                     (+ new-indentation tab-width)))))
 
                ;; LINE AFTER OPENING MULTI-LINE ASSIGNMENT
                ;; $var = 'A line' .
@@ -1283,6 +1292,7 @@
                ;; or
                ;; $var += 35 +
                ;;     77
+               ;; or 'data' => Object
                ;; but ignore
                ;; $var === true
                ;; or
@@ -1297,11 +1307,15 @@
                ;; or
                ;; $abc != 3
                ((and
-                 (string-match-p
-                  "^[\t ]*$[a-zA-Z0-9_]+[\t ]*[^=!]*=\\($\\|[\t ]+.*[^,;]$\\)"
-                  previous-line-string)
                  (not
-                  current-line-starts-with-closing-bracket))
+                  current-line-starts-with-closing-bracket)
+                 (or
+                  (string-match-p
+                   "^[\t ]*$[a-zA-Z0-9_]+[\t ]*[^=!]*=\\($\\|[\t ]+.*[^,;]$\\)"
+                   previous-line-string)
+                  (string-match-p
+                   "=>[^,;]*$"
+                   previous-line-string)))
                 (setq
                  match-type
                  'line-after-opening-multiline-assignment)
