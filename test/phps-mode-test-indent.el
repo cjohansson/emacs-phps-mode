@@ -557,6 +557,11 @@
    "<?php\n\nif (!defined('VARIABLE')) {\n    exit;\n}\n\nrequire_once(CONSTANT . 'path');\n$variable = myFunction1(\n    'argument1',\n    'argument2'\n);\n\nif (is_logged_in()) {\n    $variable = myFunction2(\n        'argument1',\n        'argument2'\n    );\n    require_once(CONSTANT . 'string');\n}\n"
    "Mixed expressions and statements")
 
+  ;; TODO Make this pass outside of automatic test
+  (phps-mode-test-indent--should-equal
+   "<?php\n\n$array = [\n    'enabled' => (true\n        && false)\n        || true\n        || false,\n];\n"
+   "Multi-line logical expression in associate array")
+
   )
 
 (defun phps-mode-test-indent--get-lines-indent-psr-2 ()
