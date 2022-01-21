@@ -1,12 +1,23 @@
-# Improvements
+# TODO
 
-* Move bookkeeping and imenu generation to main thread to be able to populate Sematic Subsystem
-* Catch signaling from AST-generation, bookkeeping and imenu generation
+## Indentation
+
 * Fix HTML/XML indentation support
-* Remove support for incremental parsing
+* Strange case
 
-# Bugs
+    $A =
+        B::
+        C($D, true);
+    // Comment
 
+
+## Code intelligence
+
+* Bookkeeping of chained object operators like WC()->cart->subtotal
+* Bookkeeping of variables inside classes with multiple methods seems to not work
+* Move bookkeeping and imenu generation to main thread to be able to populate Sematic Subsystem in the future
+* Catch signaling from AST-generation, bookkeeping and imenu generation
+* Remove support for incremental parsing if it speeds up
 * Lexer/parser fix for multiple cases like
 
     switch($here) {
@@ -17,4 +28,5 @@
     }
 
 * Imenu-generation of conditionally defined functions and classes
-* Bookkeeping of chained object operators like WC()->cart->subtotal
+
+
