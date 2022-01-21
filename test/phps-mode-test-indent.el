@@ -150,6 +150,14 @@
       "    endswitch;")))
 
   (with-temp-buffer
+    (insert "<?php\nif (!defined('VARIABLE')) {\n    exit;\n}\n\nrequire_once(CONSTANT . 'path');\n$variable = myFunction1(\n    'argument1',\n    'argument2'\n);\n")
+    (goto-char 92)
+    (should
+     (string=
+      (phps-mode-indent--get-previous-reference-command-line)
+      "require_once(CONSTANT . 'path');")))
+
+  (with-temp-buffer
     (insert "<?php\nif (true) {\n    array(\n        8,\n    );")
     (goto-char (point-max))
     (should
@@ -544,6 +552,10 @@
   (phps-mode-test-indent--should-equal
    "<?php\nif ($random) {\n    if ($random) {\n        if ($random) {\n        }\n    }\n    apply_filters(\n        'my_filter',\n        $random\n    );\n    return $random;\n}\n"
    "Line after line that ends a multi-line function call")
+
+  (phps-mode-test-indent--should-equal
+   "<?php\n\nif (!defined('VARIABLE')) {\n    exit;\n}\n\nrequire_once(CONSTANT . 'path');\n$variable = myFunction1(\n    'argument1',\n    'argument2'\n);\n\nif (is_logged_in()) {\n    $variable = myFunction2(\n        'argument1',\n        'argument2'\n    );\n    require_once(CONSTANT . 'string');\n}\n"
+   "Mixed expressions and statements")
 
   )
 

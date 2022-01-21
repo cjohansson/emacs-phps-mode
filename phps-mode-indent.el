@@ -320,6 +320,7 @@
             nil
             t))
         (let ((match (match-string-no-properties 0)))
+          ;; (message "match: %S" match)
           (cond
 
            ;; Commented out line
@@ -353,32 +354,41 @@
               (line-beginning-position)
               (line-end-position))))
 
+           ;; A closing curly bracket is indicate of a distinct command
+           ((string-match-p
+             "}[\t ]*$"
+             match)
+            (when found-semi-colon
+              (setq
+               not-found
+               nil)))
+
            ;; A second semi-colon is always a indicator of
            ;; a end of a previous command
            ;; Some keywords always indicate a start of command
            ((string-match-p
-             "\\;[\t ]*$"
+             ";[\t ]*$"
              match)
-            (let ((is-statement
-                   (string-match-p
-                    "^[\t ]*\\(endswitch\\|endforeach\\|endwhile\\|exit\\|die\\|echo[\t ]+.*\\)[\t ]*;$"
-                    (buffer-substring-no-properties
-                     (line-beginning-position)
-                     (line-end-position)))))
-              (if is-statement
-                  (progn
-                    (setq
-                     not-found
-                     nil)
-                    (setq
-                     reference-line
-                     (buffer-substring-no-properties
-                      (line-beginning-position)
-                      (line-end-position))))
-                (if found-semi-colon
-                    (setq
-                     not-found
-                     nil)
+            (if found-semi-colon
+                (setq
+                 not-found
+                 nil)
+              (let ((is-statement
+                     (string-match-p
+                      "^[\t ]*\\(endswitch\\|endforeach\\|endwhile\\|exit\\|die\\|echo[\t ]+.*\\)[\t ]*;$"
+                      (buffer-substring-no-properties
+                       (line-beginning-position)
+                       (line-end-position)))))
+                (if is-statement
+                    (progn
+                      (setq
+                       not-found
+                       nil)
+                      (setq
+                       reference-line
+                       (buffer-substring-no-properties
+                        (line-beginning-position)
+                        (line-end-position))))
                   (setq
                    reference-line
                    (buffer-substring-no-properties
@@ -1080,7 +1090,7 @@
                 (setq
                  match-type
                  'line-after-line-that-ends-with-semicolon)
-                (end-of-line)
+                (beginning-of-line)
 
                 (when-let
                     ((reference-line
