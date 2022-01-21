@@ -1290,7 +1290,28 @@
                         (setq
                          new-indentation
                          (phps-mode-indent--string-indentation
-                          reference-line)))
+                          reference-line))
+
+                        ;; $variable = (!empty($data['point1'])
+                        ;;         && $data['point2'] === 22)
+                        ;;     || (!empty($data['point3'])
+                        ;; or
+                        ;; $array = [
+                        ;;     'pointers' => (!empty($data['point1'])
+                        ;;         && $data['point2'] === 22)
+                        ;;     || (!empty($data['point3'])
+                        (when (or
+                               (string-match-p
+                                "^[\t ]*$[a-zA-Z0-9_]+[\t ]*[^=!]*=\\($\\|[\t ]+.*[^,;]$\\)"
+                                reference-line)
+                               (string-match-p
+                                "=>[^,;]*$"
+                                reference-line))
+                          (setq
+                           new-indentation
+                           (+
+                            new-indentation
+                            tab-width))))
 
                     ;; (message "previous-line-string: %S" previous-line-string)
 
@@ -1304,7 +1325,7 @@
                             "^[\t ]*$[a-zA-Z0-9_]+[\t ]*[^=!]*=\\($\\|[\t ]+.*[^,;]$\\)"
                             previous-line-string)
                            (string-match-p
-                            "=>[^,;]$"
+                            "=>[^,;]*$"
                             previous-line-string))
                       (setq
                        new-indentation

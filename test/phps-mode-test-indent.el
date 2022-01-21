@@ -565,10 +565,14 @@
    "<?php\n\nif (!defined('VARIABLE')) {\n    exit;\n}\n\nrequire_once(CONSTANT . 'path');\n$variable = myFunction1(\n    'argument1',\n    'argument2'\n);\n\nif (is_logged_in()) {\n    $variable = myFunction2(\n        'argument1',\n        'argument2'\n    );\n    require_once(CONSTANT . 'string');\n}\n"
    "Mixed expressions and statements")
 
-  ;; TODO Make this pass outside of automatic test
   (phps-mode-test-indent--should-equal
    "<?php\n\n$array = [\n    'enabled' => (true\n        && false)\n        || true\n        || false,\n];\n"
-   "Multi-line logical expression in associate array")
+   "Multi-line logical expression in associative array")
+
+  ;; TODO Make this work outside of automatic test
+  (phps-mode-test-indent--should-equal
+   "<?php\n\n$array = [\n    'pointers' => (!empty($data['point1'])\n        && $data['point2'] === 22)\n        || (!empty($data['point3'])\n            && $data['point4'] === 33)\n        || (!empty($data['point4'])\n            && $data['point4'] === 44),\n    'arrows' =>\n        $data['arrows'],\n];\n"
+   "Another multi-line logical expression inside associative array")
 
   )
 
