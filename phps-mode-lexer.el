@@ -18,12 +18,11 @@
 
 (require 'phps-mode-macros)
 
-(require 'semantic)
-(require 'semantic/lex)
 (require 'subr-x)
 
-
-(define-error 'phps-lexer-error "PHPs Lexer Error")
+(define-error
+  'phps-lexer-error
+  "PHPs Lexer Error")
 
 
 ;; INITIALIZE SETTINGS
@@ -205,11 +204,15 @@
 
 (defun phps-mode-lexer--move-forward (position)
   "Move forward to POSITION."
-  (setq semantic-lex-end-point position))
+  (setq-local
+   phps-mode-lex-analyzer--lexer-index
+   position))
 
 (defun phps-mode-lexer--yyless (points)
   "Move lexer back POINTS."
-  (setq semantic-lex-end-point (- semantic-lex-end-point points))
+  (setq-local
+   phps-mode-lex-analyzer--lexer-index
+   (- phps-mode-lex-analyzer--lexer-index points))
   (forward-char (- points)))
 
 (defun phps-mode-lexer--inline-char-handler ()
@@ -289,7 +292,6 @@
       end
       token)))
 
-  (semantic-lex-push-token (semantic-lex-token token start end))
   (push `(,token ,start . ,end) phps-mode-lexer--generated-tokens)
   (push `(,token ,start . ,end) phps-mode-lexer--generated-new-tokens)
 
@@ -337,7 +339,9 @@
     (setq start (match-beginning 0)))
   (unless end
     (setq end (match-end 0)))
-  (setq semantic-lex-end-point end))
+  (setq-local
+   phps-mode-lex-analyzer--lexer-index
+   end))
 
 (defmacro phps-mode-lexer--match-macro (states conditions &rest body)
   "Place in STATES a check for CONDITIONS to execute BODY."

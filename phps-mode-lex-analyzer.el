@@ -26,10 +26,6 @@
 (require 'phps-mode-ast-bookkeeping)
 (require 'phps-mode-ast-imenu)
 
-(require 'semantic)
-(require 'semantic/lex)
-(require 'semantic/wisent)
-
 (require 'subr-x)
 
 
@@ -87,6 +83,12 @@
 
 (defvar-local phps-mode-lex-analyzer--parse-error nil
   "Non-nil means an error.")
+
+(defvar-local phps-mode-lex-analyzer--lexer-index nil
+  "Index of lex-analyzer.")
+
+(defvar-local phps-mode-lex-analyzer--lexer-max-index nil
+  "Max-index of lex-analyzer.")
 
 
 ;; FUNCTIONS
@@ -158,52 +160,33 @@
 ;; LEXERS
 
 
-(define-lex-analyzer phps-mode-lex-analyzer--cached-lex-analyzer
-  "Return latest processed tokens or else just return one giant error token."
-  t
-
-  (let ((old-start (point)))
-    (if phps-mode-lex-analyzer--tokens
-        (progn
-          ;; Add all updated tokens to semantic
-          (phps-mode-debug-message
-           (message
-            "Updating semantic lexer tokens from point %s, tokens: %s, point-max: %s"
-            old-start
-            phps-mode-lex-analyzer--tokens
-            (point-max)))
-          (dolist (token phps-mode-lex-analyzer--tokens)
-            (let ((start (car (cdr token)))
-                  (end (cdr (cdr token)))
-                  (token-name (car token)))
-
-              ;; Apply syntax color on token
-              (let ((token-syntax-color
-                     (phps-mode-lex-analyzer--get-token-syntax-color token)))
-                (if token-syntax-color
-                    (phps-mode-lex-analyzer--set-region-syntax-color start end (list 'font-lock-face token-syntax-color))
-                  (phps-mode-lex-analyzer--clear-region-syntax-color start end)))
-
-              (semantic-lex-push-token
-               (semantic-lex-token token-name start end))))
-
-          (setq semantic-lex-end-point (point-max)))
-
-      (phps-mode-lex-analyzer--set-region-syntax-color
-       (point-min)
-       (point-max)
-       (list 'font-lock-face 'font-lock-warning-face))
-
-      (semantic-lex-push-token
-       (semantic-lex-token 'T_ERROR (point-min) (point-max))))))
-
 ;; If multiple rules match, re2c prefers the longest match.
 ;; If rules match the same string, the earlier rule has priority.
 ;; @see http://re2c.org/manual/syntax/syntax.html
-(define-lex-analyzer phps-mode-lex-analyzer--re2c-lex-analyzer
-  "Elisp port of original Zend re2c lexer."
-  t
-  (phps-mode-lexer--re2c))
+(defun phps-mode-lex-analyzer--re2c-lex-analyzer ()
+  "Run the Elisp port of original Zend re2c lexer."
+  (save-excursion
+    (while
+        (<
+         phps-mode-lex-analyzer--lexer-index
+         phps-mode-lex-analyzer--lexer-max-index)
+      (goto-char phps-mode-lex-analyzer--lexer-index)
+      (let ((old-index phps-mode-lex-analyzer--lexer-index))
+        (phps-mode-lexer--re2c)
+
+        (unless (or
+                 phps-mode-lexer--generated-new-tokens
+                 (> phps-mode-lex-analyzer--lexer-index old-index))
+          (signal
+           'phps-lexer-error
+           '(format
+             "Failed to lex buffer at position %S"
+             phps-mode-lex-analyzer--lexer-index)))
+
+        (when phps-mode-lexer--generated-new-tokens
+          (setq-local
+           phps-mode-lex-analyzer--lexer-index
+           (cdr (cdr (car phps-mode-lexer--generated-new-tokens)))))))))
 
 (defun phps-mode-lex-analyzer--re2c-run (&optional force-synchronous)
   "Run lexer, optionally FORCE-SYNCHRONOUS."
@@ -254,8 +237,10 @@
                    (end (cdr (cdr token))))
                (let ((token-syntax-color (phps-mode-lex-analyzer--get-token-syntax-color token)))
                  (if token-syntax-color
-                     (phps-mode-lex-analyzer--set-region-syntax-color start end (list 'font-lock-face token-syntax-color))
-                   (phps-mode-lex-analyzer--clear-region-syntax-color start end)))))
+                     (phps-mode-lex-analyzer--set-region-syntax-color
+                      start end (list 'font-lock-face token-syntax-color))
+                   (phps-mode-lex-analyzer--clear-region-syntax-color
+                    start end)))))
 
            ;; Signal parser error (if any)
            (when phps-mode-lex-analyzer--parse-error
@@ -456,16 +441,6 @@
      nil
      async
      async-by-process)))
-
-(define-lex phps-mode-lex-analyzer--cached-lex
-  "Call lexer analyzer action."
-  phps-mode-lex-analyzer--cached-lex-analyzer
-  semantic-lex-default-action)
-
-(define-lex phps-mode-lex-analyzer--re2c-lex
-  "Call lexer analyzer action."
-  phps-mode-lex-analyzer--re2c-lex-analyzer
-  semantic-lex-default-action)
 
 (defun phps-mode-lex-analyzer--move-states (start diff)
   "Move lexer states after (or equal to) START with modification DIFF."
@@ -1120,24 +1095,23 @@
         (setq
          phps-mode-lexer--nest-location-stack
          nest-location-stack)
-
-        ;; Setup lexer settings
-        (when (boundp 'phps-mode-syntax-table)
-          (setq
-           semantic-lex-syntax-table
-           phps-mode-syntax-table))
-        (setq
-         semantic-lex-analyzer
-         #'phps-mode-lex-analyzer--re2c-lex)
+        (unless end
+          (setq end (point-max)))
+        (unless start
+          (setq start (point-min)))
+        (setq-local
+         phps-mode-lex-analyzer--lexer-index
+         start)
+        (setq-local
+         phps-mode-lex-analyzer--lexer-max-index
+         end)
 
         ;; Catch errors to kill generated buffer
         (let ((got-error t))
           (unwind-protect
               ;; Run lexer or incremental lexer
               (progn
-                (if (and start end)
-                    (semantic-lex start end)
-                  (semantic-lex-buffer))
+                (phps-mode-lex-analyzer--re2c-lex-analyzer)
                 (setq got-error nil))
             (when got-error
               (kill-buffer))))

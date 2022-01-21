@@ -12,6 +12,7 @@
 
 (require 'ert)
 (require 'phps-mode)
+(require 'phps-mode-lex-analyzer)
 
 (defun phps-mode-test-parser--buffer-contents (buffer-contents name logic)
   (with-temp-buffer
@@ -23,37 +24,37 @@
      (buffer-substring-no-properties (point-min) (point-max)))
     
     ;; Setup lexer
-    (setq
+    (setq-local
      phps-mode-lexer--generated-tokens
      nil)
-    (setq
+    (setq-local
      phps-mode-lexer--state
      'ST_INITIAL)
-    (setq
+    (setq-local
      phps-mode-lexer--states
      nil)
-    (setq
+    (setq-local
      phps-mode-lexer--state-stack
      nil)
-    (setq
+    (setq-local
      phps-mode-lexer--heredoc-label
      nil)
-    (setq
+    (setq-local
      phps-mode-lexer--heredoc-label-stack
      nil)
-    (setq
+    (setq-local
      phps-mode-lexer--nest-location-stack
      nil)
 
     ;; Run lexer
-    (setq
-     semantic-lex-analyzer
-     #'phps-mode-lex-analyzer--re2c-lex)
-    (setq
-     semantic-lex-syntax-table
-     phps-mode-syntax-table)
-    (semantic-lex-buffer)
-    (setq
+    (setq-local
+     phps-mode-lex-analyzer--lexer-index
+     (point-min))
+    (setq-local
+     phps-mode-lex-analyzer--lexer-max-index
+     (point-max))
+    (phps-mode-lex-analyzer--re2c-lex-analyzer)
+    (setq-local
      phps-mode-parser-tokens
      (phps-mode-lex-analyzer--generate-parser-tokens
       phps-mode-lexer--generated-tokens))
