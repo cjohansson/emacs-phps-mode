@@ -266,16 +266,22 @@
             (forward-char -1)
           (end-of-line)))
       (let ((not-found-bracket-start t)
-            (parenthesis-level 0))
+            (parenthesis-level 0)
+            (same-line-p t))
         (while
             (and
              not-found-bracket-start
              (search-backward-regexp
-              "[][{}()]"
+              "[][{}()\n]"
               nil
               t))
           (let ((match (match-string-no-properties 0)))
             (cond
+
+             ((string= "\n" match)
+              (setq
+               same-line-p
+               nil))
 
              ((or
                (string= "(" match)
@@ -302,8 +308,10 @@
                parenthesis-level
                (1- parenthesis-level)))
 
-             )))))
-    reference-line))
+             )))
+        (if same-line-p
+            nil
+          reference-line)))))
 
 (defun phps-mode-indent--get-previous-reference-command-line ()
   "Get previous line that is a command (if any)."
@@ -1274,23 +1282,35 @@
                  match-type
                  'line-after-line-that-ends-with-closing-bracket)
                 (forward-line (* -1 move-length1))
-                (when-let
-                    ((reference-line
-                      (phps-mode-indent--get-previous-start-of-bracket-line t)))
-                  ;; (message "reference-line: %S" reference-line)
-                  (setq
-                   new-indentation
-                   (phps-mode-indent--string-indentation
-                    reference-line))
+                (let ((reference-line
+                       (phps-mode-indent--get-previous-start-of-bracket-line t)))
+                  (if reference-line
+                      (progn
+                        ;; (message "reference-line: %S" reference-line)
+                        (setq
+                         new-indentation
+                         (phps-mode-indent--string-indentation
+                          reference-line)))
 
-                  ;;$copies = method_exists($object, 'get_copies')
-                  ;;     ? $object->get_copies()
-                  (when (string-match-p
-                         "^[\t ]*$[a-zA-Z0-9_]+[\t ]*[^=!]*=\\($\\|[\t ]+.*[^,;]$\\)"
-                         reference-line)
-                    (setq
-                     new-indentation
-                     (+ new-indentation tab-width)))))
+                    ;; (message "previous-line-string: %S" previous-line-string)
+
+                    ;;$copies = method_exists($object, 'get_copies')
+                    ;;     ? $object->get_copies()
+                    ;; or
+                    ;; 'random' => callback($abc)
+                    ;;     || true
+                    (when (or
+                           (string-match-p
+                            "^[\t ]*$[a-zA-Z0-9_]+[\t ]*[^=!]*=\\($\\|[\t ]+.*[^,;]$\\)"
+                            previous-line-string)
+                           (string-match-p
+                            "=>[^,;]$"
+                            previous-line-string))
+                      (setq
+                       new-indentation
+                       (+
+                        new-indentation
+                        tab-width))))))
 
                ;; LINE AFTER OPENING MULTI-LINE ASSIGNMENT
                ;; $var = 'A line' .

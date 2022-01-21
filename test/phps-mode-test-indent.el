@@ -197,6 +197,14 @@
       (phps-mode-indent--get-previous-start-of-bracket-line t)
       "        [array(")))
 
+  (with-temp-buffer
+    (insert "<?php\narray(2, 3)")
+    (goto-char (point-max))
+    (should
+     (equal
+      (phps-mode-indent--get-previous-start-of-bracket-line t)
+      nil)))
+
   (message "Passed tests for indentation helper functions")
 
   )
