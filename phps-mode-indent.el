@@ -1360,7 +1360,8 @@
                        (phps-mode-indent--get-previous-start-of-bracket-line t)))
                   (if reference-line
                       (progn
-                        ;; (message "reference-line: %S" reference-line)
+                        (phps-mode-debug-message
+                         (message "reference-line: %S" reference-line))
                         (setq
                          new-indentation
                          (phps-mode-indent--string-indentation
@@ -1374,27 +1375,42 @@
                         ;;     'pointers' => (!empty($data['point1'])
                         ;;         && $data['point2'] === 22)
                         ;;     || (!empty($data['point3'])
-                        (when (or
-                               (string-match-p
-                                "^[\t ]*$[a-zA-Z0-9_]+[\t ]*[^=!]*=\\($\\|[\t ]+.*[^,;]$\\)"
-                                reference-line)
-                               (string-match-p
-                                "=>[^,;]*$"
-                                reference-line))
+                        ;; but ignore
+                        ;; foreach ($array as $key => $value) {
+                        ;;     echo 'here';
+                        ;; }
+                        ;; echo 'there';
+                        (when (and
+                               (not
+                                (string=
+                                 previous-line-ends-with-closing-bracket
+                                 "}"))
+                               (or
+                                (string-match-p
+                                 "^[\t ]*$[a-zA-Z0-9_]+[\t ]*[^=!]*=\\($\\|[\t ]+.*[^,;]$\\)"
+                                 reference-line)
+                                (string-match-p
+                                 "=>[^,;]*$"
+                                 reference-line)))
                           (setq
                            new-indentation
                            (+
                             new-indentation
                             tab-width))))
 
-                    ;; (message "previous-line-string: %S" previous-line-string)
+                    (phps-mode-debug-message
+                     (message "previous-line-string: %S" previous-line-string))
 
                     ;;$copies = method_exists($object, 'get_copies')
                     ;;     ? $object->get_copies()
                     ;; or
                     ;; 'random' => callback($abc)
                     ;;     || true
+                    ;; or
+                    ;; (isset($something)
+                    ;;     || false)
                     (when (or
+                           (>= previous-bracket-level tab-width)
                            (string-match-p
                             "^[\t ]*$[a-zA-Z0-9_]+[\t ]*[^=!]*=\\($\\|[\t ]+.*[^,;]$\\)"
                             previous-line-string)
