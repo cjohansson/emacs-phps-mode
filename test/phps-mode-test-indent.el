@@ -205,9 +205,7 @@
       (phps-mode-indent--get-previous-start-of-bracket-line t)
       nil)))
 
-  (message "Passed tests for indentation helper functions")
-
-  )
+  (message "Passed tests for indentation helper functions"))
 
 (defun phps-mode-test-indent--get-lines-indent ()
   "Test indent function."
@@ -569,10 +567,33 @@
    "<?php\n\n$array = [\n    'enabled' => (true\n        && false)\n        || true\n        || false,\n];\n"
    "Multi-line logical expression in associative array")
 
-  ;; TODO Make this work outside of automatic test
   (phps-mode-test-indent--should-equal
    "<?php\n\n$array = [\n    'pointers' => (!empty($data['point1'])\n        && $data['point2'] === 22)\n        || (!empty($data['point3'])\n            && $data['point4'] === 33)\n        || (!empty($data['point4'])\n            && $data['point4'] === 44),\n    'arrows' =>\n        $data['arrows'],\n];\n"
    "Another multi-line logical expression inside associative array")
+
+  ;; TODO Make this pass
+  (phps-mode-test-indent--should-equal
+   "<!DOCTYPE html>\n<html>\n<head>\n    <meta charset=\"UTF-8\">\n    <title>Was here</title>\n    <meta charset=\"ISO-8559-1\" />\n</head>\n<body>\n    <div>\n        <p>\n            My mixed content\n            <br>\n            Was here\n        </p>\n    </div>\n</body>\n</html>"
+   "Plain HTML markup")
+
+  ;; TODO Make this pass
+  (phps-mode-test-indent--should-equal
+   "<?php\nif (true) {\n     $variable =\n         Object::\n         method($variable2, true);\n     // Line comment\n     $variable['index'] = $variabl2->method2();\n}"
+   "Mix of various types of statements and expressions")
+
+  ;; TODO Make this pass
+  (phps-mode-test-indent--should-equal
+   "<?php\nif (true) {\n    $html .= '<dt>'\n        . __(\n            'Text',\n            'namespace'\n        )\n        . ':</dt><dd>'\n        . '<input type=\"hidden\" name=\"my_name['\n        . $variable . ']\" value=\"' . esc($myName) . '\" />'\n        . '<select class=\"my-class\" name=\"my_name['\n        . $variable2 . ']\">';\n    echo 'here';\n}\n"
+   "Multi-line echo statement with HTML 1")
+
+  ;; TODO Make this pass
+  (phps-mode-test-indent--should-equal
+   "<?php\nif (true) {\n    echo '<script type=\"text/javascript\">'\n    . 'jQuery(document).ready(function() {'\n    . 'jQuery(\"<option>\").val(\"my_value\").text(\"'\n    . __(\"Was here\", 'namespace')\n    . '\").appendTo(\"select[name=\'key\']\");'\n    . 'jQuery(\"<option>\").val(\"action\").text(\"'\n    . __(\"My action\", 'namespace')\n    . '\").appendTo(\"select[name=\'anotherAction\']\");'\n    . 'jQuery(\"<option>\").val(\"my_value2\").text(\"'\n    . __(\"My other action\", 'namespace')\n    . '\").appendTo(\"select[name=\'anotherAction2\']\");'\n    . 'jQuery(\"<option>\").val(\"my_value3\").text(\"'\n    . __(\"My third action\", 'namespace')\n    . '\").appendTo(\"select[name=\'anotherAction3\']\");'\n    . '\"\"});</script>';\n    echo 'here';\n}\n"
+   "Multi-line echo statement with HTML markup 2")
+
+  (phps-mode-test-indent--should-equal
+   "<?php\nif (true) {\n    echo '<script type=\"text/javascript\">'\n    . 'jQuery(document).ready(function() { '\n    . 'window.open(\"'\n    . $url . '\", \"_blank\");'\n    . ' });</script>';\n}\n"
+   "Multi-line echo statement with HTML markup 3")
 
   )
 
