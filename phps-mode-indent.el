@@ -351,7 +351,7 @@
            ;; Alternative control structures are always
            ;; indication of start of command
            ((string-match-p
-             "\\:[\t ]*$"
+             ")[\ t]*:[\t ]*$"
              match)
             (setq
              not-found
@@ -1104,7 +1104,8 @@
                     ((reference-line
                       (phps-mode-indent--get-previous-reference-command-line)))
 
-                  ;; (message "reference-line: %S" reference-line)
+                  (phps-mode-debug-message
+                   (message "reference-line: %S" reference-line))
                   (let ((reference-indentation
                          (phps-mode-indent--string-indentation
                           reference-line)))

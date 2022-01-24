@@ -157,6 +157,14 @@
       (phps-mode-indent--get-previous-reference-command-line)
       "require_once(CONSTANT . 'path');")))
 
+    (with-temp-buffer
+      (insert "<?php\n    $variable =\n        Object::\n        method($variable2, true);\n        // Line comment")
+      (goto-char (point-max))
+      (should
+       (string=
+        (phps-mode-indent--get-previous-reference-command-line)
+        "    $variable =")))
+
   (with-temp-buffer
     (insert "<?php\nif (true) {\n    array(\n        8,\n    );")
     (goto-char (point-max))
@@ -571,14 +579,8 @@
    "<?php\n\n$array = [\n    'pointers' => (!empty($data['point1'])\n        && $data['point2'] === 22)\n        || (!empty($data['point3'])\n            && $data['point4'] === 33)\n        || (!empty($data['point4'])\n            && $data['point4'] === 44),\n    'arrows' =>\n        $data['arrows'],\n];\n"
    "Another multi-line logical expression inside associative array")
 
-  ;; TODO Make this pass
   (phps-mode-test-indent--should-equal
-   "<!DOCTYPE html>\n<html>\n<head>\n    <meta charset=\"UTF-8\">\n    <title>Was here</title>\n    <meta charset=\"ISO-8559-1\" />\n</head>\n<body>\n    <div>\n        <p>\n            My mixed content\n            <br>\n            Was here\n        </p>\n    </div>\n</body>\n</html>"
-   "Plain HTML markup")
-
-  ;; TODO Make this pass
-  (phps-mode-test-indent--should-equal
-   "<?php\nif (true) {\n     $variable =\n         Object::\n         method($variable2, true);\n     // Line comment\n     $variable['index'] = $variabl2->method2();\n}"
+   "<?php\nif (true) {\n    $variable =\n        Object::\n        method($variable2, true);\n    // Line comment\n    $variable['index'] = $variabl2->method2();\n}"
    "Mix of various types of statements and expressions")
 
   ;; TODO Make this pass
@@ -594,6 +596,12 @@
   (phps-mode-test-indent--should-equal
    "<?php\nif (true) {\n    echo '<script type=\"text/javascript\">'\n    . 'jQuery(document).ready(function() { '\n    . 'window.open(\"'\n    . $url . '\", \"_blank\");'\n    . ' });</script>';\n}\n"
    "Multi-line echo statement with HTML markup 3")
+
+  ;; TODO Make this pass
+  (phps-mode-test-indent--should-equal
+   "<!DOCTYPE html>\n<html>\n<head>\n    <meta charset=\"UTF-8\">\n    <title>Was here</title>\n    <meta charset=\"ISO-8559-1\" />\n</head>\n<body>\n    <div>\n        <p>\n            My mixed content\n            <br>\n            Was here\n        </p>\n    </div>\n</body>\n</html>"
+   "Plain HTML markup")
+
 
   )
 
