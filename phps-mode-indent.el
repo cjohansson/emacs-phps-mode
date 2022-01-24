@@ -1078,6 +1078,45 @@
                  new-indentation
                  (- new-indentation tab-width)))
 
+               ;; LINE AFTER STARTING DOC-COMMENT
+               ;; /**
+               ;;  *
+               ((= previous-bracket-level 1)
+                (setq
+                 match-type
+                 'line-after-opening-doc-comment)
+                (setq
+                 new-indentation
+                 (+ new-indentation 1)))
+
+               ;; LINE AFTER ENDING OF DOC-COMMENT
+               ;; /**
+               ;;  *
+               ;;  */
+               ;; echo 'here';
+               ((= previous-bracket-level -1)
+                (setq
+                 match-type
+                 'line-after-ending-of-doc-comment)
+                (setq
+                 new-indentation
+                 (1- new-indentation)))
+
+               ;; LINE AFTER CONTINUATION OF DOC-COMMENT
+               ;; /**
+               ;;  * here
+               ;;  * there
+               ((and
+                 (string-match-p
+                  "^[\t ]*\\*"
+                  previous-line-string)
+                 (string-match-p
+                  "^[\t ]*/?\\*"
+                  previous2-line-string))
+                (setq
+                 match-type
+                 'line-after-continuation-of-doc-comment))
+
                ;; LINE AFTER LINE ENDING WITH COMMA
                ;; return array(
                ;;     '' => __(
@@ -1219,30 +1258,6 @@
                 (setq
                  new-indentation
                  (+ new-indentation tab-width)))
-
-               ;; LINE AFTER ENDING OF DOC-COMMENT
-               ;; /**
-               ;;  *
-               ;;  */
-               ;; echo 'here';
-               ((= previous-bracket-level -1)
-                (setq
-                 match-type
-                 'line-after-ending-of-doc-comment)
-                (setq
-                 new-indentation
-                 (1- new-indentation)))
-
-               ;; LINE AFTER STARTING DOC-COMMENT
-               ;; /**
-               ;;  *
-               ((= previous-bracket-level 1)
-                (setq
-                 match-type
-                 'line-after-opening-doc-comment)
-                (setq
-                 new-indentation
-                 (+ new-indentation 1)))
 
                ;; LINE AFTER LINE THAT ENDS AND STARTS A BRACKET BLOCK
                ;; ) {
