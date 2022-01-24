@@ -20,11 +20,15 @@ compile:
 	find . -name "*.el" -exec $(EMACS_CMD) -f batch-byte-compile {} \;
 
 .PHONY: tests
-tests: test-integration test-lexer test-lex-analyzer test-parser test-syntax-table test-ast test-indent
+tests: test-integration test-lexer test-lex-analyzer test-parser test-syntax-table test-ast test-indent test-cache
 
 .PHONY: test-ast
 test-ast:
 	$(EMACS_CMD) -l test/phps-mode-test-ast.el
+
+.PHONY: test-cache
+test-cache:
+	$(EMACS_CMD) -l test/phps-mode-test-cache.el
 
 .PHONY: test-indent
 test-indent:

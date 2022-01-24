@@ -16,6 +16,7 @@
 ;;; Code:
 
 
+(require 'phps-mode-cache)
 (require 'phps-mode-lexer)
 (require 'phps-mode-macros)
 (require 'phps-mode-parser)
@@ -207,7 +208,18 @@
      buffer-name
 
      (lambda()
-       (phps-mode-lex-analyzer--lex-string buffer-contents))
+       (phps-mode-lex-analyzer--lex-string
+        buffer-contents
+        nil
+        nil
+        nil
+        nil
+        nil
+        nil
+        nil
+        nil
+        nil
+        buffer-file-name))
 
      (lambda(lex-result)
        (when (get-buffer buffer-name)
@@ -314,7 +326,7 @@
 
 (defun phps-mode-lex-analyzer--incremental-lex-string
     (buffer-name buffer-contents incremental-start-new-buffer point-max
-                 head-states incremental-state incremental-state-stack incremental-heredoc-label incremental-heredoc-label-stack incremental-nest-location-stack head-tokens &optional force-synchronous)
+                 head-states incremental-state incremental-state-stack incremental-heredoc-label incremental-heredoc-label-stack incremental-nest-location-stack head-tokens &optional force-synchronous filename)
   "Incremental lex region."
   (let ((async (and (boundp 'phps-mode-async-process)
                     phps-mode-async-process))
@@ -337,7 +349,8 @@
         incremental-heredoc-label
         incremental-heredoc-label-stack
         incremental-nest-location-stack
-        head-tokens))
+        head-tokens
+        filename))
 
      (lambda(lex-result)
        (when (get-buffer buffer-name)
@@ -668,7 +681,8 @@
                              incremental-heredoc-label-stack
                              incremental-nest-location-stack
                              head-tokens
-                             force-synchronous)
+                             force-synchronous
+                             buffer-file-name)
 
                             (phps-mode-debug-message
                              (message "Incremental tokens: %s" incremental-tokens)))
@@ -1049,119 +1063,152 @@
          token-start)))
     parser-tokens))
 
-(defun phps-mode-lex-analyzer--lex-string (contents &optional start end states state state-stack heredoc-label heredoc-label-stack nest-location-stack tokens)
+(defun phps-mode-lex-analyzer--lex-string (contents &optional start end states state state-stack heredoc-label heredoc-label-stack nest-location-stack tokens filename)
   "Run lexer on CONTENTS."
   ;; Create a separate buffer, run lexer inside of it, catch errors and return them
   ;; to enable nice presentation
   (require 'phps-mode-macros)
-  (let* ((buffer (generate-new-buffer "*PHPs Lexer*"))
-         (parse-error)
-         (parse-trail)
-         (ast-tree)
-         (imenu-index)
-         (bookkeeping-index))
 
-    ;; Create temporary buffer and run lexer in it
-    (when (get-buffer buffer)
-      (with-current-buffer buffer
-        (insert contents)
-
-        (if tokens
-            (setq
-             phps-mode-lexer--generated-tokens
-             (nreverse tokens))
+  (let ((loaded-from-cache))
+    (when (and
+           (not end)
+           filename)
+      (let ((cache-key
+             (format "lex-%s" filename)))
+        (when
+            (phps-mode-cache-test-p
+             cache-key
+             filename)
           (setq
-           phps-mode-lexer--generated-tokens
-           nil))
-        (if state
+           loaded-from-cache
+           (phps-mode-cache-load
+            cache-key)))))
+
+    (if loaded-from-cache
+        loaded-from-cache
+      (let* ((buffer
+              (generate-new-buffer "*PHPs Lexer*"))
+             (parse-error)
+             (parse-trail)
+             (ast-tree)
+             (imenu-index)
+             (bookkeeping-index))
+
+        ;; Create temporary buffer and run lexer in it
+        (when (get-buffer buffer)
+          (with-current-buffer buffer
+            (insert contents)
+
+            (if tokens
+                (setq
+                 phps-mode-lexer--generated-tokens
+                 (nreverse tokens))
+              (setq
+               phps-mode-lexer--generated-tokens
+               nil))
+            (if state
+                (setq
+                 phps-mode-lexer--state state)
+              (setq
+               phps-mode-lexer--state
+               'ST_INITIAL))
+
             (setq
-             phps-mode-lexer--state state)
-          (setq
-           phps-mode-lexer--state
-           'ST_INITIAL))
+             phps-mode-lexer--states
+             states)
+            (setq
+             phps-mode-lexer--state-stack
+             state-stack)
+            (setq
+             phps-mode-lexer--heredoc-label
+             heredoc-label)
+            (setq
+             phps-mode-lexer--heredoc-label-stack
+             heredoc-label-stack)
+            (setq
+             phps-mode-lexer--nest-location-stack
+             nest-location-stack)
+            (unless end
+              (setq end (point-max)))
+            (unless start
+              (setq start (point-min)))
+            (setq-local
+             phps-mode-lex-analyzer--lexer-index
+             start)
+            (setq-local
+             phps-mode-lex-analyzer--lexer-max-index
+             end)
 
-        (setq
-         phps-mode-lexer--states
-         states)
-        (setq
-         phps-mode-lexer--state-stack
-         state-stack)
-        (setq
-         phps-mode-lexer--heredoc-label
-         heredoc-label)
-        (setq
-         phps-mode-lexer--heredoc-label-stack
-         heredoc-label-stack)
-        (setq
-         phps-mode-lexer--nest-location-stack
-         nest-location-stack)
-        (unless end
-          (setq end (point-max)))
-        (unless start
-          (setq start (point-min)))
-        (setq-local
-         phps-mode-lex-analyzer--lexer-index
-         start)
-        (setq-local
-         phps-mode-lex-analyzer--lexer-max-index
-         end)
+            ;; Catch errors to kill generated buffer
+            (let ((got-error t))
+              (unwind-protect
+                  ;; Run lexer or incremental lexer
+                  (progn
+                    (phps-mode-lex-analyzer--re2c-lex-analyzer)
+                    (setq got-error nil))
+                (when got-error
+                  (kill-buffer))))
 
-        ;; Catch errors to kill generated buffer
-        (let ((got-error t))
-          (unwind-protect
-              ;; Run lexer or incremental lexer
-              (progn
-                (phps-mode-lex-analyzer--re2c-lex-analyzer)
-                (setq got-error nil))
-            (when got-error
-              (kill-buffer))))
+            ;; Copy variables outside of buffer
+            (setq state phps-mode-lexer--state)
+            (setq state-stack phps-mode-lexer--state-stack)
+            (setq states phps-mode-lexer--states)
 
-        ;; Copy variables outside of buffer
-        (setq state phps-mode-lexer--state)
-        (setq state-stack phps-mode-lexer--state-stack)
-        (setq states phps-mode-lexer--states)
+            ;; NOTE Generate parser tokens here before nreverse destructs list
+            (setq
+             phps-mode-parser-tokens
+             (phps-mode-lex-analyzer--generate-parser-tokens
+              phps-mode-lexer--generated-tokens))
+            (setq tokens (nreverse phps-mode-lexer--generated-tokens))
+            (setq heredoc-label phps-mode-lexer--heredoc-label)
+            (setq heredoc-label-stack phps-mode-lexer--heredoc-label-stack)
+            (setq nest-location-stack phps-mode-lexer--nest-location-stack)
 
-        ;; NOTE Generate parser tokens here before nreverse destructs list
-        (setq
-         phps-mode-parser-tokens
-         (phps-mode-lex-analyzer--generate-parser-tokens
-          phps-mode-lexer--generated-tokens))
-        (setq tokens (nreverse phps-mode-lexer--generated-tokens))
-        (setq heredoc-label phps-mode-lexer--heredoc-label)
-        (setq heredoc-label-stack phps-mode-lexer--heredoc-label-stack)
-        (setq nest-location-stack phps-mode-lexer--nest-location-stack)
+            ;; Error-free parse here
+            (condition-case conditions
+                (progn
+                  (phps-mode-ast--generate)
+                  (phps-mode-ast-bookkeeping--generate)
+                  (phps-mode-ast-imenu--generate))
+              (error
+               (setq
+                parse-error
+                conditions)))
 
-        ;; Error-free parse here
-        (condition-case conditions
-            (progn
-              (phps-mode-ast--generate)
-              (phps-mode-ast-bookkeeping--generate)
-              (phps-mode-ast-imenu--generate))
-          (error
-           (setq
-            parse-error
-            conditions)))
+            ;; Need to copy buffer-local values before killing buffer
+            (setq parse-trail phps-mode-ast--parse-trail)
+            (setq ast-tree phps-mode-ast--tree)
+            (setq imenu-index phps-mode-ast-imenu--index)
+            (setq bookkeeping-index phps-mode-ast-bookkeeping--index)
 
-        ;; Need to copy buffer-local values before killing buffer
-        (setq parse-trail phps-mode-ast--parse-trail)
-        (setq ast-tree phps-mode-ast--tree)
-        (setq imenu-index phps-mode-ast-imenu--index)
-        (setq bookkeeping-index phps-mode-ast-bookkeeping--index)
+            (kill-buffer)))
 
-        (kill-buffer)))
-    (list
-     tokens
-     states
-     state
-     state-stack
-     heredoc-label
-     heredoc-label-stack
-     nest-location-stack
-     parse-trail
-     parse-error
-     ast-tree
-     imenu-index
-     bookkeeping-index)))
+        (let
+            ((data
+              (list
+               tokens
+               states
+               state
+               state-stack
+               heredoc-label
+               heredoc-label-stack
+               nest-location-stack
+               parse-trail
+               parse-error
+               ast-tree
+               imenu-index
+               bookkeeping-index)))
+
+          (when (and
+                 (not end)
+                 filename)
+            (let ((cache-key
+                   (format "lex-%s" filename)))
+              (phps-mode-cache-save
+               data
+               cache-key)))
+
+          data)))))
 
 (provide 'phps-mode-lex-analyzer)
 
