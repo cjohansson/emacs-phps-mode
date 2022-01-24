@@ -640,11 +640,25 @@
    "<?php\nif (true) {\n    echo '<script type=\"text/javascript\">'\n        . 'jQuery(document).ready(function() { '\n        . 'window.open(\"'\n        . $url . '\", \"_blank\");'\n        . ' });</script>';\n}"
    "Multi-line echo statement with HTML markup 3")
 
-  ;; TODO Make this pass
   (phps-mode-test-indent--should-equal
    "<!DOCTYPE html>\n<html>\n<head>\n    <meta charset=\"UTF-8\">\n    <title>Was here</title>\n    <meta charset=\"ISO-8559-1\" />\n</head>\n<body>\n    <div>\n        <p>\n            My mixed content\n            <br>\n            Was here\n        </p>\n    </div>\n</body>\n</html>"
    "Plain HTML markup")
 
+  (phps-mode-test-indent--should-equal
+   "<?php\n\nif (true) {\n    if (\n        true\n    ) {\n        return false;\n    }\n\n    /**\n     * My first line,\n     * my second line.\n     *\n     * @since Module 1.0.0\n     */\n    echo 'here';\n\n}\n"
+   "Doc-comment ending with comma and dot.")
+
+  (phps-mode-test-indent--should-equal
+   "<?php\nif (true) {\n    if (\n        (!isset(myClass()->property)\n            || !$variable = myClass()->property2->method())\n        && false\n    ) {\n    }\n}\n"
+   "Parenthesized condition on multi-rows")
+
+  (phps-mode-test-indent--should-equal
+   "<?php\nif (true) {\n    require_once(myClass()->method1()\n        . '/hard-coded-file.php');\n}\n"
+   "Require once expression on multiple rows")
+
+  (phps-mode-test-indent--should-equal
+   "<?php\nif (true) {\n    $html .= 'My text'\n        . 'and more text';\n    foreach ($data as $key => $fields) {\n        $html .= '<strong>' . $key . '</strong>';\n        foreach ($fields as $key => $value) {\n            $html .= '<span>' . $value . '</span>';\n        }\n        $html .= '</ul></li>';\n    }\n    $html .= '</dd>';\n}\n"
+   "Two nested foreach loops containing string concatenation assignments")
 
   )
 
