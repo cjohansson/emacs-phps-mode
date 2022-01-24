@@ -1154,23 +1154,6 @@
                  new-indentation
                  (+ new-indentation 1)))
 
-               ;; LINE AFTER INCREASE IN BRACKETS
-               ;; array(
-               ;;     'here'
-               ;; or
-               ;; [[
-               ;;     'here'
-               ;; or
-               ;; if (something) {
-               ;;     echo 'here';
-               ((>= previous-bracket-level tab-width)
-                (setq
-                 match-type
-                 'line-after-increase-in-brackets)
-                (setq
-                 new-indentation
-                 (+ new-indentation tab-width)))
-
                ;; LINE AFTER LINE THAT ENDS AND STARTS A BRACKET BLOCK
                ;; ) {
                ;;     echo 'here'
@@ -1510,6 +1493,24 @@
                         (setq
                          new-indentation
                          first-concatenated-line-indent)))))
+
+
+               ;; LINE AFTER INCREASE IN BRACKETS
+               ;; array(
+               ;;     'here'
+               ;; or
+               ;; [[
+               ;;     'here'
+               ;; or
+               ;; if (something) {
+               ;;     echo 'here';
+               ((>= previous-bracket-level tab-width)
+                (setq
+                 match-type
+                 'line-after-increase-in-brackets)
+                (setq
+                 new-indentation
+                 (+ new-indentation tab-width)))
 
                ;; LINE AFTER CASE DEFINITION
                ;; case true:

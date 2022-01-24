@@ -583,18 +583,16 @@
    "<?php\nif (true) {\n    $variable =\n        Object::\n        method($variable2, true);\n    // Line comment\n    $variable['index'] = $variabl2->method2();\n}"
    "Mix of various types of statements and expressions")
 
-  ;; TODO Make this pass
   (phps-mode-test-indent--should-equal
    "<?php\nif (true) {\n    $html .= '<dt>'\n        . __(\n            'Text',\n            'namespace'\n        )\n        . ':</dt><dd>'\n        . '<input type=\"hidden\" name=\"my_name['\n        . $variable . ']\" value=\"' . esc($myName) . '\" />'\n        . '<select class=\"my-class\" name=\"my_name['\n        . $variable2 . ']\">';\n    echo 'here';\n}\n"
    "Multi-line echo statement with HTML 1")
 
-  ;; TODO Make this pass
   (phps-mode-test-indent--should-equal
-   "<?php\nif (true) {\n    echo '<script type=\"text/javascript\">'\n    . 'jQuery(document).ready(function() {'\n    . 'jQuery(\"<option>\").val(\"my_value\").text(\"'\n    . __(\"Was here\", 'namespace')\n    . '\").appendTo(\"select[name=\'key\']\");'\n    . 'jQuery(\"<option>\").val(\"action\").text(\"'\n    . __(\"My action\", 'namespace')\n    . '\").appendTo(\"select[name=\'anotherAction\']\");'\n    . 'jQuery(\"<option>\").val(\"my_value2\").text(\"'\n    . __(\"My other action\", 'namespace')\n    . '\").appendTo(\"select[name=\'anotherAction2\']\");'\n    . 'jQuery(\"<option>\").val(\"my_value3\").text(\"'\n    . __(\"My third action\", 'namespace')\n    . '\").appendTo(\"select[name=\'anotherAction3\']\");'\n    . '\"\"});</script>';\n    echo 'here';\n}\n"
+   "<?php\nif (true) {\n    echo '<script type=\"text/javascript\">'\n        . 'jQuery(document).ready(function() {'\n        . 'jQuery(\"<option>\").val(\"my_value\").text(\"'\n        . __(\"Was here\", 'namespace')\n        . '\").appendTo(\"select[name='key']\");'\n        . 'jQuery(\"<option>\").val(\"action\").text(\"'\n        . __(\"My action\", 'namespace')\n        . '\").appendTo(\"select[name='anotherAction']\");'\n        . 'jQuery(\"<option>\").val(\"my_value2\").text(\"'\n        . __(\"My other action\", 'namespace')\n        . '\").appendTo(\"select[name='anotherAction2']\");'\n        . 'jQuery(\"<option>\").val(\"my_value3\").text(\"'\n        . __(\"My third action\", 'namespace')\n        . '\").appendTo(\"select[name='anotherAction3']\");'\n        . '\"\"});</script>';\n    echo 'here';\n}"
    "Multi-line echo statement with HTML markup 2")
 
   (phps-mode-test-indent--should-equal
-   "<?php\nif (true) {\n    echo '<script type=\"text/javascript\">'\n    . 'jQuery(document).ready(function() { '\n    . 'window.open(\"'\n    . $url . '\", \"_blank\");'\n    . ' });</script>';\n}\n"
+   "<?php\nif (true) {\n    echo '<script type=\"text/javascript\">'\n        . 'jQuery(document).ready(function() { '\n        . 'window.open(\"'\n        . $url . '\", \"_blank\");'\n        . ' });</script>';\n}"
    "Multi-line echo statement with HTML markup 3")
 
   ;; TODO Make this pass
