@@ -213,6 +213,51 @@
       (phps-mode-indent--get-previous-start-of-bracket-line t)
       nil)))
 
+  (should
+   (equal
+    (phps-mode-indent--get-html-string-bracket-level "<!DOCTYPE html>")
+    nil))
+  (should
+   (equal
+    (phps-mode-indent--get-html-string-bracket-level "<html>")
+    nil))
+  (should
+   (equal
+    (phps-mode-indent--get-html-string-bracket-level "</html>")
+    nil))
+  (should
+   (equal
+    (phps-mode-indent--get-html-string-bracket-level "<body>")
+    1))
+  (should
+   (equal
+    (phps-mode-indent--get-html-string-bracket-level "</body>")
+    -1))
+  (should
+   (equal
+    (phps-mode-indent--get-html-string-bracket-level "<meta>")
+    nil))
+  (should
+   (equal
+    (phps-mode-indent--get-html-string-bracket-level "<meta />")
+    nil))
+  (should
+   (equal
+    (phps-mode-indent--get-html-string-bracket-level "<button>")
+    1))
+  (should
+   (equal
+    (phps-mode-indent--get-html-string-bracket-level "<button />")
+    nil))
+  (should
+   (equal
+    (phps-mode-indent--get-html-string-bracket-level "</button>")
+    -1))
+  (should
+   (equal
+    (phps-mode-indent--get-html-string-bracket-level "</p>")
+    -1))
+
   (message "Passed tests for indentation helper functions"))
 
 (defun phps-mode-test-indent--get-lines-indent ()

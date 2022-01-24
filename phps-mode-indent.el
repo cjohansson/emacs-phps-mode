@@ -124,17 +124,13 @@
    1))
 
 (defun phps-mode-indent--get-string-brackets-count
-    (string &optional html-mode)
-  "Get bracket count for STRING optionally in HTML-MODE."
+    (string)
+  "Get bracket count for STRING."
   (let ((bracket-level 0)
         (start 0)
         (line-is-empty
          (string-match-p "^[ \t\f\r\n]*$" string))
         (test-string "\\([\]{}()[]\\|^[\t ]/\\*\\*\\|^[\t\\* ]*\\*/\\)"))
-    (when html-mode
-      (setq
-       test-string
-       "\\([\]{}()[]\\|<[a-zA-Z]+\\|</[a-zA-Z]+\\|/>\\|^[\t ]/\\*\\*\\|^[\t\\* ]*\\*/\\)"))
     (unless line-is-empty
       ;; (message "string: %S" string)
       (while
@@ -161,6 +157,64 @@
            (t
             (setq bracket-level (- bracket-level tab-width)))))))
     bracket-level))
+
+(defun phps-mode-indent--get-html-string-bracket-level (string)
+  "Get HTML bracket-level for STRING."
+  (let* ((html-bracket-level 0)
+         (start 0)
+         (next-item
+          (string-match
+           "\\(<[^>]+>\\)"
+           string
+           start)))
+    (while next-item
+      (let ((match (match-string 0 string)))
+        (setq
+         start
+         (match-end 0))
+
+        (cond
+
+         ;; Self-closing tag does not change indentation
+         ((string-match
+           "<\\([a-zA-Z]\\)+[^>]+/>"
+           match))
+
+         ;; Opening tag changes indentation for most tags
+         ((string-match
+           "<\\([a-zA-Z]+\\)"
+           match)
+          (let ((tag (match-string 1 match)))
+            (unless
+                (string-match-p
+                 "^\\(html\\|meta\\|br\\|em\\|strong\\|i\\|b\\)$"
+                 tag)
+              (setq
+               html-bracket-level
+               (1+ html-bracket-level)))))
+
+         ;; Closing tag changes indentation for most tags
+         ((string-match
+           "</\\([a-zA-Z]+\\)"
+           match)
+          (let ((tag (match-string 1 match)))
+            (unless
+                (string-match-p
+                 "^\\(html\\|meta\\|br\\|em\\|strong\\|i\\|b\\)$"
+                 tag)
+              (setq
+               html-bracket-level
+               (1- html-bracket-level)))))
+         )
+        (setq
+         next-item
+         (string-match
+          "\\(<[^>]+>\\)"
+          string
+          start))))
+    (if (= html-bracket-level 0)
+        nil
+      html-bracket-level)))
 
 (defun phps-mode-indent--get-previous-reference-index-line ()
   "Get previous index line as reference, if any exist.  A index line is a previous element line inside current bracket scope."
@@ -567,6 +621,42 @@
               ;; Case by case logic below - most specific to most general
 
               (cond
+
+
+               ((and
+                 (or
+                  (string-match-p
+                   "^[\t ]*\\(<[^>]+>\\)+[\t ]*$"
+                   previous-line-string)
+                  (string-match-p
+                   "^[\t ]*\\(<[^>]+>\\)+[\t ]*$"
+                   current-line-string))
+                 (not
+                  (string-match-p
+                   "<\\?"
+                   previous-line-string))
+                 (not
+                  (string-match-p
+                   "<\\?"
+                   current-line-string)))
+                (setq
+                 match-type
+                 'line-after-html-line)
+                (when-let ((html-bracket-level
+                            (phps-mode-indent--get-html-string-bracket-level
+                             previous-line-string)))
+                  (when (> html-bracket-level 0)
+                    (setq
+                     new-indentation
+                     (+ new-indentation tab-width))))
+
+                (when-let ((html-bracket-level
+                            (phps-mode-indent--get-html-string-bracket-level
+                             current-line-string)))
+                  (when (< html-bracket-level 0)
+                    (setq
+                     new-indentation
+                     (- new-indentation tab-width)))))
 
                ;; LINE AFTER EXTENDS / IMPLEMENTS
                ;; class MyClass implements
