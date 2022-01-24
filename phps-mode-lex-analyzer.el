@@ -682,7 +682,7 @@
                              incremental-nest-location-stack
                              head-tokens
                              force-synchronous
-                             buffer-file-name)
+                             (if (buffer-modified-p) nil buffer-file-name))
 
                             (phps-mode-debug-message
                              (message "Incremental tokens: %s" incremental-tokens)))
@@ -1069,12 +1069,15 @@
   ;; to enable nice presentation
   (require 'phps-mode-macros)
 
-  (let ((loaded-from-cache))
-    (when (and
-           (not end)
-           filename)
-      (let ((cache-key
-             (format "lex-%s" filename)))
+  (let ((loaded-from-cache)
+        (cache-key))
+
+    ;; Load cache if possible
+    (when filename
+      (setq
+       cache-key
+       (format "lex-%s" filename))
+      (unless end
         (when
             (phps-mode-cache-test-p
              cache-key
@@ -1199,14 +1202,11 @@
                imenu-index
                bookkeeping-index)))
 
-          (when (and
-                 (not end)
-                 filename)
-            (let ((cache-key
-                   (format "lex-%s" filename)))
-              (phps-mode-cache-save
-               data
-               cache-key)))
+          ;; Save cache if possible
+          (when cache-key
+            (phps-mode-cache-save
+             data
+             cache-key))
 
           data)))))
 
