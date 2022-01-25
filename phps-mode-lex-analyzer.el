@@ -95,20 +95,29 @@
 ;; FUNCTIONS
 
 
-(defun phps-mode-lex-analyzer--reset-local-variables ()
-  "Reset local variables."
+(defun phps-mode-lex-analyzer--reset-local-variables (&optional clear-existing)
+  "Reset local variables, optionally CLEAR-EXISTING."
   (setq phps-mode-lex-analyzer--allow-after-change-p t)
+  (setq phps-mode-lex-analyzer--ast nil)
   (setq phps-mode-lex-analyzer--bookkeeping nil)
   (setq phps-mode-lex-analyzer--change-min nil)
+  (setq phps-mode-lex-analyzer--heredoc-label nil)
   (setq phps-mode-lex-analyzer--heredoc-label-stack nil)
   (setq phps-mode-lex-analyzer--idle-timer nil)
   (setq phps-mode-lex-analyzer--imenu nil)
+  (setq phps-mode-lex-analyzer--nest-location-stack nil)
+  (setq phps-mode-lex-analyzer--parse-error nil)
+  (setq phps-mode-lex-analyzer--parse-trail nil)
   (setq phps-mode-lex-analyzer--processed-buffer-p nil)
   (setq phps-mode-lex-analyzer--state nil)
   (setq phps-mode-lex-analyzer--state-stack nil)
   (setq phps-mode-lex-analyzer--states nil)
   (setq phps-mode-lex-analyzer--tokens nil)
-  (setq phps-mode-lex-analyzer--nest-location-stack nil))
+  (when clear-existing
+    (phps-mode-serial--kill-active (buffer-name))
+    (when buffer-file-name
+      (phps-mode-cache-delete buffer-file-name)))
+  )
 
 (defun phps-mode-lex-analyzer--set-region-syntax-color (start end properties)
   "Do syntax coloring for region START to END with PROPERTIES."
@@ -811,14 +820,15 @@
 
   (if phps-mode-lex-analyzer--allow-after-change-p
       (progn
-        (phps-mode-debug-message (message "After change registration is enabled"))
+        (phps-mode-debug-message
+         (message "After change registration is enabled"))
+        (phps-mode-serial--kill-active (buffer-name))
         
         ;; If we haven't scheduled incremental lexer before - do it
         (when (and (boundp 'phps-mode-idle-interval)
                    phps-mode-idle-interval
                    (not phps-mode-lex-analyzer--idle-timer))
-          (phps-mode-lex-analyzer--start-idle-timer)
-          (phps-mode-serial--kill-active (buffer-name)))
+          (phps-mode-lex-analyzer--start-idle-timer))
 
         (when (or
                (not phps-mode-lex-analyzer--change-min)
@@ -829,7 +839,8 @@
                (boundp 'phps-mode-idle-interval)
                (not phps-mode-idle-interval))
           (phps-mode-lex-analyzer--process-changes (current-buffer))))
-    (phps-mode-debug-message (message "After change registration is disabled"))))
+    (phps-mode-debug-message
+     (message "After change registration is disabled"))))
 
 (defun phps-mode-lex-analyzer--imenu-create-index ()
   "Get Imenu for current buffer."

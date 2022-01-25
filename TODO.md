@@ -18,3 +18,4 @@
     }
 
 * Imenu-generation of conditionally defined functions and classes
+* Fix race-condition in incremental parser when running in threads

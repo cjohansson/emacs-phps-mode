@@ -78,7 +78,7 @@
 (defun phps-mode-rescan-buffer ()
   "Re-scan buffer."
   (interactive)
-  (phps-mode-lex-analyzer--reset-local-variables)
+  (phps-mode-lex-analyzer--reset-local-variables t)
   (phps-mode-lex-analyzer--re2c-run))
 
 ;;;###autoload
