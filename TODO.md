@@ -18,7 +18,3 @@
     }
 
 * Imenu-generation of conditionally defined functions and classes
-* Cache elisp data in file-system
-
-Save to cache after incremental edits as well
-

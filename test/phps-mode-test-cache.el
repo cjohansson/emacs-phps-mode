@@ -25,23 +25,21 @@
    (equal
     (phps-mode-cache-test-p "abc")
     nil))
-  (message "Passed cache test function 1")
-
+  (message "Passed cache test after delete")
   (phps-mode-cache-save '(0 1 2) "abc")
 
   (should
    (equal
     (phps-mode-cache-test-p "abc")
     t))
-
-  (message "Passed cache test function 2")
+  (message "Passed cache test after save")
 
   (should
    (equal
     (phps-mode-cache-load "abc")
     '(0 1 2)))
-
-  (message "Passed cache load function")
+  (message "Passed cache load")
+  (phps-mode-cache-delete "abc")
 
   (message "Passed tests for cache"))
 

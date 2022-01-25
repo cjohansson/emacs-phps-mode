@@ -318,7 +318,7 @@
 
                )
 
-))))
+             ))))
 
      nil
      async
@@ -1053,7 +1053,7 @@
         (when (and
                previous-start
                (not
-                   (= previous-start token-end)))
+                (= previous-start token-end)))
           (puthash
            token-end
            previous-start
@@ -1076,7 +1076,7 @@
     (when filename
       (setq
        cache-key
-       (format "lex-%s" filename))
+       filename)
       (unless end
         (when
             (phps-mode-cache-test-p

@@ -23,7 +23,7 @@
     (let ((filename
            (expand-file-name
             (replace-regexp-in-string
-             "\\(/\\|@\\|:\\|\\.\\|-\\)" "_"
+             "\\(/\\|@\\|:\\|\\.\\)" "_"
              key)
             directory-filename)))
       filename)))
