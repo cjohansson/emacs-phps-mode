@@ -36,9 +36,14 @@
       ;;        (car (cdr production))))))
       (phps-mode-ast--generate)
       (phps-mode-ast-bookkeeping--generate)
+      (message "bookkeeping: %S" (phps-mode-test--hash-to-list
+         phps-mode-ast-bookkeeping--index
+         t))
       (should
        (equal
-        (phps-mode-test--hash-to-list phps-mode-ast-bookkeeping--index t)
+        (phps-mode-test--hash-to-list
+         phps-mode-ast-bookkeeping--index
+         t)
         bookkeeping)))))
 
 (defun phps-mode-test-ast--buffer-contents (buffer-contents name logic)
@@ -411,6 +416,12 @@
    "<?php class myClass { static $var = '123'; static function myMethod($a) { return fn($b) => self::$var . $a . $b; }} echo myClass::myMethod('4')('5');"
    "Bookkeeping of self reference inside arrow function inside of static method"
    '((" class myClass static id $var" 1) ((30 34) 1) (" class myClass function myMethod id $a" 1) ((69 71) 1) (" class myClass function myMethod arrow function 1 id $b" 1) ((85 87) 1) ((98 102) 1) ((105 107) 1) ((110 112) 1)))
+
+  ;; TODO Make this test pass
+  ;; (phps-mode-test-ast--should-bookkeep
+  ;;  "<?php\nnamespace myNamespace;\nclass myClass\n{\n    private $property1 = '';\n    private $property2;\n    protected function myMethod(\n        $argument1,\n        $argument2,\n        $argument3\n    ) {\n        if ($this->property2) {\n            echo 'was here';\n        }\n        /* @codingStandardsIgnoreEnd */\n        if (\n            $argument1\n            && $argument2\n            && $argument3\n            && $argument4\n            && !empty($argument1['index'])\n            && $this->property1\n            && $argument1['index'] == $this->property1\n        ) {\n        }\n    }\n}\n"
+  ;;  "Bookkeeping of properties inside if condition list"
+  ;;  '((" namespace myNamespace class myClass id $property1" 1) ((58 68) 1) (" namespace myNamespace class myClass id $property2" 1) ((87 97) 1) (" namespace myNamespace class myClass function myMethod id $this" 1) (" namespace myNamespace class myClass function myMethod id $argument1" 1) ((140 150) 1) (" namespace myNamespace class myClass function myMethod id $argument2" 1) ((160 170) 1) (" namespace myNamespace class myClass function myMethod id $argument3" 1) ((180 190) 1) ((211 216) 1) ((218 227) 1) (" namespace myNamespace class myClass function myMethod defined 1 id nil" 1) ((335 345) 1) ((361 371) 1) ((387 397) 1) ((413 423) 0) ((482 487) 1) ((489 498) 1) ((537 542) 1) ((544 553) 1)))
 
   (message "\n-- Ran tests for bookkeeping generation. --"))
 

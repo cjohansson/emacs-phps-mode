@@ -2,6 +2,11 @@
 
 ## Indentation
 
+* Lines after comment looking like an assignment like:
+
+$var = 23; // 23 = Company
+    echo 'was here';
+
 ## Code intelligence
 
 * Bookkeeping of chained object operators like WC()->cart->subtotal
@@ -18,4 +23,9 @@
     }
 
 * Imenu-generation of conditionally defined functions and classes
-* Fix race-condition in incremental parser when running in threads
+* Bookkeeping of class properties inside condition lists
+* Fix race-condition in incremental parser when running asynchronous using threads
+
+Perform an edit while an incremental parse is going to reproduce
+
+Fix by reloading file or running C-r to rescan and clear cache
