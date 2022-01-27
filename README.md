@@ -30,7 +30,6 @@ This mode does not require PHP installed on your computer because it has a built
 * Mode-line asynchronous status
 * Bookkeeping in lexical-analysis, showing defined and undefined variables via syntax coloring (requires a theme that has distinct colors for 'font-lock-warning-face and 'font-lock-variable-name-face)
 * Canonical LR(1) Parser automatically generated from official PHP 8.0 LALR(1) YACC grammar
-* 
 
 ## Issues and roadmap
 
