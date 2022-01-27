@@ -33,7 +33,7 @@ This mode does not require PHP installed on your computer because it has a built
 
 ## Issues and roadmap
 
-See [TODO.md](docs/TODO.md)
+See [TODO.md](TODO.md)
 
 ## Keymap
 
