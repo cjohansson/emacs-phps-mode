@@ -12,10 +12,10 @@
   nil
   "Debug messages during macro expansion time, default nil.")
 
-(defmacro phps-mode-debug-message (&rest message)
-  "Display debug MESSAGE when debug flag is on."
+(defmacro phps-mode-debug-message (&rest code)
+  "Run CODE only when debug flag is on."
   `(when ,phps-mode-macrotime-debug
-    ,@message))
+    ,@code))
 
 (provide 'phps-mode-macros)
 ;;; phps-mode-macros.el ends here

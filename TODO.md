@@ -2,22 +2,6 @@
 
 ## Indentation
 
-* Lines after comment looking like an assignment like:
-
-$var = 23; // 23 = Company
-echo 'was here';
-
-or
-
-$var = 23; /* 23 = Company */
-echo 'was here';
-
-* Multi-lined chained object
-
-$var = Object->myMethod()
-    ->myMethod2();
-echo 'here';
-
 ## Code intelligence
 
 * Bookkeeping of chained object operators like WC()->cart->subtotal

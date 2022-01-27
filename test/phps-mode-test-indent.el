@@ -668,7 +668,6 @@
    "<?php\n$var = 23; // 23 = Company\necho 'was here';"
    "Line after line that have an assignment commented out")
 
-  ;; TODO Make this pass
   (phps-mode-test-indent--should-equal
    "<?php\n$var = Object->myMethod()\n    ->myMethod2();\necho 'here';"
    "Line after assignment were an chaining of object methods started")
