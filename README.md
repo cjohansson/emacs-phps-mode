@@ -13,11 +13,12 @@ This mode does not require PHP installed on your computer because it has a built
 * Flycheck support with `(phps-mode-flycheck-setup)`
 * Lexer based on official PHP 8.0 re2c lexer
 * Syntax coloring based on lexer tokens, makes it easier to spot invalid code
-* PSR-1, PSR-2 and PSR-12 indentation based on lexer tokens
+* PSR-1, PSR-2 and PSR-12 indentation
 * PSR-1, PSR-2 and PSR-12 supported white-space
+* Support for indentation of HTML and XML
 * Integration with `(electric-pair)`
 * Incremental lexer and syntax coloring after buffer changes
-* Incremental indentation and imenu generation after buffer changes
+* Incremental parser, imenu and bookkeeping generation after buffer changes
 * Supports `(comment-region)` and `(uncomment-region)`
 * Support indentation for inline-html areas
 * Imenu support
@@ -25,15 +26,15 @@ This mode does not require PHP installed on your computer because it has a built
 * Tested using unit tests and integration tests
 * Continuous integration tests using Travis
 * Included in GNU ELPA package archive
-* A interactive function that can be used interactively to format buffers `(phps-mode-format-buffer)`
 * Support for asynchronous lexer via processes (`async.el`) or threads
 * Mode-line asynchronous status
 * Bookkeeping in lexical-analysis, showing defined and undefined variables via syntax coloring (requires a theme that has distinct colors for 'font-lock-warning-face and 'font-lock-variable-name-face)
 * Canonical LR(1) Parser automatically generated from official PHP 8.0 LALR(1) YACC grammar
+* 
 
 ## Issues and roadmap
 
-See [Development](docs/TODO.md)
+See [TODO.md](docs/TODO.md)
 
 ## Keymap
 
@@ -115,10 +116,3 @@ Enable with:
 (phps-mode-flycheck-setup)
 (setq phps-mode-async-process nil)
 ```
-
-## Read more
-
-* [Development](docs/development.md)
-* [Heuristics](docs/heuristics.md)
-* [Indentation algorithm](docs/indentation.md)
-* [Imenu algorithm](docs/imenu.md)
