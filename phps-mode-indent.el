@@ -531,6 +531,19 @@
                 (unless (or
                          line-is-empty-p
                          line-is-comment-p)
+
+                  ;; Does line contain comment?
+                  (when (string-match-p
+                         "\\(//[^'\"]+$\\|#[^'\"]+$\\|/\\*.+\\*/\\)"
+                         line-string)
+                    ;; Delete comment region
+                    (setq
+                     line-string
+                     (replace-regexp-in-string
+                      "\\(//[^'\"]+$\\|#[^'\"]+$\\|/\\*.+\\*/\\)"
+                      ""
+                      line-string)))
+
                   (cond
                    ((= searching-previous-lines 2)
                     (setq
