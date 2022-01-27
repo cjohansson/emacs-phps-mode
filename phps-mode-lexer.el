@@ -204,15 +204,17 @@
 
 (defun phps-mode-lexer--move-forward (position)
   "Move forward to POSITION."
-  (setq-local
-   phps-mode-lex-analyzer--lexer-index
-   position))
+  (when (boundp 'phps-mode-lex-analyzer--lexer-index)
+    (setq-local
+     phps-mode-lex-analyzer--lexer-index
+     position)))
 
 (defun phps-mode-lexer--yyless (points)
   "Move lexer back POINTS."
-  (setq-local
-   phps-mode-lex-analyzer--lexer-index
-   (- phps-mode-lex-analyzer--lexer-index points))
+  (when (boundp 'phps-mode-lex-analyzer--lexer-index)
+    (setq-local
+     phps-mode-lex-analyzer--lexer-index
+     (- phps-mode-lex-analyzer--lexer-index points)))
   (forward-char (- points)))
 
 (defun phps-mode-lexer--inline-char-handler ()
@@ -339,9 +341,10 @@
     (setq start (match-beginning 0)))
   (unless end
     (setq end (match-end 0)))
-  (setq-local
-   phps-mode-lex-analyzer--lexer-index
-   end))
+  (when (boundp 'phps-mode-lex-analyzer--lexer-index)
+    (setq-local
+     phps-mode-lex-analyzer--lexer-index
+     end)))
 
 (defmacro phps-mode-lexer--match-macro (states conditions &rest body)
   "Place in STATES a check for CONDITIONS to execute BODY."

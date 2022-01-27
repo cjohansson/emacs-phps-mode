@@ -1,4 +1,4 @@
-# PHPs - Semantic Major-Mode for PHP in Emacs
+# PHPs - Emacs major mode for PHP with code intelligence
 
 [![License GPL 3](https://img.shields.io/badge/license-GPL_3-green.svg)](https://www.gnu.org/licenses/gpl-3.0.txt)
 [![Build Status](https://api.travis-ci.com/cjohansson/emacs-phps-mode.svg?branch=master)](https://app.travis-ci.com/github/cjohansson/emacs-phps-mode)
@@ -11,7 +11,7 @@ This mode does not require PHP installed on your computer because it has a built
 
 * GPLv3 license
 * Flycheck support with `(phps-mode-flycheck-setup)`
-* Semantic lexer based on official PHP 8.0 re2c lexer
+* Lexer based on official PHP 8.0 re2c lexer
 * Syntax coloring based on lexer tokens, makes it easier to spot invalid code
 * PSR-1, PSR-2 and PSR-12 indentation based on lexer tokens
 * PSR-1, PSR-2 and PSR-12 supported white-space
@@ -31,10 +31,9 @@ This mode does not require PHP installed on your computer because it has a built
 * Bookkeeping in lexical-analysis, showing defined and undefined variables via syntax coloring (requires a theme that has distinct colors for 'font-lock-warning-face and 'font-lock-variable-name-face)
 * Canonical LR(1) Parser automatically generated from official PHP 8.0 LALR(1) YACC grammar
 
-## Roadmap
+## Issues and roadmap
 
-* 1. Improved token-blind indentation (alternative and inline control structures)
-* 2. Bookkeeping and imenu-generation via syntax directed translations via the parser
+See [Development](docs/TODO.md)
 
 ## Keymap
 
