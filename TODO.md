@@ -1,26 +1,5 @@
 # TODO
 
-## Indentation
-
-* Endless loop
-
-<?php
-
-namespace Vendor\Module;
-
-class myClass implements \My\NamespaceInterface
-{
-    public function __construct()
-    {
-
-    }
-}
-
-Depends on Emacs error with code:
-
-(string-match-p "[	 ]*implements[	 ]+\\([	 ]*[\\a-zA-Z_0-9_]+,?\\)+[	 ]*{$" "ariable implements \\Magento\\Framework\\Event\\OberserverInterface{    public function __construct() ")
-
-
 ## Code intelligence
 
 * Bookkeeping of chained object operators like WC()->cart->subtotal

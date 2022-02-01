@@ -725,7 +725,7 @@
                  current-line-starts-with-opening-bracket
                  (string= current-line-starts-with-opening-bracket "{")
                  (phps-mode-indent--backwards-looking-at
-                  "[\r\t ]*implements[\r\t ]+\\([\r\t ]*[\\a-zA-Z_0-9_]+,?\\)+[\r\t ]*{$")
+                  "[\r\t ]+implements\\([\r\t ]+[\\a-zA-Z_0-9_]+,?\\)+[\r\t ]*{$")
                  (not
                   (string-match-p
                    "[\t ]*\\(class\\|interface\\)[\t ]+"
