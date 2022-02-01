@@ -30,13 +30,12 @@
       (setq limit (1- point)))
     (let* ((start (- point limit))
            (backward-string
-            (replace-regexp-in-string
-             "\n"
-             "\r"
-             (buffer-substring-no-properties
-              start
-              (1+ point)))))
-      (if (string-match regexp backward-string)
+            (buffer-substring-no-properties
+             start
+             (1+ point))))
+      (if (string-match
+           regexp
+           backward-string)
           backward-string
         nil))))
 
@@ -705,7 +704,7 @@
                  'line-after-extends-or-implements2)
                 (when-let ((backwards-string
                             (phps-mode-indent--backwards-looking-at
-                             "\r+\\([\t ]*\\)class[\r\t ]+[a-zA-Z0-9_]+[\r\t ]+\\(extends[\r\t ]+[a-zA-Z0-9_]+\\)?[\r\t ]*\\(implements[\r\t ]+[a-zA-Z0-9_]+\\)?$")))
+                             "\n+\\([\t ]*\\)class[\n\t ]+[a-zA-Z0-9_]+[\n\t ]+\\(extends[\n\t ]+[a-zA-Z0-9_]+\\)?[\n\t ]*\\(implements[\n\t ]+[a-zA-Z0-9_]+\\)?\\'")))
                   (let ((old-indentation
                          (length
                           (match-string 1 backwards-string))))
@@ -725,7 +724,7 @@
                  current-line-starts-with-opening-bracket
                  (string= current-line-starts-with-opening-bracket "{")
                  (phps-mode-indent--backwards-looking-at
-                  "[\r\t ]+implements\\([\r\t ]+[\\a-zA-Z_0-9_]+,?\\)+[\r\t ]*{$")
+                  "[\n\t ]+implements\\([\n\t ]+[\\a-zA-Z_0-9_]+,?\\)+[\n\t ]*{\\'")
                  (not
                   (string-match-p
                    "[\t ]*\\(class\\|interface\\)[\t ]+"
