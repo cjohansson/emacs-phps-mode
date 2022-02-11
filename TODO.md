@@ -1,5 +1,14 @@
 # TODO
 
+## Indentation
+
+* Case 1
+
+        $table = $installer->getConnection()
+            ->newTable($installer->getTable('my_table'))
+            ->addColumn();
+
+
 ## Code intelligence
 
 * Bookkeeping of chained object operators like WC()->cart->subtotal
