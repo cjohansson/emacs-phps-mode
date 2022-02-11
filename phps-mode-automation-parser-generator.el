@@ -54,20 +54,23 @@
 (defun phps-mode-automation-parser-generator--ensure-yacc-grammar-is-available ()
   "If grammar is not available, download it."
   (let ((php-yacc-url
-         "https://raw.githubusercontent.com/php/php-src/php-8.0.0/Zend/zend_language_parser.y")
+         "https://raw.githubusercontent.com/php/php-src/PHP-8.1/Zend/zend_language_parser.y")
         (php-yacc-file
          (expand-file-name "zend_language_parser.y")))
+
+    ;; NOTE PHP 8.1 has a syntax error at 28032, missing semi-colon
 
     ;; Download YACC if not available
     (unless (file-exists-p php-yacc-file)
       (message
-       "Downloading PHP 8.0 YACC grammar.. since %S does not exists" php-yacc-file)
+       "Downloading PHP 8.1 YACC grammar.. since %S does not exists" php-yacc-file)
       (url-copy-file
-       php-yacc-url php-yacc-file
+       php-yacc-url
+       php-yacc-file
        t
        t)
       (message
-       "Download of PHP 8.0 YACC grammar completed"))
+       "Download of PHP 8.1 YACC grammar completed"))
 
     (unless (file-exists-p php-yacc-file)
       (error "Missing PHP YACC grammar at %s!" php-yacc-file))))
@@ -354,6 +357,13 @@
 
               ))
 
+           ;; (message
+           ;;  "token: %S from %S"
+           ;;  token
+           ;;  (buffer-substring-no-properties
+           ;;   (car (cdr token))
+           ;;   (cdr (cdr token))))
+
            token)))))
 
   (when (boundp 'parser-generator-lex-analyzer--get-function)
@@ -389,7 +399,7 @@
       (kill-region delimiter-start (point-max)))
     (goto-char (point-min))
 
-    ;; (message "Buffer:\n%S" (buffer-substring-no-properties (point-min) (point-max)))
+    (message "Buffer:\n%S" (buffer-substring-no-properties (point-min) (point-max)))
     
     (let ((productions (eval (car (read-from-string (parser-generator-lr-translate))))))
 
