@@ -60,7 +60,7 @@
         (php-yacc-file
          (expand-file-name "zend_language_parser.y")))
 
-    ;; Download YACC if not available
+    ;; Download YACC if not available (seems to now work in batch mode for some reason)
     (unless (file-exists-p php-yacc-file)
       (message
        "Downloading PHP 8.1 YACC grammar.. since %S does not exists" php-yacc-file)
@@ -119,8 +119,8 @@
      nil))
   (parser-generator-set-grammar
    '(
-     (Start Productions-Block Productions-Delimiter Productions Productions Production Production-End LHS RHSS RHS RHS-Symbol RHS-Symbols Comment Logic Symbol)
-     (productions-delimiter ":" "|" ";" comment logic symbol literal)
+     (Start Productions-Block Productions-Delimiter Productions Productions Production LHS RHSS RHS RHS-Symbol RHS-Symbols Logic Symbol)
+     (productions-delimiter "|" lhs-symbol logic symbol literal)
      (
       (Start
        Productions-Block)
@@ -139,9 +139,7 @@
                     (lambda(args _terminals) (format "%s\n\n%s" (nth 0 args) (nth 1 args))))
        )
       (Production
-       (Comment Production
-                (lambda(args _terminals) (format "%s" (nth 1 args))))
-       (LHS ":" RHSS Production-End
+       (LHS RHSS
             (lambda(args _terminals)
               ;; Store distinct LHS
               (unless (gethash
@@ -158,14 +156,11 @@
                    phps-mode-automation-parser-generator--start
                    (intern (nth 0 args)))))
 
-              (format " (%s\n  %s\n )" (nth 0 args) (nth 2 args))))
+              (format " (%s\n  %s\n )" (nth 0 args) (nth 1 args))))
        )
-      (Production-End
-       ";"
-       (";" ";"))
       (LHS
-       (Symbol
-        (lambda(args _terminals) (format "%s" args)))
+       (lhs-symbol
+        (lambda(args _terminals) (format "%s" (substring args 0 -1))))
        )
       (RHSS
        (RHS
@@ -197,12 +192,8 @@
             (format "%s %s" (nth 0 args) (nth 1 args)))))
        )
       (RHS-Symbol
-       Comment
        Logic
        Symbol)
-      (Comment
-       (comment
-        (lambda(args _terminals) "")))
       (Logic
        (logic
         (lambda(args _terminals) ""))
@@ -250,9 +241,9 @@
               index)
 
              ;; Skip white-space(s)
-             (when (looking-at-p "[\t\n ]+")
+             (when (looking-at-p "[\t\n; ]+")
                (when
-                   (search-forward-regexp "[^\t\n ]" nil t)
+                   (search-forward-regexp "[^\t\n; ]" nil t)
                  (forward-char -1)
                  (when (boundp 'parser-generator-lex-analyzer--move-to-index-flag)
                    (setq-local
@@ -269,9 +260,10 @@
                    (error
                     "Failed to find end of comment started at %S (1)"
                     comment-start))
-                 (setq
-                  token
-                  `(comment ,comment-start . ,comment-end))))
+                 (when (boundp 'parser-generator-lex-analyzer--move-to-index-flag)
+                   (setq-local
+                    parser-generator-lex-analyzer--move-to-index-flag
+                    comment-end))))
 
               ((looking-at "\\({\\)")
                (let ((nesting-stack 1)
@@ -314,9 +306,8 @@
                                 (search-forward-regexp "\\*/" nil t)))
                            (unless comment-end
                              (error
-                              "Failed to find end of comment started at %S (2))"
+                              "Failed to find end of comment inside logic that started at %S (2))"
                               comment-start))))
-                        
 
                         ))))
                  (unless logic-end
@@ -327,7 +318,7 @@
                   token
                   `(logic ,logic-start . ,logic-end))))
 
-              ((looking-at "\\(:\\|;\\||\\)")
+              ((looking-at "\\(|\\)")
                (setq
                 token
                 `(
@@ -342,6 +333,11 @@
                 token
                 `(productions-delimiter ,(match-beginning 0) . ,(match-end 0))))
 
+              ((looking-at "\\([a-zA-Z_]+:\\)")
+               (setq
+                token
+                `(lhs-symbol ,(match-beginning 0) . ,(match-end 0))))
+
               ((looking-at "\\(%?[a-zA-Z_]+\\)")
                (setq
                 token
@@ -354,12 +350,14 @@
 
               ))
 
-           ;; (message
-           ;;  "token: %S from %S"
-           ;;  token
-           ;;  (buffer-substring-no-properties
-           ;;   (car (cdr token))
-           ;;   (cdr (cdr token))))
+           (when token
+             ;; (message
+             ;;  "token: %S from %S"
+             ;;  token
+             ;;  (buffer-substring-no-properties
+             ;;   (car (cdr token))
+             ;;   (cdr (cdr token))))
+             )
 
            token)))))
 
@@ -396,7 +394,7 @@
       (kill-region delimiter-start (point-max)))
     (goto-char (point-min))
 
-    (message "Buffer:\n%S" (buffer-substring-no-properties (point-min) (point-max)))
+    ;; (message "Buffer:\n%S" (buffer-substring-no-properties (point-min) (point-max)))
     
     (let ((productions (eval (car (read-from-string (parser-generator-lr-translate))))))
 
@@ -469,7 +467,7 @@
   (when (boundp 'parser-generator-lr--context-sensitive-precedence-attribute)
     (setq
      parser-generator-lr--context-sensitive-precedence-attribute
-     nil))
+     '%prec))
   (when (boundp 'parser-generator--global-declaration)
     (setq
      parser-generator--global-declaration
