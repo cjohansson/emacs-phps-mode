@@ -9,6 +9,8 @@
 ;;; Code:
 
 
+(require 'url)
+
 (autoload 'parser-generator-set-look-ahead-number "parser-generator")
 (autoload 'parser-generator-set-grammar "parser-generator")
 (autoload 'parser-generator-process-grammar "parser-generator")
@@ -58,17 +60,12 @@
         (php-yacc-file
          (expand-file-name "zend_language_parser.y")))
 
-    ;; NOTE PHP 8.1 has a syntax error at 28032, missing semi-colon
-
     ;; Download YACC if not available
     (unless (file-exists-p php-yacc-file)
       (message
        "Downloading PHP 8.1 YACC grammar.. since %S does not exists" php-yacc-file)
-      (url-copy-file
-       php-yacc-url
-       php-yacc-file
-       t
-       t)
+      (with-current-buffer (url-retrieve-synchronously php-yacc-url)
+        (write-file php-yacc-file))
       (message
        "Download of PHP 8.1 YACC grammar completed"))
 
