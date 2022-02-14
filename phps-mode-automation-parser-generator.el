@@ -63,11 +63,11 @@
     ;; Download YACC if not available (seems to now work in batch mode for some reason)
     (unless (file-exists-p php-yacc-file)
       (message
-       "Downloading PHP 8.1 YACC grammar.. since %S does not exists" php-yacc-file)
+       ";; Downloading PHP 8.1 YACC grammar.. since %S does not exists" php-yacc-file)
       (with-current-buffer (url-retrieve-synchronously php-yacc-url)
         (write-file php-yacc-file))
       (message
-       "Download of PHP 8.1 YACC grammar completed"))
+       ";; Download of PHP 8.1 YACC grammar completed"))
 
     (unless (file-exists-p php-yacc-file)
       (error "Missing PHP YACC grammar at %s!" php-yacc-file))))

@@ -37,7 +37,7 @@
                (grammar (phps-mode-automation-parser-generator--grammar))
                (context-sensitive-attributes phps-mode-automation-parser-generator--context-sensitive-attributes))
 
-          (message "Generated Grammar:\n%S" grammar)
+          (message ";; Generated Grammar:\n%S" grammar)
 
           ;; Prepare export
           (when (fboundp 'parser-generator-set-grammar)
@@ -48,19 +48,19 @@
             (setq
              parser-generator--context-sensitive-attributes
              context-sensitive-attributes)
-            (message "parser-generator--context-sensitive-attributes: %S" parser-generator--context-sensitive-attributes))
+            (message "(setq parser-generator--context-sensitive-attributes %S)" parser-generator--context-sensitive-attributes))
 
           (when (boundp 'parser-generator-lr--context-sensitive-precedence-attribute)
             (setq
              parser-generator-lr--context-sensitive-precedence-attribute
              (car context-sensitive-attributes))
-            (message "parser-generator-lr--context-sensitive-precedence-attribute: %S" parser-generator-lr--context-sensitive-precedence-attribute))
+            (message "(setq parser-generator-lr--context-sensitive-precedence-attribute %S)" parser-generator-lr--context-sensitive-precedence-attribute))
 
           (when (boundp 'parser-generator--global-declaration)
             (setq
              parser-generator--global-declaration
              global-declaration)
-            (message "parser-generator--global-declaration: %S" parser-generator--global-declaration))
+            (message "(setq parser-generator--global-declaration %S)" parser-generator--global-declaration))
 
           (when (boundp 'parser-generator--global-attributes)
             (setq
@@ -71,7 +71,7 @@
             (setq
              parser-generator-lr--global-precedence-attributes
              attributes)
-            (message "parser-generator-lr--global-precedence-attributes: %S" parser-generator-lr--global-precedence-attributes)))
+            (message "(setq parser-generator-lr--global-precedence-attributes %S)" parser-generator-lr--global-precedence-attributes)))
 
         (when (fboundp 'parser-generator-set-look-ahead-number)
           (parser-generator-set-look-ahead-number
@@ -117,7 +117,7 @@
 
         (when (fboundp 'parser-generator-lr--generate-precedence-tables)
           (parser-generator-lr--generate-precedence-tables)
-          (message "Precedence Tables")
+          (message ";; Precedence Tables")
           (when (boundp 'parser-generator-lr--symbol-precedence-value)
             (message
              "(setq parser-generator-lr--symbol-precedence-value %S)"
@@ -162,14 +162,14 @@
                 (setq
                  parser-generator-lr--distinct-action-tables
                  parser-generator-lr--distinct-action-tables-resume)
-                (message "Parser tables are defined - skipping generation"))
+                (message ";; Parser tables are defined - skipping generation"))
             (progn
-              (message "Parser tables are not defined - generating..")
+              (message ";; Parser tables are not defined - generating..")
               (when (fboundp 'parser-generator-lr--generate-goto-tables)
                 (let ((table-lr-items
                        (parser-generator-lr--generate-goto-tables)))
                   (message
-                   "table-lr-items: %S"
+                   ";; table-lr-items: %S"
                    table-lr-items)
                   (when (boundp 'parser-generator-lr--goto-tables)
                     (message
@@ -202,9 +202,9 @@
           (insert export)
           (write-file parser-file-name)
           (kill-buffer)
-          (message "export: %s" export))
+          (message ";; export: %s" export))
 
-        (message "Automation completed"))
+        (message ";; Automation completed"))
     (error "Emacs parser generator must be available!")))
 
 (provide 'phps-mode-automation)
