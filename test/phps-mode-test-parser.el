@@ -288,7 +288,6 @@
    (lambda()
      (phps-mode-parser-parse)))
 
-  ;; TODO Make this pass
   (phps-mode-test-parser--buffer-contents
    "<?php\n$case = 'First';\nswitch ($case)\n{\n    case 'First':\n    case 'Second':\n        echo 'was here';\n}"
    "Switch case with multiple conditions for same case"
