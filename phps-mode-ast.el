@@ -40,7 +40,7 @@
      phps-mode-ast--parse-trail
      parse-trail)
 
-    ;; (message "\nTranslation:\n%S\n\n" translation)
+    (message "\nTranslation:\n%S\n\n" translation)
 
     (when translation
       (dolist (item translation)
@@ -90,7 +90,7 @@
      ast
      (reverse ast))
 
-    ;; (message "AST:\n%S\n\n" ast)
+    (message "AST:\n%S\n\n" ast)
 
     (setq
      phps-mode-ast--tree

@@ -1156,7 +1156,7 @@
 
 ;; attributed_class_statement -> (variable_modifiers optional_type_without_static property_list ";")
 (puthash
- 299
+ 298
  (lambda(args terminals)
    `(
      ast-type
