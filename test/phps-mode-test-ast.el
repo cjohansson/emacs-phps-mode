@@ -39,10 +39,10 @@
       (phps-mode-ast--generate)
       (phps-mode-ast-bookkeeping--generate)
       (message
-       "expected-bookkeeping: %S\n"
+       "expected-bookkeeping:\n%S\n"
        bookkeeping)
       (message
-       "actual-bookkeeping: %S\n"
+       "actual-bookkeeping:\n%S\n"
        (phps-mode-test--hash-to-list
         phps-mode-ast-bookkeeping--index
         t))
