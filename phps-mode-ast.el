@@ -91,6 +91,7 @@
      (reverse ast))
 
     ;; (message "AST:\n%S\n\n" ast)
+
     (setq
      phps-mode-ast--tree
      ast)

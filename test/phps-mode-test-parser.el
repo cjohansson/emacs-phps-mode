@@ -76,7 +76,7 @@
 
      (let ((parse (phps-mode-parser-parse)))
        (message "Left-to-right with right-most derivation in reverse:\n%S\n" parse)
-       (dolist (production-number parse)
+       (dolist (production-number (reverse parse))
          (let ((production
                 (phps-mode-parser--get-grammar-production-by-number
                  production-number)))
@@ -129,7 +129,7 @@
    (lambda()
      (let ((parse (phps-mode-parser-parse)))
        (message "Left-to-right with right-most derivation in reverse:\n%S\n" parse)
-       (dolist (production-number parse)
+       (dolist (production-number (reverse parse))
          (let ((production
                 (phps-mode-parser--get-grammar-production-by-number
                  production-number)))
@@ -150,7 +150,7 @@
    (lambda()
      (let ((parse (phps-mode-parser-parse)))
        (message "Left-to-right with right-most derivation in reverse:\n%S\n" parse)
-       (dolist (production-number parse)
+       (dolist (production-number (reverse parse))
          (let ((production
                 (phps-mode-parser--get-grammar-production-by-number
                  production-number)))
@@ -171,7 +171,7 @@
    (lambda()
      (let ((parse (phps-mode-parser-parse)))
        (message "Left-to-right with right-most derivation in reverse:\n%S\n" parse)
-       (dolist (production-number parse)
+       (dolist (production-number (reverse parse))
          (let ((production
                 (phps-mode-parser--get-grammar-production-by-number
                  production-number)))
@@ -192,7 +192,7 @@
    (lambda()
      (let ((parse (phps-mode-parser-parse)))
        (message "Left-to-right with right-most derivation in reverse:\n%S\n" parse)
-       (dolist (production-number parse)
+       (dolist (production-number (reverse parse))
          (let ((production
                 (phps-mode-parser--get-grammar-production-by-number
                  production-number)))
@@ -213,7 +213,7 @@
    (lambda()
      (let ((parse (phps-mode-parser-parse)))
        (message "Left-to-right with right-most derivation in reverse:\n%S\n" parse)
-       (dolist (production-number parse)
+       (dolist (production-number (reverse parse))
          (let ((production
                 (phps-mode-parser--get-grammar-production-by-number
                  production-number)))

@@ -10,6 +10,7 @@
 
 ;;; Code:
 
+
 (require 'ert)
 (require 'phps-mode)
 (require 'phps-mode-ast)
@@ -23,17 +24,18 @@
    buffer-contents
    name
    (lambda()
-      ;; (let ((parse (phps-mode-parser-parse)))
-      ;;   (message "Left-to-right with right-most derivation:\n%S\n" parse)
-      ;;   (dolist (production-number (reverse parse))
-      ;;     (let ((production
-      ;;            (phps-mode-parser--get-grammar-production-by-number
-      ;;             production-number)))
-      ;;       (message
-      ;;        "%d: %S -> %S"
-      ;;        production-number
-      ;;        (car (car production))
-      ;;        (car (cdr production))))))
+      (let ((parse (phps-mode-parser-parse)))
+        (message "Left-to-right with right-most derivation in reverse:\n%S\n" parse)
+        (dolist (production-number (reverse parse))
+          (let ((production
+                 (phps-mode-parser--get-grammar-production-by-number
+                  production-number)))
+            (message
+             "%d: %S -> %S"
+             production-number
+             (car (car production))
+             (car (cdr production))))))
+      (message "\n")
       (phps-mode-ast--generate)
       (phps-mode-ast-bookkeeping--generate)
       (message "bookkeeping: %S" (phps-mode-test--hash-to-list
@@ -45,6 +47,31 @@
          phps-mode-ast-bookkeeping--index
          t)
         bookkeeping)))))
+
+(defun phps-mode-test-ast--should-imenu (buffer-contents name imenu)
+  (phps-mode-test-ast--buffer-contents
+   buffer-contents
+   name
+   (lambda()
+      (let ((parse (phps-mode-parser-parse)))
+        (message "Left-to-right with right-most derivation in reverse:\n%S\n" parse)
+        (dolist (production-number (reverse parse))
+          (let ((production
+                 (phps-mode-parser--get-grammar-production-by-number
+                  production-number)))
+            (message
+             "%d: %S -> %S"
+             production-number
+             (car (car production))
+             (car (cdr production))))))
+      (message "\n")
+      (phps-mode-ast--generate)
+      (phps-mode-ast-imenu--generate)
+      (message "imenu: %S" phps-mode-ast-imenu--index)
+      (should
+       (equal
+        phps-mode-ast-imenu--index
+        imenu)))))
 
 (defun phps-mode-test-ast--buffer-contents (buffer-contents name logic)
   (with-temp-buffer
@@ -99,157 +126,76 @@
   "Run test for imenu generation."
   (message "-- Running tests for imenu generation... --\n")
 
-  (phps-mode-test-ast--buffer-contents
+  (phps-mode-test-ast--should-imenu
    "<?php\nclass myClass\n{\n\n    public function myFunction1()\n    {\n        echo \"my string with variable {$variable} inside it\";\n    }\n\n    public function myFunction2()\n    {\n    }\n\n}"
    "Imenu generated via parser SDT for simple class"
-   (lambda()
-     (phps-mode-ast--generate)
-     (phps-mode-ast-imenu--generate)
-     (should (equal
-              phps-mode-ast-imenu--index
-              '(("myClass" ("myFunction1" . 44) ("myFunction2" . 153)))))))
+   '(("myClass" ("myFunction1" . 44) ("myFunction2" . 153))))
 
-  (phps-mode-test-ast--buffer-contents
+  (phps-mode-test-ast--should-imenu
    "<?php\ninterface myInterface {\n    public function myFunctionA() {}\n    protected function myFunctionB() {}\n}\n"
    "Imenu generated via parser SDT for interface"
-   (lambda()
-     (phps-mode-ast--generate)
-     (phps-mode-ast-imenu--generate)
-     (should (equal
-              phps-mode-ast-imenu--index
-              '(("myInterface" . (("myFunctionA" . 51) ("myFunctionB" . 91))))))))
+   '(("myInterface" . (("myFunctionA" . 51) ("myFunctionB" . 91)))))
 
-  (phps-mode-test-ast--buffer-contents
+  (phps-mode-test-ast--should-imenu
    "<?php\nfunction myFunctionA() {}\nfunction myFunctionB() {}\n$var = function () {\n    echo 'here';\n};"
    "Imenu generated via parser SDT for function-oriented file without namespace"
-   (lambda()
-     (phps-mode-ast--generate)
-     (phps-mode-ast-imenu--generate)
-     (should (equal
-              phps-mode-ast-imenu--index
-              '(("myFunctionA" . 16) ("myFunctionB" . 42))))))
+   '(("myFunctionA" . 16) ("myFunctionB" . 42)))
 
-  (phps-mode-test-ast--buffer-contents
+  (phps-mode-test-ast--should-imenu
    "<?php\n\nnamespace MyNamespace;\n\nfunction aFunction() {\n    /**\n     * With some contents\n     */\n}\n\nclass MyClass\n{\n\n    /**\n     *\n     */\n    public function __construct()\n    {\n        if ($test) {\n        }\n    }\n\n    /**\n     *\n     */\n    public function myFunction1()\n    {\n        $this->addMessage(\"My random {$message} here\" . ($random > 1 ? \"A\" : \"\") . \" was here.\");\n    }\n    \n    /**\n     *\n     */\n    public function myFunction2()\n    {\n    }\n\n    /**\n     * It's good\n     */\n    public function myFunction3()\n    {\n    }\n\n    /**\n     *\n     */\n    public function myFunction4()\n    {\n    }\n}\n"
    "Passed imenu-generation via parser AST for basic object oriented file"
-   (lambda()
-     (phps-mode-ast--generate)
-     (phps-mode-ast-imenu--generate)
-     (should
-      (equal
-       phps-mode-ast-imenu--index
-       '(("MyNamespace" ("aFunction" . 41) ("MyClass" ("__construct" . 160) ("myFunction1" . 261) ("myFunction2" . 433) ("myFunction3" . 513) ("myFunction4" . 583))))))))
+   '(("MyNamespace" ("aFunction" . 41) ("MyClass" ("__construct" . 160) ("myFunction1" . 261) ("myFunction2" . 433) ("myFunction3" . 513) ("myFunction4" . 583)))))
 
-  (phps-mode-test-ast--buffer-contents
+  (phps-mode-test-ast--should-imenu
    "<?php\n\nnamespace MyNamespaceA\n{\n    function aFunctionA() {\n        /**\n         * With some contents\n         */\n    }\n    class MyClass\n    {\n\n        /**\n         *\n         */\n        public function __construct()\n        {\n            if ($test) {\n            }\n        }\n\n        /**\n         *\n         */\n        public function myFunction1()\n        {\n            $this->addMessage(\"My random {$message} here\" . ($random > 1 ? \"A\" : \"\") . \" was here.\");\n        }\n        \n        /**\n         *\n         */\n        public function myFunction2()\n        {\n        }\n\n        /**\n         * It's good\n         */\n        public function myFunction3()\n        {\n        }\n\n        /**\n         *\n         */\n        public function myFunction4()\n        {\n        }\n    }\n}\nnamespace {\n    function aFunctionB()\n    {\n        \n    }\n    class MyClass\n    {\n\n        /**\n         *\n         */\n        public function __construct()\n        {\n            if ($test) {\n            }\n        }\n\n        /**\n         *\n         */\n        public function myFunction1()\n        {\n            $this->addMessage(\"My random {$message} here\" . ($random > 1 ? \"A\" : \"\") . \" was here.\");\n        }\n        \n        /**\n         *\n         */\n        public function myFunction2()\n        {\n        }\n\n        /**\n         * It's good\n         */\n        public function myFunction3()\n        {\n        }\n\n        /**\n         *\n         */\n        public function myFunction4()\n        {\n        }\n    }\n}"
    "Passed imenu-generation via parser AST for advanced object oriented file"
-   (lambda()
-     (phps-mode-ast--generate)
-     (phps-mode-ast-imenu--generate)
-     (should
-      (equal
-       phps-mode-ast-imenu--index
-       '(("MyNamespaceA" ("aFunctionA" . 46) ("MyClass" ("__construct" . 205) ("myFunction1" . 338) ("myFunction2" . 542) ("myFunction3" . 646) ("myFunction4" . 740))) ("aFunctionB" . 807) ("MyClass" ("__construct" . 925) ("myFunction1" . 1058) ("myFunction2" . 1262) ("myFunction3" . 1366) ("myFunction4" . 1460)))))))
+   '(("MyNamespaceA" ("aFunctionA" . 46) ("MyClass" ("__construct" . 205) ("myFunction1" . 338) ("myFunction2" . 542) ("myFunction3" . 646) ("myFunction4" . 740))) ("aFunctionB" . 807) ("MyClass" ("__construct" . 925) ("myFunction1" . 1058) ("myFunction2" . 1262) ("myFunction3" . 1366) ("myFunction4" . 1460))))
 
-  (phps-mode-test-ast--buffer-contents
+  (phps-mode-test-ast--should-imenu
    "<?php\nnamespace myNamespace {\n    class myClass extends myAbstract {\n        public function myFunctionA() {}\n        protected function myFunctionB() {}\n    }\n}\n"
    "Imenu object-oriented file with namespace, class that extends and functions"
-   (lambda()
-     (phps-mode-ast--generate)
-     (phps-mode-ast-imenu--generate)
-     (should
-      (equal
-       phps-mode-ast-imenu--index
-       '(("myNamespace" ("myClass" ("myFunctionA" . 94) ("myFunctionB" . 138))))))))
+   '(("myNamespace" ("myClass" ("myFunctionA" . 94) ("myFunctionB" . 138)))))
 
-  (phps-mode-test-ast--buffer-contents
+  (phps-mode-test-ast--should-imenu
    "<?php\nnamespace myNamespace;\nclass myClass extends myAbstract implements myInterface {\n    public function myFunctionA() {}\n    protected function myFunctionB() {}\n}\n"
    "Imenu object-oriented file with bracket-less namespace, class that extends and implements and functions"
-   (lambda()
-     (phps-mode-ast--generate)
-     (phps-mode-ast-imenu--generate)
-     (should
-      (equal
-       phps-mode-ast-imenu--index
-       '(("myNamespace" ("myClass" ("myFunctionA" . 108) ("myFunctionB" . 148))))))))
+   '(("myNamespace" ("myClass" ("myFunctionA" . 108) ("myFunctionB" . 148)))))
 
-  (phps-mode-test-ast--buffer-contents
+  (phps-mode-test-ast--should-imenu
    "<?php\nclass myClass {}"
    "Imenu empty class"
-   (lambda()
-     (phps-mode-ast--generate)
-     (phps-mode-ast-imenu--generate)
-     (should
-      (equal
-       phps-mode-ast-imenu--index
-       '(("myClass" . 13))))))
+   '(("myClass" . 13)))
 
-  (phps-mode-test-ast--buffer-contents
+  (phps-mode-test-ast--should-imenu
    "<?php\nnamespace myNamespace {}"
    "Imenu empty bracketed namespace"
-   (lambda()
-     (phps-mode-ast--generate)
-     (phps-mode-ast-imenu--generate)
-     (should
-      (equal
-       phps-mode-ast-imenu--index
-       '(("myNamespace" . 17))))))
+   '(("myNamespace" . 17)))
 
-  (phps-mode-test-ast--buffer-contents
+  (phps-mode-test-ast--should-imenu
    "<?php\nnamespace myNamespace;"
    "Imenu empty namespace without brackets"
-   (lambda()
-     (phps-mode-ast--generate)
-     (phps-mode-ast-imenu--generate)
-     (should
-      (equal
-       phps-mode-ast-imenu--index
-       '(("myNamespace" . 17))))))
+   '(("myNamespace" . 17)))
 
-  (phps-mode-test-ast--buffer-contents
+  (phps-mode-test-ast--should-imenu
    "<?php\nnamespace myNamespace;\nclass myClass extends myAbstract implements myInterface {\n    public function myFunctionA($myArg = null) {}\n    protected function myFunctionB($myArg = 'abc') {}\n}\n"
    "Imenu object-oriented file with bracket-less namespace, class that extends and implements and functions with optional arguments"
-   (lambda()
-     (phps-mode-ast--generate)
-     (phps-mode-ast-imenu--generate)
-     (should
-      (equal
-       phps-mode-ast-imenu--index
-       '(("myNamespace" ("myClass" ("myFunctionA" . 108) ("myFunctionB" . 161))))))))
+   '(("myNamespace" ("myClass" ("myFunctionA" . 108) ("myFunctionB" . 161)))))
 
-  (phps-mode-test-ast--buffer-contents
+  (phps-mode-test-ast--should-imenu
    "<?php\nnamespace myNamespace\\myNamespace2;\nclass myClass extends myAbstract implements myInterface {\n    public function myFunctionA($myArg = null) {}\n    protected function myFunctionB($myArg = 'abc') {}\n}\n"
    "Imenu object-oriented file with bracket-less namespace with multiple levels, class that extends and implements and functions with optional arguments"
-   (lambda()
-     (phps-mode-ast--generate)
-     (phps-mode-ast-imenu--generate)
-     (should
-      (equal
-       phps-mode-ast-imenu--index
-       '(("myNamespace\\myNamespace2" ("myClass" ("myFunctionA" . 121) ("myFunctionB" . 174))))))))
+   '(("myNamespace\\myNamespace2" ("myClass" ("myFunctionA" . 121) ("myFunctionB" . 174)))))
 
-  (phps-mode-test-ast--buffer-contents
+  (phps-mode-test-ast--should-imenu
    "<?php\nnamespace {}"
    "Imenu empty unnamed bracketed namespace"
-   (lambda()
-     (phps-mode-ast--generate)
-     (phps-mode-ast-imenu--generate)
-     (should
-      (equal
-       phps-mode-ast-imenu--index
-       nil))))
+   nil)
 
   ;; TODO Make this test pass
-  ;; (phps-mode-test-ast--buffer-contents
+  ;; (phps-mode-test-ast--should-imenu
   ;;  "<?php\n\nnamespace myNamespace;\n\nif (!function_exists('myFunction')) {\n    function myFunction() {\n        if (!class_exists('myClassA')) {\n            class myClassA {\n                public function myMethodA()\n                {\n                    \n                }\n            }\n        }\n    }\n}\n\nif (!class_exists('myClassB')) {\n    class myClassB\n    {\n        function myMethodB()\n        {\n        }\n    }\n}"
   ;;  "Imenu for conditionally declared function and class"
-  ;;  (lambda()
-  ;;    (phps-mode-ast--generate)
-  ;;    (phps-mode-ast-imenu--generate)
-  ;;    (should
-  ;;     (equal
-  ;;      phps-mode-ast-imenu--index
-  ;;      '(("myNamespace" ("myFunction" . 183) ("myClassA" ("myMethodA" . 200)) ("myClassB" . ("myMethodB" . 377))))))))
+  ;;  '(("myNamespace" ("myFunction" . 183) ("myClassA" ("myMethodA" . 200)) ("myClassB" . ("myMethodB" . 377)))))
 
   (message "\n-- Ran tests for imenu generation. --"))
 
