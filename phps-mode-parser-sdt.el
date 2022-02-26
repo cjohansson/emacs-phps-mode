@@ -1414,6 +1414,62 @@
      ))
  phps-mode-parser--table-translations)
 
+;; expr -> (expr "|" expr)
+(puthash
+ 384
+ (lambda(args _terminals)
+   `(
+     ast-type
+     bitwise-or-expression
+     a
+     ,(phps-mode-parser-sdt--get-list-of-object (nth 0 args))
+     b
+     ,(phps-mode-parser-sdt--get-list-of-object (nth 2 args))
+     ))
+ phps-mode-parser--table-translations)
+
+;; expr -> (expr T_AMPERSAND_NOT_FOLLOWED_BY_VAR_OR_VARARG expr)
+(puthash
+ 385
+ (lambda(args _terminals)
+   `(
+     ast-type
+     bitwise-and-expression
+     a
+     ,(phps-mode-parser-sdt--get-list-of-object (nth 0 args))
+     b
+     ,(phps-mode-parser-sdt--get-list-of-object (nth 2 args))
+     ))
+ phps-mode-parser--table-translations)
+
+;; expr -> (expr T_AMPERSAND_FOLLOWED_BY_VAR_OR_VARARG expr)
+(puthash
+ 386
+ (lambda(args _terminals)
+   `(
+     ast-type
+     bitwise-and-expression
+     a
+     ,(phps-mode-parser-sdt--get-list-of-object (nth 0 args))
+     b
+     ,(phps-mode-parser-sdt--get-list-of-object (nth 2 args))
+     ))
+ phps-mode-parser--table-translations)
+
+;; expr -> (expr "^" expr)
+(puthash
+ 387
+ (lambda(args _terminals)
+   `(
+     ast-type
+     bitwise-xor-expression
+     a
+     ,(phps-mode-parser-sdt--get-list-of-object (nth 0 args))
+     b
+     ,(phps-mode-parser-sdt--get-list-of-object (nth 2 args))
+     ))
+ phps-mode-parser--table-translations)
+
 ;; expr -> (expr "." expr)
 (puthash
  388
@@ -1430,11 +1486,109 @@
 
 ;; expr -> (expr "+" expr)
 (puthash
- 397
+ 389
  (lambda(args _terminals)
    `(
      ast-type
      addition-expression
+     a
+     ,(phps-mode-parser-sdt--get-list-of-object (nth 0 args))
+     b
+     ,(phps-mode-parser-sdt--get-list-of-object (nth 2 args))
+     ))
+ phps-mode-parser--table-translations)
+
+;; expr -> (expr "-" expr)
+(puthash
+ 390
+ (lambda(args _terminals)
+   `(
+     ast-type
+     subtraction-expression
+     a
+     ,(phps-mode-parser-sdt--get-list-of-object (nth 0 args))
+     b
+     ,(phps-mode-parser-sdt--get-list-of-object (nth 2 args))
+     ))
+ phps-mode-parser--table-translations)
+
+;; expr -> (expr "*" expr)
+(puthash
+ 391
+ (lambda(args _terminals)
+   `(
+     ast-type
+     multiplication-expression
+     a
+     ,(phps-mode-parser-sdt--get-list-of-object (nth 0 args))
+     b
+     ,(phps-mode-parser-sdt--get-list-of-object (nth 2 args))
+     ))
+ phps-mode-parser--table-translations)
+
+;; expr -> (expr T_POW expr)
+(puthash
+ 392
+ (lambda(args _terminals)
+   `(
+     ast-type
+     exponentiation-expression
+     a
+     ,(phps-mode-parser-sdt--get-list-of-object (nth 0 args))
+     b
+     ,(phps-mode-parser-sdt--get-list-of-object (nth 2 args))
+     ))
+ phps-mode-parser--table-translations)
+
+;; expr -> (expr "/" expr)
+(puthash
+ 393
+ (lambda(args _terminals)
+   `(
+     ast-type
+     division-expression
+     a
+     ,(phps-mode-parser-sdt--get-list-of-object (nth 0 args))
+     b
+     ,(phps-mode-parser-sdt--get-list-of-object (nth 2 args))
+     ))
+ phps-mode-parser--table-translations)
+
+;; expr -> (expr "%" expr)
+(puthash
+ 394
+ (lambda(args _terminals)
+   `(
+     ast-type
+     modulo-expression
+     a
+     ,(phps-mode-parser-sdt--get-list-of-object (nth 0 args))
+     b
+     ,(phps-mode-parser-sdt--get-list-of-object (nth 2 args))
+     ))
+ phps-mode-parser--table-translations)
+
+;; expr -> (expr T_SL expr)
+(puthash
+ 395
+ (lambda(args _terminals)
+   `(
+     ast-type
+     bitwise-shift-left-expression
+     a
+     ,(phps-mode-parser-sdt--get-list-of-object (nth 0 args))
+     b
+     ,(phps-mode-parser-sdt--get-list-of-object (nth 2 args))
+     ))
+ phps-mode-parser--table-translations)
+
+;; expr -> (expr T_SR expr)
+(puthash
+ 396
+ (lambda(args _terminals)
+   `(
+     ast-type
+     bitwise-shift-right-expression
      a
      ,(phps-mode-parser-sdt--get-list-of-object (nth 0 args))
      b
