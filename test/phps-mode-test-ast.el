@@ -25,8 +25,8 @@
    name
    (lambda()
       (let ((parse (phps-mode-parser-parse)))
-        (message "Left-to-right with right-most derivation in reverse:\n%S\n" parse)
-        (dolist (production-number parse)
+        (message "Left-to-right with right-most derivation:\n%S\n" parse)
+        (dolist (production-number (reverse parse))
           (let ((production
                  (phps-mode-parser--get-grammar-production-by-number
                   production-number)))
@@ -38,14 +38,14 @@
       (message "\n")
       (phps-mode-ast--generate)
       (phps-mode-ast-bookkeeping--generate)
-      (message
-       "expected-bookkeeping:\n%S\n"
-       bookkeeping)
-      (message
-       "actual-bookkeeping:\n%S\n"
-       (phps-mode-test--hash-to-list
-        phps-mode-ast-bookkeeping--index
-        t))
+      ;; (message
+      ;;  "expected-bookkeeping:\n%S\n"
+      ;;  bookkeeping)
+      ;; (message
+      ;;  "actual-bookkeeping:\n%S\n"
+      ;;  (phps-mode-test--hash-to-list
+      ;;   phps-mode-ast-bookkeeping--index
+      ;;   t))
       (should
        (equal
         (phps-mode-test--hash-to-list
@@ -59,8 +59,8 @@
    name
    (lambda()
       (let ((parse (phps-mode-parser-parse)))
-        (message "Left-to-right with right-most derivation in reverse:\n%S\n" parse)
-        (dolist (production-number parse)
+        (message "Left-to-right with right-most derivation:\n%S\n" parse)
+        (dolist (production-number (reverse parse))
           (let ((production
                  (phps-mode-parser--get-grammar-production-by-number
                   production-number)))

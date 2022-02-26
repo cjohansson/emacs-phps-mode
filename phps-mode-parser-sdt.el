@@ -1109,7 +1109,7 @@
 
 ;; static_var -> (T_VARIABLE)
 (puthash
- 292
+ 294
  (lambda(args terminals)
    `(
      ast-type
