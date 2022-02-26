@@ -5,8 +5,8 @@
 ;; Author: Christian Johansson <christian@cvj.se>
 ;; Maintainer: Christian Johansson <christian@cvj.se>
 ;; Created: 3 Mar 2018
-;; Modified: 1 Feb 2022
-;; Version: 0.4.16
+;; Modified: 26 Feb 2022
+;; Version: 0.4.17
 ;; Keywords: tools, convenience
 ;; URL: https://github.com/cjohansson/emacs-phps-mode
 
@@ -30,7 +30,7 @@
 
 ;;; Commentary:
 
-;; A major-mode that uses original PHP lex-analyzer and parser for syntax coloring, bookkeeping, imenu and indentation making it easier to spot errors in syntax.
+;; A major-mode that uses the original PHP lex-analyzer and parser for syntax coloring, bookkeeping, AST, imenu making it easier to spot errors in syntax.
 ;;
 ;; Also includes full support for PSR-1 and PSR-2 indentation and indentaton for HTML/XML contents.
 ;;
