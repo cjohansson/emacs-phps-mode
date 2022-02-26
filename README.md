@@ -5,13 +5,13 @@
 
 **Goal**: An Emacs major mode for PHP scripting language which aims at making a full syntax and semantic integration. Currently at *usable* stage.
 
-This mode does not require PHP installed on your computer because it has a built-in elisp based lexer and parser. It also works over TRAMP for the same reason. It supports Emacs >= 26.
+This mode does not require PHP installed on your computer because it has a built-in elisp based lexer and parser. It supports Emacs >= 26.
 
 ## Features
 
 * GPLv3 license
 * Flycheck support with `(phps-mode-flycheck-setup)`
-* Lexer based on official PHP 8.0 re2c lexer
+* Lexer based on official PHP 8.1 re2c generated lexer
 * Syntax coloring based on lexer tokens, makes it easier to spot invalid code
 * PSR-1, PSR-2 and PSR-12 indentation
 * PSR-1, PSR-2 and PSR-12 supported white-space
@@ -29,7 +29,7 @@ This mode does not require PHP installed on your computer because it has a built
 * Support for asynchronous lexer via processes (`async.el`) or threads
 * Mode-line asynchronous status
 * Bookkeeping in lexical-analysis, showing defined and undefined variables via syntax coloring (requires a theme that has distinct colors for 'font-lock-warning-face and 'font-lock-variable-name-face)
-* Canonical LR(1) Parser automatically generated from official PHP 8.0 LALR(1) YACC grammar
+* Canonical LR(1) Parser automatically generated from official PHP 8.1 LALR(1) YACC grammar
 
 ## Issues and roadmap
 
