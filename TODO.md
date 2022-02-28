@@ -7,6 +7,14 @@
         $table = $installer->getConnection()
             ->newTable($installer->getTable('my_table'))
             ->addColumn();
+            
+* Case 2
+
+        $criteria = $this->searchCriteriaBuilder
+            ->addFilter('status', $status)
+                ->addFilter(method', 'my_method_' . $object->getId())
+                    ->create();
+
 
 
 ## Code intelligence
