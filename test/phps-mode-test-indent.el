@@ -672,6 +672,21 @@
    "<?php\n$var = Object->myMethod()\n    ->myMethod2();\necho 'here';"
    "Line after assignment were an chaining of object methods started")
 
+  ;; TODO Make this pass
+  (phps-mode-test-indent--should-equal
+   "<?php\nif (true) {\n    $table = $installer->getConnection()\n        ->newTable($installer->getTable('my_table'))\n        ->addColumn();\n}\n"
+   "Variable assignment with chained method calls on multiple lines #1")
+
+  ;; TODO Make this pass
+  (phps-mode-test-indent--should-equal
+   "<?php\nif (true) {\n    $criteria = $this->searchCriteriaBuilder\n        ->addFilter('status', $status)\n        ->addFilter(method', 'my_method_' . $object->getId())\n        ->create();\n}\n"
+   "Variable assignment with chained method calls on multiple lines #2")
+
+  ;; TODO Make this pass
+  (phps-mode-test-indent--should-equal
+   "<?php\nif (true) {\n    /*\n    was here\n    */\n    echo 'there';\n}"
+   "Line after closing multi-row comment")
+
   )
 
 (defun phps-mode-test-indent--get-lines-indent-psr-2 ()
