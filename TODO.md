@@ -4,18 +4,38 @@
 
 * Case 1
 
-        $table = $installer->getConnection()
-            ->newTable($installer->getTable('my_table'))
-            ->addColumn();
-            
+```php
+<?php
+if (true) {
+    $table = $installer->getConnection()
+        ->newTable($installer->getTable('my_table'))
+        ->addColumn();
+}
+```
+
 * Case 2
 
-        $criteria = $this->searchCriteriaBuilder
-            ->addFilter('status', $status)
-                ->addFilter(method', 'my_method_' . $object->getId())
-                    ->create();
+```php
+<?php
+if (true) {
+    $criteria = $this->searchCriteriaBuilder
+        ->addFilter('status', $status)
+        ->addFilter(method', 'my_method_' . $object->getId())
+        ->create();
+}
+```
 
+* Case 3
 
+```php
+<?php
+if (true) {
+    /*
+    was here
+    */
+    echo 'there';
+}
+```
 
 ## Code intelligence
 
