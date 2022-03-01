@@ -905,7 +905,10 @@
                       (started-chaining-on-this-line t)
                       (is-string-concatenation)
                       (is-bracket-less-command)
-                      (is-same-line-p t))
+                      (is-same-line-p t)
+                      (chaining-line)
+                      (reference-line)
+                      (chaining-was-this-line-p))
                   (while
                       (and
                        not-found
@@ -914,11 +917,20 @@
                         nil
                         t))
                     (let ((match (match-string-no-properties 0)))
+                      (message "match: %S" match)
                       (cond
 
                        ((string=
                          "->"
                          match)
+                        (setq
+                         chaining-was-this-line-p
+                         t)
+                        (setq
+                         chaining-line
+                         (buffer-substring-no-properties
+                          (line-beginning-position)
+                          (line-end-position)))
                         (setq
                          started-chaining-on-this-line
                          is-same-line-p))
@@ -926,6 +938,17 @@
                        ((string=
                          "\n"
                          match)
+                        (if chaining-was-this-line-p
+                            (progn
+                              (setq
+                               chaining-was-this-line-p
+                               nil)
+                              (setq
+                               reference-line
+                               chaining-line))
+                          (setq
+                           reference-line
+                           nil))
                         (setq
                          is-same-line-p
                          nil))
@@ -950,7 +973,13 @@
                           match)
                          (string=
                           "}"
+                          match)
+                         (string=
+                          "{"
                           match))
+                        (setq
+                         reference-line
+                         nil)
                         (setq
                          not-found
                          nil))
@@ -978,9 +1007,17 @@
                          (not is-string-concatenation)
                          (not started-chaining-on-this-line)
                          (not is-bracket-less-command))
-                    (setq
-                     new-indentation
-                     (+ new-indentation tab-width)))))
+                    (if reference-line
+                        (progn
+                          (phps-mode-debug-message
+                           (message "reference-line: %S" reference-line))
+                          (setq
+                           new-indentation
+                           (phps-mode-indent--string-indentation
+                            reference-line)))
+                      (setq
+                       new-indentation
+                       (+ new-indentation tab-width))))))
 
                ;; LINE AFTER OPENING HEREDOC/NOWDOC
                ;; echo <<<VAR
