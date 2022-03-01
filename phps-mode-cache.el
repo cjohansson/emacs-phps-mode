@@ -58,9 +58,8 @@
   "Save DATA in cache for KEY."
   (let ((cache-filename (phps-mode-cache--get-filename-for-key key))
         (save-silently t))
-    (with-temp-buffer
-      (insert (format "'%S" data))
-      (write-file cache-filename nil))))
+    (with-temp-file cache-filename
+      (insert (format "'%S" data)))))
 
 (defun phps-mode-cache-load (key)
   "Load DATA in cache for KEY."
