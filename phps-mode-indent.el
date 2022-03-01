@@ -935,6 +935,8 @@
                          started-chaining-on-this-line
                          is-same-line-p))
 
+                       ;; TODO Make helper function that determines chaining indentation reference line
+
                        ((string=
                          "\n"
                          match)
