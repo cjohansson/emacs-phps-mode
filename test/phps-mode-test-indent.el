@@ -213,6 +213,54 @@
       (phps-mode-indent--get-previous-start-of-bracket-line t)
       nil)))
 
+  (with-temp-buffer
+    (insert "<?php\nif (true) {\n    $table = $installer->getConnection()\n        ->newTable($installer->getTable('my_table'))\n        ->addColumn();\n}\n")
+    (goto-char 127)
+    (should
+     (equal
+      (phps-mode-indent--get-previous-start-of-chaining)
+      "        ->newTable($installer->getTable('my_table'))")))
+
+  (with-temp-buffer
+    (insert "<?php\nif (true) {\n    $table = $installer->getConnection()\n        ->newTable($installer->getTable('my_table'))\n        ->addColumn();\n}\n")
+    (goto-char 73)
+    (should
+     (equal
+      (phps-mode-indent--get-previous-start-of-chaining)
+      "        ->newTable($installer->getTable('my_table'))")))
+
+  (with-temp-buffer
+    (insert "<?php\nif (true) {\n    $criteria = $this->searchCriteriaBuilder\n        ->addFilter('status', $status)\n        ->addFilter(method', 'my_method_' . $object->getId())\n        ->create();\n}\n")
+    (goto-char 177)
+    (should
+     (equal
+      (phps-mode-indent--get-previous-start-of-chaining)
+      "        ->addFilter('status', $status)")))
+
+  (with-temp-buffer
+    (insert "<?php\nif (true) {\n    $criteria = $this->searchCriteriaBuilder\n        ->addFilter('status', $status)\n        ->addFilter(method', 'my_method_' . $object->getId())\n        ->create();\n}\n")
+    (goto-char 135)
+    (should
+     (equal
+      (phps-mode-indent--get-previous-start-of-chaining)
+      "        ->addFilter('status', $status)")))
+
+  (with-temp-buffer
+    (insert "<?php\nif (true) {\n    $criteria = $this->searchCriteriaBuilder\n        ->addFilter('status', $status)\n        ->addFilter(method', 'my_method_' . $object->getId())\n        ->create();\n}\n")
+    (goto-char 96)
+    (should
+     (equal
+      (phps-mode-indent--get-previous-start-of-chaining)
+      "        ->addFilter('status', $status)")))
+
+  (with-temp-buffer
+    (insert "<?php\nif (true) {\n    $criteria = $this->searchCriteriaBuilder\n        ->addFilter('status', $status)\n        ->addFilter(method', 'my_method_' . $object->getId())\n        ->create();\n}\n")
+    (goto-char 51)
+    (should
+     (equal
+      (phps-mode-indent--get-previous-start-of-chaining)
+      nil)))
+
   (should
    (equal
     (phps-mode-indent--get-html-string-bracket-level "<!DOCTYPE html>")

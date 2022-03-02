@@ -366,6 +366,80 @@
             nil
           reference-line)))))
 
+(defun phps-mode-indent--get-previous-start-of-chaining ()
+  "Get previous start of bracket line as reference, if any exist."
+  (let ((reference-line))
+    (save-excursion
+      (end-of-line)
+      (let ((not-found-bracket-start t)
+            (parenthesis-level 0)
+            (same-line-p t)
+            (found-chain-on-this-line))
+        (while
+            (and
+             not-found-bracket-start
+             (search-backward-regexp
+              "\\([][{}()=\n]\\|->\\)"
+              nil
+              t))
+          (let ((match (match-string-no-properties 0)))
+            ;; (message "match: %S" match)
+            (cond
+
+             ((string= "\n" match)
+              (if found-chain-on-this-line
+                  (progn
+                    (setq
+                     reference-line
+                     found-chain-on-this-line)
+                    (setq
+                     found-chain-on-this-line
+                     nil))
+                (setq
+                 reference-line
+                 nil))
+              (setq
+               same-line-p
+               nil))
+
+             ((string= "->" match)
+              (setq
+               found-chain-on-this-line
+               (buffer-substring-no-properties
+                (line-beginning-position)
+                (line-end-position))))
+
+             ((string= "=" match)
+              (setq
+               not-found-bracket-start
+               nil))
+
+             ((or
+               (string= "(" match)
+               (string= "[" match)
+               (string= "{" match))
+              (setq
+               parenthesis-level
+               (1+ parenthesis-level))
+              (when (= parenthesis-level 1)
+                (setq
+                 not-found-bracket-start
+                 nil)))
+
+             ((or
+               (string= ")" match)
+               (string= "]" match)
+               (string= "}" match))
+              (setq
+               parenthesis-level
+               (1- parenthesis-level)))
+
+             )))
+        (message "reference-line: %S" reference-line)
+        (if same-line-p
+            nil
+          reference-line)))))
+
 (defun phps-mode-indent--get-previous-reference-command-line ()
   "Get previous line that is a command (if any)."
   (let ((not-found t)
@@ -901,125 +975,15 @@
                 (setq
                  match-type
                  'line-continuing-object-operators)
-                (let ((not-found t)
-                      (started-chaining-on-this-line t)
-                      (is-string-concatenation)
-                      (is-bracket-less-command)
-                      (is-same-line-p t)
-                      (chaining-line)
-                      (reference-line)
-                      (chaining-was-this-line-p))
-                  (while
-                      (and
-                       not-found
-                       (search-backward-regexp
-                        "\\(;\\|{\\|(\\|)\\|=\\|->\\|echo[\t ]+\\|print[\t ]+\\|\n\\|^[\t ]*\\.\\|\\.[\t ]*$\\)"
-                        nil
-                        t))
-                    (let ((match (match-string-no-properties 0)))
-                      (message "match: %S" match)
-                      (cond
-
-                       ((string=
-                         "->"
-                         match)
-                        (setq
-                         chaining-was-this-line-p
-                         t)
-                        (setq
-                         chaining-line
-                         (buffer-substring-no-properties
-                          (line-beginning-position)
-                          (line-end-position)))
-                        (setq
-                         started-chaining-on-this-line
-                         is-same-line-p))
-
-                       ;; TODO Make helper function that determines chaining indentation reference line
-
-                       ((string=
-                         "\n"
-                         match)
-                        (if chaining-was-this-line-p
-                            (progn
-                              (setq
-                               chaining-was-this-line-p
-                               nil)
-                              (setq
-                               reference-line
-                               chaining-line))
-                          (setq
-                           reference-line
-                           nil))
-                        (setq
-                         is-same-line-p
-                         nil))
-
-                       ((or
-                         (string=
-                          "echo"
-                          match)
-                         (string=
-                          "print"
-                          match))
-                        (setq
-                         is-bracket-less-command
-                         t)
-                        (setq
-                         not-found
-                         nil))
-
-                       ((or
-                         (string=
-                          ";"
-                          match)
-                         (string=
-                          "}"
-                          match)
-                         (string=
-                          "{"
-                          match))
-                        (setq
-                         reference-line
-                         nil)
-                        (setq
-                         not-found
-                         nil))
-
-                       ((string=
-                         "="
-                         match)
-                        (setq
-                         not-found
-                         nil))
-
-                       ((string-match-p
-                         "\\(^[\t ]*\\.\\|\\.[\t ]*\\)$"
-                         match)
-                        (setq
-                         is-string-concatenation
-                         t)
-                        (setq
-                         not-found
-                         nil))
-
-                       )))
-
-                  (when (and
-                         (not is-string-concatenation)
-                         (not started-chaining-on-this-line)
-                         (not is-bracket-less-command))
-                    (if reference-line
-                        (progn
-                          (phps-mode-debug-message
-                           (message "reference-line: %S" reference-line))
-                          (setq
-                           new-indentation
-                           (phps-mode-indent--string-indentation
-                            reference-line)))
+                (let ((reference-line (phps-mode-indent--get-previous-start-of-chaining)))
+                  (if reference-line
                       (setq
                        new-indentation
-                       (+ new-indentation tab-width))))))
+                       (phps-mode-indent--string-indentation
+                        reference-line))
+                    (setq
+                     new-indentation
+                     (+ new-indentation tab-width)))))
 
                ;; LINE AFTER OPENING HEREDOC/NOWDOC
                ;; echo <<<VAR
