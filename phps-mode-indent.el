@@ -373,34 +373,70 @@
       (end-of-line)
       (let ((not-found-bracket-start t)
             (parenthesis-level 0)
+            (string-concatenation)
+            (found-chain-on-this-line)
+            (reference-line-previous)
+            (reference-line-delta)
+            (reference-line-previous-delta)
+            (line-delta 0)
             (same-line-p t)
-            (found-chain-on-this-line))
+            (rewind-reference-line))
         (while
             (and
              not-found-bracket-start
              (search-backward-regexp
-              "\\([][{}()=\n]\\|->\\)"
+              "\\([][{}()=\n;]\\|->\\|^[\ t]*\\.\\|\\.[\t ]*$\\)"
               nil
               t))
           (let ((match (match-string-no-properties 0)))
-            ;; (message "match: %S" match)
             (cond
 
+             ((string-match-p
+               "\\(^[\ t]*\\.\\|\\.[\t ]*$\\)"
+               match)
+              (setq
+               string-concatenation
+               t)
+              (setq
+               not-found-bracket-start
+               nil))
+
              ((string= "\n" match)
+              (setq
+               same-line-p
+               nil)
               (if found-chain-on-this-line
                   (progn
+                    (setq
+                     reference-line-previous
+                     reference-line)
+                    (setq
+                     reference-line-previous-delta
+                     reference-line-delta)
                     (setq
                      reference-line
                      found-chain-on-this-line)
                     (setq
                      found-chain-on-this-line
-                     nil))
+                     nil)
+                    (setq
+                     reference-line-delta
+                     line-delta))
                 (setq
                  reference-line
+                 nil)
+                (setq
+                 reference-line-delta
+                 nil)
+                (setq
+                 reference-line-previous
+                 nil)
+                (setq
+                 reference-line-previous-delta
                  nil))
               (setq
-               same-line-p
-               nil))
+               line-delta
+               (1- line-delta)))
 
              ((string= "->" match)
               (setq
@@ -409,7 +445,11 @@
                 (line-beginning-position)
                 (line-end-position))))
 
-             ((string= "=" match)
+             ((or
+               (string= "=" match)
+               (and
+                (not same-line-p)
+                (string= ";" match)))
               (setq
                not-found-bracket-start
                nil))
@@ -423,6 +463,12 @@
                (1+ parenthesis-level))
               (when (= parenthesis-level 1)
                 (setq
+                 rewind-reference-line
+                 t)
+                (setq
+                 line-delta
+                 (1+ line-delta))
+                (setq
                  not-found-bracket-start
                  nil)))
 
@@ -435,10 +481,23 @@
                (1- parenthesis-level)))
 
              )))
-        (message "reference-line: %S" reference-line)
-        (if same-line-p
-            nil
-          reference-line)))))
+
+        (when (or
+               rewind-reference-line
+               not-found-bracket-start)
+          (setq
+           reference-line
+           reference-line-previous)
+          (setq
+           reference-line-delta
+           reference-line-previous-delta))
+
+        (if (and
+             reference-line
+             reference-line-delta
+             (not (= reference-line-delta 0)))
+            reference-line
+          nil)))))
 
 (defun phps-mode-indent--get-previous-reference-command-line ()
   "Get previous line that is a command (if any)."
