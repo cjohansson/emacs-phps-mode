@@ -373,7 +373,6 @@
       (end-of-line)
       (let ((not-found-bracket-start t)
             (parenthesis-level 0)
-            (string-concatenation)
             (found-chain-on-this-line)
             (reference-line-previous)
             (reference-line-delta)
@@ -394,9 +393,6 @@
              ((string-match-p
                "\\(^[\ t]*\\.\\|\\.[\t ]*$\\)"
                match)
-              (setq
-               string-concatenation
-               t)
               (setq
                not-found-bracket-start
                nil))
@@ -1166,9 +1162,13 @@
                 (setq
                  match-type
                  'line-after-ending-of-doc-comment)
-                (setq
-                 new-indentation
-                 (1- new-indentation)))
+                (save-excursion
+                  (when (and
+                         (search-backward-regexp "/\\*" nil t)
+                         (looking-at-p "/\\*\\*"))
+                    (setq
+                     new-indentation
+                     (1- new-indentation)))))
 
                ;; LINE AFTER CONTINUATION OF DOC-COMMENT
                ;; /**
