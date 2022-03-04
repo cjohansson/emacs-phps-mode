@@ -18,3 +18,4 @@ Fix by reloading file or running C-r to rescan and clear cache
 ## Other
 
 * Support for mmm-mode or similar
+* Build in eldoc support like php-eldoc
