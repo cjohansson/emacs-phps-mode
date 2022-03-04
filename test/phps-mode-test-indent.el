@@ -165,6 +165,15 @@
         (phps-mode-indent--get-previous-reference-command-line)
         "    $variable =")))
 
+    ;; TODO Make this pass
+    (with-temp-buffer
+      (insert "<?php\n\nif (true) {\n    $valid = true;\n    $variable = myFunction();\n    switch ($variable) {\n        case Object::CASE1:\n            throw new Exception(\n                'MyException'\n            );\n        case Object::Case2:\n            throw new \\Exception(\n                'MyException2',\n            );\n        case Object::Case3:\n            $valid = false;\n            break;\n        case Object::Case4:\n            if (!Object2::validate($variable)) {\n                $valid = false;\n            }\n            break;\n        case Object::Case5:\n            $valid = false;\n            break;\n        case Object::Case6:\n            $valid = true;\n        break;\n    }\n}\n")
+      (goto-char 380)
+      (should
+       (string=
+        (phps-mode-indent--get-previous-reference-command-line)
+        "            $valid = false;")))
+
   (with-temp-buffer
     (insert "<?php\nif (true) {\n    array(\n        8,\n    );")
     (goto-char (point-max))
@@ -772,17 +781,14 @@
    "<?php\n$var = Object->myMethod()\n    ->myMethod2();\necho 'here';"
    "Line after assignment were an chaining of object methods started")
 
-  ;; TODO Make this pass
   (phps-mode-test-indent--should-equal
    "<?php\nif (true) {\n    $table = $installer->getConnection()\n        ->newTable($installer->getTable('my_table'))\n        ->addColumn();\n}\n"
    "Variable assignment with chained method calls on multiple lines #1")
 
-  ;; TODO Make this pass
   (phps-mode-test-indent--should-equal
    "<?php\nif (true) {\n    $criteria = $this->searchCriteriaBuilder\n        ->addFilter('status', $status)\n        ->addFilter(method', 'my_method_' . $object->getId())\n        ->create();\n}\n"
    "Variable assignment with chained method calls on multiple lines #2")
 
-  ;; TODO Make this pass
   (phps-mode-test-indent--should-equal
    "<?php\nif (true) {\n    /*\n    was here\n    */\n    echo 'there';\n}"
    "Line after closing multi-row comment")
