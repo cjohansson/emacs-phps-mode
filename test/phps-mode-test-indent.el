@@ -165,7 +165,6 @@
         (phps-mode-indent--get-previous-reference-command-line)
         "    $variable =")))
 
-    ;; TODO Make this pass
     (with-temp-buffer
       (insert "<?php\n\nif (true) {\n    $valid = true;\n    $variable = myFunction();\n    switch ($variable) {\n        case Object::CASE1:\n            throw new Exception(\n                'MyException'\n            );\n        case Object::Case2:\n            throw new \\Exception(\n                'MyException2',\n            );\n        case Object::Case3:\n            $valid = false;\n            break;\n        case Object::Case4:\n            if (!Object2::validate($variable)) {\n                $valid = false;\n            }\n            break;\n        case Object::Case5:\n            $valid = false;\n            break;\n        case Object::Case6:\n            $valid = true;\n        break;\n    }\n}\n")
       (goto-char 380)

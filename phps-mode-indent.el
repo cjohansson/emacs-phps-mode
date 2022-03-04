@@ -532,17 +532,16 @@
 
            ;; Alternative control structures are always
            ;; indication of start of command
-           ((string-match-p
-             ")[\ t]*:[\t ]*$"
-             match)
+           ((or
+             (string-match-p
+              ")[\ t]*:[\t ]*$"
+              match)
+             (string-match-p
+              "[^:]:[\t ]*$"
+              match)) ;; Like case '50':
             (setq
              not-found
-             nil)
-            (setq
-             reference-line
-             (buffer-substring-no-properties
-              (line-beginning-position)
-              (line-end-position))))
+             nil))
 
            ;; A closing curly bracket is indicate of a distinct command
            ((string-match-p
