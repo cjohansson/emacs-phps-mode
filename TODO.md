@@ -2,12 +2,6 @@
 
 ## Code intelligence
 
-* Fix race-condition in incremental parser when running asynchronous using threads
-
-Perform an edit while an incremental parse is going to reproduce
-
-Fix by reloading file or running C-r to rescan and clear cache
-
 * Bookkeeping of chained object operators like WC()->cart->subtotal
 * Bookkeeping of variables inside classes with multiple methods seems to not work
 * Move bookkeeping and imenu generation to main thread to be able to populate Sematic Subsystem in the future
@@ -17,5 +11,5 @@ Fix by reloading file or running C-r to rescan and clear cache
 
 ## Other
 
-* Support for mmm-mode or similar
-* Build in eldoc support like php-eldoc
+* Support for mmm-mode or similar?
+* Build in eldoc support like php-eldoc?

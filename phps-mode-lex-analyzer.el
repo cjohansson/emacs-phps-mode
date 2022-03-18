@@ -201,8 +201,8 @@
            phps-mode-lex-analyzer--lexer-index
            (cdr (cdr (car phps-mode-lexer--generated-new-tokens)))))))))
 
-(defun phps-mode-lex-analyzer--re2c-run (&optional allow-cache-read force-synchronous)
-  "Run lexer, optionally ALLOW-CACHE-READ and FORCE-SYNCHRONOUS mode."
+(defun phps-mode-lex-analyzer--re2c-run (&optional force-synchronous allow-cache-read allow-cache-write)
+  "Run lexer, optionally FORCE-SYNCHRONOUS mode, ALLOW-CACHE-READ and ALLOW-CACHE-WRITE."
   (interactive)
   (require 'phps-mode-macros)
   (phps-mode-debug-message (message "Lexer run"))
@@ -215,8 +215,6 @@
                                phps-mode-async-process-using-async-el)))
     (when force-synchronous
       (setq async nil))
-
-    (message "Starting new serial-command 1: %S" buffer-name)
 
     (phps-mode-serial-commands
      buffer-name
@@ -234,13 +232,12 @@
         nil
         nil
         buffer-file-name
-        allow-cache-read))
+        allow-cache-read
+        allow-cache-write))
 
      (lambda(lex-result)
        (when (get-buffer buffer-name)
          (with-current-buffer buffer-name
-
-           (message "%S Serial command 1 step 2 start: %S" (current-thread) buffer-name)
 
            ;; Move variables into this buffers local variables
            (setq phps-mode-lex-analyzer--tokens (nth 0 lex-result))
@@ -271,8 +268,6 @@
 
            ;; Reset buffer changes minimum index
            (phps-mode-lex-analyzer--reset-changes)
-
-           (message "%S Serial command 1 step 2 end: %S" (current-thread) buffer-name)
 
            ;; Signal parser error (if any)
            (when phps-mode-lex-analyzer--parse-error
@@ -346,7 +341,7 @@
 
 (defun phps-mode-lex-analyzer--incremental-lex-string
     (buffer-name buffer-contents incremental-start-new-buffer point-max
-                 head-states incremental-state incremental-state-stack incremental-heredoc-label incremental-heredoc-label-stack incremental-nest-location-stack head-tokens &optional force-synchronous filename)
+                 head-states incremental-state incremental-state-stack incremental-heredoc-label incremental-heredoc-label-stack incremental-nest-location-stack head-tokens &optional force-synchronous filename allow-cache-write)
   "Incremental lex region."
   (let ((async (and (boundp 'phps-mode-async-process)
                     phps-mode-async-process))
@@ -354,8 +349,6 @@
                                phps-mode-async-process-using-async-el)))
     (when force-synchronous
       (setq async nil))
-
-    (message "Starting new serial-command 2: %S" buffer-name)
 
     (phps-mode-serial-commands
 
@@ -373,13 +366,13 @@
         incremental-heredoc-label-stack
         incremental-nest-location-stack
         head-tokens
-        filename))
+        filename
+        nil
+        allow-cache-write))
 
      (lambda(lex-result)
        (when (get-buffer buffer-name)
          (with-current-buffer buffer-name
-
-           (message "%S Serial command 2 step 2 start: %S" (current-thread) buffer-name)
 
            (phps-mode-debug-message
             (message "Incrementally-lexed-string: %s" result))
@@ -417,8 +410,6 @@
 
            ;; Reset buffer changes minimum index
            (phps-mode-lex-analyzer--reset-changes)
-
-           (message "%S Serial command 2 step 2 end: %S" (current-thread) buffer-name)
 
            ;; Signal parser error (if any)
            (when phps-mode-lex-analyzer--parse-error
@@ -698,7 +689,8 @@
                              incremental-nest-location-stack
                              head-tokens
                              force-synchronous
-                             (if (buffer-modified-p) nil buffer-file-name))
+                             (if (buffer-modified-p) nil buffer-file-name)
+                             (not (buffer-modified-p)))
 
                             (phps-mode-debug-message
                              (message "Incremental tokens: %s" incremental-tokens)))
@@ -724,7 +716,10 @@
           (push (list 'RUN-FULL-LEXER) log)
           (phps-mode-debug-message
            (message "Running full lexer"))
-          (phps-mode-lex-analyzer--re2c-run nil force-synchronous))
+          (phps-mode-lex-analyzer--re2c-run
+           force-synchronous
+           nil
+           (not (buffer-modified-p))))
 
         log))))
 
@@ -832,8 +827,6 @@
 
         ;; Kill active thread (if any)
         (phps-mode-serial--kill-active (buffer-name))
-
-        (message "Killing active thread (if any exists): %S" (buffer-name))
         
         ;; If we haven't scheduled incremental lexer before - do it
         (when (and (boundp 'phps-mode-idle-interval)
@@ -1089,7 +1082,7 @@
          token-start)))
     parser-tokens))
 
-(defun phps-mode-lex-analyzer--lex-string (contents &optional start end states state state-stack heredoc-label heredoc-label-stack nest-location-stack tokens filename allow-cache-read)
+(defun phps-mode-lex-analyzer--lex-string (contents &optional start end states state state-stack heredoc-label heredoc-label-stack nest-location-stack tokens filename allow-cache-read allow-cache-write)
   "Run lexer on CONTENTS."
   ;; Create a separate buffer, run lexer inside of it, catch errors and return them
   ;; to enable nice presentation
@@ -1098,22 +1091,20 @@
   (let ((loaded-from-cache)
         (cache-key))
 
-    ;; Load cache if possible
+    ;; Build cache key if possible
     (when (and
            phps-mode-cache--use-p
-           filename
-           (not start)
-           (not end))
+           filename)
       (setq
        cache-key
        filename)
+
+      ;; Load cache if possible and permitted
       (when (and
              allow-cache-read
              (phps-mode-cache-test-p
               cache-key
               filename))
-        (message
-         "Loaded from cache: %S" cache-key)
         (setq
          loaded-from-cache
          (phps-mode-cache-load
@@ -1237,8 +1228,9 @@
           ;; Save cache if possible and permitted
           (when (and
                  phps-mode-cache--use-p
+                 allow-cache-write
                  cache-key)
-            (message "Saved to cache")
+            ;; (message "Saved to cache")
             (phps-mode-cache-save
              data
              cache-key))

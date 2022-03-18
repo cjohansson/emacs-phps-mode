@@ -78,7 +78,10 @@
   "Re-scan buffer."
   (interactive)
   (phps-mode-lex-analyzer--reset-local-variables t)
-  (phps-mode-lex-analyzer--re2c-run nil))
+  (phps-mode-lex-analyzer--re2c-run
+   nil
+   (not (buffer-modified-p))
+   (not (buffer-modified-p))))
 
 ;;;###autoload
 (defun phps-mode-flycheck-setup ()
@@ -239,7 +242,10 @@
    t)
 
   ;; Initial run of lexer
-  (phps-mode-lex-analyzer--re2c-run t))
+  (phps-mode-lex-analyzer--re2c-run
+   nil
+   (not (buffer-modified-p))
+   (not (buffer-modified-p))))
 
 (provide 'phps-mode)
 ;;; phps-mode.el ends here

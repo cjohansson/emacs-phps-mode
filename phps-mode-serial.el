@@ -61,7 +61,6 @@
   (when (and
          (gethash key phps-mode-serial--async-threads)
          (thread-live-p (gethash key phps-mode-serial--async-threads)))
-    (message "Killing thread: %S" (gethash key phps-mode-serial--async-threads))
     (thread-signal (gethash key phps-mode-serial--async-threads) 'quit nil)))
 
 (defun phps-mode-serial-commands (key start end &optional start-error end-error async async-by-process)
