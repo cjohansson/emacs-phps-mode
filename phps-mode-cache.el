@@ -10,6 +10,11 @@
 
 
 (defvar
+  phps-mode-cache--use-p
+  nil
+  "Whether to use cache or not.")
+
+(defvar
   phps-mode-cache--base-filename
   "~/.phps-mode-cache/"
   "Base filename for cache files.")

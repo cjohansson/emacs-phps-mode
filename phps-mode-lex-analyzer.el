@@ -91,9 +91,6 @@
 (defvar-local phps-mode-lex-analyzer--lexer-max-index nil
   "Max-index of lex-analyzer.")
 
-(defvar phps-mode-lex-analyzer--use-cache-p nil
-  "Whether to use cache or not.")
-
 
 ;; FUNCTIONS
 
@@ -121,7 +118,7 @@
      (buffer-name))
     (when (and
            buffer-file-name
-           phps-mode-lex-analyzer--use-cache-p)
+           phps-mode-cache--use-p)
       (phps-mode-cache-delete buffer-file-name))))
 
 (defun phps-mode-lex-analyzer--set-region-syntax-color (start end properties)
@@ -1101,8 +1098,9 @@
 
     ;; Load cache if possible
     (when (and
+           phps-mode-cache--use-p
            filename
-           phps-mode-lex-analyzer--use-cache-p)
+           (not end))
       (setq
        cache-key
        filename)
@@ -1233,8 +1231,8 @@
 
           ;; Save cache if possible
           (when (and
-                 cache-key
-                 phps-mode-lex-analyzer--use-cache-p)
+                 phps-mode-cache--use-p
+                 cache-key)
             (phps-mode-cache-save
              data
              cache-key))
