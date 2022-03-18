@@ -91,6 +91,9 @@
 (defvar-local phps-mode-lex-analyzer--lexer-max-index nil
   "Max-index of lex-analyzer.")
 
+(defvar phps-mode-lex-analyzer--use-cache-p nil
+  "Whether to use cache or not.")
+
 
 ;; FUNCTIONS
 
@@ -114,10 +117,12 @@
   (setq phps-mode-lex-analyzer--states nil)
   (setq phps-mode-lex-analyzer--tokens nil)
   (when clear-existing
-    (phps-mode-serial--kill-active (buffer-name))
-    (when buffer-file-name
-      (phps-mode-cache-delete buffer-file-name)))
-  )
+    (phps-mode-serial--kill-active
+     (buffer-name))
+    (when (and
+           buffer-file-name
+           phps-mode-lex-analyzer--use-cache-p)
+      (phps-mode-cache-delete buffer-file-name))))
 
 (defun phps-mode-lex-analyzer--set-region-syntax-color (start end properties)
   "Do syntax coloring for region START to END with PROPERTIES."
@@ -213,6 +218,8 @@
     (when force-synchronous
       (setq async nil))
 
+    (message "Starting new serial-command 1: %S" buffer-name)
+
     (phps-mode-serial-commands
      buffer-name
 
@@ -234,6 +241,8 @@
        (when (get-buffer buffer-name)
          (with-current-buffer buffer-name
 
+           (message "%S Serial command 1 step 2 start: %S" (current-thread) buffer-name)
+
            ;; Move variables into this buffers local variables
            (setq phps-mode-lex-analyzer--tokens (nth 0 lex-result))
            (setq phps-mode-lex-analyzer--states (nth 1 lex-result))
@@ -249,8 +258,6 @@
            (setq phps-mode-lex-analyzer--bookkeeping (nth 11 lex-result))
            (setq phps-mode-lex-analyzer--processed-buffer-p t)
            (phps-mode-lex-analyzer--reset-imenu)
-           (when (fboundp 'thread-yield)
-             (thread-yield))
 
            ;; Apply syntax color on tokens
            (dolist (token phps-mode-lex-analyzer--tokens)
@@ -262,6 +269,11 @@
                       start end (list 'font-lock-face token-syntax-color))
                    (phps-mode-lex-analyzer--clear-region-syntax-color
                     start end)))))
+
+           ;; Reset buffer changes minimum index
+           (phps-mode-lex-analyzer--reset-changes)
+
+           (message "%S Serial command 1 step 2 end: %S" (current-thread) buffer-name)
 
            ;; Signal parser error (if any)
            (when phps-mode-lex-analyzer--parse-error
@@ -343,6 +355,9 @@
                                phps-mode-async-process-using-async-el)))
     (when force-synchronous
       (setq async nil))
+
+    (message "Starting new serial-command 2: %S" buffer-name)
+
     (phps-mode-serial-commands
 
      buffer-name
@@ -364,6 +379,8 @@
      (lambda(lex-result)
        (when (get-buffer buffer-name)
          (with-current-buffer buffer-name
+
+           (message "%S Serial command 2 step 2 start: %S" (current-thread) buffer-name)
 
            (phps-mode-debug-message
             (message "Incrementally-lexed-string: %s" result))
@@ -387,8 +404,6 @@
            ;; Save processed result
            (setq phps-mode-lex-analyzer--processed-buffer-p t)
            (phps-mode-lex-analyzer--reset-imenu)
-           (when (fboundp 'thread-yield)
-             (thread-yield))
 
            ;; Apply syntax color on tokens
            (dolist (token phps-mode-lex-analyzer--tokens)
@@ -400,6 +415,11 @@
                  (if token-syntax-color
                      (phps-mode-lex-analyzer--set-region-syntax-color start end (list 'font-lock-face token-syntax-color))
                    (phps-mode-lex-analyzer--clear-region-syntax-color start end)))))
+
+           ;; Reset buffer changes minimum index
+           (phps-mode-lex-analyzer--reset-changes)
+
+           (message "%S Serial command 2 step 2 end: %S" (current-thread) buffer-name)
 
            ;; Signal parser error (if any)
            (when phps-mode-lex-analyzer--parse-error
@@ -521,7 +541,12 @@
 (defun phps-mode-lex-analyzer--move-tokens (start diff)
   "Update tokens with moved lexer tokens after or equal to START with modification DIFF."
   (when phps-mode-lex-analyzer--tokens
-    (setq phps-mode-lex-analyzer--tokens (phps-mode-lex-analyzer--get-moved-tokens phps-mode-lex-analyzer--tokens start diff))))
+    (setq
+     phps-mode-lex-analyzer--tokens
+     (phps-mode-lex-analyzer--get-moved-tokens
+      phps-mode-lex-analyzer--tokens
+      start
+      diff))))
 
 (defun phps-mode-lex-analyzer--get-moved-tokens (old-tokens start diff)
   "Return moved lexer OLD-TOKENS positions after (or equal to) START with DIFF points."
@@ -578,23 +603,6 @@
 
                 ;; Reset idle timer
                 (phps-mode-lex-analyzer--cancel-idle-timer)
-
-                ;; Reset buffer changes minimum index
-                (phps-mode-lex-analyzer--reset-changes)
-
-                ;; Reset tokens and states here
-                (setq phps-mode-lex-analyzer--tokens nil)
-                (setq phps-mode-lex-analyzer--states nil)
-                (setq phps-mode-lex-analyzer--state nil)
-                (setq phps-mode-lex-analyzer--state-stack nil)
-                (setq phps-mode-lex-analyzer--heredoc-label nil)
-                (setq phps-mode-lex-analyzer--heredoc-label-stack nil)
-                (setq phps-mode-lex-analyzer--nest-location-stack nil)
-                (setq phps-mode-lex-analyzer--parse-trail nil)
-                (setq phps-mode-lex-analyzer--parse-error nil)
-                (setq phps-mode-lex-analyzer--ast nil)
-                (setq phps-mode-lex-analyzer--imenu nil)
-                (setq phps-mode-lex-analyzer--bookkeeping nil)
 
                 ;; NOTE Starts are inclusive while ends are exclusive buffer locations
 
@@ -822,7 +830,11 @@
       (progn
         (phps-mode-debug-message
          (message "After change registration is enabled"))
+
+        ;; Kill active thread (if any)
         (phps-mode-serial--kill-active (buffer-name))
+
+        (message "Killing active thread (if any exists): %S" (buffer-name))
         
         ;; If we haven't scheduled incremental lexer before - do it
         (when (and (boundp 'phps-mode-idle-interval)
@@ -830,15 +842,19 @@
                    (not phps-mode-lex-analyzer--idle-timer))
           (phps-mode-lex-analyzer--start-idle-timer))
 
+        ;; When change position is before previous start position - update it
         (when (or
                (not phps-mode-lex-analyzer--change-min)
                (< start phps-mode-lex-analyzer--change-min))
-          (setq phps-mode-lex-analyzer--change-min start))
+          (setq
+           phps-mode-lex-analyzer--change-min
+           start))
 
         (when (and
                (boundp 'phps-mode-idle-interval)
                (not phps-mode-idle-interval))
-          (phps-mode-lex-analyzer--process-changes (current-buffer))))
+          (phps-mode-lex-analyzer--process-changes
+           (current-buffer))))
     (phps-mode-debug-message
      (message "After change registration is disabled"))))
 
@@ -1084,7 +1100,9 @@
         (cache-key))
 
     ;; Load cache if possible
-    (when filename
+    (when (and
+           filename
+           phps-mode-lex-analyzer--use-cache-p)
       (setq
        cache-key
        filename)
@@ -1214,7 +1232,9 @@
                bookkeeping-index)))
 
           ;; Save cache if possible
-          (when cache-key
+          (when (and
+                 cache-key
+                 phps-mode-lex-analyzer--use-cache-p)
             (phps-mode-cache-save
              data
              cache-key))
