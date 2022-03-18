@@ -119,7 +119,8 @@
     (when (and
            buffer-file-name
            phps-mode-cache--use-p)
-      (phps-mode-cache-delete buffer-file-name))))
+      (phps-mode-cache-delete
+       buffer-file-name))))
 
 (defun phps-mode-lex-analyzer--set-region-syntax-color (start end properties)
   "Do syntax coloring for region START to END with PROPERTIES."
@@ -200,8 +201,8 @@
            phps-mode-lex-analyzer--lexer-index
            (cdr (cdr (car phps-mode-lexer--generated-new-tokens)))))))))
 
-(defun phps-mode-lex-analyzer--re2c-run (&optional force-synchronous)
-  "Run lexer, optionally FORCE-SYNCHRONOUS."
+(defun phps-mode-lex-analyzer--re2c-run (&optional allow-cache-read force-synchronous)
+  "Run lexer, optionally ALLOW-CACHE-READ and FORCE-SYNCHRONOUS mode."
   (interactive)
   (require 'phps-mode-macros)
   (phps-mode-debug-message (message "Lexer run"))
@@ -232,7 +233,8 @@
         nil
         nil
         nil
-        buffer-file-name))
+        buffer-file-name
+        allow-cache-read))
 
      (lambda(lex-result)
        (when (get-buffer buffer-name)
@@ -722,7 +724,7 @@
           (push (list 'RUN-FULL-LEXER) log)
           (phps-mode-debug-message
            (message "Running full lexer"))
-          (phps-mode-lex-analyzer--re2c-run force-synchronous))
+          (phps-mode-lex-analyzer--re2c-run nil force-synchronous))
 
         log))))
 
@@ -1087,7 +1089,7 @@
          token-start)))
     parser-tokens))
 
-(defun phps-mode-lex-analyzer--lex-string (contents &optional start end states state state-stack heredoc-label heredoc-label-stack nest-location-stack tokens filename)
+(defun phps-mode-lex-analyzer--lex-string (contents &optional start end states state state-stack heredoc-label heredoc-label-stack nest-location-stack tokens filename allow-cache-read)
   "Run lexer on CONTENTS."
   ;; Create a separate buffer, run lexer inside of it, catch errors and return them
   ;; to enable nice presentation
@@ -1100,19 +1102,22 @@
     (when (and
            phps-mode-cache--use-p
            filename
+           (not start)
            (not end))
       (setq
        cache-key
        filename)
-      (unless end
-        (when
-            (phps-mode-cache-test-p
-             cache-key
-             filename)
-          (setq
-           loaded-from-cache
-           (phps-mode-cache-load
-            cache-key)))))
+      (when (and
+             allow-cache-read
+             (phps-mode-cache-test-p
+              cache-key
+              filename))
+        (message
+         "Loaded from cache: %S" cache-key)
+        (setq
+         loaded-from-cache
+         (phps-mode-cache-load
+          cache-key))))
 
     (if loaded-from-cache
         loaded-from-cache
@@ -1229,10 +1234,11 @@
                imenu-index
                bookkeeping-index)))
 
-          ;; Save cache if possible
+          ;; Save cache if possible and permitted
           (when (and
                  phps-mode-cache--use-p
                  cache-key)
+            (message "Saved to cache")
             (phps-mode-cache-save
              data
              cache-key))
