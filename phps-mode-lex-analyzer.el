@@ -250,8 +250,21 @@
            (setq phps-mode-lex-analyzer--parse-trail (nth 7 lex-result))
            (setq phps-mode-lex-analyzer--parse-error (nth 8 lex-result))
            (setq phps-mode-lex-analyzer--ast (nth 9 lex-result))
-           (setq phps-mode-lex-analyzer--imenu (nth 10 lex-result))
-           (setq phps-mode-lex-analyzer--bookkeeping (nth 11 lex-result))
+
+           ;; Catch errors in bookkeeping or imenu generation
+           (condition-case conditions
+               (progn
+                 (phps-mode-ast-bookkeeping--generate)
+                 (phps-mode-ast-imenu--generate))
+             (error
+              (display-warning
+              'phps-mode
+              (format "Failed to generate bookkeeping or imenu: %S" conditions)
+              :warning
+              "*PHPs Parser Errors*")))
+           (setq phps-mode-lex-analyzer--imenu phps-mode-ast-imenu--index)
+           (setq phps-mode-lex-analyzer--bookkeeping phps-mode-ast-bookkeeping--index)
+
            (setq phps-mode-lex-analyzer--processed-buffer-p t)
            (phps-mode-lex-analyzer--reset-imenu)
 
@@ -259,7 +272,8 @@
            (dolist (token phps-mode-lex-analyzer--tokens)
              (let ((start (car (cdr token)))
                    (end (cdr (cdr token))))
-               (let ((token-syntax-color (phps-mode-lex-analyzer--get-token-syntax-color token)))
+               (let ((token-syntax-color
+                      (phps-mode-lex-analyzer--get-token-syntax-color token)))
                  (if token-syntax-color
                      (phps-mode-lex-analyzer--set-region-syntax-color
                       start end (list 'font-lock-face token-syntax-color))
@@ -387,8 +401,20 @@
            (setq phps-mode-lex-analyzer--parse-trail (nth 7 lex-result))
            (setq phps-mode-lex-analyzer--parse-error (nth 8 lex-result))
            (setq phps-mode-lex-analyzer--ast (nth 9 lex-result))
-           (setq phps-mode-lex-analyzer--imenu (nth 10 lex-result))
-           (setq phps-mode-lex-analyzer--bookkeeping (nth 11 lex-result))
+
+           ;; Catch errors in bookkeeping or imenu generation
+           (condition-case conditions
+               (progn
+                 (phps-mode-ast-bookkeeping--generate)
+                 (phps-mode-ast-imenu--generate))
+             (error
+              (display-warning
+              'phps-mode
+              (format "Failed to generate bookkeeping or imenu: %S" conditions)
+              :warning
+              "*PHPs Parser Errors*")))
+           (setq phps-mode-lex-analyzer--imenu phps-mode-ast-imenu--index)
+           (setq phps-mode-lex-analyzer--bookkeeping phps-mode-ast-bookkeeping--index)
 
            (phps-mode-debug-message
             (message "Incremental tokens: %s" phps-mode-lex-analyzer--tokens))
@@ -1193,9 +1219,7 @@
             ;; Error-free parse here
             (condition-case conditions
                 (progn
-                  (phps-mode-ast--generate)
-                  (phps-mode-ast-bookkeeping--generate)
-                  (phps-mode-ast-imenu--generate))
+                  (phps-mode-ast--generate))
               (error
                (setq
                 parse-error
@@ -1204,26 +1228,21 @@
             ;; Need to copy buffer-local values before killing buffer
             (setq parse-trail phps-mode-ast--parse-trail)
             (setq ast-tree phps-mode-ast--tree)
-            (setq imenu-index phps-mode-ast-imenu--index)
-            (setq bookkeeping-index phps-mode-ast-bookkeeping--index)
 
             (kill-buffer)))
 
-        (let
-            ((data
-              (list
-               tokens
-               states
-               state
-               state-stack
-               heredoc-label
-               heredoc-label-stack
-               nest-location-stack
-               parse-trail
-               parse-error
-               ast-tree
-               imenu-index
-               bookkeeping-index)))
+        (let ((data
+               (list
+                tokens
+                states
+                state
+                state-stack
+                heredoc-label
+                heredoc-label-stack
+                nest-location-stack
+                parse-trail
+                parse-error
+                ast-tree)))
 
           ;; Save cache if possible and permitted
           (when (and

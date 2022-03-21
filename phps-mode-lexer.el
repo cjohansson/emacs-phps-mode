@@ -1999,6 +1999,9 @@
       (dolist (lambd lambdas)
         (funcall lambd)))
 
+    (when (fboundp 'thread-yield)
+      (thread-yield))
+
     ;; Did we find a match?
     (if phps-mode-lexer--match-length
         (progn
