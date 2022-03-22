@@ -1146,9 +1146,7 @@
               (generate-new-buffer "*PHPs Lexer*"))
              (parse-error)
              (parse-trail)
-             (ast-tree)
-             (imenu-index)
-             (bookkeeping-index))
+             (ast-tree))
 
         ;; Create temporary buffer and run lexer in it
         (when (get-buffer buffer)
