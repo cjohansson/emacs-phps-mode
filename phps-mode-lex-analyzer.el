@@ -251,21 +251,30 @@
            (setq phps-mode-lex-analyzer--parse-error (nth 8 lex-result))
            (setq phps-mode-lex-analyzer--ast (nth 9 lex-result))
 
-           ;; Catch errors in bookkeeping or imenu generation
+           ;; Catch errors in bookkeeping generation
            (condition-case conditions
-               (progn
-                 (phps-mode-ast-bookkeeping--generate
-                  phps-mode-lex-analyzer--ast)
-                 (phps-mode-ast-imenu--generate
-                  phps-mode-lex-analyzer--ast))
+               (phps-mode-ast-bookkeeping--generate
+                phps-mode-lex-analyzer--ast)
              (error
               (display-warning
-              'phps-mode
-              (format "Failed to generate bookkeeping or imenu: %S" conditions)
-              :warning
-              "*PHPs Parser Errors*")))
+               'phps-mode
+               (format "Failed to generate bookkeeping: %S" conditions)
+               :warning
+               "*PHPs Bookkeeping Generation Errors*")))
+           (setq phps-mode-lex-analyzer--bookkeeping
+                 phps-mode-ast-bookkeeping--index)
+
+           ;; Catch errors in imenu generation
+           (condition-case conditions
+               (phps-mode-ast-imenu--generate
+                phps-mode-lex-analyzer--ast)
+             (error
+              (display-warning
+               'phps-mode
+               (format "Failed to generate imenu: %S" conditions)
+               :warning
+               "*PHPs Imenu Generation Errors*")))
            (setq phps-mode-lex-analyzer--imenu phps-mode-ast-imenu--index)
-           (setq phps-mode-lex-analyzer--bookkeeping phps-mode-ast-bookkeeping--index)
 
            (setq phps-mode-lex-analyzer--processed-buffer-p t)
            (phps-mode-lex-analyzer--reset-imenu)
@@ -404,21 +413,30 @@
            (setq phps-mode-lex-analyzer--parse-error (nth 8 lex-result))
            (setq phps-mode-lex-analyzer--ast (nth 9 lex-result))
 
-           ;; Catch errors in bookkeeping or imenu generation
+           ;; Catch errors in bookkeeping generation
            (condition-case conditions
-               (progn
-                 (phps-mode-ast-bookkeeping--generate
-                  phps-mode-lex-analyzer--ast)
-                 (phps-mode-ast-imenu--generate
-                  phps-mode-lex-analyzer--ast))
+               (phps-mode-ast-bookkeeping--generate
+                phps-mode-lex-analyzer--ast)
              (error
               (display-warning
-              'phps-mode
-              (format "Failed to generate bookkeeping or imenu: %S" conditions)
-              :warning
-              "*PHPs Parser Errors*")))
+               'phps-mode
+               (format "Failed to generate bookkeeping: %S" conditions)
+               :warning
+               "*PHPs Bookkeeping Generation Errors*")))
+           (setq phps-mode-lex-analyzer--bookkeeping
+                 phps-mode-ast-bookkeeping--index)
+
+           ;; Catch errors in imenu generation
+           (condition-case conditions
+               (phps-mode-ast-imenu--generate
+                phps-mode-lex-analyzer--ast)
+             (error
+              (display-warning
+               'phps-mode
+               (format "Failed to generate imenu: %S" conditions)
+               :warning
+               "*PHPs Imenu Generation Errors*")))
            (setq phps-mode-lex-analyzer--imenu phps-mode-ast-imenu--index)
-           (setq phps-mode-lex-analyzer--bookkeeping phps-mode-ast-bookkeeping--index)
 
            (phps-mode-debug-message
             (message "Incremental tokens: %s" phps-mode-lex-analyzer--tokens))
