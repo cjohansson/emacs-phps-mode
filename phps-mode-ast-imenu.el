@@ -16,10 +16,11 @@
   nil
   "Imenu for current buffer.")
 
-(defun phps-mode-ast-imenu--generate ()
-  "Generate imenu from AST."
-  (let ((imenu-index))
-    (dolist (item phps-mode-ast--tree)
+(defun phps-mode-ast-imenu--generate (&optional tree)
+  "Generate imenu from current buffer AST or optionally from TREE."
+  (let ((imenu-index)
+        (ast-tree (if tree tree phps-mode-ast--tree)))
+    (dolist (item ast-tree)
       (let ((children (plist-get item 'children))
             (item-type (plist-get item 'ast-type))
             (item-index (plist-get item 'index))

@@ -254,8 +254,10 @@
            ;; Catch errors in bookkeeping or imenu generation
            (condition-case conditions
                (progn
-                 (phps-mode-ast-bookkeeping--generate)
-                 (phps-mode-ast-imenu--generate))
+                 (phps-mode-ast-bookkeeping--generate
+                  phps-mode-lex-analyzer--ast)
+                 (phps-mode-ast-imenu--generate
+                  phps-mode-lex-analyzer--ast))
              (error
               (display-warning
               'phps-mode
@@ -405,8 +407,10 @@
            ;; Catch errors in bookkeeping or imenu generation
            (condition-case conditions
                (progn
-                 (phps-mode-ast-bookkeeping--generate)
-                 (phps-mode-ast-imenu--generate))
+                 (phps-mode-ast-bookkeeping--generate
+                  phps-mode-lex-analyzer--ast)
+                 (phps-mode-ast-imenu--generate
+                  phps-mode-lex-analyzer--ast))
              (error
               (display-warning
               'phps-mode

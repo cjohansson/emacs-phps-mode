@@ -242,10 +242,10 @@
         (push scope-string scope-strings)))
     scope-strings))
 
-(defun phps-mode-ast-bookkeeping--generate ()
-  "Generate AST for current buffer."
+(defun phps-mode-ast-bookkeeping--generate (&optional tree)
+  "Generate AST for current buffer or optionally for TREE."
   (let ((bookkeeping (make-hash-table :test 'equal))
-        (bookkeeping-stack phps-mode-ast--tree)
+        (bookkeeping-stack (if tree tree phps-mode-ast--tree))
         (inline-function-count 0)
         (arrow-function-count 0)
         (defined-count 0))
