@@ -883,8 +883,8 @@
  (lambda(args _terminals) (if (car args) (append (car args) (cdr args)) (cdr args)))
  phps-mode-parser--table-translations)
 
-;; 83 ((top_statement_list) (%empty))
-(puthash 83 (lambda(_args _terminals) nil) phps-mode-parser--table-translations)
+;; 84 ((top_statement_list) (%empty))
+(puthash 84 (lambda(_args _terminals) nil) phps-mode-parser--table-translations)
 
 ;; 111 top_statement -> (T_NAMESPACE namespace_declaration_name ";")
 (puthash
