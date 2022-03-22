@@ -872,10 +872,10 @@
 (puthash 80 (lambda(_args _terminals) 'T_AMPERSAND_NOT_FOLLOWED_BY_VAR_OR_VARARG) phps-mode-parser--table-translations)
 
 ;; 81 ((identifier) (T_STRING))
-(puthash 81 (lambda(_args terminals) terminals) phps-mode-parser--table-translations)
+(puthash 81 (lambda(args _terminals) args) phps-mode-parser--table-translations)
 
 ;; 82 ((identifier) (semi_reserved))
-(puthash 82 (lambda(_args terminals) terminals) phps-mode-parser--table-translations)
+(puthash 82 (lambda(args terminals) args) phps-mode-parser--table-translations)
 
 ;; 83 ((top_statement_list) (top_statement_list top_statement))
 (puthash
@@ -885,6 +885,36 @@
 
 ;; 84 ((top_statement_list) (%empty))
 (puthash 84 (lambda(_args _terminals) nil) phps-mode-parser--table-translations)
+
+;; 85 ((namespace_declaration_name) (identifier))
+(puthash 85 (lambda(args _terminals) args) phps-mode-parser--table-translations)
+
+;; 86 ((namespace_declaration_name) (T_NAME_QUALIFIED))
+(puthash 86 (lambda(_args terminals) terminals) phps-mode-parser--table-translations)
+
+;; 87 ((namespace_name) (T_STRING))
+(puthash 87 (lambda(args _terminals) args) phps-mode-parser--table-translations)
+
+;; 88 ((namespace_name) (T_NAME_QUALIFIED))
+(puthash 88 (lambda(_args terminals) terminals) phps-mode-parser--table-translations)
+
+;; 89 ((legacy_namespace_name) (namespace_name))
+(puthash 89 (lambda(args _terminals) args) phps-mode-parser--table-translations)
+
+;; 90 ((legacy_namespace_name) (T_NAME_FULLY_QUALIFIED))
+(puthash 90 (lambda(_args terminals) terminals) phps-mode-parser--table-translations)
+
+;; 91 ((name) (T_STRING))
+(puthash 91 (lambda(args _terminals) args) phps-mode-parser--table-translations)
+
+;; 92 ((name) (T_NAME_QUALIFIED))
+(puthash 92 (lambda(_args terminals) terminals) phps-mode-parser--table-translations)
+
+;; 93 ((name) (T_NAME_FULLY_QUALIFIED))
+(puthash 93 (lambda(_args terminals) terminals) phps-mode-parser--table-translations)
+
+;; 94 ((name) (T_NAME_RELATIVE))
+(puthash 94 (lambda(_args terminals) terminals) phps-mode-parser--table-translations)
 
 ;; 111 top_statement -> (T_NAMESPACE namespace_declaration_name ";")
 (puthash

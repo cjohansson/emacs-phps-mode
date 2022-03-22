@@ -40,61 +40,11 @@
      phps-mode-ast--parse-trail
      parse-trail)
 
-    ;; (message "\nTranslation:\n%S\n\n" translation)
-
-    (when translation
-      (dolist (item translation)
-        (when (listp item)
-          (cond
-
-           ((plist-get item 'ast-type)
-            (if (and
-                 (not namespace)
-                 (equal (plist-get item 'ast-type) 'namespace)
-                 (equal (plist-get item 'end) 'max))
-                (progn
-                  ;; (message "Found global namespace: %S" item)
-                  (setq
-                   namespace
-                   item))
-              (if namespace
-                  (push
-                   item
-                   namespace-children)
-                (push
-                 item
-                 ast))))
-
-           ((listp (car item))
-            (dolist (sub-item item)
-              (when (and
-                     (listp sub-item)
-                     (plist-get sub-item 'ast-type))
-                (if namespace
-                    (push
-                     sub-item
-                     namespace-children)
-                  (push
-                   sub-item
-                   ast)))))))))
-
-    (when namespace
-      (plist-put
-       namespace
-       'children
-       (reverse namespace-children))
-      (push
-       namespace
-       ast))
-    (setq
-     ast
-     (reverse ast))
-
-    ;; (message "AST:\n%S\n\n" ast)
+    (message "\nTranslation:\n%S\n\n" translation)
 
     (setq
      phps-mode-ast--tree
-     ast)
+     translation)
     phps-mode-ast--tree))
 
 
