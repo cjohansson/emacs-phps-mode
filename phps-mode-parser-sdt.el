@@ -626,16 +626,267 @@
 
    (t (list objects))))
 
-;; top_statement_list -> (top_statement_list top_statement)
+;; SDT starts here
+
+;; 0 ((start) (top_statement_list))
+(puthash 0 (lambda(args _terminals) args) phps-mode-parser--table-translations)
+
+;; 1 ((reserved_non_modifiers) (T_INCLUDE))
+(puthash 1 (lambda(_args _terminals) 'T_INCLUDE) phps-mode-parser--table-translations)
+
+;; 2 ((reserved_non_modifiers) (T_INCLUDE_ONCE))
+(puthash 2 (lambda(_args _terminals) 'T_INCLUDE_ONCE) phps-mode-parser--table-translations)
+
+;; 3 ((reserved_non_modifiers) (T_EVAL))
+(puthash 3 (lambda(_args _terminals) 'T_EVAL) phps-mode-parser--table-translations)
+
+;; 4 ((reserved_non_modifiers) (T_REQUIRE))
+(puthash 4 (lambda(_args _terminals) 'T_REQUIRE) phps-mode-parser--table-translations)
+
+;; 5 ((reserved_non_modifiers) (T_REQUIRE_ONCE))
+(puthash 5 (lambda(_args _terminals) 'T_REQUIRE_ONCE) phps-mode-parser--table-translations)
+
+;; 6 ((reserved_non_modifiers) (T_LOGICAL_OR))
+(puthash 6 (lambda(_args _terminals) 'T_LOGICAL_OR) phps-mode-parser--table-translations)
+
+;; 7 ((reserved_non_modifiers) (T_LOGICAL_XOR))
+(puthash 7 (lambda(_args _terminals) 'T_LOGICAL_XOR) phps-mode-parser--table-translations)
+
+;; 8 ((reserved_non_modifiers) (T_LOGICAL_AND))
+(puthash 8 (lambda(_args _terminals) 'T_LOGICAL_AND) phps-mode-parser--table-translations)
+
+;; 9 ((reserved_non_modifiers) (T_INSTANCEOF))
+(puthash 9 (lambda(_args _terminals) 'T_INSTANCEOF) phps-mode-parser--table-translations)
+
+;; 10 ((reserved_non_modifiers) (T_NEW))
+(puthash 10 (lambda(_args _terminals) 'T_NEW) phps-mode-parser--table-translations)
+
+;; 11 ((reserved_non_modifiers) (T_CLONE))
+(puthash 11 (lambda(_args _terminals) 'T_CLONE) phps-mode-parser--table-translations)
+
+;; 12 ((reserved_non_modifiers) (T_EXIT))
+(puthash 12 (lambda(_args _terminals) 'T_EXIT) phps-mode-parser--table-translations)
+
+;; 13 ((reserved_non_modifiers) (T_IF))
+(puthash 13 (lambda(_args _terminals) 'T_IF) phps-mode-parser--table-translations)
+
+;; 14 ((reserved_non_modifiers) (T_ELSEIF))
+(puthash 14 (lambda(_args _terminals) 'T_ELSEIF) phps-mode-parser--table-translations)
+
+;; 15 ((reserved_non_modifiers) (T_ELSE))
+(puthash 15 (lambda(_args _terminals) 'T_ELSE) phps-mode-parser--table-translations)
+
+;; 16 ((reserved_non_modifiers) (T_ENDIF))
+(puthash 16 (lambda(_args _terminals) 'T_ENDIF) phps-mode-parser--table-translations)
+
+;; 17 ((reserved_non_modifiers) (T_ECHO))
+(puthash 17 (lambda(_args _terminals) 'T_ECHO) phps-mode-parser--table-translations)
+
+;; 18 ((reserved_non_modifiers) (T_DO))
+(puthash 18 (lambda(_args _terminals) 'T_DO) phps-mode-parser--table-translations)
+
+;; 19 ((reserved_non_modifiers) (T_WHILE))
+(puthash 19 (lambda(_args _terminals) 'T_WHILE) phps-mode-parser--table-translations)
+
+;; 20 ((reserved_non_modifiers) (T_ENDWHILE))
+(puthash 20 (lambda(_args _terminals) 'T_ENDWHILE) phps-mode-parser--table-translations)
+
+;; 21 ((reserved_non_modifiers) (T_FOR))
+(puthash 21 (lambda(_args _terminals) 'T_FOR) phps-mode-parser--table-translations)
+
+;; 22 ((reserved_non_modifiers) (T_ENDFOR))
+(puthash 22 (lambda(_args _terminals) 'T_ENDFOR) phps-mode-parser--table-translations)
+
+;; 23 ((reserved_non_modifiers) (T_FOREACH))
+(puthash 23 (lambda(_args _terminals) 'T_FOREACH) phps-mode-parser--table-translations)
+
+;; 24 ((reserved_non_modifiers) (T_ENDFOREACH))
+(puthash 24 (lambda(_args _terminals) 'T_ENDFOREACH) phps-mode-parser--table-translations)
+
+;; 25 ((reserved_non_modifiers) (T_DECLARE))
+(puthash 25 (lambda(_args _terminals) 'T_DECLARE) phps-mode-parser--table-translations)
+
+;; 26 ((reserved_non_modifiers) (T_ENDDECLARE))
+(puthash 26 (lambda(_args _terminals) 'T_ENDDECLARE) phps-mode-parser--table-translations)
+
+;; 27 ((reserved_non_modifiers) (T_AS))
+(puthash 27 (lambda(_args _terminals) 'T_AS) phps-mode-parser--table-translations)
+
+;; 28 ((reserved_non_modifiers) (T_TRY))
+(puthash 28 (lambda(_args _terminals) 'T_TRY) phps-mode-parser--table-translations)
+
+;; 29 ((reserved_non_modifiers) (T_CATCH))
+(puthash 29 (lambda(_args _terminals) 'T_CATCH) phps-mode-parser--table-translations)
+
+;; 30 ((reserved_non_modifiers) (T_FINALLY))
+(puthash 30 (lambda(_args _terminals) 'T_FINALLY) phps-mode-parser--table-translations)
+
+;; 31 ((reserved_non_modifiers) (T_THROW))
+(puthash 31 (lambda(_args _terminals) 'T_THROW) phps-mode-parser--table-translations)
+
+;; 32 ((reserved_non_modifiers) (T_USE))
+(puthash 32 (lambda(_args _terminals) 'T_USE) phps-mode-parser--table-translations)
+
+;; 33 ((reserved_non_modifiers) (T_INSTEADOF))
+(puthash 33 (lambda(_args _terminals) 'T_INSTEADOF) phps-mode-parser--table-translations)
+
+;; 34 ((reserved_non_modifiers) (T_GLOBAL))
+(puthash 34 (lambda(_args _terminals) 'T_GLOBAL) phps-mode-parser--table-translations)
+
+;; 35 ((reserved_non_modifiers) (T_VAR))
+(puthash 35 (lambda(_args _terminals) 'T_VAR) phps-mode-parser--table-translations)
+
+;; 36 ((reserved_non_modifiers) (T_UNSET))
+(puthash 36 (lambda(_args _terminals) 'T_UNSET) phps-mode-parser--table-translations)
+
+;; 37 ((reserved_non_modifiers) (T_ISSET))
+(puthash 37 (lambda(_args _terminals) 'T_ISSET) phps-mode-parser--table-translations)
+
+;; 38 ((reserved_non_modifiers) (T_EMPTY))
+(puthash 38 (lambda(_args _terminals) 'T_EMPTY) phps-mode-parser--table-translations)
+
+;; 39 ((reserved_non_modifiers) (T_CONTINUE))
+(puthash 39 (lambda(_args _terminals) 'T_CONTINUE) phps-mode-parser--table-translations)
+
+;; 40 ((reserved_non_modifiers) (T_GOTO))
+(puthash 40 (lambda(_args _terminals) 'T_GOTO) phps-mode-parser--table-translations)
+
+;; 41 ((reserved_non_modifiers) (T_FUNCTION))
+(puthash 41 (lambda(_args _terminals) 'T_FUNCTION) phps-mode-parser--table-translations)
+
+;; 42 ((reserved_non_modifiers) (T_CONST))
+(puthash 42 (lambda(_args _terminals) 'T_CONST) phps-mode-parser--table-translations)
+
+;; 43 ((reserved_non_modifiers) (T_RETURN))
+(puthash 43 (lambda(_args _terminals) 'T_RETURN) phps-mode-parser--table-translations)
+
+;; 44 ((reserved_non_modifiers) (T_PRINT))
+(puthash 44 (lambda(_args _terminals) 'T_PRINT) phps-mode-parser--table-translations)
+
+;; 45 ((reserved_non_modifiers) (T_YIELD))
+(puthash 45 (lambda(_args _terminals) 'T_YIELD) phps-mode-parser--table-translations)
+
+;; 46 ((reserved_non_modifiers) (T_LIST))
+(puthash 46 (lambda(_args _terminals) 'T_LIST) phps-mode-parser--table-translations)
+
+;; 47 ((reserved_non_modifiers) (T_SWITCH))
+(puthash 47 (lambda(_args _terminals) 'T_SWITCH) phps-mode-parser--table-translations)
+
+;; 48 ((reserved_non_modifiers) (T_ENDSWITCH))
+(puthash 48 (lambda(_args _terminals) 'T_ENDSWITCH) phps-mode-parser--table-translations)
+
+;; 49 ((reserved_non_modifiers) (T_CASE))
+(puthash 49 (lambda(_args _terminals) 'T_CASE) phps-mode-parser--table-translations)
+
+;; 50 ((reserved_non_modifiers) (T_DEFAULT))
+(puthash 50 (lambda(_args _terminals) 'T_DEFAULT) phps-mode-parser--table-translations)
+
+;; 51 ((reserved_non_modifiers) (T_BREAK))
+(puthash 51 (lambda(_args _terminals) 'T_BREAK) phps-mode-parser--table-translations)
+
+;; 52 ((reserved_non_modifiers) (T_ARRAY))
+(puthash 52 (lambda(_args _terminals) 'T_ARRAY) phps-mode-parser--table-translations)
+
+;; 53 ((reserved_non_modifiers) (T_CALLABLE))
+(puthash 53 (lambda(_args _terminals) 'T_CALLABLE) phps-mode-parser--table-translations)
+
+;; 54 ((reserved_non_modifiers) (T_EXTENDS))
+(puthash 54 (lambda(_args _terminals) 'T_EXTENDS) phps-mode-parser--table-translations)
+
+;; 55 ((reserved_non_modifiers) (T_IMPLEMENTS))
+(puthash 55 (lambda(_args _terminals) 'T_IMPLEMENTS) phps-mode-parser--table-translations)
+
+;; 56 ((reserved_non_modifiers) (T_NAMESPACE))
+(puthash 56 (lambda(_args _terminals) 'T_NAMESPACE) phps-mode-parser--table-translations)
+
+;; 57 ((reserved_non_modifiers) (T_TRAIT))
+(puthash 57 (lambda(_args _terminals) 'T_TRAIT) phps-mode-parser--table-translations)
+
+;; 58 ((reserved_non_modifiers) (T_INTERFACE))
+(puthash 58 (lambda(_args _terminals) 'T_INTERFACE) phps-mode-parser--table-translations)
+
+;; 59 ((reserved_non_modifiers) (T_CLASS))
+(puthash 59 (lambda(_args _terminals) 'T_CLASS) phps-mode-parser--table-translations)
+
+;; 60 ((reserved_non_modifiers) (T_CLASS_C))
+(puthash 60 (lambda(_args _terminals) 'T_CLASS_C) phps-mode-parser--table-translations)
+
+;; 61 ((reserved_non_modifiers) (T_TRAIT_C))
+(puthash 61 (lambda(_args _terminals) 'T_TRAIT_C) phps-mode-parser--table-translations)
+
+;; 62 ((reserved_non_modifiers) (T_FUNC_C))
+(puthash 62 (lambda(_args _terminals) 'T_FUNC_C) phps-mode-parser--table-translations)
+
+;; 63 ((reserved_non_modifiers) (T_METHOD_C))
+(puthash 63 (lambda(_args _terminals) 'T_METHOD_C) phps-mode-parser--table-translations)
+
+;; 64 ((reserved_non_modifiers) (T_LINE))
+(puthash 64 (lambda(_args _terminals) 'T_LINE) phps-mode-parser--table-translations)
+
+;; 65 ((reserved_non_modifiers) (T_FILE))
+(puthash 65 (lambda(_args _terminals) 'T_FILE) phps-mode-parser--table-translations)
+
+;; 66 ((reserved_non_modifiers) (T_DIR))
+(puthash 66 (lambda(_args _terminals) 'T_DIR) phps-mode-parser--table-translations)
+
+;; 67 ((reserved_non_modifiers) (T_NS_C))
+(puthash 67 (lambda(_args _terminals) 'T_NS_C) phps-mode-parser--table-translations)
+
+;; 68 ((reserved_non_modifiers) (T_FN))
+(puthash 68 (lambda(_args _terminals) 'T_FN) phps-mode-parser--table-translations)
+
+;; 69 ((reserved_non_modifiers) (T_MATCH))
+(puthash 69 (lambda(_args _terminals) 'T_MATCH) phps-mode-parser--table-translations)
+
+;; 70 ((reserved_non_modifiers) (T_ENUM))
+(puthash 70 (lambda(_args _terminals) 'T_ENUM) phps-mode-parser--table-translations)
+
+;; 71 ((semi_reserved) (reserved_non_modifiers))
+(puthash 71 (lambda(_args _terminals) args) phps-mode-parser--table-translations)
+
+;; 72 ((semi_reserved) (T_STATIC))
+(puthash 72 (lambda(_args _terminals) 'T_STATIC) phps-mode-parser--table-translations)
+
+;; 73 ((semi_reserved) (T_ABSTRACT))
+(puthash 73 (lambda(_args _terminals) 'T_ABSTRACT) phps-mode-parser--table-translations)
+
+;; 74 ((semi_reserved) (T_FINAL))
+(puthash 74 (lambda(_args _terminals) 'T_FINAL) phps-mode-parser--table-translations)
+
+;; 75 ((semi_reserved) (T_PRIVATE))
+(puthash 75 (lambda(_args _terminals) 'T_PRIVATE) phps-mode-parser--table-translations)
+
+;; 76 ((semi_reserved) (T_PROTECTED))
+(puthash 76 (lambda(_args _terminals) 'T_PROTECTED) phps-mode-parser--table-translations)
+
+;; 77 ((semi_reserved) (T_PUBLIC))
+(puthash 77 (lambda(_args _terminals) 'T_PUBLIC) phps-mode-parser--table-translations)
+
+;; 78 ((semi_reserved) (T_READONLY))
+(puthash 78 (lambda(_args _terminals) 'T_READONLY) phps-mode-parser--table-translations)
+
+;; 79 ((ampersand) (T_AMPERSAND_FOLLOWED_BY_VAR_OR_VARARG))
+(puthash 79 (lambda(_args _terminals) 'T_AMPERSAND_FOLLOWED_BY_VAR_OR_VARARG) phps-mode-parser--table-translations)
+
+;; 80 ((ampersand) (T_AMPERSAND_NOT_FOLLOWED_BY_VAR_OR_VARARG))
+(puthash 80 (lambda(_args _terminals) 'T_AMPERSAND_NOT_FOLLOWED_BY_VAR_OR_VARARG) phps-mode-parser--table-translations)
+
+;; 81 ((identifier) (T_STRING))
+(puthash 81 (lambda(_args terminals) terminals) phps-mode-parser--table-translations)
+
+;; 82 ((identifier) (semi_reserved))
+(puthash 82 (lambda(_args terminals) terminals) phps-mode-parser--table-translations)
+
+;; 83 ((top_statement_list) (top_statement_list top_statement))
 (puthash
  83
- (lambda(args _terminals)
-   (if (car args)
-       (append (car args) (cdr args))
-     (cdr args)))
+ (lambda(args _terminals) (if (car args) (append (car args) (cdr args)) (cdr args)))
  phps-mode-parser--table-translations)
 
-;; top_statement -> (T_NAMESPACE namespace_declaration_name ";")
+;; 83 ((top_statement_list) (%empty))
+(puthash 83 (lambda(_args _terminals) nil) phps-mode-parser--table-translations)
+
+;; 111 top_statement -> (T_NAMESPACE namespace_declaration_name ";")
 (puthash
  111
  (lambda(args terminals)
@@ -653,7 +904,7 @@
      ))
  phps-mode-parser--table-translations)
 
-;; top_statement -> (T_NAMESPACE namespace_declaration_name "{" top_statement_list "}")
+;; 112 top_statement -> (T_NAMESPACE namespace_declaration_name "{" top_statement_list "}")
 (puthash
  112
  (lambda(args terminals)
