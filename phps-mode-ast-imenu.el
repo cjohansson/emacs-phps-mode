@@ -19,7 +19,9 @@
 (defun phps-mode-ast-imenu--generate (&optional tree)
   "Generate imenu from current buffer AST or optionally from TREE."
   (let ((imenu-index)
-        (ast-tree (if tree tree phps-mode-ast--tree)))
+        (ast-tree (if tree tree phps-mode-ast--tree))
+        (global-namespace-name)
+        (global-namespace-items))
     (dolist (item ast-tree)
       (let ((children (plist-get item 'children))
             (item-type (plist-get item 'ast-type))
@@ -30,57 +32,84 @@
                item-index
                item-name
                item-type)
-          (if (and
-               (or
-                (equal item-type 'namespace)
-                (equal item-type 'class)
-                (equal item-type 'interface))
-               children)
-              (progn
-                (dolist (child children)
-                  (let ((grand-children (plist-get child 'children))
-                        (child-type (plist-get child 'ast-type))
-                        (child-name (plist-get child 'name))
-                        (child-index (plist-get child 'index))
-                        (subparent))
-                    (when (and
-                           child-name
-                           child-index)
-                      (if (and
-                           (or
-                            (equal child-type 'class)
-                            (equal child-type 'interface))
-                           grand-children)
-                          (progn
-                            (dolist (grand-child grand-children)
-                              (let ((grand-child-index
-                                     (plist-get grand-child 'index))
-                                    (grand-child-name
-                                     (plist-get grand-child 'name)))
-                                (when (and
-                                       grand-child-index
-                                       grand-child-name)
+          (if (or
+               (equal item-type 'namespace)
+               (equal item-type 'class)
+               (equal item-type 'interface))
+              (if children
+                  (progn
+                    (dolist (child children)
+                      (let ((grand-children (plist-get child 'children))
+                            (child-type (plist-get child 'ast-type))
+                            (child-name (plist-get child 'name))
+                            (child-index (plist-get child 'index))
+                            (subparent))
+                        (when (and
+                               child-name
+                               child-index)
+                          (if (and
+                               (or
+                                (equal child-type 'class)
+                                (equal child-type 'interface))
+                               grand-children)
+                              (progn
+                                (dolist (grand-child grand-children)
+                                  (let ((grand-child-index
+                                         (plist-get grand-child 'index))
+                                        (grand-child-name
+                                         (plist-get grand-child 'name)))
+                                    (when (and
+                                           grand-child-index
+                                           grand-child-name)
+                                      (push
+                                       `(,grand-child-name . ,grand-child-index)
+                                       subparent))))
+                                (when subparent
                                   (push
-                                   `(,grand-child-name . ,grand-child-index)
-                                   subparent))))
-                            (when subparent
-                              (push
-                               (append
-                                (list child-name)
-                                (reverse subparent))
-                               parent)))
-                        (push
-                         `(,child-name . ,child-index)
-                         parent)))))
-                (when parent
-                  (push
-                   (append
-                    (list item-name)
-                    (reverse parent))
-                   imenu-index)))
-            (push
-             `(,item-name . ,item-index)
-             imenu-index)))))
+                                   (append
+                                    (list child-name)
+                                    (reverse subparent))
+                                   parent)))
+                            (push
+                             `(,child-name . ,child-index)
+                             parent)))))
+                    (when parent
+                      (let ((parent-item
+                             (append
+                              (list item-name)
+                              (reverse parent))))
+                        (if global-namespace-name
+                            (push
+                             parent-item
+                             global-namespace-items)
+                          (push
+                           parent-item
+                           imenu-index))
+                        imenu-index)))
+                (if (equal item-type 'namespace)
+                    (setq
+                     global-namespace-name
+                     item-name)
+                  (if global-namespace-name
+                      (push
+                       `(,item-name . ,item-index)
+                       global-namespace-items)
+                    (push
+                     `(,item-name . ,item-index)
+                     imenu-index))))
+            (if global-namespace-name
+                (push
+                 `(,item-name . ,item-index)
+                 global-namespace-items)
+              (push
+               `(,item-name . ,item-index)
+               imenu-index))))))
+    (when global-namespace-name
+      (push
+       (append
+        (list global-namespace-name)
+        (reverse global-namespace-items))
+       imenu-index))
     (setq
      phps-mode-ast-imenu--index
      (reverse imenu-index)))

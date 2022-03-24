@@ -962,7 +962,7 @@
      ast-type
      attribute-group
      children
-     ,(append (plist-get (nth 0 args) 'ast-type) (nth 2 args))
+     ,(append (plist-get (nth 0 args) 'ast-type) (list (nth 2 args)))
      ))
  phps-mode-parser--table-translations)
 
@@ -998,7 +998,7 @@
      ast-type
      attributes
      children
-     ,(append (plist-get (nth 0 args) 'children) (nth 1 args))
+     ,(append (plist-get (nth 0 args) 'children) (list (nth 1 args)))
      ))
  phps-mode-parser--table-translations)
 
@@ -1088,7 +1088,7 @@
 ;; 114 ((top_statement) (T_USE mixed_group_use_declaration ";"))
 (puthash
  114
- (lambda(args terminals)
+ (lambda(args _terminals)
    `(
      ast-type
      mixed-group-use-declaration-top-statement
@@ -1100,7 +1100,7 @@
 ;; 115 ((top_statement) (T_USE use_type group_use_declaration ";"))
 (puthash
  115
- (lambda(args terminals)
+ (lambda(args _terminals)
    `(
      ast-type
      type-group-use-declaration-top-statement
@@ -1114,7 +1114,7 @@
 ;; 116 ((top_statement) (T_USE use_declarations ";"))
 (puthash
  116
- (lambda(args terminals)
+ (lambda(args _terminals)
    `(
      ast-type
      use-declarations-top-statement
@@ -1126,7 +1126,7 @@
 ;; 117 ((top_statement) (T_USE use_type use_declarations ";"))
 (puthash
  117
- (lambda(args terminals)
+ (lambda(args _terminals)
    `(
      ast-type
      type-use-declarations-top-statement
@@ -1138,7 +1138,7 @@
 ;; 118 ((top_statement) (T_CONST const_list ";"))
 (puthash
  118
- (lambda(args terminals)
+ (lambda(args _terminals)
    `(
      ast-type
      const-list-top-statement
@@ -1151,12 +1151,12 @@
 (puthash 119 (lambda(args terminals) args) phps-mode-parser--table-translations)
 
 ;; 120 ((use_type) (T_CONST))
-(puthash 120 (lambda(args terminals) args) phps-mode-parser--table-translations)
+(puthash 120 (lambda(args _terminals) args) phps-mode-parser--table-translations)
 
 ;; 121 ((group_use_declaration) (legacy_namespace_name T_NS_SEPARATOR "{" unprefixed_use_declarations possible_comma "}"))
 (puthash
  121
- (lambda(args terminals)
+ (lambda(args _terminals)
    `(
      ast-type
      legacy-group-use-declaration
@@ -1168,7 +1168,7 @@
 ;; 122 ((mixed_group_use_declaration) (legacy_namespace_name T_NS_SEPARATOR "{" inline_use_declarations possible_comma "}"))
 (puthash
  122
- (lambda(args terminals)
+ (lambda(args _terminals)
    `(
      ast-type
      mixed-group-use-declaration
@@ -1178,10 +1178,87 @@
  phps-mode-parser--table-translations)
 
 ;; 123 ((possible_comma) (%empty))
-(puthash 123 (lambda(_args terminals) nil) phps-mode-parser--table-translations)
+(puthash 123 (lambda(_args _terminals) nil) phps-mode-parser--table-translations)
 
 ;; 124 ((possible_comma) (","))
-(puthash 124 (lambda(_args terminals) nil) phps-mode-parser--table-translations)
+(puthash 124 (lambda(_args _terminals) nil) phps-mode-parser--table-translations)
+
+;; 125 ((inline_use_declarations) (inline_use_declarations "," inline_use_declaration))
+(puthash
+ 125
+ (lambda(args _terminals)
+   `(
+     ast-type
+     inline-use-declarations
+     ,(append (nth 0 args) (list (nth 2 args)))
+     ))
+   phps-mode-parser--table-translations)
+
+;; 126 ((inline_use_declarations) (inline_use_declaration))
+(puthash
+ 126
+ (lambda(args terminals)
+   `(
+     ast-type
+     inline-use-declarations
+     ,(list (nth 1 args))
+     ))
+   phps-mode-parser--table-translations)
+
+;; 127 ((unprefixed_use_declarations) (unprefixed_use_declarations "," unprefixed_use_declaration))
+(puthash
+ 127
+ (lambda(args terminals)
+   `(
+     ast-type
+     unprefixed-use-declarations
+     ,(append (nth 0 args) (list (nth 2 args)))
+     ))
+   phps-mode-parser--table-translations)
+
+;; 128 ((unprefixed_use_declarations) (unprefixed_use_declaration))
+(puthash
+ 128
+ (lambda(args terminals)
+   `(
+     ast-type
+     unprefixed-use-declarations
+     ,(args))
+     )
+   phps-mode-parser--table-translations)
+
+;; 129 ((use_declarations) (use_declarations "," use_declaration))
+(puthash
+ 129
+ (lambda(args terminals)
+   `(
+     ast-type
+     use-declarations
+     ,(append (nth 0 args) (list (nth 2 args)))
+     ))
+ phps-mode-parser--table-translations)
+
+;; 130 ((use_declarations) (use_declaration))
+(puthash
+ 130
+ (lambda(args terminals)
+   `(
+     ast-type
+     use-declarations
+     (args)
+     ))
+ phps-mode-parser--table-translations)
+
+;; 131 ((inline_use_declaration) (unprefixed_use_declaration))
+(puthash
+ 130
+ (lambda(args terminals)
+   `(
+     ast-type
+     inline-use-declaration
+     (args)
+     ))
+ phps-mode-parser--table-translations)
 
 ;; 139 inner_statement_list -> (inner_statement_list inner_statement)
 (puthash
