@@ -1153,7 +1153,37 @@
 ;; 120 ((use_type) (T_CONST))
 (puthash 120 (lambda(args terminals) args) phps-mode-parser--table-translations)
 
-;; inner_statement_list -> (inner_statement_list inner_statement)
+;; 121 ((group_use_declaration) (legacy_namespace_name T_NS_SEPARATOR "{" unprefixed_use_declarations possible_comma "}"))
+(puthash
+ 121
+ (lambda(args terminals)
+   `(
+     ast-type
+     legacy-group-use-declaration
+     unprefixed-use-declarations
+     ,(nth 3 args)
+     ))
+ phps-mode-parser--table-translations)
+
+;; 122 ((mixed_group_use_declaration) (legacy_namespace_name T_NS_SEPARATOR "{" inline_use_declarations possible_comma "}"))
+(puthash
+ 122
+ (lambda(args terminals)
+   `(
+     ast-type
+     mixed-group-use-declaration
+     inline-use-declarations
+     ,(nth 3 args)
+     ))
+ phps-mode-parser--table-translations)
+
+;; 123 ((possible_comma) (%empty))
+(puthash 123 (lambda(_args terminals) nil) phps-mode-parser--table-translations)
+
+;; 124 ((possible_comma) (","))
+(puthash 124 (lambda(_args terminals) nil) phps-mode-parser--table-translations)
+
+;; 139 inner_statement_list -> (inner_statement_list inner_statement)
 (puthash
  139
  (lambda(args _terminals)
