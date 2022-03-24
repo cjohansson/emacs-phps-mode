@@ -1085,6 +1085,74 @@
      ))
  phps-mode-parser--table-translations)
 
+;; 114 ((top_statement) (T_USE mixed_group_use_declaration ";"))
+(puthash
+ 114
+ (lambda(args terminals)
+   `(
+     ast-type
+     mixed-group-use-declaration-top-statement
+     ast-value
+     ,(nth 1 args)
+     ))
+ phps-mode-parser--table-translations)
+
+;; 115 ((top_statement) (T_USE use_type group_use_declaration ";"))
+(puthash
+ 115
+ (lambda(args terminals)
+   `(
+     ast-type
+     type-group-use-declaration-top-statement
+     use-type
+     ,(nth 1 args)
+     ,group-use-declaration
+     ,(nth 2 args)
+     ))
+ phps-mode-parser--table-translations)
+
+;; 116 ((top_statement) (T_USE use_declarations ";"))
+(puthash
+ 116
+ (lambda(args terminals)
+   `(
+     ast-type
+     use-declarations-top-statement
+     ast-value
+     ,(nth 1 args)
+     ))
+ phps-mode-parser--table-translations)
+
+;; 117 ((top_statement) (T_USE use_type use_declarations ";"))
+(puthash
+ 117
+ (lambda(args terminals)
+   `(
+     ast-type
+     type-use-declarations-top-statement
+     ast-value
+     ,(nth 1 args)
+     ))
+ phps-mode-parser--table-translations)
+
+;; 118 ((top_statement) (T_CONST const_list ";"))
+(puthash
+ 118
+ (lambda(args terminals)
+   `(
+     ast-type
+     const-list-top-statement
+     ast-value
+     ,(nth 1 args)
+     ))
+ phps-mode-parser--table-translations)
+
+;; 119 ((use_type) (T_FUNCTION))
+(puthash 119 (lambda(args terminals) args) phps-mode-parser--table-translations)
+
+;; 120 ((use_type) (T_CONST))
+(puthash 120 (lambda(args terminals) args) phps-mode-parser--table-translations)
+
 ;; inner_statement_list -> (inner_statement_list inner_statement)
 (puthash
  139
