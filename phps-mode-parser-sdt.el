@@ -1003,74 +1003,31 @@
  phps-mode-parser--table-translations)
 
 ;; 102 ((attributed_statement) (function_declaration_statement))
-(puthash
- 102
- (lambda(args _terminals)
-   `(
-     ast-type
-     attributed-statement
-     ast-child-type
-     function
-     child
-     ,args
-     ))
- phps-mode-parser--table-translations)
+(puthash 102 (lambda(args _terminals) args) phps-mode-parser--table-translations)
 
 ;; 103 ((attributed_statement) (class_declaration_statement))
-(puthash
- 103
- (lambda(args _terminals)
-   `(
-     ast-type
-     attributed-statement
-     ast-child-type
-     class
-     child
-     ,args
-     ))
- phps-mode-parser--table-translations)
+(puthash 103 (lambda(args _terminals) args) phps-mode-parser--table-translations)
 
 ;; 104 ((attributed_statement) (trait_declaration_statement))
-(puthash
- 104
- (lambda(args _terminals)
-   `(
-     ast-type
-     attributed-statement
-     ast-child-type
-     trait
-     child
-     ,args
-     ))
- phps-mode-parser--table-translations)
+(puthash 104 (lambda(args _terminals) args) phps-mode-parser--table-translations)
 
 ;; 105 ((attributed_statement) (interface_declaration_statement))
-(puthash
- 105
- (lambda(args _terminals)
-   `(
-     ast-type
-     attributed-statement
-     ast-child-type
-     interface
-     child
-     ,args
-     ))
- phps-mode-parser--table-translations)
+(puthash 105 (lambda(args _terminals) args) phps-mode-parser--table-translations)
 
 ;; 106 ((attributed_statement) (enum_declaration_statement))
-(puthash
- 106
- (lambda(args _terminals)
-   `(
-     ast-type
-     attributed-statement
-     ast-child-type
-     enum
-     child
-     ,args
-     ))
- phps-mode-parser--table-translations)
+(puthash 106 (lambda(args _terminals) args) phps-mode-parser--table-translations)
+
+;; 107 ((top_statement) (statement))
+(puthash 107 (lambda(args _terminals) args) phps-mode-parser--table-translations)
+
+;; 108 ((top_statement) (statement))
+(puthash 108 (lambda(args _terminals) args) phps-mode-parser--table-translations)
+
+;; 109 ((top_statement) (attributed_statement))
+(puthash 109 (lambda(args _terminals) args) phps-mode-parser--table-translations)
+
+;; 110 ((top_statement) (T_HALT_COMPILER "(" ")" ";"))
+(puthash 109 (lambda(args _terminals) (nth 0 args)) phps-mode-parser--table-translations)
 
 ;; 111 top_statement -> (T_NAMESPACE namespace_declaration_name ";")
 (puthash
@@ -1110,11 +1067,22 @@
      ))
  phps-mode-parser--table-translations)
 
-;; top_statement -> (T_NAMESPACE "{" top_statement_list "}")
+;; 113 top_statement -> (T_NAMESPACE "{" top_statement_list "}")
 (puthash
  113
- (lambda(args _terminals)
-   (nth 2 args))
+ (lambda(args terminals)
+   `(
+     ast-type
+     namespace
+     index
+     ,(car (cdr (nth 0 terminals)))
+     start
+     ,(car (cdr (nth 1 terminals)))
+     end
+     ,(car (cdr (nth 3 terminals)))
+     children
+     ,(nth 2 args)
+     ))
  phps-mode-parser--table-translations)
 
 ;; inner_statement_list -> (inner_statement_list inner_statement)
