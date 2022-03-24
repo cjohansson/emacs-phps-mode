@@ -902,19 +902,175 @@
 (puthash 89 (lambda(args _terminals) args) phps-mode-parser--table-translations)
 
 ;; 90 ((legacy_namespace_name) (T_NAME_FULLY_QUALIFIED))
-(puthash 90 (lambda(_args terminals) terminals) phps-mode-parser--table-translations)
+(puthash 90 (lambda(args _terminals) args) phps-mode-parser--table-translations)
 
 ;; 91 ((name) (T_STRING))
 (puthash 91 (lambda(args _terminals) args) phps-mode-parser--table-translations)
 
 ;; 92 ((name) (T_NAME_QUALIFIED))
-(puthash 92 (lambda(_args terminals) terminals) phps-mode-parser--table-translations)
+(puthash 92 (lambda(args _terminals) args) phps-mode-parser--table-translations)
 
 ;; 93 ((name) (T_NAME_FULLY_QUALIFIED))
-(puthash 93 (lambda(_args terminals) terminals) phps-mode-parser--table-translations)
+(puthash 93 (lambda(args _terminals) args) phps-mode-parser--table-translations)
 
 ;; 94 ((name) (T_NAME_RELATIVE))
-(puthash 94 (lambda(_args terminals) terminals) phps-mode-parser--table-translations)
+(puthash 94 (lambda(args _terminals) args) phps-mode-parser--table-translations)
+
+;; 95 ((attribute_decl) (class_name))
+(puthash
+ 95
+ (lambda(args _terminals)
+   `(
+     ast-type
+     attribute-decl
+     class-name
+     ,args
+     ))
+ phps-mode-parser--table-translations)
+
+;; 96 ((attribute_decl) (class_name argument_list))
+(puthash
+ 96
+ (lambda(args _terminals)
+   `(
+     ast-type
+     attribute-decl
+     class-name
+     ,(nth 0 args)
+     argument-list
+     ,(nth 1 args)
+     ))
+ phps-mode-parser--table-translations)
+
+;; 97 ((attribute_group) (attribute_decl))
+(puthash
+ 97
+ (lambda(args _terminals)
+   `(
+     ast-type
+     attribute-group
+     children
+     (,args)
+     ))
+ phps-mode-parser--table-translations)
+
+;; 98 ((attribute_group) (attribute_group "," attribute_decl))
+(puthash
+ 98
+ (lambda(args _terminals)
+   `(
+     ast-type
+     attribute-group
+     children
+     ,(append (plist-get (nth 0 args) 'ast-type) (nth 2 args))
+     ))
+ phps-mode-parser--table-translations)
+
+;; 99 ((attribute) (T_ATTRIBUTE attribute_group possible_comma "]"))
+(puthash
+ 99
+ (lambda(args _terminals)
+   `(
+     ast-type
+     attribute
+     children
+     ,(nth 1 args)
+     ))
+ phps-mode-parser--table-translations)
+
+;; 100 ((attributes) (attribute))
+(puthash
+ 100
+ (lambda(args _terminals)
+   `(
+     ast-type
+     attributes
+     children
+     (,attribute)
+     ))
+ phps-mode-parser--table-translations)
+
+;; 101 ((attributes) (attributes attribute))
+(puthash
+ 101
+ (lambda(args _terminals)
+   `(
+     ast-type
+     attributes
+     children
+     ,(append (plist-get (nth 0 args) 'children) (nth 1 args))
+     ))
+ phps-mode-parser--table-translations)
+
+;; 102 ((attributed_statement) (function_declaration_statement))
+(puthash
+ 102
+ (lambda(args _terminals)
+   `(
+     ast-type
+     attributed-statement
+     ast-child-type
+     function
+     child
+     ,args
+     ))
+ phps-mode-parser--table-translations)
+
+;; 103 ((attributed_statement) (class_declaration_statement))
+(puthash
+ 103
+ (lambda(args _terminals)
+   `(
+     ast-type
+     attributed-statement
+     ast-child-type
+     class
+     child
+     ,args
+     ))
+ phps-mode-parser--table-translations)
+
+;; 104 ((attributed_statement) (trait_declaration_statement))
+(puthash
+ 104
+ (lambda(args _terminals)
+   `(
+     ast-type
+     attributed-statement
+     ast-child-type
+     trait
+     child
+     ,args
+     ))
+ phps-mode-parser--table-translations)
+
+;; 105 ((attributed_statement) (interface_declaration_statement))
+(puthash
+ 105
+ (lambda(args _terminals)
+   `(
+     ast-type
+     attributed-statement
+     ast-child-type
+     interface
+     child
+     ,args
+     ))
+ phps-mode-parser--table-translations)
+
+;; 106 ((attributed_statement) (enum_declaration_statement))
+(puthash
+ 106
+ (lambda(args _terminals)
+   `(
+     ast-type
+     attributed-statement
+     ast-child-type
+     enum
+     child
+     ,args
+     ))
+ phps-mode-parser--table-translations)
 
 ;; 111 top_statement -> (T_NAMESPACE namespace_declaration_name ";")
 (puthash
