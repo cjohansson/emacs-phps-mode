@@ -1251,14 +1251,83 @@
 
 ;; 131 ((inline_use_declaration) (unprefixed_use_declaration))
 (puthash
- 130
+ 131
  (lambda(args terminals)
    `(
      ast-type
      inline-use-declaration
-     (args)
+     declation
+     ,(args)
      ))
  phps-mode-parser--table-translations)
+
+;; 132 ((inline_use_declaration) (use_type unprefixed_use_declaration))
+(puthash
+ 132
+ (lambda(args terminals)
+   `(
+     ast-type
+     inline-use-declaration
+     use-type
+     ,(nth 0 args)
+     declaration
+     ,(nth 1 args)
+     ))
+ phps-mode-parser--table-translations)
+
+;; 133 ((unprefixed_use_declaration) (namespace_name))
+(puthash
+ 133
+ (lambda(args terminals)
+   `(
+     namespace-name
+     ,args
+     ))
+ phps-mode-parser--table-translations)
+
+;; 134 ((unprefixed_use_declaration) (namespace_name T_AS T_STRING))
+(puthash
+ 134
+ (lambda(args terminals)
+   `(
+     namespace-name
+     ,(nth 0 args)
+     as
+     ,(nth 2 args)
+     ))
+ phps-mode-parser--table-translations)
+
+;; 135 ((use_declaration) (legacy_namespace_name))
+(puthash
+ 135
+ (lambda(args terminals)
+   `(
+     ast-type
+     use-declaration
+     legacy-namespace-name
+     ,args
+     ))
+ phps-mode-parser--table-translations)
+
+;; 136 ((use_declaration) (legacy_namespace_name T_AS T_STRING))
+(puthash
+ 136
+ (lambda(args terminals)
+   `(
+     ast-type
+     use-declaration
+     legacy-namespace-name
+     ,(nth 0 args)
+     as
+     ,(nth 2 args)
+     ))
+ phps-mode-parser--table-translations)
+
+;; 137 ((const_list) (const_list "," const_decl))
+(puthash 137 (lambda(args terminals) (append (nth 0 args) (list (nth 2 args)))) phps-mode-parser--table-translations)
+
+;; 138 ((const_list) (const_decl))
+(puthash 138 (lambda(args terminals) (list args)) phps-mode-parser--table-translations)
 
 ;; 139 inner_statement_list -> (inner_statement_list inner_statement)
 (puthash
@@ -1269,7 +1338,22 @@
      (cdr args)))
  phps-mode-parser--table-translations)
 
-;; statement -> ("{" inner_statement_list "}")
+;; 140 ((inner_statement_list) (%empty))
+(puthash 140 (lambda(_args _terminals) nil) phps-mode-parser--table-translations)
+
+;; 141 ((inner_statement) (statement))
+(puthash 141 (lambda(args _terminals) args) phps-mode-parser--table-translations)
+
+;; 142 ((inner_statement) (attributed_statement))
+(puthash 142 (lambda(args _terminals) args) phps-mode-parser--table-translations)
+
+;; 143 ((inner_statement) (attributes attributed_statement))
+(puthash 143 (lambda(args _terminals) args) phps-mode-parser--table-translations)
+
+;; 144 ((inner_statement) (T_HALT_COMPILER "(" ")" ";"))
+(puthash 144 (lambda(args _terminals) '(ast-type halt-compiler-inner-statement)) phps-mode-parser--table-translations)
+
+;; 145 ((statement) ("{" inner_statement_list "}"))
 (puthash
  145
  (lambda(args _terminals)

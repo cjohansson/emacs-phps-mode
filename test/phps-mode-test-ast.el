@@ -38,17 +38,19 @@
       (message "\n")
       (phps-mode-ast--generate)
       (phps-mode-ast-bookkeeping--generate)
-      ;; (message
-      ;;  "expected-bookkeeping:\n%S\n"
-      ;;  bookkeeping)
-      ;; (message
-      ;;  "actual-bookkeeping:\n%S\n"
-      ;;  (phps-mode-test--hash-to-list
-      ;;   phps-mode-ast-bookkeeping--index
-      ;;   t))
+
+      (message
+       "expected-bookkeeping:\n%S\n"
+       bookkeeping)
+      (message
+       "actual-bookkeeping:\n%S\n"
+       (phps-mode-test--hash-to-list
+        phps-mode-ast-bookkeeping--index
+        t))
        (message
         "object-index:\n%S\n"
          phps-mode-ast-bookkeeping--object-index)
+
       (should
        (equal
         (phps-mode-test--hash-to-list

@@ -254,7 +254,8 @@
         (bookkeeping-objects)
         (inline-function-count 0)
         (arrow-function-count 0)
-        (defined-count 0))
+        (defined-count 0)
+        (global-namespace))
     (while bookkeeping-stack
       (let ((item-raw (pop bookkeeping-stack))
             (item)
@@ -270,6 +271,17 @@
           (setq
            item
            item-raw))
+
+        ;; Set global namespace (if any)
+        (when global-namespace
+          (let ((had-scope-p scope))
+            (when had-scopep
+              (setq scope (reverse scope)))
+            (push
+             (list 'type 'namespace 'name global-namespace)
+             scope)
+            (when had-scopep
+              (setq scope (reverse scope)))))
 
         (let ((type (plist-get item 'ast-type)))
           (cond
@@ -472,9 +484,10 @@
             (let ((name (plist-get item 'name))
                   (sub-scope scope))
               (push `(type namespace name ,name) sub-scope)
-              (when-let ((children (reverse (plist-get item 'children))))
-                (dolist (child children)
-                  (push `(,sub-scope ,child) bookkeeping-stack)))))
+              (if-let ((children (reverse (plist-get item 'children))))
+                  (dolist (child children)
+                    (push `(,sub-scope ,child) bookkeeping-stack))
+                (setq global-namespace name))))
 
            ((equal type 'class)
             (let ((name (plist-get item 'name))
@@ -931,7 +944,7 @@
                             (phps-mode-ast-bookkeeping--generate-symbol-scope-string
                              sub-scope
                              property-name))
-                           (bookkeeping-object
+                           (bookkeeping-object2
                             (list
                              object-start
                              object-end))
@@ -956,11 +969,11 @@
                            t)))
                       (if predefined
                           (puthash
-                           bookkeeping-object
+                           bookkeeping-object2
                            1
                            bookkeeping)
                         (puthash
-                         bookkeeping-object
+                         bookkeeping-object2
                          0
                          bookkeeping)))))
 
@@ -1047,7 +1060,7 @@
                             (phps-mode-ast-bookkeeping--generate-symbol-scope-string
                              sub-scope
                              property-name))
-                           (bookkeeping-object
+                           (bookkeeping-object2
                             (list
                              object-start
                              object-end))
@@ -1072,11 +1085,11 @@
                            t)))
                       (if predefined
                           (puthash
-                           bookkeeping-object
+                           bookkeeping-object2
                            1
                            bookkeeping)
                         (puthash
-                         bookkeeping-object
+                         bookkeeping-object2
                          0
                          bookkeeping)))))
 
@@ -1159,7 +1172,7 @@
                              sub-scope
                              object-name
                              t))
-                           (bookkeeping-object
+                           (bookkeeping-object2
                             (list
                              object-start
                              object-end))
@@ -1180,11 +1193,11 @@
                            t)))
                       (if predefined
                           (puthash
-                           bookkeeping-object
+                           bookkeeping-object2
                            1
                            bookkeeping)
                         (puthash
-                         bookkeeping-object
+                         bookkeeping-object2
                          0
                          bookkeeping)))))
 
