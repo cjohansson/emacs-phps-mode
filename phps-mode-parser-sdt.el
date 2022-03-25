@@ -949,7 +949,7 @@
    `(
      ast-type
      attribute-group
-     children
+     attribute-decl
      (,args)
      ))
  phps-mode-parser--table-translations)
@@ -961,7 +961,7 @@
    `(
      ast-type
      attribute-group
-     children
+     attribute-group
      ,(append (plist-get (nth 0 args) 'ast-type) (list (nth 2 args)))
      ))
  phps-mode-parser--table-translations)
@@ -973,7 +973,7 @@
    `(
      ast-type
      attribute
-     children
+     attribute-group
      ,(nth 1 args)
      ))
  phps-mode-parser--table-translations)
@@ -985,7 +985,7 @@
    `(
      ast-type
      attributes
-     children
+     attributes
      (,attribute)
      ))
  phps-mode-parser--table-translations)
@@ -997,7 +997,7 @@
    `(
      ast-type
      attributes
-     children
+     attributes
      ,(append (plist-get (nth 0 args) 'children) (list (nth 1 args)))
      ))
  phps-mode-parser--table-translations)
@@ -1062,7 +1062,7 @@
      ,(car (cdr (nth 2 terminals)))
      end
      ,(car (cdr (nth 4 terminals)))
-     children
+     top-statement-list
      ,(nth 3 args)
      ))
  phps-mode-parser--table-translations)
@@ -1080,7 +1080,7 @@
      ,(car (cdr (nth 1 terminals)))
      end
      ,(car (cdr (nth 3 terminals)))
-     children
+     top-statement-list
      ,(nth 2 args)
      ))
  phps-mode-parser--table-translations)
@@ -1360,53 +1360,97 @@
    (nth 1 args))
  phps-mode-parser--table-translations)
 
-;; statement -> (T_WHILE "(" expr ")" while_statement)
+;; 146 ((statement) (if_stmt))
+(puthash 146 (lambda(args _terminals) args) phps-mode-parser--table-translations)
+
+;; 147 ((statement) (alt_if_stmt))
+(puthash 147 (lambda(args _terminals) args) phps-mode-parser--table-translations)
+
+;; 148 (T_WHILE "(" expr ")" while_statement))
 (puthash
  148
  (lambda(args _terminals)
    `(
      ast-type
-     while
-     condition
-     ,(phps-mode-parser-sdt--get-list-of-object (nth 2 args))
-     children
-     ,(phps-mode-parser-sdt--get-list-of-object (nth 4 args)))
+     while-statement
+     expr
+     ,(nth 2 args)
+     while-statement
+     ,(nth 4 args))
    )
  phps-mode-parser--table-translations)
 
-;; statement -> (T_DO statement T_WHILE "(" expr ")" ";")
+;; 149 ((statement) (T_DO statement T_WHILE "(" expr ")" ";"))
 (puthash
  149
  (lambda(args _terminals)
    `(
      ast-type
-     do-while
-     children
-     ,(phps-mode-parser-sdt--get-list-of-object (nth 1 args))
-     condition
-     ,(phps-mode-parser-sdt--get-list-of-object (nth 4 args))
+     do-statement
+     statement
+     ,(nth 1 args)
+     expr
+     ,(nth 4 args)
      ))
  phps-mode-parser--table-translations)
 
-;; statement -> (T_FOR "(" for_exprs ";" for_exprs ";" for_exprs ")" for_statement)
+;; 150 (T_FOR "(" for_exprs ";" for_exprs ";" for_exprs ")" for_statement))
 (puthash
  150
  (lambda(args _terminals)
    `(
      ast-type
-     for
+     for-statement
      initial
-     ,(phps-mode-parser-sdt--get-list-of-object (nth 2 args))
+     ,(nth 2 args)
      test
-     ,(phps-mode-parser-sdt--get-list-of-object (nth 4 args))
+     ,(nth 4 args)
      incremental
-     ,(phps-mode-parser-sdt--get-list-of-object (nth 6 args))
-     children
-     ,(phps-mode-parser-sdt--get-list-of-object (nth 8 args))
+     ,(nth 6 args)
+     for-statement
+     ,(nth 8 args)
      ))
  phps-mode-parser--table-translations)
 
-;; statement -> (T_RETURN optional_expr ";")
+;; 151 ((statement) (T_SWITCH "(" expr ")" switch_case_list))
+(puthash
+ 151
+ (lambda(args _terminals)
+   `(
+     ast-type
+     switch-statement
+     expr
+     ,(nth 2 args)
+     switch-case-list
+     ,(nth 4 args)
+     ))
+ phps-mode-parser--table-translations)
+
+;; 152 ((statement) (T_BREAK optional_expr ";"))
+(puthash
+ 152
+ (lambda(args _terminals)
+   `(
+     ast-type
+     break-statement
+     optional-expr
+     ,(nth 1 args)
+     ))
+ phps-mode-parser--table-translations)
+
+;; 153 ((statement) (T_CONTINUE optional_expr ";"))
+(puthash
+ 153
+ (lambda(args _terminals)
+   `(
+     ast-type
+     continue-statement
+     optional-expr
+     ,(nth 1 args)
+     ))
+ phps-mode-parser--table-translations)
+
+;; 154 ((statement) (T_RETURN optional_expr ";"))
 (puthash
  154
  (lambda(args _terminals)
@@ -1414,11 +1458,11 @@
      ast-type
      return-statement
      optional-expr
-     ,(phps-mode-parser-sdt--get-list-of-object (nth 1 args))
+     ,(nth 1 args)
      ))
  phps-mode-parser--table-translations)
 
-;; statement -> (T_GLOBAL global_var_list ";")
+;; 155 ((statement) (T_GLOBAL global_var_list ";"))
 (puthash
  155
  (lambda(args _terminals)
@@ -1426,88 +1470,142 @@
      ast-type
      global-statement
      global-var-list
-     ,(phps-mode-parser-sdt--get-list-of-object (nth 1 args))
+     ,(nth 1 args)
      ))
  phps-mode-parser--table-translations)
 
-;; statement -> (T_STATIC static_var_list ";")
+;; 156 ((statement) (T_STATIC static_var_list ";"))
 (puthash
  156
  (lambda(args _terminals)
    `(
      ast-type
-     static-variables-statement
+     static-statement
      static-var-list
      ,(nth 1 args)
      ))
  phps-mode-parser--table-translations)
 
-;; statement -> (T_ECHO echo_expr_list ";")
+;; 157 ((statement) (T_ECHO echo_expr_list ";"))
 (puthash
  157
  (lambda(args _terminals)
    `(
      ast-type
      echo-statement
-     children
-     ,(phps-mode-parser-sdt--get-list-of-object (nth 1 args))
+     echo-expr-list
+     ,(nth 1 args)
      ))
  phps-mode-parser--table-translations)
 
-;; statement -> (expr ";")
+;; 158 ((statement) (T_INLINE_HTML))
+(puthash 158 (lambda(args _terminals) args) phps-mode-parser--table-translations)
+
+;; 159 ((statement) (expr ";"))
 (puthash
  159
  (lambda(args _terminals)
-   (nth 0 args))
+   `(
+     ast-type
+     expr-statement
+     expr
+     (nth 0 args)
+     ))
  phps-mode-parser--table-translations)
 
-;; statement -> (T_FOREACH "(" expr T_AS foreach_variable ")" foreach_statement)
+;; 160 ((statement) (T_UNSET "(" unset_variables possible_comma ")" ";"))
+(puthash 159 (lambda(args _terminals) (nth 0 args)) phps-mode-parser--table-translations)
+
+;; 161 ((statement) (T_FOREACH "(" expr T_AS foreach_variable ")" foreach_statement))
 (puthash
  161
  (lambda(args _terminals)
    `(
      ast-type
-     foreach
-     expression
-     ,(phps-mode-parser-sdt--get-list-of-object (nth 2 args))
-     value
+     foreach-statement
+     expr
+     ,(nth 2 args)
+     as
      ,(nth 4 args)
-     children
-     ,(phps-mode-parser-sdt--get-list-of-object (nth 6 args))
+     foreach-statement
+     ,(nth 6 args)
      ))
  phps-mode-parser--table-translations)
 
-;; statement -> (T_FOREACH "(" expr T_AS foreach_variable T_DOUBLE_ARROW foreach_variable ")" foreach_statement)
+;; 162 ((statement) (T_FOREACH "(" expr T_AS foreach_variable T_DOUBLE_ARROW foreach_variable ")" foreach_statement))
 (puthash
  162
  (lambda(args _terminals)
    `(
      ast-type
-     foreach
-     expression
-     ,(phps-mode-parser-sdt--get-list-of-object (nth 2 args))
-     key
+     foreach-statement
+     expr
+     ,(nth 2 args)
+     as
      ,(nth 4 args)
      value
      ,(nth 6 args)
-     children
-     ,(phps-mode-parser-sdt--get-list-of-object (nth 8 args))
+     foreach-statement
+     ,(nth 8 args)
      ))
  phps-mode-parser--table-translations)
 
-;; statement -> (T_TRY "{" inner_statement_list "}" catch_list finally_statement)
+;; 163 ((statement) (T_DECLARE "(" const_list ")" declare_statement))
+(puthash
+ 163
+ (lambda(args _terminals)
+   `(
+     ast-type
+     declare-statement
+     const-list
+     ,(nth 2 args)
+     declare-statement
+     ,(nth 4 args)
+     value
+     ,(nth 6 args)
+     ))
+ phps-mode-parser--table-translations)
+
+;; 164 ((statement) (";"))
+(puthash 164 (lambda(_args _terminals) nil) phps-mode-parser--table-translations)
+
+;; 165 ((statement) (T_TRY "{" inner_statement_list "}" catch_list finally_statement))
 (puthash
  165
  (lambda(args _terminals)
    `(
      ast-type
-     try
+     try-statement
      inner-statement-list
-     ,(phps-mode-parser-sdt--get-list-of-object (nth 2 args))
+     ,(nth 2 args)
      catch-list
-     ,(phps-mode-parser-sdt--get-list-of-object (nth 4 args))
+     ,(nth 4 args)
      finally-statement
      ,(nth 5 args)
+     ))
+ phps-mode-parser--table-translations)
+
+;; 166 ((statement) (T_GOTO T_STRING ";"))
+(puthash
+ 166
+ (lambda(args _terminals)
+   `(
+     ast-type
+     goto-statement
+     label
+     ,(nth 1 args)
+     ))
+ phps-mode-parser--table-translations)
+
+;; 167 ((statement) (T_STRING ":"))
+(puthash
+ 167
+ (lambda(args _terminals)
+   `(
+     ast-type
+     label-statement
+     label
+     ,(nth 0 args)
      ))
  phps-mode-parser--table-translations)
 

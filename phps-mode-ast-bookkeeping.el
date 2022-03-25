@@ -275,12 +275,12 @@
         ;; Set global namespace (if any)
         (when global-namespace
           (let ((had-scope-p scope))
-            (when had-scopep
+            (when had-scope-p
               (setq scope (reverse scope)))
             (push
              (list 'type 'namespace 'name global-namespace)
              scope)
-            (when had-scopep
+            (when had-scope-p
               (setq scope (reverse scope)))))
 
         (let ((type (plist-get item 'ast-type)))
