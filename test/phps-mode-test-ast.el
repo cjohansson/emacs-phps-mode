@@ -46,6 +46,9 @@
       ;;  (phps-mode-test--hash-to-list
       ;;   phps-mode-ast-bookkeeping--index
       ;;   t))
+       (message
+        "object-index:\n%S\n"
+         phps-mode-ast-bookkeeping--object-index)
       (should
        (equal
         (phps-mode-test--hash-to-list
@@ -379,8 +382,8 @@
 (defun phps-mode-test-ast ()
   "Run test for ast."
   (message "-- Running all tests for ast... --\n")
-  (phps-mode-test-ast-imenu)
   (phps-mode-test-ast-bookkeeping)
+  (phps-mode-test-ast-imenu)
   (message "\n-- Ran all tests for ast. --"))
 
 (phps-mode-test-ast)

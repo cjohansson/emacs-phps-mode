@@ -18,7 +18,12 @@
 (defvar-local
   phps-mode-ast-bookkeeping--index
   nil
-  "Bookkeeping for current buffer.")
+  "Bookkeeping string index for current buffer.")
+
+(defvar-local
+  phps-mode-ast-bookkeeping--object-index
+  nil
+  "Bookkeeping object index for current buffer.")
 
 (defvar
   phps-mode-ast-bookkeeping--superglobal-variable-p
@@ -246,6 +251,7 @@
   "Generate AST for current buffer or optionally for TREE."
   (let ((bookkeeping (make-hash-table :test 'equal))
         (bookkeeping-stack (if tree tree phps-mode-ast--tree))
+        (bookkeeping-objects)
         (inline-function-count 0)
         (arrow-function-count 0)
         (defined-count 0))
@@ -269,16 +275,29 @@
           (cond
 
            ((equal type 'simple-variable)
-            (let ((ids
-                   (phps-mode-ast-bookkeeping--generate-variable-scope-string
-                    scope
-                    (plist-get item 'name)
-                    t))
-                  (object
-                   (list
-                    (plist-get item 'start)
-                    (plist-get item 'end)))
-                  (defined-p 0))
+            (let* ((object-name (plist-get item 'name))
+                   (object-start (plist-get item 'start))
+                   (object-end (plist-get item 'end))
+                   (ids
+                    (phps-mode-ast-bookkeeping--generate-variable-scope-string
+                     scope
+                     object-name
+                     t))
+                   (object
+                    (list
+                     object-start
+                     object-end))
+                   (defined-p 0)
+                   (bookkeeping-object
+                    (list
+                     'type type
+                     'name object-name
+                     'scope scope
+                     'start object-start
+                     'end object-end)))
+              (push
+               bookkeeping-object
+               bookkeeping-objects)
 
               (dolist (id ids)
                 (when (gethash id bookkeeping)
@@ -286,10 +305,11 @@
                    defined-p
                    1)))
 
-              ;; Is a super-global variable?
-              (when (gethash
-                     (plist-get item 'name)
-                     phps-mode-ast-bookkeeping--superglobal-variable-p)
+              ;; Is it a super-global variable?
+              (when
+                  (gethash
+                   (plist-get item 'name)
+                   phps-mode-ast-bookkeeping--superglobal-variable-p)
                 (setq
                  defined-p
                  1))
@@ -301,14 +321,28 @@
            ((equal type 'static-variables-statement)
             (when-let ((variables (reverse (plist-get item 'static-var-list))))
               (dolist (variable variables)
-                (let ((ids
-                       (phps-mode-ast-bookkeeping--generate-variable-scope-string
-                        scope
-                        (plist-get variable 'name)))
-                      (object
-                       (list
-                        (plist-get variable 'start)
-                        (plist-get variable 'end))))
+                (let* ((object-name (plist-get variable 'name))
+                       (object-start (plist-get variable 'start))
+                       (object-end (plist-get variable 'end))
+                       (ids
+                        (phps-mode-ast-bookkeeping--generate-variable-scope-string
+                         scope
+                         object-name))
+                       (object
+                        (list
+                         object-start
+                         object-end))
+                       (bookkeeping-object
+                        (list
+                         'type type
+                         'name object-name
+                         'scope scope
+                         'start object-start
+                         'end object-end)))
+                  (push
+                   bookkeeping-object
+                   bookkeeping-objects)
+
                   (dolist (id ids)
                     (puthash
                      id
@@ -325,14 +359,28 @@
               (push `(type function name ,name) sub-scope)
               (when-let ((parameter-list (plist-get item 'parameter-list)))
                 (dolist (parameter parameter-list)
-                  (let ((ids
-                         (phps-mode-ast-bookkeeping--generate-variable-scope-string
-                          sub-scope
-                          (plist-get parameter 'name)))
-                        (object
-                         (list
-                          (plist-get parameter 'start)
-                          (plist-get parameter 'end))))
+                  (let* ((object-name (plist-get parameter 'name))
+                         (object-start (plist-get parameter 'start))
+                         (object-end (plist-get parameter 'end))
+                         (ids
+                          (phps-mode-ast-bookkeeping--generate-variable-scope-string
+                           sub-scope
+                           object-name))
+                         (object
+                          (list
+                           object-start
+                           object-end))
+                         (bookkeeping-object
+                          (list
+                           'type type
+                           'name object-name
+                           'scope scope
+                           'start object-start
+                           'end object-end)))
+                    (push
+                     bookkeeping-object
+                     bookkeeping-objects)
+
                     (dolist (id ids)
                       (puthash
                        id
@@ -384,14 +432,28 @@
 
               (when-let ((parameter-list (plist-get item 'parameter-list)))
                 (dolist (parameter parameter-list)
-                  (let ((ids
-                         (phps-mode-ast-bookkeeping--generate-variable-scope-string
-                          sub-scope
-                          (plist-get parameter 'name)))
-                        (object
-                         (list
-                          (plist-get parameter 'start)
-                          (plist-get parameter 'end))))
+                  (let* ((object-name (plist-get parameter 'name))
+                         (object-start (plist-get parameter 'start))
+                         (object-end (plist-get parameter 'end))
+                         (ids
+                          (phps-mode-ast-bookkeeping--generate-variable-scope-string
+                           sub-scope
+                           object-name))
+                         (object
+                          (list
+                           object-start
+                           object-end))
+                         (bookkeeping-object
+                          (list
+                           'type type
+                           'name object-name
+                           'scope scope
+                           'start object-start
+                           'end object-end)))
+                    (push
+                     bookkeeping-object
+                     bookkeeping-objects)
+
                     (dolist (id ids)
                       (puthash
                        id
@@ -576,15 +638,29 @@
                 (push `(,scope ,child) bookkeeping-stack))))
 
            ((equal type 'assign-property-variable)
-            (let ((ids
-                   (phps-mode-ast-bookkeeping--generate-variable-scope-string
-                    scope
-                    (plist-get item 'key)))
-                  (object
-                   (list
-                    (plist-get item 'start)
-                    (plist-get item 'end)))
-                  (defined 1))
+            (let* ((object-key (plist-get item 'key))
+                   (object-start (plist-get item 'start))
+                   (object-end (plist-get item 'end))
+                   (ids
+                    (phps-mode-ast-bookkeeping--generate-variable-scope-string
+                     scope
+                     object-key))
+                   (object
+                    (list
+                     object-start
+                     object-end))
+                   (defined 1)
+                   (bookkeeping-object
+                    (list
+                     'type type
+                     'name object-key
+                     'scope scope
+                     'start object-start
+                     'end object-end)))
+              (push
+               bookkeeping-object
+               bookkeeping-objects)
+
               (dolist (id ids)
                 (when-let ((predefined (gethash id bookkeeping)))
                   (setq
@@ -655,15 +731,29 @@
            ((and
              (equal type 'assign-variable)
              (plist-get (plist-get item 'key) 'name))
-            (let ((ids
-                   (phps-mode-ast-bookkeeping--generate-variable-scope-string
-                    scope
-                    (plist-get (plist-get item 'key) 'name)))
-                  (object
-                   (list
-                    (plist-get (plist-get item 'key) 'start)
-                    (plist-get (plist-get item 'key) 'end)))
-                  (defined 1))
+            (let* ((object-name (plist-get (plist-get item 'key) 'name))
+                   (object-start (plist-get (plist-get item 'key) 'start))
+                   (object-end (plist-get (plist-get item 'key) 'end))
+                   (ids
+                    (phps-mode-ast-bookkeeping--generate-variable-scope-string
+                     scope
+                     object-name))
+                   (object
+                    (list
+                     object-start
+                     object-end))
+                   (defined 1)
+                   (bookkeeping-object
+                    (list
+                     'type type
+                     'name object-name
+                     'scope scope
+                     'start object-start
+                     'end object-end)))
+              (push
+               bookkeeping-object
+               bookkeeping-objects)
+
               (dolist (id ids)
                 (when-let ((predefined (gethash id bookkeeping)))
                   (setq
@@ -702,11 +792,25 @@
                      (phps-mode-ast-bookkeeping--generate-variable-scope-string
                       sub-scope
                       subject))
-                    (let ((object
-                           (list
-                            (plist-get item 'start)
-                            (plist-get item 'end)))
-                          (defined 1))
+                    (let* ((object-name subject)
+                           (object-start (plist-get item 'start))
+                           (object-end (plist-get item 'end))
+                           (object
+                            (list
+                             object-start
+                             object-end))
+                           (defined 1)
+                           (bookkeeping-object
+                            (list
+                             'type type
+                             'name object-name
+                             'scope scope
+                             'start object-start
+                             'end object-end)))
+                      (push
+                       bookkeeping-object
+                       bookkeeping-objects)
+
                       (dolist (id ids)
                         (when-let ((predefined (gethash id bookkeeping)))
                           (setq
@@ -748,10 +852,23 @@
            ((equal type 'catch)
             (when-let ((optional-variable
                         (plist-get item 'optional-variable)))
-              (let ((ids
-                     (phps-mode-ast-bookkeeping--generate-variable-scope-string
-                      scope
-                      optional-variable)))
+              (let* ((object-name optional-variable)
+                     (object-start (plist-get item 'optional-variable-start))
+                     (object-end (plist-get item 'optional-variable-end))
+                     (ids
+                      (phps-mode-ast-bookkeeping--generate-variable-scope-string
+                       scope
+                       object-name))
+                     (bookkeeping-object
+                      (list
+                       'type type
+                       'name object-name
+                       'scope scope
+                       'start object-start
+                       'end object-end)))
+                (push
+                 bookkeeping-object
+                 bookkeeping-objects)
                 (dolist (id ids)
                   (puthash
                    id
@@ -759,8 +876,8 @@
                    bookkeeping))
                 (puthash
                  (list
-                  (plist-get item 'optional-variable-start)
-                  (plist-get item 'optional-variable-end))
+                  object-start
+                  object-end)
                  1
                  bookkeeping)))
             (when-let ((children (reverse (plist-get item 'children))))
@@ -801,11 +918,14 @@
                                (plist-get head-scope 'type)
                                'arrow-function)
                         (setq is-arrow-function-scope nil)))
-                    (let* ((predefined)
+                    (let* ((object-name (concat "$" property-name))
+                           (object-start (plist-get item 'property-start))
+                           (object-end (plist-get item 'property-end))
+                           (predefined)
                            (variable-ids
                             (phps-mode-ast-bookkeeping--generate-variable-scope-string
                              sub-scope
-                             (concat "$" property-name)
+                             object-name
                              t))
                            (symbol-id
                             (phps-mode-ast-bookkeeping--generate-symbol-scope-string
@@ -813,8 +933,18 @@
                              property-name))
                            (bookkeeping-object
                             (list
-                             (plist-get item 'property-start)
-                             (plist-get item 'property-end))))
+                             object-start
+                             object-end))
+                           (bookkeeping-object
+                            (list
+                             'type type
+                             'name object-name
+                             'scope scope
+                             'start object-start
+                             'end object-end)))
+                      (push
+                       bookkeeping-object
+                       bookkeeping-objects)
                       (when (gethash symbol-id bookkeeping)
                         (setq
                          predefined
@@ -835,12 +965,25 @@
                          bookkeeping)))))
 
                  (t
-                  (let ((variable-ids
-                         (phps-mode-ast-bookkeeping--generate-variable-scope-string
-                          scope
-                          (plist-get subject 'name)
-                          t))
-                        (predefined 0))
+                  (let* ((object-name (plist-get subject 'name))
+                         (object-start (plist-get subject 'start))
+                         (object-end (plist-get subject 'end))
+                         (variable-ids
+                          (phps-mode-ast-bookkeeping--generate-variable-scope-string
+                           scope
+                           object-name
+                           t))
+                         (predefined 0)
+                         (bookkeeping-object
+                          (list
+                           'type type
+                           'name object-name
+                           'scope scope
+                           'start object-start
+                           'end object-end)))
+                    (push
+                     bookkeeping-object
+                     bookkeeping-objects)
                     (dolist (variable-id variable-ids)
                       (when (gethash
                              variable-id
@@ -850,8 +993,8 @@
                          1)))
                     (puthash
                      (list
-                      (plist-get subject 'start)
-                      (plist-get subject 'end))
+                      object-start
+                      object-end)
                      predefined
                      bookkeeping)))
 
@@ -891,11 +1034,14 @@
                                (plist-get head-scope 'type)
                                'arrow-function)
                         (setq is-arrow-function-scope nil)))
-                    (let* ((predefined)
+                    (let* ((object-name (concat "$" property-name))
+                           (object-start (plist-get item 'property-start))
+                           (object-end (plist-get item 'property-end))
+                           (predefined)
                            (variable-ids
                             (phps-mode-ast-bookkeeping--generate-variable-scope-string
                              sub-scope
-                             (concat "$" property-name)
+                             object-name
                              t))
                            (symbol-id
                             (phps-mode-ast-bookkeeping--generate-symbol-scope-string
@@ -903,8 +1049,18 @@
                              property-name))
                            (bookkeeping-object
                             (list
-                             (plist-get item 'property-start)
-                             (plist-get item 'property-end))))
+                             object-start
+                             object-end))
+                           (bookkeeping-object
+                            (list
+                             'type type
+                             'name object-name
+                             'scope scope
+                             'start object-start
+                             'end object-end)))
+                      (push
+                       bookkeeping-object
+                       bookkeeping-objects)
                       (when (gethash symbol-id bookkeeping)
                         (setq
                          predefined
@@ -925,12 +1081,25 @@
                          bookkeeping)))))
 
                  (t
-                  (let ((variable-ids
-                         (phps-mode-ast-bookkeeping--generate-variable-scope-string
-                          scope
-                          (plist-get subject 'name)
-                          t))
-                        (predefined 0))
+                  (let* ((object-name (plist-get subject 'name))
+                         (object-start (plist-get subject 'start))
+                         (object-end (plist-get subject 'end))
+                         (variable-ids
+                          (phps-mode-ast-bookkeeping--generate-variable-scope-string
+                           scope
+                           object-name
+                           t))
+                         (predefined 0)
+                         (bookkeeping-object
+                          (list
+                           'type type
+                           'name object-name
+                           'scope scope
+                           'start object-start
+                           'end object-end)))
+                    (push
+                     bookkeeping-object
+                     bookkeeping-objects)
                     (dolist (variable-id variable-ids)
                       (when (gethash
                              variable-id
@@ -940,8 +1109,8 @@
                          1)))
                     (puthash
                      (list
-                      (plist-get subject 'start)
-                      (plist-get subject 'end))
+                      object-start
+                      object-end)
                      predefined
                      bookkeeping)))
 
@@ -981,16 +1150,29 @@
                                'arrow-function)
                         (setq is-arrow-function-scope nil)))
                     (push '(type static) sub-scope)
-                    (let ((predefined)
-                          (variable-ids
-                           (phps-mode-ast-bookkeeping--generate-variable-scope-string
-                            sub-scope
-                            (plist-get member 'name)
-                            t))
-                          (bookkeeping-object
-                           (list
-                            (plist-get member 'start)
-                            (plist-get member 'end))))
+                    (let* ((object-name (plist-get member 'name))
+                           (object-start (plist-get member 'start))
+                           (object-end (plist-get member 'end))
+                           (predefined)
+                           (variable-ids
+                            (phps-mode-ast-bookkeeping--generate-variable-scope-string
+                             sub-scope
+                             object-name
+                             t))
+                           (bookkeeping-object
+                            (list
+                             object-start
+                             object-end))
+                           (bookkeeping-object
+                            (list
+                             'type type
+                             'name object-name
+                             'scope scope
+                             'start object-start
+                             'end object-end)))
+                      (push
+                       bookkeeping-object
+                       bookkeeping-objects)
                       (dolist (variable-id variable-ids)
                         (when (gethash variable-id bookkeeping)
                           (setq
@@ -1028,14 +1210,27 @@
                   (push `(,sub-scope ,e) bookkeeping-stack)))
               (when-let ((parameter-list (plist-get item 'parameter-list)))
                 (dolist (parameter parameter-list)
-                  (let ((ids
-                         (phps-mode-ast-bookkeeping--generate-variable-scope-string
-                          sub-scope
-                          (plist-get parameter 'name)))
-                        (object
-                         (list
-                          (plist-get parameter 'start)
-                          (plist-get parameter 'end))))
+                  (let* ((object-name (plist-get parameter 'name))
+                         (object-start (plist-get parameter 'start))
+                         (object-end (plist-get parameter 'end))
+                         (ids
+                          (phps-mode-ast-bookkeeping--generate-variable-scope-string
+                           sub-scope
+                           object-name))
+                         (object
+                          (list
+                           object-start
+                           object-end))
+                         (bookkeeping-object
+                          (list
+                           'type type
+                           'name object-name
+                           'scope scope
+                           'start object-start
+                           'end object-end)))
+                    (push
+                     bookkeeping-object
+                     bookkeeping-objects)
                     (dolist (id ids)
                       (puthash
                        id
@@ -1074,14 +1269,28 @@
                      bookkeeping))))
               (when-let ((lexical-vars (plist-get item 'lexical-vars)))
                 (dolist (lexical-var lexical-vars)
-                  (let ((ids
-                         (phps-mode-ast-bookkeeping--generate-variable-scope-string
-                          sub-scope
-                          (plist-get lexical-var 'name)))
-                        (object
-                         (list
-                          (plist-get lexical-var 'start)
-                          (plist-get lexical-var 'end))))
+                  (let* ((object-name (plist-get lexical-var 'name))
+                         (object-start (plist-get lexical-var 'start))
+                         (object-end (plist-get lexical-var 'end))
+                         (ids
+                          (phps-mode-ast-bookkeeping--generate-variable-scope-string
+                           sub-scope
+                           object-name))
+                         (object
+                          (list
+                           object-start
+                           object-end))
+                         (bookkeeping-object
+                          (list
+                           'type type
+                           'name object-name
+                           'scope scope
+                           'start object-start
+                           'end object-end)))
+                    (push
+                     bookkeeping-object
+                     bookkeeping-objects)
+
                     (dolist (id ids)
                       (puthash
                        id
@@ -1096,6 +1305,9 @@
     (setq
      phps-mode-ast-bookkeeping--index
      bookkeeping)
+    (setq
+     phps-mode-ast-bookkeeping--object-index
+     bookkeeping-objects)
 
     ;; (message "\nBookkeeping\n:%S\n" bookkeeping)
     phps-mode-ast-bookkeeping--index))
