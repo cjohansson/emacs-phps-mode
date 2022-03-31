@@ -818,7 +818,7 @@
 (puthash 70 (lambda(_args _terminals) 'T_ENUM) phps-mode-parser--table-translations)
 
 ;; 71 ((semi_reserved) (reserved_non_modifiers))
-(puthash 71 (lambda(_args _terminals) args) phps-mode-parser--table-translations)
+(puthash 71 (lambda(args _terminals) args) phps-mode-parser--table-translations)
 
 ;; 72 ((semi_reserved) (T_STATIC))
 (puthash 72 (lambda(_args _terminals) 'T_STATIC) phps-mode-parser--table-translations)
@@ -851,7 +851,7 @@
 (puthash 81 (lambda(args _terminals) args) phps-mode-parser--table-translations)
 
 ;; 82 ((identifier) (semi_reserved))
-(puthash 82 (lambda(args terminals) args) phps-mode-parser--table-translations)
+(puthash 82 (lambda(args _terminals) args) phps-mode-parser--table-translations)
 
 ;; 83 ((top_statement_list) (top_statement_list top_statement))
 (puthash
@@ -962,7 +962,7 @@
      ast-type
      attributes
      attributes
-     (,attribute)
+     (,args)
      ))
  phps-mode-parser--table-translations)
 
@@ -1012,13 +1012,13 @@
    `(
      ast-type
      namespace
-     name
+     ast-name
      ,(nth 1 args)
-     index
+     ast-index
      ,(car (cdr (nth 1 terminals)))
-     start
+     ast-start
      ,(car (cdr (nth 2 terminals)))
-     end
+     ast-end
      max
      ))
  phps-mode-parser--table-translations)
@@ -1030,13 +1030,13 @@
    `(
      ast-type
      namespace
-     name
+     ast-name
      ,(nth 1 args)
-     index
+     ast-index
      ,(car (cdr (nth 1 terminals)))
-     start
+     ast-start
      ,(car (cdr (nth 2 terminals)))
-     end
+     ast-end
      ,(car (cdr (nth 4 terminals)))
      top-statement-list
      ,(nth 3 args)
@@ -1050,11 +1050,11 @@
    `(
      ast-type
      namespace
-     index
+     ast-index
      ,(car (cdr (nth 0 terminals)))
-     start
+     ast-start
      ,(car (cdr (nth 1 terminals)))
-     end
+     ast-end
      ,(car (cdr (nth 3 terminals)))
      top-statement-list
      ,(nth 2 args)
@@ -1082,7 +1082,7 @@
      type-group-use-declaration-top-statement
      use-type
      ,(nth 1 args)
-     ,group-use-declaration
+     group-use-declaration
      ,(nth 2 args)
      ))
  phps-mode-parser--table-translations)
@@ -1124,7 +1124,7 @@
  phps-mode-parser--table-translations)
 
 ;; 119 ((use_type) (T_FUNCTION))
-(puthash 119 (lambda(args terminals) args) phps-mode-parser--table-translations)
+(puthash 119 (lambda(args _terminals) args) phps-mode-parser--table-translations)
 
 ;; 120 ((use_type) (T_CONST))
 (puthash 120 (lambda(args _terminals) args) phps-mode-parser--table-translations)
@@ -1173,7 +1173,7 @@
 ;; 126 ((inline_use_declarations) (inline_use_declaration))
 (puthash
  126
- (lambda(args terminals)
+ (lambda(args _terminals)
    `(
      ast-type
      inline-use-declarations
@@ -1184,7 +1184,7 @@
 ;; 127 ((unprefixed_use_declarations) (unprefixed_use_declarations "," unprefixed_use_declaration))
 (puthash
  127
- (lambda(args terminals)
+ (lambda(args _terminals)
    `(
      ast-type
      unprefixed-use-declarations
@@ -1195,18 +1195,18 @@
 ;; 128 ((unprefixed_use_declarations) (unprefixed_use_declaration))
 (puthash
  128
- (lambda(args terminals)
+ (lambda(args _terminals)
    `(
      ast-type
      unprefixed-use-declarations
-     ,(args))
+     ,(list args))
      )
    phps-mode-parser--table-translations)
 
 ;; 129 ((use_declarations) (use_declarations "," use_declaration))
 (puthash
  129
- (lambda(args terminals)
+ (lambda(args _terminals)
    `(
      ast-type
      use-declarations
@@ -1217,30 +1217,30 @@
 ;; 130 ((use_declarations) (use_declaration))
 (puthash
  130
- (lambda(args terminals)
+ (lambda(args _terminals)
    `(
      ast-type
      use-declarations
-     (args)
+     ,(list args)
      ))
  phps-mode-parser--table-translations)
 
 ;; 131 ((inline_use_declaration) (unprefixed_use_declaration))
 (puthash
  131
- (lambda(args terminals)
+ (lambda(args _terminals)
    `(
      ast-type
      inline-use-declaration
      declation
-     ,(args)
+     ,(list args)
      ))
  phps-mode-parser--table-translations)
 
 ;; 132 ((inline_use_declaration) (use_type unprefixed_use_declaration))
 (puthash
  132
- (lambda(args terminals)
+ (lambda(args _terminals)
    `(
      ast-type
      inline-use-declaration
@@ -1254,7 +1254,7 @@
 ;; 133 ((unprefixed_use_declaration) (namespace_name))
 (puthash
  133
- (lambda(args terminals)
+ (lambda(args _terminals)
    `(
      namespace-name
      ,args
@@ -1264,7 +1264,7 @@
 ;; 134 ((unprefixed_use_declaration) (namespace_name T_AS T_STRING))
 (puthash
  134
- (lambda(args terminals)
+ (lambda(args _terminals)
    `(
      namespace-name
      ,(nth 0 args)
@@ -1276,7 +1276,7 @@
 ;; 135 ((use_declaration) (legacy_namespace_name))
 (puthash
  135
- (lambda(args terminals)
+ (lambda(args _terminals)
    `(
      ast-type
      use-declaration
@@ -1288,7 +1288,7 @@
 ;; 136 ((use_declaration) (legacy_namespace_name T_AS T_STRING))
 (puthash
  136
- (lambda(args terminals)
+ (lambda(args _terminals)
    `(
      ast-type
      use-declaration
@@ -1300,10 +1300,10 @@
  phps-mode-parser--table-translations)
 
 ;; 137 ((const_list) (const_list "," const_decl))
-(puthash 137 (lambda(args terminals) (append (nth 0 args) (list (nth 2 args)))) phps-mode-parser--table-translations)
+(puthash 137 (lambda(args _terminals) (append (nth 0 args) (list (nth 2 args)))) phps-mode-parser--table-translations)
 
 ;; 138 ((const_list) (const_decl))
-(puthash 138 (lambda(args terminals) (list args)) phps-mode-parser--table-translations)
+(puthash 138 (lambda(args _terminals) (list args)) phps-mode-parser--table-translations)
 
 ;; 139 inner_statement_list -> (inner_statement_list inner_statement)
 (puthash
@@ -1327,7 +1327,7 @@
 (puthash 143 (lambda(args _terminals) args) phps-mode-parser--table-translations)
 
 ;; 144 ((inner_statement) (T_HALT_COMPILER "(" ")" ";"))
-(puthash 144 (lambda(args _terminals) '(ast-type halt-compiler-inner-statement)) phps-mode-parser--table-translations)
+(puthash 144 (lambda(_args _terminals) '(ast-type halt-compiler-inner-statement)) phps-mode-parser--table-translations)
 
 ;; 145 ((statement) ("{" inner_statement_list "}"))
 (puthash
@@ -1485,7 +1485,7 @@
      ast-type
      expr-statement
      expr
-     (nth 0 args)
+     ,(nth 0 args)
      ))
  phps-mode-parser--table-translations)
 
@@ -1661,7 +1661,7 @@
      ast-type
      unset-variables
      variables
-     ,(args)
+     ,(list args)
      ))
  phps-mode-parser--table-translations)
 
@@ -1687,13 +1687,13 @@
    `(
      ast-type
      function
-     name
+     ast-name
      ,(nth 2 args)
-     index
+     ast-index
      ,(car (cdr (nth 2 terminals)))
-     start
+     ast-start
      ,(car (cdr (nth 9 terminals)))
-     end
+     ast-end
      ,(car (cdr (nth 11 terminals)))
      returns-reference-p
      ,(not (equal (nth 1 args) nil))
@@ -1706,9 +1706,19 @@
      ))
  phps-mode-parser--table-translations)
 
-;; TODO Was here
+;; 180 ((is_reference) (%empty))
+(puthash 180 (lambda(_args _terminals) nil) phps-mode-parser--table-translations)
 
-;; class_declaration_statement -> (class_modifiers T_CLASS T_STRING extends_from implements_list backup_doc_comment "{" class_statement_list "}")
+;; 181 ((is_reference) (T_AMPERSAND_FOLLOWED_BY_VAR_OR_VARARG))
+(puthash 181 (lambda(args _terminals) args) phps-mode-parser--table-translations)
+
+;; 182 ((is_variadic) (%empty))
+(puthash 182 (lambda(_args _terminals) nil) phps-mode-parser--table-translations)
+
+;; 183 ((is_variadic) (T_ELLIPSIS))
+(puthash 183 (lambda(args _terminals) args) phps-mode-parser--table-translations)
+
+;; 184 ((class_declaration_statement) (class_modifiers T_CLASS T_STRING extends_from implements_list backup_doc_comment "{" class_statement_list "}"))
 (puthash
  184
  (lambda(args terminals)
@@ -1717,83 +1727,208 @@
      class
      modifiers
      ,(nth 0 args)
-     name
+     ast-name
      ,(nth 2 args)
-     extends
-     ,(phps-mode-parser-sdt--get-list-of-object (nth 3 args))
-     implements
-     ,(phps-mode-parser-sdt--get-list-of-object (nth 4 args))
-     index
+     extends-from
+     ,(nth 3 args)
+     implements-list
+     ,(nth 4 args)
+     ast-index
      ,(car (cdr (nth 2 terminals)))
-     start
+     ast-start
      ,(car (cdr (nth 6 terminals)))
-     end
+     ast-end
      ,(car (cdr (nth 8 terminals)))
-     children
-     ,(phps-mode-parser-sdt--get-list-of-object (nth 7 args))
+     class-statement-list
+     ,(nth 7 args)
      ))
  phps-mode-parser--table-translations)
 
-;; class_declaration_statement -> (T_CLASS T_STRING extends_from implements_list backup_doc_comment "{" class_statement_list "}")
+;; 185 ((class_declaration_statement) (T_CLASS T_STRING extends_from implements_list backup_doc_comment "{" class_statement_list "}"))
 (puthash
  185
  (lambda(args terminals)
    `(
      ast-type
      class
-     name
+     ast-name
      ,(nth 1 args)
-     extends
-     ,(phps-mode-parser-sdt--get-list-of-object (nth 2 args))
-     implements
-     ,(phps-mode-parser-sdt--get-list-of-object (nth 3 args))
-     index
+     extends-from
+     ,(nth 2 args)
+     implements-list
+     ,(nth 3 args)
+     ast-index
      ,(car (cdr (nth 1 terminals)))
-     start
+     ast-start
      ,(car (cdr (nth 5 terminals)))
-     end
+     ast-end
      ,(car (cdr (nth 7 terminals)))
-     children
-     ,(phps-mode-parser-sdt--get-list-of-object (nth 6 args))
+     class-statement-list
+     ,(nth 6 args)
      ))
  phps-mode-parser--table-translations)
 
-;; interface_declaration_statement -> (T_INTERFACE T_STRING interface_extends_list backup_doc_comment "{" class_statement_list "}")
+;; 186 ((class_modifiers) (class_modifier))
+(puthash 186 (lambda(args _terminals) `(,args)) phps-mode-parser--table-translations)
+
+;; 187 ((class_modifiers) (class_modifiers class_modifier))
+(puthash 187 (lambda(args _terminals) `(append ,(nth 0 args) (,(nth 1 args)))) phps-mode-parser--table-translations)
+
+;; 188 ((class_modifier) (T_ABSTRACT))
+(puthash 188 (lambda(_args _terminals) 'T_ABSTRACT) phps-mode-parser--table-translations)
+
+;; 189 ((class_modifier) (T_ABSTRACT))
+(puthash 189 (lambda(_args _terminals) 'T_FINAL) phps-mode-parser--table-translations)
+
+;; 190 ((trait_declaration_statement) (T_TRAIT T_STRING backup_doc_comment "{" class_statement_list "}"))
+(puthash
+ 190
+ (lambda(args _terminals)
+   `(
+     ast-type
+     trait-declaration-statement
+     ast-name
+     ,(nth 1 args)
+     backup-doc-comment
+     ,(nth 2 args)
+     class-statement-list
+     ,(nth 4 args)
+     ))
+ phps-mode-parser--table-translations)
+
+;; 191 ((interface_declaration_statement) (T_INTERFACE T_STRING interface_extends_list backup_doc_comment "{" class_statement_list "}"))
 (puthash
  191
  (lambda(args terminals)
    `(
      ast-type
-     interface
-     name
+     interface-declaration-statement
+     ast-name
      ,(nth 1 args)
-     extends
-     ,(phps-mode-parser-sdt--get-list-of-object (nth 2 args))
-     index
+     interface-extends-list
+     ,(nth 2 args)
+     ast-index
      ,(car (cdr (nth 1 terminals)))
-     start
+     ast-start
      ,(car (cdr (nth 4 terminals)))
-     end
+     ast-end
      ,(car (cdr (nth 6 terminals)))
-     children
-     ,(phps-mode-parser-sdt--get-list-of-object (nth 5 args))
+     class-statement-list
+     ,(nth 5 args)
      ))
  phps-mode-parser--table-translations)
 
-;; extends_from -> (%empty)
+;; 192 ((enum_declaration_statement) (T_ENUM T_STRING enum_backing_type implements_list backup_doc_comment "{" class_statement_list "}"))
 (puthash
- 198
- (lambda(_args _terminals)
-   nil
-   )
+ 192
+ (lambda(args terminals)
+   `(
+     ast-type
+     enum-declaration-statement
+     ast-name
+     ,(nth 1 args)
+     enum-backing-type
+     ,(nth 2 args)
+     implements-list
+     ,(nth 3 args)
+     ast-index
+     ,(car (cdr (nth 1 terminals)))
+     ast-start
+     ,(car (cdr (nth 5 terminals)))
+     ast-end
+     ,(car (cdr (nth 7 terminals)))
+     class-statement-list
+     ,(nth 6 args)
+     ))
  phps-mode-parser--table-translations)
 
-;; extends_from -> (T_EXTENDS class_name)
+;; 193 ((enum_backing_type) (%empty))
+(puthash 193 (lambda(_args _terminals) nil) phps-mode-parser--table-translations)
+
+;; 194 ((enum_backing_type) (":" type_expr))
+(puthash 194 (lambda(args _terminals) (nth 1 args)) phps-mode-parser--table-translations)
+
+;; 195 ((enum_case) (T_CASE backup_doc_comment identifier enum_case_expr ";"))
+(puthash
+ 195
+ (lambda(args _terminals)
+   `(
+     ast-type
+     enum-case
+     backup-doc-comment
+     ,(nth 1 args)
+     identifier
+     ,(nth 2 args)
+     enum-case-expr
+     ,(nth 3 args)
+     ))
+ phps-mode-parser--table-translations)
+
+;; 196 ((enum_case_expr) (%empty))
+(puthash 196 (lambda(_args _terminals) nil) phps-mode-parser--table-translations)
+
+;; 197 ((enum_case_expr) ("=" expr))
+(puthash
+ 197
+ (lambda(args _terminals)
+   `(
+     ast-type
+     enum-case-expr
+     expr
+     ,(nth 1 args)
+     )
+   )
+   phps-mode-parser--table-translations)
+
+;; 198 ((extends_from) (%empty))
+(puthash 198 (lambda(_args _terminals) nil) phps-mode-parser--table-translations)
+
+;; 199 ((extends_from) (T_EXTENDS class_name))
 (puthash
  199
  (lambda(args _terminals)
-   (nth 1 args))
+   `(
+     ast-type
+     extends-from
+     class-name
+     ,(nth 1 args)
+     )
+   )
  phps-mode-parser--table-translations)
+
+;; 200 ((interface_extends_list) (%empty))
+(puthash 200 (lambda(_args _terminals) nil) phps-mode-parser--table-translations)
+
+;; 201 ((interface_extends_list) (T_EXTENDS class_name_list))
+(puthash
+ 201
+ (lambda(args _terminals)
+   `(
+     ast-type
+     interface-extends-list
+     class-name-list
+     ,(nth 1 args)
+     )
+   )
+ phps-mode-parser--table-translations)
+
+;; 202 ((implements_list) (%empty))
+(puthash 202 (lambda(_args _terminals) nil) phps-mode-parser--table-translations)
+
+;; 203 ((implements_list) (T_IMPLEMENTS class_name_list))
+(puthash
+ 203
+ (lambda(args _terminals)
+   `(
+     ast-type
+     implements-list
+     class-name-list
+     ,(nth 1 args)
+     )
+   )
+ phps-mode-parser--table-translations)
+
+;; TODO Was here 285 is half
 
 ;; foreach_variable -> (ampersand variable)
 (puthash
@@ -1857,11 +1992,11 @@
      ,(nth 2 args)
      is-variadic
      ,(nth 3 args)
-     name
+     ast-name
      ,(nth 4 args)
-     start
+     ast-start
      ,(car (cdr (nth 4 terminals)))
-     end
+     ast-end
      ,(cdr (cdr (nth 4 terminals)))
      ))
  phps-mode-parser--table-translations)
@@ -1881,11 +2016,11 @@
      ,(nth 2 args)
      is-variadic
      ,(nth 3 args)
-     name
+     ast-name
      ,(nth 4 args)
-     start
+     ast-start
      ,(car (cdr (nth 4 terminals)))
-     end
+     ast-end
      ,(cdr (cdr (nth 4 terminals)))
      backup-doc-comment
      ,(nth 5 args)
@@ -1929,13 +2064,13 @@
    `(
      ast-type
      variable
-     name
+     ast-name
      ,args
-     index
+     ast-index
      ,(car (cdr terminals))
-     start
+     ast-start
      ,(car (cdr terminals))
-     end
+     ast-end
      ,(cdr (cdr terminals))
      ))
  phps-mode-parser--table-translations)
@@ -1947,15 +2082,15 @@
    `(
      ast-type
      variable
-     name
+     ast-name
      ,(nth 0 args)
      expr
      ,(nth 2 args)
-     index
+     ast-index
      ,(car (cdr (nth 0 terminals)))
-     start
+     ast-start
      ,(car (cdr (nth 0 terminals)))
-     end
+     ast-end
      ,(cdr (cdr (nth 0 terminals)))
      ))
  phps-mode-parser--table-translations)
@@ -1982,9 +2117,9 @@
      ,(nth 1 args)
      subject
      ,(nth 2 args)
-     start
+     ast-start
      ,(car (cdr (car (nth 2 terminals))))
-     end
+     ast-end
      ,(cdr (cdr (car (nth 2 terminals))))
      ))
  phps-mode-parser--table-translations)
@@ -2000,7 +2135,7 @@
      ,(phps-mode-parser-sdt--get-list-of-object (nth 0 args))
      returns-reference-p
      ,(not (equal (nth 2 args) nil))
-     name
+     ast-name
      ,(nth 3 args)
      parameter-list
      ,(nth 6 args)
@@ -2010,13 +2145,13 @@
      ,(if (nth 10 args)
           (phps-mode-parser-sdt--get-list-of-object (nth 10 args))
         nil)
-     index
+     ast-index
      ,(car (cdr (nth 3 terminals)))
-     start
+     ast-start
      ,(if (nth 10 args)
           (car (cdr (car (nth 10 terminals))))
         nil)
-     end
+     ast-end
      ,(if (nth 10 args)
           (cdr (cdr (car (cdr (cdr (nth 10 terminals))))))
         nil)
@@ -2104,11 +2239,11 @@
      ,(nth 0 args)
      value
      ,(phps-mode-parser-sdt--get-list-of-object (nth 2 args))
-     index
+     ast-index
      ,(car (cdr (nth 0 terminals)))
-     start
+     ast-start
      ,(car (cdr (nth 0 terminals)))
-     end
+     ast-end
      ,(cdr (cdr (nth 0 terminals)))
      ))
  phps-mode-parser--table-translations)
@@ -2138,11 +2273,11 @@
      ,(nth 0 args)
      value
      ,(phps-mode-parser-sdt--get-list-of-object (nth 2 args))
-     index
+     ast-index
      ,(car (cdr (nth 0 terminals)))
-     start
+     ast-start
      ,(car (cdr (nth 0 terminals)))
-     end
+     ast-end
      ,(cdr (cdr (nth 0 terminals)))
      ))
  phps-mode-parser--table-translations)
@@ -2442,9 +2577,9 @@
    `(
      ast-type
      inline-function
-     start
+     ast-start
      ,(car (cdr (nth 9 terminals)))
-     end
+     ast-end
      ,(cdr (cdr (nth 11 terminals)))
      returns-ref
      ,(nth 1 args)
@@ -2472,9 +2607,9 @@
    `(
      ast-type
      arrow-function
-     start
+     ast-start
      ,(car (cdr (nth 9 terminals)))
-     end
+     ast-end
      ,(cdr (cdr (nth 11 terminals)))
      returns-ref
      ,(nth 1 args)
@@ -2509,11 +2644,11 @@
    `(
      ast-type
      lexical-var
-     name
+     ast-name
      ,args
-     start
+     ast-start
      ,(car (cdr terminals))
-     end
+     ast-end
      ,(cdr (cdr terminals))
      ))
  phps-mode-parser--table-translations)
@@ -2525,7 +2660,7 @@
    `(
      ast-type
      function-call
-     name
+     ast-name
      ,(nth 0 args)
      argument-list
      ,(phps-mode-parser-sdt--get-list-of-object (nth 1 args))
@@ -2674,11 +2809,11 @@
    `(
      ast-type
      simple-variable
-     name
+     ast-name
      ,args
-     start
+     ast-start
      ,(car (cdr terminals))
-     end
+     ast-end
      ,(cdr (cdr terminals))
      ))
  phps-mode-parser--table-translations)
@@ -2694,9 +2829,9 @@
      ,(nth 0 args)
      member
      ,(nth 2 args)
-     start
+     ast-start
      ,(car (cdr (nth 0 terminals)))
-     end
+     ast-end
      ,(cdr (cdr (nth 0 terminals)))
      ))
  phps-mode-parser--table-translations)
@@ -2712,9 +2847,9 @@
      ,(nth 0 args)
      member
      ,(nth 2 args)
-     start
+     ast-start
      ,(car (cdr (nth 0 terminals)))
-     end
+     ast-end
      ,(cdr (cdr (nth 0 terminals)))
      ))
  phps-mode-parser--table-translations)
