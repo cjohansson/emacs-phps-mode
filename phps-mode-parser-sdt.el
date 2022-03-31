@@ -1929,9 +1929,19 @@
    )
  phps-mode-parser--table-translations)
 
-;; TODO Was here 285 is half
+;; 204 ((foreach_variable) (variable))
+(puthash
+ 204
+ (lambda(args _terminals)
+   `(
+     ast-type
+     foreach-variable
+     variable
+     ,args
+     ))
+ phps-mode-parser--table-translations)
 
-;; foreach_variable -> (ampersand variable)
+;; 205 ((foreach_variable) (ampersand variable))
 (puthash
  205
  (lambda(args _terminals)
@@ -1942,6 +1952,81 @@
      ,(nth 1 args)
      ))
  phps-mode-parser--table-translations)
+
+;; 206 ((foreach_variable) (T_LIST "(" array_pair_list ")"))
+(puthash
+ 206
+ (lambda(args _terminals)
+   `(
+     ast-type
+     foreach-list-variable
+     array-pair-list
+     ,(nth 2 args)
+     ))
+ phps-mode-parser--table-translations)
+
+;; 207 ((foreach_variable) ("[" array_pair_list "]"))
+(puthash
+ 207
+ (lambda(args _terminals)
+   `(
+     ast-type
+     foreach-variable
+     array-pair-list
+     ,(nth 1 args)
+     ))
+ phps-mode-parser--table-translations)
+
+;; 208 ((for_statement) (statement))
+(puthash
+ 208
+ (lambda(args _terminals)
+   `(
+     ast-type
+     for-statement
+     statement
+     ,(nth 1 args)
+     ))
+ phps-mode-parser--table-translations)
+
+;; 209 ((for_statement) (":" inner_statement_list T_ENDFOR ";"))
+(puthash
+ 209
+ (lambda(args _terminals)
+   `(
+     ast-type
+     for-statement
+     inner-statement-list
+     ,(nth 1 args)
+     ))
+ phps-mode-parser--table-translations)
+
+;; 210 ((foreach_statement) (statement))
+(puthash
+ 210
+ (lambda(args _terminals)
+   `(
+     ast-type
+     foreach-statement
+     statement
+     ,args
+     ))
+ phps-mode-parser--table-translations)
+
+;; 211 ((foreach_statement) (":" inner_statement_list T_ENDFOREACH ";"))
+(puthash
+ 211
+ (lambda(args _terminals)
+   `(
+     ast-type
+     foreach-statement
+     inner-statement-list
+     ,(nth 1 args)
+     ))
+ phps-mode-parser--table-translations)
+
+;; TODO Was here 285 is half
+
 
 ;; if_stmt_without_else -> (T_IF "(" expr ")" statement)
 (puthash
