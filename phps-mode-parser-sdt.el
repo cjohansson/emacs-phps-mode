@@ -585,6 +585,7 @@
 
 
 ;; TODO Remove function (phps-mode-parser-sdt--get-list-of-object)
+;; TODO Stop using children generic name
 
 
 (require 'phps-mode-parser)
