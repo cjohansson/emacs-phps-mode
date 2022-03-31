@@ -583,30 +583,6 @@
 
 ;;; Code:
 
-;; TODO Add SDT for
-;; argument_list
-;; array_pair_list
-;; catch_list
-;; catch_name_list
-;; class_statement_list
-;; echo_expr_list
-;; expr
-;; extends_from
-;; for_exprs
-;; for_statement
-;; foreach_statement
-;; global_var_list
-;; implements_list
-;; inner_statement_list
-;; inner_statement_list
-;; interface_extends_list
-;; isset_variables
-;; lexical_vars
-;; method_body
-;; method_modifiers
-;; optional_expr
-;; statement
-;; variable_modifiers
 
 ;; TODO Remove function (phps-mode-parser-sdt--get-list-of-object)
 
@@ -1609,15 +1585,18 @@
      ))
  phps-mode-parser--table-translations)
 
-;; catch_list -> (catch_list T_CATCH "(" catch_name_list optional_variable ")" "{" inner_statement_list "}")
+;; 168 ((catch_list) (%empty))
+(puthash 168 (lambda(_args _terminals) nil) phps-mode-parser--table-translations)
+
+;; 169 ((catch_list) (catch_list T_CATCH "(" catch_name_list optional_variable ")" "{" inner_statement_list "}"))
 (puthash
  169
  (lambda(args terminals)
    `(
      ast-type
-     catch
+     catch-list
      catch-name-list
-     ,(phps-mode-parser-sdt--get-list-of-object (nth 3 args))
+     ,(nth 3 args)
      optional-variable
      ,(nth 4 args)
      optional-variable-start
@@ -1629,7 +1608,79 @@
      ))
  phps-mode-parser--table-translations)
 
-;; function_declaration_statement -> (function returns_ref T_STRING backup_doc_comment "(" parameter_list ")" return_type backup_fn_flags "{" inner_statement_list "}" backup_fn_flags)
+;; 170 ((catch_name_list) (class_name))
+(puthash
+ 170
+ (lambda(args _terminals)
+   `(
+     ast-type
+     catch-name-list
+     class-names
+     (,args)
+     ))
+ phps-mode-parser--table-translations)
+
+;; 171 ((catch_name_list) (catch_name_list "|" class_name))
+(puthash
+ 171
+ (lambda(args _terminals)
+   `(
+     ast-type
+     catch-name-list
+     class-names
+     ,(append (nth 0 args) (list (nth 2 args)))
+     ))
+ phps-mode-parser--table-translations)
+
+;; 172 ((optional_variable) (%empty))
+(puthash 172 (lambda(_args _terminals) nil) phps-mode-parser--table-translations)
+
+;; 173 ((optional_variable) (T_VARIABLE))
+(puthash 173 (lambda(args _terminals) args) phps-mode-parser--table-translations)
+
+;; 174 ((finally_statement) (%empty))
+(puthash 174 (lambda(_args _terminals) nil) phps-mode-parser--table-translations)
+
+;; 175 ((finally_statement) (T_FINALLY "{" inner_statement_list "}"))
+(puthash
+ 175
+ (lambda(args _terminals)
+   `(
+     ast-type
+     finally-statement
+     inner-statement-list
+     ,(nth 2 args)
+     ))
+ phps-mode-parser--table-translations)
+
+;; 176 ((unset_variables) (unset_variable))
+(puthash
+ 176
+ (lambda(args _terminals)
+   `(
+     ast-type
+     unset-variables
+     variables
+     ,(args)
+     ))
+ phps-mode-parser--table-translations)
+
+;; 177 ((unset_variables) (unset_variables "," unset_variable))
+(puthash
+ 177
+ (lambda(args _terminals)
+   `(
+     ast-type
+     unset-variables
+     variables
+     ,(append (nth 0 args) (nth 2 args))
+     ))
+ phps-mode-parser--table-translations)
+
+;; 178 ((unset_variable) (variable))
+(puthash 178 (lambda(args _terminals) args) phps-mode-parser--table-translations)
+
+;; 179 ((function_declaration_statement) (function returns_ref T_STRING backup_doc_comment "(" parameter_list ")" return_type backup_fn_flags "{" inner_statement_list "}" backup_fn_flags))
 (puthash
  179
  (lambda(args terminals)
@@ -1651,9 +1702,11 @@
      return-type
      ,(nth 7 args)
      children
-     ,(phps-mode-parser-sdt--get-list-of-object (nth 10 args))
+     ,(nth 10 args)
      ))
  phps-mode-parser--table-translations)
+
+;; TODO Was here
 
 ;; class_declaration_statement -> (class_modifiers T_CLASS T_STRING extends_from implements_list backup_doc_comment "{" class_statement_list "}")
 (puthash
