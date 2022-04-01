@@ -2154,29 +2154,62 @@
 ;; 231 ((match_arm_cond_list) (match_arm_cond_list "," expr))
 (puthash 231 (lambda(args _terminals) (append (nth 0 args) (list (nth 2 args)))) phps-mode-parser--table-translations)
 
-;; 233 ((while_statement) (statement))
-(puthash 233 (lambda(args _terminals) (list args)) phps-mode-parser--table-translations)
+;; 232 ((while_statement) (statement))
+(puthash 232 (lambda(args _terminals) (list args)) phps-mode-parser--table-translations)
 
-;; 234 ((while_statement) (":" inner_statement_list T_ENDWHILE ";"))
-(puthash 234 (lambda(args _terminals) (nth 1 args)) phps-mode-parser--table-translations)
+;; 233 ((while_statement) (":" inner_statement_list T_ENDWHILE ";"))
+(puthash 233 (lambda(args _terminals) (nth 1 args)) phps-mode-parser--table-translations)
 
-
-;; TODO Was here 285 is half
-
-
-;; if_stmt_without_else -> (T_IF "(" expr ")" statement)
+;; 234 ((if_stmt_without_else) (T_IF "(" expr ")" statement))
 (puthash
  234
  (lambda(args _terminals)
    `(
      ast-type
-     if
-     condition
-     ,(phps-mode-parser-sdt--get-list-of-object (nth 2 args))
-     children
-     ,(phps-mode-parser-sdt--get-list-of-object (nth 4 args))
+     if-stmt-without-else
+     if-condition
+     ,(nth 2 args)
+     statement
+     ,(nth 4 args)
      ))
  phps-mode-parser--table-translations)
+
+;; 235 ((if_stmt_without_else) (if_stmt_without_else T_ELSEIF "(" expr ")" statement))
+(puthash
+ 235
+ (lambda(args _terminals)
+   `(
+     ast-type
+     if-elseif-stmt-without-else
+     if-stmt-without-else
+     ,(nth 0 args)
+     elseif-condition
+     ,(nth 3 args)
+     statement
+     ,(nth 5 args)
+     ))
+ phps-mode-parser--table-translations)
+
+;; 236 ((if_stmt) (if_stmt_without_else))
+(puthash 236 (lambda(args _terminals) args) phps-mode-parser--table-translations)
+
+;; 237 ((if_stmt) (if_stmt_without_else T_ELSE statement))
+(puthash
+ 237
+ (lambda(args _terminals)
+   `(
+     ast-type
+     if-else-stmt
+     if-stmt-without-else
+     ,(nth 0 args)
+     else-statement
+     ,(nth 2 args)
+     ))
+ phps-mode-parser--table-translations)
+
+
+;; TODO Was here 285 is half
+
 
 ;; parameter_list -> (non_empty_parameter_list possible_comma)
 (puthash
