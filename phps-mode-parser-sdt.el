@@ -2025,6 +2025,142 @@
      ))
  phps-mode-parser--table-translations)
 
+;; 212 ((declare_statement) (statement))
+(puthash
+ 212
+ (lambda(args _terminals)
+   `(
+     ast-type
+     declare-statement
+     statement
+     ,args
+     ))
+ phps-mode-parser--table-translations)
+
+;; 213 ((declare_statement) (":" inner_statement_list T_ENDDECLARE ";"))
+(puthash
+ 213
+ (lambda(args _terminals)
+   `(
+     ast-type
+     declare-statement
+     inner-statement-list
+     ,(nth 1 args)
+     ))
+ phps-mode-parser--table-translations)
+
+;; 214 ((switch_case_list) ("{" case_list "}"))
+(puthash 214 (lambda(args _terminals) (nth 1 args)) phps-mode-parser--table-translations)
+
+;; 215 ((switch_case_list) ("{" ";" case_list "}"))
+(puthash 214 (lambda(args _terminals) (nth 2 args)) phps-mode-parser--table-translations)
+
+;; 216 ((switch_case_list) (":" case_list T_ENDSWITCH ";"))
+(puthash 214 (lambda(args _terminals) (nth 1 args)) phps-mode-parser--table-translations)
+
+;; 217 ((switch_case_list) (":" ";" case_list T_ENDSWITCH ";"))
+(puthash 217 (lambda(args _terminals) (nth 2 args)) phps-mode-parser--table-translations)
+
+;; 218 ((case_list) (%empty))
+(puthash 218 (lambda(_args _terminals) nil) phps-mode-parser--table-translations)
+
+;; 219 ((case_list) (case_list T_CASE expr case_separator inner_statement_list))
+(puthash
+ 219
+ (lambda(args _terminals)
+   `(
+     ast-type
+     expr-case-list
+     expr
+     ,(nth 2 args)
+     inner-statement-list
+     ,(nth 4 args)))
+ phps-mode-parser--table-translations)
+
+;; 220 ((case_list) (case_list T_DEFAULT case_separator inner_statement_list))
+(puthash
+ 220
+ (lambda(args _terminals)
+   `(
+     ast-type
+     default-case-list
+     inner-statement-list
+     ,(nth 3 args)))
+ phps-mode-parser--table-translations)
+
+;; 221 ((case_separator) (":"))
+(puthash 221 (lambda(_args _terminals) nil) phps-mode-parser--table-translations)
+
+;; 222 ((case_separator) (":"))
+(puthash 222 (lambda(_args _terminals) nil) phps-mode-parser--table-translations)
+
+;; 223 ((match) (T_MATCH "(" expr ")" "{" match_arm_list "}"))
+(puthash
+ 223
+ (lambda(args _terminals)
+   `(
+     ast-type
+     match
+     expr
+     ,(nth 2 args)
+     match-arm-list
+     ,(nth 5 args)
+     ))
+ phps-mode-parser--table-translations)
+
+;; 224 ((match_arm_list) (%empty))
+(puthash 224 (lambda(_args _terminals) nil) phps-mode-parser--table-translations)
+
+;; 225 ((match_arm_list) (non_empty_match_arm_list possible_comma))
+(puthash 225 (lambda(args _terminals) (nth 0 args)) phps-mode-parser--table-translations)
+
+;; 226 ((non_empty_match_arm_list) (match_arm))
+(puthash 226 (lambda(args _terminals) (list args)) phps-mode-parser--table-translations)
+
+;; 227 ((non_empty_match_arm_list) (non_empty_match_arm_list "," match_arm))
+(puthash
+ 227
+ (lambda(args _terminals)
+   (append (nth 0 args) (list (nth 2 args))))
+ phps-mode-parser--table-translations)
+
+;; 228 ((match_arm) (match_arm_cond_list possible_comma T_DOUBLE_ARROW expr))
+(puthash
+ 228
+ (lambda(args _terminals)
+   `(
+     ast-type
+     cond-match-arm
+     match-arm-cond-list
+     ,(nth 0 args)
+     expr
+     ,(nth 3 args)))
+ phps-mode-parser--table-translations)
+
+;; 229 ((match_arm) (T_DEFAULT possible_comma T_DOUBLE_ARROW expr))
+(puthash
+ 229
+ (lambda(args _terminals)
+   `(
+     ast-type
+     default-match-arm
+     expr
+     ,(nth 3 args)))
+ phps-mode-parser--table-translations)
+
+;; 230 ((match_arm_cond_list) (expr))
+(puthash 230 (lambda(args _terminals) (list args)) phps-mode-parser--table-translations)
+
+;; 231 ((match_arm_cond_list) (match_arm_cond_list "," expr))
+(puthash 231 (lambda(args _terminals) (append (nth 0 args) (list (nth 2 args)))) phps-mode-parser--table-translations)
+
+;; 233 ((while_statement) (statement))
+(puthash 233 (lambda(args _terminals) (list args)) phps-mode-parser--table-translations)
+
+;; 234 ((while_statement) (":" inner_statement_list T_ENDWHILE ";"))
+(puthash 234 (lambda(args _terminals) (nth 1 args)) phps-mode-parser--table-translations)
+
+
 ;; TODO Was here 285 is half
 
 
