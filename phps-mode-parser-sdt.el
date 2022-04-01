@@ -2207,32 +2207,110 @@
      ))
  phps-mode-parser--table-translations)
 
-
-;; TODO Was here 285 is half
-
-
-;; parameter_list -> (non_empty_parameter_list possible_comma)
+;; 238 ((alt_if_stmt_without_else) (T_IF "(" expr ")" ":" inner_statement_list))
 (puthash
- 242
+ 238
  (lambda(args _terminals)
-   (nth 0 args))
+   `(
+     ast-type
+     alt-if-stmt-without-else
+     if-condition
+     ,(nth 2 args)
+     inner-statement-list
+     ,(nth 5 args)
+     ))
  phps-mode-parser--table-translations)
 
-;; non_empty_parameter_list -> (attributed_parameter)
+;; 239 ((alt_if_stmt_without_else) (alt_if_stmt_without_else T_ELSEIF "(" expr ")" ":" inner_statement_list))
 (puthash
- 244
+ 239
  (lambda(args _terminals)
-   (list args))
+   `(
+     ast-type
+     alt-if-stmt-without-else-elseif
+     alt-if-stmt-without-else
+     ,(nth 2 args)
+     elseif-condition
+     ,(nth 3 args)
+     inner-statement-list
+     ,(nth 6 args)
+     ))
  phps-mode-parser--table-translations)
 
-;; non_empty_parameter_list -> (non_empty_parameter_list "," attributed_parameter)
+;; 240 ((alt_if_stmt) (alt_if_stmt_without_else T_ENDIF ";"))
+(puthash 240 (lambda(args _terminals) (nth 0 args)) phps-mode-parser--table-translations)
+
+;; 241 ((alt_if_stmt) (alt_if_stmt_without_else T_ELSE ":" inner_statement_list T_ENDIF ";"))
 (puthash
- 245
+ 241
  (lambda(args _terminals)
-   (append (nth 0 args) (list (nth 2 args))))
+   `(
+     ast-type
+     alt-if-stmt-else
+     alt-if-stmt-without-else
+     ,(nth 0 args)
+     inner-statement-list
+     ,(nth 3 args)
+     ))
  phps-mode-parser--table-translations)
 
-;; parameter -> (optional_property_modifiers optional_type_without_static is_reference is_variadic T_VARIABLE backup_doc_comment)
+;; 242 ((parameter_list) (non_empty_parameter_list possible_comma))
+(puthash 242 (lambda(args _terminals) (nth 0 args)) phps-mode-parser--table-translations)
+
+;; 243 ((parameter_list) (%empty))
+(puthash 243 (lambda(_args _terminals) nil) phps-mode-parser--table-translations)
+
+;; 244 ((non_empty_parameter_list) (attributed_parameter))
+(puthash 244 (lambda(args _terminals) (list args)) phps-mode-parser--table-translations)
+
+;; 245 ((non_empty_parameter_list) (non_empty_parameter_list "," attributed_parameter))
+(puthash 245 (lambda(args _terminals) (append (nth 0 args) (list (nth 2 args)))) phps-mode-parser--table-translations)
+
+;; 246 ((attributed_parameter) (attributes parameter))
+(puthash
+ 246
+ (lambda(args _terminals)
+   `(
+     ast-type
+     attributed-parameter
+     attributes
+     ,(nth 0 args)
+     parameter
+     ,(nth 1 args)
+     ))
+ phps-mode-parser--table-translations)
+
+;; 247 ((attributed_parameter) (parameter))
+(puthash
+ 247
+ (lambda(args _terminals)
+   `(
+     ast-type
+     attributed-parameter
+     parameter
+     ,(nth 1 args)
+     ))
+ phps-mode-parser--table-translations)
+
+;; 248 ((optional_property_modifiers) (%empty))
+(puthash 248 (lambda(_args _terminals) nil) phps-mode-parser--table-translations)
+
+;; 249 ((optional_property_modifiers) (optional_property_modifiers property_modifier))
+(puthash 249 (lambda(args _terminals) (append (nth 0 args) (list (nth 1 args)))) phps-mode-parser--table-translations)
+
+;; 250 ((property_modifier) (T_PUBLIC))
+(puthash 250 (lambda(_args _terminals) 'T_PUBLIC) phps-mode-parser--table-translations)
+
+;; 251 ((property_modifier) (T_PROTECTED))
+(puthash 251 (lambda(_args _terminals) 'T_PROTECTED) phps-mode-parser--table-translations)
+
+;; 252 ((property_modifier) (T_PROTECTED))
+(puthash 252 (lambda(_args _terminals) 'T_PRIVATE) phps-mode-parser--table-translations)
+
+;; 253 ((property_modifier) (T_PROTECTED))
+(puthash 253 (lambda(_args _terminals) 'T_PROTECTED) phps-mode-parser--table-translations)
+
+;; 254 ((parameter) (optional_property_modifiers optional_type_without_static is_reference is_variadic T_VARIABLE backup_doc_comment))
 (puthash
  254
  (lambda(args terminals)
@@ -2256,7 +2334,7 @@
      ))
  phps-mode-parser--table-translations)
 
-;; parameter -> (optional_property_modifiers optional_type_without_static is_reference is_variadic T_VARIABLE backup_doc_comment "=" expr)
+;; 255 ((parameter) (optional_property_modifiers optional_type_without_static is_reference is_variadic T_VARIABLE backup_doc_comment "=" expr))
 (puthash
  255
  (lambda(args terminals)
@@ -2280,9 +2358,74 @@
      backup-doc-comment
      ,(nth 5 args)
      default-value
-     ,(phps-mode-parser-sdt--get-list-of-object (nth 7 args))
+     ,(nth 7 args)
      ))
  phps-mode-parser--table-translations)
+
+;; 256 ((optional_type_without_static) (%empty))
+(puthash 256 (lambda(_args _terminals) nil) phps-mode-parser--table-translations)
+
+;; 257 ((optional_type_without_static) (type_expr_without_static))
+(puthash 257 (lambda(args _terminals) args) phps-mode-parser--table-translations)
+
+;; 258 ((type_expr) (type))
+(puthash
+ 258
+ (lambda(args _terminals)
+   `(
+     ast-type
+     plain-type
+     type
+     ,args
+     ))
+ phps-mode-parser--table-translations)
+
+;; 259 ((type_expr) ("?" type))
+(puthash
+ 259
+ (lambda(args _terminals)
+   `(
+     ast-type
+     nullable-type
+     type
+     ,args
+     ))
+ phps-mode-parser--table-translations)
+
+;; 260 ((type_expr) (union_type))
+(puthash
+ 260
+ (lambda(args _terminals)
+   `(
+     ast-type
+     union-type
+     type
+     ,args
+     ))
+ phps-mode-parser--table-translations)
+
+;; 261 ((type_expr) (intersection_type))
+(puthash
+ 261
+ (lambda(args _terminals)
+   `(
+     ast-type
+     intersection-type
+     type
+     ,args
+     ))
+ phps-mode-parser--table-translations)
+
+;; 262 ((type) (type_without_static))
+(puthash 262 (lambda(args _terminals) args) phps-mode-parser--table-translations)
+
+;; 263 ((type) (T_STATIC))
+(puthash 263 (lambda(_args _terminals) 'T_STATIC) phps-mode-parser--table-translations)
+
+
+;; TODO WAS HERE
+
+
 
 ;; argument_list -> ("(" ")")
 (puthash
