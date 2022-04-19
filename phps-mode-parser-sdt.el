@@ -2422,24 +2422,119 @@
 ;; 263 ((type) (T_STATIC))
 (puthash 263 (lambda(_args _terminals) 'T_STATIC) phps-mode-parser--table-translations)
 
+;; 264 ((union_type) (type "|" type))
+(puthash 264 (lambda(args _terminals) (list (nth 0 args) (nth 2 args))) phps-mode-parser--table-translations)
+
+;; 265 ((union_type) (union_type "|" type))
+(puthash 265 (lambda(args _terminals) (append (nth 0 args) (list (nth 2 args)))) phps-mode-parser--table-translations)
+
+;; 266 ((intersection_type) (type T_AMPERSAND_NOT_FOLLOWED_BY_VAR_OR_VARARG type))
+(puthash 266 (lambda(args _terminals) (list (nth 0 args) (nth 2 args))) phps-mode-parser--table-translations)
+
+;; 267 ((intersection_type) (intersection_type T_AMPERSAND_NOT_FOLLOWED_BY_VAR_OR_VARARG type))
+(puthash 267 (lambda(args _terminals) (append (nth 0 args) (list (nth 1 args)))) phps-mode-parser--table-translations)
+
+;; 268 ((type_expr_without_static) (type_without_static))
+(puthash 268 (lambda(args _terminals) args) phps-mode-parser--table-translations)
+
+;; 269 ((type_expr_without_static) ("?" type_without_static))
+(puthash 269 (lambda(args _terminals) args) phps-mode-parser--table-translations)
+
+;; 270 ((type_expr_without_static) (union_type_without_static))
+(puthash 270 (lambda(args _terminals) args) phps-mode-parser--table-translations)
+
+;; 271 ((type_expr_without_static) (intersection_type_without_static))
+(puthash 271 (lambda(args _terminals) args) phps-mode-parser--table-translations)
+
+;; 272 ((type_without_static) (T_ARRAY))
+(puthash 272 (lambda(args _terminals) 'T_ARRAY) phps-mode-parser--table-translations)
+
+;; 273 ((type_without_static) (T_CALLABLE))
+(puthash 273 (lambda(args _terminals) 'T_CALLABLE) phps-mode-parser--table-translations)
+
+;; 274 ((type_without_static) (name))
+(puthash 273 (lambda(args _terminals) args) phps-mode-parser--table-translations)
+
+;; 275 ((union_type_without_static) (type_without_static "|" type_without_static))
+(puthash 275 (lambda(args _terminals) (list (nth 0 args) (nth 2 args))) phps-mode-parser--table-translations)
+
+;; 276 ((union_type_without_static) (union_type_without_static "|" type_without_static))
+(puthash 276 (lambda(args _terminals) (append (nth 0 args) (list (nth 2 args)))) phps-mode-parser--table-translations)
+
+;; 277 ((intersection_type_without_static) (type_without_static T_AMPERSAND_NOT_FOLLOWED_BY_VAR_OR_VARARG type_without_static))
+(puthash 277 (lambda(args _terminals) (list (nth 0 args) (nth 2 args))) phps-mode-parser--table-translations)
+
+;; 278 ((intersection_type_without_static) (intersection_type_without_static T_AMPERSAND_NOT_FOLLOWED_BY_VAR_OR_VARARG type_without_static))
+(puthash 278 (lambda(args _terminals) (append (nth 0 args) (list (nth 2 args)))) phps-mode-parser--table-translations)
+
+;; 279 ((return_type) (%empty))
+(puthash 279 (lambda(_args _terminals) nil) phps-mode-parser--table-translations)
+
+;; 280 ((return_type) (":" type_expr))
+(puthash 280 (lambda(args _terminals) (nth 1 args)) phps-mode-parser--table-translations)
+
+;; 281 ((argument_list) ("(" ")"))
+(puthash 281 (lambda(_args _terminals) nil) phps-mode-parser--table-translations)
+
+;; 282 ((argument_list) ("(" non_empty_argument_list possible_comma ")"))
+(puthash 282 (lambda(args _terminals) (nth 1 args)) phps-mode-parser--table-translations)
+
+;; 283 ((argument_list) ("(" T_ELLIPSIS ")"))
+(puthash 283 (lambda(_args _terminals) 'T_ELLIPSIS) phps-mode-parser--table-translations)
+
+;; 284 ((non_empty_argument_list) (argument))
+(puthash 284 (lambda(args _terminals) (list (nth 0 args))) phps-mode-parser--table-translations)
+
+;; 285 ((non_empty_argument_list) (non_empty_argument_list "," argument))
+(puthash 285 (lambda(args _terminals) (append (nth 0 args) (list (nth 2 args)))) phps-mode-parser--table-translations)
+
+;; 286 ((argument) (expr))
+(puthash
+ 286
+ (lambda(args _terminals)
+   `(
+     ast-type
+     argument
+     type
+     nil
+     value
+     ,args
+     )
+   )
+ phps-mode-parser--table-translations)
+
+;; 287 ((argument) (identifier ":" expr))
+(puthash
+ 287
+ (lambda(args _terminals)
+   `(
+     ast-type
+     argument
+     type
+     ,(nth 0 args)
+     value
+     ,(nth 2 args)
+     )
+   )
+ phps-mode-parser--table-translations)
+
+;; 288 ((argument) (T_ELLIPSIS expr))
+(puthash
+ 288
+ (lambda(args _terminals)
+   `(
+     ast-type
+     ellipsis-argument
+     value
+     ,(nth 2 args)
+     )
+   )
+ phps-mode-parser--table-translations)
+
 
 ;; TODO WAS HERE
 
 
-
-;; argument_list -> ("(" ")")
-(puthash
- 281
- (lambda(_args _terminals)
-   nil)
- phps-mode-parser--table-translations)
-
-;; argument_list -> ("(" non_empty_argument_list possible_comma ")")
-(puthash
- 282
- (lambda(args _terminals)
-   (nth 1 args))
- phps-mode-parser--table-translations)
 
 ;; static_var_list -> (static_var_list "," static_var)
 (puthash
