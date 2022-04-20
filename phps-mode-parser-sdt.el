@@ -584,24 +584,12 @@
 ;;; Code:
 
 
-;; TODO Remove function (phps-mode-parser-sdt--get-list-of-object)
-;; TODO Stop using children generic name
-
-
 (require 'phps-mode-parser)
 
-(defun phps-mode-parser-sdt--get-list-of-object (objects)
-  "Get list of OBJECTS."
-  (cond
-
-   ((and (listp objects)
-         (plist-get objects 'ast-type))
-    (list objects))
-
-   ((listp objects)
-    objects)
-
-   (t (list objects))))
+(defvar-local
+  phps-mode-parser-sdt-bookkeeping
+  (make-hash-table :test 'equal)
+  "Bookkeeping")
 
 ;; SDT starts here
 
@@ -968,16 +956,7 @@
  phps-mode-parser--table-translations)
 
 ;; 101 ((attributes) (attributes attribute))
-(puthash
- 101
- (lambda(args _terminals)
-   `(
-     ast-type
-     attributes
-     attributes
-     ,(append (plist-get (nth 0 args) 'children) (list (nth 1 args)))
-     ))
- phps-mode-parser--table-translations)
+(puthash 101 (lambda(args _terminals) (append (nth 0 args) (list (nth 1 args)))) phps-mode-parser--table-translations)
 
 ;; 102 ((attributed_statement) (function_declaration_statement))
 (puthash 102 (lambda(args _terminals) args) phps-mode-parser--table-translations)
@@ -1604,7 +1583,7 @@
      ,(car (cdr (nth 4 terminals)))
      optional-variable-end
      ,(cdr (cdr (nth 4 terminals)))
-     children
+     inner-statement-list
      ,(nth 7 args)
      ))
  phps-mode-parser--table-translations)
@@ -1702,7 +1681,7 @@
      ,(nth 5 args)
      return-type
      ,(nth 7 args)
-     children
+     inner-statement-list
      ,(nth 10 args)
      ))
  phps-mode-parser--table-translations)
@@ -2531,26 +2510,22 @@
    )
  phps-mode-parser--table-translations)
 
+;; 289 ((global_var_list) (global_var_list "," global_var))
+(puthash 289 (lambda(args _terminals) (append (nth 0 args) (list (nth 2 args)))) phps-mode-parser--table-translations)
 
-;; TODO WAS HERE
+;; 290 ((global_var_list) (global_var))
+(puthash 290 (lambda(args _terminals) (list args)) phps-mode-parser--table-translations)
 
+;; 291 ((global_var) (simple_variable))
+(puthash 291 (lambda(args _terminals) args) phps-mode-parser--table-translations)
 
+;; 292 ((static_var_list) (static_var_list "," static_var))
+(puthash 292 (lambda(args _terminals) (append (nth 0 args) (list (nth 2 args)))) phps-mode-parser--table-translations)
 
-;; static_var_list -> (static_var_list "," static_var)
-(puthash
- 292
- (lambda(args _terminals)
-   (append (nth 0 args) (list (nth 2 args))))
- phps-mode-parser--table-translations)
+;; 293 ((static_var_list) (static_var))
+(puthash 293 (lambda(args _terminals) (list args)) phps-mode-parser--table-translations)
 
-;; static_var_list -> (static_var)
-(puthash
- 293
- (lambda(args _terminals)
-   (list args))
- phps-mode-parser--table-translations)
-
-;; static_var -> (T_VARIABLE)
+;; 294 ((static_var) (T_VARIABLE))
 (puthash
  294
  (lambda(args terminals)
@@ -2568,7 +2543,7 @@
      ))
  phps-mode-parser--table-translations)
 
-;; static_var -> (T_VARIABLE "=" expr)
+;; 295 ((static_var) (T_VARIABLE "=" expr))
 (puthash
  295
  (lambda(args terminals)
@@ -2588,7 +2563,7 @@
      ))
  phps-mode-parser--table-translations)
 
-;; class_statement_list -> (class_statement_list class_statement)
+;; 296 ((class_statement_list) (class_statement_list class_statement))
 (puthash
  296
  (lambda(args _terminals)
@@ -2597,7 +2572,10 @@
        (cdr args)))
  phps-mode-parser--table-translations)
 
-;; attributed_class_statement -> (variable_modifiers optional_type_without_static property_list ";")
+;; 297 ((class_statement_list) (%empty))
+(puthash 297 (lambda(_args _terminals) nil) phps-mode-parser--table-translations)
+
+;; 298 ((attributed_class_statement) (variable_modifiers optional_type_without_static property_list ";"))
 (puthash
  298
  (lambda(args terminals)
@@ -2605,7 +2583,7 @@
      ast-type
      property
      modifiers
-     ,(phps-mode-parser-sdt--get-list-of-object (nth 0 args))
+     ,(nth 0 args)
      type
      ,(nth 1 args)
      subject
@@ -2617,7 +2595,25 @@
      ))
  phps-mode-parser--table-translations)
 
-;; attributed_class_statement -> (method_modifiers function returns_ref identifier backup_doc_comment "(" parameter_list ")" return_type backup_fn_flags method_body backup_fn_flags)
+;; 299 ((attributed_class_statement) (method_modifiers T_CONST class_const_list ";"))
+(puthash
+ 299
+ (lambda(args terminals)
+   `(
+     ast-type
+     constant
+     modifiers
+     ,(nth 0 args)
+     subject
+     ,(nth 2 args)
+     ast-start
+     ,(car (cdr (car (nth 2 terminals))))
+     ast-end
+     ,(cdr (cdr (car (nth 2 terminals))))
+     ))
+ phps-mode-parser--table-translations)
+
+;; 300 ((attributed_class_statement) (method_modifiers function returns_ref identifier backup_doc_comment "(" parameter_list ")" return_type backup_fn_flags method_body backup_fn_flags))
 (puthash
  300
  (lambda(args terminals)
@@ -2625,7 +2621,7 @@
      ast-type
      method
      modifiers
-     ,(phps-mode-parser-sdt--get-list-of-object (nth 0 args))
+     ,(nth 0 args)
      returns-reference-p
      ,(not (equal (nth 2 args) nil))
      ast-name
@@ -2634,9 +2630,9 @@
      ,(nth 6 args)
      return-type
      ,(nth 8 args)
-     children
+     method-body
      ,(if (nth 10 args)
-          (phps-mode-parser-sdt--get-list-of-object (nth 10 args))
+          (nth 10 args)
         nil)
      ast-index
      ,(car (cdr (nth 3 terminals)))
@@ -2650,6 +2646,11 @@
         nil)
      ))
  phps-mode-parser--table-translations)
+
+
+;; TODO WAS HERE
+
+
 
 ;; method_body -> (";")
 (puthash
@@ -2731,7 +2732,7 @@
      key
      ,(nth 0 args)
      value
-     ,(phps-mode-parser-sdt--get-list-of-object (nth 2 args))
+     ,(nth 2 args)
      ast-index
      ,(car (cdr (nth 0 terminals)))
      ast-start
@@ -2751,7 +2752,7 @@
      keys
      ,(nth 1 args)
      values
-     ,(phps-mode-parser-sdt--get-list-of-object (nth 4 args))
+     ,(nth 4 args)
      ))
  phps-mode-parser--table-translations)
 
@@ -2765,7 +2766,7 @@
      key
      ,(nth 0 args)
      value
-     ,(phps-mode-parser-sdt--get-list-of-object (nth 2 args))
+     ,(nth 2 args)
      ast-index
      ,(car (cdr (nth 0 terminals)))
      ast-start
@@ -2795,9 +2796,9 @@
      ast-type
      boolean-or-expression
      a
-     ,(phps-mode-parser-sdt--get-list-of-object (nth 0 args))
+     ,(nth 0 args)
      b
-     ,(phps-mode-parser-sdt--get-list-of-object (nth 2 args))
+     ,(nth 2 args)
      ))
  phps-mode-parser--table-translations)
 
@@ -2809,9 +2810,9 @@
      ast-type
      boolean-and-expression
      a
-     ,(phps-mode-parser-sdt--get-list-of-object (nth 0 args))
+     ,(nth 0 args)
      b
-     ,(phps-mode-parser-sdt--get-list-of-object (nth 2 args))
+     ,(nth 2 args)
      ))
  phps-mode-parser--table-translations)
 
@@ -2823,9 +2824,9 @@
      ast-type
      logical-or-expression
      a
-     ,(phps-mode-parser-sdt--get-list-of-object (nth 0 args))
+     ,(nth 0 args)
      b
-     ,(phps-mode-parser-sdt--get-list-of-object (nth 2 args))
+     ,(nth 2 args)
      ))
  phps-mode-parser--table-translations)
 
@@ -2837,9 +2838,9 @@
      ast-type
      logical-and-expression
      a
-     ,(phps-mode-parser-sdt--get-list-of-object (nth 0 args))
+     ,(nth 0 args)
      b
-     ,(phps-mode-parser-sdt--get-list-of-object (nth 2 args))
+     ,(nth 2 args)
      ))
  phps-mode-parser--table-translations)
 
@@ -2851,9 +2852,9 @@
      ast-type
      logical-xor-expression
      a
-     ,(phps-mode-parser-sdt--get-list-of-object (nth 0 args))
+     ,(nth 0 args)
      b
-     ,(phps-mode-parser-sdt--get-list-of-object (nth 2 args))
+     ,(nth 2 args)
      ))
  phps-mode-parser--table-translations)
 
@@ -2865,9 +2866,9 @@
      ast-type
      bitwise-or-expression
      a
-     ,(phps-mode-parser-sdt--get-list-of-object (nth 0 args))
+     ,(nth 0 args)
      b
-     ,(phps-mode-parser-sdt--get-list-of-object (nth 2 args))
+     ,(nth 2 args)
      ))
  phps-mode-parser--table-translations)
 
@@ -2879,9 +2880,9 @@
      ast-type
      bitwise-and-expression
      a
-     ,(phps-mode-parser-sdt--get-list-of-object (nth 0 args))
+     ,(nth 0 args)
      b
-     ,(phps-mode-parser-sdt--get-list-of-object (nth 2 args))
+     ,(nth 2 args)
      ))
  phps-mode-parser--table-translations)
 
@@ -2893,9 +2894,9 @@
      ast-type
      bitwise-and-expression
      a
-     ,(phps-mode-parser-sdt--get-list-of-object (nth 0 args))
+     ,(nth 0 args)
      b
-     ,(phps-mode-parser-sdt--get-list-of-object (nth 2 args))
+     ,(nth 2 args)
      ))
  phps-mode-parser--table-translations)
 
@@ -2907,9 +2908,9 @@
      ast-type
      bitwise-xor-expression
      a
-     ,(phps-mode-parser-sdt--get-list-of-object (nth 0 args))
+     ,(nth 0 args)
      b
-     ,(phps-mode-parser-sdt--get-list-of-object (nth 2 args))
+     ,(nth 2 args)
      ))
  phps-mode-parser--table-translations)
 
@@ -2921,9 +2922,9 @@
      ast-type
      concat-expression
      a
-     ,(phps-mode-parser-sdt--get-list-of-object (nth 0 args))
+     ,(nth 0 args)
      b
-     ,(phps-mode-parser-sdt--get-list-of-object (nth 2 args))
+     ,(nth 2 args)
      ))
  phps-mode-parser--table-translations)
 
@@ -2935,9 +2936,9 @@
      ast-type
      addition-expression
      a
-     ,(phps-mode-parser-sdt--get-list-of-object (nth 0 args))
+     ,(nth 0 args)
      b
-     ,(phps-mode-parser-sdt--get-list-of-object (nth 2 args))
+     ,(nth 2 args)
      ))
  phps-mode-parser--table-translations)
 
@@ -2949,9 +2950,9 @@
      ast-type
      subtraction-expression
      a
-     ,(phps-mode-parser-sdt--get-list-of-object (nth 0 args))
+     ,(nth 0 args)
      b
-     ,(phps-mode-parser-sdt--get-list-of-object (nth 2 args))
+     ,(nth 2 args)
      ))
  phps-mode-parser--table-translations)
 
@@ -2963,9 +2964,9 @@
      ast-type
      multiplication-expression
      a
-     ,(phps-mode-parser-sdt--get-list-of-object (nth 0 args))
+     ,(nth 0 args)
      b
-     ,(phps-mode-parser-sdt--get-list-of-object (nth 2 args))
+     ,(nth 2 args)
      ))
  phps-mode-parser--table-translations)
 
@@ -2977,9 +2978,9 @@
      ast-type
      exponentiation-expression
      a
-     ,(phps-mode-parser-sdt--get-list-of-object (nth 0 args))
+     ,(nth 0 args)
      b
-     ,(phps-mode-parser-sdt--get-list-of-object (nth 2 args))
+     ,(nth 2 args)
      ))
  phps-mode-parser--table-translations)
 
@@ -2991,9 +2992,9 @@
      ast-type
      division-expression
      a
-     ,(phps-mode-parser-sdt--get-list-of-object (nth 0 args))
+     ,(nth 0 args)
      b
-     ,(phps-mode-parser-sdt--get-list-of-object (nth 2 args))
+     ,(nth 2 args)
      ))
  phps-mode-parser--table-translations)
 
@@ -3005,9 +3006,9 @@
      ast-type
      modulo-expression
      a
-     ,(phps-mode-parser-sdt--get-list-of-object (nth 0 args))
+     ,(nth 0 args)
      b
-     ,(phps-mode-parser-sdt--get-list-of-object (nth 2 args))
+     ,(nth 2 args)
      ))
  phps-mode-parser--table-translations)
 
@@ -3019,9 +3020,9 @@
      ast-type
      bitwise-shift-left-expression
      a
-     ,(phps-mode-parser-sdt--get-list-of-object (nth 0 args))
+     ,(nth 0 args)
      b
-     ,(phps-mode-parser-sdt--get-list-of-object (nth 2 args))
+     ,(nth 2 args)
      ))
  phps-mode-parser--table-translations)
 
@@ -3033,9 +3034,9 @@
      ast-type
      bitwise-shift-right-expression
      a
-     ,(phps-mode-parser-sdt--get-list-of-object (nth 0 args))
+     ,(nth 0 args)
      b
-     ,(phps-mode-parser-sdt--get-list-of-object (nth 2 args))
+     ,(nth 2 args)
      ))
  phps-mode-parser--table-translations)
 
@@ -3081,13 +3082,13 @@
      parameter-list
      ,(nth 4 args)
      lexical-vars
-     ,(phps-mode-parser-sdt--get-list-of-object (nth 6 args))
+     ,(nth 6 args)
      return-type
      ,(nth 7 args)
      backup-fn-flags-1
      ,(nth 8 args)
      inner-statement-list
-     ,(phps-mode-parser-sdt--get-list-of-object (nth 10 args))
+     ,(nth 10 args)
      backup-fn-flags-2
      ,(nth 12 args)
      ))
@@ -3117,7 +3118,7 @@
      backup-lex-pos
      ,(nth 9 args)
      expr
-     ,(phps-mode-parser-sdt--get-list-of-object (nth 10 args))
+     ,(nth 10 args)
      backup-fn-flags-2
      ,(nth 11 args)
      ))
@@ -3156,7 +3157,7 @@
      ast-name
      ,(nth 0 args)
      argument-list
-     ,(phps-mode-parser-sdt--get-list-of-object (nth 1 args))
+     ,(nth 1 args)
      ))
  phps-mode-parser--table-translations)
 
@@ -3168,7 +3169,7 @@
      ast-type
      dereferencable-scalar
      array-pair-list
-     ,(phps-mode-parser-sdt--get-list-of-object (nth 2 args))
+     ,(nth 2 args)
      ))
  phps-mode-parser--table-translations)
 
@@ -3202,7 +3203,7 @@
      callable-variable
      array-object-dereferencable
      array-index
-     ,(phps-mode-parser-sdt--get-list-of-object (nth 2 args))
+     ,(nth 2 args)
      ))
  phps-mode-parser--table-translations)
 
@@ -3215,7 +3216,7 @@
      callable-variable
      array-object-dereferencable
      expr
-     ,(phps-mode-parser-sdt--get-list-of-object (nth 2 args))
+     ,(nth 2 args)
      ))
  phps-mode-parser--table-translations)
 
@@ -3233,7 +3234,7 @@
      property-name
      ,(nth 2 args)
      argument-list
-     ,(phps-mode-parser-sdt--get-list-of-object (nth 3 args))
+     ,(nth 3 args)
      ))
  phps-mode-parser--table-translations)
 
@@ -3251,7 +3252,7 @@
      property-name
      ,(nth 2 args)
      argument-list
-     ,(phps-mode-parser-sdt--get-list-of-object (nth 3 args))
+     ,(nth 3 args)
      ))
  phps-mode-parser--table-translations)
 
@@ -3371,7 +3372,7 @@
      ast-type
      isset-variables
      variables
-     ,(phps-mode-parser-sdt--get-list-of-object (nth 2 args))
+     ,(nth 2 args)
      ))
  phps-mode-parser--table-translations)
 
@@ -3383,7 +3384,7 @@
      ast-type
      empty-expression
      variables
-     ,(phps-mode-parser-sdt--get-list-of-object (nth 2 args))
+     ,(nth 2 args)
      ))
  phps-mode-parser--table-translations)
 
