@@ -2647,6 +2647,68 @@
      ))
  phps-mode-parser--table-translations)
 
+;; 301 ((attributed_class_statement) (enum_case))
+(puthash
+ 301
+ (lambda(args _terminals)
+   `(
+     ast-type
+     class-enum
+     enum-case
+     ,args
+     )
+   )
+ phps-mode-parser--table-translations)
+
+;; 302 ((class_statement) (attributed_class_statement))
+(puthash
+ 302
+ (lambda(args _terminals)
+   `(
+     ast-type
+     class-statement
+     attributed-class-statement
+     ,args
+     )
+   )
+ phps-mode-parser--table-translations)
+
+;; 303 ((class_statement) (attributes attributed_class_statement))
+(puthash
+ 303
+ (lambda(args _terminals)
+   `(
+     ast-type
+     class-statement
+     attributes
+     ,(nth 0 args)
+     attributed-class-statement
+     ,(nth 1 args)
+     )
+   )
+ phps-mode-parser--table-translations)
+
+;; 304 ((class_statement) (T_USE class_name_list trait_adaptations))
+(puthash
+ 304
+ (lambda(args _terminals)
+   `(
+     ast-type
+     use-class-statement
+     class-name-list
+     ,(nth 1 args)
+     trait-adaptations
+     ,(nth 2 args)
+     )
+   )
+ phps-mode-parser--table-translations)
+
+;; 305 ((class_name_list) (class_name))
+(puthash 305 (lambda(args _terminals) (list args)) phps-mode-parser--table-translations)
+
+;; 306 ((class_name_list) (class_name_list "," class_name))
+(puthash 306 (lambda(args _terminals) (append (nth 0 args) (nth 2 args))) phps-mode-parser--table-translations)
+
 
 ;; TODO WAS HERE
 
