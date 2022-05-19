@@ -44,7 +44,9 @@
     (:propertize (:eval (if (equal phps-mode-serial--status 'error) "Error" ""))
                  face phps-mode-serial--mode-line-face-error)
     (:propertize (:eval (if (equal phps-mode-serial--status 'success) "OK" ""))
-                 face phps-mode-serial--mode-line-face-success)))
+                 face phps-mode-serial--mode-line-face-success)
+    (:propertize (:eval (if (equal phps-mode-serial--status 'aborted) "Aborted" ""))
+                 face phps-mode-serial--mode-line-face-error)))
 
 
 ;; FUNCTIONS
@@ -154,38 +156,44 @@
           (let ((async-thread
                  (make-thread
                   (lambda()
-                    (let ((start-return))
+                    (let ((quitted t))
+                      (unwind-protect
+                          (let ((start-return))
 
-                      ;; First execute start lambda
-                      (condition-case conditions
-                          (let ((return (funcall start)))
-                            (setq
-                             start-return
-                             (list 'success return start-time)))
-                        (error
-                         (setq
-                          start-return
-                          (list 'error conditions start-time))))
+                            ;; First execute start lambda
+                            (condition-case conditions
+                                (let ((return (funcall start)))
+                                  (setq
+                                   start-return
+                                   (list 'success return start-time)))
+                              (error
+                               (setq
+                                start-return
+                                (list 'error conditions start-time))))
 
-                      ;; Profile execution in debug mode
-                      (when phps-mode-serial--profiling
-                        (let* ((end-time (current-time))
-                               (end-time-float
-                                (+
-                                 (car end-time)
-                                 (car (cdr end-time))
-                                 (* (car (cdr (cdr end-time))) 0.000001)))
-                               (start-time-float
-                                (+
-                                 (car start-time)
-                                 (car (cdr start-time))
-                                 (* (car (cdr (cdr start-time))) 0.000001)))
-                               (elapsed (- end-time-float start-time-float)))
-                          (message
-                           "Serial asynchronous thread start finished, elapsed: %fs"
-                           elapsed)))
+                            ;; Profile execution in debug mode
+                            (when phps-mode-serial--profiling
+                              (let* ((end-time (current-time))
+                                     (end-time-float
+                                      (+
+                                       (car end-time)
+                                       (car (cdr end-time))
+                                       (* (car (cdr (cdr end-time))) 0.000001)))
+                                     (start-time-float
+                                      (+
+                                       (car start-time)
+                                       (car (cdr start-time))
+                                       (* (car (cdr (cdr start-time))) 0.000001)))
+                                     (elapsed (- end-time-float start-time-float)))
+                                (message
+                                 "Serial asynchronous thread start finished, elapsed: %fs"
+                                 elapsed)))
 
-                      start-return))
+                            (setq quitted nil)
+                            start-return)
+                        (when quitted
+                          (with-current-buffer key
+                            (setq phps-mode-serial--status 'aborted))))))
                   key)))
             (puthash
              key
@@ -194,62 +202,67 @@
 
             (make-thread
              (lambda()
-                (let ((start-return (thread-join async-thread))
-                      (end-return))
-                  (let ((status (car start-return))
-                        (value (car (cdr start-return)))
-                        (start-time (car (cdr (cdr start-return)))))
+               (let ((quitted t))
+                 (let ((start-return (thread-join async-thread))
+                       (end-return))
+                   (let ((status (car start-return))
+                         (value (car (cdr start-return)))
+                         (start-time (car (cdr (cdr start-return)))))
 
-                    (if (string= status "success")
-                        (progn
+                     (if (string= status "success")
+                         (progn
 
-                          ;; Then execute end lambda
-                          (condition-case conditions
-                              (let ((return (funcall end value)))
-                                (setq
-                                 end-return
-                                 (list 'success return start-time)))
-                            (error
-                             (setq
-                              end-return
-                              (list 'error conditions start-time))))
+                           ;; Then execute end lambda
+                           (condition-case conditions
+                               (let ((return (funcall end value)))
+                                 (setq
+                                  end-return
+                                  (list 'success return start-time)))
+                             (error
+                              (setq
+                               end-return
+                               (list 'error conditions start-time))))
 
-                          ;; Profile execution
-                          (when phps-mode-serial--profiling
-                            (let* ((end-time (current-time))
-                                   (end-time-float
-                                    (+
-                                     (car end-time)
-                                     (car (cdr end-time))
-                                     (* (car (cdr (cdr end-time))) 0.000001)))
-                                   (start-time-float
-                                    (+
-                                     (car start-time)
-                                     (car (cdr start-time))
-                                     (* (car (cdr (cdr start-time))) 0.000001)))
-                                   (elapsed (- end-time-float start-time-float)))
-                              (message
-                               "Serial asynchronous thread end finished, elapsed: %fs"
-                               elapsed)))
+                           ;; Profile execution
+                           (when phps-mode-serial--profiling
+                             (let* ((end-time (current-time))
+                                    (end-time-float
+                                     (+
+                                      (car end-time)
+                                      (car (cdr end-time))
+                                      (* (car (cdr (cdr end-time))) 0.000001)))
+                                    (start-time-float
+                                     (+
+                                      (car start-time)
+                                      (car (cdr start-time))
+                                      (* (car (cdr (cdr start-time))) 0.000001)))
+                                    (elapsed (- end-time-float start-time-float)))
+                               (message
+                                "Serial asynchronous thread end finished, elapsed: %fs"
+                                elapsed)))
 
-                          (let ((status (car end-return))
-                                (value (car (cdr end-return))))
+                           (let ((status (car end-return))
+                                 (value (car (cdr end-return))))
 
-                            (when (string= status "success")
-                              (with-current-buffer key
-                                (setq phps-mode-serial--status 'success)))
+                             (when (string= status "success")
+                               (with-current-buffer key
+                                 (setq phps-mode-serial--status 'success)))
 
-                            (when (string= status "error")
-                              (with-current-buffer key
-                                (setq phps-mode-serial--status 'error))
-                              (when end-error
-                                (funcall end-error value)))))
+                             (when (string= status "error")
+                               (with-current-buffer key
+                                 (setq phps-mode-serial--status 'error))
+                               (when end-error
+                                 (funcall end-error value)))))
 
-                      (when (string= status "error")
-                        (with-current-buffer key
-                          (setq phps-mode-serial--status 'error))
-                        (when start-error
-                          (funcall start-error value))))))))))
+                       (when (string= status "error")
+                         (with-current-buffer key
+                           (setq phps-mode-serial--status 'error))
+                         (when start-error
+                           (funcall start-error value))))))
+                 (setq quitted nil))
+               (when quitted
+                 (with-current-buffer key
+                   (setq phps-mode-serial--status 'aborted)))))))
 
       (let ((start-return)
             (end-return))
