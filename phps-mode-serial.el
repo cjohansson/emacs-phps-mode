@@ -114,7 +114,7 @@
 
                     (lambda (start-return)
                       (let ((start-status (car start-return))
-                            (value (car (cdr start-return)))
+                            (start-value (car (cdr start-return)))
                             (start-time (car (cdr (cdr start-return))))
                             (end-return)
                             (quitted t))
@@ -137,7 +137,7 @@
                                     ;; Execute end lambda
                                     (condition-case conditions
                                         (progn
-                                          (let ((return (funcall end value)))
+                                          (let ((return (funcall end start-value)))
                                             (setq
                                              end-return
                                              (list 'success return start-time))))
@@ -167,13 +167,13 @@
                                         (with-current-buffer key
                                           (setq phps-mode-serial--status 'error))
                                         (when end-error
-                                          (funcall end-error value)))))
+                                          (funcall end-error end-value)))))
 
                                 (when (string= start-status "error")
                                   (with-current-buffer key
                                     (setq phps-mode-serial--status 'error))
                                   (when start-error
-                                    (funcall start-error value))))
+                                    (funcall start-error start-value))))
 
                               (setq quitted nil))
                           (when quitted
@@ -244,16 +244,16 @@
                  (unwind-protect
                      (let ((start-return (thread-join async-thread))
                            (end-return))
-                       (let ((status (car start-return))
-                             (value (car (cdr start-return)))
+                       (let ((start-status (car start-return))
+                             (start-value (car (cdr start-return)))
                              (start-time (car (cdr (cdr start-return)))))
 
-                         (if (string= status "success")
+                         (if (string= start-status "success")
                              (progn
 
                                ;; Then execute end lambda
                                (condition-case conditions
-                                   (let ((return (funcall end value)))
+                                   (let ((return (funcall end start-value)))
                                      (setq
                                       end-return
                                       (list 'success return start-time)))
@@ -280,24 +280,24 @@
                                     "Serial asynchronous thread end finished, elapsed: %fs"
                                     elapsed)))
 
-                               (let ((status (car end-return))
-                                     (value (car (cdr end-return))))
+                               (let ((end-status (car end-return))
+                                     (end-value (car (cdr end-return))))
 
-                                 (when (string= status "success")
+                                 (when (string= end-status "success")
                                    (with-current-buffer key
                                      (setq phps-mode-serial--status 'success)))
 
-                                 (when (string= status "error")
+                                 (when (string= end-status "error")
                                    (with-current-buffer key
                                      (setq phps-mode-serial--status 'error))
                                    (when end-error
-                                     (funcall end-error value)))))
+                                     (funcall end-error end-value)))))
 
-                           (when (string= status "error")
+                           (when (string= start-status "error")
                              (with-current-buffer key
                                (setq phps-mode-serial--status 'error))
                              (when start-error
-                               (funcall start-error value)))))
+                               (funcall start-error start-value)))))
                        (setq quitted nil))
                    (when quitted
                      (with-current-buffer key
@@ -326,16 +326,16 @@
                        (elapsed (- end-time-float start-time-float)))
                   (message "Serial synchronous thread start finished, elapsed: %fs" elapsed)))
 
-              (let ((status (car start-return))
-                    (value (car (cdr start-return)))
+              (let ((start-status (car start-return))
+                    (start-value (car (cdr start-return)))
                     (start-time (car (cdr (cdr start-return)))))
 
-                (if (string= status "success")
+                (if (string= start-status "success")
                     (progn
 
                       ;; Then execute end lambda
                       (condition-case conditions
-                          (let ((return (funcall end value)))
+                          (let ((return (funcall end start-value)))
                             (setq end-return (list 'success return start-time)))
                         (error (setq end-return (list 'error conditions start-time))))
 
@@ -349,24 +349,24 @@
                                (elapsed (- end-time-float start-time-float)))
                           (message "Serial synchronous thread end finished, elapsed: %fs" elapsed)))
 
-                      (let ((status (car end-return))
-                            (value (car (cdr end-return))))
+                      (let ((end-status (car end-return))
+                            (end-value (car (cdr end-return))))
 
-                        (when (string= status "success")
+                        (when (string= end-status "success")
                           (with-current-buffer key
                             (setq phps-mode-serial--status 'success)))
 
-                        (when (string= status "error")
+                        (when (string= end-status "error")
                           (with-current-buffer key
                             (setq phps-mode-serial--status 'error))
                           (when end-error
-                            (funcall end-error value)))))
+                            (funcall end-error end-value)))))
 
-                  (when (string= status "error")
+                  (when (string= start-status "error")
                     (with-current-buffer key
                       (setq phps-mode-serial--status 'error))
                     (when start-error
-                      (funcall start-error value)))))
+                      (funcall start-error start-value)))))
               (setq quitted nil))
           (when quitted
             (with-current-buffer key
