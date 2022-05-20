@@ -89,7 +89,7 @@
 
                     (lambda()
                       (let ((quitted t)
-                            (return))
+                            (start-return))
                         (unwind-protect
                             (progn
                               (add-to-list 'load-path script-filename)
@@ -97,17 +97,23 @@
 
                               ;; Execute start lambda
                               (condition-case conditions
-                                  (progn
-                                    (let ((start-return (funcall start)))
-                                      (setq return (list 'success start-return start-time))))
-                                (error (setq return (list 'error conditions start-time)))))
+                                  (let ((return (funcall start)))
+                                    (setq
+                                     start-return
+                                     (list 'success return start-time)))
+                                (error
+                                 (setq
+                                  start-return
+                                  (list 'error conditions start-time))))
+                              (setq quitted nil))
                           (when quitted
-                            (with-current-buffer key
-                              (setq phps-mode-serial--status 'aborted)))
-                          return)))
+                            (setq
+                             start-return
+                             (list 'error 'quitted))))
+                        start-return))
 
                     (lambda (start-return)
-                      (let ((status (car start-return))
+                      (let ((start-status (car start-return))
                             (value (car (cdr start-return)))
                             (start-time (car (cdr (cdr start-return))))
                             (end-return)
@@ -125,15 +131,20 @@
                                        (elapsed (- end-time-float start-time-float)))
                                   (message "Serial asynchronous process start finished, elapsed: %fs" elapsed)))
 
-                              (if (string= status "success")
+                              (if (string= start-status "success")
                                   (progn
 
                                     ;; Execute end lambda
                                     (condition-case conditions
                                         (progn
                                           (let ((return (funcall end value)))
-                                            (setq end-return (list 'success return start-time))))
-                                      (error (setq end-return (list 'error conditions start-time))))
+                                            (setq
+                                             end-return
+                                             (list 'success return start-time))))
+                                      (error
+                                       (setq
+                                        end-return
+                                        (list 'error conditions start-time))))
 
                                     ;; Profile execution in debug mode
                                     (when phps-mode-serial--profiling
@@ -145,30 +156,33 @@
                                              (elapsed (- end-time-float start-time-float)))
                                         (message "Serial synchronous thread finished, elapsed: %fs" elapsed)))
 
-                                    (let ((status (car end-return))
-                                          (value (cdr end-return)))
+                                    (let ((end-status (car end-return))
+                                          (end-value (cdr end-return)))
 
-                                      (when (string= status "success")
+                                      (when (string= end-status "success")
                                         (with-current-buffer key
                                           (setq phps-mode-serial--status 'success)))
 
-                                      (when (string= status "error")
+                                      (when (string= end-status "error")
                                         (with-current-buffer key
                                           (setq phps-mode-serial--status 'error))
                                         (when end-error
                                           (funcall end-error value)))))
-                                (when (string= status "error")
+
+                                (when (string= start-status "error")
                                   (with-current-buffer key
                                     (setq phps-mode-serial--status 'error))
                                   (when start-error
                                     (funcall start-error value))))
+
                               (setq quitted nil))
                           (when quitted
                             (with-current-buffer key
-                              (setq phps-mode-serial--status 'aborted)))
-                          end-return))))
+                              (setq phps-mode-serial--status 'aborted))))
 
-                    phps-mode-serial--async-processes))
+                        end-return)))
+
+                   phps-mode-serial--async-processes))
               (signal 'error (list "Async-start function is missing")))
 
           ;; Run command(s) asynchronously
@@ -211,10 +225,11 @@
                                  elapsed)))
 
                             (setq quitted nil))
-                        (when quitted
-                          (with-current-buffer key
-                            (setq phps-mode-serial--status 'aborted))
-                          start-return))))
+                        (progn
+                          (when quitted
+                            (with-current-buffer key
+                              (setq phps-mode-serial--status 'aborted)))))
+                      start-return))
 
                   key)))
             (puthash
