@@ -166,10 +166,10 @@
                           (when quitted
                             (with-current-buffer key
                               (setq phps-mode-serial--status 'aborted)))
-                          end-return)))
+                          end-return))))
 
                     phps-mode-serial--async-processes))
-                  (signal 'error (list "Async-start function is missing")))
+              (signal 'error (list "Async-start function is missing")))
 
           ;; Run command(s) asynchronously
           (let ((async-thread
@@ -177,7 +177,7 @@
 
                   (lambda()
                     (let ((quitted t)
-                          (start return))
+                          (start-return))
                       (unwind-protect
                           (progn
 
@@ -286,7 +286,7 @@
                        (setq quitted nil))
                    (when quitted
                      (with-current-buffer key
-                       (setq phps-mode-serial--status 'aborted)))))))
+                       (setq phps-mode-serial--status 'aborted)))))))))
 
       (let ((start-return)
             (end-return)
