@@ -73,6 +73,22 @@
     map)
   "Keymap for `phps-mode'.")
 
+(defun phps-mode-error-notice ()
+  "Display error notices in echo are if any."
+  (when (and
+         phps-mode-lex-analyzer--error-start
+         phps-mode-lex-analyzer--error-message
+         (>= (point) phps-mode-lex-analyzer--error-start))
+    (let ((display-error))
+      (if phps-mode-lex-analyzer--error-end
+          (when (<= (point) phps-mode-lex-analyzer--error-end)
+            (setq display-error t))
+        (setq display-error t))
+      (when display-error
+        (message
+         "PHPs Error: %s"
+         phps-mode-lex-analyzer--error-message)))))
+
 ;;;###autoload
 (defun phps-mode-rescan-buffer ()
   "Re-scan buffer."
@@ -240,6 +256,12 @@
    #'phps-mode-lex-analyzer--after-change
    0
    t)
+
+  ;; Support for error notices
+  (run-with-idle-timer
+   phps-mode-idle-interval
+   t
+   #'phps-mode-error-notice)
 
   ;; Initial run of lexer
   (phps-mode-lex-analyzer--re2c-run
