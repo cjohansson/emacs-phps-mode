@@ -42,6 +42,15 @@
 (defvar-local phps-mode-lex-analyzer--processed-buffer-p nil
   "Flag whether current buffer is processed or not.")
 
+(defvar-local phps-mode-lex-analyzer--error-end nil
+  "Point of error end or nil.")
+
+(defvar-local phps-mode-lex-analyzer--error-message nil
+  "Message of error.")
+
+(defvar-local phps-mode-lex-analyzer--error-start nil
+  "Point of error start or nil.")
+
 
 ;; VARIABLES
 
@@ -217,6 +226,7 @@
       (setq async nil))
 
     (phps-mode-serial-commands
+
      buffer-name
 
      (lambda()
@@ -295,29 +305,31 @@
            (phps-mode-lex-analyzer--reset-changes)
 
            ;; Signal parser error (if any)
-           (when phps-mode-lex-analyzer--parse-error
+           (if phps-mode-lex-analyzer--parse-error
+               (progn
 
-             ;; Paint error
-             (phps-mode-lex-analyzer--set-region-syntax-color
-              (nth 4 phps-mode-lex-analyzer--parse-error)
-              (point-max)
-              (list 'font-lock-face 'font-lock-warning-face))
+                 ;; Paint error
+                 (phps-mode-lex-analyzer--set-region-syntax-color
+                  (nth 4 phps-mode-lex-analyzer--parse-error)
+                  (point-max)
+                  (list 'font-lock-face 'font-lock-warning-face))
 
-             ;; Display error
-             (display-warning
-              'phps-mode
-              (nth 1 phps-mode-lex-analyzer--parse-error)
-              :warning
-              "*PHPs Parser Errors*")
+                 ;; Set error
+                 (setq phps-mode-lex-analyzer--error-end nil)
+                 (setq phps-mode-lex-analyzer--error-message (nth 1 phps-mode-lex-analyzer--parse-error))
+                 (setq phps-mode-lex-analyzer--error-start (nth 4 phps-mode-lex-analyzer--parse-error))
 
-             ;; Signal that causes updated mode-line status
-             (signal
-              'phps-parser-error
-              (list
-               (nth 1 phps-mode-lex-analyzer--parse-error)
-               (nth 4 phps-mode-lex-analyzer--parse-error))))
+                 ;; Signal that causes updated mode-line status
+                 (signal
+                  'phps-parser-error
+                  (list
+                   (nth 1 phps-mode-lex-analyzer--parse-error)
+                   (nth 4 phps-mode-lex-analyzer--parse-error))))
 
-           )))
+             ;; Reset error
+             (setq phps-mode-lex-analyzer--error-end nil)
+             (setq phps-mode-lex-analyzer--error-message nil)
+             (setq phps-mode-lex-analyzer--error-start nil)))))
 
      (lambda(result)
        (when (get-buffer buffer-name)
@@ -341,24 +353,25 @@
                      (phps-mode-lex-analyzer--set-region-syntax-color
                       error-start
                       (point-max)
-                      (list 'font-lock-face 'font-lock-warning-face))))
-                 (display-warning
-                  'phps-mode
-                  error-message
-                  :warning
-                  "*PHPs Lexer Errors*"))
+                      (list 'font-lock-face 'font-lock-warning-face)))
+
+                   ;; Set error
+                   (setq phps-mode-lex-analyzer--error-end (if error-end error-end nil))
+                   (setq phps-mode-lex-analyzer--error-message error-message)
+                   (setq phps-mode-lex-analyzer--error-start error-start)))
 
                 (t
-                 (display-warning
-                  error-type
-                  error-message
-                  :warning))
+                 (progn
 
-                )
+                   ;; Reset error
+                   (setq phps-mode-lex-analyzer--error-end nil)
+                   (setq phps-mode-lex-analyzer--error-message nil)
+                   (setq phps-mode-lex-analyzer--error-start nil)
 
-               )
-
-             ))))
+                   (display-warning
+                    error-type
+                    error-message
+                    :warning)))))))))
 
      nil
      async
@@ -460,27 +473,31 @@
            (phps-mode-lex-analyzer--reset-changes)
 
            ;; Signal parser error (if any)
-           (when phps-mode-lex-analyzer--parse-error
+           (if phps-mode-lex-analyzer--parse-error
+               (progn
 
-             ;; Paint error
-             (phps-mode-lex-analyzer--set-region-syntax-color
-              (nth 4 phps-mode-lex-analyzer--parse-error)
-              (point-max)
-              (list 'font-lock-face 'font-lock-warning-face))
+                 ;; Paint error
+                 (phps-mode-lex-analyzer--set-region-syntax-color
+                  (nth 4 phps-mode-lex-analyzer--parse-error)
+                  (point-max)
+                  (list 'font-lock-face 'font-lock-warning-face))
 
-             ;; Display error
-             (display-warning
-              'phps-mode
-              (nth 1 phps-mode-lex-analyzer--parse-error)
-              :warning
-              "*PHPs Parser Errors*")
+                 ;; Set error
+                 (setq phps-mode-lex-analyzer--error-end nil)
+                 (setq phps-mode-lex-analyzer--error-message (nth 1 phps-mode-lex-analyzer--parse-error))
+                 (setq phps-mode-lex-analyzer--error-start (nth 4 phps-mode-lex-analyzer--parse-error))
 
-             ;; Signal that causes updated mode-line status
-             (signal
-              'phps-parser-error
-              (list
-               (nth 1 phps-mode-lex-analyzer--parse-error)
-               (nth 4 phps-mode-lex-analyzer--parse-error)))))))
+                 ;; Signal that causes updated mode-line status
+                 (signal
+                  'phps-parser-error
+                  (list
+                   (nth 1 phps-mode-lex-analyzer--parse-error)
+                   (nth 4 phps-mode-lex-analyzer--parse-error))))
+
+             ;; Reset error
+             (setq phps-mode-lex-analyzer--error-end nil)
+             (setq phps-mode-lex-analyzer--error-message nil)
+             (setq phps-mode-lex-analyzer--error-start nil)))))
 
      (lambda(result)
        (when (get-buffer buffer-name)
@@ -506,17 +523,24 @@
                       error-start
                       (point-max)
                       (list 'font-lock-face 'font-lock-warning-face))))
-                 (display-warning
-                  'phps-mode
-                  error-message
-                  :warning
-                  "*PHPs Lexer Errors*"))
+
+                 ;; Set error
+                 (setq phps-mode-lex-analyzer--error-end (if error-end error-end nil))
+                 (setq phps-mode-lex-analyzer--error-message error-message)
+                 (setq phps-mode-lex-analyzer--error-start error-start))
 
                 (t
-                 (display-warning
-                  error-type
-                  error-message
-                  :warning))))))))
+                 (progn
+
+                 ;; Reset error
+                 (setq phps-mode-lex-analyzer--error-end nil)
+                 (setq phps-mode-lex-analyzer--error-message nil)
+                 (setq phps-mode-lex-analyzer--error-start nil)
+
+                   (display-warning
+                    error-type
+                    error-message
+                    :warning)))))))))
 
      nil
      async
