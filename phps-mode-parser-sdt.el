@@ -2886,28 +2886,40 @@
 (puthash 335 (lambda(_args _terminals) 'final) phps-mode-parser--table-translations)
 
 ;; 336 ((member_modifier) (T_READONLY))
-(puthash 335 (lambda(_args _terminals) 'readonly) phps-mode-parser--table-translations)
+(puthash 336 (lambda(_args _terminals) 'readonly) phps-mode-parser--table-translations)
 
-;; TODO Was here
+;; 337 ((property_list) (property_list "," property))
+(puthash 337 (lambda(args _terminals) (append (nth 0 args) (nth 2 args))) phps-mode-parser--table-translations)
 
-;; property -> (T_VARIABLE backup_doc_comment)
+;; 338 ((property_list) (property))
+(puthash 338 (lambda(args _terminals) (list args)) phps-mode-parser--table-translations)
+
+;; 339 ((property) (T_VARIABLE backup_doc_comment))
 (puthash
  339
  (lambda(args _terminals)
-   (nth 0 args))
+   `(
+     property-variable
+     variable
+     ,(nth 0 args)
+     backup-doc-comment
+     ,(nth 1 args)
+     ))
  phps-mode-parser--table-translations)
 
-;; property -> (T_VARIABLE "=" expr backup_doc_comment)
+;; 340 ((property) (T_VARIABLE "=" expr backup_doc_comment))
 (puthash
  340
  (lambda(args terminals)
    `(
      ast-type
-     assign-property-variable
-     key
+     property-assigned-variable
+     variable
      ,(nth 0 args)
-     value
+     expr
      ,(nth 2 args)
+     backup-doc-comment
+     ,(nth 3 args)
      ast-index
      ,(car (cdr (nth 0 terminals)))
      ast-start
@@ -2916,6 +2928,8 @@
      ,(cdr (cdr (nth 0 terminals)))
      ))
  phps-mode-parser--table-translations)
+
+;; TODO Was here
 
 ;; expr -> ("[" array_pair_list "]" "=" expr)
 (puthash
