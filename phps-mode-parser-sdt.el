@@ -2849,56 +2849,46 @@
 ;; 323 ((method_body) ("{" inner_statement_list "}"))
 (puthash 323 (lambda(args _terminals) (nth 1 args)) phps-mode-parser--table-translations)
 
+;; 324 ((variable_modifiers) (non_empty_member_modifiers))
+(puthash 324 (lambda(args _terminals) args) phps-mode-parser--table-translations)
+
+;; 325 ((variable_modifiers) (T_VAR))
+(puthash 325 (lambda(_args _terminals) 'public) phps-mode-parser--table-translations)
+
+;; 326 ((method_modifiers) (%empty))
+(puthash 326 (lambda(_args _terminals) nil) phps-mode-parser--table-translations)
+
+;; 327 ((method_modifiers) (non_empty_member_modifiers))
+(puthash 327 (lambda(args _terminals) args) phps-mode-parser--table-translations)
+
+;; 328 ((non_empty_member_modifiers) (member_modifier))
+(puthash 328 (lambda(args _terminals) (list args)) phps-mode-parser--table-translations)
+
+;; 329 ((non_empty_member_modifiers) (non_empty_member_modifiers member_modifier))
+(puthash 329 (lambda(args _terminals) (append (nth 0 args) (list (nth 1 args)))) phps-mode-parser--table-translations)
+
+;; 330 ((member_modifier) (T_PUBLIC))
+(puthash 330 (lambda(_args _terminals) 'public) phps-mode-parser--table-translations)
+
+;; 331 ((member_modifier) (T_PROTECTED))
+(puthash 331 (lambda(_args _terminals) 'protected) phps-mode-parser--table-translations)
+
+;; 332 ((member_modifier) (T_PRIVATE))
+(puthash 332 (lambda(_args _terminals) 'private) phps-mode-parser--table-translations)
+
+;; 333 ((member_modifier) (T_STATIC))
+(puthash 333 (lambda(_args _terminals) 'static) phps-mode-parser--table-translations)
+
+;; 334 ((member_modifier) (T_ABSTRACT))
+(puthash 334 (lambda(_args _terminals) 'abstract) phps-mode-parser--table-translations)
+
+;; 335 ((member_modifier) (T_FINAL))
+(puthash 335 (lambda(_args _terminals) 'final) phps-mode-parser--table-translations)
+
+;; 336 ((member_modifier) (T_READONLY))
+(puthash 335 (lambda(_args _terminals) 'readonly) phps-mode-parser--table-translations)
+
 ;; TODO Was here
-
-;; variable_modifiers -> (T_VAR)
-(puthash
- 325
- (lambda(_args _terminals)
-   'public)
- phps-mode-parser--table-translations)
-
-;; member_modifier -> (T_PUBLIC)
-(puthash
- 330
- (lambda(_args _terminals)
-   'public)
- phps-mode-parser--table-translations)
-
-;; member_modifier -> (T_PROTECTED)
-(puthash
- 331
- (lambda(_args _terminals)
-   'protected)
- phps-mode-parser--table-translations)
-
-;; member_modifier -> (T_PRIVATE)
-(puthash
- 332
- (lambda(_args _terminals)
-   'private)
- phps-mode-parser--table-translations)
-
-;; member_modifier -> (T_STATIC)
-(puthash
- 333
- (lambda(_args _terminals)
-   'static)
- phps-mode-parser--table-translations)
-
-;; member_modifier -> (T_ABSTRACT)
-(puthash
- 334
- (lambda(_args _terminals)
-   'abstract)
- phps-mode-parser--table-translations)
-
-;; member_modifier -> (T_FINAL)
-(puthash
- 335
- (lambda(_args _terminals)
-   'final)
- phps-mode-parser--table-translations)
 
 ;; property -> (T_VARIABLE backup_doc_comment)
 (puthash
