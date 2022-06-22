@@ -2709,6 +2709,102 @@
 ;; 306 ((class_name_list) (class_name_list "," class_name))
 (puthash 306 (lambda(args _terminals) (append (nth 0 args) (nth 2 args))) phps-mode-parser--table-translations)
 
+;; 307 ((trait_adaptations) (";"))
+(puthash 307 (lambda(_args _terminals) nil) phps-mode-parser--table-translations)
+
+;; 308 ("{" "}"))
+(puthash 308 (lambda(_args _terminals) nil) phps-mode-parser--table-translations)
+
+;; 309 ((trait_adaptations) ("{" trait_adaptation_list "}"))
+(puthash 309 (lambda(args _terminals) (nth 1 args)) phps-mode-parser--table-translations)
+
+;; 310 ((trait_adaptation_list) (trait_adaptation))
+(puthash 310 (lambda(args _terminals) (list args)) phps-mode-parser--table-translations)
+
+;; 311 ((trait_adaptation_list) (trait_adaptation_list trait_adaptation))
+(puthash 311 (lambda(args _terminals) (append (nth 0 args) (nth 1 args))) phps-mode-parser--table-translations)
+
+;; 312 ((trait_adaptation) (trait_precedence ";"))
+(puthash 312 (lambda(args _terminals) (nth 0 args)) phps-mode-parser--table-translations)
+
+;; 313 ((trait_adaptation) (trait_alias ";"))
+(puthash
+ 313
+ (lambda(args _terminals) (nth 0 args))
+ phps-mode-parser--table-translations)
+
+;; 314 ((trait_precedence) (absolute_trait_method_reference T_INSTEADOF class_name_list))
+(puthash
+ 314
+ (lambda(args _terminals)
+   `(
+     ast-type
+     trait-precendence
+     absolute-trait-method-reference
+     ,(nth 0 args)
+     instead-of
+     ,(nth 2 args)
+     )
+   phps-mode-parser--table-translations))
+
+;; 315 ((trait_alias) (trait_method_reference T_AS T_STRING))
+(puthash
+ 315
+ (lambda(args _terminals)
+   `(
+     ast-type
+     trait-alias
+     trait-method-reference
+     ,(nth 0 args)
+     as
+     ,(nth 2 args)
+     )
+   phps-mode-parser--table-translations))
+
+;; 316 ((trait_alias) (trait_method_reference T_AS reserved_non_modifiers))
+(puthash
+ 316
+ (lambda(args _terminals)
+   `(
+     ast-type
+     trait-non-modifier
+     trait-method-reference
+     ,(nth 0 args)
+     as
+     ,(nth 2 args)
+     )
+   phps-mode-parser--table-translations))
+
+;; 317 ((trait_alias) (trait_method_reference T_AS member_modifier identifier))
+(puthash
+ 317
+ (lambda(args _terminals)
+   `(
+     ast-type
+     trait-alias-modifier
+     trait-method-reference
+     ,(nth 0 args)
+     as
+     ,(nth 2 args)
+     identifier
+     ,(nth 3 args)
+     )
+   phps-mode-parser--table-translations))
+
+;; 318 ((trait_alias) (trait_method_reference T_AS member_modifier))
+(puthash
+ 318
+ (lambda(args _terminals)
+   `(
+     ast-type
+     trait-modifier
+     trait-method-reference
+     ,(nth 0 args)
+     as
+     ,(nth 2 args)
+     )
+   phps-mode-parser--table-translations))
+
 
 ;; TODO WAS HERE
 
