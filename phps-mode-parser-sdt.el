@@ -2805,24 +2805,51 @@
      )
    phps-mode-parser--table-translations))
 
-
-;; TODO WAS HERE
-
-
-
-;; method_body -> (";")
+;; 319 ((trait_method_reference) (identifier))
 (puthash
- 322
- (lambda(_args _terminals)
-   nil)
- phps-mode-parser--table-translations)
-
-;; method_body -> ("{" inner_statement_list "}")
-(puthash
- 323
+ 319
  (lambda(args _terminals)
-   (nth 1 args))
+   `(
+     ast-type
+     trait-method-reference-identifier
+     identifier
+     ,args)
+   )
  phps-mode-parser--table-translations)
+
+;; 320 ((trait_method_reference) (absolute_trait_method_reference))
+(puthash
+ 320
+ (lambda(args _terminals)
+   `(
+     ast-type
+     trait-method-reference-absolute
+     absolute-trait-method-reference
+     ,args)
+   )
+ phps-mode-parser--table-translations)
+
+;; 321 ((absolute_trait_method_reference) (class_name T_PAAMAYIM_NEKUDOTAYIM identifier))
+(puthash
+ 321
+ (lambda(args _terminals)
+   `(
+     ast-type
+     absolute-trait-method-reference
+     class-name
+     ,(nth 0 args)
+     member
+     ,(nth 2 args)
+     ))
+ phps-mode-parser--table-translations)
+
+;; 322 ((method_body) (";"))
+(puthash 322 (lambda(_args _terminals) nil) phps-mode-parser--table-translations)
+
+;; 323 ((method_body) ("{" inner_statement_list "}"))
+(puthash 323 (lambda(args _terminals) (nth 1 args)) phps-mode-parser--table-translations)
+
+;; TODO Was here
 
 ;; variable_modifiers -> (T_VAR)
 (puthash
