@@ -707,6 +707,12 @@
 
   (phps-mode-lexer--match-macro
    ST_IN_SCRIPTING
+   (looking-at (concat "enum" phps-mode-lexer--whitespace "[a-zA-Z_\x80-\xff]"))
+   (phps-mode-lexer--yyless 4)
+   (phps-mode-lexer--return-token-with-indent 'T_ENUM))
+
+  (phps-mode-lexer--match-macro
+   ST_IN_SCRIPTING
    (looking-at "extends")
    (phps-mode-lexer--return-token-with-indent 'T_EXTENDS))
 
@@ -970,6 +976,19 @@
    ST_IN_SCRIPTING
    (looking-at "public")
    (phps-mode-lexer--return-token-with-indent 'T_PUBLIC))
+
+  (phps-mode-lexer--match-macro
+   ST_IN_SCRIPTING
+   (looking-at "readonly")
+   (phps-mode-lexer--return-token-with-indent 'T_READONLY))
+
+  ;; Don't treat "readonly(" as a keyword, to allow using it as a function name.
+  (phps-mode-lexer--match-macro
+   ST_IN_SCRIPTING
+   (looking-at (concat "readonly" "[ \n\r\t]*("))
+   (phps-mode-lexer--yyless (length "readonly"))
+   (phps-mode-lexer--return-token-with-indent 'T_READONLY))
+  ;; TODO Was here
 
   (phps-mode-lexer--match-macro
    ST_IN_SCRIPTING
