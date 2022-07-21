@@ -52,14 +52,6 @@
   2147483648
   "Limit for 32-bit integer.")
 
-(defconst phps-mode-lexer--bnum
-  "0b[01]+"
-  "Boolean number.")
-
-(defconst phps-mode-lexer--hnum
-  "0x[0-9a-fA-F]+"
-  "Hexadecimal number.")
-
 (defconst phps-mode-lexer--lnum
   "[0-9]+"
   "Long number.")
@@ -74,6 +66,20 @@
           phps-mode-lexer--dnum
           phps-mode-lexer--lnum)
   "Exponent double number.")
+
+;; TODO Fix this
+(defconst phps-mode-lexer--hnum
+  "0x[0-9a-fA-F]+"
+  "Hexadecimal number.")
+
+;; TODO Fix this
+(defconst phps-mode-lexer--bnum
+  "0b[01]+"
+  "Boolean number.")
+
+(defconst phps-mode-lexer--onum
+  "0o[0-7]+\\(_[0-7]+\\)*"
+  "Octal number.")
 
 (defconst phps-mode-lexer--label
   "[A-Za-z_[:nonascii:]][0-9A-Za-z_[:nonascii:]]*"
@@ -1247,6 +1253,19 @@
           (long-number (string-to-number data 2)))
      ;; (message "Binary number %s from %s" long-number data)
      (if (> long-number phps-mode-lexer--long-limit)
+         (phps-mode-lexer--return-token 'T_DNUMBER)
+       (phps-mode-lexer--return-token 'T_LNUMBER))))
+
+  ;; TODO ONUM here
+  (phps-mode-lexer--match-macro
+   ST_IN_SCRIPTING
+   (looking-at phps-mode-lexer--onum)
+   (let* ((start (match-beginning 0))
+          (end (match-end 0))
+          (data (string-to-number
+                 (buffer-substring-no-properties start end)
+                 8)))
+     (if (> data phps-mode-lexer--long-limit)
          (phps-mode-lexer--return-token 'T_DNUMBER)
        (phps-mode-lexer--return-token 'T_LNUMBER))))
 
