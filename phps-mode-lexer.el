@@ -53,11 +53,16 @@
   "Limit for 32-bit integer.")
 
 (defconst phps-mode-lexer--lnum
-  "[0-9]+"
+  "[0-9]+\\(_[0-9]+\\)*"
   "Long number.")
 
 (defconst phps-mode-lexer--dnum
-  "\\([0-9]*\\.[0-9]+\\)\\|\\([0-9]+\\.[0-9]*\\)"
+  (format
+   "\\(%s?\\.%s\\|%s\\.%s?\\)"
+   phps-mode-lexer--lnum
+   phps-mode-lexer--lnum
+   phps-mode-lexer--lnum
+   phps-mode-lexer--lnum)
   "Double number.")
 
 (defconst phps-mode-lexer--exponent-dnum
@@ -67,14 +72,12 @@
           phps-mode-lexer--lnum)
   "Exponent double number.")
 
-;; TODO Fix this
 (defconst phps-mode-lexer--hnum
-  "0x[0-9a-fA-F]+"
+  "0x[0-9a-fA-F]+\\(_[0-9a-fA-F]+\\)*"
   "Hexadecimal number.")
 
-;; TODO Fix this
 (defconst phps-mode-lexer--bnum
-  "0b[01]+"
+  "0b[01]+\\(_[01]+\\)*"
   "Boolean number.")
 
 (defconst phps-mode-lexer--onum
@@ -994,7 +997,6 @@
    (looking-at (concat "readonly" "[ \n\r\t]*("))
    (phps-mode-lexer--yyless (length "readonly"))
    (phps-mode-lexer--return-token-with-indent 'T_READONLY))
-  ;; TODO Was here
 
   (phps-mode-lexer--match-macro
    ST_IN_SCRIPTING
@@ -1083,13 +1085,13 @@
 
   (phps-mode-lexer--match-macro
    ST_IN_SCRIPTING
-   (looking-at "\\*\\\\\\*=")
-   (phps-mode-lexer--return-token 'T_POW_EQUAL))
+   (looking-at "\\*\\\\\\*")
+   (phps-mode-lexer--return-token 'T_POW))
 
   (phps-mode-lexer--match-macro
    ST_IN_SCRIPTING
-   (looking-at "\\*\\\\\\*")
-   (phps-mode-lexer--return-token 'T_POW))
+   (looking-at "\\*\\\\\\*=")
+   (phps-mode-lexer--return-token 'T_POW_EQUAL))
 
   (phps-mode-lexer--match-macro
    ST_IN_SCRIPTING
