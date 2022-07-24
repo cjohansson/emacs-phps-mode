@@ -1251,21 +1251,27 @@
    (looking-at phps-mode-lexer--bnum)
    (let* ((start (match-beginning 0))
           (end (match-end 0))
-          (data (buffer-substring-no-properties (+ start 2) end))
+          (data
+           (replace-regexp-in-string
+            "_"
+            ""
+            (buffer-substring-no-properties (+ start 2) end)))
           (long-number (string-to-number data 2)))
      ;; (message "Binary number %s from %s" long-number data)
      (if (> long-number phps-mode-lexer--long-limit)
          (phps-mode-lexer--return-token 'T_DNUMBER)
        (phps-mode-lexer--return-token 'T_LNUMBER))))
 
-  ;; TODO ONUM here
   (phps-mode-lexer--match-macro
    ST_IN_SCRIPTING
    (looking-at phps-mode-lexer--onum)
    (let* ((start (match-beginning 0))
           (end (match-end 0))
           (data (string-to-number
-                 (buffer-substring-no-properties start end)
+                 (replace-regexp-in-string
+                  "_"
+                  ""
+                  (buffer-substring-no-properties start end))
                  8)))
      (if (> data phps-mode-lexer--long-limit)
          (phps-mode-lexer--return-token 'T_DNUMBER)
@@ -1276,7 +1282,11 @@
    (looking-at phps-mode-lexer--lnum)
    (let* ((start (match-beginning 0))
           (end (match-end 0))
-          (data (string-to-number (buffer-substring-no-properties start end))))
+          (data (string-to-number
+                 (replace-regexp-in-string
+                  "_"
+                  ""
+                  (buffer-substring-no-properties start end)))))
      ;; (message "Long number: %d" data)
      (if (> data phps-mode-lexer--long-limit)
          (phps-mode-lexer--return-token 'T_DNUMBER)
@@ -1287,7 +1297,11 @@
    (looking-at phps-mode-lexer--hnum)
    (let* ((start (match-beginning 0))
           (end (match-end 0))
-          (data (buffer-substring-no-properties (+ start 2) end))
+          (data
+           (replace-regexp-in-string
+            "_"
+            ""
+            (buffer-substring-no-properties (+ start 2) end)))
           (long-number (string-to-number data 16)))
      ;; (message "Hexadecimal number %s from %s" long-number data)
      (if (> long-number phps-mode-lexer--long-limit)
@@ -1305,7 +1319,8 @@
     (concat "\\("
             phps-mode-lexer--lnum "\\|"
             phps-mode-lexer--hnum "\\|"
-            phps-mode-lexer--bnum "\\)"))
+            phps-mode-lexer--bnum "\\|"
+            phps-mode-lexer--onum "\\)"))
    (phps-mode-lexer--return-token 'T_NUM_STRING))
 
   (phps-mode-lexer--match-macro
@@ -1396,13 +1411,14 @@
    (let ((start (match-beginning 0))
          (end (match-end 0)))
 
-     ;; Allow <?php followed by end of file.
      (cond
 
+      ;; Allow <?php followed by end of file.
       ((equal end (point-max))
        (phps-mode-lexer--begin 'ST_IN_SCRIPTING)
        (phps-mode-lexer--return-or-skip-token 'T_OPEN_TAG))
 
+      ;; Degenerate case: <?phpX is interpreted as <? phpX with short tags
       ((phps-mode-lexer--CG 'short-tags)
        (phps-mode-lexer--yyless 2)
        (setq end (- end 2))
@@ -1448,6 +1464,8 @@
     1
     (match-beginning 0)
     (- (match-end 0) 3)))
+
+  ;; TODO Was here
 
   (phps-mode-lexer--match-macro
    (ST_DOUBLE_QUOTES ST_HEREDOC ST_BACKQUOTE)
