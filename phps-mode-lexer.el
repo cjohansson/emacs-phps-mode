@@ -2056,18 +2056,35 @@
                 (gethash
                  phps-mode-lexer--state
                  phps-mode-lexer--lambdas-by-state)))
-      (dolist (lambd lambdas)
-        (funcall lambd)))
+      (let ((lambda-i 0)
+            (lambda-length (length lambdas)))
+        (phps-mode-debug-message
+         (message "Found %d lexer rules in state" lambda-length))
+        (while (< lambda-i lambda-length)
+          (let ((lambd (nth lambda-i lambdas)))
+            (let ((old-match-length phps-mode-lexer--match-length))
+              (funcall lambd)
 
-    (when (fboundp 'thread-yield)
-      (thread-yield))
+              ;; Debug new matches
+              (phps-mode-debug-message
+               (when (and
+                      old-match-length
+                      (> phps-mode-lexer--match-length old-match-length))
+                 (message
+                  "Found new match (%d) %s"
+                  phps-mode-lexer--match-length
+                  phps-mode-lexer--match-body)))
+
+              (when (fboundp 'thread-yield)
+                (thread-yield))))
+          (setq lambda-i (1+ lambda-i)))))
 
     ;; Did we find a match?
     (if phps-mode-lexer--match-length
         (progn
           (phps-mode-debug-message
            (message
-            "Found match %s"
+            "Found final match %s"
             phps-mode-lexer--match-body))
           (phps-mode-lexer--re2c-execute)
 
