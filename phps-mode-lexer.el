@@ -1000,7 +1000,7 @@
    ST_IN_SCRIPTING
    (looking-at (concat "readonly" "[ \n\r\t]*("))
    (phps-mode-lexer--yyless (length "readonly"))
-   (phps-mode-lexer--return-token-with-indent 'T_READONLY))
+   (phps-mode-lexer--return-token-with-str 'T_STRING 0))
 
   (phps-mode-lexer--match-macro
    ST_IN_SCRIPTING
