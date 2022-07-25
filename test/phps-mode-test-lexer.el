@@ -292,6 +292,15 @@
      phps-mode-lex-analyzer--tokens
      '((T_OPEN_TAG 1 . 7) (T_ENUM 7 . 13) (T_STRING 13 . 16) ("{" 17 . 18) (T_CASE 23 . 27) (T_STRING 28 . 34) (";" 34 . 35) (T_CASE 40 . 44) (T_STRING 45 . 53) (";" 53 . 54) (T_CASE 59 . 63) (T_STRING 64 . 69) (";" 69 . 70) (T_CASE 75 . 79) (T_STRING 80 . 86) (";" 86 . 87) ("}" 88 . 89)))))
 
+
+  (phps-mode-test--with-buffer
+   "<?php\n\n\nclass MyClass\n{\n    public function __construct(private readonly type propertyName)\n    {\n    }\n}"
+   "Read-only auto-injected properties"
+   (should
+    (equal
+     phps-mode-lex-analyzer--tokens
+     '((T_OPEN_TAG 1 . 7) (T_CLASS 9 . 14) (T_STRING 15 . 22) ("{" 23 . 24) (T_PUBLIC 29 . 35) (T_FUNCTION 36 . 44) (T_STRING 45 . 56) ("(" 56 . 57) (T_PRIVATE 57 . 64) (T_READONLY 65 . 73) (T_STRING 74 . 78) (T_STRING 79 . 91) (")" 91 . 92) ("{" 97 . 98) ("}" 103 . 104) ("}" 105 . 106)))))
+
   (phps-mode-test--with-buffer
    "<?php\nclass User {\n    public readonly int $uid;\n\n    public function __construct(int $uid) {\n        $this->uid = $uid;\n    }\n}"
    "Read-only Properties"
