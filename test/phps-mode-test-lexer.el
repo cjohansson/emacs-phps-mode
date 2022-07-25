@@ -284,6 +284,30 @@
      phps-mode-lex-analyzer--tokens
      '((T_OPEN_TAG 1 . 7) (T_STRING 7 . 10) (";" 10 . 11) (T_COMMENT 12 . 31) (T_COMMENT 32 . 51) (T_COMMENT 52 . 70) (T_NAME_QUALIFIED 73 . 80) (";" 80 . 81) (T_COMMENT 82 . 125) (T_COMMENT 126 . 153) (T_COMMENT 154 . 185) (T_NAME_FULLY_QUALIFIED 188 . 192) (";" 192 . 193) (T_COMMENT 194 . 228) (T_COMMENT 229 . 262) (T_COMMENT 263 . 287) (T_NAME_RELATIVE 290 . 303) (";" 303 . 304) (T_COMMENT 305 . 351) (T_COMMENT 352 . 378) (T_COMMENT 379 . 414)))))
 
+  (phps-mode-test--with-buffer
+   "<?php\nenum Suit\n{\n    case Hearts;\n    case Diamonds;\n    case Clubs;\n    case Spades;\n}"
+   "Basic Enumerations"
+   (should
+    (equal
+     phps-mode-lex-analyzer--tokens
+     '((T_OPEN_TAG 1 . 7) (T_ENUM 7 . 13) (T_STRING 13 . 16) ("{" 17 . 18) (T_CASE 23 . 27) (T_STRING 28 . 34) (";" 34 . 35) (T_CASE 40 . 44) (T_STRING 45 . 53) (";" 53 . 54) (T_CASE 59 . 63) (T_STRING 64 . 69) (";" 69 . 70) (T_CASE 75 . 79) (T_STRING 80 . 86) (";" 86 . 87) ("}" 88 . 89)))))
+
+  (phps-mode-test--with-buffer
+   "<?php\nclass User {\n    public readonly int $uid;\n\n    public function __construct(int $uid) {\n        $this->uid = $uid;\n    }\n}"
+   "Read-only Properties"
+   (should
+    (equal
+     phps-mode-lex-analyzer--tokens
+     '((T_OPEN_TAG 1 . 7) (T_CLASS 7 . 12) (T_STRING 13 . 17) ("{" 18 . 19) (T_PUBLIC 24 . 30) (T_READONLY 31 . 39) (T_STRING 40 . 43) (T_VARIABLE 44 . 48) (";" 48 . 49) (T_PUBLIC 55 . 61) (T_FUNCTION 62 . 70) (T_STRING 71 . 82) ("(" 82 . 83) (T_STRING 83 . 86) (T_VARIABLE 87 . 91) (")" 91 . 92) ("{" 93 . 94) (T_VARIABLE 103 . 108) (T_OBJECT_OPERATOR 108 . 110) (T_STRING 110 . 113) ("=" 114 . 115) (T_VARIABLE 116 . 120) (";" 120 . 121) ("}" 126 . 127) ("}" 128 . 129)))))
+
+  (phps-mode-test--with-buffer
+   "<?php\n$a = 1234; // decimal number\n$a = 0123; // octal number (equivalent to 83 decimal)\n$a = 0o123; // octal number (as of PHP 8.1.0)\n$a = 0x1A; // hexadecimal number (equivalent to 26 decimal)\n$a = 0b11111111; // binary number (equivalent to 255 decimal)\n$a = 1_234_567; // decimal number (as of PHP 7.4.0)\n?>\n"
+   "Integers with underscores"
+   (should
+    (equal
+     phps-mode-lex-analyzer--tokens
+     '((T_OPEN_TAG 1 . 7) (T_VARIABLE 7 . 9) ("=" 10 . 11) (T_LNUMBER 12 . 16) (";" 16 . 17) (T_COMMENT 18 . 35) (T_VARIABLE 36 . 38) ("=" 39 . 40) (T_LNUMBER 41 . 45) (";" 45 . 46) (T_COMMENT 47 . 89) (T_VARIABLE 90 . 92) ("=" 93 . 94) (T_LNUMBER 95 . 100) (";" 100 . 101) (T_COMMENT 102 . 135) (T_VARIABLE 136 . 138) ("=" 139 . 140) (T_LNUMBER 141 . 145) (";" 145 . 146) (T_COMMENT 147 . 195) (T_VARIABLE 196 . 198) ("=" 199 . 200) (T_LNUMBER 201 . 211) (";" 211 . 212) (T_COMMENT 213 . 257) (T_VARIABLE 258 . 260) ("=" 261 . 262) (T_LNUMBER 263 . 272) (";" 272 . 273) (T_COMMENT 274 . 309) (T_CLOSE_TAG 310 . 312) (T_INLINE_HTML 312 . 313)))))
+
   )
 
 (defun phps-mode-test-lexer--complex-tokens ()
