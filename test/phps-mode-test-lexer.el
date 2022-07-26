@@ -290,7 +290,7 @@
    (should
     (equal
      phps-mode-lex-analyzer--tokens
-     '((T_OPEN_TAG 1 . 7) (T_ENUM 7 . 13) (T_STRING 13 . 16) ("{" 17 . 18) (T_CASE 23 . 27) (T_STRING 28 . 34) (";" 34 . 35) (T_CASE 40 . 44) (T_STRING 45 . 53) (";" 53 . 54) (T_CASE 59 . 63) (T_STRING 64 . 69) (";" 69 . 70) (T_CASE 75 . 79) (T_STRING 80 . 86) (";" 86 . 87) ("}" 88 . 89)))))
+     '((T_OPEN_TAG 1 . 7) (T_ENUM 7 . 11) (T_STRING 12 . 16) ("{" 17 . 18) (T_CASE 23 . 27) (T_STRING 28 . 34) (";" 34 . 35) (T_CASE 40 . 44) (T_STRING 45 . 53) (";" 53 . 54) (T_CASE 59 . 63) (T_STRING 64 . 69) (";" 69 . 70) (T_CASE 75 . 79) (T_STRING 80 . 86) (";" 86 . 87) ("}" 88 . 89)))))
 
 
   (phps-mode-test--with-buffer
