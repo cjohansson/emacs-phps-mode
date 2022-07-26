@@ -12,6 +12,11 @@
 ;; * Defines the lexer for this grammar based on the Zend PHP 8.1 Lexer at
 ;; https://raw.githubusercontent.com/php/php-src/PHP-8.1/Zend/zend_language_scanner.l
 ;; which is using re2c.
+;;
+;; Instructions on how to generate new lexer rules
+;; 1. Make edits in lexer rules in function `phps-mode-lexer--generate-lexer-rules'
+;; 2. Run `eval-buffer' and then `phps-mode-lexer--generate-lexer-rules'
+;; 3. Update inline value of `phps-mode-lexer--lambdas-by-state' by running code "(insert (format "%S" phps-mode-lexer--lambdas-by-state))"
 
 ;;; Code:
 
