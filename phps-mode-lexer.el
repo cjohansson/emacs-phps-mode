@@ -2043,33 +2043,32 @@
 
         (while (< lambda-i lambda-length)
           (let ((lambd (nth lambda-i lambdas)))
-            (let ((old-match-length phps-mode-lexer--match-length))
 
-              (let ((lambda-result
-                     (funcall (nth 0 lambd))))
-                (when lambda-result
-                  (let ((match-end (match-end 0))
-                        (match-beginning (match-beginning 0)))
-                    (let ((matching-length (- match-end match-beginning)))
-                      (when (> matching-length 0)
-                        (when (or
-                               (not phps-mode-lexer--match-length)
-                               (> matching-length phps-mode-lexer--match-length))
-                          (setq
-                           phps-mode-lexer--match-length matching-length)
-                          (setq
-                           phps-mode-lexer--match-body (nth 1 lambd))
-                          (setq
-                           phps-mode-lexer--match-data (match-data))
-                          ;; Debug new matches
-                          (phps-mode-debug-message
-                           (message
-                            "Found new match (%d) %s"
-                            phps-mode-lexer--match-length
-                            phps-mode-lexer--match-body))))))))
+            (let ((lambda-result
+                   (funcall (nth 0 lambd))))
+              (when lambda-result
+                (let ((match-end (match-end 0))
+                      (match-beginning (match-beginning 0)))
+                  (let ((matching-length (- match-end match-beginning)))
+                    (when (> matching-length 0)
+                      (when (or
+                             (not phps-mode-lexer--match-length)
+                             (> matching-length phps-mode-lexer--match-length))
+                        (setq
+                         phps-mode-lexer--match-length matching-length)
+                        (setq
+                         phps-mode-lexer--match-body (nth 1 lambd))
+                        (setq
+                         phps-mode-lexer--match-data (match-data))
+                        ;; Debug new matches
+                        (phps-mode-debug-message
+                         (message
+                          "Found new match (%d) %s"
+                          phps-mode-lexer--match-length
+                          phps-mode-lexer--match-body))))))))
 
-              (when (fboundp 'thread-yield)
-                (thread-yield))))
+            (when (fboundp 'thread-yield)
+              (thread-yield)))
           (setq lambda-i (1+ lambda-i)))))
 
     ;; Did we find a match?
