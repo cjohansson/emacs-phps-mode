@@ -1,6 +1,5 @@
 # TODO
 
-* Fix token length of T_ENUM
 * Fix indentation of enum cases
 
 ## Code intelligence
