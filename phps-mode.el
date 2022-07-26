@@ -5,8 +5,8 @@
 ;; Author: Christian Johansson <christian@cvj.se>
 ;; Maintainer: Christian Johansson <christian@cvj.se>
 ;; Created: 3 Mar 2018
-;; Modified: 23 May 2022
-;; Version: 0.4.22
+;; Modified: 26 Jul 2022
+;; Version: 0.4.23
 ;; Keywords: tools, convenience
 ;; URL: https://github.com/cjohansson/emacs-phps-mode
 
