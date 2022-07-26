@@ -792,6 +792,10 @@
    "<?php\nif (true) {\n    /*\n    was here\n    */\n    echo 'there';\n}"
    "Line after closing multi-row comment")
 
+  (phps-mode-test-indent--should-equal
+   "<?php\nenum Suit\n{\n    case Hearts;\n    case Diamonds;\n    case Clubs;\n    case Spades;\n}"
+   "Basic Enumeration")
+
   )
 
 (defun phps-mode-test-indent--get-lines-indent-psr-2 ()

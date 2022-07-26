@@ -1,7 +1,5 @@
 # TODO
 
-* Fix indentation of enum cases
-
 ## Code intelligence
 
 * Bookkeeping of chained object operators like WC()->cart->subtotal
