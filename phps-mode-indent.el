@@ -1126,7 +1126,8 @@
                ;; default:
                ((and
                  (not previous-line-ends-with-opening-bracket)
-                 (not (string-match-p ":[\t ]*$" previous-line-string))
+                 (not (string-match-p ")[\t ]*:[\t ]*$" previous-line-string))
+                 (not (string-match-p "^[\t ]*case[\t ]*" previous-line-string))
                  (or
                   (string-match-p
                    "^[\t ]*case[\t ]+.*\\(;\\|:\\)[\t ]*$"
@@ -1312,6 +1313,9 @@
                ;; LINE AFTER ALTERNATIVE CASE DEFINITION
                ;; switch ($array):
                ;;     case 'Something';
+               ;; or
+               ;; switch ($array):
+               ;;     case 'Something':
                ((and
                  (string-match-p
                   "^[\t ]*\\(case.+\\|default\\)\\(;\\|:\\)[\t ]*$"
