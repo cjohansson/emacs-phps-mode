@@ -1,5 +1,30 @@
 # TODO
 
+## Indentation
+
+### Alternative switch case
+
+switch($case) {
+    case 1:
+    case 2;
+    echo 'here';
+}
+
+### Multi-line function call with named arguments
+
+function myFunction(
+    $arg1,
+    $arg2
+) {
+}
+myFunction(
+    arg1:
+    $var1,
+    arg2:
+    $var2,
+);
+
+
 ## Code intelligence
 
 * Bookkeeping of chained object operators like WC()->cart->subtotal
