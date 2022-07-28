@@ -1259,6 +1259,37 @@
                    new-indentation
                    (- new-indentation tab-width))))
 
+               ;; LINE AFTER CASE DEFINITION
+               ;; case true:
+               ;;     echo 'here';
+               ;; or
+               ;; case true;
+               ;;     echo 'here';
+               ;; or
+               ;; default:
+               ;;     echo 'here';
+               ;; or
+               ;; default;
+               ;;     echo 'here';
+               ((and
+                 (not
+                  (string-match-p
+                   "^[\t ]*\\(case[\t ]+\\|default\\)"
+                   current-line-string))
+                 (or
+                  (string-match-p
+                   "^[\t ]*case[\t ]+.*\\(;\\|:\\)[\t ]*$"
+                   previous-line-string)
+                  (string-match-p
+                   "^[\t ]*default.*\\(;\\|:\\)[\t ]*$"
+                   previous-line-string)))
+                (setq
+                 match-type
+                 'line-after-case-definition)
+                (setq
+                 new-indentation
+                 (+ new-indentation tab-width)))
+
                ;; LINE AFTER LINE THATS ENDS WITH SEMICOLON
                ;; $var .=
                ;;     'hello';
@@ -1700,37 +1731,6 @@
                 (setq
                  match-type
                  'line-after-increase-in-brackets)
-                (setq
-                 new-indentation
-                 (+ new-indentation tab-width)))
-
-               ;; LINE AFTER CASE DEFINITION
-               ;; case true:
-               ;;     echo 'here';
-               ;; or
-               ;; case true;
-               ;;     echo 'here';
-               ;; or
-               ;; default:
-               ;;     echo 'here';
-               ;; or
-               ;; default;
-               ;;     echo 'here';
-               ((and
-                 (not
-                  (string-match-p
-                   "^[\t ]*\\(case[\t ]+\\|default\\)"
-                   current-line-string))
-                 (or
-                  (string-match-p
-                   "^[\t ]*case[\t ]+.*\\(;\\|:\\)[\t ]*$"
-                   previous-line-string)
-                  (string-match-p
-                   "^[\t ]*default.*\\(;\\|:\\)[\t ]*$"
-                   previous-line-string)))
-                (setq
-                 match-type
-                 'line-after-case-definition)
                 (setq
                  new-indentation
                  (+ new-indentation tab-width)))

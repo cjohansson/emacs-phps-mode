@@ -796,6 +796,10 @@
    "<?php\nenum Suit\n{\n    case Hearts;\n    case Diamonds;\n    case Clubs;\n    case Spades;\n}"
    "Basic Enumeration")
 
+  (phps-mode-test-indent--should-equal
+   "<?php\nswitch($case) {\n    case 1;\n        echo 'here';\n}\n"
+   "Switch case statement with semicolon")
+
   )
 
 (defun phps-mode-test-indent--get-lines-indent-psr-2 ()

@@ -2,14 +2,6 @@
 
 ## Indentation
 
-### Alternative switch case
-
-switch($case) {
-    case 1:
-    case 2;
-    echo 'here';
-}
-
 ### Multi-line function call with named arguments
 
 function myFunction(
