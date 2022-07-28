@@ -228,7 +228,7 @@
             (and
              not-found-bracket-start
              (search-backward-regexp
-              "\\([][{}(),]\\|=>\\)"
+              "\\([][{}(),:]\\|=>\\)"
               nil
               t))
           (let ((match (match-string-no-properties 0)))
@@ -285,10 +285,12 @@
                     (line-beginning-position)
                     (line-end-position))))))
 
-             ;; The first occurrence of a =>
+             ;; The first occurrence of a => or :
              ;; is a significant marker of
              ;; a starting bracket row
-             ((string= "=>" match)
+             ((or
+               (string= "=>" match)
+               (string= ":" match))
               (when (= parenthesis-level 0)
                 (setq
                  reference-line
@@ -537,7 +539,7 @@
               ")[\ t]*:[\t ]*$"
               match)
              (string-match-p
-              "[^:]:[\t ]*$"
+              "\\(case\\|default\\).*:[\t ]*$"
               match)) ;; Like case '50':
             (setq
              not-found
@@ -895,6 +897,20 @@
                  new-indentation
                  (+ new-indentation tab-width)))
 
+               ;; LINE AFTER FUNCTION CALL WITH NAMED ARGUMENT
+               ;; arg1:
+               ;;     $something
+               ((and
+                 (string-match-p
+                  "^[\t ]*[a-zA-Z0-9_]+[\t ]*:[\t ]*$"
+                  previous-line-string))
+                (setq
+                 match-type
+                 'line-after-function-call-with-named-argument)
+                (setq
+                 new-indentation
+                 (+ new-indentation tab-width)))
+
                ;; LINE AFTER INLINE OR ALTERNATIVE ELSE / ELSEIF CONTROL STRUCTURE
                ;; else
                ;;     echo 'Something';
@@ -1215,6 +1231,13 @@
                ;;     [
                ;;         2,
                ;;         3,
+               ;; or
+               ;; myFunction(
+               ;;     arg1:
+               ;;         $var1,
+               ;;     arg2:
+               ;;         $var2,
+               ;; );
                ((string-match-p
                  ",[\t ]*\\(\\?>[\t\n ]*\\)?$"
                  previous-line-string)

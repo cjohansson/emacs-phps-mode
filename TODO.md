@@ -1,21 +1,5 @@
 # TODO
 
-## Indentation
-
-### Multi-line function call with named arguments
-
-function myFunction(
-    $arg1,
-    $arg2
-) {
-}
-myFunction(
-    arg1:
-    $var1,
-    arg2:
-    $var2,
-);
-
 
 ## Code intelligence
 

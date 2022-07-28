@@ -800,6 +800,10 @@
    "<?php\nswitch($case) {\n    case 1;\n        echo 'here';\n}\n"
    "Switch case statement with semicolon")
 
+  (phps-mode-test-indent--should-equal
+   "<?php\nfunction myFunction(\n    $arg1,\n    $arg2\n) {\n}\nmyFunction(\n    arg1: $var1,\n    arg2: $var2,\n);\nmyFunction(\n    arg1:\n        $var1,\n    arg2:\n        $var2,\n);\n"
+   "Multi-line function call with named arguments")
+
   )
 
 (defun phps-mode-test-indent--get-lines-indent-psr-2 ()
