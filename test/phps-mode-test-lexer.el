@@ -317,6 +317,15 @@
      phps-mode-lex-analyzer--tokens
      '((T_OPEN_TAG 1 . 7) (T_VARIABLE 7 . 9) ("=" 10 . 11) (T_LNUMBER 12 . 16) (";" 16 . 17) (T_COMMENT 18 . 35) (T_VARIABLE 36 . 38) ("=" 39 . 40) (T_LNUMBER 41 . 45) (";" 45 . 46) (T_COMMENT 47 . 89) (T_VARIABLE 90 . 92) ("=" 93 . 94) (T_LNUMBER 95 . 100) (";" 100 . 101) (T_COMMENT 102 . 135) (T_VARIABLE 136 . 138) ("=" 139 . 140) (T_LNUMBER 141 . 145) (";" 145 . 146) (T_COMMENT 147 . 195) (T_VARIABLE 196 . 198) ("=" 199 . 200) (T_LNUMBER 201 . 211) (";" 211 . 212) (T_COMMENT 213 . 257) (T_VARIABLE 258 . 260) ("=" 261 . 262) (T_LNUMBER 263 . 272) (";" 272 . 273) (T_COMMENT 274 . 309) (T_CLOSE_TAG 310 . 312) (T_INLINE_HTML 312 . 313)))))
 
+  (phps-mode-test--with-buffer
+   "<?php\n\n$b = 0.3;\n\n$a = 0.;\n\n"
+   "Double with and without decimals"
+   (should
+    (equal
+     phps-mode-lex-analyzer--tokens
+     '((T_OPEN_TAG 1 . 7) (T_VARIABLE 8 . 10) ("=" 11 . 12) (T_DNUMBER 13 . 16) (";" 16 . 17) (T_VARIABLE 19 . 21) ("=" 22 . 23) (T_DNUMBER 24 . 26) (";" 26 . 27))
+     )))
+
   )
 
 (defun phps-mode-test-lexer--complex-tokens ()
