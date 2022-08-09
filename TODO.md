@@ -1,5 +1,32 @@
 # TODO
 
+## Parser
+
+* Parsing code like
+
+        $totalPrice =
+            0.;
+
+## Indentation
+
+            'language' =>
+                self::getLocale(),
+                'recipient' => [
+                    'countryCode' =>
+                        $order->get_shipping_country()
+                        ? $order->get_shipping_country()
+                        : $order->get_billing_country(),
+                        'postalCode' =>
+                            $order->get_shipping_postcode()
+                            ? $order->get_shipping_postcode()
+                            : $order->get_billing_postcode(),
+                            'type' =>
+                                $order->get_shipping_company()
+                                || $order->get_billing_company()
+                                ? 'business'
+                                : 'personal'
+                ]
+
 
 ## Code intelligence
 
