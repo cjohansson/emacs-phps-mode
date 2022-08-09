@@ -63,7 +63,7 @@
 
 (defconst phps-mode-lexer--dnum
   (format
-   "\\(%s?\\.%s\\|%s\\.%s?\\)"
+   "\\(\\(%s\\)?\\.%s\\|%s\\.\\(%s\\)?\\)"
    phps-mode-lexer--lnum
    phps-mode-lexer--lnum
    phps-mode-lexer--lnum
