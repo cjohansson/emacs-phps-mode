@@ -40,21 +40,24 @@
         nil))))
 
 (defun phps-mode-indent--string-starts-with-regexp (string regexp &optional match-index)
-  "If STRING start with REGEXP, return it, otherwise nil.  With optional MATCH-INDEX."
+  "If STRING start with REGEXP, return it,
+otherwise nil.  With optional MATCH-INDEX."
   (phps-mode-indent--string-match-regexp
    string
    (concat "^" regexp)
    match-index))
 
 (defun phps-mode-indent--string-ends-with-regexp (string regexp &optional match-index)
-  "If STRING end with REGEXP, return it, otherwise nil.  With optional MATCH-INDEX."
+  "If STRING end with REGEXP, return it,
+otherwise nil.  With optional MATCH-INDEX."
   (phps-mode-indent--string-match-regexp
    string
    (concat regexp "$")
    match-index))
 
 (defun phps-mode-indent--string-match-regexp (string regexp &optional match-index)
-  "If STRING match REGEXP, return it, otherwise nil.  With optional MATCH-INDEX."
+  "If STRING match REGEXP, return it, otherwise nil.
+With optional MATCH-INDEX."
   (unless match-index
     (setq match-index 0))
   (if
@@ -216,7 +219,8 @@
       html-bracket-level)))
 
 (defun phps-mode-indent--get-previous-reference-index-line ()
-  "Get previous index line as reference, if any exist.  A index line is a previous element line inside current bracket scope."
+  "Get previous index line as reference, if any exist.
+A index line is a previous element line inside current bracket scope."
   (let ((reference-line))
     (save-excursion
       (end-of-line)
@@ -306,7 +310,8 @@
 
 (defun phps-mode-indent--get-previous-start-of-bracket-line
     (&optional from-end-of-line)
-  "Get previous start of bracket line as reference, if any exist.  Optionally start FROM-END-OF-LINE."
+  "Get previous start of bracket line as reference, if any exist.
+Optionally start FROM-END-OF-LINE."
   (let ((reference-line))
     (save-excursion
       (if from-end-of-line

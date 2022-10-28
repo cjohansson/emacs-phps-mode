@@ -211,7 +211,8 @@
            (cdr (cdr (car phps-mode-lexer--generated-new-tokens)))))))))
 
 (defun phps-mode-lex-analyzer--re2c-run (&optional force-synchronous allow-cache-read allow-cache-write)
-  "Run lexer, optionally FORCE-SYNCHRONOUS mode, ALLOW-CACHE-READ and ALLOW-CACHE-WRITE."
+  "Run lexer, optionally FORCE-SYNCHRONOUS mode,
+ALLOW-CACHE-READ and ALLOW-CACHE-WRITE."
   (interactive)
   (require 'phps-mode-macros)
   (phps-mode-debug-message (message "Lexer run"))
@@ -601,7 +602,8 @@
     new-states))
 
 (defun phps-mode-lex-analyzer--move-tokens (start diff)
-  "Update tokens with moved lexer tokens after or equal to START with modification DIFF."
+  "Update tokens with moved lexer tokens after
+or equal to START with modification DIFF."
   (when phps-mode-lex-analyzer--tokens
     (setq
      phps-mode-lex-analyzer--tokens
@@ -611,7 +613,8 @@
       diff))))
 
 (defun phps-mode-lex-analyzer--get-moved-tokens (old-tokens start diff)
-  "Return moved lexer OLD-TOKENS positions after (or equal to) START with DIFF points."
+  "Return moved lexer OLD-TOKENS positions after
+(or equal to) START with DIFF points."
   (let ((new-tokens '()))
     (when old-tokens
 
@@ -635,7 +638,8 @@
   (setq phps-mode-lex-analyzer--change-min nil))
 
 (defun phps-mode-lex-analyzer--process-changes (&optional buffer force-synchronous)
-  "Run incremental lexer on BUFFER.  Return list of performed operations.  Optionally do it FORCE-SYNCHRONOUS."
+  "Run incremental lexer on BUFFER.  Return list
+of performed operations.  Optionally do it FORCE-SYNCHRONOUS."
   (unless buffer
     (setq buffer (current-buffer)))
   (phps-mode-debug-message

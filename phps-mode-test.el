@@ -18,7 +18,8 @@
   "The native tokens of PHP parser (if available).")
 
 (defmacro phps-mode-test--incremental-vs-intial-buffer (source &optional title &rest change)
-  "Set up test buffer with SOURCE, TITLE, apply CHANGE and compare incremental values with initial values."
+  "Set up test buffer with SOURCE, TITLE, apply CHANGE and
+compare incremental values with initial values."
   `(let ((test-buffer-incremental (generate-new-buffer "test-incremental"))
          (incremental-state)
          (incremental-state-stack)
@@ -168,7 +169,8 @@
        (message "\nPassed tests for '%s'\n" ,title))))
 
 (defun phps-mode-test--hash-to-list (hash-table &optional un-sorted)
-  "Return a list that represent the HASH-TABLE.  Each element is a list: (list key value), optionally UN-SORTED."
+  "Return a list that represent the HASH-TABLE.
+Each element is a list: (list key value), optionally UN-SORTED."
   (let (result)
     (if (hash-table-p hash-table)
         (progn

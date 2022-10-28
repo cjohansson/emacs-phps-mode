@@ -32,7 +32,8 @@
     (execute-kbd-macro (kbd "TAB"))))
 
 (defun phps-mode-test-indent--should-equal (string name &optional new-string)
-  "Test indent of whole buffer containing STRING with NAME with optional NEW-STRING."
+  "Test indent of whole buffer containing
+STRING with NAME with optional NEW-STRING."
   (phps-mode-test--with-buffer
    string
    name

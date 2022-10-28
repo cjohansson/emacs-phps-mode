@@ -66,7 +66,10 @@
     (thread-signal (gethash key phps-mode-serial--async-threads) 'quit nil)))
 
 (defun phps-mode-serial-commands (key start end &optional start-error end-error async async-by-process)
-  "Run command with KEY, first START and if successfully then END with the result of START as argument.  Optional arguments START-ERROR, END-ERROR that are called on errors. ASYNC ASYNC-BY-PROCESS specifies additional options for synchronicity."
+  "Run command with KEY, first START and if successfully then END with the
+result of START as argument.  Optional arguments START-ERROR, END-ERROR that are
+called on errors. ASYNC ASYNC-BY-PROCESS specifies additional options
+for synchronicity."
   (let ((start-time (current-time)))
     (when phps-mode-serial--profiling
       (message "PHPs - Starting serial commands for buffer '%s'.." key))

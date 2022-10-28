@@ -17,7 +17,8 @@
 ;; TODO Should test `backward-sexp', `forward-sexp', `backward-word', `forward-word', `backward-list', `forward-list' as well
 
 (defun phps-mode-test-syntax-table--quote-region ()
-  "Test double quotes, single quotes, curly bracket, square bracket, round bracket, back-quotes on regions."
+  "Test double quotes, single quotes, curly bracket,
+square bracket, round bracket, back-quotes on regions."
 
   (phps-mode-test--with-buffer
    "<?php\n$var = abc;"

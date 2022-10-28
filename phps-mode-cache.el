@@ -34,7 +34,8 @@
       filename)))
 
 (defun phps-mode-cache-test-p (key &optional source-file)
-  "Test whether KEY exists in cache and that it is optionally not older than SOURCE-FILE."
+  "Test whether KEY exists in cache and that it is
+optionally not older than SOURCE-FILE."
   (let ((cache-filename (phps-mode-cache--get-filename-for-key key))
         (exists))
     (when (file-exists-p cache-filename)
