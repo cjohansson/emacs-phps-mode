@@ -365,21 +365,13 @@
 
   (phps-mode-test--with-buffer
    "<?php echo \" Hello $variable[0], how are you?\";"
-   nil
+   "Simple interpolated string with indexed variable"
    (should
     (equal
      phps-mode-lex-analyzer--tokens
      '((T_OPEN_TAG 1 . 7) (T_ECHO 7 . 11) ("\"" 12 . 13) (T_ENCAPSED_AND_WHITESPACE 13 . 20) (T_VARIABLE 20 . 29) ("[" 29 . 30) (T_NUM_STRING 30 . 31) ("]" 31 . 32) (T_ENCAPSED_AND_WHITESPACE 32 . 46) ("\"" 46 . 47) (";" 47 . 48)))))
 
   ;; HEREDOC
-
-  (phps-mode-test--with-buffer
-   "<?php\nclass foo {\n    public $bar = <<<EOT\nbar\n    EOT;\n}\n// Identifier must not be indented\n?>\n"
-   "Example #1 Invalid example (HEREDOC)"
-   (should
-    (equal
-     phps-mode-lex-analyzer--tokens
-     nil)))
 
   (phps-mode-test--with-buffer
    "<?php\nclass foo {\n    public $bar = <<<EOT\nbar\nEOT;\n}\n?>\n"
@@ -422,6 +414,14 @@
      phps-mode-lex-analyzer--tokens
      '((T_OPEN_TAG 1 . 7) (T_ECHO 7 . 11) (T_START_HEREDOC 12 . 24) (T_ENCAPSED_AND_WHITESPACE 24 . 36) (T_END_HEREDOC 36 . 43) (";" 43 . 44) (T_CLOSE_TAG 45 . 47) (T_INLINE_HTML 47 . 48)))))
 
+  (phps-mode-test--with-buffer
+   "<?php\n\nclass MyClass\n{\n    public const MY_CONSTANT = <<<DELIMITER\n    {\n        some {\n            json\n        }\n    }\n    DELIMITER;\n}\n"
+   "Heredoc where ending delimiter is not first on line (PHP > 7.3)"
+   (should
+    (equal
+     phps-mode-lex-analyzer--tokens
+     '((T_OPEN_TAG 1 . 7) (T_CLASS 8 . 13) (T_STRING 14 . 21) ("{" 22 . 23) (T_PUBLIC 28 . 34) (T_CONST 35 . 40) (T_STRING 41 . 52) ("=" 53 . 54) (T_START_HEREDOC 55 . 68) (T_ENCAPSED_AND_WHITESPACE 68 . 121) (T_END_HEREDOC 121 . 131) (T_STRING 131 . 135) (";" 135 . 136) ("}" 137 . 138)))))
+
   ;; NOWDOC
 
   (phps-mode-test--with-buffer
@@ -447,6 +447,14 @@
     (equal
      phps-mode-lex-analyzer--tokens
      '((T_OPEN_TAG 1 . 7) (T_CLASS 7 . 12) (T_STRING 13 . 16) ("{" 17 . 18) (T_PUBLIC 23 . 29) (T_VARIABLE 30 . 34) ("=" 35 . 36) (T_START_HEREDOC 37 . 46) (T_ENCAPSED_AND_WHITESPACE 46 . 49) (T_END_HEREDOC 49 . 53) (";" 53 . 54) ("}" 55 . 56) (T_CLOSE_TAG 57 . 59) (T_INLINE_HTML 59 . 60)))))
+
+  (phps-mode-test--with-buffer
+   "<?php\n\nclass MyClass\n{\n    public const MY_CONSTANT = <<<'DELIMITER'\n    {\n        some {\n            json\n        }\n    }\n    DELIMITER;\n}\n"
+   "Nowdoc where ending delimiter is not first on line (PHP > 7.3)"
+   (should
+    (equal
+     phps-mode-lex-analyzer--tokens
+     '((T_OPEN_TAG 1 . 7) (T_CLASS 8 . 13) (T_STRING 14 . 21) ("{" 22 . 23) (T_PUBLIC 28 . 34) (T_CONST 35 . 40) (T_STRING 41 . 52) ("=" 53 . 54) (T_START_HEREDOC 55 . 70) (T_ENCAPSED_AND_WHITESPACE 70 . 123) (T_END_HEREDOC 123 . 133) (T_STRING 133 . 137) (";" 137 . 138) ("}" 139 . 140)))))
 
   ;; Backquotes
   (phps-mode-test--with-buffer
