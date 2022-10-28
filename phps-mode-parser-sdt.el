@@ -2929,6 +2929,36 @@
      ))
  phps-mode-parser--table-translations)
 
+;; 341 ((class_const_list) (class_const_list "," class_const_decl))
+(puthash
+ 341
+ `(lambda(args _terminals)
+    (append ,(nth 1 args) ,(nth 3 args)))
+ phps-mode-parser--table-translations)
+
+;; 342 ((class_const_list) (class_const_decl))
+(puthash
+ 342
+ (lambda(args _terminals)
+    (list args))
+ phps-mode-parser--table-translations)
+
+;; 343 ((class_const_decl) (identifier "=" expr backup_doc_comment))
+(puthash
+ 343
+ (lambda(args _terminals)
+   `(
+     ast-type
+     constant-assignment
+     ast-identifier
+     ,(nth 0 args)
+     ast-expr
+     ,(nth 2 args)
+     ast-backup-expression
+     ,(nth 3 args)))
+ phps-mode-parser--table-translations)
+
+
 ;; TODO Was here
 
 ;; expr -> ("[" array_pair_list "]" "=" expr)
