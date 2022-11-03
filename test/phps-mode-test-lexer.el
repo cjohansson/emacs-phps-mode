@@ -468,6 +468,14 @@
      phps-mode-lex-analyzer--tokens
      '((T_INLINE_HTML 1 . 2) (T_OPEN_TAG 2 . 8) (T_ECHO 8 . 12) (T_START_HEREDOC 13 . 25) (T_ENCAPSED_AND_WHITESPACE 25 . 37) (T_END_HEREDOC 37 . 44) (";" 44 . 45) (T_CLOSE_TAG 46 . 48) (T_INLINE_HTML 48 . 49)))))
 
+  (phps-mode-test--with-buffer
+   "<?php\n$var = <<<QUERY\n    {\n        shop {\n            name\n        }\n    }\n    QUERY;\n"
+   "Another HEREDOC example"
+   (should
+    (equal
+     phps-mode-lex-analyzer--tokens
+     '((T_OPEN_TAG 1 . 7) (T_VARIABLE 7 . 11) ("=" 12 . 13) (T_START_HEREDOC 14 . 23) (T_ENCAPSED_AND_WHITESPACE 23 . 76) (T_END_HEREDOC 76 . 82) (T_STRING 82 . 86) (";" 86 . 87)))))
+
 
   ;; NOWDOC
 
