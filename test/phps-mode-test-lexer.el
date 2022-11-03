@@ -381,9 +381,56 @@
   ;; HEREDOC
 
   (phps-mode-test--with-buffer
+   "<?php\n// no indentation\necho <<<END\n      a\n     b\n    c\n\n\nEND;\n\n// 4 spaces of indentation\necho <<<END\n      a\n     b\n    c\n    END;\n"
+   "Example #1 Basic Heredoc example as of PHP 7.3.0"
+   (should
+    (equal
+     phps-mode-lex-analyzer--tokens
+     '((T_OPEN_TAG 1 . 7) (T_COMMENT 7 . 24) (T_ECHO 25 . 29) (T_START_HEREDOC 30 . 37) (T_ENCAPSED_AND_WHITESPACE 37 . 59) (T_END_HEREDOC 59 . 63) (";" 63 . 64) (T_COMMENT 66 . 92) (T_ECHO 93 . 97) (T_START_HEREDOC 98 . 105) (T_ENCAPSED_AND_WHITESPACE 105 . 125) (T_END_HEREDOC 125 . 129) (T_STRING 130 . 133) (";" 133 . 134)))))
+
+  (phps-mode-test--with-buffer
+   "<?php\necho <<<END\n  a\n b\nc\n   END;\n"
+   "Example #2 Closing identifier must not be indented further than any lines of the body"
+   (should
+    (equal
+     phps-mode-lex-analyzer--tokens
+     '((T_OPEN_TAG 1 . 7) (T_ECHO 7 . 11) (T_START_HEREDOC 12 . 19) (T_ENCAPSED_AND_WHITESPACE 19 . 27) (T_END_HEREDOC 27 . 31) (T_STRING 31 . 34) (";" 34 . 35)))))
+
+  (phps-mode-test--with-buffer
+   "<?php\n// All the following code do not work.\n\n// different indentation for body (spaces) ending marker (tabs)\n{\n    echo <<<END\n     a\n        END;\n\n\n// mixing spaces and tabs in body\n{\n    echo <<<END\n        a\n     END;\n\n\n// mixing spaces and tabs in ending marker\n{\n    echo <<<END\n          a\n         END;\n\n"
+   "Example #3 Different indentation for body (spaces) closing identifier"
+   (should
+    (equal
+     phps-mode-lex-analyzer--tokens
+     '((T_OPEN_TAG 1 . 7) (T_COMMENT 7 . 45) (T_COMMENT 47 . 110) ("{" 111 . 112) (T_ECHO 117 . 121) (T_START_HEREDOC 122 . 129) (T_ENCAPSED_AND_WHITESPACE 129 . 135) (T_END_HEREDOC 135 . 139) (T_STRING 144 . 147) (";" 147 . 148) (T_COMMENT 151 . 184) ("{" 185 . 186) (T_ECHO 191 . 195) (T_START_HEREDOC 196 . 203) (T_ENCAPSED_AND_WHITESPACE 203 . 212) (T_END_HEREDOC 212 . 216) (T_STRING 218 . 221) (";" 221 . 222) (T_COMMENT 225 . 267) ("{" 268 . 269) (T_ECHO 274 . 278) (T_START_HEREDOC 279 . 286) (T_ENCAPSED_AND_WHITESPACE 286 . 297) (T_END_HEREDOC 297 . 301) (T_STRING 307 . 310) (";" 310 . 311)))))
+
+  (phps-mode-test--with-buffer
+   "<?php\n$values = [<<<END\na\n  b\n    c\nEND, 'd e f'];\nvar_dump($values);\n"
+   "Example #4 Continuing an expression after a closing identifier"
+   (should
+    (equal
+     phps-mode-lex-analyzer--tokens
+     '((T_OPEN_TAG 1 . 7) (T_VARIABLE 7 . 14) ("=" 15 . 16) ("[" 17 . 18) (T_START_HEREDOC 18 . 25) (T_ENCAPSED_AND_WHITESPACE 25 . 36) (T_END_HEREDOC 36 . 40) ("," 40 . 41) (T_CONSTANT_ENCAPSED_STRING 42 . 49) ("]" 49 . 50) (";" 50 . 51) (T_STRING 52 . 60) ("(" 60 . 61) (T_VARIABLE 61 . 68) (")" 68 . 69) (";" 69 . 70)))))
+
+  (phps-mode-test--with-buffer
+   "<?php\n$values = [<<<END\na\nb\nEND ING\nEND, 'd e f'];\n"
+   "Example #5 Closing identifier in body of the string tends to cause ParseError"
+   (should
+    (equal
+     phps-mode-lex-analyzer--tokens
+     '((T_OPEN_TAG 1 . 7) (T_VARIABLE 7 . 14) ("=" 15 . 16) ("[" 17 . 18) (T_START_HEREDOC 18 . 25) (T_ENCAPSED_AND_WHITESPACE 25 . 28) (T_END_HEREDOC 28 . 32) (T_STRING 33 . 36) (T_STRING 37 . 40) ("," 40 . 41) (T_CONSTANT_ENCAPSED_STRING 42 . 49) ("]" 49 . 50) (";" 50 . 51)))))
+
+  (phps-mode-test--with-buffer
+   "<?php\nclass foo {\n    public $bar = <<<EOT\nbar\n    EOT;\n}\n// Identifier must not be indented\n?>\n"
+   "Example #6 Invalid example, prior to PHP 7.3.0"
+   (should
+    (equal
+     phps-mode-lex-analyzer--tokens
+     '((T_OPEN_TAG 1 . 7) (T_CLASS 7 . 12) (T_STRING 13 . 16) ("{" 17 . 18) (T_PUBLIC 23 . 29) (T_VARIABLE 30 . 34) ("=" 35 . 36) (T_START_HEREDOC 37 . 44) (T_ENCAPSED_AND_WHITESPACE 44 . 47) (T_END_HEREDOC 47 . 51) (T_STRING 52 . 55) (";" 55 . 56) ("}" 57 . 58) (T_COMMENT 59 . 93) (T_CLOSE_TAG 94 . 96) (T_INLINE_HTML 96 . 97)))))
+
+  (phps-mode-test--with-buffer
    "<?php\nclass foo {\n    public $bar = <<<EOT\nbar\nEOT;\n}\n?>\n"
-   "Example #2 Valid example (HEREDOC)"
-   ;; (message "tokens: %s" phps-mode-lex-analyzer--tokens)
+   "Example #7 Valid example, even if prior to PHP 7.3.0"
    (should
     (equal
      phps-mode-lex-analyzer--tokens
@@ -391,7 +438,7 @@
 
   (phps-mode-test--with-buffer
    "<?php\n$str = <<<EOD\nExample of string\nspanning multiple lines\nusing heredoc syntax.\nEOD;\n\n/* More complex example, with variables. */\nclass foo\n{\n    var $foo;\n    var $bar;\n\n    function __construct()\n    {\n        $this->foo = 'Foo';\n        $this->bar = array('Bar1', 'Bar2', 'Bar3');\n    }\n}\n\n$foo = new foo();\n$name = 'MyName';\n\necho <<<EOT\nMy name is \"$name\". I am printing some $foo->foo.\nNow, I am printing some {$foo->bar[1]}.\nThis should print a capital 'A': \x41\nEOT;\n?>\n"
-   "Example #3 Heredoc string quoting example"
+   "Example #8 Heredoc string quoting example"
    (should
     (equal
      phps-mode-lex-analyzer--tokens
@@ -399,7 +446,7 @@
 
   (phps-mode-test--with-buffer
    "<?php\nvar_dump(array(<<<EOD\nfoobar!\nEOD\n));\n?>\n"
-   "Example #4 Heredoc in arguments example"
+   "Example #9 Heredoc in arguments example"
    (should
     (equal
      phps-mode-lex-analyzer--tokens
@@ -407,41 +454,34 @@
 
   (phps-mode-test--with-buffer
    "<?php\n// Static variables\nfunction foo()\n{\n    static $bar = <<<LABEL\nNothing in here...\nLABEL;\n}\n\n// Class properties/constants\nclass foo\n{\n    const BAR = <<<FOOBAR\nConstant example\nFOOBAR;\n\n    public $baz = <<<FOOBAR\nProperty example\nFOOBAR;\n}\n?>\n"
-   "Example #5 Using Heredoc to initialize static values"
+   "Example #10 Using Heredoc to initialize static values"
    (should
     (equal
      phps-mode-lex-analyzer--tokens
      '((T_OPEN_TAG 1 . 7) (T_COMMENT 7 . 26) (T_FUNCTION 27 . 35) (T_STRING 36 . 39) ("(" 39 . 40) (")" 40 . 41) ("{" 42 . 43) (T_STATIC 48 . 54) (T_VARIABLE 55 . 59) ("=" 60 . 61) (T_START_HEREDOC 62 . 71) (T_ENCAPSED_AND_WHITESPACE 71 . 89) (T_END_HEREDOC 89 . 95) (";" 95 . 96) ("}" 97 . 98) (T_COMMENT 100 . 129) (T_CLASS 130 . 135) (T_STRING 136 . 139) ("{" 140 . 141) (T_CONST 146 . 151) (T_STRING 152 . 155) ("=" 156 . 157) (T_START_HEREDOC 158 . 168) (T_ENCAPSED_AND_WHITESPACE 168 . 184) (T_END_HEREDOC 184 . 191) (";" 191 . 192) (T_PUBLIC 198 . 204) (T_VARIABLE 205 . 209) ("=" 210 . 211) (T_START_HEREDOC 212 . 222) (T_ENCAPSED_AND_WHITESPACE 222 . 238) (T_END_HEREDOC 238 . 245) (";" 245 . 246) ("}" 247 . 248) (T_CLOSE_TAG 249 . 251) (T_INLINE_HTML 251 . 252)))))
 
   (phps-mode-test--with-buffer
-   "<?php\necho <<<\"FOOBAR\"\nHello World!\nFOOBAR;\n?>\n"
-   "Example #6 Using double quotes in Heredoc"
+   "\n<?php\necho <<<\"FOOBAR\"\nHello World!\nFOOBAR;\n?>\n"
+   "Example #11 Using double quotes in Heredoc"
    (should
     (equal
      phps-mode-lex-analyzer--tokens
-     '((T_OPEN_TAG 1 . 7) (T_ECHO 7 . 11) (T_START_HEREDOC 12 . 24) (T_ENCAPSED_AND_WHITESPACE 24 . 36) (T_END_HEREDOC 36 . 43) (";" 43 . 44) (T_CLOSE_TAG 45 . 47) (T_INLINE_HTML 47 . 48)))))
+     '((T_INLINE_HTML 1 . 2) (T_OPEN_TAG 2 . 8) (T_ECHO 8 . 12) (T_START_HEREDOC 13 . 25) (T_ENCAPSED_AND_WHITESPACE 25 . 37) (T_END_HEREDOC 37 . 44) (";" 44 . 45) (T_CLOSE_TAG 46 . 48) (T_INLINE_HTML 48 . 49)))))
 
-  (phps-mode-test--with-buffer
-   "<?php\n\nclass MyClass\n{\n    public const MY_CONSTANT = <<<DELIMITER\n    {\n        some {\n            json\n        }\n    }\n    DELIMITER;\n}\n"
-   "Heredoc where ending delimiter is not first on line (PHP > 7.3)"
-   (should
-    (equal
-     phps-mode-lex-analyzer--tokens
-     '((T_OPEN_TAG 1 . 7) (T_CLASS 8 . 13) (T_STRING 14 . 21) ("{" 22 . 23) (T_PUBLIC 28 . 34) (T_CONST 35 . 40) (T_STRING 41 . 52) ("=" 53 . 54) (T_START_HEREDOC 55 . 68) (T_ENCAPSED_AND_WHITESPACE 68 . 121) (T_END_HEREDOC 121 . 131) (T_STRING 131 . 135) (";" 135 . 136) ("}" 137 . 138)))))
 
   ;; NOWDOC
 
   (phps-mode-test--with-buffer
-   "<?php\necho <<<'EOD'\nExample of string spanning multiple lines\nusing nowdoc syntax. Backslashes are always treated literally,\ne.g. \\ and \'.\nEOD;\n"
-   "Example #7 Nowdoc string quoting example"
+   "<?php\necho <<<'EOD'\nExample of string spanning multiple lines\nusing nowdoc syntax. Backslashes are always treated literally,\ne.g. \\ and \\'.\nEOD;\n"
+   "Example #12 Nowdoc string quoting example"
    (should
     (equal
      phps-mode-lex-analyzer--tokens
-     '((T_OPEN_TAG 1 . 7) (T_ECHO 7 . 11) (T_START_HEREDOC 12 . 21) (T_ENCAPSED_AND_WHITESPACE 21 . 139) (T_END_HEREDOC 139 . 143) (";" 143 . 144)))))
+     '((T_OPEN_TAG 1 . 7) (T_ECHO 7 . 11) (T_START_HEREDOC 12 . 21) (T_ENCAPSED_AND_WHITESPACE 21 . 140) (T_END_HEREDOC 140 . 144) (";" 144 . 145)))))
 
   (phps-mode-test--with-buffer
    "<?php\nclass foo\n{\n    public $foo;\n    public $bar;\n\n    function __construct()\n    {\n        $this->foo = 'Foo';\n        $this->bar = array('Bar1', 'Bar2', 'Bar3');\n    }\n}\n\n$foo = new foo();\n$name = 'MyName';\n\necho <<<'EOT'\nMy name is \"$name\". I am printing some $foo->foo.\nNow, I am printing some {$foo->bar[1]}.\nThis should not print a capital 'A': \x41\nEOT;\n?>\n"
-   "Example #8 Nowdoc string quoting example with variables"
+   "Example #13 Nowdoc string quoting example with variables"
    (should
     (equal
      phps-mode-lex-analyzer--tokens
@@ -449,7 +489,7 @@
 
   (phps-mode-test--with-buffer
    "<?php\nclass foo {\n    public $bar = <<<'EOT'\nbar\nEOT;\n}\n?>\n"
-   "Example #9 Static data example (Nowdoc)"
+   "Example #14 Static data example"
    (should
     (equal
      phps-mode-lex-analyzer--tokens
