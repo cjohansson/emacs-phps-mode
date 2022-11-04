@@ -386,7 +386,7 @@
    (should
     (equal
      phps-mode-lex-analyzer--tokens
-     '((T_OPEN_TAG 1 . 7) (T_COMMENT 7 . 24) (T_ECHO 25 . 29) (T_START_HEREDOC 30 . 37) (T_ENCAPSED_AND_WHITESPACE 37 . 59) (T_END_HEREDOC 59 . 63) (";" 63 . 64) (T_COMMENT 66 . 92) (T_ECHO 93 . 97) (T_START_HEREDOC 98 . 105) (T_ENCAPSED_AND_WHITESPACE 105 . 125) (T_END_HEREDOC 125 . 129) (T_STRING 130 . 133) (";" 133 . 134)))))
+     '((T_OPEN_TAG 1 . 7) (T_COMMENT 7 . 24) (T_ECHO 25 . 29) (T_START_HEREDOC 30 . 37) (T_ENCAPSED_AND_WHITESPACE 37 . 60) (T_END_HEREDOC 60 . 63) (";" 63 . 64) (T_COMMENT 66 . 92) (T_ECHO 93 . 97) (T_START_HEREDOC 98 . 105) (T_ENCAPSED_AND_WHITESPACE 105 . 130) (T_END_HEREDOC 130 . 133) (";" 133 . 134)))))
 
   (phps-mode-test--with-buffer
    "<?php\necho <<<END\n  a\n b\nc\n   END;\n"
@@ -394,7 +394,7 @@
    (should
     (equal
      phps-mode-lex-analyzer--tokens
-     '((T_OPEN_TAG 1 . 7) (T_ECHO 7 . 11) (T_START_HEREDOC 12 . 19) (T_ENCAPSED_AND_WHITESPACE 19 . 27) (T_END_HEREDOC 27 . 31) (T_STRING 31 . 34) (";" 34 . 35)))))
+     '((T_OPEN_TAG 1 . 7) (T_ECHO 7 . 11) (T_START_HEREDOC 12 . 19) (T_ENCAPSED_AND_WHITESPACE 19 . 31) (T_END_HEREDOC 31 . 34) (";" 34 . 35)))))
 
   (phps-mode-test--with-buffer
    "<?php\n// All the following code do not work.\n\n// different indentation for body (spaces) ending marker (tabs)\n{\n    echo <<<END\n     a\n        END;\n\n\n// mixing spaces and tabs in body\n{\n    echo <<<END\n        a\n     END;\n\n\n// mixing spaces and tabs in ending marker\n{\n    echo <<<END\n          a\n         END;\n\n"
@@ -402,7 +402,7 @@
    (should
     (equal
      phps-mode-lex-analyzer--tokens
-     '((T_OPEN_TAG 1 . 7) (T_COMMENT 7 . 45) (T_COMMENT 47 . 110) ("{" 111 . 112) (T_ECHO 117 . 121) (T_START_HEREDOC 122 . 129) (T_ENCAPSED_AND_WHITESPACE 129 . 135) (T_END_HEREDOC 135 . 139) (T_STRING 144 . 147) (";" 147 . 148) (T_COMMENT 151 . 184) ("{" 185 . 186) (T_ECHO 191 . 195) (T_START_HEREDOC 196 . 203) (T_ENCAPSED_AND_WHITESPACE 203 . 212) (T_END_HEREDOC 212 . 216) (T_STRING 218 . 221) (";" 221 . 222) (T_COMMENT 225 . 267) ("{" 268 . 269) (T_ECHO 274 . 278) (T_START_HEREDOC 279 . 286) (T_ENCAPSED_AND_WHITESPACE 286 . 297) (T_END_HEREDOC 297 . 301) (T_STRING 307 . 310) (";" 310 . 311)))))
+     '((T_OPEN_TAG 1 . 7) (T_COMMENT 7 . 45) (T_COMMENT 47 . 110) ("{" 111 . 112) (T_ECHO 117 . 121) (T_START_HEREDOC 122 . 129) (T_ENCAPSED_AND_WHITESPACE 129 . 144) (T_END_HEREDOC 144 . 147) (";" 147 . 148) (T_COMMENT 151 . 184) ("{" 185 . 186) (T_ECHO 191 . 195) (T_START_HEREDOC 196 . 203) (T_ENCAPSED_AND_WHITESPACE 203 . 218) (T_END_HEREDOC 218 . 221) (";" 221 . 222) (T_COMMENT 225 . 267) ("{" 268 . 269) (T_ECHO 274 . 278) (T_START_HEREDOC 279 . 286) (T_ENCAPSED_AND_WHITESPACE 286 . 307) (T_END_HEREDOC 307 . 310) (";" 310 . 311)))))
 
   (phps-mode-test--with-buffer
    "<?php\n$values = [<<<END\na\n  b\n    c\nEND, 'd e f'];\nvar_dump($values);\n"
@@ -410,7 +410,7 @@
    (should
     (equal
      phps-mode-lex-analyzer--tokens
-     '((T_OPEN_TAG 1 . 7) (T_VARIABLE 7 . 14) ("=" 15 . 16) ("[" 17 . 18) (T_START_HEREDOC 18 . 25) (T_ENCAPSED_AND_WHITESPACE 25 . 36) (T_END_HEREDOC 36 . 40) ("," 40 . 41) (T_CONSTANT_ENCAPSED_STRING 42 . 49) ("]" 49 . 50) (";" 50 . 51) (T_STRING 52 . 60) ("(" 60 . 61) (T_VARIABLE 61 . 68) (")" 68 . 69) (";" 69 . 70)))))
+     '((T_OPEN_TAG 1 . 7) (T_VARIABLE 7 . 14) ("=" 15 . 16) ("[" 17 . 18) (T_START_HEREDOC 18 . 25) (T_ENCAPSED_AND_WHITESPACE 25 . 37) (T_END_HEREDOC 37 . 40) ("," 40 . 41) (T_CONSTANT_ENCAPSED_STRING 42 . 49) ("]" 49 . 50) (";" 50 . 51) (T_STRING 52 . 60) ("(" 60 . 61) (T_VARIABLE 61 . 68) (")" 68 . 69) (";" 69 . 70)))))
 
   (phps-mode-test--with-buffer
    "<?php\n$values = [<<<END\na\nb\nEND ING\nEND, 'd e f'];\n"
@@ -418,7 +418,7 @@
    (should
     (equal
      phps-mode-lex-analyzer--tokens
-     '((T_OPEN_TAG 1 . 7) (T_VARIABLE 7 . 14) ("=" 15 . 16) ("[" 17 . 18) (T_START_HEREDOC 18 . 25) (T_ENCAPSED_AND_WHITESPACE 25 . 28) (T_END_HEREDOC 28 . 32) (T_STRING 33 . 36) (T_STRING 37 . 40) ("," 40 . 41) (T_CONSTANT_ENCAPSED_STRING 42 . 49) ("]" 49 . 50) (";" 50 . 51)))))
+     '((T_OPEN_TAG 1 . 7) (T_VARIABLE 7 . 14) ("=" 15 . 16) ("[" 17 . 18) (T_START_HEREDOC 18 . 25) (T_ENCAPSED_AND_WHITESPACE 25 . 29) (T_END_HEREDOC 29 . 32) (T_STRING 33 . 36) (T_STRING 37 . 40) ("," 40 . 41) (T_CONSTANT_ENCAPSED_STRING 42 . 49) ("]" 49 . 50) (";" 50 . 51)))))
 
   (phps-mode-test--with-buffer
    "<?php\nclass foo {\n    public $bar = <<<EOT\nbar\n    EOT;\n}\n// Identifier must not be indented\n?>\n"
@@ -426,7 +426,7 @@
    (should
     (equal
      phps-mode-lex-analyzer--tokens
-     '((T_OPEN_TAG 1 . 7) (T_CLASS 7 . 12) (T_STRING 13 . 16) ("{" 17 . 18) (T_PUBLIC 23 . 29) (T_VARIABLE 30 . 34) ("=" 35 . 36) (T_START_HEREDOC 37 . 44) (T_ENCAPSED_AND_WHITESPACE 44 . 47) (T_END_HEREDOC 47 . 51) (T_STRING 52 . 55) (";" 55 . 56) ("}" 57 . 58) (T_COMMENT 59 . 93) (T_CLOSE_TAG 94 . 96) (T_INLINE_HTML 96 . 97)))))
+     '((T_OPEN_TAG 1 . 7) (T_CLASS 7 . 12) (T_STRING 13 . 16) ("{" 17 . 18) (T_PUBLIC 23 . 29) (T_VARIABLE 30 . 34) ("=" 35 . 36) (T_START_HEREDOC 37 . 44) (T_ENCAPSED_AND_WHITESPACE 44 . 52) (T_END_HEREDOC 52 . 55) (";" 55 . 56) ("}" 57 . 58) (T_COMMENT 59 . 93) (T_CLOSE_TAG 94 . 96) (T_INLINE_HTML 96 . 97)))))
 
   (phps-mode-test--with-buffer
    "<?php\nclass foo {\n    public $bar = <<<EOT\nbar\nEOT;\n}\n?>\n"
@@ -434,7 +434,7 @@
    (should
     (equal
      phps-mode-lex-analyzer--tokens
-     '((T_OPEN_TAG 1 . 7) (T_CLASS 7 . 12) (T_STRING 13 . 16) ("{" 17 . 18) (T_PUBLIC 23 . 29) (T_VARIABLE 30 . 34) ("=" 35 . 36) (T_START_HEREDOC 37 . 44) (T_ENCAPSED_AND_WHITESPACE 44 . 47) (T_END_HEREDOC 47 . 51) (";" 51 . 52) ("}" 53 . 54) (T_CLOSE_TAG 55 . 57) (T_INLINE_HTML 57 . 58)))))
+     '((T_OPEN_TAG 1 . 7) (T_CLASS 7 . 12) (T_STRING 13 . 16) ("{" 17 . 18) (T_PUBLIC 23 . 29) (T_VARIABLE 30 . 34) ("=" 35 . 36) (T_START_HEREDOC 37 . 44) (T_ENCAPSED_AND_WHITESPACE 44 . 48) (T_END_HEREDOC 48 . 51) (";" 51 . 52) ("}" 53 . 54) (T_CLOSE_TAG 55 . 57) (T_INLINE_HTML 57 . 58)))))
 
   (phps-mode-test--with-buffer
    "<?php\n$str = <<<EOD\nExample of string\nspanning multiple lines\nusing heredoc syntax.\nEOD;\n\n/* More complex example, with variables. */\nclass foo\n{\n    var $foo;\n    var $bar;\n\n    function __construct()\n    {\n        $this->foo = 'Foo';\n        $this->bar = array('Bar1', 'Bar2', 'Bar3');\n    }\n}\n\n$foo = new foo();\n$name = 'MyName';\n\necho <<<EOT\nMy name is \"$name\". I am printing some $foo->foo.\nNow, I am printing some {$foo->bar[1]}.\nThis should print a capital 'A': \x41\nEOT;\n?>\n"
@@ -442,7 +442,7 @@
    (should
     (equal
      phps-mode-lex-analyzer--tokens
-     '((T_OPEN_TAG 1 . 7) (T_VARIABLE 7 . 11) ("=" 12 . 13) (T_START_HEREDOC 14 . 21) (T_ENCAPSED_AND_WHITESPACE 21 . 84) (T_END_HEREDOC 84 . 88) (";" 88 . 89) (T_COMMENT 91 . 134) (T_CLASS 135 . 140) (T_STRING 141 . 144) ("{" 145 . 146) (T_VAR 151 . 154) (T_VARIABLE 155 . 159) (";" 159 . 160) (T_VAR 165 . 168) (T_VARIABLE 169 . 173) (";" 173 . 174) (T_FUNCTION 180 . 188) (T_STRING 189 . 200) ("(" 200 . 201) (")" 201 . 202) ("{" 207 . 208) (T_VARIABLE 217 . 222) (T_OBJECT_OPERATOR 222 . 224) (T_STRING 224 . 227) ("=" 228 . 229) (T_CONSTANT_ENCAPSED_STRING 230 . 235) (";" 235 . 236) (T_VARIABLE 245 . 250) (T_OBJECT_OPERATOR 250 . 252) (T_STRING 252 . 255) ("=" 256 . 257) (T_ARRAY 258 . 263) ("(" 263 . 264) (T_CONSTANT_ENCAPSED_STRING 264 . 270) ("," 270 . 271) (T_CONSTANT_ENCAPSED_STRING 272 . 278) ("," 278 . 279) (T_CONSTANT_ENCAPSED_STRING 280 . 286) (")" 286 . 287) (";" 287 . 288) ("}" 293 . 294) ("}" 295 . 296) (T_VARIABLE 298 . 302) ("=" 303 . 304) (T_NEW 305 . 308) (T_STRING 309 . 312) ("(" 312 . 313) (")" 313 . 314) (";" 314 . 315) (T_VARIABLE 316 . 321) ("=" 322 . 323) (T_CONSTANT_ENCAPSED_STRING 324 . 332) (";" 332 . 333) (T_ECHO 335 . 339) (T_START_HEREDOC 340 . 347) (T_ENCAPSED_AND_WHITESPACE 347 . 359) (T_VARIABLE 359 . 364) (T_ENCAPSED_AND_WHITESPACE 364 . 386) (T_VARIABLE 386 . 390) (T_OBJECT_OPERATOR 390 . 392) (T_STRING 392 . 395) (T_ENCAPSED_AND_WHITESPACE 395 . 421) (T_CURLY_OPEN 421 . 422) (T_VARIABLE 422 . 426) (T_OBJECT_OPERATOR 426 . 428) (T_STRING 428 . 431) ("[" 431 . 432) (T_LNUMBER 432 . 433) ("]" 433 . 434) ("}" 434 . 435) (T_ENCAPSED_AND_WHITESPACE 435 . 471) (T_END_HEREDOC 471 . 475) (";" 475 . 476) (T_CLOSE_TAG 477 . 479) (T_INLINE_HTML 479 . 480)))))
+     '((T_OPEN_TAG 1 . 7) (T_VARIABLE 7 . 11) ("=" 12 . 13) (T_START_HEREDOC 14 . 21) (T_ENCAPSED_AND_WHITESPACE 21 . 85) (T_END_HEREDOC 85 . 88) (";" 88 . 89) (T_COMMENT 91 . 134) (T_CLASS 135 . 140) (T_STRING 141 . 144) ("{" 145 . 146) (T_VAR 151 . 154) (T_VARIABLE 155 . 159) (";" 159 . 160) (T_VAR 165 . 168) (T_VARIABLE 169 . 173) (";" 173 . 174) (T_FUNCTION 180 . 188) (T_STRING 189 . 200) ("(" 200 . 201) (")" 201 . 202) ("{" 207 . 208) (T_VARIABLE 217 . 222) (T_OBJECT_OPERATOR 222 . 224) (T_STRING 224 . 227) ("=" 228 . 229) (T_CONSTANT_ENCAPSED_STRING 230 . 235) (";" 235 . 236) (T_VARIABLE 245 . 250) (T_OBJECT_OPERATOR 250 . 252) (T_STRING 252 . 255) ("=" 256 . 257) (T_ARRAY 258 . 263) ("(" 263 . 264) (T_CONSTANT_ENCAPSED_STRING 264 . 270) ("," 270 . 271) (T_CONSTANT_ENCAPSED_STRING 272 . 278) ("," 278 . 279) (T_CONSTANT_ENCAPSED_STRING 280 . 286) (")" 286 . 287) (";" 287 . 288) ("}" 293 . 294) ("}" 295 . 296) (T_VARIABLE 298 . 302) ("=" 303 . 304) (T_NEW 305 . 308) (T_STRING 309 . 312) ("(" 312 . 313) (")" 313 . 314) (";" 314 . 315) (T_VARIABLE 316 . 321) ("=" 322 . 323) (T_CONSTANT_ENCAPSED_STRING 324 . 332) (";" 332 . 333) (T_ECHO 335 . 339) (T_START_HEREDOC 340 . 347) (T_ENCAPSED_AND_WHITESPACE 347 . 359) (T_VARIABLE 359 . 364) (T_ENCAPSED_AND_WHITESPACE 364 . 386) (T_VARIABLE 386 . 390) (T_OBJECT_OPERATOR 390 . 392) (T_STRING 392 . 395) (T_ENCAPSED_AND_WHITESPACE 395 . 421) (T_CURLY_OPEN 421 . 422) (T_VARIABLE 422 . 426) (T_OBJECT_OPERATOR 426 . 428) (T_STRING 428 . 431) ("[" 431 . 432) (T_LNUMBER 432 . 433) ("]" 433 . 434) ("}" 434 . 435) (T_ENCAPSED_AND_WHITESPACE 435 . 472) (T_END_HEREDOC 472 . 475) (";" 475 . 476) (T_CLOSE_TAG 477 . 479) (T_INLINE_HTML 479 . 480)))))
 
   (phps-mode-test--with-buffer
    "<?php\nvar_dump(array(<<<EOD\nfoobar!\nEOD\n));\n?>\n"
@@ -450,7 +450,7 @@
    (should
     (equal
      phps-mode-lex-analyzer--tokens
-     '((T_OPEN_TAG 1 . 7) (T_STRING 7 . 15) ("(" 15 . 16) (T_ARRAY 16 . 21) ("(" 21 . 22) (T_START_HEREDOC 22 . 29) (T_ENCAPSED_AND_WHITESPACE 29 . 36) (T_END_HEREDOC 36 . 40) (")" 41 . 42) (")" 42 . 43) (";" 43 . 44) (T_CLOSE_TAG 45 . 47) (T_INLINE_HTML 47 . 48)))))
+     '((T_OPEN_TAG 1 . 7) (T_STRING 7 . 15) ("(" 15 . 16) (T_ARRAY 16 . 21) ("(" 21 . 22) (T_START_HEREDOC 22 . 29) (T_ENCAPSED_AND_WHITESPACE 29 . 37) (T_END_HEREDOC 37 . 40) (")" 41 . 42) (")" 42 . 43) (";" 43 . 44) (T_CLOSE_TAG 45 . 47) (T_INLINE_HTML 47 . 48)))))
 
   (phps-mode-test--with-buffer
    "<?php\n// Static variables\nfunction foo()\n{\n    static $bar = <<<LABEL\nNothing in here...\nLABEL;\n}\n\n// Class properties/constants\nclass foo\n{\n    const BAR = <<<FOOBAR\nConstant example\nFOOBAR;\n\n    public $baz = <<<FOOBAR\nProperty example\nFOOBAR;\n}\n?>\n"
@@ -458,7 +458,7 @@
    (should
     (equal
      phps-mode-lex-analyzer--tokens
-     '((T_OPEN_TAG 1 . 7) (T_COMMENT 7 . 26) (T_FUNCTION 27 . 35) (T_STRING 36 . 39) ("(" 39 . 40) (")" 40 . 41) ("{" 42 . 43) (T_STATIC 48 . 54) (T_VARIABLE 55 . 59) ("=" 60 . 61) (T_START_HEREDOC 62 . 71) (T_ENCAPSED_AND_WHITESPACE 71 . 89) (T_END_HEREDOC 89 . 95) (";" 95 . 96) ("}" 97 . 98) (T_COMMENT 100 . 129) (T_CLASS 130 . 135) (T_STRING 136 . 139) ("{" 140 . 141) (T_CONST 146 . 151) (T_STRING 152 . 155) ("=" 156 . 157) (T_START_HEREDOC 158 . 168) (T_ENCAPSED_AND_WHITESPACE 168 . 184) (T_END_HEREDOC 184 . 191) (";" 191 . 192) (T_PUBLIC 198 . 204) (T_VARIABLE 205 . 209) ("=" 210 . 211) (T_START_HEREDOC 212 . 222) (T_ENCAPSED_AND_WHITESPACE 222 . 238) (T_END_HEREDOC 238 . 245) (";" 245 . 246) ("}" 247 . 248) (T_CLOSE_TAG 249 . 251) (T_INLINE_HTML 251 . 252)))))
+     '((T_OPEN_TAG 1 . 7) (T_COMMENT 7 . 26) (T_FUNCTION 27 . 35) (T_STRING 36 . 39) ("(" 39 . 40) (")" 40 . 41) ("{" 42 . 43) (T_STATIC 48 . 54) (T_VARIABLE 55 . 59) ("=" 60 . 61) (T_START_HEREDOC 62 . 71) (T_ENCAPSED_AND_WHITESPACE 71 . 90) (T_END_HEREDOC 90 . 95) (";" 95 . 96) ("}" 97 . 98) (T_COMMENT 100 . 129) (T_CLASS 130 . 135) (T_STRING 136 . 139) ("{" 140 . 141) (T_CONST 146 . 151) (T_STRING 152 . 155) ("=" 156 . 157) (T_START_HEREDOC 158 . 168) (T_ENCAPSED_AND_WHITESPACE 168 . 185) (T_END_HEREDOC 185 . 191) (";" 191 . 192) (T_PUBLIC 198 . 204) (T_VARIABLE 205 . 209) ("=" 210 . 211) (T_START_HEREDOC 212 . 222) (T_ENCAPSED_AND_WHITESPACE 222 . 239) (T_END_HEREDOC 239 . 245) (";" 245 . 246) ("}" 247 . 248) (T_CLOSE_TAG 249 . 251) (T_INLINE_HTML 251 . 252)))))
 
   (phps-mode-test--with-buffer
    "\n<?php\necho <<<\"FOOBAR\"\nHello World!\nFOOBAR;\n?>\n"
@@ -466,7 +466,7 @@
    (should
     (equal
      phps-mode-lex-analyzer--tokens
-     '((T_INLINE_HTML 1 . 2) (T_OPEN_TAG 2 . 8) (T_ECHO 8 . 12) (T_START_HEREDOC 13 . 25) (T_ENCAPSED_AND_WHITESPACE 25 . 37) (T_END_HEREDOC 37 . 44) (";" 44 . 45) (T_CLOSE_TAG 46 . 48) (T_INLINE_HTML 48 . 49)))))
+     '((T_INLINE_HTML 1 . 2) (T_OPEN_TAG 2 . 8) (T_ECHO 8 . 12) (T_START_HEREDOC 13 . 25) (T_ENCAPSED_AND_WHITESPACE 25 . 38) (T_END_HEREDOC 38 . 44) (";" 44 . 45) (T_CLOSE_TAG 46 . 48) (T_INLINE_HTML 48 . 49)))))
 
   (phps-mode-test--with-buffer
    "<?php\n$var = <<<QUERY\n    {\n        shop {\n            name\n        }\n    }\n    QUERY;\n"
@@ -474,7 +474,7 @@
    (should
     (equal
      phps-mode-lex-analyzer--tokens
-     '((T_OPEN_TAG 1 . 7) (T_VARIABLE 7 . 11) ("=" 12 . 13) (T_START_HEREDOC 14 . 23) (T_ENCAPSED_AND_WHITESPACE 23 . 76) (T_END_HEREDOC 76 . 82) (T_STRING 82 . 86) (";" 86 . 87)))))
+     '((T_OPEN_TAG 1 . 7) (T_VARIABLE 7 . 11) ("=" 12 . 13) (T_START_HEREDOC 14 . 23) (T_ENCAPSED_AND_WHITESPACE 23 . 81) (T_END_HEREDOC 81 . 86) (";" 86 . 87)))))
 
 
   ;; NOWDOC
@@ -485,7 +485,7 @@
    (should
     (equal
      phps-mode-lex-analyzer--tokens
-     '((T_OPEN_TAG 1 . 7) (T_ECHO 7 . 11) (T_START_HEREDOC 12 . 21) (T_ENCAPSED_AND_WHITESPACE 21 . 140) (T_END_HEREDOC 140 . 144) (";" 144 . 145)))))
+     '((T_OPEN_TAG 1 . 7) (T_ECHO 7 . 11) (T_START_HEREDOC 12 . 21) (T_ENCAPSED_AND_WHITESPACE 21 . 141) (T_END_HEREDOC 141 . 144) (";" 144 . 145)))))
 
   (phps-mode-test--with-buffer
    "<?php\nclass foo\n{\n    public $foo;\n    public $bar;\n\n    function __construct()\n    {\n        $this->foo = 'Foo';\n        $this->bar = array('Bar1', 'Bar2', 'Bar3');\n    }\n}\n\n$foo = new foo();\n$name = 'MyName';\n\necho <<<'EOT'\nMy name is \"$name\". I am printing some $foo->foo.\nNow, I am printing some {$foo->bar[1]}.\nThis should not print a capital 'A': \x41\nEOT;\n?>\n"
@@ -493,7 +493,7 @@
    (should
     (equal
      phps-mode-lex-analyzer--tokens
-     '((T_OPEN_TAG 1 . 7) (T_CLASS 7 . 12) (T_STRING 13 . 16) ("{" 17 . 18) (T_PUBLIC 23 . 29) (T_VARIABLE 30 . 34) (";" 34 . 35) (T_PUBLIC 40 . 46) (T_VARIABLE 47 . 51) (";" 51 . 52) (T_FUNCTION 58 . 66) (T_STRING 67 . 78) ("(" 78 . 79) (")" 79 . 80) ("{" 85 . 86) (T_VARIABLE 95 . 100) (T_OBJECT_OPERATOR 100 . 102) (T_STRING 102 . 105) ("=" 106 . 107) (T_CONSTANT_ENCAPSED_STRING 108 . 113) (";" 113 . 114) (T_VARIABLE 123 . 128) (T_OBJECT_OPERATOR 128 . 130) (T_STRING 130 . 133) ("=" 134 . 135) (T_ARRAY 136 . 141) ("(" 141 . 142) (T_CONSTANT_ENCAPSED_STRING 142 . 148) ("," 148 . 149) (T_CONSTANT_ENCAPSED_STRING 150 . 156) ("," 156 . 157) (T_CONSTANT_ENCAPSED_STRING 158 . 164) (")" 164 . 165) (";" 165 . 166) ("}" 171 . 172) ("}" 173 . 174) (T_VARIABLE 176 . 180) ("=" 181 . 182) (T_NEW 183 . 186) (T_STRING 187 . 190) ("(" 190 . 191) (")" 191 . 192) (";" 192 . 193) (T_VARIABLE 194 . 199) ("=" 200 . 201) (T_CONSTANT_ENCAPSED_STRING 202 . 210) (";" 210 . 211) (T_ECHO 213 . 217) (T_START_HEREDOC 218 . 227) (T_ENCAPSED_AND_WHITESPACE 227 . 355) (T_END_HEREDOC 355 . 359) (";" 359 . 360) (T_CLOSE_TAG 361 . 363) (T_INLINE_HTML 363 . 364)))))
+     '((T_OPEN_TAG 1 . 7) (T_CLASS 7 . 12) (T_STRING 13 . 16) ("{" 17 . 18) (T_PUBLIC 23 . 29) (T_VARIABLE 30 . 34) (";" 34 . 35) (T_PUBLIC 40 . 46) (T_VARIABLE 47 . 51) (";" 51 . 52) (T_FUNCTION 58 . 66) (T_STRING 67 . 78) ("(" 78 . 79) (")" 79 . 80) ("{" 85 . 86) (T_VARIABLE 95 . 100) (T_OBJECT_OPERATOR 100 . 102) (T_STRING 102 . 105) ("=" 106 . 107) (T_CONSTANT_ENCAPSED_STRING 108 . 113) (";" 113 . 114) (T_VARIABLE 123 . 128) (T_OBJECT_OPERATOR 128 . 130) (T_STRING 130 . 133) ("=" 134 . 135) (T_ARRAY 136 . 141) ("(" 141 . 142) (T_CONSTANT_ENCAPSED_STRING 142 . 148) ("," 148 . 149) (T_CONSTANT_ENCAPSED_STRING 150 . 156) ("," 156 . 157) (T_CONSTANT_ENCAPSED_STRING 158 . 164) (")" 164 . 165) (";" 165 . 166) ("}" 171 . 172) ("}" 173 . 174) (T_VARIABLE 176 . 180) ("=" 181 . 182) (T_NEW 183 . 186) (T_STRING 187 . 190) ("(" 190 . 191) (")" 191 . 192) (";" 192 . 193) (T_VARIABLE 194 . 199) ("=" 200 . 201) (T_CONSTANT_ENCAPSED_STRING 202 . 210) (";" 210 . 211) (T_ECHO 213 . 217) (T_START_HEREDOC 218 . 227) (T_ENCAPSED_AND_WHITESPACE 227 . 356) (T_END_HEREDOC 356 . 359) (";" 359 . 360) (T_CLOSE_TAG 361 . 363) (T_INLINE_HTML 363 . 364)))))
 
   (phps-mode-test--with-buffer
    "<?php\nclass foo {\n    public $bar = <<<'EOT'\nbar\nEOT;\n}\n?>\n"
@@ -501,7 +501,7 @@
    (should
     (equal
      phps-mode-lex-analyzer--tokens
-     '((T_OPEN_TAG 1 . 7) (T_CLASS 7 . 12) (T_STRING 13 . 16) ("{" 17 . 18) (T_PUBLIC 23 . 29) (T_VARIABLE 30 . 34) ("=" 35 . 36) (T_START_HEREDOC 37 . 46) (T_ENCAPSED_AND_WHITESPACE 46 . 49) (T_END_HEREDOC 49 . 53) (";" 53 . 54) ("}" 55 . 56) (T_CLOSE_TAG 57 . 59) (T_INLINE_HTML 59 . 60)))))
+     '((T_OPEN_TAG 1 . 7) (T_CLASS 7 . 12) (T_STRING 13 . 16) ("{" 17 . 18) (T_PUBLIC 23 . 29) (T_VARIABLE 30 . 34) ("=" 35 . 36) (T_START_HEREDOC 37 . 46) (T_ENCAPSED_AND_WHITESPACE 46 . 50) (T_END_HEREDOC 50 . 53) (";" 53 . 54) ("}" 55 . 56) (T_CLOSE_TAG 57 . 59) (T_INLINE_HTML 59 . 60)))))
 
   (phps-mode-test--with-buffer
    "<?php\n\nclass MyClass\n{\n    public const MY_CONSTANT = <<<'DELIMITER'\n    {\n        some {\n            json\n        }\n    }\n    DELIMITER;\n}\n"
@@ -509,7 +509,7 @@
    (should
     (equal
      phps-mode-lex-analyzer--tokens
-     '((T_OPEN_TAG 1 . 7) (T_CLASS 8 . 13) (T_STRING 14 . 21) ("{" 22 . 23) (T_PUBLIC 28 . 34) (T_CONST 35 . 40) (T_STRING 41 . 52) ("=" 53 . 54) (T_START_HEREDOC 55 . 70) (T_ENCAPSED_AND_WHITESPACE 70 . 123) (T_END_HEREDOC 123 . 133) (T_STRING 133 . 137) (";" 137 . 138) ("}" 139 . 140)))))
+     '((T_OPEN_TAG 1 . 7) (T_CLASS 8 . 13) (T_STRING 14 . 21) ("{" 22 . 23) (T_PUBLIC 28 . 34) (T_CONST 35 . 40) (T_STRING 41 . 52) ("=" 53 . 54) (T_START_HEREDOC 55 . 70) (T_ENCAPSED_AND_WHITESPACE 70 . 128) (T_END_HEREDOC 128 . 137) (";" 137 . 138) ("}" 139 . 140)))))
 
   ;; Backquotes
   (phps-mode-test--with-buffer
@@ -571,7 +571,7 @@
    (should
     (equal
      phps-mode-lex-analyzer--tokens
-     '((T_OPEN_TAG 1 . 7) (T_VARIABLE 7 . 11) ("=" 12 . 13) (T_START_HEREDOC 14 . 21) (T_ENCAPSED_AND_WHITESPACE 21 . 28) (T_CURLY_OPEN 28 . 29) (T_VARIABLE 29 . 35) ("[" 35 . 36) (T_CONSTANT_ENCAPSED_STRING 36 . 43) ("]" 43 . 44) (T_OBJECT_OPERATOR 44 . 46) (T_STRING 46 . 54) ("}" 54 . 55) (T_ENCAPSED_AND_WHITESPACE 55 . 62) (T_CURLY_OPEN 62 . 63) (T_VARIABLE 63 . 69) (T_OBJECT_OPERATOR 69 . 71) (T_STRING 71 . 75) ("(" 75 . 76) (")" 76 . 77) ("}" 77 . 78) (T_ENCAPSED_AND_WHITESPACE 78 . 86) (T_END_HEREDOC 86 . 90) (";" 90 . 91)))))
+     '((T_OPEN_TAG 1 . 7) (T_VARIABLE 7 . 11) ("=" 12 . 13) (T_START_HEREDOC 14 . 21) (T_ENCAPSED_AND_WHITESPACE 21 . 28) (T_CURLY_OPEN 28 . 29) (T_VARIABLE 29 . 35) ("[" 35 . 36) (T_CONSTANT_ENCAPSED_STRING 36 . 43) ("]" 43 . 44) (T_OBJECT_OPERATOR 44 . 46) (T_STRING 46 . 54) ("}" 54 . 55) (T_ENCAPSED_AND_WHITESPACE 55 . 62) (T_CURLY_OPEN 62 . 63) (T_VARIABLE 63 . 69) (T_OBJECT_OPERATOR 69 . 71) (T_STRING 71 . 75) ("(" 75 . 76) (")" 76 . 77) ("}" 77 . 78) (T_ENCAPSED_AND_WHITESPACE 78 . 87) (T_END_HEREDOC 87 . 90) (";" 90 . 91)))))
 
   (phps-mode-test--with-buffer
    "<?php echo \"\\\"$string\\\"\";"
