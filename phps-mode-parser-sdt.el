@@ -596,6 +596,11 @@
   ""
   "Current bookkeeping namespace.")
 
+(defvar-local
+  phps-mode-parser-sdt-bookkeeping-symbol-stack
+  nil
+  "Current bookkeeping symbol stack.")
+
 ;; SDT starts here
 
 ;; 0 ((start) (top_statement_list))
@@ -3162,11 +3167,22 @@
  359
  (lambda(args terminals)
    ;; TODO Should probably have a expression / statement buffer of mentioned symbols and do a parse each time a expression / statement reaches its terminus
+   (let ((variable-type (plist-get (nth 0 args) 'ast-type)))
+     (cond
+      ((equal variable-type 'variable-callable-variable)
+       (let* ((callable-variable (plist-get (nth 0 args) 'callable-variable))
+              (callable-variable-type (plist-get callable-variable 'ast-type)))
+         (cond
+          ((equal callable-variable-type 'callable-variable-simple-variable)
+           (let ((callable-variable-simple-variable (plist-get callable-variable 'simple-variable)))
+             (message "callable-variable-simple-variable: %S" callable-variable-simple-variable)
+             )))))))
 
    ;; TODO Declare variable in bookkeeping and imenu here
    (message "expr-assign-variable-by-expr")
    (message "args: %S" args)
    (message "terminals: %S" terminals)
+   (message "stack: %S" phps-mode-parser-sdt-bookkeeping-symbol-stack)
    `(
      ast-type
      expr-assign-variable-by-expr
@@ -4942,6 +4958,7 @@
    `(
      ast-type
      callable-variable-simple-variable
+     simple-variable
      ,args))
  phps-mode-parser--table-translations)
 
@@ -5069,6 +5086,12 @@
            "%s id %s"
            phps-mode-parser-sdt-bookkeeping-namespace
            args)))
+     (push
+      (list
+       namespaced-variable
+         (car (cdr terminals))
+         (cdr (cdr terminals)))
+      phps-mode-parser-sdt-bookkeeping-symbol-stack)
 
      ;; Bookkeep whether we hit or miss the variable
      (if (gethash
