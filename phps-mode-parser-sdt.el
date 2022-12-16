@@ -3161,6 +3161,12 @@
 (puthash
  359
  (lambda(args terminals)
+   ;; TODO Should probably have a expression / statement buffer of mentioned symbols and do a parse each time a expression / statement reaches its terminus
+
+   ;; TODO Declare variable in bookkeeping and imenu here
+   (message "expr-assign-variable-by-expr")
+   (message "args: %S" args)
+   (message "terminals: %S" terminals)
    `(
      ast-type
      expr-assign-variable-by-expr
