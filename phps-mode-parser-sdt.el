@@ -5120,24 +5120,205 @@
      ,args))
  phps-mode-parser--table-translations)
 
+;; 521 ((new_variable) (new_variable "[" optional_expr "]"))
+(puthash
+ 521
+ (lambda(args _terminals)
+   `(
+     ast-type
+     new-variable-optional-expr
+     new-variable
+     ,(nth 0 args)
+     optional-expr
+     ,(nth 2 args)))
+ phps-mode-parser--table-translations)
 
-;; TODO Was here
+;; 522 ((new_variable) (new_variable "{" expr "}"))
+(puthash
+ 522
+ (lambda(args _terminals)
+   `(
+     ast-type
+     new-variable-expr
+     new-variable
+     ,(nth 0 args)
+     optional-expr
+     ,(nth 2 args)))
+ phps-mode-parser--table-translations)
 
-;; non_empty_array_pair_list -> (non_empty_array_pair_list "," possible_array_pair)
+;; 523 ((new_variable) (new_variable T_OBJECT_OPERATOR property_name))
+(puthash
+ 523
+ (lambda(args _terminals)
+   `(
+     ast-type
+     new-variable-property-name
+     new-variable
+     ,(nth 0 args)
+     property-name
+     ,(nth 2 args)))
+ phps-mode-parser--table-translations)
+
+;; 524 ((new_variable) (new_variable T_NULLSAFE_OBJECT_OPERATOR property_name))
+(puthash
+ 524
+ (lambda(args _terminals)
+   `(
+     ast-type
+     new-variable-nullsafe-property-name
+     new-variable
+     ,(nth 0 args)
+     property-name
+     ,(nth 2 args)))
+ phps-mode-parser--table-translations)
+
+;; 525 ((new_variable) (class_name T_PAAMAYIM_NEKUDOTAYIM simple_variable))
+(puthash
+ 525
+ (lambda(args _terminals)
+   `(
+     ast-type
+     new-variable-class-name
+     class-name
+     ,(nth 0 args)
+     simple-variable
+     ,(nth 2 args)))
+ phps-mode-parser--table-translations)
+
+;; 526 ((new_variable) (new_variable T_PAAMAYIM_NEKUDOTAYIM simple_variable))
+(puthash
+ 526
+ (lambda(args _terminals)
+   `(
+     ast-type
+     new-variable-simple-variable
+     new-variable
+     ,(nth 0 args)
+     simple-variable
+     ,(nth 2 args)))
+ phps-mode-parser--table-translations)
+
+;; 527 ((member_name) (identifier))
+(puthash
+ 527
+ (lambda(args _terminals)
+   `(
+     ast-type
+     member-name-identifier
+     identifier
+     ,args))
+ phps-mode-parser--table-translations)
+
+;; 528 ((member_name) ("{" expr "}"))
+(puthash
+ 528
+ (lambda(args _terminals)
+   `(
+     ast-type
+     member-name-expr
+     expr
+     ,(nth 1 args)))
+ phps-mode-parser--table-translations)
+
+;; 529 ((member_name) (simple_variable))
+(puthash
+ 529
+ (lambda(args _terminals)
+   `(
+     ast-type
+     member-name-simple-variable
+     simple-variable
+     ,args))
+ phps-mode-parser--table-translations)
+
+;; 530 ((property_name) (T_STRING))
+(puthash
+ 530
+ (lambda(args _terminals)
+   `(
+     ast-type
+     properyt-name-string
+     string
+     ,args))
+ phps-mode-parser--table-translations)
+
+;; 531 ((property_name) ("{" expr "}"))
+(puthash
+ 531
+ (lambda(args _terminals)
+   `(
+     ast-type
+     properyt-name-expr
+     expr
+     ,args))
+ phps-mode-parser--table-translations)
+
+;; 532 ((property_name) (simple_variable))
+(puthash
+ 532
+ (lambda(args _terminals)
+   `(
+     ast-type
+     property-name-simple-variable
+     simple-variable
+     ,args))
+ phps-mode-parser--table-translations)
+
+;; 533 ((array_pair_list) (non_empty_array_pair_list))
+(puthash
+ 533
+ (lambda(args _terminals)
+   `(
+     ast-type
+     array-pair-list-non-empty
+     non-empty-array-pair-list
+     ,args))
+ phps-mode-parser--table-translations)
+
+;; 534 ((possible_array_pair) (%empty))
+(puthash
+ 534
+ (lambda(args _terminals)
+   `(
+     ast-type
+     possible-array-pair-empty))
+ phps-mode-parser--table-translations)
+
+;; 535 ((possible_array_pair) (array_pair))
+(puthash
+ 535
+ (lambda(args _terminals)
+   `(
+     ast-type
+     possible-array-pair-not-empty
+     array-pair
+     ,args))
+ phps-mode-parser--table-translations)
+
+;; 536 ((non_empty_array_pair_list) (non_empty_array_pair_list "," possible_array_pair))
 (puthash
  536
  (lambda(args _terminals)
-   (if (nth 2 args)
-       (append (nth 0 args) (list (nth 2 args)))
-     (nth 0 args)))
+   `(
+     ast-type
+     non-empty-array-pair-list
+     ,(append (nth 0 args) (list (nth 2 args)))))
  phps-mode-parser--table-translations)
 
-;; non_empty_array_pair_list -> (possible_array_pair)
+;; 537 ((non_empty_array_pair_list) (possible_array_pair))
 (puthash
  537
  (lambda(args _terminals)
-   (list args))
+   `(
+     ast-type
+     non-empty-array-pair-list
+     possible-array-pair
+     ,args))
  phps-mode-parser--table-translations)
+
+
+;; TODO Was here
+
 
 ;; internal_functions_in_yacc -> (T_ISSET "(" isset_variables possible_comma ")")
 (puthash
