@@ -591,6 +591,11 @@
   (make-hash-table :test 'equal)
   "Bookkeeping")
 
+(defvar-local
+  phps-mode-parser-sdt-bookkeeping-namespace
+  ""
+  "Current bookkeeping namespace.")
+
 ;; SDT starts here
 
 ;; 0 ((start) (top_statement_list))
@@ -3158,7 +3163,7 @@
  (lambda(args terminals)
    `(
      ast-type
-     expr-assign-variable
+     expr-assign-variable-by-expr
      variable
      ,(nth 0 args)
      expr
@@ -5052,7 +5057,46 @@
 ;; 515 ((simple_variable) (T_VARIABLE))
 (puthash
  515
- (lambda(args _terminals)
+ (lambda(args terminals)
+   (let ((namespaced-variable
+          (format
+           "%s id %s"
+           phps-mode-parser-sdt-bookkeeping-namespace
+           args)))
+
+     ;; Bookkeep whether we hit or miss the variable
+     (if (gethash
+          namespaced-variable
+          phps-mode-parser-sdt-bookkeeping)
+       (puthash
+        (list
+         (car (cdr terminals))
+         (cdr (cdr terminals)))
+        1
+        phps-mode-parser-sdt-bookkeeping)
+       (puthash
+        (list
+         (car (cdr terminals))
+         (cdr (cdr terminals)))
+        0
+        phps-mode-parser-sdt-bookkeeping))
+
+     ;; Declare variable
+     (unless (gethash
+              namespaced-variable
+              phps-mode-parser-sdt-bookkeeping)
+
+       ;; TODO Should not declare in this production
+       (puthash
+        namespaced-variable
+        1
+        phps-mode-parser-sdt-bookkeeping)
+       (message "Declared variable")
+       )
+     ;; Flag whether we hit or missed variable in the bookkeeping here
+     )
+   (message "args: %S" args)
+   (message "terminals: %S" terminals)
    `(
      ast-type
      simple-variable-variable
