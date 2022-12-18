@@ -250,6 +250,7 @@
 (defun phps-mode-ast-bookkeeping--generate (&optional tree)
   "Generate AST for current buffer or optionally for TREE."
   (setq phps-mode-ast-bookkeeping--index phps-mode-parser-sdt-bookkeeping)
+  (message "phps-mode-parser-sdt--bookkeeping-symbol-stack: %S" phps-mode-parser-sdt--bookkeeping-symbol-stack)
   phps-mode-ast-bookkeeping--index)
 
 

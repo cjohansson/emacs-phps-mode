@@ -592,12 +592,12 @@
   "Bookkeeping")
 
 (defvar-local
-  phps-mode-parser-sdt-bookkeeping-namespace
+  phps-mode-parser-sdt--bookkeeping-namespace
   ""
   "Current bookkeeping namespace.")
 
 (defvar-local
-  phps-mode-parser-sdt-bookkeeping-symbol-stack
+  phps-mode-parser-sdt--bookkeeping-symbol-stack
   nil
   "Current bookkeeping symbol stack.")
 
@@ -3176,13 +3176,34 @@
           ((equal callable-variable-type 'callable-variable-simple-variable)
            (let ((callable-variable-simple-variable (plist-get callable-variable 'simple-variable)))
              (message "callable-variable-simple-variable: %S" callable-variable-simple-variable)
-             )))))))
+             (let ((callable-variable-simple-variable-type
+                    (plist-get
+                     callable-variable-simple-variable
+                     'ast-type)))
+                   (cond
+                    ((equal
+                      callable-variable-simple-variable-type
+                      'simple-variable-variable)
+                     (push
+                      (list
+                       'write
+                       (format
+                        "%s id %s"
+                        phps-mode-parser-sdt--bookkeeping-namespace
+                        (plist-get
+                         callable-variable-simple-variable
+                         'variable))
+                       (car (cdr (car terminals)))
+                       (cdr (cdr (car terminals))))
+                      phps-mode-parser-sdt--bookkeeping-symbol-stack)))))))))))
+
+   ;; TODO Should parse bookkeeping writes and reads at every statement terminus
 
    ;; TODO Declare variable in bookkeeping and imenu here
    (message "expr-assign-variable-by-expr")
    (message "args: %S" args)
    (message "terminals: %S" terminals)
-   (message "stack: %S" phps-mode-parser-sdt-bookkeeping-symbol-stack)
+   (message "stack: %S" phps-mode-parser-sdt--bookkeeping-symbol-stack)
    `(
      ast-type
      expr-assign-variable-by-expr
@@ -5084,14 +5105,15 @@
    (let ((namespaced-variable
           (format
            "%s id %s"
-           phps-mode-parser-sdt-bookkeeping-namespace
+           phps-mode-parser-sdt--bookkeeping-namespace
            args)))
      (push
       (list
+       'read
        namespaced-variable
-         (car (cdr terminals))
-         (cdr (cdr terminals)))
-      phps-mode-parser-sdt-bookkeeping-symbol-stack)
+       (car (cdr terminals))
+       (cdr (cdr terminals)))
+      phps-mode-parser-sdt--bookkeeping-symbol-stack)
 
      ;; Bookkeep whether we hit or miss the variable
      (if (gethash
