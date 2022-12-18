@@ -3283,6 +3283,7 @@
                 ((equal
                   callable-variable-simple-variable-type
                   'simple-variable-variable)
+                 ;; (message "declared variable from terminals: %S" terminals)
                  (push
                   (list
                    (format

@@ -30,6 +30,15 @@
 
 (defun phps-mode-ast--generate ()
   "Generate AST for current buffer."
+  (setq
+   phps-mode-parser-sdt-bookkeeping
+   (make-hash-table :test 'equal))
+  (setq
+   phps-mode-parser-sdt--bookkeeping-namespace
+   "")
+  (setq
+   phps-mode-parser-sdt--bookkeeping-symbol-stack
+   nil)
   (let* ((result (phps-mode-parser--parse t))
          (parse-trail (nth 0 result))
          (translation (nth 1 result))
