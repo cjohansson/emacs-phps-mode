@@ -601,6 +601,68 @@
   nil
   "Current bookkeeping symbol stack.")
 
+(defvar-local
+  phps-mode-parser-sdt--bookkeeping-symbol-assignment-stack
+  nil
+  "Current bookkeeping assignment symbol stack.")
+
+(defun phps-mode-parser-sdt--parse-statement ()
+  "Parse latest statement."
+   ;; (message "phps-mode-parser-sdt--bookkeeping-symbol-assignment-stack: %S" phps-mode-parser-sdt--bookkeeping-symbol-assignment-stack)
+   ;; (message "phps-mode-parser-sdt--bookkeeping-symbol-stack: %S" phps-mode-parser-sdt--bookkeeping-symbol-stack)
+
+  ;; Parse bookkeeping writes and reads at every statement terminus
+  (when phps-mode-parser-sdt--bookkeeping-symbol-assignment-stack
+    ;; TODO Should declare based on start?
+    ;; Declare variables
+    (dolist (
+             symbol-list
+             phps-mode-parser-sdt--bookkeeping-symbol-assignment-stack)
+      (let ((symbol-name (car symbol-list))
+            (symbol-start (car (cdr symbol-list)))
+            (symbol-end (car (cdr (cdr symbol-list)))))
+        (if (gethash symbol-name phps-mode-parser-sdt-bookkeeping)
+            (puthash
+             symbol-name
+             (1+ (gethash symbol-name phps-mode-parser-sdt-bookkeeping))
+             phps-mode-parser-sdt-bookkeeping)
+          (puthash
+           symbol-name
+           1
+           phps-mode-parser-sdt-bookkeeping))))
+    (setq
+     phps-mode-parser-sdt--bookkeeping-symbol-assignment-stack
+     nil))
+
+  (when phps-mode-parser-sdt--bookkeeping-symbol-stack
+    ;; Bookkeeping hit / misses of symbols here
+    ;; TODO Should consider declaration position as well?
+    (dolist (
+             symbol-list
+             phps-mode-parser-sdt--bookkeeping-symbol-stack)
+      (let ((symbol-name (car symbol-list))
+            (symbol-start (car (cdr symbol-list)))
+            (symbol-end (car (cdr (cdr symbol-list)))))
+        (if (gethash
+             symbol-name
+             phps-mode-parser-sdt-bookkeeping)
+            (puthash
+             (list
+              symbol-start
+              symbol-end)
+             1
+             phps-mode-parser-sdt-bookkeeping)
+          (puthash
+           (list
+            symbol-start
+            symbol-end)
+           0
+           phps-mode-parser-sdt-bookkeeping))))
+    (setq
+     phps-mode-parser-sdt--bookkeeping-symbol-stack
+     nil)))
+
+
 ;; SDT starts here
 
 ;; 0 ((start) (top_statement_list))
@@ -1323,19 +1385,31 @@
 (puthash
  145
  (lambda(args _terminals)
+   (phps-mode-parser-sdt--parse-statement)
    (nth 1 args))
  phps-mode-parser--table-translations)
 
 ;; 146 ((statement) (if_stmt))
-(puthash 146 (lambda(args _terminals) args) phps-mode-parser--table-translations)
+(puthash
+ 146
+ (lambda(args _terminals)
+   (phps-mode-parser-sdt--parse-statement)
+   args)
+ phps-mode-parser--table-translations)
 
 ;; 147 ((statement) (alt_if_stmt))
-(puthash 147 (lambda(args _terminals) args) phps-mode-parser--table-translations)
+(puthash
+ 147
+ (lambda(args _terminals)
+   (phps-mode-parser-sdt--parse-statement)
+   args)
+ phps-mode-parser--table-translations)
 
-;; 148 (T_WHILE "(" expr ")" while_statement))
+;; 148 ((statement) (T_WHILE "(" expr ")" while_statement))
 (puthash
  148
  (lambda(args _terminals)
+   (phps-mode-parser-sdt--parse-statement)
    `(
      ast-type
      while-statement
@@ -1350,6 +1424,7 @@
 (puthash
  149
  (lambda(args _terminals)
+   (phps-mode-parser-sdt--parse-statement)
    `(
      ast-type
      do-statement
@@ -1360,10 +1435,11 @@
      ))
  phps-mode-parser--table-translations)
 
-;; 150 (T_FOR "(" for_exprs ";" for_exprs ";" for_exprs ")" for_statement))
+;; 150 ((statement) (T_FOR "(" for_exprs ";" for_exprs ";" for_exprs ")" for_statement))
 (puthash
  150
  (lambda(args _terminals)
+   (phps-mode-parser-sdt--parse-statement)
    `(
      ast-type
      for-statement
@@ -1382,6 +1458,7 @@
 (puthash
  151
  (lambda(args _terminals)
+   (phps-mode-parser-sdt--parse-statement)
    `(
      ast-type
      switch-statement
@@ -1396,6 +1473,7 @@
 (puthash
  152
  (lambda(args _terminals)
+   (phps-mode-parser-sdt--parse-statement)
    `(
      ast-type
      break-statement
@@ -1408,6 +1486,7 @@
 (puthash
  153
  (lambda(args _terminals)
+   (phps-mode-parser-sdt--parse-statement)
    `(
      ast-type
      continue-statement
@@ -1420,6 +1499,7 @@
 (puthash
  154
  (lambda(args _terminals)
+   (phps-mode-parser-sdt--parse-statement)
    `(
      ast-type
      return-statement
@@ -1432,6 +1512,7 @@
 (puthash
  155
  (lambda(args _terminals)
+   (phps-mode-parser-sdt--parse-statement)
    `(
      ast-type
      global-statement
@@ -1444,6 +1525,7 @@
 (puthash
  156
  (lambda(args _terminals)
+   (phps-mode-parser-sdt--parse-statement)
    `(
      ast-type
      static-statement
@@ -1456,6 +1538,7 @@
 (puthash
  157
  (lambda(args _terminals)
+   (phps-mode-parser-sdt--parse-statement)
    `(
      ast-type
      echo-statement
@@ -1465,12 +1548,18 @@
  phps-mode-parser--table-translations)
 
 ;; 158 ((statement) (T_INLINE_HTML))
-(puthash 158 (lambda(args _terminals) args) phps-mode-parser--table-translations)
+(puthash
+ 158
+ (lambda(args _terminals)
+   (phps-mode-parser-sdt--parse-statement)
+   args)
+ phps-mode-parser--table-translations)
 
 ;; 159 ((statement) (expr ";"))
 (puthash
  159
  (lambda(args _terminals)
+   (phps-mode-parser-sdt--parse-statement)
    `(
      ast-type
      expr-statement
@@ -1480,12 +1569,18 @@
  phps-mode-parser--table-translations)
 
 ;; 160 ((statement) (T_UNSET "(" unset_variables possible_comma ")" ";"))
-(puthash 159 (lambda(args _terminals) (nth 0 args)) phps-mode-parser--table-translations)
+(puthash
+ 160
+ (lambda(args _terminals)
+   (phps-mode-parser-sdt--parse-statement)
+   (nth 0 args))
+ phps-mode-parser--table-translations)
 
 ;; 161 ((statement) (T_FOREACH "(" expr T_AS foreach_variable ")" foreach_statement))
 (puthash
  161
  (lambda(args _terminals)
+   (phps-mode-parser-sdt--parse-statement)
    `(
      ast-type
      foreach-statement
@@ -1494,14 +1589,14 @@
      as
      ,(nth 4 args)
      foreach-statement
-     ,(nth 6 args)
-     ))
+     ,(nth 6 args)))
  phps-mode-parser--table-translations)
 
 ;; 162 ((statement) (T_FOREACH "(" expr T_AS foreach_variable T_DOUBLE_ARROW foreach_variable ")" foreach_statement))
 (puthash
  162
  (lambda(args _terminals)
+   (phps-mode-parser-sdt--parse-statement)
    `(
      ast-type
      foreach-statement
@@ -1512,14 +1607,14 @@
      value
      ,(nth 6 args)
      foreach-statement
-     ,(nth 8 args)
-     ))
+     ,(nth 8 args)))
  phps-mode-parser--table-translations)
 
 ;; 163 ((statement) (T_DECLARE "(" const_list ")" declare_statement))
 (puthash
  163
  (lambda(args _terminals)
+   (phps-mode-parser-sdt--parse-statement)
    `(
      ast-type
      declare-statement
@@ -1533,12 +1628,18 @@
  phps-mode-parser--table-translations)
 
 ;; 164 ((statement) (";"))
-(puthash 164 (lambda(_args _terminals) nil) phps-mode-parser--table-translations)
+(puthash
+ 164
+ (lambda(_args _terminals)
+   (phps-mode-parser-sdt--parse-statement)
+   nil)
+ phps-mode-parser--table-translations)
 
 ;; 165 ((statement) (T_TRY "{" inner_statement_list "}" catch_list finally_statement))
 (puthash
  165
  (lambda(args _terminals)
+   (phps-mode-parser-sdt--parse-statement)
    `(
      ast-type
      try-statement
@@ -1547,32 +1648,31 @@
      catch-list
      ,(nth 4 args)
      finally-statement
-     ,(nth 5 args)
-     ))
+     ,(nth 5 args)))
  phps-mode-parser--table-translations)
 
 ;; 166 ((statement) (T_GOTO T_STRING ";"))
 (puthash
  166
  (lambda(args _terminals)
+   (phps-mode-parser-sdt--parse-statement)
    `(
      ast-type
      goto-statement
      label
-     ,(nth 1 args)
-     ))
+     ,(nth 1 args)))
  phps-mode-parser--table-translations)
 
 ;; 167 ((statement) (T_STRING ":"))
 (puthash
  167
  (lambda(args _terminals)
+   (phps-mode-parser-sdt--parse-statement)
    `(
      ast-type
      label-statement
      label
-     ,(nth 0 args)
-     ))
+     ,(nth 0 args)))
  phps-mode-parser--table-translations)
 
 ;; 168 ((catch_list) (%empty))
@@ -3175,35 +3275,26 @@
          (cond
           ((equal callable-variable-type 'callable-variable-simple-variable)
            (let ((callable-variable-simple-variable (plist-get callable-variable 'simple-variable)))
-             (message "callable-variable-simple-variable: %S" callable-variable-simple-variable)
              (let ((callable-variable-simple-variable-type
                     (plist-get
                      callable-variable-simple-variable
                      'ast-type)))
-                   (cond
-                    ((equal
-                      callable-variable-simple-variable-type
-                      'simple-variable-variable)
-                     (push
-                      (list
-                       'write
-                       (format
-                        "%s id %s"
-                        phps-mode-parser-sdt--bookkeeping-namespace
-                        (plist-get
-                         callable-variable-simple-variable
-                         'variable))
-                       (car (cdr (car terminals)))
-                       (cdr (cdr (car terminals))))
-                      phps-mode-parser-sdt--bookkeeping-symbol-stack)))))))))))
+               (cond
+                ((equal
+                  callable-variable-simple-variable-type
+                  'simple-variable-variable)
+                 (push
+                  (list
+                   (format
+                    "%s id %s"
+                    phps-mode-parser-sdt--bookkeeping-namespace
+                    (plist-get
+                     callable-variable-simple-variable
+                     'variable))
+                   (car (cdr (car terminals)))
+                   (cdr (cdr (car terminals))))
+                  phps-mode-parser-sdt--bookkeeping-symbol-assignment-stack)))))))))))
 
-   ;; TODO Should parse bookkeeping writes and reads at every statement terminus
-
-   ;; TODO Declare variable in bookkeeping and imenu here
-   (message "expr-assign-variable-by-expr")
-   (message "args: %S" args)
-   (message "terminals: %S" terminals)
-   (message "stack: %S" phps-mode-parser-sdt--bookkeeping-symbol-stack)
    `(
      ast-type
      expr-assign-variable-by-expr
@@ -5109,45 +5200,11 @@
            args)))
      (push
       (list
-       'read
        namespaced-variable
        (car (cdr terminals))
        (cdr (cdr terminals)))
-      phps-mode-parser-sdt--bookkeeping-symbol-stack)
+      phps-mode-parser-sdt--bookkeeping-symbol-stack))
 
-     ;; Bookkeep whether we hit or miss the variable
-     (if (gethash
-          namespaced-variable
-          phps-mode-parser-sdt-bookkeeping)
-       (puthash
-        (list
-         (car (cdr terminals))
-         (cdr (cdr terminals)))
-        1
-        phps-mode-parser-sdt-bookkeeping)
-       (puthash
-        (list
-         (car (cdr terminals))
-         (cdr (cdr terminals)))
-        0
-        phps-mode-parser-sdt-bookkeeping))
-
-     ;; Declare variable
-     (unless (gethash
-              namespaced-variable
-              phps-mode-parser-sdt-bookkeeping)
-
-       ;; TODO Should not declare in this production
-       (puthash
-        namespaced-variable
-        1
-        phps-mode-parser-sdt-bookkeeping)
-       (message "Declared variable")
-       )
-     ;; Flag whether we hit or missed variable in the bookkeeping here
-     )
-   (message "args: %S" args)
-   (message "terminals: %S" terminals)
    `(
      ast-type
      simple-variable-variable
