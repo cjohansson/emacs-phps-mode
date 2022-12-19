@@ -35,7 +35,7 @@
    (make-hash-table :test 'equal))
   (setq
    phps-mode-parser-sdt--bookkeeping-namespace
-   "")
+   nil)
   (setq
    phps-mode-parser-sdt--bookkeeping-symbol-stack
    nil)

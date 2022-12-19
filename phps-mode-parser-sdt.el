@@ -591,11 +591,9 @@
   (make-hash-table :test 'equal)
   "Bookkeeping")
 
-;; TODO Should use stack for namespace to be able to go up and down in level
-
 (defvar-local
   phps-mode-parser-sdt--bookkeeping-namespace
-  ""
+  nil
   "Current bookkeeping namespace.")
 
 (defvar-local
@@ -615,15 +613,70 @@
 
 (defun phps-mode-parser-sdt--get-namespaced-symbol-name (symbol-name)
   "Get namespaced SYMBOL-NAME."
-  (if
-      (gethash
-       symbol-name
-       phps-mode-parser-sdt--bookkeeping--superglobal-variable-p)
-      symbol-name
-    (format
-     "%s id %s"
-     phps-mode-parser-sdt--bookkeeping-namespace
-     symbol-name)))
+  (let ((namespace)
+        (class)
+        (interface)
+        (trait)
+        (function))
+    (when phps-mode-parser-sdt--bookkeeping-namespace
+      (dolist (item phps-mode-parser-sdt--bookkeeping-namespace)
+        (let ((space-type (car item))
+              (space-name (car (cdr item))))
+          (cond
+           ((equal space-type 'namespace)
+            (setq namespace space-name))
+           ((equal space-type 'class)
+            (setq class space-name))
+           ((equal space-type 'interface)
+            (setq interface space-name))
+           ((equal space-type 'trait)
+            (setq trait space-name))
+           ((equal space-type 'function)
+            (setq function space-name))))))
+    (if (gethash
+         symbol-name
+         phps-mode-parser-sdt--bookkeeping--superglobal-variable-p)
+        symbol-name
+      (let ((new-symbol-name
+             (format
+              " id %s"
+              symbol-name)))
+        (when function
+          (setq
+           new-symbol-name
+           (format
+            " function %s%s"
+            function
+            new-symbol-name)))
+        (when trait
+          (setq
+           new-symbol-name
+           (format
+            " trait %s%s"
+            trait
+            new-symbol-name)))
+        (when interface
+          (setq
+           new-symbol-name
+           (format
+            " interface %s%s"
+            interface
+            new-symbol-name)))
+        (when class
+          (setq
+           new-symbol-name
+           (format
+            " class %s%s"
+            class
+            new-symbol-name)))
+        (when namespace
+          (setq
+           new-symbol-name
+           (format
+            " namespace %s%s"
+            namespace
+            new-symbol-name)))
+        new-symbol-name))))
 
 (defun phps-mode-parser-sdt--parse-top-statement ()
   "Parse latest top statement."
@@ -968,13 +1021,10 @@
  85
  (lambda(args _terminals)
    (let ((namespace-name args))
-     (setq
-      phps-mode-parser-sdt--bookkeeping-namespace
-      (format
-       " namespace %s%s"
-       namespace-name
-       phps-mode-parser-sdt--bookkeeping-namespace)))
-   args)
+     (push
+      (list 'namespace namespace-name)
+      phps-mode-parser-sdt--bookkeeping-namespace))
+     args)
  phps-mode-parser--table-translations)
 
 ;; 86 ((namespace_declaration_name) (T_NAME_QUALIFIED))
@@ -1151,9 +1201,7 @@
  112
  (lambda(args terminals)
    (phps-mode-parser-sdt--parse-top-statement)
-   (setq
-    phps-mode-parser-sdt--bookkeeping-namespace
-    "")
+   (setq phps-mode-parser-sdt--bookkeeping-namespace nil)
    `(
      ast-type
      namespace
