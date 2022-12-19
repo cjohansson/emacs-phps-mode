@@ -216,17 +216,17 @@
   (phps-mode-test-ast--should-bookkeep
    "<?php\n\n$var = 'abc';\n\nif ($var2) {\n    echo 'This never happens';\n}\nif ($var) {\n    echo 'This happens';\n}"
    "Bookkeeping in root level variable assignments #1"
-   '((" id $var" 1) ((8 12) 1) ((27 32) 0) ((73 77) 1)))
+   '((" id $var" ((8 12))) ((8 12) 1) ((27 32) 0) ((73 77) 1)))
 
   (phps-mode-test-ast--should-bookkeep
    "<?php\n\n$var = 'abc';\n\nif ($var) {\n    echo 'This never happens';\n}\nif ($var2) {\n    echo 'This happens';\n}"
    "Bookkeeping in root level variable assignments #2"
-   '((" id $var" 1) ((8 12) 1) ((27 31) 1) ((72 77) 0)))
+   '((" id $var" ((8 12))) ((8 12) 1) ((27 31) 1) ((72 77) 0)))
 
   (phps-mode-test-ast--should-bookkeep
    "<?php\n\n$var2 = 4;\n\nfunction myFunction($var)\n{\n    $var3 = 3;\n    if ($var) {\n        echo 'Hit';\n    }\n    if ($var2) {\n        echo 'Miss';\n    }\n    if ($var3) {\n        echo 'Hit';\n    }\n}\n\nfunction myFunction2($abc)\n{\n    if ($var) {\n        echo 'Miss';\n    }\n    if ($abc) {\n        echo 'Hit';\n    }\n}\n\nif ($var) {\n    echo 'Miss';\n}\nif ($var2) {\n    echo 'Hit';\n}"
    "Bookkeeping in function level with variable assignments"
-   '((" id $var2" 1) ((8 13) 1) (" function myFunction id $var" 1) ((40 44) 1) (" function myFunction id $var3" 1) ((52 57) 1) ((71 75) 1) ((113 118) 0) ((157 162) 1) (" function myFunction2 id $abc" 1) ((216 220) 1) ((232 236) 0) ((275 279) 1) ((316 320) 0) ((347 352) 1)))
+   '((" id $var2" ((8 13))) ((8 13) 1) (" function myFunction id $var" ((40 44))) (" function myFunction id $var3" ((52 57))) ((157 162) 1) ((113 118) 0) ((71 75) 1) ((52 57) 1) (" function myFunction2 id $abc" ((216 220))) ((275 279) 1) ((232 236) 0) ((316 320) 0) ((347 352) 1)))
 
   (phps-mode-test-ast--should-bookkeep
    "<?php\n\n// Super-globals\n\nif ($_GET) {\n    echo 'Hit';\n}\nif ($_POST) {\n    echo 'Hit';\n}\nif ($_COOKIE) {\n    echo 'Hit';\n}\nif ($_SESSION) {\n    echo 'Hit';\n}\nif ($_REQUEST) {\n    echo 'Hit';\n}\nif ($GLOBALS) {\n    echo 'Hit';\n}\nif ($_SERVER) {\n    echo 'Hit';\n}\nif ($_FILES) {\n    echo 'Hit';\n}\nif ($_ENV) {\n    echo 'Hit';\n}\nif ($argc) {\n    echo 'Hit';\n}\nif ($argv) {\n    echo 'Hit';\n}\nif ($http_​response_​header) {\n    echo 'Hit';\n}"

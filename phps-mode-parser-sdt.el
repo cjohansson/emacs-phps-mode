@@ -606,14 +606,13 @@
   nil
   "Current bookkeeping assignment symbol stack.")
 
-(defun phps-mode-parser-sdt--parse-statement ()
-  "Parse latest statement."
+(defun phps-mode-parser-sdt--parse-top-statement ()
+  "Parse latest top statement."
    ;; (message "phps-mode-parser-sdt--bookkeeping-symbol-assignment-stack: %S" phps-mode-parser-sdt--bookkeeping-symbol-assignment-stack)
    ;; (message "phps-mode-parser-sdt--bookkeeping-symbol-stack: %S" phps-mode-parser-sdt--bookkeeping-symbol-stack)
 
   ;; Parse bookkeeping writes and reads at every statement terminus
   (when phps-mode-parser-sdt--bookkeeping-symbol-assignment-stack
-    ;; TODO Should declare based on start?
     ;; Declare variables
     (dolist (
              symbol-list
@@ -624,11 +623,16 @@
         (if (gethash symbol-name phps-mode-parser-sdt-bookkeeping)
             (puthash
              symbol-name
-             (1+ (gethash symbol-name phps-mode-parser-sdt-bookkeeping))
+             (append
+              (gethash symbol-name phps-mode-parser-sdt-bookkeeping)
+              (list symbol-start symbol-end))
              phps-mode-parser-sdt-bookkeeping)
           (puthash
            symbol-name
-           1
+           (list
+            (list
+             symbol-start
+             symbol-end))
            phps-mode-parser-sdt-bookkeeping))))
     (setq
      phps-mode-parser-sdt--bookkeeping-symbol-assignment-stack
@@ -1046,21 +1050,42 @@
 (puthash 106 (lambda(args _terminals) args) phps-mode-parser--table-translations)
 
 ;; 107 ((top_statement) (statement))
-(puthash 107 (lambda(args _terminals) args) phps-mode-parser--table-translations)
+(puthash
+ 107
+ (lambda(args _terminals)
+   (phps-mode-parser-sdt--parse-top-statement)
+   args)
+ phps-mode-parser--table-translations)
 
 ;; 108 ((top_statement) (statement))
-(puthash 108 (lambda(args _terminals) args) phps-mode-parser--table-translations)
+(puthash
+ 108
+ (lambda(args _terminals)
+   (phps-mode-parser-sdt--parse-top-statement)
+   args)
+ phps-mode-parser--table-translations)
 
 ;; 109 ((top_statement) (attributed_statement))
-(puthash 109 (lambda(args _terminals) args) phps-mode-parser--table-translations)
+(puthash
+ 109
+ (lambda(args _terminals)
+   (phps-mode-parser-sdt--parse-top-statement)
+   args)
+ phps-mode-parser--table-translations)
 
 ;; 110 ((top_statement) (T_HALT_COMPILER "(" ")" ";"))
-(puthash 109 (lambda(args _terminals) (nth 0 args)) phps-mode-parser--table-translations)
+(puthash
+ 109
+ (lambda(args _terminals)
+   (phps-mode-parser-sdt--parse-top-statement)
+   (nth 0 args))
+ phps-mode-parser--table-translations)
 
 ;; 111 top_statement -> (T_NAMESPACE namespace_declaration_name ";")
 (puthash
  111
  (lambda(args terminals)
+   (phps-mode-parser-sdt--parse-top-statement)
    `(
      ast-type
      namespace
@@ -1071,14 +1096,14 @@
      ast-start
      ,(car (cdr (nth 2 terminals)))
      ast-end
-     max
-     ))
+     max))
  phps-mode-parser--table-translations)
 
 ;; 112 top_statement -> (T_NAMESPACE namespace_declaration_name "{" top_statement_list "}")
 (puthash
  112
  (lambda(args terminals)
+   (phps-mode-parser-sdt--parse-top-statement)
    `(
      ast-type
      namespace
@@ -1091,14 +1116,14 @@
      ast-end
      ,(car (cdr (nth 4 terminals)))
      top-statement-list
-     ,(nth 3 args)
-     ))
+     ,(nth 3 args)))
  phps-mode-parser--table-translations)
 
 ;; 113 top_statement -> (T_NAMESPACE "{" top_statement_list "}")
 (puthash
  113
  (lambda(args terminals)
+   (phps-mode-parser-sdt--parse-top-statement)
    `(
      ast-type
      namespace
@@ -1109,70 +1134,69 @@
      ast-end
      ,(car (cdr (nth 3 terminals)))
      top-statement-list
-     ,(nth 2 args)
-     ))
+     ,(nth 2 args)))
  phps-mode-parser--table-translations)
 
 ;; 114 ((top_statement) (T_USE mixed_group_use_declaration ";"))
 (puthash
  114
  (lambda(args _terminals)
+   (phps-mode-parser-sdt--parse-top-statement)
    `(
      ast-type
      mixed-group-use-declaration-top-statement
      ast-value
-     ,(nth 1 args)
-     ))
+     ,(nth 1 args)))
  phps-mode-parser--table-translations)
 
 ;; 115 ((top_statement) (T_USE use_type group_use_declaration ";"))
 (puthash
  115
  (lambda(args _terminals)
+   (phps-mode-parser-sdt--parse-top-statement)
    `(
      ast-type
      type-group-use-declaration-top-statement
      use-type
      ,(nth 1 args)
      group-use-declaration
-     ,(nth 2 args)
-     ))
+     ,(nth 2 args)))
  phps-mode-parser--table-translations)
 
 ;; 116 ((top_statement) (T_USE use_declarations ";"))
 (puthash
  116
  (lambda(args _terminals)
+   (phps-mode-parser-sdt--parse-top-statement)
    `(
      ast-type
      use-declarations-top-statement
      ast-value
-     ,(nth 1 args)
-     ))
+     ,(nth 1 args)))
  phps-mode-parser--table-translations)
 
 ;; 117 ((top_statement) (T_USE use_type use_declarations ";"))
 (puthash
  117
  (lambda(args _terminals)
+   (phps-mode-parser-sdt--parse-top-statement)
    `(
      ast-type
      type-use-declarations-top-statement
      ast-value
-     ,(nth 1 args)
-     ))
+     ,(nth 1 args)))
  phps-mode-parser--table-translations)
 
 ;; 118 ((top_statement) (T_CONST const_list ";"))
 (puthash
  118
  (lambda(args _terminals)
+   (phps-mode-parser-sdt--parse-top-statement)
    `(
      ast-type
      const-list-top-statement
      ast-value
-     ,(nth 1 args)
-     ))
+     ,(nth 1 args)))
  phps-mode-parser--table-translations)
 
 ;; 119 ((use_type) (T_FUNCTION))
@@ -1385,7 +1409,6 @@
 (puthash
  145
  (lambda(args _terminals)
-   (phps-mode-parser-sdt--parse-statement)
    (nth 1 args))
  phps-mode-parser--table-translations)
 
@@ -1393,7 +1416,6 @@
 (puthash
  146
  (lambda(args _terminals)
-   (phps-mode-parser-sdt--parse-statement)
    args)
  phps-mode-parser--table-translations)
 
@@ -1401,7 +1423,6 @@
 (puthash
  147
  (lambda(args _terminals)
-   (phps-mode-parser-sdt--parse-statement)
    args)
  phps-mode-parser--table-translations)
 
@@ -1409,7 +1430,6 @@
 (puthash
  148
  (lambda(args _terminals)
-   (phps-mode-parser-sdt--parse-statement)
    `(
      ast-type
      while-statement
@@ -1424,7 +1444,6 @@
 (puthash
  149
  (lambda(args _terminals)
-   (phps-mode-parser-sdt--parse-statement)
    `(
      ast-type
      do-statement
@@ -1439,7 +1458,6 @@
 (puthash
  150
  (lambda(args _terminals)
-   (phps-mode-parser-sdt--parse-statement)
    `(
      ast-type
      for-statement
@@ -1458,7 +1476,6 @@
 (puthash
  151
  (lambda(args _terminals)
-   (phps-mode-parser-sdt--parse-statement)
    `(
      ast-type
      switch-statement
@@ -1473,7 +1490,6 @@
 (puthash
  152
  (lambda(args _terminals)
-   (phps-mode-parser-sdt--parse-statement)
    `(
      ast-type
      break-statement
@@ -1486,7 +1502,6 @@
 (puthash
  153
  (lambda(args _terminals)
-   (phps-mode-parser-sdt--parse-statement)
    `(
      ast-type
      continue-statement
@@ -1499,7 +1514,6 @@
 (puthash
  154
  (lambda(args _terminals)
-   (phps-mode-parser-sdt--parse-statement)
    `(
      ast-type
      return-statement
@@ -1512,7 +1526,6 @@
 (puthash
  155
  (lambda(args _terminals)
-   (phps-mode-parser-sdt--parse-statement)
    `(
      ast-type
      global-statement
@@ -1525,7 +1538,6 @@
 (puthash
  156
  (lambda(args _terminals)
-   (phps-mode-parser-sdt--parse-statement)
    `(
      ast-type
      static-statement
@@ -1538,7 +1550,6 @@
 (puthash
  157
  (lambda(args _terminals)
-   (phps-mode-parser-sdt--parse-statement)
    `(
      ast-type
      echo-statement
@@ -1551,7 +1562,6 @@
 (puthash
  158
  (lambda(args _terminals)
-   (phps-mode-parser-sdt--parse-statement)
    args)
  phps-mode-parser--table-translations)
 
@@ -1559,7 +1569,6 @@
 (puthash
  159
  (lambda(args _terminals)
-   (phps-mode-parser-sdt--parse-statement)
    `(
      ast-type
      expr-statement
@@ -1572,7 +1581,6 @@
 (puthash
  160
  (lambda(args _terminals)
-   (phps-mode-parser-sdt--parse-statement)
    (nth 0 args))
  phps-mode-parser--table-translations)
 
@@ -1580,7 +1588,6 @@
 (puthash
  161
  (lambda(args _terminals)
-   (phps-mode-parser-sdt--parse-statement)
    `(
      ast-type
      foreach-statement
@@ -1596,7 +1603,6 @@
 (puthash
  162
  (lambda(args _terminals)
-   (phps-mode-parser-sdt--parse-statement)
    `(
      ast-type
      foreach-statement
@@ -1614,7 +1620,6 @@
 (puthash
  163
  (lambda(args _terminals)
-   (phps-mode-parser-sdt--parse-statement)
    `(
      ast-type
      declare-statement
@@ -1631,7 +1636,6 @@
 (puthash
  164
  (lambda(_args _terminals)
-   (phps-mode-parser-sdt--parse-statement)
    nil)
  phps-mode-parser--table-translations)
 
@@ -1639,7 +1643,6 @@
 (puthash
  165
  (lambda(args _terminals)
-   (phps-mode-parser-sdt--parse-statement)
    `(
      ast-type
      try-statement
@@ -1655,7 +1658,6 @@
 (puthash
  166
  (lambda(args _terminals)
-   (phps-mode-parser-sdt--parse-statement)
    `(
      ast-type
      goto-statement
@@ -1667,7 +1669,6 @@
 (puthash
  167
  (lambda(args _terminals)
-   (phps-mode-parser-sdt--parse-statement)
    `(
      ast-type
      label-statement
@@ -1774,6 +1775,66 @@
 (puthash
  179
  (lambda(args terminals)
+   (message "parameter_list-args: %S" (nth 5 args))
+   (message "parameter_list-terminals: %S" (nth 5 terminals))
+
+   ;; Iterate optional parameters are declare them
+   (when-let ((parameter-list (nth 5 args)))
+     (dolist (parameter parameter-list)
+       (let ((parameter-ast-type (plist-get parameter 'ast-type)))
+         (cond
+          ((equal parameter-ast-type 'attributed-parameter)
+           (let ((attributed-parameter
+                  (plist-get
+                   parameter
+                   'parameter)))
+             (push
+              (list
+               (format
+                " id %s"
+                (plist-get attributed-parameter 'ast-name))
+               (plist-get attributed-parameter 'ast-start)
+               (plist-get attributed-parameter 'ast-end))
+              phps-mode-parser-sdt--bookkeeping-symbol-assignment-stack)))))))
+
+   ;; TODO Should go through stack and modify symbol namespaces
+   (message
+    "phps-mode-parser-sdt--bookkeeping-symbol-assignment-stack: %S"
+    phps-mode-parser-sdt--bookkeeping-symbol-assignment-stack)
+   (message
+    "phps-mode-parser-sdt--bookkeeping-symbol-stack: %S"
+    phps-mode-parser-sdt--bookkeeping-symbol-stack)
+
+   (when phps-mode-parser-sdt--bookkeeping-symbol-assignment-stack
+     (dolist (
+              symbol-list
+              phps-mode-parser-sdt--bookkeeping-symbol-assignment-stack)
+       (let ((symbol-name (car symbol-list)))
+         (setcar symbol-list
+                 (format
+                  " function %s%s"
+                  (nth 2 args)
+                  symbol-name))))
+     (message
+      "new-phps-mode-parser-sdt--bookkeeping-symbol-assignment-stack: %S"
+      phps-mode-parser-sdt--bookkeeping-symbol-assignment-stack))
+
+   (when phps-mode-parser-sdt--bookkeeping-symbol-stack
+     (dolist (
+              symbol-list
+              phps-mode-parser-sdt--bookkeeping-symbol-stack)
+       (let ((symbol-name (car symbol-list)))
+         (setcar symbol-list
+                 (format
+                  " function %s%s"
+                  (nth 2 args)
+                  symbol-name))))
+     (message
+      "new-phps-mode-parser-sdt--bookkeeping-symbol-stack: %S"
+      phps-mode-parser-sdt--bookkeeping-symbol-stack))
+
+   (message "")
+
    `(
      ast-type
      function
@@ -2377,7 +2438,7 @@
      ast-type
      attributed-parameter
      parameter
-     ,(nth 1 args)
+     ,args
      ))
  phps-mode-parser--table-translations)
 
