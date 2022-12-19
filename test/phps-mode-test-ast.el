@@ -373,6 +373,8 @@
    "Bookkeeping of self reference inside arrow function inside of static method"
    '((" class myClass static id $var" 1) ((30 34) 1) (" class myClass function myMethod id $a" 1) ((69 71) 1) (" class myClass function myMethod arrow function 1 id $b" 1) ((85 87) 1) ((98 102) 1) ((105 107) 1) ((110 112) 1)))
 
+  ;; TODO Add trait class bookkeping test here
+
   ;; TODO Make this test pass
   ;; (phps-mode-test-ast--should-bookkeep
   ;;  "<?php\nnamespace myNamespace;\nclass myClass\n{\n    private $property1 = '';\n    private $property2;\n    protected function myMethod(\n        $argument1,\n        $argument2,\n        $argument3\n    ) {\n        if ($this->property2) {\n            echo 'was here';\n        }\n        /* @codingStandardsIgnoreEnd */\n        if (\n            $argument1\n            && $argument2\n            && $argument3\n            && $argument4\n            && !empty($argument1['index'])\n            && $this->property1\n            && $argument1['index'] == $this->property1\n        ) {\n        }\n    }\n}\n"
