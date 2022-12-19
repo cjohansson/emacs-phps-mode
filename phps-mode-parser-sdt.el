@@ -591,6 +591,8 @@
   (make-hash-table :test 'equal)
   "Bookkeeping")
 
+;; TODO Should use stack for namespace to be able to go up and down in level
+
 (defvar-local
   phps-mode-parser-sdt--bookkeeping-namespace
   ""
@@ -962,7 +964,18 @@
 (puthash 84 (lambda(_args _terminals) nil) phps-mode-parser--table-translations)
 
 ;; 85 ((namespace_declaration_name) (identifier))
-(puthash 85 (lambda(args _terminals) args) phps-mode-parser--table-translations)
+(puthash
+ 85
+ (lambda(args _terminals)
+   (let ((namespace-name args))
+     (setq
+      phps-mode-parser-sdt--bookkeeping-namespace
+      (format
+       " namespace %s%s"
+       namespace-name
+       phps-mode-parser-sdt--bookkeeping-namespace)))
+   args)
+ phps-mode-parser--table-translations)
 
 ;; 86 ((namespace_declaration_name) (T_NAME_QUALIFIED))
 (puthash 86 (lambda(_args terminals) terminals) phps-mode-parser--table-translations)
@@ -1120,13 +1133,6 @@
  111
  (lambda(args terminals)
    (phps-mode-parser-sdt--parse-top-statement)
-   (let ((namespace-name (nth 1 args)))
-     (setq phps-mode-parser-sdt--bookkeeping-namespace
-           (format
-            " namespace %s%s"
-            namespace-name
-            phps-mode-parser-sdt--bookkeeping-namespace)))
-
    `(
      ast-type
      namespace
@@ -1144,40 +1150,10 @@
 (puthash
  112
  (lambda(args terminals)
-   (message "phps-mode-parser-sdt--bookkeeping-symbol-assignment-stack: %S" phps-mode-parser-sdt--bookkeeping-symbol-assignment-stack)
-   (message "phps-mode-parser-sdt--bookkeeping-symbol-stack: %S" phps-mode-parser-sdt--bookkeeping-symbol-stack)
-   ;; Go through stacks and modify symbol namespaces
-   ;; but only for non-super-global variables
-   (let ((namespace-name (nth 1 args)))
-     (when phps-mode-parser-sdt--bookkeeping-symbol-assignment-stack
-       (dolist (
-                symbol-list
-                phps-mode-parser-sdt--bookkeeping-symbol-assignment-stack)
-         (let ((symbol-name (car symbol-list)))
-           (unless (gethash
-                    symbol-name
-                    phps-mode-parser-sdt--bookkeeping--superglobal-variable-p)
-             (setcar symbol-list
-                     (format
-                      " namespace %s%s"
-                      namespace-name
-                      symbol-name))))))
-     (when phps-mode-parser-sdt--bookkeeping-symbol-stack
-       (dolist (
-                symbol-list
-                phps-mode-parser-sdt--bookkeeping-symbol-stack)
-         (let ((symbol-name (car symbol-list)))
-           (unless (gethash
-                    symbol-name
-                    phps-mode-parser-sdt--bookkeeping--superglobal-variable-p)
-             (setcar symbol-list
-                     (format
-                      " namespace %s%s"
-                      namespace-name
-                      symbol-name)))))))
-
    (phps-mode-parser-sdt--parse-top-statement)
-
+   (setq
+    phps-mode-parser-sdt--bookkeeping-namespace
+    "")
    `(
      ast-type
      namespace
@@ -1981,6 +1957,41 @@
 (puthash
  185
  (lambda(args terminals)
+
+   ;; TODO Should use stacks to fix symbol name-space
+
+   ;; Go through stacks and modify symbol name-spaces
+   ;; but only for non-super-global variables
+   (let ((class-name (nth 1 args)))
+     (when phps-mode-parser-sdt--bookkeeping-symbol-assignment-stack
+       (dolist (
+                symbol-list
+                phps-mode-parser-sdt--bookkeeping-symbol-assignment-stack)
+         (let ((symbol-name (car symbol-list)))
+           (unless (gethash
+                    symbol-name
+                    phps-mode-parser-sdt--bookkeeping--superglobal-variable-p)
+             (setcar
+              symbol-list
+              (format
+               " class %s%s"
+               class-name
+               symbol-name))))))
+     (when phps-mode-parser-sdt--bookkeeping-symbol-stack
+       (dolist (
+                symbol-list
+                phps-mode-parser-sdt--bookkeeping-symbol-stack)
+         (let ((symbol-name (car symbol-list)))
+           (unless (gethash
+                    symbol-name
+                    phps-mode-parser-sdt--bookkeeping--superglobal-variable-p)
+             (setcar
+              symbol-list
+              (format
+               " class %s%s"
+               class-name
+               symbol-name)))))))
+
    `(
      ast-type
      class
@@ -1997,8 +2008,7 @@
      ast-end
      ,(car (cdr (nth 7 terminals)))
      class-statement-list
-     ,(nth 6 args)
-     ))
+     ,(nth 6 args)))
  phps-mode-parser--table-translations)
 
 ;; 186 ((class_modifiers) (class_modifier))
@@ -2826,7 +2836,11 @@
  phps-mode-parser--table-translations)
 
 ;; 297 ((class_statement_list) (%empty))
-(puthash 297 (lambda(_args _terminals) nil) phps-mode-parser--table-translations)
+(puthash
+ 297
+ (lambda(args terminals)
+   nil)
+ phps-mode-parser--table-translations)
 
 ;; 298 ((attributed_class_statement) (variable_modifiers optional_type_without_static property_list ";"))
 (puthash
