@@ -606,6 +606,23 @@
   nil
   "Current bookkeeping assignment symbol stack.")
 
+(defvar
+  phps-mode-parser-sdt--bookkeeping--superglobal-variable-p
+  #s(hash-table size 12 test equal rehash-size 1.5 rehash-threshold 0.8125 data ("$_GET" 1 "$_POST" 1 "$_COOKIE" 1 "$_SESSION" 1 "$_REQUEST" 1 "$GLOBALS" 1 "$_SERVER" 1 "$_FILES" 1 "$_ENV" 1 "$argc" 1 "$argv" 1 "$http_​response_​header" 1))
+  "Hash-table of super-global variables.")
+
+(defun phps-mode-parser-sdt--get-namespaced-symbol-name (symbol-name)
+  "Get namespaced SYMBOL-NAME."
+  (if
+      (gethash
+       symbol-name
+       phps-mode-parser-sdt--bookkeeping--superglobal-variable-p)
+      symbol-name
+    (format
+     "%s id %s"
+     phps-mode-parser-sdt--bookkeeping-namespace
+     symbol-name)))
+
 (defun phps-mode-parser-sdt--parse-top-statement ()
   "Parse latest top statement."
    ;; (message "phps-mode-parser-sdt--bookkeeping-symbol-assignment-stack: %S" phps-mode-parser-sdt--bookkeeping-symbol-assignment-stack)
@@ -647,21 +664,38 @@
       (let ((symbol-name (car symbol-list))
             (symbol-start (car (cdr symbol-list)))
             (symbol-end (car (cdr (cdr symbol-list)))))
-        (if (gethash
-             symbol-name
-             phps-mode-parser-sdt-bookkeeping)
-            (puthash
-             (list
-              symbol-start
-              symbol-end)
-             1
-             phps-mode-parser-sdt-bookkeeping)
+        (cond
+
+         ;; Super-global variable
+         ((gethash
+           symbol-name
+           phps-mode-parser-sdt--bookkeeping--superglobal-variable-p)
+          (puthash
+           (list
+            symbol-start
+            symbol-end)
+           1
+           phps-mode-parser-sdt-bookkeeping))
+
+         ;; Declared variable
+         ((gethash
+           symbol-name
+           phps-mode-parser-sdt-bookkeeping)
+          (puthash
+           (list
+            symbol-start
+            symbol-end)
+           1
+           phps-mode-parser-sdt-bookkeeping))
+
+         ;; Undeclared variable
+         (t
           (puthash
            (list
             symbol-start
             symbol-end)
            0
-           phps-mode-parser-sdt-bookkeeping))))
+           phps-mode-parser-sdt-bookkeeping)))))
     (setq
      phps-mode-parser-sdt--bookkeeping-symbol-stack
      nil)))
@@ -1775,8 +1809,8 @@
 (puthash
  179
  (lambda(args terminals)
-   (message "parameter_list-args: %S" (nth 5 args))
-   (message "parameter_list-terminals: %S" (nth 5 terminals))
+   ;; (message "parameter_list-args: %S" (nth 5 args))
+   ;; (message "parameter_list-terminals: %S" (nth 5 terminals))
 
    ;; Iterate optional parameters are declare them
    (when-let ((parameter-list (nth 5 args)))
@@ -1784,56 +1818,71 @@
        (let ((parameter-ast-type (plist-get parameter 'ast-type)))
          (cond
           ((equal parameter-ast-type 'attributed-parameter)
-           (let ((attributed-parameter
+           (let* ((attributed-parameter
                   (plist-get
                    parameter
-                   'parameter)))
+                   'parameter))
+                  (attributed-parameter-name
+                   (plist-get attributed-parameter 'ast-name))
+                  (symbol-name
+                   (phps-mode-parser-sdt--get-namespaced-symbol-name
+                    attributed-parameter-name))
+                  (symbol-start
+                   (plist-get attributed-parameter 'ast-start))
+                  (symbol-end
+                   (plist-get attributed-parameter 'ast-end)))
              (push
               (list
-               (format
-                " id %s"
-                (plist-get attributed-parameter 'ast-name))
-               (plist-get attributed-parameter 'ast-start)
-               (plist-get attributed-parameter 'ast-end))
+               symbol-name
+               symbol-start
+               symbol-end)
               phps-mode-parser-sdt--bookkeeping-symbol-assignment-stack)))))))
 
-   ;; TODO Should go through stack and modify symbol namespaces
-   (message
-    "phps-mode-parser-sdt--bookkeeping-symbol-assignment-stack: %S"
-    phps-mode-parser-sdt--bookkeeping-symbol-assignment-stack)
-   (message
-    "phps-mode-parser-sdt--bookkeeping-symbol-stack: %S"
-    phps-mode-parser-sdt--bookkeeping-symbol-stack)
+   
+   ;; (message
+   ;;  "phps-mode-parser-sdt--bookkeeping-symbol-assignment-stack: %S"
+   ;;  phps-mode-parser-sdt--bookkeeping-symbol-assignment-stack)
+   ;; (message
+   ;;  "phps-mode-parser-sdt--bookkeeping-symbol-stack: %S"
+   ;;  phps-mode-parser-sdt--bookkeeping-symbol-stack)
 
+   ;; Go through stacks and modify symbol namespaces
+   ;; but only for non-super-global variables
    (when phps-mode-parser-sdt--bookkeeping-symbol-assignment-stack
      (dolist (
               symbol-list
               phps-mode-parser-sdt--bookkeeping-symbol-assignment-stack)
        (let ((symbol-name (car symbol-list)))
+         (unless (gethash
+                  symbol-name
+                  phps-mode-parser-sdt--bookkeeping--superglobal-variable-p)
          (setcar symbol-list
                  (format
                   " function %s%s"
                   (nth 2 args)
-                  symbol-name))))
-     (message
-      "new-phps-mode-parser-sdt--bookkeeping-symbol-assignment-stack: %S"
-      phps-mode-parser-sdt--bookkeeping-symbol-assignment-stack))
+                  symbol-name)))))
+     ;; (message
+     ;;  "new-phps-mode-parser-sdt--bookkeeping-symbol-assignment-stack: %S"
+     ;;  phps-mode-parser-sdt--bookkeeping-symbol-assignment-stack)
+     )
 
    (when phps-mode-parser-sdt--bookkeeping-symbol-stack
      (dolist (
               symbol-list
               phps-mode-parser-sdt--bookkeeping-symbol-stack)
        (let ((symbol-name (car symbol-list)))
-         (setcar symbol-list
-                 (format
-                  " function %s%s"
-                  (nth 2 args)
-                  symbol-name))))
-     (message
-      "new-phps-mode-parser-sdt--bookkeeping-symbol-stack: %S"
-      phps-mode-parser-sdt--bookkeeping-symbol-stack))
-
-   (message "")
+         (unless (gethash
+                  symbol-name
+                  phps-mode-parser-sdt--bookkeeping--superglobal-variable-p)
+           (setcar symbol-list
+                   (format
+                    " function %s%s"
+                    (nth 2 args)
+                    symbol-name)))))
+     ;; (message
+     ;;  "new-phps-mode-parser-sdt--bookkeeping-symbol-stack: %S"
+     ;;  phps-mode-parser-sdt--bookkeeping-symbol-stack)
+     )
 
    `(
      ast-type
@@ -3327,7 +3376,7 @@
 (puthash
  359
  (lambda(args terminals)
-   ;; TODO Should probably have a expression / statement buffer of mentioned symbols and do a parse each time a expression / statement reaches its terminus
+   ;; Save variable declaration in bookkeeping buffer
    (let ((variable-type (plist-get (nth 0 args) 'ast-type)))
      (cond
       ((equal variable-type 'variable-callable-variable)
@@ -3344,18 +3393,25 @@
                 ((equal
                   callable-variable-simple-variable-type
                   'simple-variable-variable)
-                 ;; (message "declared variable from terminals: %S" terminals)
-                 (push
-                  (list
-                   (format
-                    "%s id %s"
-                    phps-mode-parser-sdt--bookkeeping-namespace
-                    (plist-get
-                     callable-variable-simple-variable
-                     'variable))
-                   (car (cdr (car terminals)))
-                   (cdr (cdr (car terminals))))
-                  phps-mode-parser-sdt--bookkeeping-symbol-assignment-stack)))))))))))
+                 (let* ((variable-name
+                         (plist-get
+                          callable-variable-simple-variable
+                          'variable))
+                        (symbol-name
+                         (phps-mode-parser-sdt--get-namespaced-symbol-name
+                          variable-name))
+                        (symbol-start
+                         (car (cdr (car terminals))))
+                        (symbol-end
+                         (cdr (cdr (car terminals)))))
+
+                   ;; (message "declared variable from terminals: %S" terminals)
+                   (push
+                    (list
+                     symbol-name
+                     symbol-start
+                     symbol-end)
+                    phps-mode-parser-sdt--bookkeeping-symbol-assignment-stack))))))))))))
 
    `(
      ast-type
@@ -3369,8 +3425,7 @@
      ast-start
      ,(car (cdr (nth 0 terminals)))
      ast-end
-     ,(cdr (cdr (nth 0 terminals)))
-     ))
+     ,(cdr (cdr (nth 0 terminals)))))
  phps-mode-parser--table-translations)
 
 ;; 360 ((expr) (variable "=" ampersand variable))
@@ -5255,16 +5310,18 @@
 (puthash
  515
  (lambda(args terminals)
-   (let ((namespaced-variable
-          (format
-           "%s id %s"
-           phps-mode-parser-sdt--bookkeeping-namespace
-           args)))
+   (let ((symbol-name
+          (phps-mode-parser-sdt--get-namespaced-symbol-name
+           args))
+         (symbol-start
+          (car (cdr terminals)))
+         (symbol-end
+          (cdr (cdr terminals))))
      (push
       (list
-       namespaced-variable
-       (car (cdr terminals))
-       (cdr (cdr terminals)))
+       symbol-name
+       symbol-start
+       symbol-end)
       phps-mode-parser-sdt--bookkeeping-symbol-stack))
 
    `(
