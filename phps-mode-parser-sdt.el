@@ -611,15 +611,15 @@
   #s(hash-table size 12 test equal rehash-size 1.5 rehash-threshold 0.8125 data ("$_GET" 1 "$_POST" 1 "$_COOKIE" 1 "$_SESSION" 1 "$_REQUEST" 1 "$GLOBALS" 1 "$_SERVER" 1 "$_FILES" 1 "$_ENV" 1 "$argc" 1 "$argv" 1 "$http_​response_​header" 1))
   "Hash-table of super-global variables.")
 
-(defun phps-mode-parser-sdt--get-namespaced-symbol-name (symbol-name)
-  "Get namespaced SYMBOL-NAME."
+(defun phps-mode-parser-sdt--get-namespaced-symbol-name (symbol-name scope)
+  "Get namespaced SYMBOL-NAME in SCOPE."
   (let ((namespace)
         (class)
         (interface)
         (trait)
         (function))
-    (when phps-mode-parser-sdt--bookkeeping-namespace
-      (dolist (item phps-mode-parser-sdt--bookkeeping-namespace)
+    (when scope
+      (dolist (item scope)
         (let ((space-type (car item))
               (space-name (car (cdr item))))
           (cond
@@ -689,18 +689,27 @@
     (dolist (
              symbol-list
              phps-mode-parser-sdt--bookkeeping-symbol-assignment-stack)
-      (let ((symbol-name (car symbol-list))
-            (symbol-start (car (cdr symbol-list)))
-            (symbol-end (car (cdr (cdr symbol-list)))))
-        (if (gethash symbol-name phps-mode-parser-sdt-bookkeeping)
+      (let* ((symbol-name (car symbol-list))
+             (symbol-scope (car (cdr symbol-list)))
+             (symbol-start (car (cdr (cdr symbol-list))))
+             (symbol-end (car (cdr (cdr (cdr symbol-list)))))
+             (symbol-id
+              (phps-mode-parser-sdt--get-namespaced-symbol-name
+               symbol-name
+               symbol-scope)))
+        (message "assign id: %S from %S + %S"
+                 symbol-id
+                 symbol-name
+                 symbol-scope)
+        (if (gethash symbol-id phps-mode-parser-sdt-bookkeeping)
             (puthash
-             symbol-name
+             symbol-id
              (append
-              (gethash symbol-name phps-mode-parser-sdt-bookkeeping)
+              (gethash symbol-id phps-mode-parser-sdt-bookkeeping)
               (list symbol-start symbol-end))
              phps-mode-parser-sdt-bookkeeping)
           (puthash
-           symbol-name
+           symbol-id
            (list
             (list
              symbol-start
@@ -711,14 +720,19 @@
      nil))
 
   (when phps-mode-parser-sdt--bookkeeping-symbol-stack
-    ;; Bookkeeping hit / misses of symbols here
+    ;; Bookkeeping hit / misses of symbol references here
     ;; TODO Should consider declaration position as well?
     (dolist (
              symbol-list
              phps-mode-parser-sdt--bookkeeping-symbol-stack)
-      (let ((symbol-name (car symbol-list))
-            (symbol-start (car (cdr symbol-list)))
-            (symbol-end (car (cdr (cdr symbol-list)))))
+      (let* ((symbol-name (car symbol-list))
+             (symbol-scope (car (cdr symbol-list)))
+             (symbol-start (car (cdr (cdr symbol-list))))
+             (symbol-end (car (cdr (cdr (cdr symbol-list)))))
+             (symbol-id
+              (phps-mode-parser-sdt--get-namespaced-symbol-name
+               symbol-name
+               symbol-scope)))
         (cond
 
          ;; Super-global variable
@@ -734,7 +748,7 @@
 
          ;; Declared variable
          ((gethash
-           symbol-name
+           symbol-id
            phps-mode-parser-sdt-bookkeeping)
           (puthash
            (list
@@ -1889,8 +1903,9 @@
                   (attributed-parameter-name
                    (plist-get attributed-parameter 'ast-name))
                   (symbol-name
-                   (phps-mode-parser-sdt--get-namespaced-symbol-name
-                    attributed-parameter-name))
+                   attributed-parameter-name)
+                  (symbol-scope
+                   phps-mode-parser-sdt--bookkeeping-namespace)
                   (symbol-start
                    (plist-get attributed-parameter 'ast-start))
                   (symbol-end
@@ -1898,19 +1913,21 @@
              (push
               (list
                symbol-name
+               symbol-scope
                symbol-start
                symbol-end)
               phps-mode-parser-sdt--bookkeeping-symbol-assignment-stack)))))))
 
-   ;; (message
-   ;;  "phps-mode-parser-sdt--bookkeeping-symbol-assignment-stack: %S"
-   ;;  phps-mode-parser-sdt--bookkeeping-symbol-assignment-stack)
-   ;; (message
-   ;;  "phps-mode-parser-sdt--bookkeeping-symbol-stack: %S"
-   ;;  phps-mode-parser-sdt--bookkeeping-symbol-stack)
+   (message "before:")
+   (message
+    "phps-mode-parser-sdt--bookkeeping-symbol-assignment-stack: %S"
+    phps-mode-parser-sdt--bookkeeping-symbol-assignment-stack)
+   (message
+    "phps-mode-parser-sdt--bookkeeping-symbol-stack: %S"
+    phps-mode-parser-sdt--bookkeeping-symbol-stack)
 
    ;; Go through stacks and modify symbol namespaces
-   ;; but only for non-super-global variables
+   ;; - add function scope but only for non-super-global variables
    (let ((function-name (nth 2 args)))
      (when phps-mode-parser-sdt--bookkeeping-symbol-assignment-stack
        (dolist (
@@ -1920,12 +1937,13 @@
            (unless (gethash
                     symbol-name
                     phps-mode-parser-sdt--bookkeeping--superglobal-variable-p)
-             (setcar
-              symbol-list
-              (format
-               " function %s%s"
-               function-name
-               symbol-name))))))
+             (let ((symbol-scope (car (cdr symbol-list))))
+               (push
+                (list 'function function-name)
+                symbol-scope)
+               (setcar
+                (cdr symbol-list)
+                symbol-scope))))))
      (when phps-mode-parser-sdt--bookkeeping-symbol-stack
        (dolist (
                 symbol-list
@@ -1934,12 +1952,23 @@
            (unless (gethash
                     symbol-name
                     phps-mode-parser-sdt--bookkeeping--superglobal-variable-p)
-             (setcar
-              symbol-list
-              (format
-               " function %s%s"
-               function-name
-               symbol-name)))))))
+             (let ((symbol-scope (car (cdr symbol-list))))
+               (push
+                (list 'function function-name)
+                symbol-scope)
+               (setcar
+                (cdr symbol-list)
+                symbol-scope)))))))
+
+
+   (message "after:")
+   (message
+    "phps-mode-parser-sdt--bookkeeping-symbol-assignment-stack: %S"
+    phps-mode-parser-sdt--bookkeeping-symbol-assignment-stack)
+   (message
+    "phps-mode-parser-sdt--bookkeeping-symbol-stack: %S"
+    phps-mode-parser-sdt--bookkeeping-symbol-stack)
+
 
    `(
      ast-type
@@ -2019,12 +2048,10 @@
            (unless (gethash
                     symbol-name
                     phps-mode-parser-sdt--bookkeeping--superglobal-variable-p)
-             (setcar
-              symbol-list
-              (format
-               " class %s%s"
-               class-name
-               symbol-name))))))
+             (let ((symbol-scope (car (cdr symbol-list))))
+               (push
+                (list 'class class-name)
+                symbol-scope))))))
      (when phps-mode-parser-sdt--bookkeeping-symbol-stack
        (dolist (
                 symbol-list
@@ -2033,12 +2060,10 @@
            (unless (gethash
                     symbol-name
                     phps-mode-parser-sdt--bookkeeping--superglobal-variable-p)
-             (setcar
-              symbol-list
-              (format
-               " class %s%s"
-               class-name
-               symbol-name)))))))
+             (let ((symbol-scope (car (cdr symbol-list))))
+               (push
+                (list 'class class-name)
+                symbol-scope)))))))
 
    `(
      ast-type
@@ -3493,17 +3518,19 @@
                           callable-variable-simple-variable
                           'variable))
                         (symbol-name
-                         (phps-mode-parser-sdt--get-namespaced-symbol-name
-                          variable-name))
+                          variable-name)
                         (symbol-start
                          (car (cdr (car terminals))))
                         (symbol-end
-                         (cdr (cdr (car terminals)))))
+                         (cdr (cdr (car terminals))))
+                        (symbol-scope
+                         phps-mode-parser-sdt--bookkeeping-namespace))
 
                    ;; (message "declared variable from terminals: %S" terminals)
                    (push
                     (list
                      symbol-name
+                     symbol-scope
                      symbol-start
                      symbol-end)
                     phps-mode-parser-sdt--bookkeeping-symbol-assignment-stack))))))))))))
@@ -5406,8 +5433,7 @@
  515
  (lambda(args terminals)
    (let ((symbol-name
-          (phps-mode-parser-sdt--get-namespaced-symbol-name
-           args))
+           args)
          (symbol-start
           (car (cdr terminals)))
          (symbol-end
@@ -5415,6 +5441,7 @@
      (push
       (list
        symbol-name
+       phps-mode-parser-sdt--bookkeeping-namespace
        symbol-start
        symbol-end)
       phps-mode-parser-sdt--bookkeeping-symbol-stack))
