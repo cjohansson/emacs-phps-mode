@@ -2252,18 +2252,21 @@
 (puthash
  204
  (lambda(args _terminals)
+   ;; TODO Declare variable here
+
    `(
      ast-type
      foreach-variable
      variable
-     ,args
-     ))
+     ,args))
  phps-mode-parser--table-translations)
 
 ;; 205 ((foreach_variable) (ampersand variable))
 (puthash
  205
  (lambda(args _terminals)
+   ;; TODO Declare variable here
+
    `(
      ast-type
      foreach-referenced-variable
@@ -2276,24 +2279,26 @@
 (puthash
  206
  (lambda(args _terminals)
+   ;; TODO Declare variable here
+
    `(
      ast-type
      foreach-list-variable
      array-pair-list
-     ,(nth 2 args)
-     ))
+     ,(nth 2 args)))
  phps-mode-parser--table-translations)
 
 ;; 207 ((foreach_variable) ("[" array_pair_list "]"))
 (puthash
  207
  (lambda(args _terminals)
+   ;; TODO Declare variable here
+
    `(
      ast-type
      foreach-variable
      array-pair-list
-     ,(nth 1 args)
-     ))
+     ,(nth 1 args)))
  phps-mode-parser--table-translations)
 
 ;; 208 ((for_statement) (statement))
