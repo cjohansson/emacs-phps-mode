@@ -2961,6 +2961,54 @@
 (puthash
  300
  (lambda(args terminals)
+   ;; Go through stacks and modify symbol namespaces
+   ;; - add function scope but only for non-super-global variables
+   (let ((function-name (nth 3 args))
+         (is-static-p))
+     (when-let (method-modifiers (nth 0 args))
+       (dolist (method-modifier method-modifiers)
+         (when (equal method-modifier 'static)
+           (setq is-static-p t))))
+     (unless is-static-p
+       (push
+        (list
+         "$this"
+         phps-mode-parser-sdt--bookkeeping-namespace
+         (car (cdr (car (nth 10 terminals))))
+         (cdr (cdr (car (cdr (cdr (nth 10 terminals)))))))
+        phps-mode-parser-sdt--bookkeeping-symbol-assignment-stack))
+     (when phps-mode-parser-sdt--bookkeeping-symbol-assignment-stack
+       (dolist (
+                symbol-list
+                phps-mode-parser-sdt--bookkeeping-symbol-assignment-stack)
+         (let ((symbol-name (car symbol-list)))
+           (unless (gethash
+                    symbol-name
+                    phps-mode-parser-sdt--bookkeeping--superglobal-variable-p)
+             (let ((symbol-scope (car (cdr symbol-list))))
+               (push
+                (list 'function function-name)
+                symbol-scope)
+               (setcar
+                (cdr symbol-list)
+                symbol-scope))))))
+
+     (when phps-mode-parser-sdt--bookkeeping-symbol-stack
+       (dolist (
+                symbol-list
+                phps-mode-parser-sdt--bookkeeping-symbol-stack)
+         (let ((symbol-name (car symbol-list)))
+           (unless (gethash
+                    symbol-name
+                    phps-mode-parser-sdt--bookkeeping--superglobal-variable-p)
+             (let ((symbol-scope (car (cdr symbol-list))))
+               (push
+                (list 'function function-name)
+                symbol-scope)
+               (setcar
+                (cdr symbol-list)
+                symbol-scope)))))))
+
    `(
      ast-type
      method
@@ -2987,8 +3035,7 @@
      ast-end
      ,(if (nth 10 args)
           (cdr (cdr (car (cdr (cdr (nth 10 terminals))))))
-        nil)
-     ))
+        nil)))
  phps-mode-parser--table-translations)
 
 ;; 301 ((attributed_class_statement) (enum_case))
