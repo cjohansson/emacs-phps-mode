@@ -611,8 +611,8 @@
   #s(hash-table size 12 test equal rehash-size 1.5 rehash-threshold 0.8125 data ("$_GET" 1 "$_POST" 1 "$_COOKIE" 1 "$_SESSION" 1 "$_REQUEST" 1 "$GLOBALS" 1 "$_SERVER" 1 "$_FILES" 1 "$_ENV" 1 "$argc" 1 "$argv" 1 "$http_​response_​header" 1))
   "Hash-table of super-global variables.")
 
-(defun phps-mode-parser-sdt--get-namespaced-symbol-name (symbol-name scope)
-  "Get namespaced SYMBOL-NAME in SCOPE."
+(defun phps-mode-parser-sdt--get-symbol-uri (name scope)
+  "Get URI from symbol NAME in SCOPE."
   (let ((namespace)
         (class)
         (interface)
@@ -634,13 +634,13 @@
            ((equal space-type 'function)
             (setq function space-name))))))
     (if (gethash
-         symbol-name
+         name
          phps-mode-parser-sdt--bookkeeping--superglobal-variable-p)
-        symbol-name
+        name
       (let ((new-symbol-name
              (format
               " id %s"
-              symbol-name)))
+              name)))
         (when function
           (setq
            new-symbol-name
@@ -693,23 +693,24 @@
              (symbol-scope (car (cdr symbol-list)))
              (symbol-start (car (cdr (cdr symbol-list))))
              (symbol-end (car (cdr (cdr (cdr symbol-list)))))
-             (symbol-id
-              (phps-mode-parser-sdt--get-namespaced-symbol-name
+             (symbol-uri
+              (phps-mode-parser-sdt--get-symbol-uri
                symbol-name
                symbol-scope)))
-        (message "assign id: %S from %S + %S"
-                 symbol-id
-                 symbol-name
-                 symbol-scope)
-        (if (gethash symbol-id phps-mode-parser-sdt-bookkeeping)
+        (message
+         "assign uri: %S from %S + %S"
+         symbol-uri
+         symbol-name
+         symbol-scope)
+        (if (gethash symbol-uri phps-mode-parser-sdt-bookkeeping)
             (puthash
-             symbol-id
+             symbol-uri
              (append
-              (gethash symbol-id phps-mode-parser-sdt-bookkeeping)
+              (gethash symbol-uri phps-mode-parser-sdt-bookkeeping)
               (list symbol-start symbol-end))
              phps-mode-parser-sdt-bookkeeping)
           (puthash
-           symbol-id
+           symbol-uri
            (list
             (list
              symbol-start
@@ -729,8 +730,8 @@
              (symbol-scope (car (cdr symbol-list)))
              (symbol-start (car (cdr (cdr symbol-list))))
              (symbol-end (car (cdr (cdr (cdr symbol-list)))))
-             (symbol-id
-              (phps-mode-parser-sdt--get-namespaced-symbol-name
+             (symbol-uri
+              (phps-mode-parser-sdt--get-symbol-uri
                symbol-name
                symbol-scope)))
         (cond
@@ -748,7 +749,7 @@
 
          ;; Declared variable
          ((gethash
-           symbol-id
+           symbol-uri
            phps-mode-parser-sdt-bookkeeping)
           (puthash
            (list
