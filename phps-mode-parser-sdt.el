@@ -697,11 +697,11 @@
               (phps-mode-parser-sdt--get-symbol-uri
                symbol-name
                symbol-scope)))
-        (message
-         "assign uri: %S from %S + %S"
-         symbol-uri
-         symbol-name
-         symbol-scope)
+        ;; (message
+        ;;  "assign uri: %S from %S + %S"
+        ;;  symbol-uri
+        ;;  symbol-name
+        ;;  symbol-scope)
         (if (gethash symbol-uri phps-mode-parser-sdt-bookkeeping)
             (puthash
              symbol-uri
@@ -2035,9 +2035,6 @@
 (puthash
  185
  (lambda(args terminals)
-
-   ;; TODO Should use stacks to fix symbol name-space
-
    ;; Go through stacks and modify symbol name-spaces
    ;; but only for non-super-global variables
    (let ((class-name (nth 1 args)))
@@ -2052,6 +2049,9 @@
              (let ((symbol-scope (car (cdr symbol-list))))
                (push
                 (list 'class class-name)
+                symbol-scope)
+               (setcar
+                (cdr symbol-list)
                 symbol-scope))))))
      (when phps-mode-parser-sdt--bookkeeping-symbol-stack
        (dolist (
@@ -2064,6 +2064,9 @@
              (let ((symbol-scope (car (cdr symbol-list))))
                (push
                 (list 'class class-name)
+                symbol-scope)
+               (setcar
+                (cdr symbol-list)
                 symbol-scope)))))))
 
    `(
@@ -3251,6 +3254,23 @@
 (puthash
  340
  (lambda(args terminals)
+   ;; Save variable declaration in bookkeeping buffer
+   (let* ((symbol-name
+           (nth 0 args))
+          (symbol-start
+           (car (cdr (car terminals))))
+          (symbol-end
+           (cdr (cdr (car terminals))))
+          (symbol-scope
+           phps-mode-parser-sdt--bookkeeping-namespace))
+     (push
+      (list
+       symbol-name
+       symbol-scope
+       symbol-start
+       symbol-end)
+      phps-mode-parser-sdt--bookkeeping-symbol-assignment-stack))
+
    `(
      ast-type
      property-assigned-variable
@@ -3265,8 +3285,7 @@
      ast-start
      ,(car (cdr (nth 0 terminals)))
      ast-end
-     ,(cdr (cdr (nth 0 terminals)))
-     ))
+     ,(cdr (cdr (nth 0 terminals)))))
  phps-mode-parser--table-translations)
 
 ;; 341 ((class_const_list) (class_const_list "," class_const_decl))
