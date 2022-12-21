@@ -617,7 +617,8 @@
         (class)
         (interface)
         (trait)
-        (function))
+        (function)
+        (is-static-p))
     (when scope
       (dolist (item scope)
         (let ((space-type (car item))
@@ -632,7 +633,9 @@
            ((equal space-type 'trait)
             (setq trait space-name))
            ((equal space-type 'function)
-            (setq function space-name))))))
+            (setq function space-name))
+           ((equal space-type 'static)
+            (setq is-static-p t))))))
     (if (gethash
          name
          phps-mode-parser-sdt--bookkeeping--superglobal-variable-p)
@@ -641,6 +644,12 @@
              (format
               " id %s"
               name)))
+        (when is-static-p
+          (setq
+           new-symbol-name
+           (format
+            " static%s"
+            new-symbol-name)))
         (when function
           (setq
            new-symbol-name
@@ -1919,13 +1928,13 @@
                symbol-end)
               phps-mode-parser-sdt--bookkeeping-symbol-assignment-stack)))))))
 
-   (message "before:")
-   (message
-    "phps-mode-parser-sdt--bookkeeping-symbol-assignment-stack: %S"
-    phps-mode-parser-sdt--bookkeeping-symbol-assignment-stack)
-   (message
-    "phps-mode-parser-sdt--bookkeeping-symbol-stack: %S"
-    phps-mode-parser-sdt--bookkeeping-symbol-stack)
+   ;; (message "before:")
+   ;; (message
+   ;;  "phps-mode-parser-sdt--bookkeeping-symbol-assignment-stack: %S"
+   ;;  phps-mode-parser-sdt--bookkeeping-symbol-assignment-stack)
+   ;; (message
+   ;;  "phps-mode-parser-sdt--bookkeeping-symbol-stack: %S"
+   ;;  phps-mode-parser-sdt--bookkeeping-symbol-stack)
 
    ;; Go through stacks and modify symbol namespaces
    ;; - add function scope but only for non-super-global variables
@@ -1962,13 +1971,13 @@
                 symbol-scope)))))))
 
 
-   (message "after:")
-   (message
-    "phps-mode-parser-sdt--bookkeeping-symbol-assignment-stack: %S"
-    phps-mode-parser-sdt--bookkeeping-symbol-assignment-stack)
-   (message
-    "phps-mode-parser-sdt--bookkeeping-symbol-stack: %S"
-    phps-mode-parser-sdt--bookkeeping-symbol-stack)
+   ;; (message "after:")
+   ;; (message
+   ;;  "phps-mode-parser-sdt--bookkeeping-symbol-assignment-stack: %S"
+   ;;  phps-mode-parser-sdt--bookkeeping-symbol-assignment-stack)
+   ;; (message
+   ;;  "phps-mode-parser-sdt--bookkeeping-symbol-stack: %S"
+   ;;  phps-mode-parser-sdt--bookkeeping-symbol-stack)
 
 
    `(
@@ -2251,8 +2260,45 @@
 ;; 204 ((foreach_variable) (variable))
 (puthash
  204
- (lambda(args _terminals)
-   ;; TODO Declare variable here
+ (lambda(args terminals)
+   ;; Save variable declaration in bookkeeping buffer
+   (let ((variable-type (plist-get args 'ast-type)))
+     (cond
+      ((equal variable-type 'variable-callable-variable)
+       (let* ((callable-variable (plist-get args 'callable-variable))
+              (callable-variable-type (plist-get callable-variable 'ast-type)))
+         (cond
+          ((equal callable-variable-type 'callable-variable-simple-variable)
+           (let ((callable-variable-simple-variable
+                  (plist-get callable-variable 'simple-variable)))
+             (let ((callable-variable-simple-variable-type
+                    (plist-get
+                     callable-variable-simple-variable
+                     'ast-type)))
+               (cond
+                ((equal
+                  callable-variable-simple-variable-type
+                  'simple-variable-variable)
+                 (let* ((variable-name
+                         (plist-get
+                          callable-variable-simple-variable
+                          'variable))
+                        (symbol-name
+                         variable-name)
+                        (symbol-start
+                         (car (cdr terminals)))
+                        (symbol-end
+                         (cdr (cdr terminals)))
+                        (symbol-scope
+                         phps-mode-parser-sdt--bookkeeping-namespace))
+                   ;; (message "declared foreach variable from terminals: %S" terminals)
+                   (push
+                    (list
+                     symbol-name
+                     symbol-scope
+                     symbol-start
+                     symbol-end)
+                    phps-mode-parser-sdt--bookkeeping-symbol-assignment-stack))))))))))))
 
    `(
      ast-type
