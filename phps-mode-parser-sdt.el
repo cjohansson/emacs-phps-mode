@@ -3689,14 +3689,15 @@
      ))
  phps-mode-parser--table-translations)
 
-;; 356 ((echo_expr_list) (echo_expr_list "," echo_expr))
+;; 356 ((expr) (variable))
 (puthash
  356
  (lambda(args _terminals)
    `(
      ast-type
-     echo-expr-list
-     ,(append (list (nth 0 args)) (list (nth 2 args)))))
+     expr-variable
+     variable
+     ,args))
  phps-mode-parser--table-translations)
 
 ;; 357 ((expr) (T_LIST "(" array_pair_list ")" "=" expr))
@@ -5640,6 +5641,7 @@
 (puthash
  513
  (lambda(args _terminals)
+   ;; TODO Add to stack variable reference here
    `(
      ast-type
      variable-array-object-dereferenceable-property-name
@@ -5861,7 +5863,7 @@
  (lambda(args _terminals)
    `(
      ast-type
-     properyt-name-string
+     property-name-string
      string
      ,args))
  phps-mode-parser--table-translations)
