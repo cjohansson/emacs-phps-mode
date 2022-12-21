@@ -2930,14 +2930,14 @@
      ast-start
      ,(car (cdr terminals))
      ast-end
-     ,(cdr (cdr terminals))
-     ))
+     ,(cdr (cdr terminals))))
  phps-mode-parser--table-translations)
 
 ;; 295 ((static_var) (T_VARIABLE "=" expr))
 (puthash
  295
  (lambda(args terminals)
+   ;; TODO Should bookkeep here
    `(
      ast-type
      variable
@@ -2950,8 +2950,7 @@
      ast-start
      ,(car (cdr (nth 0 terminals)))
      ast-end
-     ,(cdr (cdr (nth 0 terminals)))
-     ))
+     ,(cdr (cdr (nth 0 terminals)))))
  phps-mode-parser--table-translations)
 
 ;; 296 ((class_statement_list) (class_statement_list class_statement))
@@ -2994,6 +2993,7 @@
 (puthash
  299
  (lambda(args terminals)
+   ;; TODO Bookkeep class constants here
    `(
      ast-type
      constant
@@ -3004,8 +3004,7 @@
      ast-start
      ,(car (cdr (car (nth 2 terminals))))
      ast-end
-     ,(cdr (cdr (car (nth 2 terminals))))
-     ))
+     ,(cdr (cdr (car (nth 2 terminals))))))
  phps-mode-parser--table-translations)
 
 ;; 300 ((attributed_class_statement) (method_modifiers function returns_ref identifier backup_doc_comment "(" parameter_list ")" return_type backup_fn_flags method_body backup_fn_flags))
@@ -3106,28 +3105,84 @@
 (puthash
  302
  (lambda(args _terminals)
+   (let* ((attributed-class-statement
+           args)
+          (attributed-class-statement-type
+           (plist-get attributed-class-statement 'ast-type)))
+     (cond
+      ((equal attributed-class-statement-type 'property)
+       (let ((property-list
+              (plist-get attributed-class-statement 'subject)))
+         (dolist (property property-list)
+           (let ((property-type
+                  (plist-get property 'ast-type)))
+             (cond
+              ((equal property-type 'property-variable)
+               ;; TODO Bookkeep proerty-variable here
+               (let ((symbol-name
+                      (plist-get property 'variable))
+                     (symbol-start
+                      (plist-get property 'ast-start))
+                     (symbol-end
+                      (plist-get property 'ast-end))
+                     (symbol-scope
+                      phps-mode-parser-sdt--bookkeeping-namespace))
+                 (push
+                  (list
+                   symbol-name
+                   symbol-scope
+                   symbol-start
+                   symbol-end)
+                  phps-mode-parser-sdt--bookkeeping-symbol-assignment-stack))))))))))
+
    `(
      ast-type
      class-statement
      attributed-class-statement
-     ,args
-     )
-   )
+     ,args))
  phps-mode-parser--table-translations)
 
 ;; 303 ((class_statement) (attributes attributed_class_statement))
 (puthash
  303
  (lambda(args _terminals)
+   (let* ((attributed-class-statement
+           (nth 1 args))
+          (attributed-class-statement-type
+           (plist-get attributed-class-statement 'ast-type)))
+     (cond
+      ((equal attributed-class-statement-type 'property)
+       (let ((property-list
+              (plist-get attributed-class-statement 'subject)))
+         (dolist (property property-list)
+           (let ((property-type
+                  (plist-get property 'ast-type)))
+             (cond
+              ((equal property-type 'property-variable)
+               ;; TODO Bookkeep proerty-variable here
+               (let ((symbol-name
+                      (plist-get property 'variable))
+                     (symbol-start
+                      (plist-get property 'ast-start))
+                     (symbol-end
+                      (plist-get property 'ast-end))
+                     (symbol-scope
+                      phps-mode-parser-sdt--bookkeeping-namespace))
+                 (push
+                  (list
+                   symbol-name
+                   symbol-scope
+                   symbol-start
+                   symbol-end)
+                  phps-mode-parser-sdt--bookkeeping-symbol-assignment-stack))))))))))
+
    `(
      ast-type
      class-statement
      attributes
      ,(nth 0 args)
      attributed-class-statement
-     ,(nth 1 args)
-     )
-   )
+     ,(nth 1 args)))
  phps-mode-parser--table-translations)
 
 ;; 304 ((class_statement) (T_USE class_name_list trait_adaptations))
@@ -3140,9 +3195,7 @@
      class-name-list
      ,(nth 1 args)
      trait-adaptations
-     ,(nth 2 args)
-     )
-   )
+     ,(nth 2 args)))
  phps-mode-parser--table-translations)
 
 ;; 305 ((class_name_list) (class_name))
@@ -3338,14 +3391,20 @@
 ;; 339 ((property) (T_VARIABLE backup_doc_comment))
 (puthash
  339
- (lambda(args _terminals)
+ (lambda(args terminals)
    `(
+     ast-type
      property-variable
+     ast-start
+     ,(car (cdr (car terminals)))
+     ast-index
+     ,(car (cdr (car terminals)))
+     ast-end
+     ,(cdr (cdr (car terminals)))
      variable
      ,(nth 0 args)
      backup-doc-comment
-     ,(nth 1 args)
-     ))
+     ,(nth 1 args)))
  phps-mode-parser--table-translations)
 
 ;; 340 ((property) (T_VARIABLE "=" expr backup_doc_comment))
