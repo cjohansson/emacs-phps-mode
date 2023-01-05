@@ -5640,8 +5640,83 @@
 ;; 513 ((variable) (array_object_dereferenceable T_OBJECT_OPERATOR property_name))
 (puthash
  513
- (lambda(args _terminals)
-   ;; TODO Add to stack variable reference here
+ (lambda(args terminals)
+   (let* ((array-object-dereferenceable (nth 0 args))
+          (array-object-dereferenceable-type
+           (plist-get
+            array-object-dereferenceable
+            'ast-type)))
+     (when (equal
+            array-object-dereferenceable-type
+            'array-object-dereferenceable-fully-dereferenceable)
+       (let* ((dereferenceable
+               (plist-get
+                array-object-dereferenceable
+                'fully-dereferenceable))
+              (dereferencable-type
+               (plist-get
+                dereferenceable
+                'ast-type)))
+         (when (equal
+                dereferencable-type
+                'fully-dereferenceable-variable)
+           (let* ((fully-dereferenceable-variable
+                   (plist-get
+                    dereferenceable
+                    'variable))
+                  (fully-dereferenceable-variable-type
+                   (plist-get
+                    fully-dereferenceable-variable
+                    'ast-type)))
+             (when (equal
+                    fully-dereferenceable-variable-type
+                    'variable-callable-variable)
+               (let* ((callable-variable
+                       (plist-get
+                        fully-dereferenceable-variable
+                        'callable-variable))
+                      (callable-variable-type
+                       (plist-get
+                        callable-variable
+                        'ast-type)))
+                 (when (equal
+                        callable-variable-type
+                        'callable-variable-simple-variable)
+                   (let* ((simple-variable
+                          (plist-get
+                           (plist-get
+                            callable-variable
+                            'simple-variable)
+                           'variable))
+                          (simple-variable-lowercased
+                           (downcase simple-variable)))
+                     (let* ((property (nth 2 args))
+                            (property-type (plist-get property 'ast-type)))
+                       (when (equal
+                              property-type
+                              'property-name-string)
+                         (let ((property-string
+                                (plist-get
+                                 property
+                                 'string)))
+                           (cond
+
+                            ((string=
+                              simple-variable-lowercased
+                              "$this")
+                             (let ((namespace phps-mode-parser-sdt--bookkeeping-namespace))
+                               (push (list 'object-operator) namespace)
+                               (push
+                                (list
+                                 property-string
+                                 namespace
+                                 (car (cdr (nth 0 terminals)))
+                                 (cdr (cdr (nth 2 terminals))))
+                                phps-mode-parser-sdt--bookkeeping-symbol-stack)))
+
+                            (t
+                             ;; TODO Do something here?
+                             ))))))))))))))
    `(
      ast-type
      variable-array-object-dereferenceable-property-name
@@ -5685,6 +5760,10 @@
    `(
      ast-type
      simple-variable-variable
+     ast-start
+     ,(car (cdr terminals))
+     ast-end
+     ,(cdr (cdr terminals))
      variable
      ,args))
  phps-mode-parser--table-translations)
@@ -5702,11 +5781,16 @@
 ;; 517 ((simple_variable) ("$" simple_variable))
 (puthash
  517
- (lambda(args _terminals)
+ (lambda(args terminals)
    `(
      ast-type
      simple-variable-variable
-     ,(nth 1 args)))
+     ,(nth 1 args)
+     ast-start
+     ,(car (cdr (nth 1 terminals)))
+     ast-end
+     ,(cdr (cdr (nth 1 terminals)))
+     ))
  phps-mode-parser--table-translations)
 
 ;; 518 ((static_member) (class_name T_PAAMAYIM_NEKUDOTAYIM simple_variable))
