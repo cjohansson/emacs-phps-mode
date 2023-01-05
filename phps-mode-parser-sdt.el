@@ -634,6 +634,8 @@
             (setq trait space-name))
            ((equal space-type 'function)
             (setq function space-name))
+           ((equal space-type 'object-operator)
+            (setq function nil))
            ((equal space-type 'static)
             (setq is-static-p t))))))
     (if (gethash
@@ -690,7 +692,7 @@
 (defun phps-mode-parser-sdt--parse-top-statement ()
   "Parse latest top statement."
    ;; (message "phps-mode-parser-sdt--bookkeeping-symbol-assignment-stack: %S" phps-mode-parser-sdt--bookkeeping-symbol-assignment-stack)
-   ;; (message "phps-mode-parser-sdt--bookkeeping-symbol-stack: %S" phps-mode-parser-sdt--bookkeeping-symbol-stack)
+   (message "phps-mode-parser-sdt--bookkeeping-symbol-stack: %S" phps-mode-parser-sdt--bookkeeping-symbol-stack)
 
   ;; Parse bookkeeping writes and reads at every statement terminus
   (when phps-mode-parser-sdt--bookkeeping-symbol-assignment-stack
@@ -743,6 +745,7 @@
               (phps-mode-parser-sdt--get-symbol-uri
                symbol-name
                symbol-scope)))
+        (message "symbol-uri: %S" symbol-uri)
         (cond
 
          ;; Super-global variable
@@ -3147,7 +3150,8 @@
            (dolist (
                     symbol-list
                     phps-mode-parser-sdt--bookkeeping-symbol-stack)
-             (let ((symbol-name (car symbol-list))
+             (let ((symbol-name (nth 0 symbol-list))
+                   (symbol-namespace (nth 1 symbol-list))
                    (symbol-start (nth 2 symbol-list)))
                (unless (or
                         (gethash
