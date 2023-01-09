@@ -3078,7 +3078,13 @@
      (cond
       ((equal attributed-class-statement-type 'property)
        (let ((property-list
-              (plist-get attributed-class-statement 'subject)))
+              (plist-get attributed-class-statement 'subject))
+             (is-static))
+         (when-let (property-modifiers
+                    (plist-get attributed-class-statement 'modifiers))
+           (dolist (modifier property-modifiers)
+             (when (equal modifier 'static)
+               (setq is-static t))))
          (dolist (property property-list)
            (let ((property-type
                   (plist-get property 'ast-type)))
@@ -3092,6 +3098,8 @@
                       (plist-get property 'ast-end))
                      (symbol-scope
                       phps-mode-parser-sdt--bookkeeping-namespace))
+                 (when is-static
+                   (push (list 'static) symbol-scope))
                  (push
                   (list
                    symbol-name
@@ -3419,7 +3427,7 @@
 (puthash 324 (lambda(args _terminals) args) phps-mode-parser--table-translations)
 
 ;; 325 ((variable_modifiers) (T_VAR))
-(puthash 325 (lambda(_args _terminals) 'public) phps-mode-parser--table-translations)
+(puthash 325 (lambda(_args _terminals) '(public)) phps-mode-parser--table-translations)
 
 ;; 326 ((method_modifiers) (%empty))
 (puthash 326 (lambda(_args _terminals) nil) phps-mode-parser--table-translations)
