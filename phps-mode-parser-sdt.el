@@ -635,7 +635,14 @@
            ((equal space-type 'function)
             (setq function space-name))
            ((equal space-type 'object-operator)
-            (setq function nil))
+            (let ((downcased-space-name
+                   (downcase space-name)))
+              (cond
+               ((string= downcased-space-name "$this")
+                (setq function nil))
+               (t
+                ;; TODO Do something here
+                ))))
            ((equal space-type 'static)
             (setq is-static-p t))))))
     (if (gethash
@@ -692,7 +699,7 @@
 (defun phps-mode-parser-sdt--parse-top-statement ()
   "Parse latest top statement."
    ;; (message "phps-mode-parser-sdt--bookkeeping-symbol-assignment-stack: %S" phps-mode-parser-sdt--bookkeeping-symbol-assignment-stack)
-   (message "phps-mode-parser-sdt--bookkeeping-symbol-stack: %S" phps-mode-parser-sdt--bookkeeping-symbol-stack)
+   ;; (message "phps-mode-parser-sdt--bookkeeping-symbol-stack: %S" phps-mode-parser-sdt--bookkeeping-symbol-stack)
 
   ;; Parse bookkeeping writes and reads at every statement terminus
   (when phps-mode-parser-sdt--bookkeeping-symbol-assignment-stack
@@ -708,11 +715,11 @@
               (phps-mode-parser-sdt--get-symbol-uri
                symbol-name
                symbol-scope)))
-        ;; (message
-        ;;  "assign uri: %S from %S + %S"
-        ;;  symbol-uri
-        ;;  symbol-name
-        ;;  symbol-scope)
+        (message
+         "assign symbol uri: %S from %S + %S"
+         symbol-uri
+         symbol-name
+         symbol-scope)
         (if (gethash symbol-uri phps-mode-parser-sdt-bookkeeping)
             (puthash
              symbol-uri
@@ -745,7 +752,11 @@
               (phps-mode-parser-sdt--get-symbol-uri
                symbol-name
                symbol-scope)))
-        (message "symbol-uri: %S" symbol-uri)
+        (message
+         "reference symbol uri: %S from %S + %S"
+         symbol-uri
+         symbol-name
+         symbol-scope)
         (cond
 
          ;; Super-global variable
@@ -5687,13 +5698,18 @@
                         callable-variable-type
                         'callable-variable-simple-variable)
                    (let* ((simple-variable
-                          (plist-get
                            (plist-get
-                            callable-variable
-                            'simple-variable)
-                           'variable))
-                          (simple-variable-lowercased
-                           (downcase simple-variable)))
+                            (plist-get
+                             callable-variable
+                             'simple-variable)
+                            'variable)))
+                     (push
+                      (list
+                       simple-variable
+                       phps-mode-parser-sdt--bookkeeping-namespace
+                       (car (cdr (nth 0 terminals)))
+                       (cdr (cdr (nth 0 terminals))))
+                      phps-mode-parser-sdt--bookkeeping-symbol-stack)
                      (let* ((property (nth 2 args))
                             (property-type (plist-get property 'ast-type)))
                        (when (equal
@@ -5703,24 +5719,15 @@
                                 (plist-get
                                  property
                                  'string)))
-                           (cond
-
-                            ((string=
-                              simple-variable-lowercased
-                              "$this")
-                             (let ((namespace phps-mode-parser-sdt--bookkeeping-namespace))
-                               (push (list 'object-operator) namespace)
-                               (push
-                                (list
-                                 property-string
-                                 namespace
-                                 (car (cdr (nth 0 terminals)))
-                                 (cdr (cdr (nth 2 terminals))))
-                                phps-mode-parser-sdt--bookkeeping-symbol-stack)))
-
-                            (t
-                             ;; TODO Do something here?
-                             ))))))))))))))
+                           (let ((namespace phps-mode-parser-sdt--bookkeeping-namespace))
+                             (push (list 'object-operator simple-variable) namespace)
+                             (push
+                              (list
+                               (format "$%s" property-string)
+                               namespace
+                               (car (cdr (nth 2 terminals)))
+                               (cdr (cdr (nth 2 terminals))))
+                              phps-mode-parser-sdt--bookkeeping-symbol-stack))))))))))))))
    `(
      ast-type
      variable-array-object-dereferenceable-property-name
