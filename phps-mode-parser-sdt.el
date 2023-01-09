@@ -643,6 +643,18 @@
                (t
                 ;; TODO Do something here
                 ))))
+           ((equal space-type 'static-member)
+            (let ((downcased-space-name
+                   (downcase space-name)))
+              (cond
+               ((or
+                 (string= downcased-space-name "self")
+                 (string= downcased-space-name "static"))
+                (setq is-static-p t)
+                (setq function nil))
+               (t
+                ;; TODO Do something here
+                ))))
            ((equal space-type 'static)
             (setq is-static-p t))))))
     (if (gethash
@@ -5652,7 +5664,30 @@
 ;; 512 ((variable) (static_member))
 (puthash
  512
- (lambda(args _terminals)
+ (lambda(args terminals)
+   (let ((static-member-type
+          (plist-get
+           args
+           'ast-type)))
+     (cond
+      ((equal static-member-type 'static-member-class-name)
+       (let* ((class-name (plist-get args 'class-name))
+              (class-name-type (plist-get class-name 'ast-type)))
+         (cond
+          ((equal class-name-type 'class-name-name)
+           (let* ((class-name-string (plist-get class-name 'name))
+                  (simple-variable (plist-get args 'simple-variable))
+                  (simple-variable-type (plist-get simple-variable 'ast-type)))
+             (cond
+              ((equal simple-variable-type 'simple-variable-variable)
+               (let ((simple-variable-name
+                      (plist-get simple-variable 'variable))
+                     (namespace
+                      phps-mode-parser-sdt--bookkeeping-namespace))
+                 ;; TODO Should modify stack car instead
+                 (push
+                  (list 'static-member class-name-string)
+                  (nth 1 (car phps-mode-parser-sdt--bookkeeping-symbol-stack)))))))))))))
    `(
      ast-type
      variable-static-member
