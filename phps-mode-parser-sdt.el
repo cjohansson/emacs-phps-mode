@@ -597,6 +597,11 @@
   "Current bookkeeping namespace.")
 
 (defvar-local
+  phps-mode-parser-sdt--bookkeeping-namespace-stack
+  nil
+  "Current bookkeeping namespace.")
+
+(defvar-local
   phps-mode-parser-sdt--bookkeeping-symbol-stack
   nil
   "Current bookkeeping symbol stack.")
@@ -727,11 +732,11 @@
               (phps-mode-parser-sdt--get-symbol-uri
                symbol-name
                symbol-scope)))
-        (message
-         "assign symbol uri: %S from %S + %S"
-         symbol-uri
-         symbol-name
-         symbol-scope)
+        ;; (message
+        ;;  "assign symbol uri: %S from %S + %S"
+        ;;  symbol-uri
+        ;;  symbol-name
+        ;;  symbol-scope)
         (if (gethash symbol-uri phps-mode-parser-sdt-bookkeeping)
             (puthash
              symbol-uri
@@ -764,11 +769,11 @@
               (phps-mode-parser-sdt--get-symbol-uri
                symbol-name
                symbol-scope)))
-        (message
-         "reference symbol uri: %S from %S + %S"
-         symbol-uri
-         symbol-name
-         symbol-scope)
+        ;; (message
+        ;;  "reference symbol uri: %S from %S + %S"
+        ;;  symbol-uri
+        ;;  symbol-name
+        ;;  symbol-scope)
         (cond
 
          ;; Super-global variable
@@ -5665,29 +5670,6 @@
 (puthash
  512
  (lambda(args terminals)
-   (let ((static-member-type
-          (plist-get
-           args
-           'ast-type)))
-     (cond
-      ((equal static-member-type 'static-member-class-name)
-       (let* ((class-name (plist-get args 'class-name))
-              (class-name-type (plist-get class-name 'ast-type)))
-         (cond
-          ((equal class-name-type 'class-name-name)
-           (let* ((class-name-string (plist-get class-name 'name))
-                  (simple-variable (plist-get args 'simple-variable))
-                  (simple-variable-type (plist-get simple-variable 'ast-type)))
-             (cond
-              ((equal simple-variable-type 'simple-variable-variable)
-               (let ((simple-variable-name
-                      (plist-get simple-variable 'variable))
-                     (namespace
-                      phps-mode-parser-sdt--bookkeeping-namespace))
-                 ;; TODO Should modify stack car instead
-                 (push
-                  (list 'static-member class-name-string)
-                  (nth 1 (car phps-mode-parser-sdt--bookkeeping-symbol-stack)))))))))))))
    `(
      ast-type
      variable-static-member
@@ -5802,11 +5784,14 @@
          (symbol-start
           (car (cdr terminals)))
          (symbol-end
-          (cdr (cdr terminals))))
+          (cdr (cdr terminals)))
+         (namespace phps-mode-parser-sdt--bookkeeping-namespace))
+     (when phps-mode-parser-sdt--bookkeeping-namespace-stack
+       (setq namespace (pop phps-mode-parser-sdt--bookkeeping-namespace-stack)))
      (push
       (list
        symbol-name
-       phps-mode-parser-sdt--bookkeeping-namespace
+       namespace
        symbol-start
        symbol-end)
       phps-mode-parser-sdt--bookkeeping-symbol-stack))
@@ -5850,7 +5835,15 @@
 ;; 518 ((static_member) (class_name T_PAAMAYIM_NEKUDOTAYIM simple_variable))
 (puthash
  518
- (lambda(args _terminals)
+ (lambda(args terminals)
+   (let* ((class-name (nth 0 args))
+          (class-name-type (plist-get class-name 'ast-type)))
+     (cond
+      ((equal class-name-type 'class-name-name)
+       (let ((class-name-string (plist-get class-name 'name))
+             (namespace phps-mode-parser-sdt--bookkeeping-namespace))
+         (push (list 'static-member class-name-string) namespace)
+         (push namespace phps-mode-parser-sdt--bookkeeping-namespace-stack)))))
    `(
      ast-type
      static-member-class-name
@@ -5864,6 +5857,7 @@
 (puthash
  519
  (lambda(args _terminals)
+   ;; TODO Add bookkeeping here
    `(
      ast-type
      static-member-variable-class-name
