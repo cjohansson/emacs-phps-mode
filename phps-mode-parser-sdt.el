@@ -3189,53 +3189,54 @@
            (dolist (method-modifier method-modifiers)
              (when (equal method-modifier 'static)
                (setq is-static-p t))))
-         (unless is-static-p
-           (push
-            (list
-             "$this"
-             phps-mode-parser-sdt--bookkeeping-namespace
-             (plist-get attributed-class-statement 'ast-start)
-             (plist-get attributed-class-statement 'ast-end))
-            phps-mode-parser-sdt--bookkeeping-symbol-assignment-stack))
-         (when phps-mode-parser-sdt--bookkeeping-symbol-assignment-stack
-           (dolist (
-                    symbol-list
-                    phps-mode-parser-sdt--bookkeeping-symbol-assignment-stack)
-             (let ((symbol-name (car symbol-list))
-                   (symbol-start (nth 2 symbol-list)))
-               (unless (or
-                        (gethash
-                         symbol-name
-                         phps-mode-parser-sdt--bookkeeping--superglobal-variable-p)
-                        (< symbol-start function-start)
-                        (> symbol-start function-end))
-                 (let ((symbol-scope (car (cdr symbol-list))))
-                   (push
-                    (list 'function function-name)
-                    symbol-scope)
-                   (setcar
-                    (cdr symbol-list)
-                    symbol-scope))))))
-         (when phps-mode-parser-sdt--bookkeeping-symbol-stack
-           (dolist (
-                    symbol-list
-                    phps-mode-parser-sdt--bookkeeping-symbol-stack)
-             (let ((symbol-name (nth 0 symbol-list))
-                   (symbol-namespace (nth 1 symbol-list))
-                   (symbol-start (nth 2 symbol-list)))
-               (unless (or
-                        (gethash
-                         symbol-name
-                         phps-mode-parser-sdt--bookkeeping--superglobal-variable-p)
-                        (< symbol-start function-start)
-                        (> symbol-start function-end))
-                 (let ((symbol-scope (car (cdr symbol-list))))
-                   (push
-                    (list 'function function-name)
-                    symbol-scope)
-                   (setcar
-                    (cdr symbol-list)
-                    symbol-scope))))))
+         (when (and function-start function-end)
+           (unless is-static-p
+             (push
+              (list
+               "$this"
+               phps-mode-parser-sdt--bookkeeping-namespace
+               (plist-get attributed-class-statement 'ast-start)
+               (plist-get attributed-class-statement 'ast-end))
+              phps-mode-parser-sdt--bookkeeping-symbol-assignment-stack))
+           (when phps-mode-parser-sdt--bookkeeping-symbol-assignment-stack
+             (dolist (
+                      symbol-list
+                      phps-mode-parser-sdt--bookkeeping-symbol-assignment-stack)
+               (let ((symbol-name (car symbol-list))
+                     (symbol-start (nth 2 symbol-list)))
+                 (unless (or
+                          (gethash
+                           symbol-name
+                           phps-mode-parser-sdt--bookkeeping--superglobal-variable-p)
+                          (< symbol-start function-start)
+                          (> symbol-start function-end))
+                   (let ((symbol-scope (car (cdr symbol-list))))
+                     (push
+                      (list 'function function-name)
+                      symbol-scope)
+                     (setcar
+                      (cdr symbol-list)
+                      symbol-scope))))))
+           (when phps-mode-parser-sdt--bookkeeping-symbol-stack
+             (dolist (
+                      symbol-list
+                      phps-mode-parser-sdt--bookkeeping-symbol-stack)
+               (let ((symbol-name (nth 0 symbol-list))
+                     (symbol-namespace (nth 1 symbol-list))
+                     (symbol-start (nth 2 symbol-list)))
+                 (unless (or
+                          (gethash
+                           symbol-name
+                           phps-mode-parser-sdt--bookkeeping--superglobal-variable-p)
+                          (< symbol-start function-start)
+                          (> symbol-start function-end))
+                   (let ((symbol-scope (car (cdr symbol-list))))
+                     (push
+                      (list 'function function-name)
+                      symbol-scope)
+                     (setcar
+                      (cdr symbol-list)
+                      symbol-scope)))))))
 
          ;; Bookkeep method parameters
          (let ((symbol-scope
@@ -4883,81 +4884,117 @@
 (puthash
  439
  (lambda(args terminals)
-   (message "439: %S" phps-mode-parser-sdt--bookkeeping-symbol-stack)
-   (message "args: %S" args)
    (let ((function-start
           (cdr (cdr (nth 9 terminals))))
          (function-end
-          (car (cdr (nth 11 terminals)))))
-     (let ((namespace phps-mode-parser-sdt--bookkeeping-namespace)
-           (parameter-list (nth 4 args))
-           (lexical-vars (nth 6 args)))
-       (setq
-        phps-mode-parser-sdt--bookkeeping-anonymous-function-count
-        (1+ phps-mode-parser-sdt--bookkeeping-anonymous-function-count))
-       (push
-        (list
-         'anonymous-function
-         phps-mode-parser-sdt--bookkeeping-anonymous-function-count)
-        namespace)
+          (car (cdr (nth 11 terminals))))
+         (namespace
+          phps-mode-parser-sdt--bookkeeping-namespace)
+         (parameter-list
+          (nth 4 args))
+         (lexical-vars
+          (nth 6 args)))
+     (setq
+      phps-mode-parser-sdt--bookkeeping-anonymous-function-count
+      (1+ phps-mode-parser-sdt--bookkeeping-anonymous-function-count))
+     (push
+      (list
+       'anonymous-function
+       phps-mode-parser-sdt--bookkeeping-anonymous-function-count)
+      namespace)
 
-       ;; Go through parameters and assign variables inside function
-       (when parameter-list
-         (dolist (parameter parameter-list)
-           (let ((parameter-type
-                  (plist-get
-                   parameter
-                   'ast-type)))
-             (cond
-              ((equal parameter-type 'attributed-parameter)
-               (let* ((attributed-parameter
-                       (plist-get parameter 'parameter))
-                      (parameter-name
-                       (plist-get attributed-parameter 'ast-name))
-                      (parameter-start
-                       (plist-get attributed-parameter 'ast-start))
-                      (parameter-end
-                       (plist-get attributed-parameter 'ast-end)))
-                 (push
-                  (list
-                   parameter-name
-                   namespace
-                   parameter-start
-                   parameter-end)
-                  phps-mode-parser-sdt--bookkeeping-symbol-assignment-stack)
-                 (push
-                  (list
-                   parameter-name
-                   namespace
-                   parameter-start
-                   parameter-end)
-                  phps-mode-parser-sdt--bookkeeping-symbol-stack)))))))
+     ;; Go through parameters and assign variables inside function
+     (when parameter-list
+       (dolist (parameter parameter-list)
+         (let ((parameter-type
+                (plist-get
+                 parameter
+                 'ast-type)))
+           (cond
+            ((equal parameter-type 'attributed-parameter)
+             (let* ((attributed-parameter
+                     (plist-get parameter 'parameter))
+                    (parameter-name
+                     (plist-get attributed-parameter 'ast-name))
+                    (parameter-start
+                     (plist-get attributed-parameter 'ast-start))
+                    (parameter-end
+                     (plist-get attributed-parameter 'ast-end)))
+               (push
+                (list
+                 parameter-name
+                 namespace
+                 parameter-start
+                 parameter-end)
+                phps-mode-parser-sdt--bookkeeping-symbol-assignment-stack)
+               (push
+                (list
+                 parameter-name
+                 namespace
+                 parameter-start
+                 parameter-end)
+                phps-mode-parser-sdt--bookkeeping-symbol-stack)))))))
 
-       ;; TODO Go through lexical_vars and assign inside function
+     ;; Go through lexical_vars and assign inside function
+     (when lexical-vars
+       (let ((lexical-vars-type
+              (plist-get lexical-vars 'ast-type)))
+         (cond
+          ((equal lexical-vars-type 'lexical-vars)
+           (let ((lexical-var-list
+                  (plist-get lexical-vars 'lexical-var-list)))
+             (dolist (lexical-var lexical-var-list)
+               (let ((lexical-var-type
+                      (plist-get lexical-var 'ast-type)))
+                 (cond
+                  ((equal lexical-var-type 'lexical-var-variable)
+                   (let ((lexical-var-name
+                          (plist-get lexical-var 'ast-name))
+                         (lexical-var-start
+                          (plist-get lexical-var 'ast-start))
+                         (lexical-var-end
+                          (plist-get lexical-var 'ast-end)))
+                     (push
+                      (list
+                       lexical-var-name
+                       namespace
+                       lexical-var-start
+                       lexical-var-end)
+                      phps-mode-parser-sdt--bookkeeping-symbol-assignment-stack)
+                     (push
+                      (list
+                       lexical-var-name
+                       phps-mode-parser-sdt--bookkeeping-namespace
+                       lexical-var-start
+                       lexical-var-end)
+                      phps-mode-parser-sdt--bookkeeping-symbol-stack)))))))))))
 
-       ;; Go through phps-mode-parser-sdt--bookkeeping-symbol-stack in scope and add namespace
-       (when phps-mode-parser-sdt--bookkeeping-symbol-stack
-         (dolist (
-                  symbol-list
-                  phps-mode-parser-sdt--bookkeeping-symbol-stack)
-           (let ((symbol-name (nth 0 symbol-list))
-                 (symbol-namespace (nth 1 symbol-list))
-                 (symbol-start (nth 2 symbol-list)))
-             (unless (or
-                      (gethash
-                       symbol-name
-                       phps-mode-parser-sdt--bookkeeping--superglobal-variable-p)
-                      (< symbol-start function-start)
-                      (> symbol-start function-end))
-               (let ((symbol-scope (car (cdr symbol-list))))
-                 (push
-                  (list
-                   'anonymous-function
-                   phps-mode-parser-sdt--bookkeeping-anonymous-function-count)
-                  symbol-scope)
-                 (setcar
-                  (cdr symbol-list)
-                  symbol-scope))))))))
+     ;; Go through phps-mode-parser-sdt--bookkeeping-symbol-stack in scope and add namespace
+     (when (and
+            phps-mode-parser-sdt--bookkeeping-symbol-stack
+            function-start
+            function-end)
+       (dolist (
+                symbol-list
+                phps-mode-parser-sdt--bookkeeping-symbol-stack)
+         (let ((symbol-name (nth 0 symbol-list))
+               (symbol-namespace (nth 1 symbol-list))
+               (symbol-start (nth 2 symbol-list)))
+           (unless (or
+                    (gethash
+                     symbol-name
+                     phps-mode-parser-sdt--bookkeeping--superglobal-variable-p)
+                    (< symbol-start function-start)
+                    (> symbol-start function-end))
+             (let ((symbol-scope (car (cdr symbol-list))))
+               (push
+                (list
+                 'anonymous-function
+                 phps-mode-parser-sdt--bookkeeping-anonymous-function-count)
+                symbol-scope)
+               (setcar
+                (cdr symbol-list)
+                symbol-scope)))))))
 
    `(
      ast-type
@@ -5080,40 +5117,43 @@
 (puthash
  450
  (lambda(args _terminals)
-   `(
-     ast-type
-     lexical-vars
-     ,(append (nth 0 args) (list (nth 2 args)))))
+   (append (nth 0 args) (nth 2 args)))
  phps-mode-parser--table-translations)
 
 ;; 451 ((lexical_var_list) (lexical_var))
 (puthash
  451
  (lambda(args _terminals)
-   `(
-     ast-type
-     lexical-var-list
-     ,args))
+   (list args))
  phps-mode-parser--table-translations)
 
 ;; 452 ((lexical_var) (T_VARIABLE))
 (puthash
  452
- (lambda(args _terminals)
+ (lambda(args terminals)
    `(
      ast-type
      lexical-var-variable
-     ,args))
+     ast-name
+     ,args
+     ast-start
+     ,(car (cdr terminals))
+     ast-end
+     ,(cdr (cdr terminals))))
  phps-mode-parser--table-translations)
 
 ;; 453 ((lexical_var) (ampersand T_VARIABLE))
 (puthash
  453
- (lambda(args _terminals)
+ (lambda(args terminals)
    `(
      ast-type
      lexical-var-reference
-     ,args))
+     ast-name
+     ,(nth 1 args)
+     ast-start
+     ,(car (cdr (nth 1 terminals)))
+     ,(cdr (cdr (nth 1 terminals)))))
  phps-mode-parser--table-translations)
 
 ;; 454 ((function_call) (name argument_list))
@@ -5708,7 +5748,7 @@
      array-object-dereferenceable
      ,(nth 0 args)
      optional-expr
-     ,(nth 2 expr)))
+     ,(nth 2 args)))
  phps-mode-parser--table-translations)
 
 ;; 507 ((callable_variable) (array_object_dereferenceable "{" expr "}"))

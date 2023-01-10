@@ -256,12 +256,12 @@
   (phps-mode-test-ast--should-bookkeep
    "<?php\n\n$example = function ($test) {\n    if ($test) {\n        echo 'Hit';\n    }\n    if ($example) {\n        echo 'Miss';\n    }\n};\n$example2 = function ($test2) use ($example) {\n    if ($test2) {\n        echo 'Hit';\n    }\n    if ($example) {\n        echo 'Hit';\n    }\n    if ($example2) {\n        echo 'Miss';\n    }\n    if ($example3) {\n        echo 'Miss';\n    }\n};\nif ($test) {\n    echo 'Miss';\n}\nif ($test2) {\n    echo 'Miss';\n}"
    "Bookkeeping of anonymous function variable assignments"
-   '((" id $example" 1) ((8 16) 1) (" anonymous function 1 id $test" 1) ((29 34) 1) ((46 51) 1) ((89 97) 0) (" id $example2" 1) ((131 140) 1) (" anonymous function 2 id $test2" 1) ((153 159) 1) (" anonymous function 2 id $example" 1) ((166 174) 1) ((186 192) 1) ((230 238) 1) ((276 285) 0) ((324 333) 0) ((371 376) 0) ((403 409) 0)))
+   '((" id $example" ((8 16))) (" anonymous function1 id $test" ((29 34))) ((29 34) 1) ((89 97) 0) ((46 51) 1) ((8 16) 1) (" id $example2" ((131 140))) (" anonymous function2 id $example" ((166 174))) (" anonymous function2 id $test2" ((153 159))) ((166 174) 1) ((153 159) 1) ((324 333) 0) ((276 285) 0) ((230 238) 1) ((186 192) 1) ((131 140) 1) ((371 376) 0) ((403 409) 0)))
 
   (phps-mode-test-ast--should-bookkeep
    "<?php\nclass myClass {\n    function random() {}\n    function __construct()\n    {\n        $this->random();\n        $this->random['abc'] = 123;\n    }\n}"
    "Method calls should be avoided in bookkeeping"
-   '((" class myClass function random id $this" 1) (" class myClass function __construct id $this" 1)))
+   '((" class myClass function __construct id $this" ((79 147))) ((121 127) 0) ((114 119) 1) ((89 94) 1)))
 
   (phps-mode-test-ast--should-bookkeep
    "<?php\n$items = array(1, 2, 3);\nforeach ($items as &$item) {\n    if ($item) {\n        echo 'Hit';\n    }\n}\nforeach ($items as $key => &$item2) {\n    if ($item) {\n        echo 'Hit';\n    }\n}"
