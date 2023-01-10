@@ -611,6 +611,11 @@
   nil
   "Current bookkeeping assignment symbol stack.")
 
+(defvar-local
+  phps-mode-parser-sdt--bookkeeping-anonymous-function-count
+  nil
+  "Count of anonymous functions.")
+
 (defvar
   phps-mode-parser-sdt--bookkeeping--superglobal-variable-p
   #s(hash-table size 12 test equal rehash-size 1.5 rehash-threshold 0.8125 data ("$_GET" 1 "$_POST" 1 "$_COOKIE" 1 "$_SESSION" 1 "$_REQUEST" 1 "$GLOBALS" 1 "$_SERVER" 1 "$_FILES" 1 "$_ENV" 1 "$argc" 1 "$argv" 1 "$http_​response_​header" 1))
@@ -623,7 +628,8 @@
         (interface)
         (trait)
         (function)
-        (is-static-p))
+        (is-static-p)
+        (anonymous-function))
     (when scope
       (dolist (item scope)
         (let ((space-type (car item))
@@ -639,6 +645,8 @@
             (setq trait space-name))
            ((equal space-type 'function)
             (setq function space-name))
+           ((equal space-type 'anonymous-function)
+            (setq anonymous-function space-name))
            ((equal space-type 'object-operator)
             (let ((downcased-space-name
                    (downcase space-name)))
@@ -670,6 +678,13 @@
              (format
               " id %s"
               name)))
+        (when anonymous-function
+          (setq
+           new-symbol-name
+           (format
+            " anonymous function%s%s"
+            anonymous-function
+            new-symbol-name)))
         (when is-static-p
           (setq
            new-symbol-name
@@ -4867,7 +4882,83 @@
 ;; 439 ((inline_function) (function returns_ref backup_doc_comment "(" parameter_list ")" lexical_vars return_type backup_fn_flags "{" inner_statement_list "}" backup_fn_flags))
 (puthash
  439
- (lambda(args _terminals)
+ (lambda(args terminals)
+   (message "439: %S" phps-mode-parser-sdt--bookkeeping-symbol-stack)
+   (message "args: %S" args)
+   (let ((function-start
+          (cdr (cdr (nth 9 terminals))))
+         (function-end
+          (car (cdr (nth 11 terminals)))))
+     (let ((namespace phps-mode-parser-sdt--bookkeeping-namespace)
+           (parameter-list (nth 4 args))
+           (lexical-vars (nth 6 args)))
+       (setq
+        phps-mode-parser-sdt--bookkeeping-anonymous-function-count
+        (1+ phps-mode-parser-sdt--bookkeeping-anonymous-function-count))
+       (push
+        (list
+         'anonymous-function
+         phps-mode-parser-sdt--bookkeeping-anonymous-function-count)
+        namespace)
+
+       ;; Go through parameters and assign variables inside function
+       (when parameter-list
+         (dolist (parameter parameter-list)
+           (let ((parameter-type
+                  (plist-get
+                   parameter
+                   'ast-type)))
+             (cond
+              ((equal parameter-type 'attributed-parameter)
+               (let* ((attributed-parameter
+                       (plist-get parameter 'parameter))
+                      (parameter-name
+                       (plist-get attributed-parameter 'ast-name))
+                      (parameter-start
+                       (plist-get attributed-parameter 'ast-start))
+                      (parameter-end
+                       (plist-get attributed-parameter 'ast-end)))
+                 (push
+                  (list
+                   parameter-name
+                   namespace
+                   parameter-start
+                   parameter-end)
+                  phps-mode-parser-sdt--bookkeeping-symbol-assignment-stack)
+                 (push
+                  (list
+                   parameter-name
+                   namespace
+                   parameter-start
+                   parameter-end)
+                  phps-mode-parser-sdt--bookkeeping-symbol-stack)))))))
+
+       ;; TODO Go through lexical_vars and assign inside function
+
+       ;; Go through phps-mode-parser-sdt--bookkeeping-symbol-stack in scope and add namespace
+       (when phps-mode-parser-sdt--bookkeeping-symbol-stack
+         (dolist (
+                  symbol-list
+                  phps-mode-parser-sdt--bookkeeping-symbol-stack)
+           (let ((symbol-name (nth 0 symbol-list))
+                 (symbol-namespace (nth 1 symbol-list))
+                 (symbol-start (nth 2 symbol-list)))
+             (unless (or
+                      (gethash
+                       symbol-name
+                       phps-mode-parser-sdt--bookkeeping--superglobal-variable-p)
+                      (< symbol-start function-start)
+                      (> symbol-start function-end))
+               (let ((symbol-scope (car (cdr symbol-list))))
+                 (push
+                  (list
+                   'anonymous-function
+                   phps-mode-parser-sdt--bookkeeping-anonymous-function-count)
+                  symbol-scope)
+                 (setcar
+                  (cdr symbol-list)
+                  symbol-scope))))))))
+
    `(
      ast-type
      inline-function
