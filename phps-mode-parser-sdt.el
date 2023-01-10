@@ -1836,20 +1836,39 @@
 (puthash
  169
  (lambda(args terminals)
+   (let ((optional-variable (nth 4 args))
+         (optional-variable-start)
+         (optional-variable-end))
+     (when optional-variable
+       (setq optional-variable-start (car (cdr (nth 4 terminals))))
+       (setq optional-variable-end (cdr (cdr (nth 4 terminals))))
+       (push
+        (list
+         optional-variable
+         phps-mode-parser-sdt--bookkeeping-namespace
+         optional-variable-start
+         optional-variable-end)
+        phps-mode-parser-sdt--bookkeeping-symbol-assignment-stack)
+       (push
+        (list
+         optional-variable
+         phps-mode-parser-sdt--bookkeeping-namespace
+         optional-variable-start
+         optional-variable-end)
+        phps-mode-parser-sdt--bookkeeping-symbol-stack))
    `(
      ast-type
      catch-list
      catch-name-list
      ,(nth 3 args)
      optional-variable
-     ,(nth 4 args)
+     ,optional-variable
      optional-variable-start
-     ,(car (cdr (nth 4 terminals)))
+     ,optional-variable-start
      optional-variable-end
-     ,(cdr (cdr (nth 4 terminals)))
+     ,optional-variable-end
      inner-statement-list
-     ,(nth 7 args)
-     ))
+     ,(nth 7 args))))
  phps-mode-parser--table-translations)
 
 ;; 170 ((catch_name_list) (class_name))

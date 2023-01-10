@@ -37,6 +37,9 @@
    phps-mode-parser-sdt--bookkeeping-namespace
    nil)
   (setq
+   phps-mode-parser-sdt--bookkeeping-namespace-stack
+   nil)
+  (setq
    phps-mode-parser-sdt--bookkeeping-symbol-stack
    nil)
   (let* ((result (phps-mode-parser--parse t))

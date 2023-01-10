@@ -251,7 +251,7 @@
   (phps-mode-test-ast--should-bookkeep
    "<?php\n\ntry {\n    \n} catch (\\Exception $e) {\n    if ($e) {\n        echo 'Hit';\n    }\n}\n\nif ($e) {\n    echo 'Miss';\n}\n"
    "Bookkeeping of try catch variable assignment"
-   '((" id $e" 1) ((39 41) 1) ((53 55) 1) ((92 94) 1)))
+   '((" id $e" ((39 41))) ((39 41) 1) ((53 55) 1) ((92 94) 1)))
 
   (phps-mode-test-ast--should-bookkeep
    "<?php\n\n$example = function ($test) {\n    if ($test) {\n        echo 'Hit';\n    }\n    if ($example) {\n        echo 'Miss';\n    }\n};\n$example2 = function ($test2) use ($example) {\n    if ($test2) {\n        echo 'Hit';\n    }\n    if ($example) {\n        echo 'Hit';\n    }\n    if ($example2) {\n        echo 'Miss';\n    }\n    if ($example3) {\n        echo 'Miss';\n    }\n};\nif ($test) {\n    echo 'Miss';\n}\nif ($test2) {\n    echo 'Miss';\n}"
