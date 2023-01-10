@@ -254,9 +254,9 @@
    '((" id $e" ((39 41))) ((39 41) 1) ((53 55) 1) ((92 94) 1)))
 
   (phps-mode-test-ast--should-bookkeep
-   "<?php\n\n$example = function ($test) {\n    if ($test) {\n        echo 'Hit';\n    }\n    if ($example) {\n        echo 'Miss';\n    }\n};\n$example2 = function ($test2) use ($example) {\n    if ($test2) {\n        echo 'Hit';\n    }\n    if ($example) {\n        echo 'Hit';\n    }\n    if ($example2) {\n        echo 'Miss';\n    }\n    if ($example3) {\n        echo 'Miss';\n    }\n};\nif ($test) {\n    echo 'Miss';\n}\nif ($test2) {\n    echo 'Miss';\n}"
-   "Bookkeeping of anonymous function variable assignments"
-   '((" id $example" ((8 16))) (" anonymous function1 id $test" ((29 34))) ((29 34) 1) ((89 97) 0) ((46 51) 1) ((8 16) 1) (" id $example2" ((131 140))) (" anonymous function2 id $example" ((166 174))) (" anonymous function2 id $test2" ((153 159))) ((166 174) 1) ((153 159) 1) ((324 333) 0) ((276 285) 0) ((230 238) 1) ((186 192) 1) ((131 140) 1) ((371 376) 0) ((403 409) 0)))
+   "<?php\n\n$example = function ($test) {\n    if ($test) {\n        echo 'Hit';\n    }\n    if ($example) {\n        echo 'Miss';\n    }\n};\n$example2 = function ($test2) use ($example) {\n    if ($test2) {\n        echo 'Hit';\n    }\n    if ($example) {\n        echo 'Hit';\n    }\n    if ($example2) {\n        echo 'Miss';\n    }\n    if ($example3) {\n        echo 'Miss';\n    }\n};\n$example3 = function ($test3) use ($example4) {\n    if ($test3) {\n        echo 'Hit';\n    }\n    if ($example4) {\n        echo 'Hit';\n    }\n};\nif ($test) {\n    echo 'Miss';\n}\nif ($test2) {\n    echo 'Miss';\n}"
+   "Bookkeeping of anonymous function variable assignments and lexical vars"
+   '((" id $example" ((8 16))) (" anonymous function1 id $test" ((29 34))) ((29 34) 1) ((89 97) 0) ((46 51) 1) ((8 16) 1) (" id $example2" ((131 140))) (" anonymous function2 id $example" ((166 174))) (" anonymous function2 id $test2" ((153 159))) ((166 174) 1) ((153 159) 1) ((324 333) 0) ((276 285) 0) ((230 238) 1) ((186 192) 1) ((131 140) 1) (" id $example3" ((367 376))) (" anonymous function3 id $example4" ((402 411))) (" anonymous function3 id $test3" ((389 395))) ((402 411) 0) ((389 395) 1) ((467 476) 1) ((423 429) 1) ((367 376) 1) ((513 518) 0) ((545 551) 0)))
 
   (phps-mode-test-ast--should-bookkeep
    "<?php\nclass myClass {\n    function random() {}\n    function __construct()\n    {\n        $this->random();\n        $this->random['abc'] = 123;\n    }\n}"
