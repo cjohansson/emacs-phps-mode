@@ -266,7 +266,7 @@
   (phps-mode-test-ast--should-bookkeep
    "<?php\n$items = array(1, 2, 3);\nforeach ($items as &$item) {\n    if ($item) {\n        echo 'Hit';\n    }\n}\nforeach ($items as $key => &$item2) {\n    if ($item) {\n        echo 'Hit';\n    }\n}"
    "Bookkeeping of foreach reference variable declaration"
-   '((" id $items" 1) ((7 13) 1) ((41 47) 1) (" id $item" 1) ((52 57) 1) ((69 74) 1) ((115 121) 1) (" id $key" 1) ((125 129) 1) (" id $item2" 1) ((134 140) 1) ((152 157) 1)))
+   '((" id $items" ((7 13))) ((7 13) 1) (" id $item" ((52 57))) ((69 74) 1) ((52 57) 1) ((41 47) 1) (" id $item2" ((134 140))) (" id $key" ((125 129))) ((152 157) 1) ((134 140) 1) ((125 129) 1) ((115 121) 1)))
 
   (phps-mode-test-ast--should-bookkeep
    "<?php\n\n[$random, $bandom] = myValues();\nif ($random) {\n    echo 'Hit';\n}\nif ($bandom) {\n    echo 'Hit';\n}\n"

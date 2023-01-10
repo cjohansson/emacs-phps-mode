@@ -2375,8 +2375,46 @@
 ;; 205 ((foreach_variable) (ampersand variable))
 (puthash
  205
- (lambda(args _terminals)
-   ;; TODO Declare variable here
+ (lambda(args terminals)
+   ;; Save variable declaration in bookkeeping buffer
+   (let* ((variable (nth 1 args))
+          (variable-type (plist-get variable 'ast-type)))
+     (cond
+      ((equal variable-type 'variable-callable-variable)
+       (let* ((callable-variable (plist-get variable 'callable-variable))
+              (callable-variable-type (plist-get callable-variable 'ast-type)))
+         (cond
+          ((equal callable-variable-type 'callable-variable-simple-variable)
+           (let ((callable-variable-simple-variable
+                  (plist-get callable-variable 'simple-variable)))
+             (let ((callable-variable-simple-variable-type
+                    (plist-get
+                     callable-variable-simple-variable
+                     'ast-type)))
+               (cond
+                ((equal
+                  callable-variable-simple-variable-type
+                  'simple-variable-variable)
+                 (let* ((variable-name
+                         (plist-get
+                          callable-variable-simple-variable
+                          'variable))
+                        (symbol-name
+                         variable-name)
+                        (symbol-start
+                         (car (cdr (nth 1 terminals))))
+                        (symbol-end
+                         (cdr (cdr (nth 1 terminals))))
+                        (symbol-scope
+                         phps-mode-parser-sdt--bookkeeping-namespace))
+                   ;; (message "declared foreach variable from terminals: %S" (nth 1 terminals))
+                   (push
+                    (list
+                     symbol-name
+                     symbol-scope
+                     symbol-start
+                     symbol-end)
+                    phps-mode-parser-sdt--bookkeeping-symbol-assignment-stack))))))))))))
 
    `(
      ast-type
@@ -2444,8 +2482,7 @@
      ast-type
      foreach-statement
      statement
-     ,args
-     ))
+     ,args))
  phps-mode-parser--table-translations)
 
 ;; 211 ((foreach_statement) (":" inner_statement_list T_ENDFOREACH ";"))
@@ -5937,7 +5974,9 @@
           (cdr (cdr terminals)))
          (namespace phps-mode-parser-sdt--bookkeeping-namespace))
      (when phps-mode-parser-sdt--bookkeeping-namespace-stack
-       (setq namespace (pop phps-mode-parser-sdt--bookkeeping-namespace-stack)))
+       (setq
+        namespace
+        (pop phps-mode-parser-sdt--bookkeeping-namespace-stack)))
      (push
       (list
        symbol-name
