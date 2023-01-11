@@ -752,11 +752,11 @@
               (phps-mode-parser-sdt--get-symbol-uri
                symbol-name
                symbol-scope)))
-        ;; (message
-        ;;  "assign symbol uri: %S from %S + %S"
-        ;;  symbol-uri
-        ;;  symbol-name
-        ;;  symbol-scope)
+        (message
+         "assign symbol uri: %S from %S + %S"
+         symbol-uri
+         symbol-name
+         symbol-scope)
         (if (gethash symbol-uri phps-mode-parser-sdt-bookkeeping)
             (puthash
              symbol-uri
@@ -788,44 +788,37 @@
              (symbol-uri
               (phps-mode-parser-sdt--get-symbol-uri
                symbol-name
-               symbol-scope)))
-        ;; (message
-        ;;  "reference symbol uri: %S from %S + %S"
-        ;;  symbol-uri
-        ;;  symbol-name
-        ;;  symbol-scope)
+               symbol-scope))
+             (symbol-hit 0))
         (cond
 
          ;; Super-global variable
          ((gethash
            symbol-name
            phps-mode-parser-sdt--bookkeeping--superglobal-variable-p)
-          (puthash
-           (list
-            symbol-start
-            symbol-end)
-           1
-           phps-mode-parser-sdt-bookkeeping))
+          (setq symbol-hit 1))
 
          ;; Declared variable
          ((gethash
            symbol-uri
            phps-mode-parser-sdt-bookkeeping)
-          (puthash
-           (list
-            symbol-start
-            symbol-end)
-           1
-           phps-mode-parser-sdt-bookkeeping))
+          (setq symbol-hit 1)))
 
-         ;; Undeclared variable
-         (t
-          (puthash
-           (list
-            symbol-start
-            symbol-end)
-           0
-           phps-mode-parser-sdt-bookkeeping)))))
+        (puthash
+         (list
+          symbol-start
+          symbol-end)
+         symbol-hit
+         phps-mode-parser-sdt-bookkeeping)
+
+        (message
+         "reference symbol uri: %S from %S + %S, start: %S, end: %S, hit?: %S"
+         symbol-uri
+         symbol-name
+         symbol-scope
+         symbol-start
+         symbol-end
+         symbol-hit)))
     (setq
      phps-mode-parser-sdt--bookkeeping-symbol-stack
      nil)))
@@ -1699,6 +1692,8 @@
 (puthash
  155
  (lambda(args _terminals)
+   (dolist (stack-item phps-mode-parser-sdt--bookkeeping-symbol-stack)
+     (push '(global) (nth 1 stack-item)))
    (let ((global-var-list (nth 1 args)))
      (dolist (global-var global-var-list)
        (let ((global-var-type (plist-get global-var 'ast-type)))
@@ -1713,14 +1708,7 @@
                phps-mode-parser-sdt--bookkeeping-namespace
                variable-start
                variable-end)
-              phps-mode-parser-sdt--bookkeeping-symbol-assignment-stack)
-             (push
-              (list
-               variable-name
-               '((global))
-               variable-start
-               variable-end)
-              phps-mode-parser-sdt--bookkeeping-symbol-stack)))))))
+              phps-mode-parser-sdt--bookkeeping-symbol-assignment-stack)))))))
    `(
      ast-type
      global-statement
