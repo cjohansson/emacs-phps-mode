@@ -647,6 +647,11 @@
             (setq function space-name))
            ((equal space-type 'anonymous-function)
             (setq anonymous-function space-name))
+           ((equal space-type 'global)
+            (setq namespace nil)
+            (setq class nil)
+            (setq function nil)
+            (setq anonymous-function nil))
            ((equal space-type 'object-operator)
             (let ((downcased-space-name
                    (downcase space-name)))
@@ -1694,12 +1699,33 @@
 (puthash
  155
  (lambda(args _terminals)
+   (let ((global-var-list (nth 1 args)))
+     (dolist (global-var global-var-list)
+       (let ((global-var-type (plist-get global-var 'ast-type)))
+         (cond
+          ((equal global-var-type 'simple-variable-variable)
+           (let ((variable-name (plist-get global-var 'variable))
+                 (variable-start (plist-get global-var 'ast-start))
+                 (variable-end (plist-get global-var 'ast-end)))
+             (push
+              (list
+               variable-name
+               phps-mode-parser-sdt--bookkeeping-namespace
+               variable-start
+               variable-end)
+              phps-mode-parser-sdt--bookkeeping-symbol-assignment-stack)
+             (push
+              (list
+               variable-name
+               '((global))
+               variable-start
+               variable-end)
+              phps-mode-parser-sdt--bookkeeping-symbol-stack)))))))
    `(
      ast-type
      global-statement
      global-var-list
-     ,(nth 1 args)
-     ))
+     ,(nth 1 args)))
  phps-mode-parser--table-translations)
 
 ;; 156 ((statement) (T_STATIC static_var_list ";"))

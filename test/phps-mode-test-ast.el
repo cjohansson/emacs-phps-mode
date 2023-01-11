@@ -274,7 +274,7 @@
    '((" id $bandom" ((18 25))) (" id $random" ((9 16))) ((18 25) 1) ((9 16) 1) ((45 52) 1) ((78 85) 1)))
 
   (phps-mode-test-ast--should-bookkeep
-   "<?php\n\n$var = 123;\n\nfunction test($abc) {\n    global $var;\n    if ($var) {\n        echo 'Hit';\n    }\n}"
+   "<?php\n\n$var = 123;\n\nfunction test($abc) {\n    global $var, $var2;\n    if ($var) {\n        echo 'Hit';\n    }\n    if ($var2) {\n        echo 'Hit';\n    }\n}"
    "Bookkeeping of global variable declaration in function"
    '((" id $var" 1) ((8 12) 1) (" function test id $abc" 1) ((35 39) 1) (" function test id $var" 1) ((54 58) 1) ((68 72) 1)))
 
