@@ -226,7 +226,7 @@
   (phps-mode-test-ast--should-bookkeep
    "<?php\n\n$var2 = 4;\n\nfunction myFunction($var)\n{\n    $var3 = 3;\n    if ($var) {\n        echo 'Hit';\n    }\n    if ($var2) {\n        echo 'Miss';\n    }\n    if ($var3) {\n        echo 'Hit';\n    }\n}\n\nfunction myFunction2($abc)\n{\n    if ($var) {\n        echo 'Miss';\n    }\n    if ($abc) {\n        echo 'Hit';\n    }\n}\n\nif ($var) {\n    echo 'Miss';\n}\nif ($var2) {\n    echo 'Hit';\n}"
    "Bookkeeping in function level with variable assignments"
-   '((" id $var2" ((8 13))) ((8 13) 1) (" function myFunction id $var" ((40 44))) (" function myFunction id $var3" ((52 57))) ((157 162) 1) ((113 118) 0) ((71 75) 1) ((52 57) 1) (" function myFunction2 id $abc" ((216 220))) ((275 279) 1) ((232 236) 0) ((316 320) 0) ((347 352) 1)))
+   '((" id $var2" ((8 13))) ((8 13) 1) (" function myFunction id $var" ((40 44))) (" function myFunction id $var3" ((52 57))) ((40 44) 1) ((157 162) 1) ((113 118) 0) ((71 75) 1) ((52 57) 1) (" function myFunction2 id $abc" ((216 220))) ((216 220) 1) ((275 279) 1) ((232 236) 0) ((316 320) 0) ((347 352) 1)))
 
   (phps-mode-test-ast--should-bookkeep
    "<?php\n\n// Super-globals\n\nif ($_GET) {\n    echo 'Hit';\n}\nif ($_POST) {\n    echo 'Hit';\n}\nif ($_COOKIE) {\n    echo 'Hit';\n}\nif ($_SESSION) {\n    echo 'Hit';\n}\nif ($_REQUEST) {\n    echo 'Hit';\n}\nif ($GLOBALS) {\n    echo 'Hit';\n}\nif ($_SERVER) {\n    echo 'Hit';\n}\nif ($_FILES) {\n    echo 'Hit';\n}\nif ($_ENV) {\n    echo 'Hit';\n}\nif ($argc) {\n    echo 'Hit';\n}\nif ($argv) {\n    echo 'Hit';\n}\nif ($http_​response_​header) {\n    echo 'Hit';\n}"
@@ -276,7 +276,7 @@
   (phps-mode-test-ast--should-bookkeep
    "<?php\n\n$var = 123;\n\nfunction test($abc) {\n    global $var, $var2;\n    if ($var) {\n        echo 'Hit';\n    }\n    if ($var2) {\n        echo 'Hit';\n    }\n}"
    "Bookkeeping of global variable declaration in function"
-   '((" id $var" 1) ((8 12) 1) (" function test id $abc" 1) ((35 39) 1) (" function test id $var" 1) ((54 58) 1) ((68 72) 1)))
+   '((" id $var" ((8 12))) ((8 12) 1) (" function test id $abc" ((35 39))) (" function test id $var2" ((60 65))) (" function test id $var" ((54 58))) ((35 39) 1) ((117 122) 1) ((75 79) 1) ((60 65) 0) ((54 58) 1)))
 
   (phps-mode-test-ast--should-bookkeep
    "<?php\n$y = 1;\n$fn1 = fn($x) => $x + $y;\n$z = 1;\n$fn = fn($x2) => fn($y2) => $x2 * $y2 + $z;\nfn(array $x3) => $x3;\n$x4 = 4;\nstatic fn(): int => $x4;\nfn($x5 = 42) => $x5;\nfn(&$x6) => $x6;\nfn&($x7) => $x7;\nfn($x8, ...$rest) => $rest;"

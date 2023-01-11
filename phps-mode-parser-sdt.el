@@ -752,11 +752,11 @@
               (phps-mode-parser-sdt--get-symbol-uri
                symbol-name
                symbol-scope)))
-        (message
-         "assign symbol uri: %S from %S + %S"
-         symbol-uri
-         symbol-name
-         symbol-scope)
+        ;; (message
+        ;;  "assign symbol uri: %S from %S + %S"
+        ;;  symbol-uri
+        ;;  symbol-name
+        ;;  symbol-scope)
         (if (gethash symbol-uri phps-mode-parser-sdt-bookkeeping)
             (puthash
              symbol-uri
@@ -811,14 +811,15 @@
          symbol-hit
          phps-mode-parser-sdt-bookkeeping)
 
-        (message
-         "reference symbol uri: %S from %S + %S, start: %S, end: %S, hit?: %S"
-         symbol-uri
-         symbol-name
-         symbol-scope
-         symbol-start
-         symbol-end
-         symbol-hit)))
+        ;; (message
+        ;;  "reference symbol uri: %S from %S + %S, start: %S, end: %S, hit?: %S"
+        ;;  symbol-uri
+        ;;  symbol-name
+        ;;  symbol-scope
+        ;;  symbol-start
+        ;;  symbol-end
+        ;;  symbol-hit)
+        ))
     (setq
      phps-mode-parser-sdt--bookkeeping-symbol-stack
      nil)))
@@ -1976,7 +1977,7 @@
 (puthash
  179
  (lambda(args terminals)
-   ;; (message "parameter_list-args: %S" (nth 5 args))
+   ;; (message "179-parameter_list-args: %S" (nth 5 args))
    ;; (message "parameter_list-terminals: %S" (nth 5 terminals))
 
    ;; Iterate optional parameters are declare them as new variable declarations
@@ -2005,7 +2006,14 @@
                symbol-scope
                symbol-start
                symbol-end)
-              phps-mode-parser-sdt--bookkeeping-symbol-assignment-stack)))))))
+              phps-mode-parser-sdt--bookkeeping-symbol-assignment-stack)
+             (push
+              (list
+               symbol-name
+               symbol-scope
+               symbol-start
+               symbol-end)
+              phps-mode-parser-sdt--bookkeeping-symbol-stack)))))))
 
    ;; (message "before:")
    ;; (message
