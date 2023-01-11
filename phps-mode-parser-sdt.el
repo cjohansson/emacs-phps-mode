@@ -3829,6 +3829,39 @@
 (puthash
  358
  (lambda(args _terminals)
+   ;; TODO Declare array-pair-list assignments here
+   (let ((array-pair-list (nth 1 args)))
+     (dolist (array-item array-pair-list)
+       (let ((array-item-type (plist-get array-item 'ast-type)))
+         (cond
+          ((equal array-item-type 'array-pair-expr)
+           (let* ((array-item-expr (plist-get array-item 'expr))
+                  (array-item-expr-type (plist-get array-item-expr 'ast-type)))
+             (cond
+              ((equal array-item-expr-type 'expr-variable)
+               (let* ((expr-variable (plist-get array-item-expr 'variable))
+                      (expr-variable-type (plist-get expr-variable 'ast-type)))
+                 (cond
+                  ((equal expr-variable-type 'variable-callable-variable)
+                   (let* ((callable-variable (plist-get expr-variable 'callable-variable))
+                          (callable-variable-type (plist-get callable-variable 'ast-type)))
+                     (cond
+                      ((equal callable-variable-type 'callable-variable-simple-variable)
+                       (let* ((callable-simple-variable
+                               (plist-get callable-variable 'simple-variable))
+                              (variable-name
+                               (plist-get callable-simple-variable 'variable))
+                              (variable-start
+                               (plist-get callable-simple-variable 'ast-start))
+                              (variable-end
+                               (plist-get callable-simple-variable 'ast-end)))
+                         (push
+                          (list
+                           variable-name
+                           phps-mode-parser-sdt--bookkeeping-namespace
+                           variable-start
+                           variable-end)
+                          phps-mode-parser-sdt--bookkeeping-symbol-assignment-stack))))))))))))))))
    `(
      ast-type
      expr-list
@@ -6215,52 +6248,37 @@
 (puthash
  533
  (lambda(args _terminals)
-   `(
-     ast-type
-     array-pair-list-non-empty
-     non-empty-array-pair-list
-     ,args))
+   args)
  phps-mode-parser--table-translations)
 
 ;; 534 ((possible_array_pair) (%empty))
 (puthash
  534
  (lambda(args _terminals)
-   `(
-     ast-type
-     possible-array-pair-empty))
+   nil)
  phps-mode-parser--table-translations)
 
 ;; 535 ((possible_array_pair) (array_pair))
 (puthash
  535
  (lambda(args _terminals)
-   `(
-     ast-type
-     possible-array-pair-not-empty
-     array-pair
-     ,args))
+   args)
  phps-mode-parser--table-translations)
 
 ;; 536 ((non_empty_array_pair_list) (non_empty_array_pair_list "," possible_array_pair))
 (puthash
  536
  (lambda(args _terminals)
-   `(
-     ast-type
-     non-empty-array-pair-list
-     ,(append (nth 0 args) (list (nth 2 args)))))
+   (if (nth 2 args)
+       (append (nth 0 args) (list (nth 2 args)))
+     (nth 0 args)))
  phps-mode-parser--table-translations)
 
 ;; 537 ((non_empty_array_pair_list) (possible_array_pair))
 (puthash
  537
  (lambda(args _terminals)
-   `(
-     ast-type
-     non-empty-array-pair-list
-     possible-array-pair
-     ,args))
+   (list args))
  phps-mode-parser--table-translations)
 
 ;; 538 ((array_pair) (expr T_DOUBLE_ARROW expr))

@@ -271,7 +271,7 @@
   (phps-mode-test-ast--should-bookkeep
    "<?php\n\n[$random, $bandom] = myValues();\nif ($random) {\n    echo 'Hit';\n}\nif ($bandom) {\n    echo 'Hit';\n}\n"
    "Bookkeeping of variable declarations in array"
-   '((" id $random" 1) ((9 16) 1) (" id $bandom" 1) ((18 25) 1) ((45 52) 1) ((78 85) 1)))
+   '((" id $bandom" ((18 25))) (" id $random" ((9 16))) ((18 25) 1) ((9 16) 1) ((45 52) 1) ((78 85) 1)))
 
   (phps-mode-test-ast--should-bookkeep
    "<?php\n\n$var = 123;\n\nfunction test($abc) {\n    global $var;\n    if ($var) {\n        echo 'Hit';\n    }\n}"
