@@ -45,6 +45,9 @@
   (setq
    phps-mode-parser-sdt--bookkeeping-anonymous-function-count
    0)
+  (setq
+   phps-mode-parser-sdt--bookkeeping-arrow-function-count
+   0)
   (let* ((result (phps-mode-parser--parse t))
          (parse-trail (nth 0 result))
          (translation (nth 1 result))

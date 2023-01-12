@@ -616,6 +616,11 @@
   nil
   "Count of anonymous functions.")
 
+(defvar-local
+  phps-mode-parser-sdt--bookkeeping-arrow-function-count
+  nil
+  "Count of arrow functions.")
+
 (defvar
   phps-mode-parser-sdt--bookkeeping--superglobal-variable-p
   #s(hash-table size 12 test equal rehash-size 1.5 rehash-threshold 0.8125 data ("$_GET" 1 "$_POST" 1 "$_COOKIE" 1 "$_SESSION" 1 "$_REQUEST" 1 "$GLOBALS" 1 "$_SERVER" 1 "$_FILES" 1 "$_ENV" 1 "$argc" 1 "$argv" 1 "$http_​response_​header" 1))
@@ -629,7 +634,8 @@
         (trait)
         (function)
         (is-static-p)
-        (anonymous-function))
+        (anonymous-function)
+        (arrow-function))
     (when scope
       (dolist (item scope)
         (let ((space-type (car item))
@@ -647,10 +653,13 @@
             (setq function space-name))
            ((equal space-type 'anonymous-function)
             (setq anonymous-function space-name))
+           ((equal space-type 'arrow-function)
+            (setq arrow-function space-name))
            ((equal space-type 'global)
             (setq namespace nil)
             (setq class nil)
             (setq function nil)
+            (setq arrow-function nil)
             (setq anonymous-function nil))
            ((equal space-type 'object-operator)
             (let ((downcased-space-name
@@ -689,6 +698,13 @@
            (format
             " anonymous function%s%s"
             anonymous-function
+            new-symbol-name)))
+        (when arrow-function
+          (setq
+           new-symbol-name
+           (format
+            " arrow function %s%s"
+            arrow-function
             new-symbol-name)))
         (when is-static-p
           (setq
@@ -5114,30 +5130,93 @@
 ;; 440 ((inline_function) (fn returns_ref backup_doc_comment "(" parameter_list ")" return_type T_DOUBLE_ARROW backup_fn_flags backup_lex_pos expr backup_fn_flags))
 (puthash
  440
- (lambda(args _terminals)
+ (lambda(args terminals)
+   ;; TODO Perform bookkeeping here
+   (let ((namespace
+          phps-mode-parser-sdt--bookkeeping-namespace)
+         (parameter-list
+          (nth 4 args)))
+     (setq
+      phps-mode-parser-sdt--bookkeeping-arrow-function-count
+      (1+ phps-mode-parser-sdt--bookkeeping-arrow-function-count))
+     (push
+      (list
+       'arrow-function
+       phps-mode-parser-sdt--bookkeeping-arrow-function-count)
+      namespace)
+
+     ;; Go through parameters and assign variables inside function
+     (when parameter-list
+       (dolist (parameter parameter-list)
+         (let ((parameter-type
+                (plist-get
+                 parameter
+                 'ast-type)))
+           (cond
+            ((equal parameter-type 'attributed-parameter)
+             (let* ((attributed-parameter
+                     (plist-get parameter 'parameter))
+                    (parameter-name
+                     (plist-get attributed-parameter 'ast-name))
+                    (parameter-start
+                     (plist-get attributed-parameter 'ast-start))
+                    (parameter-end
+                     (plist-get attributed-parameter 'ast-end)))
+               (push
+                (list
+                 parameter-name
+                 namespace
+                 parameter-start
+                 parameter-end)
+                phps-mode-parser-sdt--bookkeeping-symbol-assignment-stack)
+               (push
+                (list
+                 parameter-name
+                 namespace
+                 parameter-start
+                 parameter-end)
+                phps-mode-parser-sdt--bookkeeping-symbol-stack)))))))
+
+     ;; Go through phps-mode-parser-sdt--bookkeeping-symbol-stack in scope and add namespace
+     (when phps-mode-parser-sdt--bookkeeping-symbol-stack
+       (dolist (
+                symbol-list
+                phps-mode-parser-sdt--bookkeeping-symbol-stack)
+         (let ((symbol-name (nth 0 symbol-list))
+               (symbol-namespace (nth 1 symbol-list))
+               (symbol-start (nth 2 symbol-list)))
+           (unless (gethash
+                    symbol-name
+                    phps-mode-parser-sdt--bookkeeping--superglobal-variable-p)
+             (let ((symbol-scope (car (cdr symbol-list))))
+               (push
+                (list
+                 'arrow-function
+                 phps-mode-parser-sdt--bookkeeping-arrow-function-count)
+                symbol-scope)
+               (setcar
+                (cdr symbol-list)
+                symbol-scope)))))))
+
    `(
      ast-type
      inline-fn
-     function
-     ,(nth 0 args)
      returns-ref
      ,(nth 1 args)
      backup-doc-comment
      ,(nth 2 args)
      parameter-list
      ,(nth 4 args)
-     lexical-vars
-     ,(nth 6 args)
      return-type
-     ,(nth 7 args)
+     ,(nth 6 args)
      backup-fn-flags-pre
-     ,(nth 9 args)
+     ,(nth 8 args)
      backup-lex-pos
-     ,(nth 10 args)
+     ,(nth 9 args)
      expr
-     ,(nth 11 args)
+     ,(nth 10 args)
      backup-fn-flags-post
-     ,(nth 12 args)))
+     ,(nth 11 args)))
  phps-mode-parser--table-translations)
 
 ;; 441 ((fn) (T_FN))
