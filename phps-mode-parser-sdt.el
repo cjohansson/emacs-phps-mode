@@ -2156,12 +2156,11 @@
 (puthash
  185
  (lambda(args terminals)
-
-   ;; TODO Should place class scope first in scope
-   ;; unless a namespace exists, in that case it should be placed second in scope
-
    ;; Go through stacks and modify symbol name-spaces
-   ;; but only for non-super-global variables
+   ;; but only for non-super-global variables.
+   ;; 
+   ;; Should place class scope first in scope
+   ;; unless a namespace exists, in that case it should be placed second in scope
    (let ((class-name (nth 1 args)))
      (when phps-mode-parser-sdt--bookkeeping-symbol-assignment-stack
        (dolist (
@@ -2172,9 +2171,13 @@
                     symbol-name
                     phps-mode-parser-sdt--bookkeeping--superglobal-variable-p)
              (let ((symbol-scope (reverse (car (cdr symbol-list)))))
-               (push
-                (list 'class class-name)
-                symbol-scope)
+               (if (equal (car (car symbol-scope)) 'namespace)
+                   (let ((namespace-name (car (cdr (car symbol-scope)))))
+                     (setcar symbol-scope (list 'class class-name))
+                     (push (list 'namespace namespace-name) symbol-scope))
+                 (push
+                  (list 'class class-name)
+                  symbol-scope))
                (setcar
                 (cdr symbol-list)
                 (reverse symbol-scope)))))))
@@ -2188,9 +2191,13 @@
                     symbol-name
                     phps-mode-parser-sdt--bookkeeping--superglobal-variable-p)
              (let ((symbol-scope (reverse (car (cdr symbol-list)))))
-               (push
-                (list 'class class-name)
-                symbol-scope)
+               (if (equal (car (car symbol-scope)) 'namespace)
+                   (let ((namespace-name (car (cdr (car symbol-scope)))))
+                     (setcar symbol-scope (list 'class class-name))
+                     (push (list 'namespace namespace-name) symbol-scope))
+                 (push
+                  (list 'class class-name)
+                  symbol-scope))
                (setcar
                 (cdr symbol-list)
                 (reverse symbol-scope))))))))
