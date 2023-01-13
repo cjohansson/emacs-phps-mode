@@ -693,6 +693,15 @@
                    (format " anonymous %s%s" space-name (nth potential-uri-index potential-uris)))
                   (setq potential-uri-index (1+ potential-uri-index)))))
 
+             ((equal space-type 'static)
+              (let ((potential-uri-count (length potential-uris))
+                    (potential-uri-index 0))
+                (while (< potential-uri-index potential-uri-count)
+                  (setf
+                   (nth potential-uri-index potential-uris)
+                   (format " static%s" (nth potential-uri-index potential-uris)))
+                  (setq potential-uri-index (1+ potential-uri-index)))))
+
              ((equal space-type 'arrow-function)
               ;; TODO Should branch of two here one with and one without the arrow function scope
               (let ((potential-uri-count (length potential-uris))
@@ -733,9 +742,6 @@
                  (t
                   ;; TODO Do something here
                   ))))
-
-             ((equal space-type 'static)
-              (setq is-static-p t))
 
              ))))
 
