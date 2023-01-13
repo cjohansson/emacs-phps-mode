@@ -628,126 +628,132 @@
 
 (defun phps-mode-parser-sdt--get-symbol-uri (name scope)
   "Get URI from symbol NAME in SCOPE."
-  (let ((namespace)
-        (class)
-        (interface)
-        (trait)
-        (function)
-        (is-static-p)
-        (anonymous-function)
-        (arrow-function))
-    (when scope
-      (dolist (item scope)
-        (let ((space-type (car item))
-              (space-name (car (cdr item))))
-          (cond
-           ((equal space-type 'namespace)
-            (setq namespace space-name))
-           ((equal space-type 'class)
-            (setq class space-name))
-           ((equal space-type 'interface)
-            (setq interface space-name))
-           ((equal space-type 'trait)
-            (setq trait space-name))
-           ((equal space-type 'function)
-            (setq function space-name))
-           ((equal space-type 'anonymous-function)
-            (setq anonymous-function space-name))
-           ((equal space-type 'arrow-function)
-            (setq arrow-function space-name))
-           ((equal space-type 'global)
-            (setq namespace nil)
-            (setq class nil)
-            (setq function nil)
-            (setq arrow-function nil)
-            (setq anonymous-function nil))
-           ((equal space-type 'object-operator)
-            (let ((downcased-space-name
-                   (downcase space-name)))
-              (cond
-               ((string= downcased-space-name "$this")
-                (setq function nil))
-               (t
-                ;; TODO Do something here
-                ))))
-           ((equal space-type 'static-member)
-            (let ((downcased-space-name
-                   (downcase space-name)))
-              (cond
-               ((or
-                 (string= downcased-space-name "self")
-                 (string= downcased-space-name "static"))
-                (setq is-static-p t)
-                (setq function nil))
-               (t
-                ;; TODO Do something here
-                ))))
-           ((equal space-type 'static)
-            (setq is-static-p t))))))
-    (if (gethash
-         name
-         phps-mode-parser-sdt--bookkeeping--superglobal-variable-p)
-        name
-      (let ((new-symbol-name
-             (format
-              " id %s"
-              name)))
-        (when anonymous-function
-          (setq
-           new-symbol-name
-           (format
-            " anonymous function%s%s"
-            anonymous-function
-            new-symbol-name)))
-        (when arrow-function
-          (setq
-           new-symbol-name
-           (format
-            " arrow function %s%s"
-            arrow-function
-            new-symbol-name)))
-        (when is-static-p
-          (setq
-           new-symbol-name
-           (format
-            " static%s"
-            new-symbol-name)))
-        (when function
-          (setq
-           new-symbol-name
-           (format
-            " function %s%s"
-            function
-            new-symbol-name)))
-        (when trait
-          (setq
-           new-symbol-name
-           (format
-            " trait %s%s"
-            trait
-            new-symbol-name)))
-        (when interface
-          (setq
-           new-symbol-name
-           (format
-            " interface %s%s"
-            interface
-            new-symbol-name)))
-        (when class
-          (setq
-           new-symbol-name
-           (format
-            " class %s%s"
-            class
-            new-symbol-name)))
-        (when namespace
-          (setq
-           new-symbol-name
-           (format
-            " namespace %s%s"
-            namespace
-            new-symbol-name)))
-        new-symbol-name))))
+  (if (gethash
+       name
+       phps-mode-parser-sdt--bookkeeping--superglobal-variable-p)
+      name
+    (let ((potential-uris (list "")))
+      (when scope
+        (dolist (item scope)
+          (let ((space-type (car item))
+                (space-name (car (cdr item))))
+            (cond
+
+             ((equal space-type 'namespace)
+              (let ((potential-uri-count (length potential-uris))
+                    (potential-uri-index 0))
+                (while (< potential-uri-index potential-uri-count)
+                  (setf
+                   (nth potential-uri-index potential-uris)
+                   (format " namespace %s%s" space-name (nth potential-uri-index potential-uris)))
+                  (setq potential-uri-index (1+ potential-uri-index)))))
+
+             ((equal space-type 'class)
+              (let ((potential-uri-count (length potential-uris))
+                    (potential-uri-index 0))
+                (while (< potential-uri-index potential-uri-count)
+                  (setf
+                   (nth potential-uri-index potential-uris)
+                   (format " class %s%s" space-name (nth potential-uri-index potential-uris)))
+                  (setq potential-uri-index (1+ potential-uri-index)))))
+
+             ((equal space-type 'interface)
+              (let ((potential-uri-count (length potential-uris))
+                    (potential-uri-index 0))
+                (while (< potential-uri-index potential-uri-count)
+                  (setf
+                   (nth potential-uri-index potential-uris)
+                   (format " interface %s%s" space-name (nth potential-uri-index potential-uris)))
+                  (setq potential-uri-index (1+ potential-uri-index)))))
+
+             ((equal space-type 'trait)
+              (let ((potential-uri-count (length potential-uris))
+                    (potential-uri-index 0))
+                (while (< potential-uri-index potential-uri-count)
+                  (setf
+                   (nth potential-uri-index potential-uris)
+                   (format " trait %s%s" space-name (nth potential-uri-index potential-uris)))
+                  (setq potential-uri-index (1+ potential-uri-index)))))
+
+             ((equal space-type 'function)
+              (let ((potential-uri-count (length potential-uris))
+                    (potential-uri-index 0))
+                (while (< potential-uri-index potential-uri-count)
+                  (setf
+                   (nth potential-uri-index potential-uris)
+                   (format " function %s%s" space-name (nth potential-uri-index potential-uris)))
+                  (setq potential-uri-index (1+ potential-uri-index)))))
+
+             ((equal space-type 'anonymous-function)
+              (let ((potential-uri-count (length potential-uris))
+                    (potential-uri-index 0))
+                (while (< potential-uri-index potential-uri-count)
+                  (setf
+                   (nth potential-uri-index potential-uris)
+                   (format " anonymous %s%s" space-name (nth potential-uri-index potential-uris)))
+                  (setq potential-uri-index (1+ potential-uri-index)))))
+
+             ((equal space-type 'arrow-function)
+              ;; TODO Should branch of two here one with and one without the arrow function scope
+              (let ((potential-uri-count (length potential-uris))
+                    (potential-uri-index 0))
+                (while (< potential-uri-index potential-uri-count)
+                  (setf
+                   (nth potential-uri-index potential-uris)
+                   (format " anonymous %s%s" space-name (nth potential-uri-index potential-uris)))
+                  (setq potential-uri-index (1+ potential-uri-index)))))
+
+             ;; TODO Below should alter symbol namespaces instead of build namespace data
+             ((equal space-type 'global)
+              (setq namespace nil)
+              (setq class nil)
+              (setq function nil)
+              (setq arrow-function nil)
+              (setq anonymous-function nil))
+
+             ((equal space-type 'object-operator)
+              (let ((downcased-space-name
+                     (downcase space-name)))
+                (cond
+                 ((string= downcased-space-name "$this")
+                  (setq function nil))
+                 (t
+                  ;; TODO Do something here
+                  ))))
+
+             ((equal space-type 'static-member)
+              (let ((downcased-space-name
+                     (downcase space-name)))
+                (cond
+                 ((or
+                   (string= downcased-space-name "self")
+                   (string= downcased-space-name "static"))
+                  (setq is-static-p t)
+                  (setq function nil))
+                 (t
+                  ;; TODO Do something here
+                  ))))
+
+             ((equal space-type 'static)
+              (setq is-static-p t))
+
+             ))))
+
+      (let ((potential-uri-count (length potential-uris))
+            (potential-uri-index 0)
+            (matching-uri))
+        ;; Iterate potential-uris, select first match or if no match return the first
+        (while (< potential-uri-index potential-uri-count)
+          (setf
+           (nth potential-uri-index potential-uris)
+           (format "%s id %s" (nth potential-uri-index potential-uris) name))
+          (setq potential-uri-index (1+ potential-uri-index))
+          (let ((potential-uri (nth potential-uri-index potential-uris)))
+            (when (gethash potential-uri phps-mode-parser-sdt-bookkeeping)
+              (setq matching-uri potential-uri))))
+        (if matching-uri
+            matching-uri
+          (nth 0 potential-uris))))))
 
 (defun phps-mode-parser-sdt--parse-top-statement ()
   "Parse latest top statement."
@@ -768,11 +774,13 @@
               (phps-mode-parser-sdt--get-symbol-uri
                symbol-name
                symbol-scope)))
-        ;; (message
-        ;;  "assign symbol uri: %S from %S + %S"
-        ;;  symbol-uri
-        ;;  symbol-name
-        ;;  symbol-scope)
+
+        (message
+         "assign symbol uri: %S from %S + %S"
+         symbol-uri
+         symbol-name
+         symbol-scope)
+
         (if (gethash symbol-uri phps-mode-parser-sdt-bookkeeping)
             (puthash
              symbol-uri
@@ -827,14 +835,15 @@
          symbol-hit
          phps-mode-parser-sdt-bookkeeping)
 
-        ;; (message
-        ;;  "reference symbol uri: %S from %S + %S, start: %S, end: %S, hit?: %S"
-        ;;  symbol-uri
-        ;;  symbol-name
-        ;;  symbol-scope
-        ;;  symbol-start
-        ;;  symbol-end
-        ;;  symbol-hit)
+        (message
+         "reference symbol uri: %S from %S + %S, start: %S, end: %S, hit?: %S"
+         symbol-uri
+         symbol-name
+         symbol-scope
+         symbol-start
+         symbol-end
+         symbol-hit)
+
         ))
     (setq
      phps-mode-parser-sdt--bookkeeping-symbol-stack
@@ -2147,6 +2156,10 @@
 (puthash
  185
  (lambda(args terminals)
+
+   ;; TODO Should place class scope first in scope
+   ;; unless a namespace exists, in that case it should be placed second in scope
+
    ;; Go through stacks and modify symbol name-spaces
    ;; but only for non-super-global variables
    (let ((class-name (nth 1 args)))
@@ -2158,13 +2171,14 @@
            (unless (gethash
                     symbol-name
                     phps-mode-parser-sdt--bookkeeping--superglobal-variable-p)
-             (let ((symbol-scope (car (cdr symbol-list))))
+             (let ((symbol-scope (reverse (car (cdr symbol-list)))))
                (push
                 (list 'class class-name)
                 symbol-scope)
                (setcar
                 (cdr symbol-list)
-                symbol-scope))))))
+                (reverse symbol-scope)))))))
+
      (when phps-mode-parser-sdt--bookkeeping-symbol-stack
        (dolist (
                 symbol-list
@@ -2173,13 +2187,13 @@
            (unless (gethash
                     symbol-name
                     phps-mode-parser-sdt--bookkeeping--superglobal-variable-p)
-             (let ((symbol-scope (car (cdr symbol-list))))
+             (let ((symbol-scope (reverse (car (cdr symbol-list)))))
                (push
                 (list 'class class-name)
                 symbol-scope)
                (setcar
                 (cdr symbol-list)
-                symbol-scope)))))))
+                (reverse symbol-scope))))))))
 
    `(
      ast-type
