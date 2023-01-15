@@ -753,14 +753,20 @@
                       (setq potential-uri-index (1+ potential-uri-index)))))
 
                  ((equal space-type 'arrow-function)
-                  ;; TODO Should branch of two here one with and one without the arrow function scope
+                  ;; branch of two alternative namespaces here
+                  ;; one with and one without the arrow function scope
                   (let ((potential-uri-count (length potential-uris))
-                        (potential-uri-index 0))
+                        (potential-uri-index 0)
+                        (new-potential-uris))
                     (while (< potential-uri-index potential-uri-count)
-                      (setf
-                       (nth potential-uri-index potential-uris)
-                       (format " anonymous %s%s" space-name (nth potential-uri-index potential-uris)))
-                      (setq potential-uri-index (1+ potential-uri-index)))))
+                      (push
+                       (format " arrow %s%s" space-name (nth potential-uri-index potential-uris))
+                       new-potential-uris)
+                      (setq potential-uri-index (1+ potential-uri-index)))
+                    (setq potential-uris (append potential-uris new-potential-uris))
+                    (message "new-potential-uris: %S" new-potential-uris)
+                    (message "potential-uris: %S" potential-uris)
+                    ))
 
                  ;; TODO Below should alter symbol namespaces instead of build namespace data
                  ((equal space-type 'global)
