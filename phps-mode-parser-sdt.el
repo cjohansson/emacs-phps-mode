@@ -640,6 +640,7 @@
             (let ((item (nth scope-index scope))
                   (next-scope)
                   (next-scope-type)
+                  (next-scope-is-global)
                   (next-scope-is-this-object-operator)
                   (next-scope-is-self-static-member-operator))
 
@@ -649,6 +650,8 @@
                 (setq next-scope (nth (1+ scope-index) scope))
                 (setq next-scope-type (car next-scope))
                 (cond
+                 ((equal next-scope-type 'global)
+                  (setq next-scope-is-global t))
                  ((equal next-scope-type 'object-operator)
                   (let ((downcased-scope-name (downcase (car (cdr next-scope)))))
                     (when (string= downcased-scope-name "$this")
@@ -673,7 +676,9 @@
                     (space-name (car (cdr item))))
                 (cond
 
-                 ((equal space-type 'namespace)
+                 ((and
+                   (equal space-type 'namespace)
+                   (not next-scope-is-global))
                   (let ((potential-uri-count (length potential-uris))
                         (potential-uri-index 0))
                     (while (< potential-uri-index potential-uri-count)
@@ -682,7 +687,9 @@
                        (format " namespace %s%s" space-name (nth potential-uri-index potential-uris)))
                       (setq potential-uri-index (1+ potential-uri-index)))))
 
-                 ((equal space-type 'class)
+                 ((and
+                   (equal space-type 'class)
+                   (not next-scope-is-global))
                   (let ((potential-uri-count (length potential-uris))
                         (potential-uri-index 0))
                     (while (< potential-uri-index potential-uri-count)
@@ -691,7 +698,9 @@
                        (format " class %s%s" space-name (nth potential-uri-index potential-uris)))
                       (setq potential-uri-index (1+ potential-uri-index)))))
 
-                 ((equal space-type 'interface)
+                 ((and
+                   (equal space-type 'interface)
+                   (not next-scope-is-global))
                   (let ((potential-uri-count (length potential-uris))
                         (potential-uri-index 0))
                     (while (< potential-uri-index potential-uri-count)
@@ -700,7 +709,9 @@
                        (format " interface %s%s" space-name (nth potential-uri-index potential-uris)))
                       (setq potential-uri-index (1+ potential-uri-index)))))
 
-                 ((equal space-type 'trait)
+                 ((and
+                   (equal space-type 'trait)
+                   (not next-scope-is-global))
                   (let ((potential-uri-count (length potential-uris))
                         (potential-uri-index 0))
                     (while (< potential-uri-index potential-uri-count)
@@ -712,6 +723,7 @@
                  ((and
                    (equal space-type 'function)
                    (not (or
+                         next-scope-is-global
                          next-scope-is-this-object-operator
                          next-scope-is-self-static-member-operator)))
                   (let ((potential-uri-count (length potential-uris))
