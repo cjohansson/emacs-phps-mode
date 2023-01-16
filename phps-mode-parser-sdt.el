@@ -768,14 +768,6 @@
                     ;; (message "potential-uris: %S" potential-uris)
                     ))
 
-                 ;; TODO Below should alter symbol namespaces instead of build namespace data
-                 ((equal space-type 'global)
-                  (setq namespace nil)
-                  (setq class nil)
-                  (setq function nil)
-                  (setq arrow-function nil)
-                  (setq anonymous-function nil))
-
                  )))
             (setq scope-index (1+ scope-index)))))
 
@@ -842,7 +834,6 @@
 
   (when phps-mode-parser-sdt--bookkeeping-symbol-stack
     ;; Bookkeeping hit / misses of symbol references here
-    ;; TODO Should consider declaration position as well?
     (dolist (
              symbol-list
              phps-mode-parser-sdt--bookkeeping-symbol-stack)
@@ -867,7 +858,15 @@
          ((gethash
            symbol-uri
            phps-mode-parser-sdt-bookkeeping)
-          (setq symbol-hit 1)))
+          (let ((matching-symbols
+                 (gethash
+                  symbol-uri
+                  phps-mode-parser-sdt-bookkeeping)))
+            (dolist (matching-symbol matching-symbols)
+              (let ((matching-symbol-start (car matching-symbol))
+                    (matching-symbol-end (car (cdr matching-symbol))))
+                (when (<= matching-symbol-start symbol-start)
+                  (setq symbol-hit 1)))))))
 
         (puthash
          (list
@@ -3428,7 +3427,6 @@
                   (plist-get property 'ast-type)))
              (cond
               ((equal property-type 'property-variable)
-               ;; TODO Bookkeep proerty-variable here
                (let ((symbol-name
                       (plist-get property 'variable))
                      (symbol-start
@@ -3929,7 +3927,6 @@
 (puthash
  358
  (lambda(args _terminals)
-   ;; TODO Declare array-pair-list assignments here
    (let ((array-pair-list (nth 1 args)))
      (dolist (array-item array-pair-list)
        (let ((array-item-type (plist-get array-item 'ast-type)))
@@ -6715,17 +6712,50 @@
 ;; 561 ((internal_functions_in_yacc) (T_ISSET "(" isset_variables possible_comma ")"))
 (puthash
  561
- (lambda(args _terminals)
+ (lambda(args terminals)
+   (when phps-mode-parser-sdt--bookkeeping-symbol-stack
+     (let ((isset-start (car (cdr (nth 1 terminals))))
+           (isset-end (cdr (cdr (nth 4 terminals)))))
+       (dolist (item phps-mode-parser-sdt--bookkeeping-symbol-stack)
+         (let ((item-start (nth 2 item))
+               (item-end (nth 3 item)))
+           (when (and
+                  (> item-start isset-start)
+                  (< item-end isset-end))
+             (push
+              (list
+               (nth 0 item)
+               phps-mode-parser-sdt--bookkeeping-namespace
+               item-start
+               item-end)
+             phps-mode-parser-sdt--bookkeeping-symbol-assignment-stack))))))
    `(
      ast-type
      internal-isset
+     isset-variables
      ,(nth 2 args)))
  phps-mode-parser--table-translations)
 
 ;; 562 ((internal_functions_in_yacc) (T_EMPTY "(" expr ")"))
 (puthash
  562
- (lambda(args _terminals)
+ (lambda(args terminals)
+   (when phps-mode-parser-sdt--bookkeeping-symbol-stack
+     (let ((empty-start (car (cdr (nth 1 terminals))))
+           (empty-end (cdr (cdr (nth 3 terminals)))))
+       (dolist (item phps-mode-parser-sdt--bookkeeping-symbol-stack)
+         (let ((item-start (nth 2 item))
+               (item-end (nth 3 item)))
+           (when (and
+                  (> item-start empty-start)
+                  (< item-end empty-end))
+             (push
+              (list
+               (nth 0 item)
+               phps-mode-parser-sdt--bookkeeping-namespace
+               item-start
+               item-end)
+              phps-mode-parser-sdt--bookkeeping-symbol-assignment-stack))))))
    `(
      ast-type
      internal-empty-expr
@@ -6806,7 +6836,7 @@
 (puthash
  570
  (lambda(args _terminals)
-   (list args))
+   args)
  phps-mode-parser--table-translations)
 
 (provide 'phps-mode-parser-sdt)
