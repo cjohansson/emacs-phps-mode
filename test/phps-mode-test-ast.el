@@ -304,29 +304,29 @@
    '((" interface myInterface function myFunction2 id $x" ((84 86))) ((84 86) 1)))
 
   (phps-mode-test-ast--should-bookkeep
-   "<?php\n\nfunction myFunction1()\n{\n    return isset($a);\n}\n\nfunction myFunction2()\n{\n    $b = 2;\n    if ($b) {\n        echo 'Hit';\n    }\n    if ($b) {\n        echo 'Hit';\n    }\n}\n"
+   "<?php\n\nfunction myFunction1()\n{\n    return isset($a);\n}\n\nfunction myFunction2()\n{\n    $b = 2;\n    if ($b) {\n        echo 'Hit';\n    }\n    if ($a) {\n        echo 'Miss';\n    }\n}\n"
    "Bookkeeping after definition condition"
-   '(((50 52) 0) (" function myFunction2 id $b" 1) ((87 89) 1) ((103 105) 1) ((143 145) 1)))
+   '((" function myFunction1 id $a" ((50 52))) ((50 52) 1) (" function myFunction2 id $b" ((87 89))) ((143 145) 0) ((103 105) 1) ((87 89) 1)))
 
   (phps-mode-test-ast--should-bookkeep
    "<?php\n\n$a = array(1, 2, 3);\nforeach ($a as $uri => $page)\n{\n    if (isset($pages)) {\n        if ($a) {\n            echo 'Hit';\n        }\n        if ($uri) {\n            echo 'Hit';\n        }\n        if ($page) {\n            echo 'Hit';\n        }\n    }\n}\n"
    "Bookkeeping of foreach variable inside if (isset()) block"
-   '((" id $a" 1) ((8 10) 1) ((38 40) 1) (" id $uri" 1) ((44 48) 1) (" id $page" 1) ((52 57) 1) (" defined 1 id $pages" 1) ((75 81) 1) ((98 100) 1) ((150 154) 1) ((204 209) 1)))
+   '((" id $a" ((8 10))) ((8 10) 1) (" id $pages" ((75 81))) (" id $page" ((52 57))) (" id $uri" ((44 48))) ((204 209) 1) ((150 154) 1) ((98 100) 1) ((75 81) 1) ((52 57) 1) ((44 48) 1) ((38 40) 1)))
 
   (phps-mode-test-ast--should-bookkeep
    "<?php\nif (isset($b)) {\n    $b = false;\n}\n$c = 2;\n\nif ($c) {\n    echo 'Hit';\n}\n"
    "Bookkeeping of variable after isset() block"
-   '((" defined 1 id $b" 2) ((17 19) 1) ((28 30) 2) (" id $c" 1) ((42 44) 1) ((55 57) 1)))
+   '((" id $b" ((28 30) (17 19))) ((28 30) 1) ((17 19) 1) (" id $c" ((42 44))) ((42 44) 1) ((55 57) 1)))
 
   (phps-mode-test-ast--should-bookkeep
    "<?php\nif (!isset($a)) {\n    if ($a) {\n        echo 'Miss';\n    }\n}"
    "Bookkeeping for variable in negative isset() conditional"
-   '(((18 20) 0) ((33 35) 0)))
+   '((" id $a" ((18 20))) ((33 35) 1) ((18 20) 1)))
 
   (phps-mode-test-ast--should-bookkeep
    "<?php\n\nfunction myFunction($a, $b, $c, $d)\n{\n    global $f, $g;\n    if (isset($f)) {\n        if (!empty($g)) {\n            if ($a) {\n                echo 'Hit';\n            }\n            if ($b) {\n                echo 'Hit';\n            }\n            if ($c) {\n                echo 'Hit';\n            }\n            if ($d) {\n                echo 'Hit';\n            }\n        }\n    }\n}\n"
    "Bookkeeping variables inside nested isset() !empty() blocks"
-   '((" function myFunction id $a" 1) ((28 30) 1) (" function myFunction id $b" 1) ((32 34) 1) (" function myFunction id $c" 1) ((36 38) 1) (" function myFunction id $d" 1) ((40 42) 1) (" function myFunction id $f" 1) ((57 59) 1) (" function myFunction id $g" 1) ((61 63) 1) (" function myFunction defined 1 id $f" 1) ((79 81) 1) (" function myFunction defined 1 defined 2 id $g" 1) ((105 107) 1) ((128 130) 1) ((192 194) 1) ((256 258) 1) ((320 322) 1)))
+   '((" function myFunction id $d" ((40 42))) (" function myFunction id $c" ((36 38))) (" function myFunction id $b" ((32 34))) (" function myFunction id $a" ((28 30))) (" function myFunction id $g" ((105 107) (61 63))) (" function myFunction id $f" ((79 81) (57 59))) ((40 42) 1) ((36 38) 1) ((32 34) 1) ((28 30) 1) ((320 322) 1) ((256 258) 1) ((192 194) 1) ((128 130) 1) ((105 107) 1) ((79 81) 1) ((61 63) 0) ((57 59) 0)))
 
   (phps-mode-test-ast--should-bookkeep
    "<?php\n\n$var = 123;\n\nfunction test($abc) {\n    static $var;\n    if ($var) {\n        echo 'Hit';\n    }\n}"

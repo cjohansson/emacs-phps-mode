@@ -819,7 +819,7 @@
              symbol-uri
              (append
               (gethash symbol-uri phps-mode-parser-sdt-bookkeeping)
-              (list symbol-start symbol-end))
+              (list (list symbol-start symbol-end)))
              phps-mode-parser-sdt-bookkeeping)
           (puthash
            symbol-uri
