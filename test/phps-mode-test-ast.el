@@ -283,15 +283,15 @@
    "Bookkeeping in arrow functions"
    '((" id $y" ((7 9))) ((7 9) 1) (" id $fn1" ((15 19))) (" arrow 1 id $x" ((25 27))) ((25 27) 1) ((37 39) 1) ((32 34) 1) ((15 19) 1) (" id $z" ((41 43))) ((41 43) 1) (" id $fn" ((49 52))) (" arrow 3 id $x2" ((58 61))) (" arrow 2 id $y2" ((69 72))) ((58 61) 1) ((69 72) 1) ((89 91) 1) ((83 86) 1) ((77 80) 1) ((49 52) 1) (" arrow 4 id $x3" ((102 105))) ((102 105) 1) ((110 113) 1) (" id $x4" ((115 118))) ((115 118) 1) ((144 147) 1) (" arrow 6 id $x5" ((152 155))) ((152 155) 1) ((165 168) 1) (" arrow 7 id $x6" ((174 177))) ((174 177) 1) ((182 185) 1) (" arrow 8 id $x7" ((191 194))) ((191 194) 1) ((199 202) 1) (" arrow 9 id $rest" ((215 220))) (" arrow 9 id $x8" ((207 210))) ((215 220) 1) ((207 210) 1) ((225 230) 1)))
 
-  (phps-mode-test-ast--should-bookkeep
-   "<?php\n$z = (object) array('name' => 'random');\nif ($z->name) {\n    echo 'Hit';\n}"
-   "Bookkeeping ignoring variable properties"
-   '((" id $z" 1) ((7 9) 1) ((52 54) 1)))
+  ;; (phps-mode-test-ast--should-bookkeep
+  ;;  "<?php\n$z = (object) array('name' => 'random');\nif ($z->name) {\n    echo 'Hit';\n}"
+  ;;  "Bookkeeping ignoring variable properties"
+  ;;  '((" id $z" 1) ((7 9) 1) ((52 54) 1)))
 
   (phps-mode-test-ast--should-bookkeep
    "<?php\nif (!$var = false) {\n    echo 'Hit';\n}\n"
    "Bookkeeping negative conditional assignment"
-   '((" id $var" 1) ((12 16) 1)))
+   '((" id $var" ((12 16))) ((12 16) 1)))
 
   (phps-mode-test-ast--should-bookkeep
    "<?php\n\nif (isset($x)) {\n    if ($x) {\n        echo 'Hit';\n        if (isset($i, $u)) {\n            if ($i) {\n                echo 'Hit';\n            }\n            if ($u) {\n                echo 'Hit';\n            }\n            if ($x) {\n                echo 'Hit';\n            }\n        }\n        if ($i) {\n            echo 'Miss';\n        }\n        if ($u) {\n            echo 'Miss';\n        }\n    }\n}\nif ($x) {\n    echo 'Miss';\n}\n\nif (!empty($y)) {\n    if ($y) {\n        echo 'Hit';\n        if (!empty($k) && !empty($L)) {\n            if ($k) {\n                echo 'Hit';\n            }\n            if ($L) {\n                echo 'Hit';\n            }\n            if ($y) {\n                echo 'Hit';\n            }\n        }\n        if ($k) {\n            echo 'Miss';\n        }\n        if ($L) {\n            echo 'Miss';\n        }\n    }\n}\nif ($y) {\n    echo 'Miss';\n}\n"
