@@ -331,7 +331,7 @@
   (phps-mode-test-ast--should-bookkeep
    "<?php\n\n$var = 123;\n\nfunction test($abc) {\n    static $var;\n    if ($var) {\n        echo 'Hit';\n    }\n}"
    "Bookkeeping of static variable declaration in function"
-   '((" id $var" 1) ((8 12) 1) (" function test id $abc" 1) ((35 39) 1) (" function test id $var" 1) ((54 58) 1) ((68 72) 1)))
+   '((" id $var" ((8 12))) ((8 12) 1) (" function test id $abc" ((35 39))) (" function test id $var" ((54 58))) ((35 39) 1) ((68 72) 1)))
 
   (phps-mode-test-ast--should-bookkeep
    "<?php\n\nglobal $a, $b;\n\nif ($a) {\n    echo 'Hit';\n}\n\nfunction myFunction($c)\n{\n    global $a;\n    if ($a) {\n        echo 'Hit';\n    }\n    if ($b) {\n        echo 'Miss';\n    }\n}\n"

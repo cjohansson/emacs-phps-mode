@@ -1786,6 +1786,21 @@
 (puthash
  156
  (lambda(args _terminals)
+   (let ((static-var-list (nth 1 args)))
+     (dolist (static-var static-var-list)
+       (let ((static-var-type (plist-get static-var 'ast-type)))
+         (cond
+          ((equal static-var-type 'variable)
+           (let* ((variable-name (plist-get static-var 'ast-name))
+                  (variable-start (plist-get static-var 'ast-start))
+                  (variable-end (plist-get static-var 'ast-end)))
+             (push
+              (list
+               variable-name
+               phps-mode-parser-sdt--bookkeeping-namespace
+               variable-start
+               variable-end)
+              phps-mode-parser-sdt--bookkeeping-symbol-assignment-stack)))))))
    `(
      ast-type
      static-statement
