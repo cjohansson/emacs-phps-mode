@@ -331,17 +331,17 @@
   (phps-mode-test-ast--should-bookkeep
    "<?php\n\n$var = 123;\n\nfunction test($abc) {\n    static $var;\n    if ($var) {\n        echo 'Hit';\n    }\n}"
    "Bookkeeping of static variable declaration in function"
-   '((" id $var" ((8 12))) ((8 12) 1) (" function test id $abc" ((35 39))) (" function test id $var" ((54 58))) ((35 39) 1) ((68 72) 1)))
+   '((" id $var" ((8 12))) ((8 12) 1) (" function test id $abc" ((35 39))) (" function test id $var" ((54 58))) ((35 39) 1) ((68 72) 1) ((54 58) 1)))
 
   (phps-mode-test-ast--should-bookkeep
    "<?php\n\nglobal $a, $b;\n\nif ($a) {\n    echo 'Hit';\n}\n\nfunction myFunction($c)\n{\n    global $a;\n    if ($a) {\n        echo 'Hit';\n    }\n    if ($b) {\n        echo 'Miss';\n    }\n}\n"
    "Bookkeeping of global variables in functional-oriented file"
-   '((" id $a" 1) ((15 17) 1) (" id $b" 1) ((19 21) 1) ((28 30) 1) (" function myFunction id $c" 1) ((73 75) 1) (" function myFunction id $a" 1) ((90 92) 1) ((102 104) 1) ((142 144) 0)))
+   '((" id $b" ((19 21))) (" id $a" ((15 17))) ((19 21) 1) ((15 17) 1) ((28 30) 1) (" function myFunction id $c" ((73 75))) (" function myFunction id $a" ((90 92))) ((73 75) 1) ((142 144) 0) ((102 104) 1) ((90 92) 1)))
 
   (phps-mode-test-ast--should-bookkeep
    "<?php\n\nstatic $a;\n\nif ($a) {}\n\nfunction test()\n{\n    static $a;\n    if ($a) {}\n}\n\nclass There\n{\n    function here()\n    {\n        static $a;\n        if ($a) {}\n    }\n}"
    "Bookkeeping of static variables in different scopes without namespaces"
-   '((" id $a" 1) ((15 17) 1) ((24 26) 1) (" function test id $a" 1) ((61 63) 1) ((73 75) 1) (" class There function here id $this" 1) (" class There function here id $a" 1) ((138 140) 1) ((154 156) 1)))
+   '((" id $a" ((15 17))) ((15 17) 1) ((24 26) 1) (" function test id $a" ((61 63))) ((73 75) 1) ((61 63) 1) (" class There function here id $this" ((121 166))) (" class There function here id $a" ((138 140))) ((154 156) 1) ((138 140) 1)))
 
   (phps-mode-test-ast--should-bookkeep
    "<?php\nclass There\n{\n    private $variable;\n    private \\My\\Random $variable2;\n    private string $variable3;\n    private static $variable4;\n    private static \\My\\Random $variable5;\n    private static string $variable6;\n    function here()\n    {\n        if ($this->variable) {}\n        if ($this->variable2) {}\n        if ($this->variable3) {}\n        if ($this->variable4) {}\n        if (self::$variable4) {}\n        if (self::$variable5) {}\n        if (self::$variable6) {}\n    }\n}\n"

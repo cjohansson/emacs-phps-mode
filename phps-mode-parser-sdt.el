@@ -1800,7 +1800,14 @@
                phps-mode-parser-sdt--bookkeeping-namespace
                variable-start
                variable-end)
-              phps-mode-parser-sdt--bookkeeping-symbol-assignment-stack)))))))
+              phps-mode-parser-sdt--bookkeeping-symbol-assignment-stack)
+             (push
+              (list
+               variable-name
+               phps-mode-parser-sdt--bookkeeping-namespace
+               variable-start
+               variable-end)
+              phps-mode-parser-sdt--bookkeeping-symbol-stack)))))))
    `(
      ast-type
      static-statement
