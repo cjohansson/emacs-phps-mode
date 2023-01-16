@@ -301,7 +301,7 @@
   (phps-mode-test-ast--should-bookkeep
    "<?php\ninterface myInterface\n{\n    function myFunction1();\n    function myFunction2($x);\n}\n"
    "Bookkeeping variable in interface function"
-   '((" class myInterface function myFunction2 id $x" 1) ((84 86) 1)))
+   '((" interface myInterface function myFunction2 id $x" ((84 86))) ((84 86) 1)))
 
   (phps-mode-test-ast--should-bookkeep
    "<?php\n\nfunction myFunction1()\n{\n    return isset($a);\n}\n\nfunction myFunction2()\n{\n    $b = 2;\n    if ($b) {\n        echo 'Hit';\n    }\n    if ($b) {\n        echo 'Hit';\n    }\n}\n"

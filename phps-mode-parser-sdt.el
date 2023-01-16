@@ -2293,6 +2293,38 @@
 (puthash
  191
  (lambda(args terminals)
+   ;; Go through stacks and modify symbol name-spaces
+   ;; but only for non-super-global variables.
+   ;; 
+   ;; Should place class scope first in scope
+   ;; unless a namespace exists, in that case it should be placed second in scope
+   (let ((class-name (nth 1 args)))
+     (when phps-mode-parser-sdt--bookkeeping-symbol-assignment-stack
+       (dolist (
+                symbol-list
+                phps-mode-parser-sdt--bookkeeping-symbol-assignment-stack)
+         (let ((symbol-name (car symbol-list))
+               (symbol-start (nth 2 symbol-list))
+               (symbol-end (nth 3 symbol-list)))
+           (unless (gethash
+                    symbol-name
+                    phps-mode-parser-sdt--bookkeeping--superglobal-variable-p)
+             (let ((symbol-scope (reverse (car (cdr symbol-list)))))
+               (if (equal (car (car symbol-scope)) 'namespace)
+                   (let ((namespace-name (car (cdr (car symbol-scope)))))
+                     (setcar symbol-scope (list 'interface class-name))
+                     (push (list 'namespace namespace-name) symbol-scope))
+                 (push
+                  (list 'interface class-name)
+                  symbol-scope))
+               (setq symbol-scope (reverse symbol-scope))
+               (setcar
+                (cdr symbol-list)
+                symbol-scope)
+               (push
+                (list symbol-name symbol-scope symbol-start symbol-end)
+                phps-mode-parser-sdt--bookkeeping-symbol-stack)))))))
+
    `(
      ast-type
      interface-declaration-statement
