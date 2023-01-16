@@ -2893,9 +2893,9 @@
      type
      ,(nth 1 args)
      is-reference
-     ,(nth 2 args)
+     ,(if (nth 2 args) t nil)
      is-variadic
-     ,(nth 3 args)
+     ,(if (nth 3 args) t nil)
      ast-name
      ,(nth 4 args)
      ast-start
@@ -2917,9 +2917,9 @@
      type
      ,(nth 1 args)
      is-reference
-     ,(nth 2 args)
+     ,(if (nth 2 args) t nil)
      is-variadic
-     ,(nth 3 args)
+     ,(if (nth 3 args) t nil)
      ast-name
      ,(nth 4 args)
      ast-start
