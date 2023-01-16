@@ -763,9 +763,9 @@
                        (format " arrow %s%s" space-name (nth potential-uri-index potential-uris))
                        new-potential-uris)
                       (setq potential-uri-index (1+ potential-uri-index)))
-                    (setq potential-uris (append potential-uris new-potential-uris))
-                    (message "new-potential-uris: %S" new-potential-uris)
-                    (message "potential-uris: %S" potential-uris)
+                    (setq potential-uris (append new-potential-uris potential-uris))
+                    ;; (message "new-potential-uris: %S" new-potential-uris)
+                    ;; (message "potential-uris: %S" potential-uris)
                     ))
 
                  ;; TODO Below should alter symbol namespaces instead of build namespace data
@@ -782,15 +782,16 @@
       (let ((potential-uri-count (length potential-uris))
             (potential-uri-index 0)
             (matching-uri))
+
         ;; Iterate potential-uris, select first match or if no match return the first
         (while (< potential-uri-index potential-uri-count)
           (setf
            (nth potential-uri-index potential-uris)
            (format "%s id %s" (nth potential-uri-index potential-uris) name))
-          (setq potential-uri-index (1+ potential-uri-index))
           (let ((potential-uri (nth potential-uri-index potential-uris)))
             (when (gethash potential-uri phps-mode-parser-sdt-bookkeeping)
-              (setq matching-uri potential-uri))))
+              (setq matching-uri potential-uri)))
+          (setq potential-uri-index (1+ potential-uri-index)))
         (if matching-uri
             matching-uri
           (nth 0 potential-uris))))))
@@ -5192,7 +5193,6 @@
 (puthash
  440
  (lambda(args terminals)
-   ;; TODO Perform bookkeeping here
    (let ((namespace
           phps-mode-parser-sdt--bookkeeping-namespace)
          (parameter-list
@@ -5205,6 +5205,27 @@
        'arrow-function
        phps-mode-parser-sdt--bookkeeping-arrow-function-count)
       namespace)
+
+     ;; Go through symbol stack in scope and add namespace
+     (when phps-mode-parser-sdt--bookkeeping-symbol-stack
+       (dolist (
+                symbol-list
+                phps-mode-parser-sdt--bookkeeping-symbol-stack)
+         (let ((symbol-name (nth 0 symbol-list))
+               (symbol-namespace (nth 1 symbol-list))
+               (symbol-start (nth 2 symbol-list)))
+           (unless (gethash
+                    symbol-name
+                    phps-mode-parser-sdt--bookkeeping--superglobal-variable-p)
+             (let ((symbol-scope (car (cdr symbol-list))))
+               (push
+                (list
+                 'arrow-function
+                 phps-mode-parser-sdt--bookkeeping-arrow-function-count)
+                symbol-scope)
+               (setcar
+                (cdr symbol-list)
+                symbol-scope))))))
 
      ;; Go through parameters and assign variables inside function
      (when parameter-list
@@ -5236,29 +5257,7 @@
                  namespace
                  parameter-start
                  parameter-end)
-                phps-mode-parser-sdt--bookkeeping-symbol-stack)))))))
-
-     ;; Go through phps-mode-parser-sdt--bookkeeping-symbol-stack in scope and add namespace
-     (when phps-mode-parser-sdt--bookkeeping-symbol-stack
-       (dolist (
-                symbol-list
-                phps-mode-parser-sdt--bookkeeping-symbol-stack)
-         (let ((symbol-name (nth 0 symbol-list))
-               (symbol-namespace (nth 1 symbol-list))
-               (symbol-start (nth 2 symbol-list)))
-           (unless (gethash
-                    symbol-name
-                    phps-mode-parser-sdt--bookkeeping--superglobal-variable-p)
-             (let ((symbol-scope (car (cdr symbol-list))))
-               (push
-                (list
-                 'arrow-function
-                 phps-mode-parser-sdt--bookkeeping-arrow-function-count)
-                symbol-scope)
-               (setcar
-                (cdr symbol-list)
-                symbol-scope)))))))
-
+                phps-mode-parser-sdt--bookkeeping-symbol-stack))))))))
    `(
      ast-type
      inline-fn
