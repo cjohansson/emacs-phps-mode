@@ -667,13 +667,14 @@
                              (string= downcased-scope-name "self")
                              (string= downcased-scope-name "static"))
 
-                        (let ((potential-uri-count (length potential-uris))
-                              (potential-uri-index 0))
-                          (while (< potential-uri-index potential-uri-count)
-                            (setf
-                             (nth potential-uri-index potential-uris)
-                             (format " static%s" (nth potential-uri-index potential-uris)))
-                            (setq potential-uri-index (1+ potential-uri-index))))
+                        (when (equal next-scope-index (1+ scope-index))
+                          (let ((potential-uri-count (length potential-uris))
+                                (potential-uri-index 0))
+                            (while (< potential-uri-index potential-uri-count)
+                              (setf
+                               (nth potential-uri-index potential-uris)
+                               (format " static%s" (nth potential-uri-index potential-uris)))
+                              (setq potential-uri-index (1+ potential-uri-index)))))
 
                         (setq next-scope-is-self-static-member-operator t)))))))
 
@@ -3323,6 +3324,7 @@
           (attributed-class-statement-type
            (plist-get attributed-class-statement 'ast-type)))
      (cond
+      ;; Property
       ((equal attributed-class-statement-type 'property)
        (let ((property-list
               (plist-get attributed-class-statement 'subject))
@@ -3336,7 +3338,9 @@
            (let ((property-type
                   (plist-get property 'ast-type)))
              (cond
-              ((equal property-type 'property-variable)
+              ((or
+                (equal property-type 'property-variable)
+                (equal property-type 'property-assigned-variable))
                (let ((symbol-name
                       (plist-get property 'variable))
                      (symbol-start
@@ -3353,7 +3357,14 @@
                    symbol-scope
                    symbol-start
                    symbol-end)
-                  phps-mode-parser-sdt--bookkeeping-symbol-assignment-stack))))))))
+                  phps-mode-parser-sdt--bookkeeping-symbol-assignment-stack)
+                 (push
+                  (list
+                   symbol-name
+                   symbol-scope
+                   symbol-start
+                   symbol-end)
+                  phps-mode-parser-sdt--bookkeeping-symbol-stack))))))))
 
       ;; Method Declaration
       ((equal attributed-class-statement-type 'method)
@@ -3399,8 +3410,6 @@
                (plist-get attributed-class-statement 'ast-start)
                (plist-get attributed-class-statement 'ast-end))
               phps-mode-parser-sdt--bookkeeping-symbol-assignment-stack))
-
-           ;; TODO if we have a arrow function scope function should come before it (to the right)
 
            ;; Add function scope to symbol assignments
            (when phps-mode-parser-sdt--bookkeeping-symbol-assignment-stack
@@ -3470,7 +3479,14 @@
                      symbol-scope
                      symbol-start
                      symbol-end)
-                    phps-mode-parser-sdt--bookkeeping-symbol-assignment-stack)))))))))))
+                    phps-mode-parser-sdt--bookkeeping-symbol-assignment-stack)
+                   (push
+                    (list
+                     symbol-name
+                     symbol-scope
+                     symbol-start
+                     symbol-end)
+                    phps-mode-parser-sdt--bookkeeping-symbol-stack)))))))))))
 
    `(
      ast-type
