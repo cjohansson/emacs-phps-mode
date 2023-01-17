@@ -642,30 +642,40 @@
               ;; Should add one scope look-ahead to determine if we should
               ;; ignore function scope before a $this-> or self:: or static:: operator
               (when (< scope-index (1- scope-count))
-                (setq next-scope (nth (1+ scope-index) scope))
-                (setq next-scope-type (car next-scope))
-                (cond
-                 ((equal next-scope-type 'global)
-                  (setq next-scope-is-global t))
-                 ((equal next-scope-type 'object-operator)
-                  (let ((downcased-scope-name (downcase (car (cdr next-scope)))))
-                    (when (string= downcased-scope-name "$this")
-                      (setq next-scope-is-this-object-operator t))))
-                 ((equal next-scope-type 'static-member)
-                  (let ((downcased-scope-name (downcase (car (cdr next-scope)))))
-                   (when (or
-                          (string= downcased-scope-name "self")
-                          (string= downcased-scope-name "static"))
+                (let ((next-scope-index (1+ scope-index)))
+                  (setq next-scope (nth next-scope-index scope))
+                  (setq next-scope-type (car next-scope))
 
-                     (let ((potential-uri-count (length potential-uris))
-                           (potential-uri-index 0))
-                       (while (< potential-uri-index potential-uri-count)
-                         (setf
-                          (nth potential-uri-index potential-uris)
-                          (format " static%s" (nth potential-uri-index potential-uris)))
-                         (setq potential-uri-index (1+ potential-uri-index))))
+                  ;; When next scope is arrow function, ignore it
+                  (while (and
+                          (equal next-scope-type 'arrow-function)
+                          (< next-scope-index (1- scope-count)))
+                    (setq next-scope-index (1+ next-scope-index))
+                    (setq next-scope (nth next-scope-index scope))
+                    (setq next-scope-type (car next-scope)))
 
-                      (setq next-scope-is-self-static-member-operator t))))))
+                  (cond
+                   ((equal next-scope-type 'global)
+                    (setq next-scope-is-global t))
+                   ((equal next-scope-type 'object-operator)
+                    (let ((downcased-scope-name (downcase (car (cdr next-scope)))))
+                      (when (string= downcased-scope-name "$this")
+                        (setq next-scope-is-this-object-operator t))))
+                   ((equal next-scope-type 'static-member)
+                    (let ((downcased-scope-name (downcase (car (cdr next-scope)))))
+                      (when (or
+                             (string= downcased-scope-name "self")
+                             (string= downcased-scope-name "static"))
+
+                        (let ((potential-uri-count (length potential-uris))
+                              (potential-uri-index 0))
+                          (while (< potential-uri-index potential-uri-count)
+                            (setf
+                             (nth potential-uri-index potential-uris)
+                             (format " static%s" (nth potential-uri-index potential-uris)))
+                            (setq potential-uri-index (1+ potential-uri-index))))
+
+                        (setq next-scope-is-self-static-member-operator t)))))))
 
               (let ((space-type (car item))
                     (space-name (car (cdr item))))
@@ -769,6 +779,7 @@
       (let ((potential-uri-count (length potential-uris))
             (potential-uri-index 0)
             (matching-uri))
+        (message "potential-uris: %S" potential-uris)
 
         ;; Iterate potential-uris, select first match or if no match return the first
         (while (< potential-uri-index potential-uri-count)
@@ -3344,6 +3355,7 @@
                    symbol-end)
                   phps-mode-parser-sdt--bookkeeping-symbol-assignment-stack))))))))
 
+      ;; Method Declaration
       ((equal attributed-class-statement-type 'method)
        ;; Go through stacks and modify symbol namespaces
        ;; - add function scope but only for:
@@ -3367,6 +3379,7 @@
                'parameter-list))
              (is-static-p))
 
+         ;; Is static method?
          (when-let (method-modifiers
                     (plist-get
                      attributed-class-statement
@@ -3374,7 +3387,10 @@
            (dolist (method-modifier method-modifiers)
              (when (equal method-modifier 'static)
                (setq is-static-p t))))
+
          (when (and function-start function-end)
+
+           ;; Add $this symbol in scope unless method is static
            (unless is-static-p
              (push
               (list
@@ -3383,6 +3399,10 @@
                (plist-get attributed-class-statement 'ast-start)
                (plist-get attributed-class-statement 'ast-end))
               phps-mode-parser-sdt--bookkeeping-symbol-assignment-stack))
+
+           ;; TODO if we have a arrow function scope function should come before it (to the right)
+
+           ;; Add function scope to symbol assignments
            (when phps-mode-parser-sdt--bookkeeping-symbol-assignment-stack
              (dolist (
                       symbol-list
@@ -3402,6 +3422,8 @@
                      (setcar
                       (cdr symbol-list)
                       symbol-scope))))))
+
+           ;; Add function scope to symbol reads
            (when phps-mode-parser-sdt--bookkeeping-symbol-stack
              (dolist (
                       symbol-list
@@ -3416,14 +3438,12 @@
                           (< symbol-start function-start)
                           (> symbol-start function-end))
                    (let ((symbol-scope (car (cdr symbol-list))))
-                     (push
-                      (list 'function function-name)
-                      symbol-scope)
+                     (push (list 'function function-name) symbol-scope)
                      (setcar
                       (cdr symbol-list)
                       symbol-scope)))))))
 
-         ;; Bookkeep method parameters
+         ;; Create symbol assignments out of method parameters
          (let ((symbol-scope
                 phps-mode-parser-sdt--bookkeeping-namespace))
            (push (list 'function function-name) symbol-scope)
