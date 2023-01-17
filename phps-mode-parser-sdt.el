@@ -6218,10 +6218,6 @@
          (symbol-end
           (cdr (cdr terminals)))
          (namespace phps-mode-parser-sdt--bookkeeping-namespace))
-     (when phps-mode-parser-sdt--bookkeeping-namespace-stack
-       (setq
-        namespace
-        (pop phps-mode-parser-sdt--bookkeeping-namespace-stack)))
      (push
       (list
        symbol-name
@@ -6277,7 +6273,15 @@
        (let ((class-name-string (plist-get class-name 'name))
              (namespace phps-mode-parser-sdt--bookkeeping-namespace))
          (push (list 'static-member class-name-string) namespace)
-         (push namespace phps-mode-parser-sdt--bookkeeping-namespace-stack)))))
+         (setf
+          (nth 1 (car phps-mode-parser-sdt--bookkeeping-symbol-stack))
+          namespace)))
+      ((equal class-name-type 'class-name-static)
+       (let ((namespace phps-mode-parser-sdt--bookkeeping-namespace))
+         (push (list 'static-member "static") namespace)
+         (setf
+          (nth 1 (car phps-mode-parser-sdt--bookkeeping-symbol-stack))
+          namespace)))))
    `(
      ast-type
      static-member-class-name

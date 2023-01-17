@@ -343,6 +343,8 @@
    "Bookkeeping of static variables in different scopes without namespaces"
    '((" id $a" ((15 17))) ((15 17) 1) ((24 26) 1) (" function test id $a" ((61 63))) ((73 75) 1) ((61 63) 1) (" class There function here id $this" ((121 166))) (" class There function here id $a" ((138 140))) ((154 156) 1) ((138 140) 1)))
 
+  ;; TODO WAS HERE
+
   (phps-mode-test-ast--should-bookkeep
    "<?php\nclass There\n{\n    private $variable;\n    private \\My\\Random $variable2;\n    private string $variable3;\n    private static $variable4;\n    private static \\My\\Random $variable5;\n    private static string $variable6;\n    function here()\n    {\n        if ($this->variable) {}\n        if ($this->variable2) {}\n        if ($this->variable3) {}\n        if ($this->variable4) {}\n        if (self::$variable4) {}\n        if (self::$variable5) {}\n        if (self::$variable6) {}\n    }\n}\n"
    "Bookkeeping of typed class variables"
