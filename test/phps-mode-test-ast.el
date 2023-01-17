@@ -343,27 +343,25 @@
    "Bookkeeping of static variables in different scopes without namespaces"
    '((" id $a" ((15 17))) ((15 17) 1) ((24 26) 1) (" function test id $a" ((61 63))) ((73 75) 1) ((61 63) 1) (" class There function here id $this" ((121 166))) (" class There function here id $a" ((138 140))) ((154 156) 1) ((138 140) 1)))
 
-  ;; TODO WAS HERE
-
   (phps-mode-test-ast--should-bookkeep
    "<?php\nclass There\n{\n    private $variable;\n    private \\My\\Random $variable2;\n    private string $variable3;\n    private static $variable4;\n    private static \\My\\Random $variable5;\n    private static string $variable6;\n    function here()\n    {\n        if ($this->variable) {}\n        if ($this->variable2) {}\n        if ($this->variable3) {}\n        if ($this->variable4) {}\n        if (self::$variable4) {}\n        if (self::$variable5) {}\n        if (self::$variable6) {}\n    }\n}\n"
    "Bookkeeping of typed class variables"
-   '((" class There id $variable" 1) ((33 42) 1) (" class There id $variable2" 1) ((67 77) 1) (" class There id $variable3" 1) ((98 108) 1) (" class There static id $variable4" 1) ((129 139) 1) (" class There static id $variable5" 1) ((171 181) 1) (" class There static id $variable6" 1) ((209 219) 1) (" class There function here id $this" 1) ((259 264) 1) ((266 274) 1) ((291 296) 1) ((298 307) 1) ((324 329) 1) ((331 340) 1) ((357 362) 1) ((364 373) 0) ((396 406) 1) ((429 439) 1) ((462 472) 1)))
+   '((" class There function here id $this" ((245 482))) (" class There static id $variable6" ((209 219))) (" class There static id $variable5" ((171 181))) (" class There static id $variable4" ((129 139))) (" class There id $variable3" ((98 108))) (" class There id $variable2" ((67 77))) (" class There id $variable" ((33 42))) ((462 472) 1) ((429 439) 1) ((396 406) 1) ((364 373) 0) ((357 362) 1) ((331 340) 1) ((324 329) 1) ((298 307) 1) ((291 296) 1) ((266 274) 1) ((259 264) 1)))
 
   (phps-mode-test-ast--should-bookkeep
    "<?php\n\n$a = $b = $c = 3;\n\nif ($a) {\n    echo 'a=',$a;\n} else {\n    echo '$a is undefined!';\n}\nif ($b) {\n    echo 'b=',$b;\n} else {\n    echo '$b is undefined!';\n}\nif ($c) {\n    echo 'c=',$c;\n} else {\n    echo '$c is undefined!';\n}"
    "Bookkeeping of chained variable assignments"
-   '((" id $a" 1) ((8 10) 1) (" id $b" 1) ((13 15) 1) (" id $c" 1) ((18 20) 1) ((31 33) 1) ((51 53) 1) ((99 101) 1) ((119 121) 1) ((167 169) 1) ((187 189) 1)))
+   '((" id $a" ((8 10))) (" id $b" ((13 15))) (" id $c" ((18 20))) ((18 20) 1) ((13 15) 1) ((8 10) 1) ((51 53) 1) ((31 33) 1) ((119 121) 1) ((99 101) 1) ((187 189) 1) ((167 169) 1)))
 
   (phps-mode-test-ast--should-bookkeep
    "<?php\nclass There\n{\n    private $variable;\n    private ?\\My\\Random $variable2;\n    private string $variable3;\n    private static $variable4;\n    private static \\My\\Random $variable5;\n    private static ?string $variable6;\n    function here()\n    {\n        if ($this->variable) {}\n        if ($this->variable2) {}\n        if ($this->variable3) {}\n        if ($this->variable4) {}\n        if (self::$variable4) {}\n        if (self::$variable5) {}\n        if (self::$variable6) {}\n    }\n}\n"
    "Bookkeeping of nullable typed class variables"
-   '((" class There id $variable" 1) ((33 42) 1) (" class There id $variable2" 1) ((68 78) 1) (" class There id $variable3" 1) ((99 109) 1) (" class There static id $variable4" 1) ((130 140) 1) (" class There static id $variable5" 1) ((172 182) 1) (" class There static id $variable6" 1) ((211 221) 1) (" class There function here id $this" 1) ((261 266) 1) ((268 276) 1) ((293 298) 1) ((300 309) 1) ((326 331) 1) ((333 342) 1) ((359 364) 1) ((366 375) 0) ((398 408) 1) ((431 441) 1) ((464 474) 1)))
+   '((" class There function here id $this" ((247 484))) (" class There static id $variable6" ((211 221))) (" class There static id $variable5" ((172 182))) (" class There static id $variable4" ((130 140))) (" class There id $variable3" ((99 109))) (" class There id $variable2" ((68 78))) (" class There id $variable" ((33 42))) ((464 474) 1) ((431 441) 1) ((398 408) 1) ((366 375) 0) ((359 364) 1) ((333 342) 1) ((326 331) 1) ((300 309) 1) ((293 298) 1) ((268 276) 1) ((261 266) 1)))
 
   (phps-mode-test-ast--should-bookkeep
    "<?php\nclass MyClass\n{\n    static function here()\n    {\n        if ($this) {\n            // Miss;\n        }\n    }\n    function there()\n    {\n        if ($this) {\n            // Hit\n        }\n    }\n}\n"
    "Bookkeeping of $this not available inside static method"
-   '(((68 73) 0) (" class MyClass function there id $this" 1) ((153 158) 1)))
+   '((" class MyClass function there id $this" ((139 196))) ((153 158) 1) ((68 73) 0)))
 
   (phps-mode-test-ast--should-bookkeep
    "<?php\n\nclass myClass\n{\n    private $test = 'abc';\n    public function test($d)\n    {\n        return fn($e) => $this->test . $d . $e;\n    }\n}\n\n$a = new myClass();\necho $a->test('def')('ghi');"

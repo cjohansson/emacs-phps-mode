@@ -597,11 +597,6 @@
   "Current bookkeeping namespace.")
 
 (defvar-local
-  phps-mode-parser-sdt--bookkeeping-namespace-stack
-  nil
-  "Current bookkeeping namespace.")
-
-(defvar-local
   phps-mode-parser-sdt--bookkeeping-symbol-stack
   nil
   "Current bookkeeping symbol stack.")
@@ -3923,7 +3918,7 @@
      class-name
      ,(nth 1 args)
      ctor-arguments
-     ,(n 2 args)
+     ,(nth 2 args)
      ))
  phps-mode-parser--table-translations)
 
