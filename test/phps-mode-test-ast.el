@@ -356,7 +356,7 @@
   (phps-mode-test-ast--should-bookkeep
    "<?php\nclass There\n{\n    private $variable;\n    private ?\\My\\Random $variable2;\n    private string $variable3;\n    private static $variable4;\n    private static \\My\\Random $variable5;\n    private static ?string $variable6;\n    function here()\n    {\n        if ($this->variable) {}\n        if ($this->variable2) {}\n        if ($this->variable3) {}\n        if ($this->variable4) {}\n        if (self::$variable4) {}\n        if (self::$variable5) {}\n        if (self::$variable6) {}\n    }\n}\n"
    "Bookkeeping of nullable typed class variables"
-   '((" class There function here id $this" ((247 484))) (" class There static id $variable6" ((211 221))) (" class There static id $variable5" ((172 182))) (" class There static id $variable4" ((130 140))) (" class There id $variable3" ((99 109))) (" class There id $variable2" ((68 78))) (" class There id $variable" ((33 42))) ((464 474) 1) ((431 441) 1) ((398 408) 1) ((366 375) 0) ((359 364) 1) ((333 342) 1) ((326 331) 1) ((300 309) 1) ((293 298) 1) ((268 276) 1) ((261 266) 1)))
+   '((" class There function here id $this" ((247 484))) (" class There static id $variable6" ((211 221))) (" class There static id $variable5" ((172 182))) (" class There static id $variable4" ((130 140))) (" class There id $variable3" ((99 109))) (" class There id $variable2" ((68 78))) (" class There id $variable" ((33 42))) ((464 474) 1) ((431 441) 1) ((398 408) 1) ((366 375) 0) ((359 364) 1) ((333 342) 1) ((326 331) 1) ((300 309) 1) ((293 298) 1) ((268 276) 1) ((261 266) 1) ((211 221) 1) ((172 182) 1) ((130 140) 1) ((99 109) 1) ((68 78) 1) ((33 42) 1)))
 
   (phps-mode-test-ast--should-bookkeep
    "<?php\nclass MyClass\n{\n    static function here()\n    {\n        if ($this) {\n            // Miss;\n        }\n    }\n    function there()\n    {\n        if ($this) {\n            // Hit\n        }\n    }\n}\n"
@@ -366,9 +366,9 @@
   (phps-mode-test-ast--should-bookkeep
    "<?php\n\nclass myClass\n{\n    private $tost = 'abc';\n    public function test($d)\n    {\n        return fn($e) => $this->tost . $d . $e;\n    }\n}\n\n$a = new myClass();\necho $a->test('def')('ghi');"
    "Bookkeeping of $this reference inside arrow function inside of method"
-   '((" class myClass function test id $d" ((76 78))) (" class myClass function test id $this" ((84 139))) (" class myClass arrow 1 function test id $e" ((104 106))) (" class myClass id $tost" ((36 41))) ((104 106) 1) ((130 132) 1) ((125 127) 1) ((118 122) 1) ((111 116) 1) (" id $a" ((143 145))) ((143 145) 1) ((168 170) 1)))
+   '((" class myClass function test id $d" ((76 78))) (" class myClass function test id $this" ((84 139))) (" class myClass arrow 1 function test id $e" ((104 106))) (" class myClass id $tost" ((36 41) (36 41))) ((76 78) 1) ((104 106) 1) ((130 132) 1) ((125 127) 1) ((118 122) 1) ((111 116) 1) ((36 41) 1) (" id $a" ((143 145))) ((143 145) 1) ((168 170) 1)))
 
-  ;; TODO Should bookkeep class method parameters
+  ;; TODO this is wrong: '(" class myClass id $var" ((35 39))) for below
 
   (phps-mode-test-ast--should-bookkeep
    "<?php\n\nclass myClass\n{\n    static $var = '123';\n    static function myMethod($a)\n    {\n        return fn($b) => self::$var . $a . $b;\n    }\n}\n\necho myClass::myMethod('4')('5');"
