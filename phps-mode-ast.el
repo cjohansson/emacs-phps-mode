@@ -70,6 +70,9 @@
     (message "\nTranslation:\n%S\n\n" translation)
 
     (setq
+     phps-mode-parser-sdt-symbol-imenu
+     (nreverse phps-mode-parser-sdt-symbol-imenu))
+    (setq
      phps-mode-ast--tree
      translation)
     phps-mode-ast--tree))

@@ -850,13 +850,13 @@
                symbol-name
                symbol-scope)))
 
-        (message
-         "assign symbol uri: %S from %S + %S, start: %S, end: %S"
-         symbol-uri
-         symbol-name
-         symbol-scope
-         symbol-start
-         symbol-end)
+        ;; (message
+        ;;  "assign symbol uri: %S from %S + %S, start: %S, end: %S"
+        ;;  symbol-uri
+        ;;  symbol-name
+        ;;  symbol-scope
+        ;;  symbol-start
+        ;;  symbol-end)
 
         (setq
          phps-mode-parser-sdt-symbol-table-index
@@ -961,14 +961,14 @@
          symbol-hit
          phps-mode-parser-sdt-bookkeeping)
 
-        (message
-         "reference symbol uri: %S from %S + %S, start: %S, end: %S, hit?: %S"
-         symbol-uri
-         symbol-name
-         symbol-scope
-         symbol-start
-         symbol-end
-         symbol-hit)
+        ;; (message
+        ;;  "reference symbol uri: %S from %S + %S, start: %S, end: %S, hit?: %S"
+        ;;  symbol-uri
+        ;;  symbol-name
+        ;;  symbol-scope
+        ;;  symbol-start
+        ;;  symbol-end
+        ;;  symbol-hit)
 
         ))
     (setq
