@@ -379,13 +379,11 @@
    '((" namespace myNamespace class myClass function myMethod id $argument3" ((180 190))) (" namespace myNamespace class myClass function myMethod id $argument2" ((160 170))) (" namespace myNamespace class myClass function myMethod id $argument1" ((140 150) (446 456))) (" namespace myNamespace class myClass function myMethod id $this" ((197 581))) (" namespace myNamespace class myClass id $property2" ((87 97))) (" namespace myNamespace class myClass id $property1" ((58 68))) ((180 190) 1) ((160 170) 1) ((140 150) 1) ((544 553) 1) ((537 542) 1) ((514 524) 1) ((489 498) 1) ((482 487) 1) ((446 456) 1) ((413 423) 0) ((387 397) 1) ((361 371) 1) ((335 345) 1) ((218 227) 1) ((211 216) 1) ((87 97) 1) ((58 68) 1)))
 
   (phps-mode-test-ast--should-bookkeep
-   "<?php\ntrait Hello {\n    public function sayHello() {\n        echo 'Hello ';\n    }\n}\n\ntrait World {\n    public function sayWorld() {\n        echo 'World';\n    }\n}\n\nclass MyHelloWorld {\n    use Hello, World;\n    public function sayExclamationMark() {\n        echo '!';\n    }\n}\n\n$o = new MyHelloWorld();\n$o->sayHello();\n$o->sayWorld();\n$o->sayExclamationMark();\n?>"
-   "Trait classes"
-   nil)
+   "<?php\ntrait MyTrait {\n    private $var = 'abc';\n    public function sayHello() {\n        if ($this->var) {\n            echo 'Hit';\n        }\n    }\n}\n"
+   "A basic trait class"
+   '((" trait MyTrait function sayHello id $this" ((80 147))) (" trait MyTrait id $var" ((35 39))) ((101 104) 1) ((94 99) 1) ((35 39) 1)))
 
-  ;; TODO Add trait class bookkeping test here
   ;; TODO Add test for class properties in class construct here
-
 
   (message "\n-- Ran tests for bookkeeping generation. --"))
 
