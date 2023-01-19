@@ -69,6 +69,7 @@
 
     (message "\nTranslation:\n%S\n\n" translation)
 
+    ;; TODO Should sort this by position
     (setq
      phps-mode-parser-sdt-symbol-imenu
      (nreverse phps-mode-parser-sdt-symbol-imenu))
