@@ -816,10 +816,12 @@
                symbol-scope)))
 
         (message
-         "assign symbol uri: %S from %S + %S"
+         "assign symbol uri: %S from %S + %S, start: %S, end: %S"
          symbol-uri
          symbol-name
-         symbol-scope)
+         symbol-scope
+         symbol-start
+         symbol-end)
 
         (if (gethash symbol-uri phps-mode-parser-sdt-bookkeeping)
             (puthash
@@ -3783,23 +3785,6 @@
 (puthash
  340
  (lambda(args terminals)
-   ;; Save variable declaration in bookkeeping buffer
-   (let* ((symbol-name
-           (nth 0 args))
-          (symbol-start
-           (car (cdr (car terminals))))
-          (symbol-end
-           (cdr (cdr (car terminals))))
-          (symbol-scope
-           phps-mode-parser-sdt--bookkeeping-namespace))
-     (push
-      (list
-       symbol-name
-       symbol-scope
-       symbol-start
-       symbol-end)
-      phps-mode-parser-sdt--bookkeeping-symbol-assignment-stack))
-
    `(
      ast-type
      property-assigned-variable
