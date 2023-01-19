@@ -34,6 +34,18 @@
    phps-mode-parser-sdt-bookkeeping
    (make-hash-table :test 'equal))
   (setq
+   phps-mode-parser-sdt-symbol-table-index
+   0)
+  (setq
+   phps-mode-parser-sdt-symbol-imenu
+   nil)
+  (setq
+   phps-mode-parser-sdt-symbol-table
+   (make-hash-table :test 'equal))
+  (setq
+   phps-mode-parser-sdt-symbol-table-by-uri
+   (make-hash-table :test 'equal))
+  (setq
    phps-mode-parser-sdt--bookkeeping-namespace
    nil)
   (setq

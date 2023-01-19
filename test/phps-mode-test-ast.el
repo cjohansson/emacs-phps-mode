@@ -39,6 +39,10 @@
       (phps-mode-ast--generate)
       (phps-mode-ast-bookkeeping--generate)
 
+      (message "imenu: \n%S\n" phps-mode-parser-sdt-symbol-imenu)
+      (message "symbol-table: \n%S\n" phps-mode-parser-sdt-symbol-table)
+      (message "phps-mode-parser-sdt-symbol-table-by-uri: \n%S\n" phps-mode-parser-sdt-symbol-table-by-uri)
+
       (message
        "expected-bookkeeping:\n%S\n"
        bookkeeping)
@@ -47,9 +51,6 @@
        (phps-mode-test--hash-to-list
         phps-mode-ast-bookkeeping--index
         t))
-       (message
-        "object-index:\n%S\n"
-         phps-mode-ast-bookkeeping--object-index)
 
       (should
        (equal

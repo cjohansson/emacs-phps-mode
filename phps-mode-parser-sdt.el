@@ -589,7 +589,27 @@
 (defvar-local
   phps-mode-parser-sdt-bookkeeping
   (make-hash-table :test 'equal)
-  "Bookkeeping")
+  "Bookkeeping of symbol references.")
+
+(defvar-local
+  phps-mode-parser-sdt-symbol-table-index
+  0
+  "Symbol table index.")
+
+(defvar-local
+  phps-mode-parser-sdt-symbol-table
+  (make-hash-table :test 'equal)
+  "Symbol table of parse, symbol ID => (list URI start end)")
+
+(defvar-local
+  phps-mode-parser-sdt-symbol-table-by-uri
+  (make-hash-table :test 'equal)
+  "Symbol table of parse, symbol URI => list of symbol IDs.")
+
+(defvar-local
+  phps-mode-parser-sdt-symbol-imenu
+  nil
+  "Imenu for symbols of parse.")
 
 (defvar-local
   phps-mode-parser-sdt--bookkeeping-namespace
@@ -673,7 +693,7 @@
                             (while (< potential-uri-index potential-uri-count)
                               (setf
                                (nth potential-uri-index potential-uris)
-                               (format " static%s" (nth potential-uri-index potential-uris)))
+                               (format "static%s" (nth potential-uri-index potential-uris)))
                               (setq potential-uri-index (1+ potential-uri-index)))))
 
                         (setq next-scope-is-self-static-member-operator t)))))))
@@ -690,7 +710,7 @@
                     (while (< potential-uri-index potential-uri-count)
                       (setf
                        (nth potential-uri-index potential-uris)
-                       (format " namespace %s%s" space-name (nth potential-uri-index potential-uris)))
+                       (format "namespace %s%s" space-name (nth potential-uri-index potential-uris)))
                       (setq potential-uri-index (1+ potential-uri-index)))))
 
                  ((and
@@ -701,7 +721,7 @@
                     (while (< potential-uri-index potential-uri-count)
                       (setf
                        (nth potential-uri-index potential-uris)
-                       (format " class %s%s" space-name (nth potential-uri-index potential-uris)))
+                       (format "class %s%s" space-name (nth potential-uri-index potential-uris)))
                       (setq potential-uri-index (1+ potential-uri-index)))))
 
                  ((and
@@ -712,7 +732,7 @@
                     (while (< potential-uri-index potential-uri-count)
                       (setf
                        (nth potential-uri-index potential-uris)
-                       (format " interface %s%s" space-name (nth potential-uri-index potential-uris)))
+                       (format "interface %s%s" space-name (nth potential-uri-index potential-uris)))
                       (setq potential-uri-index (1+ potential-uri-index)))))
 
                  ((and
@@ -723,7 +743,7 @@
                     (while (< potential-uri-index potential-uri-count)
                       (setf
                        (nth potential-uri-index potential-uris)
-                       (format " trait %s%s" space-name (nth potential-uri-index potential-uris)))
+                       (format "trait %s%s" space-name (nth potential-uri-index potential-uris)))
                       (setq potential-uri-index (1+ potential-uri-index)))))
 
                  ((and
@@ -737,7 +757,7 @@
                     (while (< potential-uri-index potential-uri-count)
                       (setf
                        (nth potential-uri-index potential-uris)
-                       (format " function %s%s" space-name (nth potential-uri-index potential-uris)))
+                       (format "function %s%s" space-name (nth potential-uri-index potential-uris)))
                       (setq potential-uri-index (1+ potential-uri-index)))))
 
                  ((equal space-type 'anonymous-function)
@@ -746,7 +766,7 @@
                     (while (< potential-uri-index potential-uri-count)
                       (setf
                        (nth potential-uri-index potential-uris)
-                       (format " anonymous %s%s" space-name (nth potential-uri-index potential-uris)))
+                       (format "anonymous %s%s" space-name (nth potential-uri-index potential-uris)))
                       (setq potential-uri-index (1+ potential-uri-index)))))
 
                  ((equal space-type 'static)
@@ -755,7 +775,7 @@
                     (while (< potential-uri-index potential-uri-count)
                       (setf
                        (nth potential-uri-index potential-uris)
-                       (format " static%s" (nth potential-uri-index potential-uris)))
+                       (format "static%s" (nth potential-uri-index potential-uris)))
                       (setq potential-uri-index (1+ potential-uri-index)))))
 
                  ((equal space-type 'arrow-function)
@@ -766,7 +786,7 @@
                         (new-potential-uris))
                     (while (< potential-uri-index potential-uri-count)
                       (push
-                       (format " arrow %s%s" space-name (nth potential-uri-index potential-uris))
+                       (format "arrow %s%s" space-name (nth potential-uri-index potential-uris))
                        new-potential-uris)
                       (setq potential-uri-index (1+ potential-uri-index)))
                     (setq potential-uris (append new-potential-uris potential-uris))
@@ -780,15 +800,30 @@
       (let ((potential-uri-count (length potential-uris))
             (potential-uri-index 0)
             (matching-uri))
-        ;; (message "potential-uris: %S" potential-uris)
 
         ;; Iterate potential-uris, select first match or if no match return the first
-        (while (< potential-uri-index potential-uri-count)
-          (setf
-           (nth potential-uri-index potential-uris)
-           (format "%s id %s" (nth potential-uri-index potential-uris) name))
-          (let ((potential-uri (nth potential-uri-index potential-uris)))
-            (when (gethash potential-uri phps-mode-parser-sdt-bookkeeping)
+        (while (and
+                (< potential-uri-index potential-uri-count)
+                (not matching-uri))
+          (let ((old-uri
+                 (nth potential-uri-index potential-uris))
+                (potential-uri))
+            (if (string= old-uri "")
+                (setq
+                 potential-uri
+                 (format
+                  "id %s"
+                  name))
+              (setq
+               potential-uri
+               (format
+                "%s id %s"
+                old-uri
+                name)))
+            (setf
+             (nth potential-uri-index potential-uris)
+             potential-uri)
+            (when (gethash potential-uri phps-mode-parser-sdt-symbol-table-by-uri)
               (setq matching-uri potential-uri)))
           (setq potential-uri-index (1+ potential-uri-index)))
         (if matching-uri
@@ -815,28 +850,55 @@
                symbol-name
                symbol-scope)))
 
-        ;; (message
-        ;;  "assign symbol uri: %S from %S + %S, start: %S, end: %S"
-        ;;  symbol-uri
-        ;;  symbol-name
-        ;;  symbol-scope
-        ;;  symbol-start
-        ;;  symbol-end)
+        (message
+         "assign symbol uri: %S from %S + %S, start: %S, end: %S"
+         symbol-uri
+         symbol-name
+         symbol-scope
+         symbol-start
+         symbol-end)
 
-        (if (gethash symbol-uri phps-mode-parser-sdt-bookkeeping)
-            (puthash
-             symbol-uri
-             (append
-              (gethash symbol-uri phps-mode-parser-sdt-bookkeeping)
-              (list (list symbol-start symbol-end)))
-             phps-mode-parser-sdt-bookkeeping)
+        (setq
+         phps-mode-parser-sdt-symbol-table-index
+         (1+ phps-mode-parser-sdt-symbol-table-index))
+
+        ;; Register new symbol in symbol-table
+        ;; and place a reference to it in the symbol URI hash-map
+        (if (gethash symbol-uri phps-mode-parser-sdt-symbol-table-by-uri)
+            (progn
+              (push
+               (list symbol-uri symbol-start)
+               phps-mode-parser-sdt-symbol-imenu)
+
+              (puthash
+               phps-mode-parser-sdt-symbol-table-index
+               (list
+                symbol-uri
+                symbol-start
+                symbol-end)
+               phps-mode-parser-sdt-symbol-table)
+              (puthash
+               symbol-uri
+               (append
+                (gethash symbol-uri phps-mode-parser-sdt-symbol-table-by-uri)
+                (list phps-mode-parser-sdt-symbol-table-index))
+               phps-mode-parser-sdt-symbol-table-by-uri))
+
+          (push
+           `(,symbol-uri . ,symbol-start)
+           phps-mode-parser-sdt-symbol-imenu)
+
+          (puthash
+           phps-mode-parser-sdt-symbol-table-index
+           (list
+            symbol-uri
+            symbol-start
+            symbol-end)
+           phps-mode-parser-sdt-symbol-table)
           (puthash
            symbol-uri
-           (list
-            (list
-             symbol-start
-             symbol-end))
-           phps-mode-parser-sdt-bookkeeping))))
+           (list phps-mode-parser-sdt-symbol-table-index)
+           phps-mode-parser-sdt-symbol-table-by-uri))))
     (setq
      phps-mode-parser-sdt--bookkeeping-symbol-assignment-stack
      nil))
@@ -861,21 +923,36 @@
          ((gethash
            symbol-name
            phps-mode-parser-sdt--bookkeeping--superglobal-variable-p)
-          (setq symbol-hit 1))
+          (setq symbol-hit -1))
 
          ;; Declared variable
          ((gethash
            symbol-uri
-           phps-mode-parser-sdt-bookkeeping)
-          (let ((matching-symbols
-                 (gethash
-                  symbol-uri
-                  phps-mode-parser-sdt-bookkeeping)))
-            (dolist (matching-symbol matching-symbols)
-              (let ((matching-symbol-start (car matching-symbol))
-                    (matching-symbol-end (car (cdr matching-symbol))))
-                (when (<= matching-symbol-start symbol-start)
-                  (setq symbol-hit 1)))))))
+           phps-mode-parser-sdt-symbol-table-by-uri)
+          (let* ((matching-symbol-ids
+                  (gethash
+                   symbol-uri
+                   phps-mode-parser-sdt-symbol-table-by-uri))
+                 (matching-symbol-index 0)
+                 (matching-symbol-count (length matching-symbol-ids))
+                 (matching-hit)
+                 (matching-symbol-id
+                  (nth matching-symbol-index matching-symbol-ids))
+                 (matching-symbol
+                  (gethash
+                   matching-symbol-id
+                   phps-mode-parser-sdt-symbol-table))
+                 (matching-symbol-start
+                  (nth 1 matching-symbol))
+                 (matching-symbol-end
+                  (nth 2 matching-symbol)))
+            (while (and
+                 (not matching-hit)
+                 (< matching-symbol-index matching-symbol-count))
+              (when (<= matching-symbol-start symbol-start)
+                (setq matching-hit t)
+                (setq symbol-hit matching-symbol-id))
+              (setq matching-symbol-index (1+ matching-symbol-index))))))
 
         (puthash
          (list
@@ -884,14 +961,14 @@
          symbol-hit
          phps-mode-parser-sdt-bookkeeping)
 
-        ;; (message
-        ;;  "reference symbol uri: %S from %S + %S, start: %S, end: %S, hit?: %S"
-        ;;  symbol-uri
-        ;;  symbol-name
-        ;;  symbol-scope
-        ;;  symbol-start
-        ;;  symbol-end
-        ;;  symbol-hit)
+        (message
+         "reference symbol uri: %S from %S + %S, start: %S, end: %S, hit?: %S"
+         symbol-uri
+         symbol-name
+         symbol-scope
+         symbol-start
+         symbol-end
+         symbol-hit)
 
         ))
     (setq
