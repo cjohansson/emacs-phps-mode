@@ -373,14 +373,19 @@
    "Bookkeeping of self reference inside arrow function inside of static method"
    '((" class myClass function myMethod id $a" ((78 80))) (" class myClass arrow 1 function myMethod id $b" ((106 108))) (" class myClass static id $var" ((35 39))) ((78 80) 1) ((106 108) 1) ((131 133) 1) ((126 128) 1) ((119 123) 1) ((35 39) 1)))
 
+  (phps-mode-test-ast--should-bookkeep
+   "<?php\nnamespace myNamespace;\nclass myClass\n{\n    private $property1 = '';\n    private $property2;\n    protected function myMethod(\n        $argument1,\n        $argument2,\n        $argument3\n    ) {\n        if ($this->property2) {\n            echo 'was here';\n        }\n        /* @codingStandardsIgnoreEnd */\n        if (\n            $argument1\n            && $argument2\n            && $argument3\n            && $argument4\n            && !empty($argument1['index'])\n            && $this->property1\n            && $argument1['index'] == $this->property1\n        ) {\n        }\n    }\n}\n"
+   "Bookkeeping of properties inside if condition list"
+   '((" namespace myNamespace class myClass function myMethod id $argument3" ((180 190))) (" namespace myNamespace class myClass function myMethod id $argument2" ((160 170))) (" namespace myNamespace class myClass function myMethod id $argument1" ((140 150) (446 456))) (" namespace myNamespace class myClass function myMethod id $this" ((197 581))) (" namespace myNamespace class myClass id $property2" ((87 97))) (" namespace myNamespace class myClass id $property1" ((58 68))) ((180 190) 1) ((160 170) 1) ((140 150) 1) ((544 553) 1) ((537 542) 1) ((514 524) 1) ((489 498) 1) ((482 487) 1) ((446 456) 1) ((413 423) 0) ((387 397) 1) ((361 371) 1) ((335 345) 1) ((218 227) 1) ((211 216) 1) ((87 97) 1) ((58 68) 1)))
+
+  (phps-mode-test-ast--should-bookkeep
+   "<?php\ntrait Hello {\n    public function sayHello() {\n        echo 'Hello ';\n    }\n}\n\ntrait World {\n    public function sayWorld() {\n        echo 'World';\n    }\n}\n\nclass MyHelloWorld {\n    use Hello, World;\n    public function sayExclamationMark() {\n        echo '!';\n    }\n}\n\n$o = new MyHelloWorld();\n$o->sayHello();\n$o->sayWorld();\n$o->sayExclamationMark();\n?>"
+   "Trait classes"
+   nil)
+
   ;; TODO Add trait class bookkeping test here
   ;; TODO Add test for class properties in class construct here
 
-  ;; TODO Make this test pass
-  ;; (phps-mode-test-ast--should-bookkeep
-  ;;  "<?php\nnamespace myNamespace;\nclass myClass\n{\n    private $property1 = '';\n    private $property2;\n    protected function myMethod(\n        $argument1,\n        $argument2,\n        $argument3\n    ) {\n        if ($this->property2) {\n            echo 'was here';\n        }\n        /* @codingStandardsIgnoreEnd */\n        if (\n            $argument1\n            && $argument2\n            && $argument3\n            && $argument4\n            && !empty($argument1['index'])\n            && $this->property1\n            && $argument1['index'] == $this->property1\n        ) {\n        }\n    }\n}\n"
-  ;;  "Bookkeeping of properties inside if condition list"
-  ;;  '((" namespace myNamespace class myClass id $property1" 1) ((58 68) 1) (" namespace myNamespace class myClass id $property2" 1) ((87 97) 1) (" namespace myNamespace class myClass function myMethod id $this" 1) (" namespace myNamespace class myClass function myMethod id $argument1" 1) ((140 150) 1) (" namespace myNamespace class myClass function myMethod id $argument2" 1) ((160 170) 1) (" namespace myNamespace class myClass function myMethod id $argument3" 1) ((180 190) 1) ((211 216) 1) ((218 227) 1) (" namespace myNamespace class myClass function myMethod defined 1 id nil" 1) ((335 345) 1) ((361 371) 1) ((387 397) 1) ((413 423) 0) ((482 487) 1) ((489 498) 1) ((537 542) 1) ((544 553) 1)))
 
   (message "\n-- Ran tests for bookkeeping generation. --"))
 
