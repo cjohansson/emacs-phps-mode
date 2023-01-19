@@ -780,7 +780,7 @@
       (let ((potential-uri-count (length potential-uris))
             (potential-uri-index 0)
             (matching-uri))
-        (message "potential-uris: %S" potential-uris)
+        ;; (message "potential-uris: %S" potential-uris)
 
         ;; Iterate potential-uris, select first match or if no match return the first
         (while (< potential-uri-index potential-uri-count)
@@ -815,13 +815,13 @@
                symbol-name
                symbol-scope)))
 
-        (message
-         "assign symbol uri: %S from %S + %S, start: %S, end: %S"
-         symbol-uri
-         symbol-name
-         symbol-scope
-         symbol-start
-         symbol-end)
+        ;; (message
+        ;;  "assign symbol uri: %S from %S + %S, start: %S, end: %S"
+        ;;  symbol-uri
+        ;;  symbol-name
+        ;;  symbol-scope
+        ;;  symbol-start
+        ;;  symbol-end)
 
         (if (gethash symbol-uri phps-mode-parser-sdt-bookkeeping)
             (puthash
@@ -884,14 +884,14 @@
          symbol-hit
          phps-mode-parser-sdt-bookkeeping)
 
-        (message
-         "reference symbol uri: %S from %S + %S, start: %S, end: %S, hit?: %S"
-         symbol-uri
-         symbol-name
-         symbol-scope
-         symbol-start
-         symbol-end
-         symbol-hit)
+        ;; (message
+        ;;  "reference symbol uri: %S from %S + %S, start: %S, end: %S, hit?: %S"
+        ;;  symbol-uri
+        ;;  symbol-name
+        ;;  symbol-scope
+        ;;  symbol-start
+        ;;  symbol-end
+        ;;  symbol-hit)
 
         ))
     (setq
@@ -3445,10 +3445,12 @@
        ;; - add function scope but only for:
        ;;     - non-super-global variables
        ;;     - symbols defined inside function limits
-       (let ((function-name
+       (let* ((function-name
               (plist-get
                attributed-class-statement
                'ast-name))
+              (function-name-downcased
+               (downcase function-name))
              (function-start
               (plist-get
                attributed-class-statement
@@ -3461,7 +3463,11 @@
               (plist-get
                attributed-class-statement
                'parameter-list))
-             (is-static-p))
+             (is-static-p)
+             (is-contructor-p
+              (string=
+               function-name-downcased
+               "__construct")))
 
          ;; Is static method?
          (when-let (method-modifiers
@@ -3540,12 +3546,27 @@
                           'parameter))
                         (attributed-parameter-name
                          (plist-get attributed-parameter 'ast-name))
+                        (attributed-parameter-visibility
+                         (plist-get attributed-parameter 'visibility))
                         (symbol-name
                          attributed-parameter-name)
                         (symbol-start
                          (plist-get attributed-parameter 'ast-start))
                         (symbol-end
                          (plist-get attributed-parameter 'ast-end)))
+
+                   (when (and
+                          is-contructor-p
+                          attributed-parameter-visibility)
+                     ;; Declare class properties here
+                     (push
+                      (list
+                       symbol-name
+                       phps-mode-parser-sdt--bookkeeping-namespace
+                       symbol-start
+                       symbol-end)
+                      phps-mode-parser-sdt--bookkeeping-symbol-assignment-stack))
+
                    (push
                     (list
                      symbol-name

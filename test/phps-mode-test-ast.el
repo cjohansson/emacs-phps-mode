@@ -383,11 +383,10 @@
    "A basic trait class"
    '((" trait MyTrait function sayHello id $this" ((80 147))) (" trait MyTrait id $var" ((35 39))) ((101 104) 1) ((94 99) 1) ((35 39) 1)))
 
-  ;; TODO Make this test pass
   (phps-mode-test-ast--should-bookkeep
    "<?php\nclass Person {\n    public function __construct(\n        private string $name,\n        private int $age,\n        public $address\n    ) {}\n}"
    "Class with class properties in constructor."
-   nil)
+   '((" class Person function __construct id $address" ((126 134))) (" class Person id $address" ((126 134))) (" class Person function __construct id $age" ((105 109))) (" class Person id $age" ((105 109))) (" class Person function __construct id $name" ((78 83))) (" class Person id $name" ((78 83))) ((126 134) 1) ((105 109) 1) ((78 83) 1)))
 
   (message "\n-- Ran tests for bookkeeping generation. --"))
 
