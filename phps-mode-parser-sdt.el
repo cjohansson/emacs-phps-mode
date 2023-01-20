@@ -647,9 +647,12 @@
        name
        phps-mode-parser-sdt--bookkeeping--superglobal-variable-p)
       name
-    ;; TODO Should capture unique scopes (without the id)
-    ;; with name and place on the imenu list
-    (let ((potential-uris (list "")))
+    (let ((potential-uris (list ""))
+          (scope-namespace)
+          (scope-class)
+          (scope-trait)
+          (scope-interface)
+          (scope-function))
       (when scope
         (let ((scope-count (length scope))
               (scope-index 0))
@@ -688,7 +691,6 @@
                       (when (or
                              (string= downcased-scope-name "self")
                              (string= downcased-scope-name "static"))
-
                         (when (equal next-scope-index (1+ scope-index))
                           (let ((potential-uri-count (length potential-uris))
                                 (potential-uri-index 0))
@@ -697,70 +699,84 @@
                                (nth potential-uri-index potential-uris)
                                (format "static %s" (nth potential-uri-index potential-uris)))
                               (setq potential-uri-index (1+ potential-uri-index)))))
-
                         (setq next-scope-is-self-static-member-operator t)))))))
 
-              (let ((space-type (car item))
-                    (space-name (car (cdr item))))
+              (let ((space-type (nth 0 item))
+                    (space-name (nth 1 item)))
                 (cond
 
-                 ((and
-                   (equal space-type 'namespace)
-                   (not next-scope-is-global))
-                  (let ((potential-uri-count (length potential-uris))
-                        (potential-uri-index 0))
-                    (while (< potential-uri-index potential-uri-count)
-                      (setf
-                       (nth potential-uri-index potential-uris)
-                       (format "namespace %s %s" space-name (nth potential-uri-index potential-uris)))
-                      (setq potential-uri-index (1+ potential-uri-index)))))
+                 ((equal space-type 'namespace)
+                  (setq scope-namespace (list space-name (nth 2 item)))
+                  (unless next-scope-is-global
+                    (let ((potential-uri-count (length potential-uris))
+                          (potential-uri-index 0))
+                      (while (< potential-uri-index potential-uri-count)
+                        (setf
+                         (nth potential-uri-index potential-uris)
+                         (format
+                          "namespace %s %s"
+                          space-name
+                          (nth potential-uri-index potential-uris)))
+                        (setq potential-uri-index (1+ potential-uri-index))))))
 
-                 ((and
-                   (equal space-type 'class)
-                   (not next-scope-is-global))
-                  (let ((potential-uri-count (length potential-uris))
-                        (potential-uri-index 0))
-                    (while (< potential-uri-index potential-uri-count)
-                      (setf
-                       (nth potential-uri-index potential-uris)
-                       (format "class %s %s" space-name (nth potential-uri-index potential-uris)))
-                      (setq potential-uri-index (1+ potential-uri-index)))))
+                 ((equal space-type 'class)
+                  (setq scope-class (list space-name (nth 2 item)))
+                  (unless next-scope-is-global
+                    (let ((potential-uri-count (length potential-uris))
+                          (potential-uri-index 0))
+                      (while (< potential-uri-index potential-uri-count)
+                        (setf
+                         (nth potential-uri-index potential-uris)
+                         (format
+                          "class %s %s"
+                          space-name
+                          (nth potential-uri-index potential-uris)))
+                        (setq potential-uri-index (1+ potential-uri-index))))))
 
-                 ((and
-                   (equal space-type 'interface)
-                   (not next-scope-is-global))
-                  (let ((potential-uri-count (length potential-uris))
-                        (potential-uri-index 0))
-                    (while (< potential-uri-index potential-uri-count)
-                      (setf
-                       (nth potential-uri-index potential-uris)
-                       (format "interface %s %s" space-name (nth potential-uri-index potential-uris)))
-                      (setq potential-uri-index (1+ potential-uri-index)))))
+                 ((equal space-type 'interface)
+                  (setq scope-interface (list space-name (nth 2 item)))
+                  (unless next-scope-is-global
+                    (let ((potential-uri-count (length potential-uris))
+                          (potential-uri-index 0))
+                      (while (< potential-uri-index potential-uri-count)
+                        (setf
+                         (nth potential-uri-index potential-uris)
+                         (format
+                          "interface %s %s"
+                          space-name
+                          (nth potential-uri-index potential-uris)))
+                        (setq potential-uri-index (1+ potential-uri-index))))))
 
-                 ((and
-                   (equal space-type 'trait)
-                   (not next-scope-is-global))
-                  (let ((potential-uri-count (length potential-uris))
-                        (potential-uri-index 0))
-                    (while (< potential-uri-index potential-uri-count)
-                      (setf
-                       (nth potential-uri-index potential-uris)
-                       (format "trait %s %s" space-name (nth potential-uri-index potential-uris)))
-                      (setq potential-uri-index (1+ potential-uri-index)))))
+                 ((equal space-type 'trait)
+                  (setq scope-trait (list space-name (nth 2 item)))
+                  (unless next-scope-is-global
+                    (let ((potential-uri-count (length potential-uris))
+                          (potential-uri-index 0))
+                      (while (< potential-uri-index potential-uri-count)
+                        (setf
+                         (nth potential-uri-index potential-uris)
+                         (format
+                          "trait %s %s"
+                          space-name
+                          (nth potential-uri-index potential-uris)))
+                        (setq potential-uri-index (1+ potential-uri-index))))))
 
-                 ((and
-                   (equal space-type 'function)
-                   (not (or
-                         next-scope-is-global
-                         next-scope-is-this-object-operator
-                         next-scope-is-self-static-member-operator)))
-                  (let ((potential-uri-count (length potential-uris))
-                        (potential-uri-index 0))
-                    (while (< potential-uri-index potential-uri-count)
-                      (setf
-                       (nth potential-uri-index potential-uris)
-                       (format "function %s %s" space-name (nth potential-uri-index potential-uris)))
-                      (setq potential-uri-index (1+ potential-uri-index)))))
+                 ((equal space-type 'function)
+                  (setq scope-function (list space-name (nth 2 item)))
+                  (unless (or
+                           next-scope-is-global
+                           next-scope-is-this-object-operator
+                           next-scope-is-self-static-member-operator)
+                    (let ((potential-uri-count (length potential-uris))
+                          (potential-uri-index 0))
+                      (while (< potential-uri-index potential-uri-count)
+                        (setf
+                         (nth potential-uri-index potential-uris)
+                         (format
+                          "function %s %s"
+                          space-name
+                          (nth potential-uri-index potential-uris)))
+                        (setq potential-uri-index (1+ potential-uri-index))))))
 
                  ((equal space-type 'anonymous-function)
                   (let ((potential-uri-count (length potential-uris))
@@ -768,7 +784,10 @@
                     (while (< potential-uri-index potential-uri-count)
                       (setf
                        (nth potential-uri-index potential-uris)
-                       (format "anonymous %s %s" space-name (nth potential-uri-index potential-uris)))
+                       (format
+                        "anonymous %s %s"
+                        space-name
+                        (nth potential-uri-index potential-uris)))
                       (setq potential-uri-index (1+ potential-uri-index)))))
 
                  ((equal space-type 'static)
@@ -777,7 +796,9 @@
                     (while (< potential-uri-index potential-uri-count)
                       (setf
                        (nth potential-uri-index potential-uris)
-                       (format "static %s" (nth potential-uri-index potential-uris)))
+                       (format
+                        "static %s"
+                        (nth potential-uri-index potential-uris)))
                       (setq potential-uri-index (1+ potential-uri-index)))))
 
                  ((equal space-type 'arrow-function)
@@ -788,7 +809,10 @@
                         (new-potential-uris))
                     (while (< potential-uri-index potential-uri-count)
                       (push
-                       (format "arrow %s %s" space-name (nth potential-uri-index potential-uris))
+                       (format
+                        "arrow %s %s"
+                        space-name
+                        (nth potential-uri-index potential-uris))
                        new-potential-uris)
                       (setq potential-uri-index (1+ potential-uri-index)))
                     (setq potential-uris (append new-potential-uris potential-uris))
@@ -797,7 +821,348 @@
                     ))
 
                  )))
-            (setq scope-index (1+ scope-index)))))
+            (setq scope-index (1+ scope-index))))
+
+        ;; Namespace
+        (when scope-namespace
+          (let ((scope-uri (format "namespace %s" (nth 0 scope-namespace)))
+                (scope-start (nth 1 scope-namespace))
+                (scope-end (nth 2 scope-namespace)))
+            (unless (gethash scope-uri phps-mode-parser-sdt-symbol-table-by-uri)
+              (setq
+               phps-mode-parser-sdt-symbol-table-index
+               (1+ phps-mode-parser-sdt-symbol-table-index))
+              (puthash
+               phps-mode-parser-sdt-symbol-table-index
+               (list
+                scope-uri
+                scope-start
+                scope-end)
+               phps-mode-parser-sdt-symbol-table)
+              (push
+               `(,scope-uri . ,scope-start)
+               phps-mode-parser-sdt-symbol-imenu))))
+
+        ;; Class
+        (when scope-class
+          (if scope-namespace
+              (let ((scope-uri
+                     (format
+                      "namespace %s class %s"
+                      (nth 0 scope-namespace)
+                      (nth 0 scope-class)))
+                    (scope-start (nth 1 scope-class))
+                    (scope-end (nth 2 scope-class)))
+                (unless (gethash scope-uri phps-mode-parser-sdt-symbol-table-by-uri)
+                  (setq
+                   phps-mode-parser-sdt-symbol-table-index
+                   (1+ phps-mode-parser-sdt-symbol-table-index))
+                  (puthash
+                   phps-mode-parser-sdt-symbol-table-index
+                   (list
+                    scope-uri
+                    scope-start
+                    scope-end)
+                   phps-mode-parser-sdt-symbol-table)
+                  (push
+                   `(,scope-uri . ,scope-start)
+                   phps-mode-parser-sdt-symbol-imenu)))
+            (let ((scope-uri
+                   (format
+                    "class %s"
+                    (nth 0 scope-class)))
+                  (scope-start (nth 1 scope-class))
+                  (scope-end (nth 2 scope-class)))
+              (unless (gethash scope-uri phps-mode-parser-sdt-symbol-table-by-uri)
+                (setq
+                 phps-mode-parser-sdt-symbol-table-index
+                 (1+ phps-mode-parser-sdt-symbol-table-index))
+                (puthash
+                 phps-mode-parser-sdt-symbol-table-index
+                 (list
+                  scope-uri
+                  scope-start
+                  scope-end)
+                 phps-mode-parser-sdt-symbol-table)
+                (push
+                 `(,scope-uri . ,scope-start)
+                 phps-mode-parser-sdt-symbol-imenu)))))
+
+        ;; Trait
+        (when scope-trait
+          (if scope-namespace
+              (let ((scope-uri
+                     (format
+                      "namespace %s trait %s"
+                      (nth 0 scope-namespace)
+                      (nth 0 scope-trait)))
+                    (scope-start (nth 1 scope-trait))
+                    (scope-end (nth 2 scope-trait)))
+                (unless (gethash scope-uri phps-mode-parser-sdt-symbol-table-by-uri)
+                  (setq
+                   phps-mode-parser-sdt-symbol-table-index
+                   (1+ phps-mode-parser-sdt-symbol-table-index))
+                  (puthash
+                   phps-mode-parser-sdt-symbol-table-index
+                   (list
+                    scope-uri
+                    scope-start
+                    scope-end)
+                   phps-mode-parser-sdt-symbol-table)
+                  (push
+                   `(,scope-uri . ,scope-start)
+                   phps-mode-parser-sdt-symbol-imenu)))
+            (let ((scope-uri
+                   (format
+                    "trait %s"
+                    (nth 0 scope-trait)))
+                  (scope-start (nth 1 scope-trait))
+                  (scope-end (nth 2 scope-trait)))
+              (unless (gethash scope-uri phps-mode-parser-sdt-symbol-table-by-uri)
+                (setq
+                 phps-mode-parser-sdt-symbol-table-index
+                 (1+ phps-mode-parser-sdt-symbol-table-index))
+                (puthash
+                 phps-mode-parser-sdt-symbol-table-index
+                 (list
+                  scope-uri
+                  scope-start
+                  scope-end)
+                 phps-mode-parser-sdt-symbol-table)
+                (push
+                 `(,scope-uri . ,scope-start)
+                 phps-mode-parser-sdt-symbol-imenu)))))
+
+        ;; Interface
+        (when scope-interface
+          (if scope-namespace
+              (let ((scope-uri
+                     (format
+                      "namespace %s interface %s"
+                      (nth 0 scope-namespace)
+                      (nth 0 scope-interface)))
+                    (scope-start (nth 1 scope-interface))
+                    (scope-end (nth 2 scope-interface)))
+                (unless (gethash scope-uri phps-mode-parser-sdt-symbol-table-by-uri)
+                  (setq
+                   phps-mode-parser-sdt-symbol-table-index
+                   (1+ phps-mode-parser-sdt-symbol-table-index))
+                  (puthash
+                   phps-mode-parser-sdt-symbol-table-index
+                   (list
+                    scope-uri
+                    scope-start
+                    scope-end)
+                   phps-mode-parser-sdt-symbol-table)
+                  (push
+                   `(,scope-uri . ,scope-start)
+                   phps-mode-parser-sdt-symbol-imenu)))
+            (let ((scope-uri
+                   (format
+                    "interface %s"
+                    (nth 0 scope-interface)))
+                  (scope-start (nth 1 scope-interface))
+                  (scope-end (nth 2 scope-interface)))
+              (unless (gethash scope-uri phps-mode-parser-sdt-symbol-table-by-uri)
+                (setq
+                 phps-mode-parser-sdt-symbol-table-index
+                 (1+ phps-mode-parser-sdt-symbol-table-index))
+                (puthash
+                 phps-mode-parser-sdt-symbol-table-index
+                 (list
+                  scope-uri
+                  scope-start
+                  scope-end)
+                 phps-mode-parser-sdt-symbol-table)
+                (push
+                 `(,scope-uri . ,scope-start)
+                 phps-mode-parser-sdt-symbol-imenu)))))
+
+        ;; Function
+        (when scope-function
+          (if scope-namespace
+              (cond
+               (scope-class
+                (let ((scope-uri
+                       (format
+                        "namespace %s class %s function %s"
+                        (nth 0 scope-namespace)
+                        (nth 0 scope-class)
+                        (nth 0 scope-function)))
+                      (scope-start (nth 1 scope-function))
+                      (scope-end (nth 2 scope-function)))
+                  (unless (gethash scope-uri phps-mode-parser-sdt-symbol-table-by-uri)
+                    (setq
+                     phps-mode-parser-sdt-symbol-table-index
+                     (1+ phps-mode-parser-sdt-symbol-table-index))
+                    (puthash
+                     phps-mode-parser-sdt-symbol-table-index
+                     (list
+                      scope-uri
+                      scope-start
+                      scope-end)
+                     phps-mode-parser-sdt-symbol-table)
+                    (push
+                     `(,scope-uri . ,scope-start)
+                     phps-mode-parser-sdt-symbol-imenu))))
+               (scope-trait
+                (let ((scope-uri
+                       (format
+                        "namespace %s trait %s function %s"
+                        (nth 0 scope-namespace)
+                        (nth 0 scope-trait)
+                        (nth 0 scope-function)))
+                      (scope-start (nth 1 scope-function))
+                      (scope-end (nth 2 scope-function)))
+                  (unless (gethash scope-uri phps-mode-parser-sdt-symbol-table-by-uri)
+                    (setq
+                     phps-mode-parser-sdt-symbol-table-index
+                     (1+ phps-mode-parser-sdt-symbol-table-index))
+                    (puthash
+                     phps-mode-parser-sdt-symbol-table-index
+                     (list
+                      scope-uri
+                      scope-start
+                      scope-end)
+                     phps-mode-parser-sdt-symbol-table)
+                    (push
+                     `(,scope-uri . ,scope-start)
+                     phps-mode-parser-sdt-symbol-imenu))))
+               (scope-interface
+                (let ((scope-uri
+                       (format
+                        "namespace %s interface %s function %s"
+                        (nth 0 scope-namespace)
+                        (nth 0 scope-interface)
+                        (nth 0 scope-function)))
+                      (scope-start (nth 1 scope-function))
+                      (scope-end (nth 2 scope-function)))
+                  (unless (gethash scope-uri phps-mode-parser-sdt-symbol-table-by-uri)
+                    (setq
+                     phps-mode-parser-sdt-symbol-table-index
+                     (1+ phps-mode-parser-sdt-symbol-table-index))
+                    (puthash
+                     phps-mode-parser-sdt-symbol-table-index
+                     (list
+                      scope-uri
+                      scope-start
+                      scope-end)
+                     phps-mode-parser-sdt-symbol-table)
+                    (push
+                     `(,scope-uri . ,scope-start)
+                     phps-mode-parser-sdt-symbol-imenu)))
+                )
+               (t
+                (let ((scope-uri
+                       (format
+                        "namespace %s function %s"
+                        (nth 0 scope-namespace)
+                        (nth 0 scope-function)))
+                      (scope-start (nth 1 scope-function))
+                      (scope-end (nth 2 scope-function)))
+                  (unless (gethash scope-uri phps-mode-parser-sdt-symbol-table-by-uri)
+                    (setq
+                     phps-mode-parser-sdt-symbol-table-index
+                     (1+ phps-mode-parser-sdt-symbol-table-index))
+                    (puthash
+                     phps-mode-parser-sdt-symbol-table-index
+                     (list
+                      scope-uri
+                      scope-start
+                      scope-end)
+                     phps-mode-parser-sdt-symbol-table)
+                    (push
+                     `(,scope-uri . ,scope-start)
+                     phps-mode-parser-sdt-symbol-imenu)))))
+            (cond
+             (scope-class
+              (let ((scope-uri
+                     (format
+                      "class %s function %s"
+                      (nth 0 scope-class)
+                      (nth 0 scope-function)))
+                    (scope-start (nth 1 scope-function))
+                    (scope-end (nth 2 scope-function)))
+                (unless (gethash scope-uri phps-mode-parser-sdt-symbol-table-by-uri)
+                  (setq
+                   phps-mode-parser-sdt-symbol-table-index
+                   (1+ phps-mode-parser-sdt-symbol-table-index))
+                  (puthash
+                   phps-mode-parser-sdt-symbol-table-index
+                   (list
+                    scope-uri
+                    scope-start
+                    scope-end)
+                   phps-mode-parser-sdt-symbol-table)
+                  (push
+                   `(,scope-uri . ,scope-start)
+                   phps-mode-parser-sdt-symbol-imenu))))
+             (scope-trait
+              (let ((scope-uri
+                     (format
+                      "%s trait %s function %s"
+                      (nth 0 scope-trait)
+                      (nth 0 scope-function)))
+                    (scope-start (nth 1 scope-function))
+                    (scope-end (nth 2 scope-function)))
+                (unless (gethash scope-uri phps-mode-parser-sdt-symbol-table-by-uri)
+                  (setq
+                   phps-mode-parser-sdt-symbol-table-index
+                   (1+ phps-mode-parser-sdt-symbol-table-index))
+                  (puthash
+                   phps-mode-parser-sdt-symbol-table-index
+                   (list
+                    scope-uri
+                    scope-start
+                    scope-end)
+                   phps-mode-parser-sdt-symbol-table)
+                  (push
+                   `(,scope-uri . ,scope-start)
+                   phps-mode-parser-sdt-symbol-imenu))))
+             (scope-interface
+              (let ((scope-uri
+                     (format
+                      "interface %s function %s"
+                      (nth 0 scope-interface)
+                      (nth 0 scope-function)))
+                    (scope-start (nth 1 scope-function))
+                    (scope-end (nth 2 scope-function)))
+                (unless (gethash scope-uri phps-mode-parser-sdt-symbol-table-by-uri)
+                  (setq
+                   phps-mode-parser-sdt-symbol-table-index
+                   (1+ phps-mode-parser-sdt-symbol-table-index))
+                  (puthash
+                   phps-mode-parser-sdt-symbol-table-index
+                   (list
+                    scope-uri
+                    scope-start
+                    scope-end)
+                   phps-mode-parser-sdt-symbol-table)
+                  (push
+                   `(,scope-uri . ,scope-start)
+                   phps-mode-parser-sdt-symbol-imenu)))
+              )
+             (t
+              (let ((scope-uri
+                     (format
+                      "function %s"
+                      (nth 0 scope-function)))
+                    (scope-start (nth 1 scope-function))
+                    (scope-end (nth 2 scope-function)))
+                (unless (gethash scope-uri phps-mode-parser-sdt-symbol-table-by-uri)
+                  (setq
+                   phps-mode-parser-sdt-symbol-table-index
+                   (1+ phps-mode-parser-sdt-symbol-table-index))
+                  (puthash
+                   phps-mode-parser-sdt-symbol-table-index
+                   (list
+                    scope-uri
+                    scope-start
+                    scope-end)
+                   phps-mode-parser-sdt-symbol-table)
+                  (push
+                   `(,scope-uri . ,scope-start)
+                   phps-mode-parser-sdt-symbol-imenu))))))))
 
       (let ((potential-uri-count (length potential-uris))
             (potential-uri-index 0)
@@ -807,18 +1172,19 @@
         (while (and
                 (< potential-uri-index potential-uri-count)
                 (not matching-uri))
-          (setq
-           potential-uri
-           (format
-            "%sid %s"
-            (nth potential-uri-index potential-uris)
-            name))
-          (setf
-           (nth potential-uri-index potential-uris)
-           potential-uri)
-          (when (gethash potential-uri phps-mode-parser-sdt-symbol-table-by-uri)
-            (setq matching-uri potential-uri))
-          (setq potential-uri-index (1+ potential-uri-index)))
+          (let ((potential-uri (nth potential-uri-index potential-uris)))
+            (setq
+             potential-uri
+             (format
+              "%sid %s"
+              potential-uri
+              name))
+            (setf
+             (nth potential-uri-index potential-uris)
+             potential-uri)
+            (when (gethash potential-uri phps-mode-parser-sdt-symbol-table-by-uri)
+              (setq matching-uri potential-uri))
+            (setq potential-uri-index (1+ potential-uri-index))))
         (if matching-uri
             matching-uri
           (nth 0 potential-uris))))))
@@ -1237,10 +1603,10 @@
 ;; 85 ((namespace_declaration_name) (identifier))
 (puthash
  85
- (lambda(args _terminals)
+ (lambda(args terminals)
    (let ((namespace-name args))
      (push
-      (list 'namespace namespace-name)
+      (list 'namespace namespace-name (car (cdr terminals)) (point-max))
       phps-mode-parser-sdt--bookkeeping-namespace))
      args)
  phps-mode-parser--table-translations)
@@ -2196,7 +2562,9 @@
 
    ;; Go through stacks and modify symbol namespaces
    ;; - add function scope but only for non-super-global variables
-   (let ((function-name (nth 2 args)))
+   (let ((function-name (nth 2 args))
+         (function-start (car (cdr (nth 2 terminals))))
+         (function-end (car (cdr (nth 11 terminals)))))
      (when phps-mode-parser-sdt--bookkeeping-symbol-assignment-stack
        (dolist (
                 symbol-list
@@ -2207,7 +2575,7 @@
                     phps-mode-parser-sdt--bookkeeping--superglobal-variable-p)
              (let ((symbol-scope (car (cdr symbol-list))))
                (push
-                (list 'function function-name)
+                (list 'function function-name function-start function-end)
                 symbol-scope)
                (setcar
                 (cdr symbol-list)
@@ -2222,7 +2590,7 @@
                     phps-mode-parser-sdt--bookkeeping--superglobal-variable-p)
              (let ((symbol-scope (car (cdr symbol-list))))
                (push
-                (list 'function function-name)
+                (list 'function function-name function-start function-end)
                 symbol-scope)
                (setcar
                 (cdr symbol-list)
@@ -2307,7 +2675,9 @@
    ;; 
    ;; Should place class scope first in scope
    ;; unless a namespace exists, in that case it should be placed second in scope
-   (let ((class-name (nth 1 args)))
+   (let ((class-name (nth 1 args))
+         (class-start (car (cdr (nth 1 terminals))))
+         (class-end (car (cdr (cdr (nth 7 terminals))))))
      (when phps-mode-parser-sdt--bookkeeping-symbol-assignment-stack
        (dolist (
                 symbol-list
@@ -2318,11 +2688,17 @@
                     phps-mode-parser-sdt--bookkeeping--superglobal-variable-p)
              (let ((symbol-scope (reverse (car (cdr symbol-list)))))
                (if (equal (car (car symbol-scope)) 'namespace)
-                   (let ((namespace-name (car (cdr (car symbol-scope)))))
-                     (setcar symbol-scope (list 'class class-name))
-                     (push (list 'namespace namespace-name) symbol-scope))
+                   (let ((namespace-name (nth 1 (car symbol-scope)))
+                         (namespace-start (nth 2 (car symbol-scope)))
+                         (namespace-end (nth 3 (car symbol-scope))))
+                     (setcar
+                      symbol-scope
+                      (list 'class class-name class-start class-end))
+                     (push
+                      (list 'namespace namespace-name namespace-start namespace-end)
+                      symbol-scope))
                  (push
-                  (list 'class class-name)
+                  (list 'class class-name class-start class-end)
                   symbol-scope))
                (setcar
                 (cdr symbol-list)
@@ -2338,11 +2714,17 @@
                     phps-mode-parser-sdt--bookkeeping--superglobal-variable-p)
              (let ((symbol-scope (reverse (car (cdr symbol-list)))))
                (if (equal (car (car symbol-scope)) 'namespace)
-                   (let ((namespace-name (car (cdr (car symbol-scope)))))
-                     (setcar symbol-scope (list 'class class-name))
-                     (push (list 'namespace namespace-name) symbol-scope))
+                   (let ((namespace-name (nth 1 (car symbol-scope)))
+                         (namespace-start (nth 2 (car symbol-scope)))
+                         (namespace-end (nth 3 (car symbol-scope))))
+                     (setcar
+                      symbol-scope
+                      (list 'class class-name class-start class-end))
+                     (push
+                      (list 'namespace namespace-name namespace-start namespace-end)
+                      symbol-scope))
                  (push
-                  (list 'class class-name)
+                  (list 'class class-name class-start class-end)
                   symbol-scope))
                (setcar
                 (cdr symbol-list)
@@ -2382,13 +2764,15 @@
 ;; 190 ((trait_declaration_statement) (T_TRAIT T_STRING backup_doc_comment "{" class_statement_list "}"))
 (puthash
  190
- (lambda(args _terminals)
+ (lambda(args terminals)
    ;; Go through stacks and modify symbol name-spaces
    ;; but only for non-super-global variables.
    ;; 
    ;; Should place class scope first in scope
    ;; unless a namespace exists, in that case it should be placed second in scope
-   (let ((class-name (nth 1 args)))
+   (let ((class-name (nth 1 args))
+         (class-start (car (cdr (nth 1 terminals))))
+         (class-end (car (cdr (cdr (nth 5 terminals))))))
      (when phps-mode-parser-sdt--bookkeeping-symbol-assignment-stack
        (dolist (
                 symbol-list
@@ -2401,11 +2785,17 @@
                     phps-mode-parser-sdt--bookkeeping--superglobal-variable-p)
              (let ((symbol-scope (reverse (car (cdr symbol-list)))))
                (if (equal (car (car symbol-scope)) 'namespace)
-                   (let ((namespace-name (car (cdr (car symbol-scope)))))
-                     (setcar symbol-scope (list 'interface class-name))
-                     (push (list 'namespace namespace-name) symbol-scope))
+                   (let ((namespace-name (nth 1 (car symbol-scope)))
+                         (namespace-start (nth 2 (car symbol-scope)))
+                         (namespace-end (nth 3 (car symbol-scope))))
+                     (setcar
+                      symbol-scope
+                      (list 'trait class-name class-start class-end))
+                     (push
+                      (list 'namespace namespace-name namespace-start namespace-end)
+                      symbol-scope))
                  (push
-                  (list 'trait class-name)
+                  (list 'trait class-name class-start class-end)
                   symbol-scope))
                (setq symbol-scope (reverse symbol-scope))
                (setcar
@@ -2424,11 +2814,17 @@
                     phps-mode-parser-sdt--bookkeeping--superglobal-variable-p)
              (let ((symbol-scope (reverse (car (cdr symbol-list)))))
                (if (equal (car (car symbol-scope)) 'namespace)
-                   (let ((namespace-name (car (cdr (car symbol-scope)))))
-                     (setcar symbol-scope (list 'interface class-name))
-                     (push (list 'namespace namespace-name) symbol-scope))
+                   (let ((namespace-name (nth 1 (car symbol-scope)))
+                         (namespace-start (nth 2 (car symbol-scope)))
+                         (namespace-end (nth 3 (car symbol-scope))))
+                     (setcar
+                      symbol-scope
+                      (list 'trait class-name class-start class-end))
+                     (push
+                      (list 'namespace namespace-name namespace-start namespace-end)
+                      symbol-scope))
                  (push
-                  (list 'trait class-name)
+                  (list 'trait class-name class-start class-end)
                   symbol-scope))
                (setq symbol-scope (reverse symbol-scope))
                (setcar
@@ -2455,7 +2851,9 @@
    ;; 
    ;; Should place class scope first in scope
    ;; unless a namespace exists, in that case it should be placed second in scope
-   (let ((class-name (nth 1 args)))
+   (let ((class-name (nth 1 args))
+         (class-start (car (cdr (nth 1 terminals))))
+         (class-end (car (cdr (cdr (nth 1 terminals))))))
      (when phps-mode-parser-sdt--bookkeeping-symbol-assignment-stack
        (dolist (
                 symbol-list
@@ -2468,11 +2866,17 @@
                     phps-mode-parser-sdt--bookkeeping--superglobal-variable-p)
              (let ((symbol-scope (reverse (car (cdr symbol-list)))))
                (if (equal (car (car symbol-scope)) 'namespace)
-                   (let ((namespace-name (car (cdr (car symbol-scope)))))
-                     (setcar symbol-scope (list 'interface class-name))
-                     (push (list 'namespace namespace-name) symbol-scope))
+                   (let ((namespace-name (nth 1 (car symbol-scope)))
+                         (namespace-start (nth 2 (car symbol-scope)))
+                         (namespace-end (nth 3 (car symbol-scope))))
+                     (setcar
+                      symbol-scope
+                      (list 'interface class-name class-start class-end))
+                     (push
+                      (list 'namespace namespace-name namespace-start namespace-end)
+                      symbol-scope))
                  (push
-                  (list 'interface class-name)
+                  (list 'interface class-name class-start class-end)
                   symbol-scope))
                (setq symbol-scope (reverse symbol-scope))
                (setcar
@@ -2491,11 +2895,17 @@
                     phps-mode-parser-sdt--bookkeeping--superglobal-variable-p)
              (let ((symbol-scope (reverse (car (cdr symbol-list)))))
                (if (equal (car (car symbol-scope)) 'namespace)
-                   (let ((namespace-name (car (cdr (car symbol-scope)))))
-                     (setcar symbol-scope (list 'interface class-name))
-                     (push (list 'namespace namespace-name) symbol-scope))
+                   (let ((namespace-name (nth 1 (car symbol-scope)))
+                         (namespace-start (nth 2 (car symbol-scope)))
+                         (namespace-end (nth 3 (car symbol-scope))))
+                     (setcar
+                      symbol-scope
+                      (list 'interface class-name class-start class-end))
+                     (push
+                      (list 'namespace namespace-name namespace-start namespace-end)
+                      symbol-scope))
                  (push
-                  (list 'interface class-name)
+                  (list 'interface class-name class-start class-end)
                   symbol-scope))
                (setq symbol-scope (reverse symbol-scope))
                (setcar
@@ -3580,7 +3990,7 @@
                           (> symbol-start function-end))
                    (let ((symbol-scope (car (cdr symbol-list))))
                      (push
-                      (list 'function function-name)
+                      (list 'function function-name function-start function-end)
                       symbol-scope)
                      (setcar
                       (cdr symbol-list)
@@ -3601,7 +4011,9 @@
                           (< symbol-start function-start)
                           (> symbol-start function-end))
                    (let ((symbol-scope (car (cdr symbol-list))))
-                     (push (list 'function function-name) symbol-scope)
+                     (push
+                      (list 'function function-name function-start function-end)
+                      symbol-scope)
                      (setcar
                       (cdr symbol-list)
                       symbol-scope)))))))
@@ -3609,7 +4021,9 @@
          ;; Create symbol assignments out of method parameters
          (let ((symbol-scope
                 phps-mode-parser-sdt--bookkeeping-namespace))
-           (push (list 'function function-name) symbol-scope)
+           (push
+            (list 'function function-name function-start function-end)
+            symbol-scope)
            (dolist (parameter function-parameter-list)
              (let ((parameter-ast-type
                     (plist-get parameter 'ast-type)))

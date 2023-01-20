@@ -132,8 +132,6 @@
   "Run test for bookkeeping generation."
   (message "-- Running tests for bookkeeping generation... --\n")
 
-  ;; TODO Should generate imenu for namespaces, classes, interfaces and traits as well
-
   (phps-mode-test-ast--should-bookkeep
    "<?php\n\n$var = 'abc';\n\nif ($var2) {\n    echo 'This never happens';\n}\nif ($var) {\n    echo 'This happens';\n}"
    "Bookkeeping in root level variable assignments #1"
@@ -149,7 +147,7 @@
   (phps-mode-test-ast--should-bookkeep
    "<?php\n\n$var2 = 4;\n\nfunction myFunction($var)\n{\n    $var3 = 3;\n    if ($var) {\n        echo 'Hit';\n    }\n    if ($var2) {\n        echo 'Miss';\n    }\n    if ($var3) {\n        echo 'Hit';\n    }\n}\n\nfunction myFunction2($abc)\n{\n    if ($var) {\n        echo 'Miss';\n    }\n    if ($abc) {\n        echo 'Hit';\n    }\n}\n\nif ($var) {\n    echo 'Miss';\n}\nif ($var2) {\n    echo 'Hit';\n}"
    "Bookkeeping in function level with variable assignments"
-   '(((8 13) 1) ((40 44) 2) ((157 162) 3) ((113 118) 0) ((71 75) 2) ((52 57) 3) ((216 220) 4) ((275 279) 4) ((232 236) 0) ((316 320) 0) ((347 352) 1))
+   '(((8 13) 1) ((40 44) 3) ((157 162) 5) ((113 118) 0) ((71 75) 3) ((52 57) 5) ((216 220) 12) ((275 279) 12) ((232 236) 0) ((316 320) 0) ((347 352) 1))
    '(("id $var2" . 8) ("function myFunction id $var" . 40) ("function myFunction id $var3" . 52) ("function myFunction2 id $abc" . 216)))
 
   (phps-mode-test-ast--should-bookkeep
