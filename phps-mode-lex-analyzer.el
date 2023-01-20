@@ -24,8 +24,6 @@
 (require 'phps-mode-serial)
 (require 'phps-mode-syntax-color)
 (require 'phps-mode-ast)
-(require 'phps-mode-ast-bookkeeping)
-(require 'phps-mode-ast-imenu)
 
 (require 'subr-x)
 
@@ -260,46 +258,26 @@
            (setq phps-mode-lex-analyzer--parse-trail (nth 7 lex-result))
            (setq phps-mode-lex-analyzer--parse-error (nth 8 lex-result))
            (setq phps-mode-lex-analyzer--ast (nth 9 lex-result))
-
-           ;; Catch errors in bookkeeping generation
-           (condition-case conditions
-               (phps-mode-ast-bookkeeping--generate
-                phps-mode-lex-analyzer--ast)
-             (error
-              (display-warning
-               'phps-mode
-               (format "Failed to generate bookkeeping: %S" conditions)
-               :warning
-               "*PHPs Bookkeeping Generation Errors*")))
-           (setq phps-mode-lex-analyzer--bookkeeping
-                 phps-mode-ast-bookkeeping--index)
-
-           ;; Catch errors in imenu generation
-           (condition-case conditions
-               (phps-mode-ast-imenu--generate
-                phps-mode-lex-analyzer--ast)
-             (error
-              (display-warning
-               'phps-mode
-               (format "Failed to generate imenu: %S" conditions)
-               :warning
-               "*PHPs Imenu Generation Errors*")))
-           (setq phps-mode-lex-analyzer--imenu phps-mode-ast-imenu--index)
+           (setq phps-mode-lex-analyzer--bookkeeping (nth 10 lex-result))
+           (setq phps-mode-lex-analyzer--imenu (nth 11 lex-result))
 
            (setq phps-mode-lex-analyzer--processed-buffer-p t)
            (phps-mode-lex-analyzer--reset-imenu)
 
-           ;; Apply syntax color on tokens
+           ;; Apply syntax color
+           (phps-mode-lex-analyzer--clear-region-syntax-color
+            (point-min)
+            (point-max))
            (dolist (token phps-mode-lex-analyzer--tokens)
              (let ((start (car (cdr token)))
                    (end (cdr (cdr token))))
                (let ((token-syntax-color
                       (phps-mode-lex-analyzer--get-token-syntax-color token)))
-                 (if token-syntax-color
+                 (when token-syntax-color
                      (phps-mode-lex-analyzer--set-region-syntax-color
-                      start end (list 'font-lock-face token-syntax-color))
-                   (phps-mode-lex-analyzer--clear-region-syntax-color
-                    start end)))))
+                      start
+                      end
+                      (list 'font-lock-face token-syntax-color))))))
 
            ;; Reset buffer changes minimum index
            (phps-mode-lex-analyzer--reset-changes)
@@ -425,49 +403,30 @@
            (setq phps-mode-lex-analyzer--parse-trail (nth 7 lex-result))
            (setq phps-mode-lex-analyzer--parse-error (nth 8 lex-result))
            (setq phps-mode-lex-analyzer--ast (nth 9 lex-result))
-
-           ;; Catch errors in bookkeeping generation
-           (condition-case conditions
-               (phps-mode-ast-bookkeeping--generate
-                phps-mode-lex-analyzer--ast)
-             (error
-              (display-warning
-               'phps-mode
-               (format "Failed to generate bookkeeping: %S" conditions)
-               :warning
-               "*PHPs Bookkeeping Generation Errors*")))
-           (setq phps-mode-lex-analyzer--bookkeeping
-                 phps-mode-ast-bookkeeping--index)
-
-           ;; Catch errors in imenu generation
-           (condition-case conditions
-               (phps-mode-ast-imenu--generate
-                phps-mode-lex-analyzer--ast)
-             (error
-              (display-warning
-               'phps-mode
-               (format "Failed to generate imenu: %S" conditions)
-               :warning
-               "*PHPs Imenu Generation Errors*")))
-           (setq phps-mode-lex-analyzer--imenu phps-mode-ast-imenu--index)
+           (setq phps-mode-lex-analyzer--bookkeeping (nth 10 lex-result))
+           (setq phps-mode-lex-analyzer--imenu (nth 11 lex-result))
 
            (phps-mode-debug-message
-            (message "Incremental tokens: %s" phps-mode-lex-analyzer--tokens))
+            (message
+             "Incremental tokens: %s"
+             phps-mode-lex-analyzer--tokens))
 
            ;; Save processed result
            (setq phps-mode-lex-analyzer--processed-buffer-p t)
            (phps-mode-lex-analyzer--reset-imenu)
 
            ;; Apply syntax color on tokens
+           (phps-mode-lex-analyzer--clear-region-syntax-color
+            incremental-start-new-buffer
+            point-max)
            (dolist (token phps-mode-lex-analyzer--tokens)
              (let ((start (car (cdr token)))
                    (end (cdr (cdr token))))
 
                ;; Apply syntax color on token
                (let ((token-syntax-color (phps-mode-lex-analyzer--get-token-syntax-color token)))
-                 (if token-syntax-color
-                     (phps-mode-lex-analyzer--set-region-syntax-color start end (list 'font-lock-face token-syntax-color))
-                   (phps-mode-lex-analyzer--clear-region-syntax-color start end)))))
+                 (when token-syntax-color
+                     (phps-mode-lex-analyzer--set-region-syntax-color start end (list 'font-lock-face token-syntax-color))))))
 
            ;; Reset buffer changes minimum index
            (phps-mode-lex-analyzer--reset-changes)

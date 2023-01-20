@@ -14,8 +14,6 @@
 (require 'ert)
 (require 'phps-mode)
 (require 'phps-mode-ast)
-(require 'phps-mode-ast-bookkeeping)
-(require 'phps-mode-ast-imenu)
 (require 'phps-mode-lex-analyzer)
 (require 'phps-mode-test)
 
@@ -38,7 +36,6 @@
             (car (cdr production))))))
      (message "\n")
      (phps-mode-ast--generate)
-     (phps-mode-ast-bookkeeping--generate)
 
      ;; (message "symbol-table: \n%S\n" phps-mode-parser-sdt-symbol-table)
      ;; (message "phps-mode-parser-sdt-symbol-table-by-uri: \n%S\n" phps-mode-parser-sdt-symbol-table-by-uri)

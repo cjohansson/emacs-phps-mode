@@ -9,6 +9,7 @@
 ;;; Code:
 
 
+(require 'phps-mode-macros)
 (require 'phps-mode-parser-sdt)
 
 
@@ -67,9 +68,8 @@
      phps-mode-ast--parse-trail
      parse-trail)
 
-    (message "\nTranslation:\n%S\n\n" translation)
-
-    ;; TODO Should sort this by position
+    (phps-mode-debug-message
+     (message "\nTranslation:\n%S\n\n" translation))
     (setq
      phps-mode-parser-sdt-symbol-imenu
      (nreverse phps-mode-parser-sdt-symbol-imenu))
