@@ -693,7 +693,7 @@
                             (while (< potential-uri-index potential-uri-count)
                               (setf
                                (nth potential-uri-index potential-uris)
-                               (format "static%s" (nth potential-uri-index potential-uris)))
+                               (format "static %s" (nth potential-uri-index potential-uris)))
                               (setq potential-uri-index (1+ potential-uri-index)))))
 
                         (setq next-scope-is-self-static-member-operator t)))))))
@@ -710,7 +710,7 @@
                     (while (< potential-uri-index potential-uri-count)
                       (setf
                        (nth potential-uri-index potential-uris)
-                       (format "namespace %s%s" space-name (nth potential-uri-index potential-uris)))
+                       (format "namespace %s %s" space-name (nth potential-uri-index potential-uris)))
                       (setq potential-uri-index (1+ potential-uri-index)))))
 
                  ((and
@@ -721,7 +721,7 @@
                     (while (< potential-uri-index potential-uri-count)
                       (setf
                        (nth potential-uri-index potential-uris)
-                       (format "class %s%s" space-name (nth potential-uri-index potential-uris)))
+                       (format "class %s %s" space-name (nth potential-uri-index potential-uris)))
                       (setq potential-uri-index (1+ potential-uri-index)))))
 
                  ((and
@@ -732,7 +732,7 @@
                     (while (< potential-uri-index potential-uri-count)
                       (setf
                        (nth potential-uri-index potential-uris)
-                       (format "interface %s%s" space-name (nth potential-uri-index potential-uris)))
+                       (format "interface %s %s" space-name (nth potential-uri-index potential-uris)))
                       (setq potential-uri-index (1+ potential-uri-index)))))
 
                  ((and
@@ -743,7 +743,7 @@
                     (while (< potential-uri-index potential-uri-count)
                       (setf
                        (nth potential-uri-index potential-uris)
-                       (format "trait %s%s" space-name (nth potential-uri-index potential-uris)))
+                       (format "trait %s %s" space-name (nth potential-uri-index potential-uris)))
                       (setq potential-uri-index (1+ potential-uri-index)))))
 
                  ((and
@@ -757,7 +757,7 @@
                     (while (< potential-uri-index potential-uri-count)
                       (setf
                        (nth potential-uri-index potential-uris)
-                       (format "function %s%s" space-name (nth potential-uri-index potential-uris)))
+                       (format "function %s %s" space-name (nth potential-uri-index potential-uris)))
                       (setq potential-uri-index (1+ potential-uri-index)))))
 
                  ((equal space-type 'anonymous-function)
@@ -766,7 +766,7 @@
                     (while (< potential-uri-index potential-uri-count)
                       (setf
                        (nth potential-uri-index potential-uris)
-                       (format "anonymous %s%s" space-name (nth potential-uri-index potential-uris)))
+                       (format "anonymous %s %s" space-name (nth potential-uri-index potential-uris)))
                       (setq potential-uri-index (1+ potential-uri-index)))))
 
                  ((equal space-type 'static)
@@ -775,7 +775,7 @@
                     (while (< potential-uri-index potential-uri-count)
                       (setf
                        (nth potential-uri-index potential-uris)
-                       (format "static%s" (nth potential-uri-index potential-uris)))
+                       (format "static %s" (nth potential-uri-index potential-uris)))
                       (setq potential-uri-index (1+ potential-uri-index)))))
 
                  ((equal space-type 'arrow-function)
@@ -786,7 +786,7 @@
                         (new-potential-uris))
                     (while (< potential-uri-index potential-uri-count)
                       (push
-                       (format "arrow %s%s" space-name (nth potential-uri-index potential-uris))
+                       (format "arrow %s %s" space-name (nth potential-uri-index potential-uris))
                        new-potential-uris)
                       (setq potential-uri-index (1+ potential-uri-index)))
                     (setq potential-uris (append new-potential-uris potential-uris))
@@ -805,26 +805,17 @@
         (while (and
                 (< potential-uri-index potential-uri-count)
                 (not matching-uri))
-          (let ((old-uri
-                 (nth potential-uri-index potential-uris))
-                (potential-uri))
-            (if (string= old-uri "")
-                (setq
-                 potential-uri
-                 (format
-                  "id %s"
-                  name))
-              (setq
-               potential-uri
-               (format
-                "%s id %s"
-                old-uri
-                name)))
-            (setf
-             (nth potential-uri-index potential-uris)
-             potential-uri)
-            (when (gethash potential-uri phps-mode-parser-sdt-symbol-table-by-uri)
-              (setq matching-uri potential-uri)))
+          (setq
+           potential-uri
+           (format
+            "%sid %s"
+            (nth potential-uri-index potential-uris)
+            name))
+          (setf
+           (nth potential-uri-index potential-uris)
+           potential-uri)
+          (when (gethash potential-uri phps-mode-parser-sdt-symbol-table-by-uri)
+            (setq matching-uri potential-uri))
           (setq potential-uri-index (1+ potential-uri-index)))
         (if matching-uri
             matching-uri
@@ -867,7 +858,7 @@
         (if (gethash symbol-uri phps-mode-parser-sdt-symbol-table-by-uri)
             (progn
               (push
-               (list symbol-uri symbol-start)
+               `(,symbol-uri . ,symbol-start)
                phps-mode-parser-sdt-symbol-imenu)
 
               (puthash
