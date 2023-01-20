@@ -61,10 +61,7 @@
    0)
   (let* ((result (phps-mode-parser--parse t))
          (parse-trail (nth 0 result))
-         (translation (nth 1 result))
-         (namespace)
-         (namespace-children)
-         (ast))
+         (translation (nth 1 result)))
     (setq
      phps-mode-ast--parse-trail
      parse-trail)

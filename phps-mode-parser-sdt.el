@@ -1367,9 +1367,7 @@
                    matching-symbol-id
                    phps-mode-parser-sdt-symbol-table))
                  (matching-symbol-start
-                  (nth 1 matching-symbol))
-                 (matching-symbol-end
-                  (nth 2 matching-symbol)))
+                  (nth 1 matching-symbol)))
             (while (and
                  (not matching-hit)
                  (< matching-symbol-index matching-symbol-count))
@@ -2837,9 +2835,7 @@
        (dolist (
                 symbol-list
                 phps-mode-parser-sdt--bookkeeping-symbol-assignment-stack)
-         (let ((symbol-name (car symbol-list))
-               (symbol-start (nth 2 symbol-list))
-               (symbol-end (nth 3 symbol-list)))
+         (let ((symbol-name (car symbol-list)))
            (unless (gethash
                     symbol-name
                     phps-mode-parser-sdt--bookkeeping--superglobal-variable-p)
@@ -2866,9 +2862,7 @@
        (dolist (
                 symbol-list
                 phps-mode-parser-sdt--bookkeeping-symbol-stack)
-         (let ((symbol-name (car symbol-list))
-               (symbol-start (nth 2 symbol-list))
-               (symbol-end (nth 3 symbol-list)))
+         (let ((symbol-name (car symbol-list)))
            (unless (gethash
                     symbol-name
                     phps-mode-parser-sdt--bookkeeping--superglobal-variable-p)
@@ -2918,9 +2912,7 @@
        (dolist (
                 symbol-list
                 phps-mode-parser-sdt--bookkeeping-symbol-assignment-stack)
-         (let ((symbol-name (car symbol-list))
-               (symbol-start (nth 2 symbol-list))
-               (symbol-end (nth 3 symbol-list)))
+         (let ((symbol-name (car symbol-list)))
            (unless (gethash
                     symbol-name
                     phps-mode-parser-sdt--bookkeeping--superglobal-variable-p)
@@ -2947,9 +2939,7 @@
        (dolist (
                 symbol-list
                 phps-mode-parser-sdt--bookkeeping-symbol-stack)
-         (let ((symbol-name (car symbol-list))
-               (symbol-start (nth 2 symbol-list))
-               (symbol-end (nth 3 symbol-list)))
+         (let ((symbol-name (car symbol-list)))
            (unless (gethash
                     symbol-name
                     phps-mode-parser-sdt--bookkeeping--superglobal-variable-p)
@@ -3697,10 +3687,10 @@
 (puthash 271 (lambda(args _terminals) args) phps-mode-parser--table-translations)
 
 ;; 272 ((type_without_static) (T_ARRAY))
-(puthash 272 (lambda(args _terminals) 'T_ARRAY) phps-mode-parser--table-translations)
+(puthash 272 (lambda(_args _terminals) 'T_ARRAY) phps-mode-parser--table-translations)
 
 ;; 273 ((type_without_static) (T_CALLABLE))
-(puthash 273 (lambda(args _terminals) 'T_CALLABLE) phps-mode-parser--table-translations)
+(puthash 273 (lambda(_args _terminals) 'T_CALLABLE) phps-mode-parser--table-translations)
 
 ;; 274 ((type_without_static) (name))
 (puthash 273 (lambda(args _terminals) args) phps-mode-parser--table-translations)
@@ -3843,11 +3833,7 @@
  phps-mode-parser--table-translations)
 
 ;; 297 ((class_statement_list) (%empty))
-(puthash
- 297
- (lambda(args terminals)
-   nil)
- phps-mode-parser--table-translations)
+(puthash 297 (lambda(_args _terminals) nil) phps-mode-parser--table-translations)
 
 ;; 298 ((attributed_class_statement) (variable_modifiers optional_type_without_static property_list ";"))
 (puthash
@@ -4062,7 +4048,6 @@
                       symbol-list
                       phps-mode-parser-sdt--bookkeeping-symbol-stack)
                (let ((symbol-name (nth 0 symbol-list))
-                     (symbol-namespace (nth 1 symbol-list))
                      (symbol-start (nth 2 symbol-list)))
                  (unless (or
                           (gethash
@@ -4505,11 +4490,10 @@
 ;; 348 ((for_exprs) (%empty))
 (puthash
  348
- (lambda(args _terminals)
+ (lambda(_args _terminals)
    `(
      ast-type
-     empty-for-exprs
-     ))
+     empty-for-exprs))
  phps-mode-parser--table-translations)
 
 ;; 349 ((for_exprs) (non_empty_for_exprs))
@@ -4761,7 +4745,7 @@
 ;; 361 ((expr) (T_CLONE expr))
 (puthash
  361
- (lambda(args terminals)
+ (lambda(args _terminals)
    `(
      ast-type
      expr-clone
@@ -4773,7 +4757,7 @@
 ;; 362 ((expr) (variable T_PLUS_EQUAL expr))
 (puthash
  362
- (lambda(args terminals)
+ (lambda(args _terminals)
    `(
      ast-type
      expr-variable-plus-equal-expr
@@ -4787,7 +4771,7 @@
 ;; 363 ((expr) (variable T_MINUS_EQUAL expr))
 (puthash
  363
- (lambda(args terminals)
+ (lambda(args _terminals)
    `(
      ast-type
      expr-variable-minus-equal-expr
@@ -4801,7 +4785,7 @@
 ;; 364 ((expr) (variable T_MUL_EQUAL expr))
 (puthash
  364
- (lambda(args terminals)
+ (lambda(args _terminals)
    `(
      ast-type
      expr-variable-mul-equal-expr
@@ -4815,7 +4799,7 @@
 ;; 365 ((expr) (variable T_POW_EQUAL expr))
 (puthash
  365
- (lambda(args terminals)
+ (lambda(args _terminals)
    `(
      ast-type
      expr-variable-pow-equal-expr
@@ -4829,7 +4813,7 @@
 ;; 366 ((expr) (variable T_DIV_EQUAL expr))
 (puthash
  366
- (lambda(args terminals)
+ (lambda(args _terminals)
    `(
      ast-type
      expr-variable-div-equal-expr
@@ -4843,7 +4827,7 @@
 ;; 367 ((expr) (variable T_CONCAT_EQUAL expr))
 (puthash
  367
- (lambda(args terminals)
+ (lambda(args _terminals)
    `(
      ast-type
      expr-variable-concat-equal-expr
@@ -4857,7 +4841,7 @@
 ;; 368 ((expr) (variable T_MOD_EQUAL expr))
 (puthash
  368
- (lambda(args terminals)
+ (lambda(args _terminals)
    `(
      ast-type
      expr-variable-mod-equal-expr
@@ -4871,7 +4855,7 @@
 ;; 369 ((expr) (variable T_AND_EQUAL expr))
 (puthash
  369
- (lambda(args terminals)
+ (lambda(args _terminals)
    `(
      ast-type
      expr-variable-and-equal-expr
@@ -4885,7 +4869,7 @@
 ;; 370 ((expr) (variable T_OR_EQUAL expr))
 (puthash
  370
- (lambda(args terminals)
+ (lambda(args _terminals)
    `(
      ast-type
      expr-variable-or-equal-expr
@@ -4899,7 +4883,7 @@
 ;; 371 ((expr) (variable T_XOR_EQUAL expr))
 (puthash
  371
- (lambda(args terminals)
+ (lambda(args _terminals)
    `(
      ast-type
      expr-variable-xor-equal-expr
@@ -4913,7 +4897,7 @@
 ;; 372 ((expr) (variable T_SL_EQUAL expr))
 (puthash
  372
- (lambda(args terminals)
+ (lambda(args _terminals)
    `(
      ast-type
      expr-variable-sl-equal-expr
@@ -4927,7 +4911,7 @@
 ;; 373 ((expr) (variable T_SR_EQUAL expr))
 (puthash
  373
- (lambda(args terminals)
+ (lambda(args _terminals)
    `(
      ast-type
      expr-variable-sr-equal-expr
@@ -4941,7 +4925,7 @@
 ;; 374 ((expr) (variable T_COALESCE_EQUAL expr))
 (puthash
  374
- (lambda(args terminals)
+ (lambda(args _terminals)
    `(
      ast-type
      expr-variable-coalesce-equal-expr
@@ -5647,7 +5631,7 @@
 ;; 429 ((expr) (T_YIELD))
 (puthash
  429
- (lambda(args _terminals)
+ (lambda(_args _terminals)
    `(
      ast-type
      expr-yield))
@@ -5856,7 +5840,6 @@
                 symbol-list
                 phps-mode-parser-sdt--bookkeeping-symbol-stack)
          (let ((symbol-name (nth 0 symbol-list))
-               (symbol-namespace (nth 1 symbol-list))
                (symbol-start (nth 2 symbol-list)))
            (unless (or
                     (gethash
@@ -5900,7 +5883,7 @@
 ;; 440 ((inline_function) (fn returns_ref backup_doc_comment "(" parameter_list ")" return_type T_DOUBLE_ARROW backup_fn_flags backup_lex_pos expr backup_fn_flags))
 (puthash
  440
- (lambda(args terminals)
+ (lambda(args _terminals)
    (let ((namespace
           phps-mode-parser-sdt--bookkeeping-namespace)
          (parameter-list
@@ -5919,9 +5902,7 @@
        (dolist (
                 symbol-list
                 phps-mode-parser-sdt--bookkeeping-symbol-stack)
-         (let ((symbol-name (nth 0 symbol-list))
-               (symbol-namespace (nth 1 symbol-list))
-               (symbol-start (nth 2 symbol-list)))
+         (let ((symbol-name (nth 0 symbol-list)))
            (unless (gethash
                     symbol-name
                     phps-mode-parser-sdt--bookkeeping--superglobal-variable-p)
@@ -5990,7 +5971,7 @@
 ;; 441 ((fn) (T_FN))
 (puthash
  441
- (lambda(args _terminals)
+ (lambda(_args _terminals)
    `(
      ast-type
      fn))
@@ -5999,7 +5980,7 @@
 ;; 442 ((function) (T_FUNCTION))
 (puthash
  442
- (lambda(args _terminals)
+ (lambda(_args _terminals)
    `(
      ast-type
      function))
@@ -6008,37 +5989,37 @@
 ;; 443 ((backup_doc_comment) (%empty))
 (puthash
  443
- (lambda(args _terminals) nil)
+ (lambda(_args _terminals) nil)
  phps-mode-parser--table-translations)
 
 ;; 444 ((backup_fn_flags) (%empty))
 (puthash
  444
- (lambda(args _terminals) nil)
+ (lambda(_args _terminals) nil)
  phps-mode-parser--table-translations)
 
 ;; 445 ((backup_lex_pos) (%empty))
 (puthash
  445
- (lambda(args _terminals) nil)
+ (lambda(_args _terminals) nil)
  phps-mode-parser--table-translations)
 
 ;; 446 ((returns_ref) (%empty))
 (puthash
  446
- (lambda(args _terminals) nil)
+ (lambda(_args _terminals) nil)
  phps-mode-parser--table-translations)
 
 ;; 447 ((returns_ref) (ampersand))
 (puthash
  447
- (lambda(args _terminals) t)
+ (lambda(_args _terminals) t)
  phps-mode-parser--table-translations)
 
 ;; 448 ((lexical_vars) (%empty))
 (puthash
  448
- (lambda(args _terminals) nil)
+ (lambda(_args _terminals) nil)
  phps-mode-parser--table-translations)
 
 ;; 449 ((lexical_vars) (T_USE "(" lexical_var_list possible_comma ")"))
@@ -6154,7 +6135,7 @@
 ;; 458 ((class_name) (T_STATIC))
 (puthash
  458
- (lambda(args _terminals)
+ (lambda(_args _terminals)
    `(
      ast-type
      class-name-static))
@@ -6207,7 +6188,7 @@
 ;; 463 ((exit_expr) (%empty))
 (puthash
  463
- (lambda(args _terminals)
+ (lambda(_args _terminals)
    `(
      ast-type
      exit-expr))
@@ -6227,7 +6208,7 @@
 ;; 465 ((backticks_expr) (%empty))
 (puthash
  465
- (lambda(args _terminals)
+ (lambda(_args _terminals)
    `(
      ast-type
      backticks-expr-empty))
@@ -6258,7 +6239,7 @@
 ;; 468 ((ctor_arguments) (%empty))
 (puthash
  468
- (lambda(args _terminals)
+ (lambda(_args _terminals)
    `(
      ast-type
      ctor-arguments-empty))
@@ -6362,7 +6343,7 @@
 ;; 477 ((scalar) (T_START_HEREDOC T_END_HEREDOC))
 (puthash
  477
- (lambda(args _terminals)
+ (lambda(_args _terminals)
    `(
      ast-type
      dereferencable-scalar-scalar
@@ -6434,7 +6415,7 @@
 ;; 483 ((constant) (T_LINE))
 (puthash
  483
- (lambda(args _terminals)
+ (lambda(_args _terminals)
    `(
      ast-type
      constant-line
@@ -6444,7 +6425,7 @@
 ;; 484 ((constant) (T_FILE))
 (puthash
  484
- (lambda(args _terminals)
+ (lambda(_args _terminals)
    `(
      ast-type
      constant-file
@@ -6454,7 +6435,7 @@
 ;; 485 ((constant) (T_DIR))
 (puthash
  485
- (lambda(args _terminals)
+ (lambda(_args _terminals)
    `(
      ast-type
      constant-dir
@@ -6464,7 +6445,7 @@
 ;; 486 ((constant) (T_TRAIT_C))
 (puthash
  486
- (lambda(args _terminals)
+ (lambda(_args _terminals)
    `(
      ast-type
      constant-trait
@@ -6474,7 +6455,7 @@
 ;; 487 ((constant) (T_METHOD_C))
 (puthash
  487
- (lambda(args _terminals)
+ (lambda(_args _terminals)
    `(
      ast-type
      constant-method
@@ -6484,7 +6465,7 @@
 ;; 488 ((constant) (T_FUNC_C))
 (puthash
  488
- (lambda(args _terminals)
+ (lambda(_args _terminals)
    `(
      ast-type
      constant-function
@@ -6494,7 +6475,7 @@
 ;; 489 ((constant) (T_NS_C))
 (puthash
  489
- (lambda(args _terminals)
+ (lambda(_args _terminals)
    `(
      ast-type
      constant-namespace
@@ -6504,7 +6485,7 @@
 ;; 490 ((constant) (T_CLASS_C))
 (puthash
  490
- (lambda(args _terminals)
+ (lambda(_args _terminals)
    `(
      ast-type
      constant-class
@@ -6540,7 +6521,7 @@
 ;; 493 ((optional_expr) (%empty))
 (puthash
  493
- (lambda(args _terminals)
+ (lambda(_args _terminals)
    `(
      ast-type
      optional-expr-empty))
@@ -6758,7 +6739,7 @@
 ;; 512 ((variable) (static_member))
 (puthash
  512
- (lambda(args terminals)
+ (lambda(args _terminals)
    `(
      ast-type
      variable-static-member
@@ -6922,7 +6903,7 @@
 ;; 518 ((static_member) (class_name T_PAAMAYIM_NEKUDOTAYIM simple_variable))
 (puthash
  518
- (lambda(args terminals)
+ (lambda(args _terminals)
    (let* ((class-name (nth 0 args))
           (class-name-type (plist-get class-name 'ast-type)))
      (cond
@@ -7127,7 +7108,7 @@
 ;; 534 ((possible_array_pair) (%empty))
 (puthash
  534
- (lambda(args _terminals)
+ (lambda(_args _terminals)
    nil)
  phps-mode-parser--table-translations)
 
