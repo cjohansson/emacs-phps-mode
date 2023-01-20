@@ -164,9 +164,9 @@
     (cond
 
      ((when bookkeeping-value
-        (if (> bookkeeping-value 0)
-            'font-lock-variable-name-face
-          'font-lock-warning-face)))
+        (if (= bookkeeping-value 0)
+            'font-lock-warning-face
+          'font-lock-variable-name-face)))
 
      ((when-let ((face
                   (gethash
