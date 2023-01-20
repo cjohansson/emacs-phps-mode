@@ -2,6 +2,9 @@
 
 ;; Copyright (C) 2018-2022  Free Software Foundation, Inc.
 
+;; TODO 1. Should make imenu hierarchical
+;; TODO 2. Should fix bookkeeping issues in real-world example files
+;; TODO 3. (FUTURE) Fix bookkeeping in scope if-isset/!empty blocks
 
 ;;; Commentary:
 
