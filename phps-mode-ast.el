@@ -15,6 +15,7 @@
 
 ;;; Variables:
 
+
 (defvar-local
   phps-mode-ast--parse-trail
   nil

@@ -1147,7 +1147,9 @@
               (generate-new-buffer "*PHPs Lexer*"))
              (parse-error)
              (parse-trail)
-             (ast-tree))
+             (ast-tree)
+             (bookkeeping)
+             (imenu))
 
         ;; Create temporary buffer and run lexer in it
         (when (get-buffer buffer)
@@ -1231,6 +1233,8 @@
             ;; Need to copy buffer-local values before killing buffer
             (setq parse-trail phps-mode-ast--parse-trail)
             (setq ast-tree phps-mode-ast--tree)
+            (setq bookkeeping phps-mode-parser-sdt-bookkeeping)
+            (setq imenu phps-mode-parser-sdt-symbol-imenu)
 
             (kill-buffer)))
 
@@ -1245,7 +1249,9 @@
                 nest-location-stack
                 parse-trail
                 parse-error
-                ast-tree)))
+                ast-tree
+                bookkeeping
+                imenu)))
 
           ;; Save cache if possible and permitted
           (when (and
