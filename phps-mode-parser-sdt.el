@@ -839,6 +839,10 @@
                 scope-start
                 scope-end)
                phps-mode-parser-sdt-symbol-table)
+              (puthash
+               scope-uri
+               (list phps-mode-parser-sdt-symbol-table-index)
+               phps-mode-parser-sdt-symbol-table-by-uri)
               (push
                `(,scope-uri . ,scope-start)
                phps-mode-parser-sdt-symbol-imenu))))
@@ -864,6 +868,10 @@
                     scope-start
                     scope-end)
                    phps-mode-parser-sdt-symbol-table)
+                  (puthash
+                   scope-uri
+                   (list phps-mode-parser-sdt-symbol-table-index)
+                   phps-mode-parser-sdt-symbol-table-by-uri)
                   (push
                    `(,scope-uri . ,scope-start)
                    phps-mode-parser-sdt-symbol-imenu)))
@@ -884,6 +892,10 @@
                   scope-start
                   scope-end)
                  phps-mode-parser-sdt-symbol-table)
+                (puthash
+                 scope-uri
+                 (list phps-mode-parser-sdt-symbol-table-index)
+                 phps-mode-parser-sdt-symbol-table-by-uri)
                 (push
                  `(,scope-uri . ,scope-start)
                  phps-mode-parser-sdt-symbol-imenu)))))
@@ -909,6 +921,10 @@
                     scope-start
                     scope-end)
                    phps-mode-parser-sdt-symbol-table)
+                  (puthash
+                   scope-uri
+                   (list phps-mode-parser-sdt-symbol-table-index)
+                   phps-mode-parser-sdt-symbol-table-by-uri)
                   (push
                    `(,scope-uri . ,scope-start)
                    phps-mode-parser-sdt-symbol-imenu)))
@@ -929,6 +945,10 @@
                   scope-start
                   scope-end)
                  phps-mode-parser-sdt-symbol-table)
+                (puthash
+                 scope-uri
+                 (list phps-mode-parser-sdt-symbol-table-index)
+                 phps-mode-parser-sdt-symbol-table-by-uri)
                 (push
                  `(,scope-uri . ,scope-start)
                  phps-mode-parser-sdt-symbol-imenu)))))
@@ -954,6 +974,10 @@
                     scope-start
                     scope-end)
                    phps-mode-parser-sdt-symbol-table)
+                  (puthash
+                   scope-uri
+                   (list phps-mode-parser-sdt-symbol-table-index)
+                   phps-mode-parser-sdt-symbol-table-by-uri)
                   (push
                    `(,scope-uri . ,scope-start)
                    phps-mode-parser-sdt-symbol-imenu)))
@@ -974,6 +998,10 @@
                   scope-start
                   scope-end)
                  phps-mode-parser-sdt-symbol-table)
+                (puthash
+                 scope-uri
+                 (list phps-mode-parser-sdt-symbol-table-index)
+                 phps-mode-parser-sdt-symbol-table-by-uri)
                 (push
                  `(,scope-uri . ,scope-start)
                  phps-mode-parser-sdt-symbol-imenu)))))
@@ -1002,6 +1030,10 @@
                       scope-start
                       scope-end)
                      phps-mode-parser-sdt-symbol-table)
+                    (puthash
+                     scope-uri
+                     (list phps-mode-parser-sdt-symbol-table-index)
+                     phps-mode-parser-sdt-symbol-table-by-uri)
                     (push
                      `(,scope-uri . ,scope-start)
                      phps-mode-parser-sdt-symbol-imenu))))
@@ -1025,6 +1057,10 @@
                       scope-start
                       scope-end)
                      phps-mode-parser-sdt-symbol-table)
+                    (puthash
+                     scope-uri
+                     (list phps-mode-parser-sdt-symbol-table-index)
+                     phps-mode-parser-sdt-symbol-table-by-uri)
                     (push
                      `(,scope-uri . ,scope-start)
                      phps-mode-parser-sdt-symbol-imenu))))
@@ -1048,6 +1084,10 @@
                       scope-start
                       scope-end)
                      phps-mode-parser-sdt-symbol-table)
+                    (puthash
+                     scope-uri
+                     (list phps-mode-parser-sdt-symbol-table-index)
+                     phps-mode-parser-sdt-symbol-table-by-uri)
                     (push
                      `(,scope-uri . ,scope-start)
                      phps-mode-parser-sdt-symbol-imenu)))
@@ -1071,6 +1111,10 @@
                       scope-start
                       scope-end)
                      phps-mode-parser-sdt-symbol-table)
+                    (puthash
+                     scope-uri
+                     (list phps-mode-parser-sdt-symbol-table-index)
+                     phps-mode-parser-sdt-symbol-table-by-uri)
                     (push
                      `(,scope-uri . ,scope-start)
                      phps-mode-parser-sdt-symbol-imenu)))))
@@ -1094,13 +1138,17 @@
                     scope-start
                     scope-end)
                    phps-mode-parser-sdt-symbol-table)
+                  (puthash
+                   scope-uri
+                   (list phps-mode-parser-sdt-symbol-table-index)
+                   phps-mode-parser-sdt-symbol-table-by-uri)
                   (push
                    `(,scope-uri . ,scope-start)
                    phps-mode-parser-sdt-symbol-imenu))))
              (scope-trait
               (let ((scope-uri
                      (format
-                      "%s trait %s function %s"
+                      "trait %s function %s"
                       (nth 0 scope-trait)
                       (nth 0 scope-function)))
                     (scope-start (nth 1 scope-function))
@@ -1116,6 +1164,10 @@
                     scope-start
                     scope-end)
                    phps-mode-parser-sdt-symbol-table)
+                  (puthash
+                   scope-uri
+                   (list phps-mode-parser-sdt-symbol-table-index)
+                   phps-mode-parser-sdt-symbol-table-by-uri)
                   (push
                    `(,scope-uri . ,scope-start)
                    phps-mode-parser-sdt-symbol-imenu))))
@@ -1138,6 +1190,10 @@
                     scope-start
                     scope-end)
                    phps-mode-parser-sdt-symbol-table)
+                  (puthash
+                   scope-uri
+                   (list phps-mode-parser-sdt-symbol-table-index)
+                   phps-mode-parser-sdt-symbol-table-by-uri)
                   (push
                    `(,scope-uri . ,scope-start)
                    phps-mode-parser-sdt-symbol-imenu)))
@@ -1160,6 +1216,10 @@
                     scope-start
                     scope-end)
                    phps-mode-parser-sdt-symbol-table)
+                  (puthash
+                   scope-uri
+                   (list phps-mode-parser-sdt-symbol-table-index)
+                   phps-mode-parser-sdt-symbol-table-by-uri)
                   (push
                    `(,scope-uri . ,scope-start)
                    phps-mode-parser-sdt-symbol-imenu))))))))
@@ -2677,7 +2737,7 @@
    ;; unless a namespace exists, in that case it should be placed second in scope
    (let ((class-name (nth 1 args))
          (class-start (car (cdr (nth 1 terminals))))
-         (class-end (car (cdr (cdr (nth 7 terminals))))))
+         (class-end (cdr (cdr (nth 7 terminals)))))
      (when phps-mode-parser-sdt--bookkeeping-symbol-assignment-stack
        (dolist (
                 symbol-list
@@ -2772,7 +2832,7 @@
    ;; unless a namespace exists, in that case it should be placed second in scope
    (let ((class-name (nth 1 args))
          (class-start (car (cdr (nth 1 terminals))))
-         (class-end (car (cdr (cdr (nth 5 terminals))))))
+         (class-end (cdr (cdr (nth 5 terminals)))))
      (when phps-mode-parser-sdt--bookkeeping-symbol-assignment-stack
        (dolist (
                 symbol-list
@@ -2853,7 +2913,7 @@
    ;; unless a namespace exists, in that case it should be placed second in scope
    (let ((class-name (nth 1 args))
          (class-start (car (cdr (nth 1 terminals))))
-         (class-end (car (cdr (cdr (nth 1 terminals))))))
+         (class-end (cdr (cdr (nth 1 terminals)))))
      (when phps-mode-parser-sdt--bookkeeping-symbol-assignment-stack
        (dolist (
                 symbol-list
