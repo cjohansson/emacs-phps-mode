@@ -256,7 +256,7 @@
    "<?php\nif (isset($b)) {\n    $b = false;\n}\n$c = 2;\n\nif ($c) {\n    echo 'Hit';\n}\n"
    "Bookkeeping of variable after isset() block"
    '(((28 30) 1) ((17 19) 0) ((42 44) 3) ((55 57) 3))
-   '(("id $b" . 28) ("id $b" . 17)("id $c" . 42)))
+   '(("id $b" . 28) ("id $b (2)" . 17) ("id $c" . 42)))
 
   (phps-mode-test-ast--should-bookkeep
    "<?php\nif (!isset($a)) {\n    if ($a) {\n        echo 'Miss';\n    }\n}"
@@ -268,7 +268,7 @@
    "<?php\n\nfunction myFunction($a, $b, $c, $d)\n{\n    global $f, $g;\n    if (isset($f)) {\n        if (!empty($g)) {\n            if ($a) {\n                echo 'Hit';\n            }\n            if ($b) {\n                echo 'Hit';\n            }\n            if ($c) {\n                echo 'Hit';\n            }\n            if ($d) {\n                echo 'Hit';\n            }\n        }\n    }\n}\n"
    "Bookkeeping variables inside nested isset() !empty() blocks"
    '(((40 42) 1) ((36 38) 2) ((32 34) 3) ((28 30) 4) ((320 322) 1) ((256 258) 2) ((192 194) 3) ((128 130) 4) ((105 107) 5) ((79 81) 6) ((61 63) 0) ((57 59) 0))
-   '(("function myFunction id $d" . 40) ("function myFunction id $c" . 36) ("function myFunction id $b" . 32) ("function myFunction id $a" . 28) ("function myFunction id $g" . 105) ("function myFunction id $f" . 79) ("function myFunction id $g" . 61) ("function myFunction id $f" . 57)))
+   '(("function myFunction id $d" . 40) ("function myFunction id $c" . 36) ("function myFunction id $b" . 32) ("function myFunction id $a" . 28) ("function myFunction id $g" . 105) ("function myFunction id $f" . 79) ("function myFunction id $g (2)" . 61) ("function myFunction id $f (2)" . 57)))
 
   (phps-mode-test-ast--should-bookkeep
    "<?php\n\n$var = 123;\n\nfunction test($abc) {\n    static $var;\n    if ($var) {\n        echo 'Hit';\n    }\n}"
@@ -328,7 +328,7 @@
    "<?php\nnamespace myNamespace;\nclass myClass\n{\n    private $property1 = '';\n    private $property2;\n    protected function myMethod(\n        $argument1,\n        $argument2,\n        $argument3\n    ) {\n        if ($this->property2) {\n            echo 'was here';\n        }\n        /* @codingStandardsIgnoreEnd */\n        if (\n            $argument1\n            && $argument2\n            && $argument3\n            && $argument4\n            && !empty($argument1['index'])\n            && $this->property1\n            && $argument1['index'] == $this->property1\n        ) {\n        }\n    }\n}\n"
    "Bookkeeping of properties inside if condition list"
    '(((180 190) 1) ((160 170) 2) ((140 150) 3) ((544 553) 7) ((537 542) 4) ((514 524) 3) ((489 498) 7) ((482 487) 4) ((446 456) 3) ((413 423) 0) ((387 397) 1) ((361 371) 2) ((335 345) 3) ((218 227) 6) ((211 216) 4) ((87 97) 6) ((58 68) 7))
-  '(("namespace myNamespace class myClass function myMethod id $argument3" . 180) ("namespace myNamespace class myClass function myMethod id $argument2" . 160) ("namespace myNamespace class myClass function myMethod id $argument1" . 140) ("namespace myNamespace class myClass function myMethod id $this" . 197) ("namespace myNamespace class myClass function myMethod id $argument1" . 446) ("namespace myNamespace class myClass id $property2" . 87) ("namespace myNamespace class myClass id $property1" . 58)))
+  '(("namespace myNamespace class myClass function myMethod id $argument3" . 180) ("namespace myNamespace class myClass function myMethod id $argument2" . 160) ("namespace myNamespace class myClass function myMethod id $argument1" . 140) ("namespace myNamespace class myClass function myMethod id $this" . 197) ("namespace myNamespace class myClass function myMethod id $argument1 (2)" . 446) ("namespace myNamespace class myClass id $property2" . 87) ("namespace myNamespace class myClass id $property1" . 58)))
 
   (phps-mode-test-ast--should-bookkeep
    "<?php\ntrait MyTrait {\n    private $var = 'abc';\n    public function sayHello() {\n        if ($this->var) {\n            echo 'Hit';\n        }\n    }\n}\n"

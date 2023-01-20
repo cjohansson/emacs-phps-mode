@@ -647,6 +647,8 @@
        name
        phps-mode-parser-sdt--bookkeeping--superglobal-variable-p)
       name
+    ;; TODO Should capture unique scopes (without the id)
+    ;; with name and place on the imenu list
     (let ((potential-uris (list "")))
       (when scope
         (let ((scope-count (length scope))
@@ -857,9 +859,14 @@
         ;; and place a reference to it in the symbol URI hash-map
         (if (gethash symbol-uri phps-mode-parser-sdt-symbol-table-by-uri)
             (progn
-              (push
-               `(,symbol-uri . ,symbol-start)
-               phps-mode-parser-sdt-symbol-imenu)
+              (let ((symbol-uri-duplicate
+                     (format
+                      "%s (%d)"
+                      symbol-uri
+                      (1+ (length (gethash symbol-uri phps-mode-parser-sdt-symbol-table-by-uri))))))
+                (push
+                 `(,symbol-uri-duplicate . ,symbol-start)
+                 phps-mode-parser-sdt-symbol-imenu))
 
               (puthash
                phps-mode-parser-sdt-symbol-table-index
