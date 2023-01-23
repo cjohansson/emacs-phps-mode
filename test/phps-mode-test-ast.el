@@ -340,6 +340,12 @@
    '(((126 134) 3) ((105 109) 5) ((78 83) 7))
    '(("class Person" . 13) ("class Person function __construct") ("class Person function __construct id $address" . 126) ("class Person id $address" . 126) ("class Person function __construct id $age" . 105) ("class Person id $age" . 105) ("class Person function __construct id $name" . 78) ("class Person id $name" . 78)))
 
+  (phps-mode-test-ast--should-bookkeep
+   "<?php\nfunction myFunction()\n{\n    $variable = 123;\n    if ($variable === 456) {\n        $variable = 789;\n    }\n}\n"
+   "Variable inside function with assignment inside conditional block"
+   '(((89 98) 1) ((60 69) 1) ((35 44) 1))
+   '(("myFunction" . 16)))
+
   (message "\n-- Ran tests for bookkeeping generation. --"))
 
 (defun phps-mode-test-ast ()
