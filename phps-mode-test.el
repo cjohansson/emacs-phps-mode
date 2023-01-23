@@ -178,7 +178,12 @@
            hash-table)
           (if un-sorted
               (nreverse result)
-            (sort (nreverse result) (lambda (a b) (< (car a) (car b))))))
+            (sort
+             (nreverse result)
+             (lambda (a b)
+               (if (listp (car a))
+                   (< (car (car a)) (car (car b)))
+                 (< (car a) (car b)))))))
       nil)))
 
 (transient-mark-mode t)

@@ -40,26 +40,22 @@
      ;; (message "symbol-table: \n%S\n" phps-mode-parser-sdt-symbol-table)
      ;; (message "phps-mode-parser-sdt-symbol-table-by-uri: \n%S\n" phps-mode-parser-sdt-symbol-table-by-uri)
 
-     (unless
-         (equal
-          (phps-mode-test--hash-to-list
-           phps-mode-parser-sdt-bookkeeping
-           t)
-          expected-bookkeeping)
+     (unless (equal
+              (phps-mode-test--hash-to-list
+               phps-mode-parser-sdt-bookkeeping)
+              expected-bookkeeping)
        (message
         "expected-bookkeeping:\n%S\n"
         expected-bookkeeping)
        (message
         "actual-bookkeeping:\n%S\n"
         (phps-mode-test--hash-to-list
-         phps-mode-parser-sdt-bookkeeping
-         t)))
+         phps-mode-parser-sdt-bookkeeping)))
 
      (should
       (equal
        (phps-mode-test--hash-to-list
-        phps-mode-parser-sdt-bookkeeping
-        t)
+        phps-mode-parser-sdt-bookkeeping)
        expected-bookkeeping))
 
      (when expected-imenu
@@ -343,8 +339,8 @@
   (phps-mode-test-ast--should-bookkeep
    "<?php\nfunction myFunction()\n{\n    $variable = 123;\n    if ($variable === 456) {\n        $variable = 789;\n    }\n}\n"
    "Variable inside function with assignment inside conditional block"
-   '(((89 98) 1) ((60 69) 1) ((35 44) 1))
-   '(("myFunction" . 16)))
+   '(((35 44) 2) ((60 69) 2) ((89 98) 2))
+   '(("function myFunction" . 16) ("function myFunction id $variable" . 35) ("function myFunction id $variable (2)" . 89)))
 
   (message "\n-- Ran tests for bookkeeping generation. --"))
 

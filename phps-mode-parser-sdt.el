@@ -1262,7 +1262,7 @@
     ;; Declare variables
     (dolist (
              symbol-list
-             phps-mode-parser-sdt--bookkeeping-symbol-assignment-stack)
+             (reverse phps-mode-parser-sdt--bookkeeping-symbol-assignment-stack))
       (let* ((symbol-name (car symbol-list))
              (symbol-scope (car (cdr symbol-list)))
              (symbol-start (car (cdr (cdr symbol-list))))
@@ -1356,27 +1356,32 @@
          ((gethash
            symbol-uri
            phps-mode-parser-sdt-symbol-table-by-uri)
+          ;; (message "matches: %S" (gethash
+          ;;  symbol-uri
+          ;;  phps-mode-parser-sdt-symbol-table-by-uri))
           (let* ((matching-symbol-ids
                   (gethash
                    symbol-uri
                    phps-mode-parser-sdt-symbol-table-by-uri))
                  (matching-symbol-index 0)
                  (matching-symbol-count (length matching-symbol-ids))
-                 (matching-hit)
-                 (matching-symbol-id
-                  (nth matching-symbol-index matching-symbol-ids))
-                 (matching-symbol
-                  (gethash
-                   matching-symbol-id
-                   phps-mode-parser-sdt-symbol-table))
-                 (matching-symbol-start
-                  (nth 1 matching-symbol)))
+                 (matching-hit))
             (while (and
                  (not matching-hit)
                  (< matching-symbol-index matching-symbol-count))
-              (when (<= matching-symbol-start symbol-start)
-                (setq matching-hit t)
-                (setq symbol-hit matching-symbol-id))
+              (let* ((matching-symbol-id
+                      (nth matching-symbol-index matching-symbol-ids))
+                     (matching-symbol
+                      (gethash
+                       matching-symbol-id
+                       phps-mode-parser-sdt-symbol-table))
+                     (matching-symbol-start
+                      (nth 1 matching-symbol)))
+                ;; (message "matching-symbol: %S" matching-symbol)
+                ;; (message "matching-symbol-start: %S" matching-symbol-start)
+                (when (<= matching-symbol-start symbol-start)
+                  (setq matching-hit t)
+                  (setq symbol-hit matching-symbol-id)))
               (setq matching-symbol-index (1+ matching-symbol-index))))))
 
         (puthash
