@@ -2,9 +2,6 @@
 
 ;; Copyright (C) 2018-2022  Free Software Foundation, Inc.
 
-;; TODO 1. Should make imenu hierarchical
-;; TODO 2. Should fix bookkeeping issues in real-world example files
-;; TODO 3. (FUTURE) Fix bookkeeping in scope if-isset/!empty blocks
 
 ;;; Commentary:
 
@@ -613,6 +610,21 @@
   phps-mode-parser-sdt-symbol-imenu
   nil
   "Imenu for symbols of parse.")
+
+(defvar-local
+  phps-mode-parser-sdt-symbol-imenu--classes
+  nil
+  "Symbols inside class / interface / trait scope.")
+
+(defvar-local
+  phps-mode-parser-sdt-symbol-imenu--functions
+  nil
+  "Symbols inside class scope.")
+
+(defvar-local
+  phps-mode-parser-sdt-symbol-imenu--namespaces
+  nil
+  "Symbols inside namespaces.")
 
 (defvar-local
   phps-mode-parser-sdt--bookkeeping-namespace

@@ -39,8 +39,14 @@
    phps-mode-parser-sdt-symbol-table-index
    0)
   (setq
-   phps-mode-parser-sdt-symbol-imenu
-   nil)
+   phps-mode-parser-sdt-symbol-imenu--classes
+   (make-hash-table :test 'equal))
+  (setq
+   phps-mode-parser-sdt-symbol-imenu--functions
+   (make-hash-table :test 'equal))
+  (setq
+   phps-mode-parser-sdt-symbol-imenu--namespaces
+   (make-hash-table :test 'equal))
   (setq
    phps-mode-parser-sdt-symbol-table
    (make-hash-table :test 'equal))
@@ -68,9 +74,12 @@
 
     (phps-mode-debug-message
      (message "\nTranslation:\n%S\n\n" translation))
-    (setq
-     phps-mode-parser-sdt-symbol-imenu
-     (nreverse phps-mode-parser-sdt-symbol-imenu))
+
+    ;; TODO Build imenu  in `phps-mode-parser-sdt-symbol-imenu' by collecting:
+    ;; * `phps-mode-parser-sdt-symbol-imenu--classes'
+    ;; * `phps-mode-parser-sdt-symbol-imenu--functions'
+    ;; * `phps-mode-parser-sdt-symbol-imenu--namespaces'
+
     (setq
      phps-mode-ast--tree
      translation)

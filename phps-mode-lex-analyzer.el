@@ -65,6 +65,9 @@
 (defvar-local phps-mode-lex-analyzer--bookkeeping nil
   "Bookkeeping of all variables in tokens.")
 
+(defvar-local phps-mode-lex-analyzer--symbol-table nil
+  "Symbol-table of all symbols found in parse.")
+
 (defvar-local phps-mode-lex-analyzer--tokens nil
   "Latest tokens.")
 
@@ -260,6 +263,7 @@
            (setq phps-mode-lex-analyzer--ast (nth 9 lex-result))
            (setq phps-mode-lex-analyzer--bookkeeping (nth 10 lex-result))
            (setq phps-mode-lex-analyzer--imenu (nth 11 lex-result))
+           (setq phps-mode-lex-analyzer--symbol-table (nth 12 lex-result))
 
            (setq phps-mode-lex-analyzer--processed-buffer-p t)
            (phps-mode-lex-analyzer--reset-imenu)
@@ -405,6 +409,7 @@
            (setq phps-mode-lex-analyzer--ast (nth 9 lex-result))
            (setq phps-mode-lex-analyzer--bookkeeping (nth 10 lex-result))
            (setq phps-mode-lex-analyzer--imenu (nth 11 lex-result))
+           (setq phps-mode-lex-analyzer--symbol-table (nth 12 lex-result))
 
            (phps-mode-debug-message
             (message
@@ -1235,6 +1240,7 @@
             (setq ast-tree phps-mode-ast--tree)
             (setq bookkeeping phps-mode-parser-sdt-bookkeeping)
             (setq imenu phps-mode-parser-sdt-symbol-imenu)
+            (setq symbol-table phps-mode phps-mode-parser-sdt-symbol-table)
 
             (kill-buffer)))
 
@@ -1251,7 +1257,8 @@
                 parse-error
                 ast-tree
                 bookkeeping
-                imenu)))
+                imenu
+                symbol-table)))
 
           ;; Save cache if possible and permitted
           (when (and
