@@ -39,14 +39,14 @@
    phps-mode-parser-sdt-symbol-table-index
    0)
   (setq
-   phps-mode-parser-sdt-symbol-imenu--classes
+   phps-mode-parser-sdt-symbol-imenu--table
    (make-hash-table :test 'equal))
   (setq
-   phps-mode-parser-sdt-symbol-imenu--functions
-   (make-hash-table :test 'equal))
+   phps-mode-parser-sdt-symbol-imenu--namespace
+   nil)
   (setq
-   phps-mode-parser-sdt-symbol-imenu--namespaces
-   (make-hash-table :test 'equal))
+   phps-mode-parser-sdt-symbol-imenu--stack
+   nil)
   (setq
    phps-mode-parser-sdt-symbol-table
    (make-hash-table :test 'equal))

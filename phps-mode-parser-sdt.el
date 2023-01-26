@@ -612,19 +612,19 @@
   "Imenu for symbols of parse.")
 
 (defvar-local
-  phps-mode-parser-sdt-symbol-imenu--classes
-  nil
-  "Symbols inside class / interface / trait scope.")
-
-(defvar-local
-  phps-mode-parser-sdt-symbol-imenu--functions
-  nil
-  "Symbols inside class scope.")
-
-(defvar-local
-  phps-mode-parser-sdt-symbol-imenu--namespaces
+  phps-mode-parser-sdt-symbol-imenu--table
   nil
   "Symbols inside namespaces.")
+
+(defvar-local
+  phps-mode-parser-sdt-symbol-imenu--stack
+  nil
+  "Current imenu namespace.")
+
+(defvar-local
+  phps-mode-parser-sdt-symbol-imenu--namespace
+  nil
+  "Current imenu namespace.")
 
 (defvar-local
   phps-mode-parser-sdt--bookkeeping-namespace
@@ -721,8 +721,8 @@
                 (cond
 
                  ((equal space-type 'namespace)
-                  (setq scope-namespace (list space-name (nth 2 item)))
                   (unless next-scope-is-global
+                    (setq scope-namespace (list space-name (nth 2 item)))
                     (let ((potential-uri-count (length potential-uris))
                           (potential-uri-index 0))
                       (while (< potential-uri-index potential-uri-count)
@@ -735,8 +735,8 @@
                         (setq potential-uri-index (1+ potential-uri-index))))))
 
                  ((equal space-type 'class)
-                  (setq scope-class (list space-name (nth 2 item)))
                   (unless next-scope-is-global
+                    (setq scope-class (list space-name (nth 2 item)))
                     (let ((potential-uri-count (length potential-uris))
                           (potential-uri-index 0))
                       (while (< potential-uri-index potential-uri-count)
@@ -749,8 +749,8 @@
                         (setq potential-uri-index (1+ potential-uri-index))))))
 
                  ((equal space-type 'interface)
-                  (setq scope-interface (list space-name (nth 2 item)))
                   (unless next-scope-is-global
+                    (setq scope-interface (list space-name (nth 2 item)))
                     (let ((potential-uri-count (length potential-uris))
                           (potential-uri-index 0))
                       (while (< potential-uri-index potential-uri-count)
@@ -763,8 +763,8 @@
                         (setq potential-uri-index (1+ potential-uri-index))))))
 
                  ((equal space-type 'trait)
-                  (setq scope-trait (list space-name (nth 2 item)))
                   (unless next-scope-is-global
+                    (setq scope-trait (list space-name (nth 2 item)))
                     (let ((potential-uri-count (length potential-uris))
                           (potential-uri-index 0))
                       (while (< potential-uri-index potential-uri-count)
@@ -777,11 +777,11 @@
                         (setq potential-uri-index (1+ potential-uri-index))))))
 
                  ((equal space-type 'function)
-                  (setq scope-function (list space-name (nth 2 item)))
                   (unless (or
                            next-scope-is-global
                            next-scope-is-this-object-operator
                            next-scope-is-self-static-member-operator)
+                    (setq scope-function (list space-name (nth 2 item)))
                     (let ((potential-uri-count (length potential-uris))
                           (potential-uri-index 0))
                       (while (< potential-uri-index potential-uri-count)
@@ -836,414 +836,13 @@
                     ))
 
                  )))
-            (setq scope-index (1+ scope-index))))
-
-        ;; Namespace
-        (when scope-namespace
-          (let ((scope-uri (format "namespace %s" (nth 0 scope-namespace)))
-                (scope-start (nth 1 scope-namespace))
-                (scope-end (nth 2 scope-namespace)))
-            (unless (gethash scope-uri phps-mode-parser-sdt-symbol-table-by-uri)
-              (setq
-               phps-mode-parser-sdt-symbol-table-index
-               (1+ phps-mode-parser-sdt-symbol-table-index))
-              (puthash
-               phps-mode-parser-sdt-symbol-table-index
-               (list
-                scope-uri
-                scope-start
-                scope-end)
-               phps-mode-parser-sdt-symbol-table)
-              (puthash
-               scope-uri
-               (list phps-mode-parser-sdt-symbol-table-index)
-               phps-mode-parser-sdt-symbol-table-by-uri)
-              (push
-               `(,scope-uri . ,scope-start)
-               phps-mode-parser-sdt-symbol-imenu))))
-
-        ;; Class
-        (when scope-class
-          (if scope-namespace
-              (let ((scope-uri
-                     (format
-                      "namespace %s class %s"
-                      (nth 0 scope-namespace)
-                      (nth 0 scope-class)))
-                    (scope-start (nth 1 scope-class))
-                    (scope-end (nth 2 scope-class)))
-                (unless (gethash scope-uri phps-mode-parser-sdt-symbol-table-by-uri)
-                  (setq
-                   phps-mode-parser-sdt-symbol-table-index
-                   (1+ phps-mode-parser-sdt-symbol-table-index))
-                  (puthash
-                   phps-mode-parser-sdt-symbol-table-index
-                   (list
-                    scope-uri
-                    scope-start
-                    scope-end)
-                   phps-mode-parser-sdt-symbol-table)
-                  (puthash
-                   scope-uri
-                   (list phps-mode-parser-sdt-symbol-table-index)
-                   phps-mode-parser-sdt-symbol-table-by-uri)
-                  (push
-                   `(,scope-uri . ,scope-start)
-                   phps-mode-parser-sdt-symbol-imenu)))
-            (let ((scope-uri
-                   (format
-                    "class %s"
-                    (nth 0 scope-class)))
-                  (scope-start (nth 1 scope-class))
-                  (scope-end (nth 2 scope-class)))
-              (unless (gethash scope-uri phps-mode-parser-sdt-symbol-table-by-uri)
-                (setq
-                 phps-mode-parser-sdt-symbol-table-index
-                 (1+ phps-mode-parser-sdt-symbol-table-index))
-                (puthash
-                 phps-mode-parser-sdt-symbol-table-index
-                 (list
-                  scope-uri
-                  scope-start
-                  scope-end)
-                 phps-mode-parser-sdt-symbol-table)
-                (puthash
-                 scope-uri
-                 (list phps-mode-parser-sdt-symbol-table-index)
-                 phps-mode-parser-sdt-symbol-table-by-uri)
-                (push
-                 `(,scope-uri . ,scope-start)
-                 phps-mode-parser-sdt-symbol-imenu)))))
-
-        ;; Trait
-        (when scope-trait
-          (if scope-namespace
-              (let ((scope-uri
-                     (format
-                      "namespace %s trait %s"
-                      (nth 0 scope-namespace)
-                      (nth 0 scope-trait)))
-                    (scope-start (nth 1 scope-trait))
-                    (scope-end (nth 2 scope-trait)))
-                (unless (gethash scope-uri phps-mode-parser-sdt-symbol-table-by-uri)
-                  (setq
-                   phps-mode-parser-sdt-symbol-table-index
-                   (1+ phps-mode-parser-sdt-symbol-table-index))
-                  (puthash
-                   phps-mode-parser-sdt-symbol-table-index
-                   (list
-                    scope-uri
-                    scope-start
-                    scope-end)
-                   phps-mode-parser-sdt-symbol-table)
-                  (puthash
-                   scope-uri
-                   (list phps-mode-parser-sdt-symbol-table-index)
-                   phps-mode-parser-sdt-symbol-table-by-uri)
-                  (push
-                   `(,scope-uri . ,scope-start)
-                   phps-mode-parser-sdt-symbol-imenu)))
-            (let ((scope-uri
-                   (format
-                    "trait %s"
-                    (nth 0 scope-trait)))
-                  (scope-start (nth 1 scope-trait))
-                  (scope-end (nth 2 scope-trait)))
-              (unless (gethash scope-uri phps-mode-parser-sdt-symbol-table-by-uri)
-                (setq
-                 phps-mode-parser-sdt-symbol-table-index
-                 (1+ phps-mode-parser-sdt-symbol-table-index))
-                (puthash
-                 phps-mode-parser-sdt-symbol-table-index
-                 (list
-                  scope-uri
-                  scope-start
-                  scope-end)
-                 phps-mode-parser-sdt-symbol-table)
-                (puthash
-                 scope-uri
-                 (list phps-mode-parser-sdt-symbol-table-index)
-                 phps-mode-parser-sdt-symbol-table-by-uri)
-                (push
-                 `(,scope-uri . ,scope-start)
-                 phps-mode-parser-sdt-symbol-imenu)))))
-
-        ;; Interface
-        (when scope-interface
-          (if scope-namespace
-              (let ((scope-uri
-                     (format
-                      "namespace %s interface %s"
-                      (nth 0 scope-namespace)
-                      (nth 0 scope-interface)))
-                    (scope-start (nth 1 scope-interface))
-                    (scope-end (nth 2 scope-interface)))
-                (unless (gethash scope-uri phps-mode-parser-sdt-symbol-table-by-uri)
-                  (setq
-                   phps-mode-parser-sdt-symbol-table-index
-                   (1+ phps-mode-parser-sdt-symbol-table-index))
-                  (puthash
-                   phps-mode-parser-sdt-symbol-table-index
-                   (list
-                    scope-uri
-                    scope-start
-                    scope-end)
-                   phps-mode-parser-sdt-symbol-table)
-                  (puthash
-                   scope-uri
-                   (list phps-mode-parser-sdt-symbol-table-index)
-                   phps-mode-parser-sdt-symbol-table-by-uri)
-                  (push
-                   `(,scope-uri . ,scope-start)
-                   phps-mode-parser-sdt-symbol-imenu)))
-            (let ((scope-uri
-                   (format
-                    "interface %s"
-                    (nth 0 scope-interface)))
-                  (scope-start (nth 1 scope-interface))
-                  (scope-end (nth 2 scope-interface)))
-              (unless (gethash scope-uri phps-mode-parser-sdt-symbol-table-by-uri)
-                (setq
-                 phps-mode-parser-sdt-symbol-table-index
-                 (1+ phps-mode-parser-sdt-symbol-table-index))
-                (puthash
-                 phps-mode-parser-sdt-symbol-table-index
-                 (list
-                  scope-uri
-                  scope-start
-                  scope-end)
-                 phps-mode-parser-sdt-symbol-table)
-                (puthash
-                 scope-uri
-                 (list phps-mode-parser-sdt-symbol-table-index)
-                 phps-mode-parser-sdt-symbol-table-by-uri)
-                (push
-                 `(,scope-uri . ,scope-start)
-                 phps-mode-parser-sdt-symbol-imenu)))))
-
-        ;; Function
-        (when scope-function
-          (if scope-namespace
-              (cond
-               (scope-class
-                (let ((scope-uri
-                       (format
-                        "namespace %s class %s function %s"
-                        (nth 0 scope-namespace)
-                        (nth 0 scope-class)
-                        (nth 0 scope-function)))
-                      (scope-start (nth 1 scope-function))
-                      (scope-end (nth 2 scope-function)))
-                  (unless (gethash scope-uri phps-mode-parser-sdt-symbol-table-by-uri)
-                    (setq
-                     phps-mode-parser-sdt-symbol-table-index
-                     (1+ phps-mode-parser-sdt-symbol-table-index))
-                    (puthash
-                     phps-mode-parser-sdt-symbol-table-index
-                     (list
-                      scope-uri
-                      scope-start
-                      scope-end)
-                     phps-mode-parser-sdt-symbol-table)
-                    (puthash
-                     scope-uri
-                     (list phps-mode-parser-sdt-symbol-table-index)
-                     phps-mode-parser-sdt-symbol-table-by-uri)
-                    (push
-                     `(,scope-uri . ,scope-start)
-                     phps-mode-parser-sdt-symbol-imenu))))
-               (scope-trait
-                (let ((scope-uri
-                       (format
-                        "namespace %s trait %s function %s"
-                        (nth 0 scope-namespace)
-                        (nth 0 scope-trait)
-                        (nth 0 scope-function)))
-                      (scope-start (nth 1 scope-function))
-                      (scope-end (nth 2 scope-function)))
-                  (unless (gethash scope-uri phps-mode-parser-sdt-symbol-table-by-uri)
-                    (setq
-                     phps-mode-parser-sdt-symbol-table-index
-                     (1+ phps-mode-parser-sdt-symbol-table-index))
-                    (puthash
-                     phps-mode-parser-sdt-symbol-table-index
-                     (list
-                      scope-uri
-                      scope-start
-                      scope-end)
-                     phps-mode-parser-sdt-symbol-table)
-                    (puthash
-                     scope-uri
-                     (list phps-mode-parser-sdt-symbol-table-index)
-                     phps-mode-parser-sdt-symbol-table-by-uri)
-                    (push
-                     `(,scope-uri . ,scope-start)
-                     phps-mode-parser-sdt-symbol-imenu))))
-               (scope-interface
-                (let ((scope-uri
-                       (format
-                        "namespace %s interface %s function %s"
-                        (nth 0 scope-namespace)
-                        (nth 0 scope-interface)
-                        (nth 0 scope-function)))
-                      (scope-start (nth 1 scope-function))
-                      (scope-end (nth 2 scope-function)))
-                  (unless (gethash scope-uri phps-mode-parser-sdt-symbol-table-by-uri)
-                    (setq
-                     phps-mode-parser-sdt-symbol-table-index
-                     (1+ phps-mode-parser-sdt-symbol-table-index))
-                    (puthash
-                     phps-mode-parser-sdt-symbol-table-index
-                     (list
-                      scope-uri
-                      scope-start
-                      scope-end)
-                     phps-mode-parser-sdt-symbol-table)
-                    (puthash
-                     scope-uri
-                     (list phps-mode-parser-sdt-symbol-table-index)
-                     phps-mode-parser-sdt-symbol-table-by-uri)
-                    (push
-                     `(,scope-uri . ,scope-start)
-                     phps-mode-parser-sdt-symbol-imenu)))
-                )
-               (t
-                (let ((scope-uri
-                       (format
-                        "namespace %s function %s"
-                        (nth 0 scope-namespace)
-                        (nth 0 scope-function)))
-                      (scope-start (nth 1 scope-function))
-                      (scope-end (nth 2 scope-function)))
-                  (unless (gethash scope-uri phps-mode-parser-sdt-symbol-table-by-uri)
-                    (setq
-                     phps-mode-parser-sdt-symbol-table-index
-                     (1+ phps-mode-parser-sdt-symbol-table-index))
-                    (puthash
-                     phps-mode-parser-sdt-symbol-table-index
-                     (list
-                      scope-uri
-                      scope-start
-                      scope-end)
-                     phps-mode-parser-sdt-symbol-table)
-                    (puthash
-                     scope-uri
-                     (list phps-mode-parser-sdt-symbol-table-index)
-                     phps-mode-parser-sdt-symbol-table-by-uri)
-                    (push
-                     `(,scope-uri . ,scope-start)
-                     phps-mode-parser-sdt-symbol-imenu)))))
-            (cond
-             (scope-class
-              (let ((scope-uri
-                     (format
-                      "class %s function %s"
-                      (nth 0 scope-class)
-                      (nth 0 scope-function)))
-                    (scope-start (nth 1 scope-function))
-                    (scope-end (nth 2 scope-function)))
-                (unless (gethash scope-uri phps-mode-parser-sdt-symbol-table-by-uri)
-                  (setq
-                   phps-mode-parser-sdt-symbol-table-index
-                   (1+ phps-mode-parser-sdt-symbol-table-index))
-                  (puthash
-                   phps-mode-parser-sdt-symbol-table-index
-                   (list
-                    scope-uri
-                    scope-start
-                    scope-end)
-                   phps-mode-parser-sdt-symbol-table)
-                  (puthash
-                   scope-uri
-                   (list phps-mode-parser-sdt-symbol-table-index)
-                   phps-mode-parser-sdt-symbol-table-by-uri)
-                  (push
-                   `(,scope-uri . ,scope-start)
-                   phps-mode-parser-sdt-symbol-imenu))))
-             (scope-trait
-              (let ((scope-uri
-                     (format
-                      "trait %s function %s"
-                      (nth 0 scope-trait)
-                      (nth 0 scope-function)))
-                    (scope-start (nth 1 scope-function))
-                    (scope-end (nth 2 scope-function)))
-                (unless (gethash scope-uri phps-mode-parser-sdt-symbol-table-by-uri)
-                  (setq
-                   phps-mode-parser-sdt-symbol-table-index
-                   (1+ phps-mode-parser-sdt-symbol-table-index))
-                  (puthash
-                   phps-mode-parser-sdt-symbol-table-index
-                   (list
-                    scope-uri
-                    scope-start
-                    scope-end)
-                   phps-mode-parser-sdt-symbol-table)
-                  (puthash
-                   scope-uri
-                   (list phps-mode-parser-sdt-symbol-table-index)
-                   phps-mode-parser-sdt-symbol-table-by-uri)
-                  (push
-                   `(,scope-uri . ,scope-start)
-                   phps-mode-parser-sdt-symbol-imenu))))
-             (scope-interface
-              (let ((scope-uri
-                     (format
-                      "interface %s function %s"
-                      (nth 0 scope-interface)
-                      (nth 0 scope-function)))
-                    (scope-start (nth 1 scope-function))
-                    (scope-end (nth 2 scope-function)))
-                (unless (gethash scope-uri phps-mode-parser-sdt-symbol-table-by-uri)
-                  (setq
-                   phps-mode-parser-sdt-symbol-table-index
-                   (1+ phps-mode-parser-sdt-symbol-table-index))
-                  (puthash
-                   phps-mode-parser-sdt-symbol-table-index
-                   (list
-                    scope-uri
-                    scope-start
-                    scope-end)
-                   phps-mode-parser-sdt-symbol-table)
-                  (puthash
-                   scope-uri
-                   (list phps-mode-parser-sdt-symbol-table-index)
-                   phps-mode-parser-sdt-symbol-table-by-uri)
-                  (push
-                   `(,scope-uri . ,scope-start)
-                   phps-mode-parser-sdt-symbol-imenu)))
-              )
-             (t
-              (let ((scope-uri
-                     (format
-                      "function %s"
-                      (nth 0 scope-function)))
-                    (scope-start (nth 1 scope-function))
-                    (scope-end (nth 2 scope-function)))
-                (unless (gethash scope-uri phps-mode-parser-sdt-symbol-table-by-uri)
-                  (setq
-                   phps-mode-parser-sdt-symbol-table-index
-                   (1+ phps-mode-parser-sdt-symbol-table-index))
-                  (puthash
-                   phps-mode-parser-sdt-symbol-table-index
-                   (list
-                    scope-uri
-                    scope-start
-                    scope-end)
-                   phps-mode-parser-sdt-symbol-table)
-                  (puthash
-                   scope-uri
-                   (list phps-mode-parser-sdt-symbol-table-index)
-                   phps-mode-parser-sdt-symbol-table-by-uri)
-                  (push
-                   `(,scope-uri . ,scope-start)
-                   phps-mode-parser-sdt-symbol-imenu))))))))
+            (setq scope-index (1+ scope-index)))))
 
       (let ((potential-uri-count (length potential-uris))
             (potential-uri-index 0)
             (matching-uri))
 
-        ;; Iterate potential-uris, select first match or if no match return the first
+        ;; Iterate potential-uris, select first match or if no match just return the first
         (while (and
                 (< potential-uri-index potential-uri-count)
                 (not matching-uri))
@@ -1261,13 +860,36 @@
               (setq matching-uri potential-uri))
             (setq potential-uri-index (1+ potential-uri-index))))
         (if matching-uri
-            matching-uri
-          (nth 0 potential-uris))))))
+            (list
+             matching-uri
+             (list 'namespace scope-namespace 'class scope-class 'trait scope-trait 'interface scope-interface 'function scope-function))
+          (list
+           (nth 0 potential-uris)
+           (list 'namespace scope-namespace 'class scope-class 'trait scope-trait 'interface scope-interface 'function scope-function)))))))
 
 (defun phps-mode-parser-sdt--parse-top-statement ()
   "Parse latest top statement."
    ;; (message "phps-mode-parser-sdt--bookkeeping-symbol-assignment-stack: %S" phps-mode-parser-sdt--bookkeeping-symbol-assignment-stack)
-   ;; (message "phps-mode-parser-sdt--bookkeeping-symbol-stack: %S" phps-mode-parser-sdt--bookkeeping-symbol-stack)
+  ;; (message "phps-mode-parser-sdt--bookkeeping-symbol-stack: %S" phps-mode-parser-sdt--bookkeeping-symbol-stack)
+
+  ;; Add imenu class, trait, interface and functions here
+  (when
+      phps-mode-parser-sdt-symbol-imenu--namespace
+    (message "phps-mode-parser-sdt-symbol-imenu--namespace: %S" phps-mode-parser-sdt-symbol-imenu--namespace)
+    (let ((imenu-nail (format "namespace %s" phps-mode-parser-sdt-symbol-imenu--namespace)))
+      (unless
+          (gethash
+           imenu-nail
+           phps-mode-parser-sdt-symbol-imenu--table)
+        (puthash
+         imenu-nail
+         (make-hash-table :test 'equal)
+         phps-mode-parser-sdt-symbol-imenu--table))))
+
+  (when phps-mode-parser-sdt-symbol-imenu--stack
+    (message "phps-mode-parser-sdt-symbol-imenu--stack: %S" phps-mode-parser-sdt-symbol-imenu--stack)
+    ;; TODO Go through stack and add on imenu index
+    (setq phps-mode-parser-sdt-symbol-imenu--stack nil))
 
   ;; Parse bookkeeping writes and reads at every statement terminus
   (when phps-mode-parser-sdt--bookkeeping-symbol-assignment-stack
@@ -1279,18 +901,374 @@
              (symbol-scope (car (cdr symbol-list)))
              (symbol-start (car (cdr (cdr symbol-list))))
              (symbol-end (car (cdr (cdr (cdr symbol-list)))))
-             (symbol-uri
+             (symbol-uri-object
               (phps-mode-parser-sdt--get-symbol-uri
                symbol-name
-               symbol-scope)))
+               symbol-scope))
+             (symbol-uri (car symbol-uri-object))
+             (symbol-namespace)
+             (symbol-class)
+             (symbol-interface)
+             (symbol-trait)
+             (symbol-function))
 
-        ;; (message
-        ;;  "assign symbol uri: %S from %S + %S, start: %S, end: %S"
-        ;;  symbol-uri
-        ;;  symbol-name
-        ;;  symbol-scope
-        ;;  symbol-start
-        ;;  symbol-end)
+        ;; Collect namespace, class, interface, trait and function here
+        (dolist (symbol-scope-item symbol-scope)
+          (let ((symbol-scope-item-type (nth 0 symbol-scope))
+                (symbol-scope-item-name (nth 1 symbol-scop)))
+            (cond
+             ((equal symbol-scope-item-type 'namespace)
+              (setq symbol-namespace symbol-scope-item-name))
+             ((equal symbol-scope-item-type 'class)
+              (setq symbol-class symbol-scope-item-name))
+             ((equal symbol-scope-item-type 'interface)
+              (setq symbol-interface symbol-scope-item-name))
+             ((equal symbol-scope-item-type 'function)
+              (setq symbol-function symbol-scope-item-name)))))
+
+        ;; Place symbol in imenu if not there already
+        (cond
+
+         ;; Symbol is inside namespace
+         (symbol-namespace
+          (let ((imenu-nail (format "namespace %s" symbol-namespace)))
+            (cond
+
+             ;; Symbol is inside class inside a namespace
+             (symbol-class
+              (let ((imenu-nail2 (format "class %s" symbol-class)))
+                (cond
+
+                 ;; Symbol is inside function inside class inside namespace
+                 (symbol-function
+                  (let ((imenu-nail3 (format "function %s" symbol-function)))
+                    (unless
+                        (gethash
+                         symbol-name
+                         (gethash
+                          imenu-nail3
+                          (gethash
+                           imenu-nail2
+                           (gethash
+                            imenu-nail
+                            phps-mode-parser-sdt-symbol-imenu--table))))
+                      (puthash
+                       symbol-name
+                       symbol-start
+                       (gethash
+                        imenu-nail3
+                        (gethash
+                         imenu-nail2
+                         (gethash
+                          imenu-nail
+                          phps-mode-parser-sdt-symbol-imenu--table)))))))
+
+                 ;; Symbol is inside class inside namespace
+                 (t
+                  (unless
+                      (gethash
+                       symbol-name
+                       (gethash
+                        imenu-nail2
+                        (gethash
+                         imenu-nail
+                         phps-mode-parser-sdt-symbol-imenu--table)))
+                    (puthash
+                     symbol-name
+                     symbol-start
+                     (gethash
+                      imenu-nail2
+                      (gethash
+                       imenu-nail
+                       phps-mode-parser-sdt-symbol-imenu--table))))))))
+
+             ;; Symbol is inside interface inside namespace
+             (symbol-interface
+              (let ((imenu-nail2 (format "interface %s" symbol-interface)))
+                (cond
+
+                 ;; Symbol is inside function inside interface inside namespace
+                 (symbol-function
+                  (let ((imenu-nail3 (format "function %s" symbol-function)))
+                    (unless
+                        (gethash
+                         symbol-name
+                         (gethash
+                          imenu-nail3
+                          (gethash
+                           imenu-nail2
+                           (gethash
+                            imenu-nail
+                            phps-mode-parser-sdt-symbol-imenu--table))))
+                      (puthash
+                       symbol-name
+                       symbol-start
+                       (gethash
+                        imenu-nail3
+                        (gethash
+                         imenu-nail2
+                         (gethash
+                          imenu-nail
+                          phps-mode-parser-sdt-symbol-imenu--table)))))))
+
+                 ;; Symbol is inside interface inside namespace
+                 (t
+                  (unless
+                      (gethash
+                       symbol-name
+                       (gethash
+                        imenu-nail2
+                        (gethash
+                         imenu-nail
+                         phps-mode-parser-sdt-symbol-imenu--table)))
+                    (puthash
+                     symbol-name
+                     symbol-start
+                     (gethash
+                      imenu-nail2
+                      (gethash
+                       imenu-nail
+                       phps-mode-parser-sdt-symbol-imenu--table))))))))
+
+             ;; Symbol is inside trait inside namespace
+             (symbol-trait
+              (let ((imenu-nail2 (format "trait %s" symbol-trait)))
+                (cond
+
+                 ;; Symbol is inside function inside trait inside a namespace
+                 (symbol-function
+                  (let ((imenu-nail3 (format "function %s" symbol-function)))
+                    (unless
+                        (gethash
+                         symbol-name
+                         (gethash
+                          imenu-nail3
+                          (gethash
+                           imenu-nail2
+                           (gethash
+                            imenu-nail
+                            phps-mode-parser-sdt-symbol-imenu--table))))
+                      (puthash
+                       symbol-name
+                       symbol-start
+                       (gethash
+                        imenu-nail3
+                        (gethash
+                         imenu-nail2
+                         (gethash
+                          imenu-nail
+                          phps-mode-parser-sdt-symbol-imenu--table)))))))
+
+                 ;; Symbol is inside trait inside namespace
+                 (t
+                  (unless
+                      (gethash
+                       symbol-name
+                       (gethash
+                        imenu-nail2
+                        (gethash
+                         imenu-nail
+                         phps-mode-parser-sdt-symbol-imenu--table)))
+                    (puthash
+                     symbol-name
+                     symbol-start
+                     (gethash
+                      imenu-nail2
+                      (gethash
+                       imenu-nail
+                       phps-mode-parser-sdt-symbol-imenu--table))))))))
+
+             ;; Symbol is inside a namespace
+             (t
+              (cond
+
+               ;; Symbol is inside function inside namespace
+               (symbol-function
+                (let ((imenu-nail2 (format "function %s" symbol-function)))
+                  (unless
+                      (gethash
+                       symbol-name
+                       (gethash
+                        imenu-nail2
+                        (gethash
+                         imenu-nail
+                         phps-mode-parser-sdt-symbol-imenu--table)))
+                    (puthash
+                     symbol-name
+                     symbol-start
+                     (gethash
+                      imenu-nail2
+                      (gethash
+                       imenu-nail
+                       phps-mode-parser-sdt-symbol-imenu--table))))))
+
+               ;; Symbol is inside a namespace
+               (t
+                (unless
+                    (gethash
+                     symbol-name
+                     (gethash
+                      imenu-nail
+                      phps-mode-parser-sdt-symbol-imenu--table))
+                  (puthash
+                   symbol-name
+                   symbol-start
+                   (gethash
+                    imenu-nail
+                    phps-mode-parser-sdt-symbol-imenu--table)))))))))
+
+         ;; Symbol is inside class
+         (symbol-class
+          (let ((imenu-nail (format "class %s" symbol-class)))
+            (cond
+
+             ;; Symbol is inside function inside class
+             (symbol-function
+              (let ((imenu-nail2 (format "function %s" symbol-function)))
+                (unless
+                    (gethash
+                     symbol-name
+                     (gethash
+                      imenu-nail2
+                      (gethash
+                       imenu-nail
+                       phps-mode-parser-sdt-symbol-imenu--table)))
+                  (puthash
+                   symbol-name
+                   symbol-start
+                   (gethash
+                    imenu-nail2
+                    (gethash
+                     imenu-nail
+                     phps-mode-parser-sdt-symbol-imenu--table))))))
+
+             ;; Symbol is inside class
+             (t
+              (unless
+                  (gethash
+                   symbol-name
+                   (gethash
+                    imenu-nail
+                    phps-mode-parser-sdt-symbol-imenu--table))
+                (puthash
+                 symbol-name
+                 symbol-start
+                 (gethash
+                  imenu-nail
+                  phps-mode-parser-sdt-symbol-imenu--table)))))))
+
+         ;; Symbol is inside trait
+         (symbol-trait
+          (let ((imenu-nail (format "trait %s" symbol-class)))
+            (cond
+
+             ;; Symbol is inside function inside trait
+             (symbol-function
+              (let ((imenu-nail2 (format "function %s" symbol-function)))
+                (unless
+                    (gethash
+                     symbol-name
+                     (gethash
+                      imenu-nail2
+                      (gethash
+                       imenu-nail
+                       phps-mode-parser-sdt-symbol-imenu--table)))
+                  (puthash
+                   symbol-name
+                   symbol-start
+                   (gethash
+                    imenu-nail2
+                    (gethash
+                     imenu-nail
+                     phps-mode-parser-sdt-symbol-imenu--table))))))
+
+             ;; Symbol is inside trait
+             (t
+              (unless
+                  (gethash
+                   symbol-name
+                   (gethash
+                    imenu-nail
+                    phps-mode-parser-sdt-symbol-imenu--table))
+                (puthash
+                 symbol-name
+                 symbol-start
+                 (gethash
+                  imenu-nail
+                  phps-mode-parser-sdt-symbol-imenu--table)))))))
+
+         ;; Symbol is inside interface
+         (symbol-interface
+          (let ((imenu-nail (format "interface %s" symbol-class)))
+            (cond
+
+             ;; Symbol is inside function inside interface
+             (symbol-function
+              (let ((imenu-nail2 (format "function %s" symbol-function)))
+                (unless
+                    (gethash
+                     symbol-name
+                     (gethash
+                      imenu-nail2
+                      (gethash
+                       imenu-nail
+                       phps-mode-parser-sdt-symbol-imenu--table)))
+                  (puthash
+                   symbol-name
+                   symbol-start
+                   (gethash
+                    imenu-nail2
+                    (gethash
+                     imenu-nail
+                     phps-mode-parser-sdt-symbol-imenu--table))))))
+
+             ;; Symbol is inside interface
+             (t
+              (unless
+                  (gethash
+                   symbol-name
+                   (gethash
+                    imenu-nail
+                    phps-mode-parser-sdt-symbol-imenu--table))
+                (puthash
+                 symbol-name
+                 symbol-start
+                 (gethash
+                  imenu-nail
+                  phps-mode-parser-sdt-symbol-imenu--table)))))))
+
+         (symbol-function
+          (let ((imenu-nail (format "function %s" symbol-function)))
+            (unless
+                (gethash
+                 symbol-name
+                 (gethash
+                  imenu-nail
+                  phps-mode-parser-sdt-symbol-imenu--table))
+              (puthash
+               symbol-name
+               symbol-start
+               (gethash
+                imenu-nail
+                phps-mode-parser-sdt-symbol-imenu--table)))))
+
+         ;; Symbol is in no scope
+         (t
+          (unless (gethash symbol-name phps-mode-parser-sdt-symbol-imenu--table)
+            (puthash
+             symbol-name
+             symbol-start
+             phps-mode-parser-sdt-symbol-imenu--table))))
+
+
+        (message
+         "assign symbol uri: %S from %S + %S, start: %S, end: %S, object: %S"
+         symbol-uri
+         symbol-name
+         symbol-scope
+         symbol-start
+         symbol-end
+         symbol-uri-object)
 
         (setq
          phps-mode-parser-sdt-symbol-table-index
@@ -1305,9 +1283,11 @@
                       "%s (%d)"
                       symbol-uri
                       (1+ (length (gethash symbol-uri phps-mode-parser-sdt-symbol-table-by-uri))))))
-                (push
-                 `(,symbol-uri-duplicate . ,symbol-start)
-                 phps-mode-parser-sdt-symbol-imenu))
+                ;; TODO Place symbol in the correct place of the hierarchy here
+                ;; (push
+                ;;  `(,symbol-uri-duplicate . ,symbol-start)
+                ;;  phps-mode-parser-sdt-symbol-imenu)
+                )
 
               (puthash
                phps-mode-parser-sdt-symbol-table-index
@@ -1323,9 +1303,10 @@
                 (list phps-mode-parser-sdt-symbol-table-index))
                phps-mode-parser-sdt-symbol-table-by-uri))
 
-          (push
-           `(,symbol-uri . ,symbol-start)
-           phps-mode-parser-sdt-symbol-imenu)
+          ;; TODO Place symbol at the correct place of the hierarchy here
+          ;; (push
+          ;;  `(,symbol-uri . ,symbol-start)
+          ;;  phps-mode-parser-sdt-symbol-imenu)
 
           (puthash
            phps-mode-parser-sdt-symbol-table-index
@@ -1351,10 +1332,11 @@
              (symbol-scope (car (cdr symbol-list)))
              (symbol-start (car (cdr (cdr symbol-list))))
              (symbol-end (car (cdr (cdr (cdr symbol-list)))))
-             (symbol-uri
+             (symbol-uri-object
               (phps-mode-parser-sdt--get-symbol-uri
                symbol-name
                symbol-scope))
+             (symbol-uri (car symbol-uri-object))
              (symbol-hit 0))
         (cond
 
@@ -1403,14 +1385,15 @@
          symbol-hit
          phps-mode-parser-sdt-bookkeeping)
 
-        ;; (message
-        ;;  "reference symbol uri: %S from %S + %S, start: %S, end: %S, hit?: %S"
-        ;;  symbol-uri
-        ;;  symbol-name
-        ;;  symbol-scope
-        ;;  symbol-start
-        ;;  symbol-end
-        ;;  symbol-hit)
+        (message
+         "reference symbol uri: %S from %S + %S, start: %S, end: %S, object: %S, hit?: %S"
+         symbol-uri
+         symbol-name
+         symbol-scope
+         symbol-start
+         symbol-end
+         symbol-uri-object
+         symbol-hit)
 
         ))
     (setq
@@ -1682,11 +1665,7 @@
 (puthash
  85
  (lambda(args terminals)
-   (let ((namespace-name args))
-     (push
-      (list 'namespace namespace-name (car (cdr terminals)) (point-max))
-      phps-mode-parser-sdt--bookkeeping-namespace))
-     args)
+   args)
  phps-mode-parser--table-translations)
 
 ;; 86 ((namespace_declaration_name) (T_NAME_QUALIFIED))
@@ -1844,39 +1823,131 @@
 (puthash
  111
  (lambda(args terminals)
-   (phps-mode-parser-sdt--parse-top-statement)
-   `(
-     ast-type
-     namespace
-     ast-name
-     ,(nth 1 args)
-     ast-index
-     ,(car (cdr (nth 1 terminals)))
-     ast-start
-     ,(car (cdr (nth 2 terminals)))
-     ast-end
-     max))
+   (let ((name (nth 1 args))
+         (index (car (cdr (nth 1 terminals))))
+         (start (car (cdr (nth 2 terminals))))
+         (end (point-max)))
+
+     ;; Add to imenu if not there already
+     (let ((imenu-nail (format "namespace %s" name)))
+       (unless (gethash
+                imenu-nail
+                phps-mode-parser-sdt-symbol-imenu--table)
+         (let ((namespace-table (make-hash-table :test 'equal)))
+           (puthash
+            'declaration
+            index
+            namespace-table)
+           (puthash
+            imenu-nail
+            namespace-table
+            phps-mode-parser-sdt-symbol-imenu--table))))
+
+     (phps-mode-parser-sdt--parse-top-statement)
+     (push
+      (list 'namespace namespace-name start end)
+      phps-mode-parser-sdt--bookkeeping-namespace)
+     (setq
+      phps-mode-parser-sdt-symbol-imenu--namespace
+      name)
+     `(
+       ast-type
+       namespace
+       ast-name
+       ,name
+       ast-index
+       ,index
+       ast-start
+       ,start
+       ast-end
+       ,end)))
  phps-mode-parser--table-translations)
 
 ;; 112 top_statement -> (T_NAMESPACE namespace_declaration_name "{" top_statement_list "}")
 (puthash
  112
  (lambda(args terminals)
-   (phps-mode-parser-sdt--parse-top-statement)
-   (setq phps-mode-parser-sdt--bookkeeping-namespace nil)
-   `(
-     ast-type
-     namespace
-     ast-name
-     ,(nth 1 args)
-     ast-index
-     ,(car (cdr (nth 1 terminals)))
-     ast-start
-     ,(car (cdr (nth 2 terminals)))
-     ast-end
-     ,(car (cdr (nth 4 terminals)))
-     top-statement-list
-     ,(nth 3 args)))
+   (let ((name (nth 1 args))
+         (index (car (cdr (nth 1 terminals))))
+         (start (car (cdr (nth 2 terminals))))
+         (end (car (cdr (nth 4 terminals)))))
+
+     ;; Add to imenu if not there already
+     (let ((imenu-nail (format "namespace %s" name)))
+       (unless (gethash
+                imenu-nail
+                phps-mode-parser-sdt-symbol-imenu--table)
+         (let ((namespace-table (make-hash-table :test 'equal)))
+           (puthash
+            'declaration
+            index
+            namespace-table)
+           (puthash
+            imenu-nail
+            namespace-table
+            phps-mode-parser-sdt-symbol-imenu--table))))
+
+     ;; Add namespace to all imenu stack items
+     (when phps-mode-parser-sdt-symbol-imenu--stack
+       (dolist (item phps-mode-parser-sdt-symbol-imenu--stack)
+         (let ((item-start (nth 2 item))
+               (item-end (nth 3 item)))
+           (when (and
+                  (>= item-start start)
+                  (<= item-end end))
+             (setcar
+              (list 'namespace name start end)
+              item)))))
+
+     ;; Add namespace to all symbols in scope (start, end) here
+     (when phps-mode-parser-sdt--bookkeeping-symbol-assignment-stack
+       (dolist (
+                symbol-list
+                phps-mode-parser-sdt--bookkeeping-symbol-assignment-stack)
+         (let ((symbol-name (car symbol-list)))
+           (unless (gethash
+                    symbol-name
+                    phps-mode-parser-sdt--bookkeeping--superglobal-variable-p)
+             (let ((symbol-scope (car (cdr symbol-list))))
+               (push
+                (list 'namespace name start end)
+                symbol-scope)
+               (setcar
+                (cdr symbol-list)
+                symbol-scope))))))
+
+     (when phps-mode-parser-sdt--bookkeeping-symbol-stack
+       (dolist (
+                symbol-list
+                phps-mode-parser-sdt--bookkeeping-symbol-stack)
+         (let ((symbol-name (car symbol-list))
+               (symbol-scope (car (cdr symbol-list))))
+           (unless (gethash
+                    symbol-name
+                    phps-mode-parser-sdt--bookkeeping--superglobal-variable-p)
+             (let ((symbol-scope (car (cdr symbol-list))))
+               (push
+                (list 'namespace name start end)
+                symbol-scope)
+               (setcar
+                (cdr symbol-list)
+                symbol-scope))))))
+
+     (phps-mode-parser-sdt--parse-top-statement)
+     (setq phps-mode-parser-sdt--bookkeeping-namespace nil)
+     `(
+       ast-type
+       namespace
+       ast-name
+       ,name
+       ast-index
+       ,index
+       ast-start
+       ,start
+       ast-end
+       ,end
+       top-statement-list
+       ,(nth 3 args))))
  phps-mode-parser--table-translations)
 
 ;; 113 top_statement -> (T_NAMESPACE "{" top_statement_list "}")
@@ -2643,6 +2714,12 @@
    (let ((function-name (nth 2 args))
          (function-start (car (cdr (nth 2 terminals))))
          (function-end (car (cdr (nth 11 terminals)))))
+
+     ;; Add function to imenu stack
+     (push
+      (list 'function function-name function-start function-end)
+      phps-mode-parser-sdt-symbol-imenu--stack)
+
      (when phps-mode-parser-sdt--bookkeeping-symbol-assignment-stack
        (dolist (
                 symbol-list
@@ -2722,6 +2799,84 @@
 (puthash
  184
  (lambda(args terminals)
+   ;; Go through stacks and modify symbol name-spaces
+   ;; but only for non-super-global variables.
+   ;; 
+   ;; Should place class scope first in scope
+   ;; unless a namespace exists, in that case it should be placed second in scope
+   (let ((class-name (nth 2 args))
+         (class-start (car (cdr (nth 2 terminals))))
+         (class-end (cdr (cdr (nth 8 terminals)))))
+
+     ;; Add class scope to all functions in class
+     (when phps-mode-parser-sdt-symbol-imenu--stack
+       (dolist (item phps-mode-parser-sdt-symbol-imenu--stack)
+         (let ((item-start (nth 2 item))
+               (item-end (nth 3 item)))
+           (when (and
+                  (>= item-start class-start)
+                  (<= item-end class-end))
+             (setcar
+              item
+              (list 'class class-name class-start class-end))))))
+
+     ;; Add class to imenu stack
+     (push
+      (list 'class class-name class-start class-end)
+      phps-mode-parser-sdt-symbol-imenu--stack)
+
+     (when phps-mode-parser-sdt--bookkeeping-symbol-assignment-stack
+       (dolist (
+                symbol-list
+                phps-mode-parser-sdt--bookkeeping-symbol-assignment-stack)
+         (let ((symbol-name (car symbol-list)))
+           (unless (gethash
+                    symbol-name
+                    phps-mode-parser-sdt--bookkeeping--superglobal-variable-p)
+             (let ((symbol-scope (reverse (car (cdr symbol-list)))))
+               (if (equal (car (car symbol-scope)) 'namespace)
+                   (let ((namespace-name (nth 1 (car symbol-scope)))
+                         (namespace-start (nth 2 (car symbol-scope)))
+                         (namespace-end (nth 3 (car symbol-scope))))
+                     (setcar
+                      symbol-scope
+                      (list 'class class-name class-start class-end))
+                     (push
+                      (list 'namespace namespace-name namespace-start namespace-end)
+                      symbol-scope))
+                 (push
+                  (list 'class class-name class-start class-end)
+                  symbol-scope))
+               (setcar
+                (cdr symbol-list)
+                (reverse symbol-scope)))))))
+
+     (when phps-mode-parser-sdt--bookkeeping-symbol-stack
+       (dolist (
+                symbol-list
+                phps-mode-parser-sdt--bookkeeping-symbol-stack)
+         (let ((symbol-name (car symbol-list)))
+           (unless (gethash
+                    symbol-name
+                    phps-mode-parser-sdt--bookkeeping--superglobal-variable-p)
+             (let ((symbol-scope (reverse (car (cdr symbol-list)))))
+               (if (equal (car (car symbol-scope)) 'namespace)
+                   (let ((namespace-name (nth 1 (car symbol-scope)))
+                         (namespace-start (nth 2 (car symbol-scope)))
+                         (namespace-end (nth 3 (car symbol-scope))))
+                     (setcar
+                      symbol-scope
+                      (list 'class class-name class-start class-end))
+                     (push
+                      (list 'namespace namespace-name namespace-start namespace-end)
+                      symbol-scope))
+                 (push
+                  (list 'class class-name class-start class-end)
+                  symbol-scope))
+               (setcar
+                (cdr symbol-list)
+                (reverse symbol-scope))))))))
+
    `(
      ast-type
      class
@@ -2836,7 +2991,7 @@
 ;; 188 ((class_modifier) (T_ABSTRACT))
 (puthash 188 (lambda(_args _terminals) 'T_ABSTRACT) phps-mode-parser--table-translations)
 
-;; 189 ((class_modifier) (T_ABSTRACT))
+;; 189 ((class_modifier) (T_FINAL))
 (puthash 189 (lambda(_args _terminals) 'T_FINAL) phps-mode-parser--table-translations)
 
 ;; 190 ((trait_declaration_statement) (T_TRAIT T_STRING backup_doc_comment "{" class_statement_list "}"))
@@ -2851,6 +3006,24 @@
    (let ((class-name (nth 1 args))
          (class-start (car (cdr (nth 1 terminals))))
          (class-end (cdr (cdr (nth 5 terminals)))))
+
+     ;; Add class scope to all functions in class
+     (when phps-mode-parser-sdt-symbol-imenu--stack
+       (dolist (item phps-mode-parser-sdt-symbol-imenu--stack)
+         (let ((item-start (nth 2 item))
+               (item-end (nth 3 item)))
+           (when (and
+                  (>= item-start class-start)
+                  (<= item-end class-end))
+             (setcar
+              item
+              (list 'class class-name class-start class-end))))))
+
+     ;; Add class to imenu stack
+     (push
+      (list 'class class-name class-start class-end)
+      phps-mode-parser-sdt-symbol-imenu--stack)
+
      (when phps-mode-parser-sdt--bookkeeping-symbol-assignment-stack
        (dolist (
                 symbol-list
@@ -2928,6 +3101,24 @@
    (let ((class-name (nth 1 args))
          (class-start (car (cdr (nth 1 terminals))))
          (class-end (cdr (cdr (nth 1 terminals)))))
+
+     ;; Add class scope to all functions in class
+     (when phps-mode-parser-sdt-symbol-imenu--stack
+       (dolist (item phps-mode-parser-sdt-symbol-imenu--stack)
+         (let ((item-start (nth 2 item))
+               (item-end (nth 3 item)))
+           (when (and
+                  (>= item-start class-start)
+                  (<= item-end class-end))
+             (setcar
+              item
+              (list 'class class-name class-start class-end))))))
+
+     ;; Add class to imenu stack
+     (push
+      (list 'class class-name class-start class-end)
+      phps-mode-parser-sdt-symbol-imenu--stack)
+
      (when phps-mode-parser-sdt--bookkeeping-symbol-assignment-stack
        (dolist (
                 symbol-list
