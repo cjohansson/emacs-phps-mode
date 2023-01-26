@@ -75,6 +75,8 @@
     (phps-mode-debug-message
      (message "\nTranslation:\n%S\n\n" translation))
 
+    (message "phps-mode-parser-sdt-symbol-imenu--table: %S" phps-mode-parser-sdt-symbol-imenu--table)
+
     ;; Convert imenu index from hash-table to list structure here
     (let ((imenu-index))
       (maphash
@@ -83,7 +85,7 @@
              (let ((v-list))
                (maphash
                 (lambda (k2 v2)
-                  (if hash-table-p v2
+                  (if (hash-table-p v2)
                     (let ((v2-list))
                       (maphash
                        (lambda (k3 v3)
@@ -91,6 +93,7 @@
                           `(,k3 . ,v3)
                           v2-list))
                        v2)
+                      ;; TODO sort v2-list here
                       (push
                        `(,k2 ,v2-list)
                        v-list))
@@ -98,6 +101,7 @@
                      `(,k2 . ,v2)
                      v-list)))
                 v)
+               ;; TODO Sort by index here
                (push
                 `(,k ,v-list)
                 imenu-index))
@@ -105,6 +109,17 @@
             `(,k . ,v)
             imenu-index)))
        phps-mode-parser-sdt-symbol-imenu--table)
+      ;; TODO sort imenu-index here
+      ;; (setq
+      ;;  imenu-index
+      ;;  (sort
+      ;;   imenu-index
+      ;;   (lambda (a b)
+      ;;     (cond
+      ;;      ((and
+      ;;        (listp a)
+      ;;        (listp b))
+      ;;       (if ()
       (setq
        phps-mode-parser-sdt-symbol-imenu
        imenu-index))

@@ -887,8 +887,247 @@
          phps-mode-parser-sdt-symbol-imenu--table))))
 
   (when phps-mode-parser-sdt-symbol-imenu--stack
+    ;; Go through imenu stack and add new items to imenu index
     (message "phps-mode-parser-sdt-symbol-imenu--stack: %S" phps-mode-parser-sdt-symbol-imenu--stack)
-    ;; TODO Go through stack and add on imenu index
+    (let ((imenu-namespace)
+          (imenu-class)
+          (imenu-trait)
+          (imenu-interface)
+          (imenu-function))
+      (dolist (imenu-scope phps-mode-parser-sdt-symbol-imenu--stack)
+        (let ((imenu-item-type (nth 0 imenu-scope))
+              (imenu-item-name (nth 1 imenu-scope))
+              (imenu-item-start (nth 2 imenu-scope)))
+          (cond
+           ((equal imenu-item-type 'namespace)
+            (setq imenu-namespace (list imenu-item-name imenu-item-start)))
+           ((equal imenu-item-type 'class)
+            (setq imenu-class (list imenu-item-name imenu-item-start)))
+           ((equal imenu-item-type 'interface)
+            (setq imenu-interface (list imenu-item-name imenu-item-start)))
+           ((equal imenu-item-type 'trait)
+            (setq imenu-trait (list imenu-item-name imenu-item-start)))
+           ((equal imenu-item-type 'function)
+            (setq imenu-function (list imenu-item-name imenu-item-start))))))
+      (cond
+
+       (imenu-namespace
+        (let ((imenu-nail (format "namespace %s" (nth 0 imenu-namespace))))
+          (unless (gethash imenu-nail phps-mode-parser-sdt-symbol-imenu--table)
+            (let ((imenu-object (make-hash-table :test 'equal)))
+              (puthash 'declaration (nth 1 imenu-namespace) imenu-object)
+              (puthash imenu-nail imenu-object phps-mode-parser-sdt-symbol-imenu--table)))
+          (cond
+           (imenu-class
+            (let ((imenu-nail2 (format "class %s" (nth 0 imenu-class))))
+              (unless
+                  (gethash
+                   imenu-nail2
+                   (gethash
+                    imenu-nail
+                    phps-mode-parser-sdt-symbol-imenu--table))
+                (let ((imenu-object (make-hash-table :test 'equal)))
+                  (puthash 'declaration (nth 1 imenu-class) imenu-object)
+                  (puthash
+                   imenu-nail2
+                   imenu-object
+                   (gethash
+                    imenu-nail
+                    phps-mode-parser-sdt-symbol-imenu--table))))
+              (when imenu-function
+                (let ((imenu-nail3 (format "function %s" (nth 0 imenu-function))))
+                  (unless
+                      (gethash
+                       imenu-nail3
+                       (gethash
+                        imenu-nail2
+                        (gethash
+                         imenu-nail
+                         phps-mode-parser-sdt-symbol-imenu--table))))
+                  (let ((imenu-object (make-hash-table :test 'equal)))
+                    (puthash 'declaration (nth imenu-function))
+                    (puthash
+                     imenu-nail3
+                     imenu-object
+                     (gethash
+                      imenu-nail2
+                      (gethash
+                       imenu-nail
+                       phps-mode-parser-sdt-symbol-imenu--table))))))))
+
+           (imenu-trait
+            (let ((imenu-nail2 (format "trait %s" (nth 0 imenu-trait))))
+              (unless
+                  (gethash
+                   imenu-nail2
+                   (gethash
+                    imenu-nail
+                    phps-mode-parser-sdt-symbol-imenu--table))
+                (let ((imenu-object (make-hash-table :test 'equal)))
+                  (puthash 'declaration (nth 1 imenu-class) imenu-object)
+                  (puthash
+                   imenu-nail2
+                   imenu-object
+                   (gethash
+                    imenu-nail
+                    phps-mode-parser-sdt-symbol-imenu--table))))
+              (when imenu-function
+                (let ((imenu-nail3 (format "function %s" (nth 0 imenu-function))))
+                  (unless
+                      (gethash
+                       imenu-nail3
+                       (gethash
+                        imenu-nail2
+                        (gethash
+                         imenu-nail
+                         phps-mode-parser-sdt-symbol-imenu--table))))
+                  (let ((imenu-object (make-hash-table :test 'equal)))
+                    (puthash 'declaration (nth imenu-function))
+                    (puthash
+                     imenu-nail3
+                     imenu-object
+                     (gethash
+                      imenu-nail2
+                      (gethash
+                       imenu-nail
+                       phps-mode-parser-sdt-symbol-imenu--table))))))))
+
+           (imenu-interface
+            (let ((imenu-nail2 (format "interface %s" (nth 0 imenu-interface))))
+              (unless
+                  (gethash
+                   imenu-nail2
+                   (gethash
+                    imenu-nail
+                    phps-mode-parser-sdt-symbol-imenu--table))
+                (let ((imenu-object (make-hash-table :test 'equal)))
+                  (puthash 'declaration (nth 1 imenu-class) imenu-object)
+                  (puthash
+                   imenu-nail2
+                   imenu-object
+                   (gethash
+                    imenu-nail
+                    phps-mode-parser-sdt-symbol-imenu--table))))
+              (when imenu-function
+                (let ((imenu-nail3 (format "function %s" (nth 0 imenu-function))))
+                  (unless
+                      (gethash
+                       imenu-nail3
+                       (gethash
+                        imenu-nail2
+                        (gethash
+                         imenu-nail
+                         phps-mode-parser-sdt-symbol-imenu--table))))
+                  (let ((imenu-object (make-hash-table :test 'equal)))
+                    (puthash 'declaration (nth imenu-function))
+                    (puthash
+                     imenu-nail3
+                     imenu-object
+                     (gethash
+                      imenu-nail2
+                      (gethash
+                       imenu-nail
+                       phps-mode-parser-sdt-symbol-imenu--table)))))))))))
+
+       (imenu-class
+        (let ((imenu-nail (format "class %s" (nth 0 imenu-class))))
+          (unless
+              (gethash
+               imenu-nail
+               phps-mode-parser-sdt-symbol-imenu--table)
+            (let ((imenu-object (make-hash-table :test 'equal)))
+              (puthash 'declaration (nth 1 imenu-class) imenu-object)
+              (puthash
+               imenu-nail
+               imenu-object
+               phps-mode-parser-sdt-symbol-imenu--table)
+              (when imenu-function
+                (let ((imenu-nail2 (format "function %s" (nth 0 imenu-function))))
+                  (unless
+                      (gethash
+                       imenu-nail2
+                       (gethash
+                        imenu-nail
+                        phps-mode-parser-sdt-symbol-imenu--table))))
+                (let ((imenu-object (make-hash-table :test 'equal)))
+                  (puthash 'declaration (nth imenu-function))
+                  (puthash
+                   imenu-nail2
+                   imenu-object
+                   (gethash
+                    imenu-nail
+                    phps-mode-parser-sdt-symbol-imenu--table))))))))
+
+       (imenu-trait
+        (let ((imenu-nail (format "trait %s" (nth 0 imenu-trait))))
+          (unless
+              (gethash
+               imenu-nail
+               phps-mode-parser-sdt-symbol-imenu--table)
+            (let ((imenu-object (make-hash-table :test 'equal)))
+              (puthash 'declaration (nth 1 imenu-class) imenu-object)
+              (puthash
+               imenu-nail
+               imenu-object
+               phps-mode-parser-sdt-symbol-imenu--table)
+              (when imenu-function
+                (let ((imenu-nail2 (format "function %s" (nth 0 imenu-function))))
+                  (unless
+                      (gethash
+                       imenu-nail2
+                       (gethash
+                        imenu-nail
+                        phps-mode-parser-sdt-symbol-imenu--table))))
+                (let ((imenu-object (make-hash-table :test 'equal)))
+                  (puthash 'declaration (nth imenu-function))
+                  (puthash
+                   imenu-nail2
+                   imenu-object
+                   (gethash
+                    imenu-nail
+                    phps-mode-parser-sdt-symbol-imenu--table))))))))
+
+       (imenu-interface
+        (let ((imenu-nail (format "interface %s" (nth 0 imenu-interface))))
+          (unless
+              (gethash
+               imenu-nail
+               phps-mode-parser-sdt-symbol-imenu--table)
+            (let ((imenu-object (make-hash-table :test 'equal)))
+              (puthash 'declaration (nth 1 imenu-class) imenu-object)
+              (puthash
+               imenu-nail
+               imenu-object
+               phps-mode-parser-sdt-symbol-imenu--table)
+              (when imenu-function
+                (let ((imenu-nail2 (format "function %s" (nth 0 imenu-function))))
+                  (unless
+                      (gethash
+                       imenu-nail2
+                       (gethash
+                        imenu-nail
+                        phps-mode-parser-sdt-symbol-imenu--table))))
+                (let ((imenu-object (make-hash-table :test 'equal)))
+                  (puthash 'declaration (nth imenu-function))
+                  (puthash
+                   imenu-nail2
+                   imenu-object
+                   (gethash
+                    imenu-nail
+                    phps-mode-parser-sdt-symbol-imenu--table))))))))
+
+       (imenu-function
+        (let ((imenu-nail (format "function %s" (nth 0 imenu-function))))
+          (unless
+              (gethash
+               imenu-nail
+               phps-mode-parser-sdt-symbol-imenu--table)
+            (let ((imenu-object (make-hash-table :test 'equal)))
+              (puthash 'declaration (nth 1 imenu-function) imenu-object)
+              (puthash
+               imenu-nail
+               imenu-object
+               phps-mode-parser-sdt-symbol-imenu--table)))))))
     (setq phps-mode-parser-sdt-symbol-imenu--stack nil))
 
   ;; Parse bookkeeping writes and reads at every statement terminus
@@ -913,18 +1152,16 @@
              (symbol-function))
 
         ;; Collect namespace, class, interface, trait and function here
-        (dolist (symbol-scope-item symbol-scope)
-          (let ((symbol-scope-item-type (nth 0 symbol-scope))
-                (symbol-scope-item-name (nth 1 symbol-scope)))
-            (cond
-             ((equal symbol-scope-item-type 'namespace)
-              (setq symbol-namespace symbol-scope-item-name))
-             ((equal symbol-scope-item-type 'class)
-              (setq symbol-class symbol-scope-item-name))
-             ((equal symbol-scope-item-type 'interface)
-              (setq symbol-interface symbol-scope-item-name))
-             ((equal symbol-scope-item-type 'function)
-              (setq symbol-function symbol-scope-item-name)))))
+        (when (nth 1 (nth 1 symbol-uri-object))
+          (setq symbol-namespace (car (nth 1 (nth 1 symbol-uri-object)))))
+        (when (nth 3 (nth 1 symbol-uri-object))
+          (setq symbol-class (car (nth 3 (nth 1 symbol-uri-object)))))
+        (when (nth 5 (nth 1 symbol-uri-object))
+          (setq symbol-trait (car (nth 5 (nth 1 symbol-uri-object)))))
+        (when (nth 7 (nth 1 symbol-uri-object))
+          (setq symbol-interface (car (nth 7 (nth 1 symbol-uri-object)))))
+        (when (nth 9 (nth 1 symbol-uri-object))
+          (setq symbol-function (car (nth 9 (nth 1 symbol-uri-object)))))
 
         ;; Place symbol in imenu if not there already
         (cond
