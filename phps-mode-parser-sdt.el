@@ -915,7 +915,7 @@
         ;; Collect namespace, class, interface, trait and function here
         (dolist (symbol-scope-item symbol-scope)
           (let ((symbol-scope-item-type (nth 0 symbol-scope))
-                (symbol-scope-item-name (nth 1 symbol-scop)))
+                (symbol-scope-item-name (nth 1 symbol-scope)))
             (cond
              ((equal symbol-scope-item-type 'namespace)
               (setq symbol-namespace symbol-scope-item-name))

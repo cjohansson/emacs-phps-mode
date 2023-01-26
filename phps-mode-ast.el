@@ -75,10 +75,39 @@
     (phps-mode-debug-message
      (message "\nTranslation:\n%S\n\n" translation))
 
-    ;; TODO Build imenu  in `phps-mode-parser-sdt-symbol-imenu' by collecting:
-    ;; * `phps-mode-parser-sdt-symbol-imenu--classes'
-    ;; * `phps-mode-parser-sdt-symbol-imenu--functions'
-    ;; * `phps-mode-parser-sdt-symbol-imenu--namespaces'
+    ;; Convert imenu index from hash-table to list structure here
+    (let ((imenu-index))
+      (maphash
+       (lambda (k v)
+         (if (hash-table-p v)
+             (let ((v-list))
+               (maphash
+                (lambda (k2 v2)
+                  (if hash-table-p v2
+                    (let ((v2-list))
+                      (maphash
+                       (lambda (k3 v3)
+                         (push
+                          `(,k3 . ,v3)
+                          v2-list))
+                       v2)
+                      (push
+                       `(,k2 ,v2-list)
+                       v-list))
+                    (push
+                     `(,k2 . ,v2)
+                     v-list)))
+                v)
+               (push
+                `(,k ,v-list)
+                imenu-index))
+           (push
+            `(,k . ,v)
+            imenu-index)))
+       phps-mode-parser-sdt-symbol-imenu--table)
+      (setq
+       phps-mode-parser-sdt-symbol-imenu
+       imenu-index))
 
     (setq
      phps-mode-ast--tree
