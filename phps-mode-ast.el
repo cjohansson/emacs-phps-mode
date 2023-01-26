@@ -93,7 +93,12 @@
                           `(,k3 . ,v3)
                           v2-list))
                        v2)
-                      ;; TODO sort v2-list here
+                      (setq
+                       v2-list
+                       (sort
+                        v2-list
+                        (lambda (a b)
+                          (< (cdr a) (cdr b)))))
                       (push
                        `(,k2 ,v2-list)
                        v-list))

@@ -1162,6 +1162,11 @@
           (setq symbol-interface (car (nth 7 (nth 1 symbol-uri-object)))))
         (when (nth 9 (nth 1 symbol-uri-object))
           (setq symbol-function (car (nth 9 (nth 1 symbol-uri-object)))))
+        (message "symbol-namespace: %S" symbol-namespace)
+        (message "symbol-class: %S" symbol-class)
+        (message "symbol-trait: %S" symbol-trait)
+        (message "symbol-interface: %S" symbol-interface)
+        (message "symbol-function: %S" symbol-function)
 
         ;; Place symbol in imenu if not there already
         (cond
