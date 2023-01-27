@@ -75,8 +75,6 @@
     (phps-mode-debug-message
      (message "\nTranslation:\n%S\n\n" translation))
 
-    (message "phps-mode-parser-sdt-symbol-imenu--table: %S" phps-mode-parser-sdt-symbol-imenu--table)
-
     ;; Convert imenu index from hash-table to list structure here
     (let ((imenu-index))
       (maphash
@@ -91,11 +89,38 @@
                             (v2-index))
                         (maphash
                          (lambda (k3 v3)
-                           (if (symbolp k3)
-                               (setq v2-index v3))
-                           (push
-                            `(,k3 . ,v3)
-                            v2-list))
+                           (if (hash-table-p v3)
+                               (let ((v3-list)
+                                     (v3-index))
+                                 (maphash
+                                  (lambda (k4 v4)
+                                    (if (symbolp k4)
+                                        (setq v3-index v4)
+                                      (push `(,k4 . ,v4) v3-list)))
+                                  v3)
+
+                                 ;; Sort level 4
+                                 (setq
+                                  v3-list
+                                  (sort
+                                   v3-list
+                                   (lambda (a b)
+                                     (cond
+                                      ((and
+                                        (listp (cdr a))
+                                        (listp (cdr b)))
+                                       (< (cdr (car (car (cdr a)))) (cdr (car (car (cdr b))))))
+                                      ((listp (cdr a))
+                                       (< (cdr (car (car (cdr a)))) (cdr b)))
+                                      ((listp (cdr b))
+                                       (< (cdr a) (cdr (car (car (cdr b))))))
+                                      (t
+                                       (< (cdr a) (cdr b)))))))
+                                 (push `(declaration . ,v3-index) v3-list)
+                                 (push `(,k3 ,v3-list) v2-list))
+                             (if (symbolp k3)
+                                 (setq v2-index v3))
+                             (push `(,k3 . ,v3) v2-list)))
                          v2)
 
                         ;; Sort level 3
@@ -104,11 +129,21 @@
                          (sort
                           v2-list
                           (lambda (a b)
-                            (< (cdr a) (cdr b)))))
+                            (cond
+                             ((and
+                               (listp (cdr a))
+                               (listp (cdr b)))
+                              (< (cdr (car (car (cdr a)))) (cdr (car (car (cdr b))))))
+                             ((listp (cdr a))
+                              (< (cdr (car (car (cdr a)))) (cdr b)))
+                             ((listp (cdr b))
+                              (< (cdr a) (cdr (car (car (cdr b))))))
+                             (t
+                              (< (cdr a) (cdr b)))))))
                         (push `(declaration . ,v2-index) v2-list)
                         (push `(,k2 ,v2-list) v-list))
                     (if (symbolp k2)
-                      (setq v-index v2)
+                        (setq v-index v2)
                       (push `(,k2 . ,v2) v-list))))
                 v)
 
@@ -152,17 +187,6 @@
            (t
             (< (cdr a) (cdr b)))))))
 
-      ;; TODO sort imenu-index here
-      ;; (setq
-      ;;  imenu-index
-      ;;  (sort
-      ;;   imenu-index
-      ;;   (lambda (a b)
-      ;;     (cond
-      ;;      ((and
-      ;;        (listp a)
-      ;;        (listp b))
-      ;;       (if ()
       (setq
        phps-mode-parser-sdt-symbol-imenu
        imenu-index))
