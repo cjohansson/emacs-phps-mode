@@ -878,7 +878,7 @@
   (when
       phps-mode-parser-sdt-symbol-imenu--namespace
     (message "phps-mode-parser-sdt-symbol-imenu--namespace: %S" phps-mode-parser-sdt-symbol-imenu--namespace)
-    (let ((imenu-nail (format "namespace %s" phps-mode-parser-sdt-symbol-imenu--namespace)))
+    (let ((imenu-nail (format "namespace %s" (nth 0 phps-mode-parser-sdt-symbol-imenu--namespace))))
       (unless
           (gethash
            imenu-nail
@@ -888,10 +888,11 @@
          (make-hash-table :test 'equal)
          phps-mode-parser-sdt-symbol-imenu--table))))
 
+    (message "\nphps-mode-parser-sdt-symbol-imenu--stack: %S" phps-mode-parser-sdt-symbol-imenu--stack)
   (when phps-mode-parser-sdt-symbol-imenu--stack
     ;; Go through imenu stack and add new items to imenu index
-    (message "phps-mode-parser-sdt-symbol-imenu--stack: %S" phps-mode-parser-sdt-symbol-imenu--stack)
-    (let ((imenu-namespace)
+    (let ((imenu-namespace
+           phps-mode-parser-sdt-symbol-imenu--namespace)
           (imenu-class)
           (imenu-trait)
           (imenu-interface)
@@ -1132,6 +1133,8 @@
                phps-mode-parser-sdt-symbol-imenu--table)))))))
     (setq phps-mode-parser-sdt-symbol-imenu--stack nil))
 
+  (message "phps-mode-parser-sdt-symbol-imenu--table: %S" phps-mode-parser-sdt-symbol-imenu--table)
+
   ;; Parse bookkeeping writes and reads at every statement terminus
   (when phps-mode-parser-sdt--bookkeeping-symbol-assignment-stack
     ;; Declare variables
@@ -1164,6 +1167,9 @@
           (setq symbol-interface (car (nth 7 (nth 1 symbol-uri-object)))))
         (when (nth 9 (nth 1 symbol-uri-object))
           (setq symbol-function (car (nth 9 (nth 1 symbol-uri-object)))))
+
+        (message "symbol-name: %S" symbol-name)
+        (message "symbol-scope: %S" symbol-scope)
         (message "symbol-namespace: %S" symbol-namespace)
         (message "symbol-class: %S" symbol-class)
         (message "symbol-trait: %S" symbol-trait)
@@ -1889,7 +1895,8 @@
 ;; 83 ((top_statement_list) (top_statement_list top_statement))
 (puthash
  83
- (lambda(args _terminals) (if (car args) (append (car args) (cdr args)) (cdr args)))
+ (lambda(args _terminals)
+   (if (car args) (append (car args) (cdr args)) (cdr args)))
  phps-mode-parser--table-translations)
 
 ;; 84 ((top_statement_list) (%empty))
@@ -1899,11 +1906,65 @@
 (puthash
  85
  (lambda(args terminals)
-   args)
+   (let ((name args)
+         (index (car (cdr terminals))))
+
+     ;; Add to imenu if not there already
+     (let ((imenu-nail (format "namespace %s" name)))
+       (unless (gethash
+                imenu-nail
+                phps-mode-parser-sdt-symbol-imenu--table)
+         (let ((namespace-table (make-hash-table :test 'equal)))
+           (puthash
+            'declaration
+            index
+            namespace-table)
+           (puthash
+            imenu-nail
+            namespace-table
+            phps-mode-parser-sdt-symbol-imenu--table))))
+
+     (push
+      (list 'namespace name index)
+      phps-mode-parser-sdt--bookkeeping-namespace)
+     (setq
+      phps-mode-parser-sdt-symbol-imenu--namespace
+      (list name (car (cdr terminals))))
+
+     args))
  phps-mode-parser--table-translations)
 
 ;; 86 ((namespace_declaration_name) (T_NAME_QUALIFIED))
-(puthash 86 (lambda(_args terminals) terminals) phps-mode-parser--table-translations)
+(puthash
+ 86
+ (lambda(args terminals)
+   (let ((name args)
+         (index (car (cdr terminals))))
+
+     ;; Add to imenu if not there already
+     (let ((imenu-nail (format "namespace %s" name)))
+       (unless (gethash
+                imenu-nail
+                phps-mode-parser-sdt-symbol-imenu--table)
+         (let ((namespace-table (make-hash-table :test 'equal)))
+           (puthash
+            'declaration
+            index
+            namespace-table)
+           (puthash
+            imenu-nail
+            namespace-table
+            phps-mode-parser-sdt-symbol-imenu--table))))
+
+     (push
+      (list 'namespace name index)
+      phps-mode-parser-sdt--bookkeeping-namespace)
+     (setq
+      phps-mode-parser-sdt-symbol-imenu--namespace
+      (list name (car (cdr terminals))))
+
+     args))
+ phps-mode-parser--table-translations)
 
 ;; 87 ((namespace_name) (T_STRING))
 (puthash 87 (lambda(args _terminals) args) phps-mode-parser--table-translations)
@@ -2037,7 +2098,7 @@
    args)
  phps-mode-parser--table-translations)
 
-;; 109 ((top_statement) (attributed_statement))
+;; 109 ((top_statement) (attributes attributed_statement))
 (puthash
  109
  (lambda(args _terminals)
@@ -2057,131 +2118,44 @@
 (puthash
  111
  (lambda(args terminals)
-   (let ((name (nth 1 args))
-         (index (car (cdr (nth 1 terminals))))
-         (start (car (cdr (nth 2 terminals))))
-         (end (point-max)))
-
-     ;; Add to imenu if not there already
-     (let ((imenu-nail (format "namespace %s" name)))
-       (unless (gethash
-                imenu-nail
-                phps-mode-parser-sdt-symbol-imenu--table)
-         (let ((namespace-table (make-hash-table :test 'equal)))
-           (puthash
-            'declaration
-            index
-            namespace-table)
-           (puthash
-            imenu-nail
-            namespace-table
-            phps-mode-parser-sdt-symbol-imenu--table))))
-
-     (phps-mode-parser-sdt--parse-top-statement)
-     (push
-      (list 'namespace namespace-name start end)
-      phps-mode-parser-sdt--bookkeeping-namespace)
-     (setq
-      phps-mode-parser-sdt-symbol-imenu--namespace
-      name)
-     `(
-       ast-type
-       namespace
-       ast-name
-       ,name
-       ast-index
-       ,index
-       ast-start
-       ,start
-       ast-end
-       ,end)))
+   (phps-mode-parser-sdt--parse-top-statement)
+   `(
+     ast-type
+     namespace
+     ast-name
+     ,name
+     ast-index
+     ,index
+     ast-start
+     ,start
+     ast-end
+     ,end))
  phps-mode-parser--table-translations)
 
 ;; 112 top_statement -> (T_NAMESPACE namespace_declaration_name "{" top_statement_list "}")
 (puthash
  112
  (lambda(args terminals)
-   (let ((name (nth 1 args))
-         (index (car (cdr (nth 1 terminals))))
-         (start (car (cdr (nth 2 terminals))))
-         (end (car (cdr (nth 4 terminals)))))
-
-     ;; Add to imenu if not there already
-     (let ((imenu-nail (format "namespace %s" name)))
-       (unless (gethash
-                imenu-nail
-                phps-mode-parser-sdt-symbol-imenu--table)
-         (let ((namespace-table (make-hash-table :test 'equal)))
-           (puthash
-            'declaration
-            index
-            namespace-table)
-           (puthash
-            imenu-nail
-            namespace-table
-            phps-mode-parser-sdt-symbol-imenu--table))))
-
-     ;; Add namespace to all imenu stack items
-     (when phps-mode-parser-sdt-symbol-imenu--stack
-       (dolist (item phps-mode-parser-sdt-symbol-imenu--stack)
-         (let ((item-start (nth 2 item))
-               (item-end (nth 3 item)))
-           (when (and
-                  (>= item-start start)
-                  (<= item-end end))
-             (setcar
-              (list 'namespace name start end)
-              item)))))
-
-     ;; Add namespace to all symbols in scope (start, end) here
-     (when phps-mode-parser-sdt--bookkeeping-symbol-assignment-stack
-       (dolist (
-                symbol-list
-                phps-mode-parser-sdt--bookkeeping-symbol-assignment-stack)
-         (let ((symbol-name (car symbol-list)))
-           (unless (gethash
-                    symbol-name
-                    phps-mode-parser-sdt--bookkeeping--superglobal-variable-p)
-             (let ((symbol-scope (car (cdr symbol-list))))
-               (push
-                (list 'namespace name start end)
-                symbol-scope)
-               (setcar
-                (cdr symbol-list)
-                symbol-scope))))))
-
-     (when phps-mode-parser-sdt--bookkeeping-symbol-stack
-       (dolist (
-                symbol-list
-                phps-mode-parser-sdt--bookkeeping-symbol-stack)
-         (let ((symbol-name (car symbol-list))
-               (symbol-scope (car (cdr symbol-list))))
-           (unless (gethash
-                    symbol-name
-                    phps-mode-parser-sdt--bookkeeping--superglobal-variable-p)
-             (let ((symbol-scope (car (cdr symbol-list))))
-               (push
-                (list 'namespace name start end)
-                symbol-scope)
-               (setcar
-                (cdr symbol-list)
-                symbol-scope))))))
-
-     (phps-mode-parser-sdt--parse-top-statement)
-     (setq phps-mode-parser-sdt--bookkeeping-namespace nil)
-     `(
-       ast-type
-       namespace
-       ast-name
-       ,name
-       ast-index
-       ,index
-       ast-start
-       ,start
-       ast-end
-       ,end
-       top-statement-list
-       ,(nth 3 args))))
+   (phps-mode-parser-sdt--parse-top-statement)
+   (setq
+    phps-mode-parser-sdt-symbol-imenu--namespace
+    nil)
+   (setq
+    phps-mode-parser-sdt--bookkeeping-namespace
+    nil)
+   `(
+     ast-type
+     namespace
+     ast-name
+     ,name
+     ast-index
+     ,index
+     ast-start
+     ,start
+     ast-end
+     ,end
+     top-statement-list
+     ,(nth 3 args)))
  phps-mode-parser--table-translations)
 
 ;; 113 top_statement -> (T_NAMESPACE "{" top_statement_list "}")
@@ -3145,6 +3119,24 @@
    (let ((class-name (nth 1 args))
          (class-start (car (cdr (nth 1 terminals))))
          (class-end (cdr (cdr (nth 7 terminals)))))
+
+     ;; Add class scope to all functions in class
+     (when phps-mode-parser-sdt-symbol-imenu--stack
+       (dolist (item phps-mode-parser-sdt-symbol-imenu--stack)
+         (let ((item-start (nth 2 item))
+               (item-end (nth 3 item)))
+           (when (and
+                  (>= item-start class-start)
+                  (<= item-end class-end))
+             (setcar
+              item
+              (list 'class class-name class-start class-end))))))
+
+     ;; Add class to imenu stack
+     (push
+      (list 'class class-name class-start class-end)
+      phps-mode-parser-sdt-symbol-imenu--stack)
+
      (when phps-mode-parser-sdt--bookkeeping-symbol-assignment-stack
        (dolist (
                 symbol-list
