@@ -173,7 +173,7 @@
   (phps-mode-test-ast--should-bookkeep
    "<?php\n\n// Class properties\n\nclass myParent {}\n\nclass myClass extends myParent {\n    private $var1 = 123;\n    protected static $var2;\n    public $var3;\n    var $var4;\n    function __construct() {\n        if ($this) {\n            echo 'Hit';\n        }\n        if ($this->var1) {\n            echo 'Hit';\n        }\n        if (self::$var1) {\n            echo 'Miss';\n        }\n        if (self::$var2) {\n            echo 'Hit';\n        }\n        if (static::$var2) {\n            echo 'Hit';\n        }\n        if ($this->var3) {\n            echo 'Hit';\n        }\n        if ($this->var4) {\n            echo 'Hit';\n        }\n        if ($this->var5) {\n            echo 'Miss';\n        }\n        if (paren1) {\n            echo 'Hit';\n        }\n    }\n}\n\nif ($this) {\n    echo 'Miss';\n}\nif (self) {\n    echo 'Miss';\n}\nif (paren1) {\n    echo 'Miss';\n}"
    "Bookkeeping of class properties"
-   '(((639 643) 0) ((632 637) 3) ((578 582) 4) ((571 576) 3) ((517 521) 5) ((510 515) 3) ((455 460) 6) ((392 397) 6) ((330 335) 0) ((270 274) 7) ((263 268) 3) ((208 213) 3) ((160 165) 4) ((145 150) 5) ((127 132) 6) ((93 98) 7) ((751 756) 0))
+   '(((93 98) 1) ((127 132) 2) ((145 150) 3) ((160 165) 4) ((208 213) 5) ((263 268) 5) ((270 274) 1) ((330 335) 0) ((392 397) 2) ((455 460) 2) ((510 515) 5) ((517 521) 3) ((571 576) 5) ((578 582) 4) ((632 637) 5) ((639 643) 0) ((751 756) 0))
    '(("class myClass" . 54) ("class myClass function __construct" . 194) ("class myClass function __construct id $this" . 194) ("class myClass id $var4" . 160) ("class myClass id $var3" . 145) ("class myClass static id $var2" . 127) ("class myClass id $var1" . 93)))
 
   (phps-mode-test-ast--should-bookkeep
