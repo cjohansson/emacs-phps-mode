@@ -82,38 +82,76 @@
       (maphash
        (lambda (k v)
          (if (hash-table-p v)
-             (let ((v-list))
+             (let ((v-list)
+                   (v-index))
                (maphash
                 (lambda (k2 v2)
                   (if (hash-table-p v2)
-                    (let ((v2-list))
-                      (maphash
-                       (lambda (k3 v3)
-                         (push
-                          `(,k3 . ,v3)
-                          v2-list))
-                       v2)
-                      (setq
-                       v2-list
-                       (sort
-                        v2-list
-                        (lambda (a b)
-                          (< (cdr a) (cdr b)))))
-                      (push
-                       `(,k2 ,v2-list)
-                       v-list))
-                    (push
-                     `(,k2 . ,v2)
-                     v-list)))
+                      (let ((v2-list)
+                            (v2-index))
+                        (maphash
+                         (lambda (k3 v3)
+                           (if (symbolp k3)
+                               (setq v2-index v3))
+                           (push
+                            `(,k3 . ,v3)
+                            v2-list))
+                         v2)
+
+                        ;; Sort level 3
+                        (setq
+                         v2-list
+                         (sort
+                          v2-list
+                          (lambda (a b)
+                            (< (cdr a) (cdr b)))))
+                        (push `(declaration . ,v2-index) v2-list)
+                        (push `(,k2 ,v2-list) v-list))
+                    (if (symbolp k2)
+                      (setq v-index v2)
+                      (push `(,k2 . ,v2) v-list))))
                 v)
-               ;; TODO Sort by index here
-               (push
-                `(,k ,v-list)
-                imenu-index))
-           (push
-            `(,k . ,v)
-            imenu-index)))
+
+               ;; Sort level 2
+               (setq
+                v-list
+                (sort
+                 v-list
+                 (lambda (a b)
+                   (cond
+                    ((and
+                      (listp (cdr a))
+                      (listp (cdr b)))
+                     (< (cdr (car (car (cdr a)))) (cdr (car (car (cdr b))))))
+                    ((listp (cdr a))
+                     (< (cdr (car (car (cdr a))) (cdr b))))
+                    ((listp (cdr b))
+                     (< (cdr a) (cdr (car (car (cdr b))))))
+                    (t
+                     (< (cdr a) (cdr b)))))))
+               (push `(declaration . ,v-index) v-list)
+               (push `(,k ,v-list) imenu-index))
+           (push `(,k . ,v) imenu-index)))
        phps-mode-parser-sdt-symbol-imenu--table)
+
+      ;; Sort level 1
+      (setq
+       imenu-index
+       (sort
+        imenu-index
+        (lambda (a b)
+          (cond
+           ((and
+             (listp (cdr a))
+             (listp (cdr b)))
+            (< (cdr (car (car (cdr a)))) (cdr (car (car (cdr b))))))
+           ((listp (cdr a))
+            (< (cdr (car (car (cdr a))) (cdr b))))
+           ((listp (cdr b))
+            (< (cdr a) (cdr (car (car (cdr b))))))
+           (t
+            (< (cdr a) (cdr b)))))))
+
       ;; TODO sort imenu-index here
       ;; (setq
       ;;  imenu-index

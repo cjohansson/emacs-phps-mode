@@ -151,7 +151,7 @@
    "<?php\n\n$var2 = 4;\n\nfunction myFunction($var)\n{\n    $var3 = 3;\n    if ($var) {\n        echo 'Hit';\n    }\n    if ($var2) {\n        echo 'Miss';\n    }\n    if ($var3) {\n        echo 'Hit';\n    }\n}\n\nfunction myFunction2($abc)\n{\n    if ($var) {\n        echo 'Miss';\n    }\n    if ($abc) {\n        echo 'Hit';\n    }\n}\n\nif ($var) {\n    echo 'Miss';\n}\nif ($var2) {\n    echo 'Hit';\n}"
    "Bookkeeping in function level with variable assignments"
    '(((8 13) 1) ((40 44) 3) ((52 57) 2) ((71 75) 3) ((113 118) 0) ((157 162) 2) ((216 220) 4) ((232 236) 0) ((275 279) 4) ((316 320) 0) ((347 352) 1))
-   '(("id $var2" . 8) ("function myFunction" ((declaration . 29) ("id $var" . 40) ("id $var3" . 52)) ("function myFunction2" . ((declaration . 204) ("id $abc" . 216))))))
+   '(("$var2" . 8) ("function myFunction" ((declaration . 29) ("$var" . 40) ("$var3" . 52))) ("function myFunction2" ((declaration . 204) ("$abc" . 216)))))
 
   (phps-mode-test-ast--should-bookkeep
    "<?php\n\n// Super-globals\n\nif ($_GET) {\n    echo 'Hit';\n}\nif ($_POST) {\n    echo 'Hit';\n}\nif ($_COOKIE) {\n    echo 'Hit';\n}\nif ($_SESSION) {\n    echo 'Hit';\n}\nif ($_REQUEST) {\n    echo 'Hit';\n}\nif ($GLOBALS) {\n    echo 'Hit';\n}\nif ($_SERVER) {\n    echo 'Hit';\n}\nif ($_FILES) {\n    echo 'Hit';\n}\nif ($_ENV) {\n    echo 'Hit';\n}\nif ($argc) {\n    echo 'Hit';\n}\nif ($argv) {\n    echo 'Hit';\n}\nif ($http_​response_​header) {\n    echo 'Hit';\n}"

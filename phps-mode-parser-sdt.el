@@ -661,7 +661,9 @@
   (if (gethash
        name
        phps-mode-parser-sdt--bookkeeping--superglobal-variable-p)
-      name
+      (list
+       name
+       (list 'namespace nil 'class nil 'trait nil 'interface nil 'function nil 'superglobal t))
     (let ((potential-uris (list ""))
           (scope-namespace)
           (scope-class)
@@ -1524,12 +1526,7 @@
                      (format
                       "%s (%d)"
                       symbol-uri
-                      (1+ (length (gethash symbol-uri phps-mode-parser-sdt-symbol-table-by-uri))))))
-                ;; TODO Place symbol in the correct place of the hierarchy here
-                ;; (push
-                ;;  `(,symbol-uri-duplicate . ,symbol-start)
-                ;;  phps-mode-parser-sdt-symbol-imenu)
-                )
+                      (1+ (length (gethash symbol-uri phps-mode-parser-sdt-symbol-table-by-uri)))))))
 
               (puthash
                phps-mode-parser-sdt-symbol-table-index
@@ -1544,11 +1541,6 @@
                 (gethash symbol-uri phps-mode-parser-sdt-symbol-table-by-uri)
                 (list phps-mode-parser-sdt-symbol-table-index))
                phps-mode-parser-sdt-symbol-table-by-uri))
-
-          ;; TODO Place symbol at the correct place of the hierarchy here
-          ;; (push
-          ;;  `(,symbol-uri . ,symbol-start)
-          ;;  phps-mode-parser-sdt-symbol-imenu)
 
           (puthash
            phps-mode-parser-sdt-symbol-table-index
@@ -1570,10 +1562,10 @@
     (dolist (
              symbol-list
              phps-mode-parser-sdt--bookkeeping-symbol-stack)
-      (let* ((symbol-name (car symbol-list))
-             (symbol-scope (car (cdr symbol-list)))
-             (symbol-start (car (cdr (cdr symbol-list))))
-             (symbol-end (car (cdr (cdr (cdr symbol-list)))))
+      (let* ((symbol-name (nth 0 symbol-list))
+             (symbol-scope (nth 1 symbol-list))
+             (symbol-start (nth 2 symbol-list))
+             (symbol-end (nth 3 symbol-list))
              (symbol-uri-object
               (phps-mode-parser-sdt--get-symbol-uri
                symbol-name
