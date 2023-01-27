@@ -181,7 +181,7 @@
              (listp (cdr b)))
             (< (cdr (car (car (cdr a)))) (cdr (car (car (cdr b))))))
            ((listp (cdr a))
-            (< (cdr (car (car (cdr a))) (cdr b))))
+            (< (cdr (car (car (cdr a)))) (cdr b)))
            ((listp (cdr b))
             (< (cdr a) (cdr (car (car (cdr b))))))
            (t

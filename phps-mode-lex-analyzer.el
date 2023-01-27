@@ -1154,7 +1154,8 @@
              (parse-trail)
              (ast-tree)
              (bookkeeping)
-             (imenu))
+             (imenu)
+             (symbol-table))
 
         ;; Create temporary buffer and run lexer in it
         (when (get-buffer buffer)
@@ -1240,7 +1241,7 @@
             (setq ast-tree phps-mode-ast--tree)
             (setq bookkeeping phps-mode-parser-sdt-bookkeeping)
             (setq imenu phps-mode-parser-sdt-symbol-imenu)
-            (setq symbol-table phps-mode phps-mode-parser-sdt-symbol-table)
+            (setq symbol-table phps-mode-parser-sdt-symbol-table)
 
             (kill-buffer)))
 
