@@ -913,6 +913,14 @@
                 (setq imenu-trait (list imenu-item-name imenu-item-start)))
                ((equal imenu-item-type 'function)
                 (setq imenu-function (list imenu-item-name imenu-item-start))))))
+
+          ;; (message "\nimenu-namespace: %S" imenu-namespace)
+          ;; (message "imenu-class: %S" imenu-class)
+          ;; (message "imenu-trait: %S" imenu-trait)
+          ;; (message "imenu-interface: %S" imenu-interface)
+          ;; (message "imenu-function: %S" imenu-function)
+
+
           (cond
 
            (imenu-namespace
@@ -1134,7 +1142,7 @@
                    phps-mode-parser-sdt-symbol-imenu--table)))))))))
     (setq phps-mode-parser-sdt-symbol-imenu--stack nil))
 
-    (message "phps-mode-parser-sdt-symbol-imenu--table: %S" phps-mode-parser-sdt-symbol-imenu--table)
+    ;; (message "phps-mode-parser-sdt-symbol-imenu--table: %S" phps-mode-parser-sdt-symbol-imenu--table)
 
   ;; Parse bookkeeping writes and reads at every statement terminus
   (when phps-mode-parser-sdt--bookkeeping-symbol-assignment-stack
@@ -1169,13 +1177,13 @@
         (when (nth 9 (nth 1 symbol-uri-object))
           (setq symbol-function (car (nth 9 (nth 1 symbol-uri-object)))))
 
-        (message "\nsymbol-name: %S" symbol-name)
-        (message "symbol-scope: %S" symbol-scope)
-        (message "symbol-namespace: %S" symbol-namespace)
-        (message "symbol-class: %S" symbol-class)
-        (message "symbol-trait: %S" symbol-trait)
-        (message "symbol-interface: %S" symbol-interface)
-        (message "symbol-function: %S" symbol-function)
+        ;; (message "\nsymbol-name: %S" symbol-name)
+        ;; (message "symbol-scope: %S" symbol-scope)
+        ;; (message "symbol-namespace: %S" symbol-namespace)
+        ;; (message "symbol-class: %S" symbol-class)
+        ;; (message "symbol-trait: %S" symbol-trait)
+        ;; (message "symbol-interface: %S" symbol-interface)
+        ;; (message "symbol-function: %S" symbol-function)
 
         ;; Place symbol in imenu if not there already
         (cond
@@ -1410,7 +1418,7 @@
 
          ;; Symbol is inside trait
          (symbol-trait
-          (let ((imenu-nail (format "trait %s" symbol-class)))
+          (let ((imenu-nail (format "trait %s" symbol-trait)))
             (cond
 
              ;; Symbol is inside function inside trait
@@ -1450,7 +1458,7 @@
 
          ;; Symbol is inside interface
          (symbol-interface
-          (let ((imenu-nail (format "interface %s" symbol-class)))
+          (let ((imenu-nail (format "interface %s" symbol-interface)))
             (cond
 
              ;; Symbol is inside function inside interface
@@ -3370,7 +3378,7 @@
    ;; unless a namespace exists, in that case it should be placed second in scope
    (let ((class-name (nth 1 args))
          (class-start (car (cdr (nth 1 terminals))))
-         (class-end (cdr (cdr (nth 1 terminals)))))
+         (class-end (cdr (cdr (nth 6 terminals)))))
 
      ;; Add class scope to all functions in class
      (when phps-mode-parser-sdt-symbol-imenu--stack
@@ -3383,11 +3391,10 @@
                   (item-index 0))
              (while (< item-index item-count)
                (let* ((item (nth item-index items))
-                      (item-start (nth 2 item))
-                      (item-end (nth 3 item)))
+                      (item-start (nth 2 item)))
                  (when (and
                         (>= item-start class-start)
-                        (<= item-end class-end))
+                        (<= item-start class-end))
                    (push
                     (list 'interface class-name class-start class-end)
                     (nth imenu-stack-index phps-mode-parser-sdt-symbol-imenu--stack))
@@ -4393,13 +4400,14 @@
      ast-index
      ,(car (cdr (nth 3 terminals)))
      ast-start
-     ,(if (nth 10 args)
+     ,(if (listp (car (nth 10 terminals)))
           (car (cdr (car (nth 10 terminals))))
         nil)
      ast-end
-     ,(if (nth 10 args)
+     ,(if (listp (car (nth 10 terminals)))
           (cdr (cdr (car (cdr (cdr (nth 10 terminals))))))
-        nil)))
+        nil)
+     nil))
  phps-mode-parser--table-translations)
 
 ;; 301 ((attributed_class_statement) (enum_case))
@@ -4424,6 +4432,7 @@
           (attributed-class-statement-type
            (plist-get attributed-class-statement 'ast-type)))
      (cond
+
       ;; Property
       ((equal attributed-class-statement-type 'property)
        (let ((property-list
@@ -4482,6 +4491,10 @@
               (plist-get
                attributed-class-statement
                'ast-start))
+             (function-index
+              (plist-get
+               attributed-class-statement
+               'ast-index))
              (function-end
               (plist-get
                attributed-class-statement
@@ -4505,16 +4518,26 @@
              (when (equal method-modifier 'static)
                (setq is-static-p t))))
 
-         (when (and function-start function-end)
-
-           ;; Add function to imenu stack
+         ;; Add function to imenu stack
+         (cond
+          ((and function-start function-end)
            (if phps-mode-parser-sdt-symbol-imenu--stack
                (push
                 (list (list 'function function-name function-start function-end))
                 phps-mode-parser-sdt-symbol-imenu--stack)
              (setq
               phps-mode-parser-sdt-symbol-imenu--stack
-              (list (list (list 'function function-name function-start function-end)))))
+              (list (list (list 'function function-name function-start function-end))))))
+          (function-index
+           (if phps-mode-parser-sdt-symbol-imenu--stack
+               (push
+                (list (list 'function function-name function-index))
+                phps-mode-parser-sdt-symbol-imenu--stack)
+             (setq
+              phps-mode-parser-sdt-symbol-imenu--stack
+              (list (list (list 'function function-name function-index)))))))
+
+         (when (and function-start function-end)
 
            ;; Add $this symbol in scope unless method is static
            (unless is-static-p

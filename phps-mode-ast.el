@@ -119,8 +119,8 @@
                                  (push `("declaration" . ,v3-index) v3-list)
                                  (push `(,k3 ,v3-list) v2-list))
                              (if (symbolp k3)
-                                 (setq v2-index v3))
-                             (push `(,k3 . ,v3) v2-list)))
+                                 (setq v2-index v3)
+                             (push `(,k3 . ,v3) v2-list))))
                          v2)
 
                         ;; Sort level 3
