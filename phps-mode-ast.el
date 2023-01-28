@@ -116,7 +116,7 @@
                                        (< (cdr a) (cdr (car (car (cdr b))))))
                                       (t
                                        (< (cdr a) (cdr b)))))))
-                                 (push `(declaration . ,v3-index) v3-list)
+                                 (push `("declaration" . ,v3-index) v3-list)
                                  (push `(,k3 ,v3-list) v2-list))
                              (if (symbolp k3)
                                  (setq v2-index v3))
@@ -140,7 +140,7 @@
                               (< (cdr a) (cdr (car (car (cdr b))))))
                              (t
                               (< (cdr a) (cdr b)))))))
-                        (push `(declaration . ,v2-index) v2-list)
+                        (push `("declaration" . ,v2-index) v2-list)
                         (push `(,k2 ,v2-list) v-list))
                     (if (symbolp k2)
                         (setq v-index v2)
@@ -164,7 +164,7 @@
                      (< (cdr a) (cdr (car (car (cdr b))))))
                     (t
                      (< (cdr a) (cdr b)))))))
-               (push `(declaration . ,v-index) v-list)
+               (push `("declaration" . ,v-index) v-list)
                (push `(,k ,v-list) imenu-index))
            (push `(,k . ,v) imenu-index)))
        phps-mode-parser-sdt-symbol-imenu--table)
