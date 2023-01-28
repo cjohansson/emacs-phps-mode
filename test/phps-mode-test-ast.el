@@ -131,9 +131,8 @@
   "Run test for bookkeeping generation."
   (message "-- Running tests for bookkeeping generation... --\n")
 
-;; TODO Imenu should be hierarchical and created independently of variables
-;; TODO Not bookkeeping for $var->whatever when $var is not $this
-;; TODO Should always bookkeep hit for global variables in function
+  ;; TODO MVP Not bookkeeping for $var->whatever when $var is not $this
+  ;; TODO v2 Should have more delicate handling of isset, !empty condition blocks
 
   (phps-mode-test-ast--should-bookkeep
    "<?php\n\n$var = 'abc';\n\nif ($var2) {\n    echo 'This never happens';\n}\nif ($var) {\n    echo 'This happens';\n}"
@@ -151,7 +150,7 @@
    "<?php\n\n$var2 = 4;\n\nfunction myFunction($var)\n{\n    $var3 = 3;\n    if ($var) {\n        echo 'Hit';\n    }\n    if ($var2) {\n        echo 'Miss';\n    }\n    if ($var3) {\n        echo 'Hit';\n    }\n}\n\nfunction myFunction2($abc)\n{\n    if ($var) {\n        echo 'Miss';\n    }\n    if ($abc) {\n        echo 'Hit';\n    }\n}\n\nif ($var) {\n    echo 'Miss';\n}\nif ($var2) {\n    echo 'Hit';\n}"
    "Bookkeeping in function level with variable assignments"
    '(((8 13) 1) ((40 44) 3) ((52 57) 2) ((71 75) 3) ((113 118) 0) ((157 162) 2) ((216 220) 4) ((232 236) 0) ((275 279) 4) ((316 320) 0) ((347 352) 1))
-   '(("$var2" . 8) ("function myFunction" (("declaration" . 29) ("$var" . 40) ("$var3" . 52))) ("function myFunction2" (("declaration" . 204) ("$abc" . 216)))))
+   '(("$var2" . 8) ("function myFunction" ("declaration" . 29) ("$var" . 40) ("$var3" . 52)) ("function myFunction2" ("declaration" . 204) ("$abc" . 216))))
 
   (phps-mode-test-ast--should-bookkeep
    "<?php\n\n// Super-globals\n\nif ($_GET) {\n    echo 'Hit';\n}\nif ($_POST) {\n    echo 'Hit';\n}\nif ($_COOKIE) {\n    echo 'Hit';\n}\nif ($_SESSION) {\n    echo 'Hit';\n}\nif ($_REQUEST) {\n    echo 'Hit';\n}\nif ($GLOBALS) {\n    echo 'Hit';\n}\nif ($_SERVER) {\n    echo 'Hit';\n}\nif ($_FILES) {\n    echo 'Hit';\n}\nif ($_ENV) {\n    echo 'Hit';\n}\nif ($argc) {\n    echo 'Hit';\n}\nif ($argv) {\n    echo 'Hit';\n}\nif ($http_​response_​header) {\n    echo 'Hit';\n}"
@@ -162,7 +161,7 @@
    "<?php\n\nnamespace myNamespaceA {\n    $var = 123;\n    class myClassA {\n        private $var2 = 123;\n        public static function myFunctionA($var3) {\n            $var4 = 123;\n            if ($var) {\n                echo 'Miss';\n            }\n            if ($var2) {\n                echo 'Miss';\n            }\n            if ($var3) {\n                echo 'Hit';\n            }\n            if ($var4) {\n                echo 'Hit';\n            }\n        }\n\n        function myFunctionB($var5)\n        {\n            $var6 = 123;\n            if ($var) {\n                echo 'Miss';\n            }\n            if ($var2) {\n                echo 'Miss';\n            }\n            if ($var3) {\n                echo 'Miss';\n            }\n            if ($var4) {\n                echo 'Miss';\n            }\n            if ($var5) {\n                echo 'Hit';\n            }\n            if ($var6) {\n                echo 'Hit';\n            }\n        }\n    }\n\n    if ($var) {\n        echo 'Hit';\n    }\n    if ($var2) {\n        echo 'Miss';\n    }\n    if ($var3) {\n        echo 'Miss';\n    }\n    if ($var4) {\n        echo 'Miss';\n    }\n    if ($var5) {\n        echo 'Miss';\n    }\n    if ($var6) {\n        echo 'Miss';\n    }\n}\n\nnamespace myNamespaceB {\n    $var7 = 123;\n    class myClassB {\n        private $var8 = 123;\n        function myFunctionA($var10) {\n            $var9 = 123;\n            if ($var) {\n                echo 'Miss';\n            }\n            if ($var2) {\n                echo 'Miss';\n            }\n            if ($var3) {\n                echo 'Miss';\n            }\n            if ($var4) {\n                echo 'Miss';\n            }\n            if ($var5) {\n                echo 'Miss';\n            }\n            if ($var6) {\n                echo 'Miss';\n            }\n            if ($var7) {\n                echo 'Miss';\n            }\n            if ($var8) {\n                echo 'Miss';\n            }\n            if ($var9) {\n                echo 'Hit';\n            }\n            if ($var10) {\n                echo 'Hit';\n            }\n        }\n\n        function myFunctionB($var12)\n        {\n            $var11 = 123;\n            if ($var) {\n                echo 'Miss';\n            }\n            if ($var2) {\n                echo 'Miss';\n            }\n            if ($var3) {\n                echo 'Miss';\n            }\n            if ($var4) {\n                echo 'Miss';\n            }\n            if ($var5) {\n                echo 'Hit';\n            }\n            if ($var6) {\n                echo 'Hit';\n            }\n            if ($var7) {\n                echo 'Miss';\n            }\n            if ($var8) {\n                echo 'Miss';\n            }\n            if ($var9) {\n                echo 'Miss';\n            }\n            if ($var10) {\n                echo 'Miss';\n            }\n            if ($var11) {\n                echo 'Hit';\n            }\n            if ($var12) {\n                echo 'Hit';\n            }\n        }\n    }\n\n    if ($var) {\n        echo 'Hit';\n    }\n    if ($var2) {\n        echo 'Miss';\n    }\n    if ($var3) {\n        echo 'Miss';\n    }\n    if ($var4) {\n        echo 'Miss';\n    }\n    if ($var5) {\n        echo 'Miss';\n    }\n    if ($var6) {\n        echo 'Miss';\n    }\n    if ($var7) {\n        echo 'Hit';\n    }\n}\n"
    "Bookkeeping in maximum level with namespaces, classes and functions."
    '(((37 41) 1) ((86 91) 2) ((142 147) 4) ((163 168) 3) ((192 196) 0) ((259 264) 0) ((327 332) 4) ((394 399) 3) ((485 490) 7) ((514 519) 5) ((543 547) 0) ((610 615) 0) ((678 683) 0) ((746 751) 0) ((814 819) 7) ((881 886) 5) ((957 961) 1) ((999 1004) 0) ((1043 1048) 0) ((1087 1092) 0) ((1131 1136) 0) ((1175 1180) 0) ((1243 1248) 8) ((1293 1298) 9) ((1335 1341) 12) ((1357 1362) 10) ((1386 1390) 0) ((1453 1458) 0) ((1521 1526) 0) ((1589 1594) 0) ((1657 1662) 0) ((1725 1730) 0) ((1793 1798) 0) ((1861 1866) 0) ((1929 1934) 10) ((1996 2002) 12) ((2088 2094) 15) ((2118 2124) 13) ((2148 2152) 0) ((2215 2220) 0) ((2283 2288) 0) ((2351 2356) 0) ((2419 2424) 0) ((2486 2491) 0) ((2553 2558) 0) ((2621 2626) 0) ((2689 2694) 0) ((2757 2763) 0) ((2826 2832) 13) ((2894 2900) 15) ((2971 2975) 0) ((3013 3018) 0) ((3057 3062) 0) ((3101 3106) 0) ((3145 3150) 0) ((3189 3194) 0) ((3233 3238) 8))
-   '(("namespace myNamespaceA" (("declaration" . 18) ("$var" . 37) ("class myClassA" (("declaration" . 59) ("$var2" . 86) ("function myFunctionA" (("declaration" . 149) ("$var3" . 142) ("$var4" . 163))) ("function myFunctionB" (("declaration" . 500) ("$var5" . 485) ("$this" . 500) ("$var6" . 514))))))) ("namespace myNamespaceB" (("declaration" . 1224) ("$var7" . 1243) ("class myClassB" (("declaration" . 1266) ("$var8" . 1293) ("function myFunctionA" (("declaration" . 1343) ("$var10" . 1335) ("$this" . 1343) ("$var9" . 1357))) ("function myFunctionB" (("declaration" . 2104) ("$var12" . 2088) ("$this" . 2104) ("$var11" . 2118)))))))))
+   '(("namespace myNamespaceA" ("declaration" . 18) ("$var" . 37) ("class myClassA" ("declaration" . 59) ("$var2" . 86) ("function myFunctionA" ("declaration" . 149) ("$var3" . 142) ("$var4" . 163)) ("function myFunctionB" ("declaration" . 500) ("$var5" . 485) ("$var6" . 514)))) ("namespace myNamespaceB" ("declaration" . 1224) ("$var7" . 1243) ("class myClassB" ("declaration" . 1266) ("$var8" . 1293) ("function myFunctionA" ("declaration" . 1343) ("$var10" . 1335) ("$var9" . 1357)) ("function myFunctionB" ("declaration" . 2104) ("$var12" . 2088) ("$var11" . 2118))))))
 
   (phps-mode-test-ast--should-bookkeep
    "<?php\n\n// Conditional assignments\n\n$items = array(1, 2, 3);\nforeach ($items as $item) {\n    if ($item) {\n        echo 'Hit';\n    }\n}\nforeach ($items as $key => $value) {\n    if ($key || $value) {\n        echo 'Hit';\n    }\n}\nfor ($i = 0; $i < count($items); $i++) {\n    if ($i) {\n        echo 'Hit';\n    }\n}\nif ($a = 123) {\n    if ($a) {\n        echo 'Hit';\n    }\n}\nwhile ($b = 123) {\n    if ($a) {\n        echo 'Hit';\n    }\n}\ndo {\n    echo 'Hit';\n} while ($c = 456);\n"
@@ -174,7 +173,7 @@
    "<?php\n\n// Class properties\n\nclass myParent {}\n\nclass myClass extends myParent {\n    private $var1 = 123;\n    protected static $var2;\n    public $var3;\n    var $var4;\n    function __construct() {\n        if ($this) {\n            echo 'Hit';\n        }\n        if ($this->var1) {\n            echo 'Hit';\n        }\n        if (self::$var1) {\n            echo 'Miss';\n        }\n        if (self::$var2) {\n            echo 'Hit';\n        }\n        if (static::$var2) {\n            echo 'Hit';\n        }\n        if ($this->var3) {\n            echo 'Hit';\n        }\n        if ($this->var4) {\n            echo 'Hit';\n        }\n        if ($this->var5) {\n            echo 'Miss';\n        }\n        if (paren1) {\n            echo 'Hit';\n        }\n    }\n}\n\nif ($this) {\n    echo 'Miss';\n}\nif (self) {\n    echo 'Miss';\n}\nif (paren1) {\n    echo 'Miss';\n}"
    "Bookkeeping of class properties"
    '(((93 98) 1) ((127 132) 2) ((145 150) 3) ((160 165) 4) ((208 213) 5) ((263 268) 5) ((270 274) 1) ((330 335) 0) ((392 397) 2) ((455 460) 2) ((510 515) 5) ((517 521) 3) ((571 576) 5) ((578 582) 4) ((632 637) 5) ((639 643) 0) ((751 756) 0))
-   '(("class myParent" (("declaration" . 35))) ("class myClass" (("declaration" . 54) ("$var1" . 93) ("$var2" . 127) ("$var3" . 145) ("$var4" . 160) ("function __construct" (("declaration" . 194) ("$this" . 194)))))))
+   '(("class myParent" ("declaration" . 35)) ("class myClass" ("declaration" . 54) ("$var1" . 93) ("$var2" . 127) ("$var3" . 145) ("$var4" . 160) ("function __construct" ("declaration" . 194)))))
 
   (phps-mode-test-ast--should-bookkeep
    "<?php\n\ntry {\n    \n} catch (\\Exception $e) {\n    if ($e) {\n        echo 'Hit';\n    }\n}\n\nif ($e) {\n    echo 'Miss';\n}\n"
@@ -192,7 +191,7 @@
    "<?php\nfinal class myClass {\n    function random() {}\n    function __construct()\n    {\n        $this->random();\n        $this->random['abc'] = 123;\n    }\n}"
    "Method calls should be avoided in bookkeeping"
    '(((95 100) 2) ((120 125) 2) ((127 133) 0))
-   '(("class myClass" (("declaration" . 19) ("function random" (("declaration" . 51) ("$this" . 51))) ("function __construct" (("declaration" . 85) ("$this" . 85)))))))
+   '(("class myClass" ("declaration" . 19) ("function random" ("declaration" . 51)) ("function __construct" ("declaration" . 85)))))
 
   (phps-mode-test-ast--should-bookkeep
    "<?php\n$items = array(1, 2, 3);\nforeach ($items as &$item) {\n    if ($item) {\n        echo 'Hit';\n    }\n}\nforeach ($items as $key => &$item2) {\n    if ($item) {\n        echo 'Hit';\n    }\n}"
@@ -210,7 +209,7 @@
    "<?php\n\n$var = 123;\n\nfunction test($abc) {\n    global $var, $var2;\n    if ($var) {\n        echo 'Hit';\n    }\n    if ($var2) {\n        echo 'Hit';\n    }\n}"
    "Bookkeeping of global variable declaration in function"
    '(((8 12) 1) ((35 39) 4) ((54 58) 1) ((60 65) 0) ((75 79) 2) ((117 122) 3))
-   '(("$var" . 8) ("function test" (("declaration" . 30) ("$abc" . 35) ("$var" . 54) ("$var2" . 60)))))
+   '(("$var" . 8) ("function test" ("declaration" . 30) ("$abc" . 35) ("$var" . 54) ("$var2" . 60))))
 
   (phps-mode-test-ast--should-bookkeep
    "<?php\n$y = 1;\n$fn1 = fn($x) => $x + $y;\n$z = 1;\n$fn = fn($x2) => fn($y2) => $x2 * $y2 + $z;\nfn(array $x3) => $x3;\n$x4 = 4;\nstatic fn(): int => $x4;\nfn($x5 = 42) => $x5;\nfn(&$x6) => $x6;\nfn&($x7) => $x7;\nfn($x8, ...$rest) => $rest;"
@@ -239,13 +238,13 @@
    "<?php\ninterface myInterface\n{\n    function myFunction1();\n    function myFunction2($x);\n}\n"
    "Bookkeeping variable in interface function"
    '(((84 86) 1))
-   '(("interface myInterface" (("declaration" . 17) ("function myFunction1" (("declaration" . 44))) ("function myFunction2" (("declaration" . 72) ("$x" . 84)))))))
+   '(("interface myInterface" ("declaration" . 17) ("function myFunction1" ("declaration" . 44)) ("function myFunction2" ("declaration" . 72) ("$x" . 84)))))
 
   (phps-mode-test-ast--should-bookkeep
    "<?php\n\nfunction myFunction1()\n{\n    return isset($a);\n}\n\nfunction myFunction2()\n{\n    $b = 2;\n    if ($b) {\n        echo 'Hit';\n    }\n    if ($a) {\n        echo 'Miss';\n    }\n}\n"
    "Bookkeeping after definition condition"
    '(((50 52) 1) ((87 89) 2) ((103 105) 2) ((143 145) 0))
-   '(("function myFunction1" (("declaration" . 17) ("$a" . 50))) ("function myFunction2" (("declaration" . 67) ("$b" . 87)))))
+   '(("function myFunction1" ("declaration" . 17) ("$a" . 50)) ("function myFunction2" ("declaration" . 67) ("$b" . 87))))
 
   (phps-mode-test-ast--should-bookkeep
    "<?php\n\n$a = array(1, 2, 3);\nforeach ($a as $uri => $page)\n{\n    if (isset($pages)) {\n        if ($a) {\n            echo 'Hit';\n        }\n        if ($uri) {\n            echo 'Hit';\n        }\n        if ($page) {\n            echo 'Hit';\n        }\n    }\n}\n"
@@ -269,31 +268,31 @@
    "<?php\n\nfunction myFunction($a, $b, $c, $d)\n{\n    global $f, $g;\n    if (isset($f)) {\n        if (!empty($g)) {\n            if ($a) {\n                echo 'Hit';\n            }\n            if ($b) {\n                echo 'Hit';\n            }\n            if ($c) {\n                echo 'Hit';\n            }\n            if ($d) {\n                echo 'Hit';\n            }\n        }\n    }\n}\n"
    "Bookkeeping variables inside nested isset() !empty() blocks"
    '(((28 30) 5) ((32 34) 6) ((36 38) 7) ((40 42) 8) ((57 59) 0) ((61 63) 0) ((79 81) 1) ((105 107) 2) ((128 130) 5) ((192 194) 6) ((256 258) 7) ((320 322) 8))
-   '(("function myFunction" (("declaration" . 17) ("$a" . 28) ("$b" . 32) ("$c" . 36) ("$d" . 40) ("$f" . 57) ("$g" . 61)))))
+   '(("function myFunction" ("declaration" . 17) ("$a" . 28) ("$b" . 32) ("$c" . 36) ("$d" . 40) ("$f" . 57) ("$g" . 61))))
 
   (phps-mode-test-ast--should-bookkeep
    "<?php\n\n$var = 123;\n\nfunction test($abc) {\n    static $var;\n    if ($var) {\n        echo 'Hit';\n    }\n}"
    "Bookkeeping of static variable declaration in function"
    '(((8 12) 1) ((35 39) 3) ((54 58) 2) ((68 72) 2))
-   '(("$var" . 8) ("function test" (("declaration" . 30) ("$abc" . 35) ("$var" . 54)))))
+   '(("$var" . 8) ("function test" ("declaration" . 30) ("$abc" . 35) ("$var" . 54))))
 
   (phps-mode-test-ast--should-bookkeep
    "<?php\n\nglobal $a, $b;\n\nif ($a) {\n    echo 'Hit';\n}\n\nfunction myFunction($c)\n{\n    global $a;\n    if ($a) {\n        echo 'Hit';\n    }\n    if ($b) {\n        echo 'Miss';\n    }\n}\n"
    "Bookkeeping of global variables in functional-oriented file"
    '(((15 17) 1) ((19 21) 2) ((28 30) 1) ((73 75) 4) ((90 92) 1) ((102 104) 3) ((142 144) 0))
-   '(("$a" . 15) ("$b" . 19) ("function myFunction" (("declaration" . 62) ("$c" . 73) ("$a" . 90)))))
+   '(("$a" . 15) ("$b" . 19) ("function myFunction" ("declaration" . 62) ("$c" . 73) ("$a" . 90))))
 
   (phps-mode-test-ast--should-bookkeep
    "<?php\n\nstatic $a;\n\nif ($a) {}\n\nfunction test()\n{\n    static $a;\n    if ($a) {}\n}\n\nclass There\n{\n    function here()\n    {\n        static $a;\n        if ($a) {}\n    }\n}"
    "Bookkeeping of static variables in different scopes without namespaces"
    '(((15 17) 1) ((24 26) 1) ((61 63) 2) ((73 75) 2) ((138 140) 3) ((154 156) 3))
-   '(("$a" . 15) ("function test" (("declaration" . 41) ("$a" . 61))) ("class There" (("declaration" . 89) ("function here" (("declaration" . 121) ("$this" . 121) ("$a" . 138)))))))
+   '(("$a" . 15) ("function test" ("declaration" . 41) ("$a" . 61)) ("class There" ("declaration" . 89) ("function here" ("declaration" . 121) ("$a" . 138)))))
 
   (phps-mode-test-ast--should-bookkeep
    "<?php\nclass There\n{\n    private $variable;\n    private \\My\\Random $variable2;\n    private string $variable3;\n    private static $variable4;\n    private static \\My\\Random $variable5;\n    private static string $variable6;\n    function here()\n    {\n        if ($this->variable) {}\n        if ($this->variable2) {}\n        if ($this->variable3) {}\n        if ($this->variable4) {}\n        if (self::$variable4) {}\n        if (self::$variable5) {}\n        if (self::$variable6) {}\n    }\n}\n"
    "Bookkeeping of typed class variables"
    '(((33 42) 1) ((67 77) 2) ((98 108) 3) ((129 139) 4) ((171 181) 5) ((209 219) 6) ((259 264) 7) ((266 274) 1) ((291 296) 7) ((298 307) 2) ((324 329) 7) ((331 340) 3) ((357 362) 7) ((364 373) 0) ((396 406) 4) ((429 439) 5) ((462 472) 6))
-   '(("class There" (("declaration" . 13) ("$variable" . 33) ("$variable2" . 67) ("$variable3" . 98) ("$variable4" . 129) ("$variable5" . 171) ("$variable6" . 209) ("function here" (("declaration" . 245) ("$this" . 245)))))))
+   '(("class There" ("declaration" . 13) ("$variable" . 33) ("$variable2" . 67) ("$variable3" . 98) ("$variable4" . 129) ("$variable5" . 171) ("$variable6" . 209) ("function here" ("declaration" . 245)))))
 
   (phps-mode-test-ast--should-bookkeep
    "<?php\n\n$a = $b = $c = 3;\n\nif ($a) {\n    echo 'a=',$a;\n} else {\n    echo '$a is undefined!';\n}\nif ($b) {\n    echo 'b=',$b;\n} else {\n    echo '$b is undefined!';\n}\nif ($c) {\n    echo 'c=',$c;\n} else {\n    echo '$c is undefined!';\n}"
@@ -305,49 +304,49 @@
    "<?php\nclass There\n{\n    private $variable;\n    private ?\\My\\Random $variable2;\n    private string $variable3;\n    private static $variable4;\n    private static \\My\\Random $variable5;\n    private static ?string $variable6;\n    function here()\n    {\n        if ($this->variable) {}\n        if ($this->variable2) {}\n        if ($this->variable3) {}\n        if ($this->variable4) {}\n        if (self::$variable4) {}\n        if (self::$variable5) {}\n        if (self::$variable6) {}\n    }\n}\n"
    "Bookkeeping of nullable typed class variables"
    '(((33 42) 1) ((68 78) 2) ((99 109) 3) ((130 140) 4) ((172 182) 5) ((211 221) 6) ((261 266) 7) ((268 276) 1) ((293 298) 7) ((300 309) 2) ((326 331) 7) ((333 342) 3) ((359 364) 7) ((366 375) 0) ((398 408) 4) ((431 441) 5) ((464 474) 6))
-   '(("class There" (("declaration" . 13) ("$variable" . 33) ("$variable2" . 68) ("$variable3" . 99) ("$variable4" . 130) ("$variable5" . 172) ("$variable6" . 211) ("function here" (("declaration" . 247) ("$this" . 247)))))))
+   '(("class There" ("declaration" . 13) ("$variable" . 33) ("$variable2" . 68) ("$variable3" . 99) ("$variable4" . 130) ("$variable5" . 172) ("$variable6" . 211) ("function here" ("declaration" . 247)))))
 
   (phps-mode-test-ast--should-bookkeep
    "<?php\nclass MyClass\n{\n    static function here()\n    {\n        if ($this) {\n            // Miss;\n        }\n    }\n    function there()\n    {\n        if ($this) {\n            // Hit\n        }\n    }\n}\n"
    "Bookkeeping of $this not available inside static method"
    '(((68 73) 0) ((153 158) 1))
-   '(("class MyClass" (("declaration" . 13) ("function here" (("declaration" . 54))) ("function there" (("declaration" . 139) ("$this" . 139)))))))
+   '(("class MyClass" ("declaration" . 13) ("function here" ("declaration" . 54)) ("function there" ("declaration" . 139)))))
 
   (phps-mode-test-ast--should-bookkeep
    "<?php\n\nclass myClass\n{\n    private $tost = 'abc';\n    public function test($d)\n    {\n        return fn($e) => $this->tost . $d . $e;\n    }\n}\n\n$a = new myClass();\necho $a->test('def')('ghi');"
    "Bookkeeping of $this reference inside arrow function inside of method"
    '(((36 41) 1) ((76 78) 4) ((104 106) 2) ((111 116) 3) ((118 122) 1) ((125 127) 4) ((130 132) 2) ((143 145) 5) ((168 170) 5))
-   '(("class myClass" (("declaration" . 14) ("$tost" . 36) ("function test" (("declaration" . 84) ("$d" . 76) ("$this" . 84) ("$e" . 104))))) ("$a" . 143)))
+   '(("class myClass" ("declaration" . 14) ("$tost" . 36) ("function test" ("declaration" . 84) ("$d" . 76) ("$e" . 104))) ("$a" . 143)))
 
   (phps-mode-test-ast--should-bookkeep
    "<?php\n\nclass myClass\n{\n    static $var = '123';\n    static function myMethod($a)\n    {\n        return fn($b) => self::$var . $a . $b;\n    }\n}\n\necho myClass::myMethod('4')('5');"
    "Bookkeeping of self reference inside arrow function inside of static method"
    '(((35 39) 1) ((78 80) 3) ((106 108) 2) ((119 123) 1) ((126 128) 3) ((131 133) 2))
-  '(("class myClass" (("declaration" . 14) ("$var" . 35) ("function myMethod" (("declaration" . 86) ("$a" . 78) ("$b" . 106)))))))
+  '(("class myClass" ("declaration" . 14) ("$var" . 35) ("function myMethod" ("declaration" . 86) ("$a" . 78) ("$b" . 106)))))
 
   (phps-mode-test-ast--should-bookkeep
    "<?php\nnamespace myNamespace;\nclass myClass\n{\n    private $property1 = '';\n    private $property2;\n    protected function myMethod(\n        $argument1,\n        $argument2,\n        $argument3\n    ) {\n        if ($this->property2) {\n            echo 'was here';\n        }\n        /* @codingStandardsIgnoreEnd */\n        if (\n            $argument1\n            && $argument2\n            && $argument3\n            && $argument4\n            && !empty($argument1['index'])\n            && $this->property1\n            && $argument1['index'] == $this->property1\n        ) {\n        }\n    }\n}\n"
    "Bookkeeping of properties inside if condition list"
    '(((58 68) 1) ((87 97) 2) ((140 150) 5) ((160 170) 6) ((180 190) 7) ((211 216) 4) ((218 227) 2) ((335 345) 5) ((361 371) 6) ((387 397) 7) ((413 423) 0) ((446 456) 3) ((482 487) 4) ((489 498) 1) ((514 524) 3) ((537 542) 4) ((544 553) 1))
-  '(("namespace myNamespace" (("declaration" . 17) ("class myClass" (("declaration" . 36) ("$property1" . 58) ("$property2" . 87) ("function myMethod" (("declaration" . 197) ("$argument2" . 160) ("$argument3" . 180) ("$this" . 197) ("$argument1" . 446)))))))))
+  '(("namespace myNamespace" ("declaration" . 17) ("class myClass" ("declaration" . 36) ("$property1" . 58) ("$property2" . 87) ("function myMethod" ("declaration" . 197) ("$argument2" . 160) ("$argument3" . 180) ("$argument1" . 446))))))
 
   (phps-mode-test-ast--should-bookkeep
    "<?php\ntrait MyTrait {\n    private $var = 'abc';\n    public function sayHello() {\n        if ($this->var) {\n            echo 'Hit';\n        }\n    }\n}\n"
    "A basic trait class"
    '(((35 39) 1) ((94 99) 2) ((101 104) 1))
-   '(("trait MyTrait" (("declaration") ("$var" . 35) ("function sayHello" (("declaration" . 80) ("$this" . 80)))))))
+   '(("trait MyTrait" ("declaration") ("$var" . 35) ("function sayHello" ("declaration" . 80)))))
 
   (phps-mode-test-ast--should-bookkeep
    "<?php\nclass Person {\n    public function __construct(\n        private string $name,\n        private int $age,\n        public $address\n    ) {}\n}"
    "Class with class properties in constructor."
    '(((78 83) 3) ((105 109) 5) ((126 134) 7))
-   '(("class Person" (("declaration" . 13) ("$name" . 78) ("$age" . 105) ("$address" . 126) ("function __construct" (("declaration" . 141) ("$name" . 78) ("$age" . 105) ("$address" . 126) ("$this" . 141)))))))
+   '(("class Person" ("declaration" . 13) ("$name" . 78) ("$age" . 105) ("$address" . 126) ("function __construct" ("declaration" . 141) ("$name" . 78) ("$age" . 105) ("$address" . 126)))))
 
   (phps-mode-test-ast--should-bookkeep
    "<?php\nfunction myFunction()\n{\n    $variable = 123;\n    if ($variable === 456) {\n        $variable = 789;\n    }\n}\n"
    "Variable inside function with assignment inside conditional block"
    '(((35 44) 1) ((60 69) 1) ((89 98) 1))
-   '(("function myFunction" (("declaration" . 16) ("$variable" . 35)))))
+   '(("function myFunction" ("declaration" . 16) ("$variable" . 35))))
 
   (message "\n-- Ran tests for bookkeeping generation. --"))
 

@@ -864,10 +864,10 @@
         (if matching-uri
             (list
              matching-uri
-             (list 'namespace scope-namespace 'class scope-class 'trait scope-trait 'interface scope-interface 'function scope-function))
+             (list 'namespace scope-namespace 'class scope-class 'trait scope-trait 'interface scope-interface 'function scope-function 'superglobal nil))
           (list
            (nth 0 potential-uris)
-           (list 'namespace scope-namespace 'class scope-class 'trait scope-trait 'interface scope-interface 'function scope-function)))))))
+           (list 'namespace scope-namespace 'class scope-class 'trait scope-trait 'interface scope-interface 'function scope-function 'superglobal nil)))))))
 
 (defun phps-mode-parser-sdt--parse-top-statement ()
   "Parse latest top statement."
@@ -1163,7 +1163,9 @@
              (symbol-class)
              (symbol-interface)
              (symbol-trait)
-             (symbol-function))
+             (symbol-function)
+             (symbol-superglobal)
+             (symbol-is-this (string= (downcase symbol-name) "$this")))
 
         ;; Collect namespace, class, interface, trait and function here
         (when (nth 1 (nth 1 symbol-uri-object))
@@ -1176,6 +1178,8 @@
           (setq symbol-interface (car (nth 7 (nth 1 symbol-uri-object)))))
         (when (nth 9 (nth 1 symbol-uri-object))
           (setq symbol-function (car (nth 9 (nth 1 symbol-uri-object)))))
+        (when (nth 11 (nth 1 symbol-uri-object))
+          (setq symbol-superglobal t))
 
         ;; (message "\nsymbol-name: %S" symbol-name)
         ;; (message "symbol-scope: %S" symbol-scope)
@@ -1185,163 +1189,211 @@
         ;; (message "symbol-interface: %S" symbol-interface)
         ;; (message "symbol-function: %S" symbol-function)
 
+        ;; TODO detect if symbol is super-global
+        ;; TODO detect if symbol is $this, self, static
+
         ;; Place symbol in imenu if not there already
-        (cond
+        ;; and is not superglobal
+        ;; and is not $this
+        (unless (or
+                 symbol-superglobal
+                 symbol-is-this)
+          (cond
 
-         ;; Symbol is inside namespace
-         (symbol-namespace
-          (let ((imenu-nail (format "namespace %s" symbol-namespace)))
-            (cond
-
-             ;; Symbol is inside class inside a namespace
-             (symbol-class
-              (let ((imenu-nail2 (format "class %s" symbol-class)))
-                (cond
-
-                 ;; Symbol is inside function inside class inside namespace
-                 (symbol-function
-                  (let ((imenu-nail3 (format "function %s" symbol-function)))
-                    (unless
-                        (gethash
-                         symbol-name
-                         (gethash
-                          imenu-nail3
-                          (gethash
-                           imenu-nail2
-                           (gethash
-                            imenu-nail
-                            phps-mode-parser-sdt-symbol-imenu--table))))
-                      (puthash
-                       symbol-name
-                       symbol-start
-                       (gethash
-                        imenu-nail3
-                        (gethash
-                         imenu-nail2
-                         (gethash
-                          imenu-nail
-                          phps-mode-parser-sdt-symbol-imenu--table)))))))
-
-                 ;; Symbol is inside class inside namespace
-                 (t
-                  (unless
-                      (gethash
-                       symbol-name
-                       (gethash
-                        imenu-nail2
-                        (gethash
-                         imenu-nail
-                         phps-mode-parser-sdt-symbol-imenu--table)))
-                    (puthash
-                     symbol-name
-                     symbol-start
-                     (gethash
-                      imenu-nail2
-                      (gethash
-                       imenu-nail
-                       phps-mode-parser-sdt-symbol-imenu--table))))))))
-
-             ;; Symbol is inside interface inside namespace
-             (symbol-interface
-              (let ((imenu-nail2 (format "interface %s" symbol-interface)))
-                (cond
-
-                 ;; Symbol is inside function inside interface inside namespace
-                 (symbol-function
-                  (let ((imenu-nail3 (format "function %s" symbol-function)))
-                    (unless
-                        (gethash
-                         symbol-name
-                         (gethash
-                          imenu-nail3
-                          (gethash
-                           imenu-nail2
-                           (gethash
-                            imenu-nail
-                            phps-mode-parser-sdt-symbol-imenu--table))))
-                      (puthash
-                       symbol-name
-                       symbol-start
-                       (gethash
-                        imenu-nail3
-                        (gethash
-                         imenu-nail2
-                         (gethash
-                          imenu-nail
-                          phps-mode-parser-sdt-symbol-imenu--table)))))))
-
-                 ;; Symbol is inside interface inside namespace
-                 (t
-                  (unless
-                      (gethash
-                       symbol-name
-                       (gethash
-                        imenu-nail2
-                        (gethash
-                         imenu-nail
-                         phps-mode-parser-sdt-symbol-imenu--table)))
-                    (puthash
-                     symbol-name
-                     symbol-start
-                     (gethash
-                      imenu-nail2
-                      (gethash
-                       imenu-nail
-                       phps-mode-parser-sdt-symbol-imenu--table))))))))
-
-             ;; Symbol is inside trait inside namespace
-             (symbol-trait
-              (let ((imenu-nail2 (format "trait %s" symbol-trait)))
-                (cond
-
-                 ;; Symbol is inside function inside trait inside a namespace
-                 (symbol-function
-                  (let ((imenu-nail3 (format "function %s" symbol-function)))
-                    (unless
-                        (gethash
-                         symbol-name
-                         (gethash
-                          imenu-nail3
-                          (gethash
-                           imenu-nail2
-                           (gethash
-                            imenu-nail
-                            phps-mode-parser-sdt-symbol-imenu--table))))
-                      (puthash
-                       symbol-name
-                       symbol-start
-                       (gethash
-                        imenu-nail3
-                        (gethash
-                         imenu-nail2
-                         (gethash
-                          imenu-nail
-                          phps-mode-parser-sdt-symbol-imenu--table)))))))
-
-                 ;; Symbol is inside trait inside namespace
-                 (t
-                  (unless
-                      (gethash
-                       symbol-name
-                       (gethash
-                        imenu-nail2
-                        (gethash
-                         imenu-nail
-                         phps-mode-parser-sdt-symbol-imenu--table)))
-                    (puthash
-                     symbol-name
-                     symbol-start
-                     (gethash
-                      imenu-nail2
-                      (gethash
-                       imenu-nail
-                       phps-mode-parser-sdt-symbol-imenu--table))))))))
-
-             ;; Symbol is inside a namespace
-             (t
+           ;; Symbol is inside namespace
+           (symbol-namespace
+            (let ((imenu-nail (format "namespace %s" symbol-namespace)))
               (cond
 
-               ;; Symbol is inside function inside namespace
+               ;; Symbol is inside class inside a namespace
+               (symbol-class
+                (let ((imenu-nail2 (format "class %s" symbol-class)))
+                  (cond
+
+                   ;; Symbol is inside function inside class inside namespace
+                   (symbol-function
+                    (let ((imenu-nail3 (format "function %s" symbol-function)))
+                      (unless
+                          (gethash
+                           symbol-name
+                           (gethash
+                            imenu-nail3
+                            (gethash
+                             imenu-nail2
+                             (gethash
+                              imenu-nail
+                              phps-mode-parser-sdt-symbol-imenu--table))))
+                        (puthash
+                         symbol-name
+                         symbol-start
+                         (gethash
+                          imenu-nail3
+                          (gethash
+                           imenu-nail2
+                           (gethash
+                            imenu-nail
+                            phps-mode-parser-sdt-symbol-imenu--table)))))))
+
+                   ;; Symbol is inside class inside namespace
+                   (t
+                    (unless
+                        (gethash
+                         symbol-name
+                         (gethash
+                          imenu-nail2
+                          (gethash
+                           imenu-nail
+                           phps-mode-parser-sdt-symbol-imenu--table)))
+                      (puthash
+                       symbol-name
+                       symbol-start
+                       (gethash
+                        imenu-nail2
+                        (gethash
+                         imenu-nail
+                         phps-mode-parser-sdt-symbol-imenu--table))))))))
+
+               ;; Symbol is inside interface inside namespace
+               (symbol-interface
+                (let ((imenu-nail2 (format "interface %s" symbol-interface)))
+                  (cond
+
+                   ;; Symbol is inside function inside interface inside namespace
+                   (symbol-function
+                    (let ((imenu-nail3 (format "function %s" symbol-function)))
+                      (unless
+                          (gethash
+                           symbol-name
+                           (gethash
+                            imenu-nail3
+                            (gethash
+                             imenu-nail2
+                             (gethash
+                              imenu-nail
+                              phps-mode-parser-sdt-symbol-imenu--table))))
+                        (puthash
+                         symbol-name
+                         symbol-start
+                         (gethash
+                          imenu-nail3
+                          (gethash
+                           imenu-nail2
+                           (gethash
+                            imenu-nail
+                            phps-mode-parser-sdt-symbol-imenu--table)))))))
+
+                   ;; Symbol is inside interface inside namespace
+                   (t
+                    (unless
+                        (gethash
+                         symbol-name
+                         (gethash
+                          imenu-nail2
+                          (gethash
+                           imenu-nail
+                           phps-mode-parser-sdt-symbol-imenu--table)))
+                      (puthash
+                       symbol-name
+                       symbol-start
+                       (gethash
+                        imenu-nail2
+                        (gethash
+                         imenu-nail
+                         phps-mode-parser-sdt-symbol-imenu--table))))))))
+
+               ;; Symbol is inside trait inside namespace
+               (symbol-trait
+                (let ((imenu-nail2 (format "trait %s" symbol-trait)))
+                  (cond
+
+                   ;; Symbol is inside function inside trait inside a namespace
+                   (symbol-function
+                    (let ((imenu-nail3 (format "function %s" symbol-function)))
+                      (unless
+                          (gethash
+                           symbol-name
+                           (gethash
+                            imenu-nail3
+                            (gethash
+                             imenu-nail2
+                             (gethash
+                              imenu-nail
+                              phps-mode-parser-sdt-symbol-imenu--table))))
+                        (puthash
+                         symbol-name
+                         symbol-start
+                         (gethash
+                          imenu-nail3
+                          (gethash
+                           imenu-nail2
+                           (gethash
+                            imenu-nail
+                            phps-mode-parser-sdt-symbol-imenu--table)))))))
+
+                   ;; Symbol is inside trait inside namespace
+                   (t
+                    (unless
+                        (gethash
+                         symbol-name
+                         (gethash
+                          imenu-nail2
+                          (gethash
+                           imenu-nail
+                           phps-mode-parser-sdt-symbol-imenu--table)))
+                      (puthash
+                       symbol-name
+                       symbol-start
+                       (gethash
+                        imenu-nail2
+                        (gethash
+                         imenu-nail
+                         phps-mode-parser-sdt-symbol-imenu--table))))))))
+
+               ;; Symbol is inside a namespace
+               (t
+                (cond
+
+                 ;; Symbol is inside function inside namespace
+                 (symbol-function
+                  (let ((imenu-nail2 (format "function %s" symbol-function)))
+                    (unless
+                        (gethash
+                         symbol-name
+                         (gethash
+                          imenu-nail2
+                          (gethash
+                           imenu-nail
+                           phps-mode-parser-sdt-symbol-imenu--table)))
+                      (puthash
+                       symbol-name
+                       symbol-start
+                       (gethash
+                        imenu-nail2
+                        (gethash
+                         imenu-nail
+                         phps-mode-parser-sdt-symbol-imenu--table))))))
+
+                 ;; Symbol is inside a namespace
+                 (t
+                  (unless
+                      (gethash
+                       symbol-name
+                       (gethash
+                        imenu-nail
+                        phps-mode-parser-sdt-symbol-imenu--table))
+                    (puthash
+                     symbol-name
+                     symbol-start
+                     (gethash
+                      imenu-nail
+                      phps-mode-parser-sdt-symbol-imenu--table)))))))))
+
+           ;; Symbol is inside class
+           (symbol-class
+            (let ((imenu-nail (format "class %s" symbol-class)))
+              (cond
+
+               ;; Symbol is inside function inside class
                (symbol-function
                 (let ((imenu-nail2 (format "function %s" symbol-function)))
                   (unless
@@ -1361,7 +1413,7 @@
                        imenu-nail
                        phps-mode-parser-sdt-symbol-imenu--table))))))
 
-               ;; Symbol is inside a namespace
+               ;; Symbol is inside class
                (t
                 (unless
                     (gethash
@@ -1374,35 +1426,90 @@
                    symbol-start
                    (gethash
                     imenu-nail
-                    phps-mode-parser-sdt-symbol-imenu--table)))))))))
+                    phps-mode-parser-sdt-symbol-imenu--table)))))))
 
-         ;; Symbol is inside class
-         (symbol-class
-          (let ((imenu-nail (format "class %s" symbol-class)))
-            (cond
+           ;; Symbol is inside trait
+           (symbol-trait
+            (let ((imenu-nail (format "trait %s" symbol-trait)))
+              (cond
 
-             ;; Symbol is inside function inside class
-             (symbol-function
-              (let ((imenu-nail2 (format "function %s" symbol-function)))
-                (unless
-                    (gethash
+               ;; Symbol is inside function inside trait
+               (symbol-function
+                (let ((imenu-nail2 (format "function %s" symbol-function)))
+                  (unless
+                      (gethash
+                       symbol-name
+                       (gethash
+                        imenu-nail2
+                        (gethash
+                         imenu-nail
+                         phps-mode-parser-sdt-symbol-imenu--table)))
+                    (puthash
                      symbol-name
+                     symbol-start
                      (gethash
                       imenu-nail2
                       (gethash
                        imenu-nail
-                       phps-mode-parser-sdt-symbol-imenu--table)))
+                       phps-mode-parser-sdt-symbol-imenu--table))))))
+
+               ;; Symbol is inside trait
+               (t
+                (unless
+                    (gethash
+                     symbol-name
+                     (gethash
+                      imenu-nail
+                      phps-mode-parser-sdt-symbol-imenu--table))
                   (puthash
                    symbol-name
                    symbol-start
                    (gethash
-                    imenu-nail2
-                    (gethash
-                     imenu-nail
-                     phps-mode-parser-sdt-symbol-imenu--table))))))
+                    imenu-nail
+                    phps-mode-parser-sdt-symbol-imenu--table)))))))
 
-             ;; Symbol is inside class
-             (t
+           ;; Symbol is inside interface
+           (symbol-interface
+            (let ((imenu-nail (format "interface %s" symbol-interface)))
+              (cond
+
+               ;; Symbol is inside function inside interface
+               (symbol-function
+                (let ((imenu-nail2 (format "function %s" symbol-function)))
+                  (unless
+                      (gethash
+                       symbol-name
+                       (gethash
+                        imenu-nail2
+                        (gethash
+                         imenu-nail
+                         phps-mode-parser-sdt-symbol-imenu--table)))
+                    (puthash
+                     symbol-name
+                     symbol-start
+                     (gethash
+                      imenu-nail2
+                      (gethash
+                       imenu-nail
+                       phps-mode-parser-sdt-symbol-imenu--table))))))
+
+               ;; Symbol is inside interface
+               (t
+                (unless
+                    (gethash
+                     symbol-name
+                     (gethash
+                      imenu-nail
+                      phps-mode-parser-sdt-symbol-imenu--table))
+                  (puthash
+                   symbol-name
+                   symbol-start
+                   (gethash
+                    imenu-nail
+                    phps-mode-parser-sdt-symbol-imenu--table)))))))
+
+           (symbol-function
+            (let ((imenu-nail (format "function %s" symbol-function)))
               (unless
                   (gethash
                    symbol-name
@@ -1414,110 +1521,15 @@
                  symbol-start
                  (gethash
                   imenu-nail
-                  phps-mode-parser-sdt-symbol-imenu--table)))))))
+                  phps-mode-parser-sdt-symbol-imenu--table)))))
 
-         ;; Symbol is inside trait
-         (symbol-trait
-          (let ((imenu-nail (format "trait %s" symbol-trait)))
-            (cond
-
-             ;; Symbol is inside function inside trait
-             (symbol-function
-              (let ((imenu-nail2 (format "function %s" symbol-function)))
-                (unless
-                    (gethash
-                     symbol-name
-                     (gethash
-                      imenu-nail2
-                      (gethash
-                       imenu-nail
-                       phps-mode-parser-sdt-symbol-imenu--table)))
-                  (puthash
-                   symbol-name
-                   symbol-start
-                   (gethash
-                    imenu-nail2
-                    (gethash
-                     imenu-nail
-                     phps-mode-parser-sdt-symbol-imenu--table))))))
-
-             ;; Symbol is inside trait
-             (t
-              (unless
-                  (gethash
-                   symbol-name
-                   (gethash
-                    imenu-nail
-                    phps-mode-parser-sdt-symbol-imenu--table))
-                (puthash
-                 symbol-name
-                 symbol-start
-                 (gethash
-                  imenu-nail
-                  phps-mode-parser-sdt-symbol-imenu--table)))))))
-
-         ;; Symbol is inside interface
-         (symbol-interface
-          (let ((imenu-nail (format "interface %s" symbol-interface)))
-            (cond
-
-             ;; Symbol is inside function inside interface
-             (symbol-function
-              (let ((imenu-nail2 (format "function %s" symbol-function)))
-                (unless
-                    (gethash
-                     symbol-name
-                     (gethash
-                      imenu-nail2
-                      (gethash
-                       imenu-nail
-                       phps-mode-parser-sdt-symbol-imenu--table)))
-                  (puthash
-                   symbol-name
-                   symbol-start
-                   (gethash
-                    imenu-nail2
-                    (gethash
-                     imenu-nail
-                     phps-mode-parser-sdt-symbol-imenu--table))))))
-
-             ;; Symbol is inside interface
-             (t
-              (unless
-                  (gethash
-                   symbol-name
-                   (gethash
-                    imenu-nail
-                    phps-mode-parser-sdt-symbol-imenu--table))
-                (puthash
-                 symbol-name
-                 symbol-start
-                 (gethash
-                  imenu-nail
-                  phps-mode-parser-sdt-symbol-imenu--table)))))))
-
-         (symbol-function
-          (let ((imenu-nail (format "function %s" symbol-function)))
-            (unless
-                (gethash
-                 symbol-name
-                 (gethash
-                  imenu-nail
-                  phps-mode-parser-sdt-symbol-imenu--table))
+           ;; Symbol is in no scope
+           (t
+            (unless (gethash symbol-name phps-mode-parser-sdt-symbol-imenu--table)
               (puthash
                symbol-name
                symbol-start
-               (gethash
-                imenu-nail
-                phps-mode-parser-sdt-symbol-imenu--table)))))
-
-         ;; Symbol is in no scope
-         (t
-          (unless (gethash symbol-name phps-mode-parser-sdt-symbol-imenu--table)
-            (puthash
-             symbol-name
-             symbol-start
-             phps-mode-parser-sdt-symbol-imenu--table))))
+               phps-mode-parser-sdt-symbol-imenu--table)))))
 
 
         ;; (message
