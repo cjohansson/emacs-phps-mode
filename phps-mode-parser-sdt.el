@@ -1005,7 +1005,7 @@
                         imenu-nail
                         phps-mode-parser-sdt-symbol-imenu--table))
                     (let ((imenu-object (make-hash-table :test 'equal)))
-                      (puthash 'declaration (nth 1 imenu-class) imenu-object)
+                      (puthash 'declaration (nth 1 imenu-interface) imenu-object)
                       (puthash
                        imenu-nail2
                        imenu-object
@@ -1098,7 +1098,7 @@
                    imenu-nail
                    phps-mode-parser-sdt-symbol-imenu--table)
                 (let ((imenu-object (make-hash-table :test 'equal)))
-                  (puthash 'declaration (nth 1 imenu-class) imenu-object)
+                  (puthash 'declaration (nth 1 imenu-interface) imenu-object)
                   (puthash
                    imenu-nail
                    imenu-object
@@ -3288,11 +3288,11 @@
      ;; Add class to imenu stack
      (if phps-mode-parser-sdt-symbol-imenu--stack
          (push
-          (list (list 'class class-name class-start class-end))
+          (list (list 'trait class-name class-start class-end))
           phps-mode-parser-sdt-symbol-imenu--stack)
        (setq
         phps-mode-parser-sdt-symbol-imenu--stack
-        (list (list (list 'class class-name class-start class-end)))))
+        (list (list (list 'trait class-name class-start class-end)))))
 
      (when phps-mode-parser-sdt--bookkeeping-symbol-assignment-stack
        (dolist (
@@ -3398,11 +3398,11 @@
      ;; Add class to imenu stack
      (if phps-mode-parser-sdt-symbol-imenu--stack
          (push
-          (list (list 'class class-name class-start class-end))
+          (list (list 'interface class-name class-start class-end))
           phps-mode-parser-sdt-symbol-imenu--stack)
        (setq
         phps-mode-parser-sdt-symbol-imenu--stack
-        (list (list (list 'class class-name class-start class-end)))))
+        (list (list (list 'interface class-name class-start class-end)))))
 
      (when phps-mode-parser-sdt--bookkeeping-symbol-assignment-stack
        (dolist (
