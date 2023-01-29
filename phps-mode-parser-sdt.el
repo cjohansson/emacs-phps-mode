@@ -663,13 +663,15 @@
        phps-mode-parser-sdt--bookkeeping--superglobal-variable-p)
       (list
        name
-       (list 'namespace nil 'class nil 'trait nil 'interface nil 'function nil 'superglobal t))
+       (list 'namespace nil 'class nil 'trait nil 'interface nil 'function nil 'superglobal t 'object-operator nil 'static-member nil))
     (let ((potential-uris (list ""))
           (scope-namespace)
           (scope-class)
           (scope-trait)
           (scope-interface)
-          (scope-function))
+          (scope-function)
+          (scope-object-operator)
+          (scope-static-member))
       (when scope
         (let ((scope-count (length scope))
               (scope-index 0))
@@ -700,10 +702,12 @@
                    ((equal next-scope-type 'global)
                     (setq next-scope-is-global t))
                    ((equal next-scope-type 'object-operator)
+                    (setq scope-object-operator (car (cdr next-scope)))
                     (let ((downcased-scope-name (downcase (car (cdr next-scope)))))
                       (when (string= downcased-scope-name "$this")
                         (setq next-scope-is-this-object-operator t))))
                    ((equal next-scope-type 'static-member)
+                    (setq scope-static-member t)
                     (let ((downcased-scope-name (downcase (car (cdr next-scope)))))
                       (when (or
                              (string= downcased-scope-name "self")
@@ -864,10 +868,10 @@
         (if matching-uri
             (list
              matching-uri
-             (list 'namespace scope-namespace 'class scope-class 'trait scope-trait 'interface scope-interface 'function scope-function 'superglobal nil))
+             (list 'namespace scope-namespace 'class scope-class 'trait scope-trait 'interface scope-interface 'function scope-function 'superglobal nil 'object-operator scope-object-operator 'static-member scope-static-member))
           (list
            (nth 0 potential-uris)
-           (list 'namespace scope-namespace 'class scope-class 'trait scope-trait 'interface scope-interface 'function scope-function 'superglobal nil)))))))
+           (list 'namespace scope-namespace 'class scope-class 'trait scope-trait 'interface scope-interface 'function scope-function 'superglobal nil 'object-operator scope-object-operator 'static-member scope-static-member)))))))
 
 (defun phps-mode-parser-sdt--parse-top-statement ()
   "Parse latest top statement."
@@ -1164,7 +1168,7 @@
              (symbol-interface)
              (symbol-trait)
              (symbol-function)
-             (symbol-superglobal)
+             (symbol-is-superglobal)
              (symbol-is-this (string= (downcase symbol-name) "$this")))
 
         ;; Collect namespace, class, interface, trait and function here
@@ -1179,7 +1183,7 @@
         (when (nth 9 (nth 1 symbol-uri-object))
           (setq symbol-function (car (nth 9 (nth 1 symbol-uri-object)))))
         (when (nth 11 (nth 1 symbol-uri-object))
-          (setq symbol-superglobal t))
+          (setq symbol-is-superglobal t))
 
         ;; (message "\nsymbol-name: %S" symbol-name)
         ;; (message "symbol-scope: %S" symbol-scope)
@@ -1189,15 +1193,12 @@
         ;; (message "symbol-interface: %S" symbol-interface)
         ;; (message "symbol-function: %S" symbol-function)
 
-        ;; TODO detect if symbol is super-global
-        ;; TODO detect if symbol is $this, self, static
-
         ;; Place symbol in imenu if not there already
         ;; and is not superglobal
         ;; and is not $this
         (unless (or
-                 symbol-superglobal
-                 symbol-is-this)
+                 symbol-is-this
+                 symbol-is-superglobal)
           (cond
 
            ;; Symbol is inside namespace
@@ -1592,46 +1593,51 @@
                symbol-name
                symbol-scope))
              (symbol-uri (car symbol-uri-object))
+             (symbol-object-operator
+              (nth 13 (nth 1 symbol-uri-object)))
              (symbol-hit 0))
-        (cond
+        (unless (and
+                 symbol-object-operator
+                 (not (string= (downcase symbol-object-operator) "$this")))
+          (cond
 
-         ;; Super-global variable
-         ((gethash
-           symbol-name
-           phps-mode-parser-sdt--bookkeeping--superglobal-variable-p)
-          (setq symbol-hit -1))
+           ;; Super-global variable
+           ((gethash
+             symbol-name
+             phps-mode-parser-sdt--bookkeeping--superglobal-variable-p)
+            (setq symbol-hit -1))
 
-         ;; Declared variable
-         ((gethash
-           symbol-uri
-           phps-mode-parser-sdt-symbol-table-by-uri)
-          ;; (message "matches: %S" (gethash
-          ;;  symbol-uri
-          ;;  phps-mode-parser-sdt-symbol-table-by-uri))
-          (let* ((matching-symbol-ids
-                  (gethash
-                   symbol-uri
-                   phps-mode-parser-sdt-symbol-table-by-uri))
-                 (matching-symbol-index 0)
-                 (matching-symbol-count (length matching-symbol-ids))
-                 (matching-hit))
-            (while (and
-                 (not matching-hit)
-                 (< matching-symbol-index matching-symbol-count))
-              (let* ((matching-symbol-id
-                      (nth matching-symbol-index matching-symbol-ids))
-                     (matching-symbol
-                      (gethash
-                       matching-symbol-id
-                       phps-mode-parser-sdt-symbol-table))
-                     (matching-symbol-start
-                      (nth 1 matching-symbol)))
-                ;; (message "matching-symbol: %S" matching-symbol)
-                ;; (message "matching-symbol-start: %S" matching-symbol-start)
-                (when (<= matching-symbol-start symbol-start)
-                  (setq matching-hit t)
-                  (setq symbol-hit matching-symbol-id)))
-              (setq matching-symbol-index (1+ matching-symbol-index))))))
+           ;; Declared variable
+           ((gethash
+             symbol-uri
+             phps-mode-parser-sdt-symbol-table-by-uri)
+            ;; (message "matches: %S" (gethash
+            ;;  symbol-uri
+            ;;  phps-mode-parser-sdt-symbol-table-by-uri))
+            (let* ((matching-symbol-ids
+                    (gethash
+                     symbol-uri
+                     phps-mode-parser-sdt-symbol-table-by-uri))
+                   (matching-symbol-index 0)
+                   (matching-symbol-count (length matching-symbol-ids))
+                   (matching-hit))
+              (while (and
+                      (not matching-hit)
+                      (< matching-symbol-index matching-symbol-count))
+                (let* ((matching-symbol-id
+                        (nth matching-symbol-index matching-symbol-ids))
+                       (matching-symbol
+                        (gethash
+                         matching-symbol-id
+                         phps-mode-parser-sdt-symbol-table))
+                       (matching-symbol-start
+                        (nth 1 matching-symbol)))
+                  ;; (message "matching-symbol: %S" matching-symbol)
+                  ;; (message "matching-symbol-start: %S" matching-symbol-start)
+                  (when (<= matching-symbol-start symbol-start)
+                    (setq matching-hit t)
+                    (setq symbol-hit matching-symbol-id)))
+                (setq matching-symbol-index (1+ matching-symbol-index)))))))
 
         (puthash
          (list

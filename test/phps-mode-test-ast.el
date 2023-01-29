@@ -217,10 +217,12 @@
    '(((7 9) 1) ((15 19) 3) ((25 27) 2) ((32 34) 2) ((37 39) 1) ((41 43) 4) ((49 52) 7) ((58 61) 6) ((69 72) 5) ((77 80) 6) ((83 86) 5) ((89 91) 4) ((102 105) 8) ((110 113) 8) ((115 118) 9) ((144 147) 9) ((152 155) 10) ((165 168) 10) ((174 177) 11) ((182 185) 11) ((191 194) 12) ((199 202) 12) ((207 210) 13) ((215 220) 14) ((225 230) 14))
    '(("$y" . 7) ("$fn1" . 15) ("$x" . 25) ("$z" . 41) ("$fn" . 49) ("$x2" . 58) ("$y2" . 69) ("$x3" . 102) ("$x4" . 115) ("$x5" . 152) ("$x6" . 174) ("$x7" . 191) ("$x8" . 207) ("$rest" . 215)))
 
-  ;; (phps-mode-test-ast--should-bookkeep
-  ;;  "<?php\n$z = (object) array('name' => 'random');\nif ($z->name) {\n    echo 'Hit';\n}"
-  ;;  "Bookkeeping ignoring variable properties"
-  ;;  '((" id $z" 1) ((7 9) 1) ((52 54) 1)))
+  ;; TODO Make this pass for MVP
+  (phps-mode-test-ast--should-bookkeep
+   "<?php\n$z = (object) ['name' => 'random', 'doThis' => function() {}];\nif ($z->name) {\n    echo 'Hit';\n}\nif ($z->doThis()) {\n    echo 'Hit';\n}"
+   "Bookkeeping ignoring variable properties that is not $this"
+   '(((7 9) 1) ((74 76) 1) ((108 110) 1))
+   '(("$z" . 7)))
 
   (phps-mode-test-ast--should-bookkeep
    "<?php\nif (!$var = false) {\n    echo 'Hit';\n}\n"
