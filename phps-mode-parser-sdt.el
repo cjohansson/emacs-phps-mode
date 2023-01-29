@@ -5279,6 +5279,45 @@
 (puthash
  360
  (lambda(args terminals)
+   ;; Save variable declaration in bookkeeping buffer
+   (let ((variable-type (plist-get (nth 0 args) 'ast-type)))
+     (cond
+      ((equal variable-type 'variable-callable-variable)
+       (let* ((callable-variable (plist-get (nth 0 args) 'callable-variable))
+              (callable-variable-type (plist-get callable-variable 'ast-type)))
+         (cond
+          ((equal callable-variable-type 'callable-variable-simple-variable)
+           (let ((callable-variable-simple-variable (plist-get callable-variable 'simple-variable)))
+             (let ((callable-variable-simple-variable-type
+                    (plist-get
+                     callable-variable-simple-variable
+                     'ast-type)))
+               (cond
+                ((equal
+                  callable-variable-simple-variable-type
+                  'simple-variable-variable)
+                 (let* ((variable-name
+                         (plist-get
+                          callable-variable-simple-variable
+                          'variable))
+                        (symbol-name
+                          variable-name)
+                        (symbol-start
+                         (car (cdr (car terminals))))
+                        (symbol-end
+                         (cdr (cdr (car terminals))))
+                        (symbol-scope
+                         phps-mode-parser-sdt--bookkeeping-namespace))
+
+                   ;; (message "declared variable from terminals: %S" terminals)
+                   (push
+                    (list
+                     symbol-name
+                     symbol-scope
+                     symbol-start
+                     symbol-end)
+                    phps-mode-parser-sdt--bookkeeping-symbol-assignment-stack))))))))))))
+
    `(
      ast-type
      expr-assign-variable-by-reference

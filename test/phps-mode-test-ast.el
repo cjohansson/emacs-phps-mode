@@ -131,7 +131,6 @@
   "Run test for bookkeeping generation."
   (message "-- Running tests for bookkeeping generation... --\n")
 
-  ;; TODO fix Should bookkeep assignment via reference $var = & $test
   ;; TODO v2 Should have more delicate handling of isset, !empty condition blocks
   ;; TODO v2 bookkeep and include constants in imenu
   ;; TODO v2 imenu should contain redeclaration of variables
@@ -147,6 +146,12 @@
    "Bookkeeping in root level variable assignments #2"
    '(((8 12) 1) ((27 31) 1) ((72 77) 0))
    '(("$var" . 8)))
+
+  (phps-mode-test-ast--should-bookkeep
+   "<?php\n\n$abc = 123;\n\n$var = & $abc;\nif ($var) {\n    echo 'Hit';\n}"
+   "Bookkeeping in root level variable assignments #3"
+   '(((8 12) 1) ((21 25) 2) ((30 34) 1) ((40 44) 2))
+   '(("$abc" . 8) ("$var" . 21)))
 
   (phps-mode-test-ast--should-bookkeep
    "<?php\n\n$var2 = 4;\n\nfunction myFunction($var)\n{\n    $var3 = 3;\n    if ($var) {\n        echo 'Hit';\n    }\n    if ($var2) {\n        echo 'Miss';\n    }\n    if ($var3) {\n        echo 'Hit';\n    }\n}\n\nfunction myFunction2($abc)\n{\n    if ($var) {\n        echo 'Miss';\n    }\n    if ($abc) {\n        echo 'Hit';\n    }\n}\n\nif ($var) {\n    echo 'Miss';\n}\nif ($var2) {\n    echo 'Hit';\n}"
