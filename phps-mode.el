@@ -1,6 +1,6 @@
 ;;; phps-mode.el --- Major mode for PHP with code intelligence -*- lexical-binding: t -*-
 
-;; Copyright (C) 2018-2022  Free Software Foundation, Inc.
+;; Copyright (C) 2018-2023  Free Software Foundation, Inc.
 
 ;; Author: Christian Johansson <christian@cvj.se>
 ;; Maintainer: Christian Johansson <christian@cvj.se>

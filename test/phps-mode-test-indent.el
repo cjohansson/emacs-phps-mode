@@ -1,6 +1,6 @@
 ;;; phps-mode-test-indent.el --- Tests for indentation -*- lexical-binding: t -*-
 
-;; Copyright (C) 2018-2022  Free Software Foundation, Inc.
+;; Copyright (C) 2018-2023  Free Software Foundation, Inc.
 
 
 ;;; Commentary:
