@@ -109,8 +109,9 @@ Enable with:
     (setq phps-mode-async-process-using-async-el nil))
 ```
 
-### Load and configure using regular emacs-lisp with flycheck support, no asynchronous support
+### Install, load and configure using regular emacs-lisp with flycheck support, no asynchronous support
 ``` emacs-lisp
+(package-install 'phps-mode)
 (require 'phps-mode)
 (add-to-list 'auto-mode-alist '("\\.\\(php\\|phtml\\)\\'" . phps-mode))
 (phps-mode-flycheck-setup)
