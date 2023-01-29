@@ -131,6 +131,7 @@
   "Run test for bookkeeping generation."
   (message "-- Running tests for bookkeeping generation... --\n")
 
+  ;; TODO fix Should bookkeep assignment via reference $var = & $test
   ;; TODO v2 Should have more delicate handling of isset, !empty condition blocks
   ;; TODO v2 bookkeep and include constants in imenu
   ;; TODO v2 imenu should contain redeclaration of variables
