@@ -841,6 +841,12 @@
                     ;; (message "potential-uris: %S" potential-uris)
                     ))
 
+                 ((equal space-type 'object-operator)
+                  (setq scope-object-operator space-name))
+
+                 ((equal space-type 'static-member)
+                  (setq scope-static-member space-name))
+
                  )))
             (setq scope-index (1+ scope-index)))))
 
@@ -1596,6 +1602,7 @@
              (symbol-object-operator
               (nth 13 (nth 1 symbol-uri-object)))
              (symbol-hit 0))
+
         (unless (and
                  symbol-object-operator
                  (not (string= (downcase symbol-object-operator) "$this")))
@@ -1637,14 +1644,14 @@
                   (when (<= matching-symbol-start symbol-start)
                     (setq matching-hit t)
                     (setq symbol-hit matching-symbol-id)))
-                (setq matching-symbol-index (1+ matching-symbol-index)))))))
+                (setq matching-symbol-index (1+ matching-symbol-index))))))
 
-        (puthash
-         (list
-          symbol-start
-          symbol-end)
-         symbol-hit
-         phps-mode-parser-sdt-bookkeeping)
+          (puthash
+           (list
+            symbol-start
+            symbol-end)
+           symbol-hit
+           phps-mode-parser-sdt-bookkeeping))
 
         ;; (message
         ;;  "reference symbol uri: %S from %S + %S, start: %S, end: %S, object: %S, hit?: %S"
