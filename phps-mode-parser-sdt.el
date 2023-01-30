@@ -1601,11 +1601,19 @@
              (symbol-uri (car symbol-uri-object))
              (symbol-object-operator
               (nth 13 (nth 1 symbol-uri-object)))
+             (symbol-static-member
+              (nth 15 (nth 1 symbol-uri-object)))
              (symbol-hit 0))
 
-        (unless (and
-                 symbol-object-operator
-                 (not (string= (downcase symbol-object-operator) "$this")))
+        (unless (or
+                 (and
+                  symbol-object-operator
+                  (not (string= (downcase symbol-object-operator) "$this")))
+                 (and
+                  symbol-static-member
+                  (not
+                   (or (string= (downcase symbol-static-member) "self")
+                       (string= (downcase symbol-static-member) "static")))))
           (cond
 
            ;; Super-global variable
@@ -4548,11 +4556,11 @@
           ((and function-start function-end)
            (if phps-mode-parser-sdt-symbol-imenu--stack
                (push
-                (list (list 'function function-name function-start function-end))
+                (list (list 'function function-name function-index function-end))
                 phps-mode-parser-sdt-symbol-imenu--stack)
              (setq
               phps-mode-parser-sdt-symbol-imenu--stack
-              (list (list (list 'function function-name function-start function-end))))))
+              (list (list (list 'function function-name function-index function-end))))))
           (function-index
            (if phps-mode-parser-sdt-symbol-imenu--stack
                (push
