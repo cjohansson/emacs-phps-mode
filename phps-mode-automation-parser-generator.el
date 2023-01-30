@@ -56,7 +56,7 @@
 (defun phps-mode-automation-parser-generator--ensure-yacc-grammar-is-available ()
   "If grammar is not available, download it."
   (let ((php-yacc-url
-         "https://raw.githubusercontent.com/php/php-src/PHP-8.1/Zend/zend_language_parser.y")
+         "https://raw.githubusercontent.com/php/php-src/PHP-8.2/Zend/zend_language_parser.y")
         (php-yacc-file
          (expand-file-name "zend_language_parser.y")))
 
