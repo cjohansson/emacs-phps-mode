@@ -7,12 +7,10 @@
 
 ;;; Uses a parser-generator library to convert LALR(1) YACC grammar into a Canonical LR(1) Parser
 
-;; This does not work if some variables are byte-compiled therefore we delete byte-compiled files in `make parser' command
+;; This does not work if some variables are byte-compiled therefore we delete byte-compiled files in `make parser &> output.txt' command, follow progress with `tail -f output.txt'
 
-;; To resume use command: `make parser &> output.txt'
-;; and to extract Emacs-Lisp data to separate file run `cat output.txt | grep -F "-resume" - > resume.el'
-;; and then to resume parser-generation run
-;; `rm phps-mode-automation-grammar.elc; emacs -Q -batch -L . -L ~/.emacs.d/emacs-parser-generator -l phps-mode-lexer.el -l admin/phps-mode-automation.el -eval "(progn (require 'parser-generator-lr)(require 'parser-generator-lr-export))"  -eval "(phps-mode-automation)"'
+;; If generation fails for some reason, to extract Emacs-Lisp data to a separate file run `cat output.txt | grep -F "-resume" - > resume.el'
+;; and then to resume use command: `make parser-resumed &> output.txt'
 
 
 ;;; Code:
