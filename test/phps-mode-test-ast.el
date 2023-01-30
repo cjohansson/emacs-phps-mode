@@ -131,6 +131,8 @@
   "Run test for bookkeeping generation."
   (message "-- Running tests for bookkeeping generation... --\n")
 
+  ;; TODO Support list($abc, $def) = myFunction();
+
   ;; TODO v2 Should have more delicate handling of isset, !empty condition blocks
   ;; TODO v2 Should properly bookkeep inside endlessly nested anonymous functions / arrow functions / anonymous classes
   ;; TODO v2 bookkeep and include constants in imenu
