@@ -6,9 +6,11 @@
 ;;; Commentary:
 
 ;;; Uses a parser-generator library to convert LALR(1) YACC grammar into a Canonical LR(1) Parser
-
+;;
 ;; This does not work if some variables are byte-compiled therefore we delete byte-compiled files in `make parser &> output.txt' command, follow progress with `tail -f output.txt'
-
+;;
+;; For some reason the grammar file can't be downloaded non-interactively, in that case try to run the code `(progn (require 'parser-generator-lr-export)(setq debug-on-signal t)(setq debug-on-error t)(phps-mode-automation))' in a active Emacs session and quit when file has been downloaded and the restart the process from terminal.
+;;
 ;; If generation fails for some reason, to extract Emacs-Lisp data to a separate file run `cat output.txt | grep -F "-resume" - > resume.el'
 ;; and then to resume use command: `make parser-resumed &> output.txt'
 
