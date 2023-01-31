@@ -5170,6 +5170,38 @@
 (puthash
  357
  (lambda(args _terminals)
+   (let ((array-pair-list (nth 2 args)))
+     (dolist (array-item array-pair-list)
+       (let ((array-item-type (plist-get array-item 'ast-type)))
+         (cond
+          ((equal array-item-type 'array-pair-expr)
+           (let* ((array-item-expr (plist-get array-item 'expr))
+                  (array-item-expr-type (plist-get array-item-expr 'ast-type)))
+             (cond
+              ((equal array-item-expr-type 'expr-variable)
+               (let* ((expr-variable (plist-get array-item-expr 'variable))
+                      (expr-variable-type (plist-get expr-variable 'ast-type)))
+                 (cond
+                  ((equal expr-variable-type 'variable-callable-variable)
+                   (let* ((callable-variable (plist-get expr-variable 'callable-variable))
+                          (callable-variable-type (plist-get callable-variable 'ast-type)))
+                     (cond
+                      ((equal callable-variable-type 'callable-variable-simple-variable)
+                       (let* ((callable-simple-variable
+                               (plist-get callable-variable 'simple-variable))
+                              (variable-name
+                               (plist-get callable-simple-variable 'variable))
+                              (variable-start
+                               (plist-get callable-simple-variable 'ast-start))
+                              (variable-end
+                               (plist-get callable-simple-variable 'ast-end)))
+                         (push
+                          (list
+                           variable-name
+                           phps-mode-parser-sdt--bookkeeping-namespace
+                           variable-start
+                           variable-end)
+                          phps-mode-parser-sdt--bookkeeping-symbol-assignment-stack))))))))))))))))
    `(
      ast-type
      expr-list

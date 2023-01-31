@@ -131,12 +131,9 @@
   "Run test for bookkeeping generation."
   (message "-- Running tests for bookkeeping generation... --\n")
 
-  ;; TODO Support list($abc, $def) = myFunction();
-
   ;; TODO v2 Should have more delicate handling of isset, !empty condition blocks
-  ;; TODO v2 Should properly bookkeep inside endlessly nested anonymous functions / arrow functions / anonymous classes
-  ;; TODO v2 bookkeep and include constants in imenu
-  ;; TODO v2 imenu should contain declaration of variables, both define and namespace const and class, trait and interface const
+  ;; TODO v2 Should properly bookkeep inside potentially endlessly nested anonymous functions / arrow functions / anonymous classes
+  ;; TODO v2 bookkeep and include all kind of constants in imenu
 
   (phps-mode-test-ast--should-bookkeep
    "<?php\n\n$var = 'abc';\n\nif ($var2) {\n    echo 'This never happens';\n}\nif ($var) {\n    echo 'This happens';\n}"
@@ -214,6 +211,12 @@
    "Bookkeeping of variable declarations in array"
    '(((9 16) 1) ((18 25) 2) ((45 52) 1) ((78 85) 2))
    '(("$random" . 9) ("$bandom" . 18)))
+
+  (phps-mode-test-ast--should-bookkeep
+   "<?php\n\nlist($random, $bandom) = myValues();\nif ($random) {\n    echo 'Hit';\n}\nif ($bandom) {\n    echo 'Hit';\n}\n"
+   "Bookkeeping of variable declarations in array via list()"
+   '(((13 20) 1) ((22 29) 2) ((49 56) 1) ((82 89) 2))
+   '(("$random" . 13) ("$bandom" . 22)))
 
   (phps-mode-test-ast--should-bookkeep
    "<?php\n\n$var = 123;\n\nfunction test($abc) {\n    global $var, $var2;\n    if ($var) {\n        echo 'Hit';\n    }\n    if ($var2) {\n        echo 'Hit';\n    }\n}"
