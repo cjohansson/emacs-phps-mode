@@ -4401,7 +4401,27 @@
 (puthash
  299
  (lambda(args terminals)
-   ;; TODO Bookkeep class constants here
+   (when-let (const-list (nth 2 args))
+     (let ((const-count (length const-list))
+           (const-index 0))
+       (while (< const-index const-count)
+         (let* ((const-item (nth const-index const-list))
+                (const-item-type (plist-get const-item 'ast-type)))
+           (when (equal const-item-type 'constant-assignment)
+             (let ((constant-name
+                    (plist-get const-item 'ast-identifier))
+                   (constant-start
+                    (car (cdr (nth const-index (nth 2 terminals)))))
+                   (constant-end
+                    (cdr (cdr (nth const-index (nth 2 terminals))))))
+               (push
+                (list
+                 constant-name
+                 phps-mode-parser-sdt--bookkeeping-namespace
+                 constant-start
+                 constant-end)
+                phps-mode-parser-sdt--bookkeeping-symbol-assignment-stack))))
+         (setq const-index (1+ const-index)))))
    `(
      ast-type
      constant
@@ -5007,7 +5027,14 @@
 ;; 344 ((const_decl) (T_STRING "=" expr backup_doc_comment))
 (puthash
  344
- (lambda(args _terminals)
+ (lambda(args terminals)
+   (push
+    (list
+     (nth 0 args)
+     phps-mode-parser-sdt--bookkeeping-namespace
+     (car (cdr (nth 0 terminals)))
+     (cdr (cdr (nth 0 terminals))))
+    phps-mode-parser-sdt--bookkeeping-symbol-assignment-stack)
    `(
      ast-type
      constant-string-assignment
@@ -7100,6 +7127,7 @@
 (puthash
  482
  (lambda(args _terminals)
+   (message "482: %S" args)
    `(
      ast-type
      constant-name
