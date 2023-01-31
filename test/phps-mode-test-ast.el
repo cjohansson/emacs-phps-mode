@@ -37,15 +37,14 @@
      (message "\n")
      (phps-mode-ast--generate)
 
-     ;; (message "symbol-table: \n%S\n"
-     ;;          (phps-mode-test--hash-to-list
-     ;;           phps-mode-parser-sdt-symbol-table))
-     ;; (message "phps-mode-parser-sdt-symbol-table-by-uri: \n%S\n" phps-mode-parser-sdt-symbol-table-by-uri)
-
      (unless (equal
               (phps-mode-test--hash-to-list
                phps-mode-parser-sdt-bookkeeping)
               expected-bookkeeping)
+       (message "symbol-table: \n%S\n"
+                (phps-mode-test--hash-to-list
+                 phps-mode-parser-sdt-symbol-table))
+       (message "phps-mode-parser-sdt-symbol-table-by-uri: \n%S\n" phps-mode-parser-sdt-symbol-table-by-uri)
        (message
         "expected-bookkeeping:\n%S\n"
         expected-bookkeeping)
@@ -134,6 +133,12 @@
   ;; TODO v2 Should have more delicate handling of isset, !empty condition blocks
   ;; TODO v2 Should properly bookkeep inside potentially endlessly nested anonymous functions / arrow functions / anonymous classes
   ;; TODO v2 bookkeep and include all kind of constants in imenu
+
+  (phps-mode-test-ast--should-bookkeep
+   "<?php\n\nnamespace mySpace\n{\n    define('MY_CONSTANT', 'abc123');\n    const MY_CONSTANT2 = 'def456';\n\n    if (\\MY_CONSTANT) {\n        echo 'hit';\n    }\n    if (MY_CONSTANT) {\n        echo 'hit';\n    }\n    if (MY_CONSTANT2) {\n        echo 'hit';\n    }\n    if (\\mySpace\\MY_CONSTANT2) {\n        echo 'hit';\n    }\n\n    if (\\YOUR_CONSTANT) {\n        echo 'miss';\n    }\n    if (YOUR_CONSTANT) {\n        echo 'miss';\n    }\n    if (\\MY_CONSTANT2) {\n        echo 'miss';\n    }\n    if (\\mySpace\\MY_CONSTANT) {\n        echo 'miss';\n    }\n\n    class myClass\n    {\n        public const MY_CONSTANT3 = 'abc123';\n        function myFunction()\n        {\n            if (self::MY_CONSTANT3) {\n                echo 'hit';\n            }\n        }\n    }\n}\nnamespace {\n    define('THEIR_CONSTANT', 'abc123');\n    if (\\THEIR_CONSTANT) {\n        echo 'hit';\n    }\n    if (THEIR_CONSTANT) {\n        echo 'hit';\n    }\n    if (MY_CONSTANT) {\n        echo 'miss';\n    }\n    if (\\MY_CONSTANT) {\n        echo 'hit';\n    }\n    if (MY_CONSTANT) {\n        echo 'hit';\n    }\n    if (\\mySpace\\MY_CONSTANT2) {\n        echo 'hit';\n    }\n}\n"
+   "Constants in all possible scopes"
+   '(("abc"))
+   '(("abc")))
 
   (phps-mode-test-ast--should-bookkeep
    "<?php\n\n$var = 'abc';\n\nif ($var2) {\n    echo 'This never happens';\n}\nif ($var) {\n    echo 'This happens';\n}"

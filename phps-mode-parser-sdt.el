@@ -4259,10 +4259,18 @@
 (puthash 283 (lambda(_args _terminals) 'T_ELLIPSIS) phps-mode-parser--table-translations)
 
 ;; 284 ((non_empty_argument_list) (argument))
-(puthash 284 (lambda(args _terminals) (list (nth 0 args))) phps-mode-parser--table-translations)
+(puthash
+ 284
+ (lambda(args _terminals)
+   (list args))
+ phps-mode-parser--table-translations)
 
 ;; 285 ((non_empty_argument_list) (non_empty_argument_list "," argument))
-(puthash 285 (lambda(args _terminals) (append (nth 0 args) (list (nth 2 args)))) phps-mode-parser--table-translations)
+(puthash
+ 285
+ (lambda(args _terminals)
+   (append (nth 0 args) (list (nth 2 args))))
+ phps-mode-parser--table-translations)
 
 ;; 286 ((argument) (expr))
 (puthash
@@ -4271,8 +4279,6 @@
    `(
      ast-type
      argument
-     type
-     nil
      value
      ,args
      )
@@ -4285,8 +4291,8 @@
  (lambda(args _terminals)
    `(
      ast-type
-     argument
-     type
+     named-argument
+     name
      ,(nth 0 args)
      value
      ,(nth 2 args)
@@ -6734,7 +6740,42 @@
 ;; 454 ((function_call) (name argument_list))
 (puthash
  454
- (lambda(args _terminals)
+ (lambda(args terminals)
+   (when (string= (downcase (nth 0 args)) "define")
+     (let* ((arguments (nth 1 args))
+            (key-argument (nth 0 arguments))
+            (key-argument-type (plist-get key-argument 'ast-type)))
+       (when (equal key-argument-type 'argument))
+       (let* ((key-argument-value (plist-get key-argument 'value))
+              (key-argument-value-type (plist-get key-argument-value 'ast-type)))
+         (when (equal key-argument-value-type 'expr-scalar)
+           (let* ((key-scalar (plist-get key-argument-value 'scalar))
+                  (key-scalar-type (plist-get key-scalar 'ast-type)))
+             (when (equal key-scalar-type 'scalar-dereferencable-scalar)
+               (let* ((dereferenced-scalar (plist-get key-scalar 'dereferenceable-scalar))
+                      (dereferenced-scalar-type (plist-get dereferenced-scalar 'ast-type)))
+                 (when
+                     (equal
+                      dereferenced-scalar-type
+                      'dereferencable-scalar-constant-encapsed-string)
+                   (let ((constant-name
+                          (substring
+                           (plist-get
+                            dereferenced-scalar
+                            'constant-encapsed-string)
+                           1
+                           -1))
+                         (constant-start
+                          (1+ (car (cdr (nth 0 (nth 1 (nth 1 terminals)))))))
+                         (constant-end
+                          (1- (cdr (cdr (nth 0 (nth 1 (nth 1 terminals))))))))
+                     (push
+                      (list
+                       constant-name
+                       nil
+                       constant-start
+                       constant-end)
+                      phps-mode-parser-sdt--bookkeeping-symbol-assignment-stack))))))))))
    `(
      ast-type
      function-call
