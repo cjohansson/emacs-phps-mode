@@ -101,6 +101,9 @@
 (defvar-local phps-mode-lex-analyzer--lexer-max-index nil
   "Max-index of lex-analyzer.")
 
+(defvar phps-mode-lex-analyzer--show-profiling-information nil
+  "Show profiling information.")
+
 
 ;; FUNCTIONS
 
@@ -367,10 +370,11 @@ ALLOW-CACHE-READ and ALLOW-CACHE-WRITE."
                timer-end
                timer-start)))
 
-           (message "Total elapsed time: %S" timer-elapsed)
-           (message "Lexer elapsed time: %S" timer-elapsed-lexer)
-           (message "Parser elapsed time: %S" timer-elapsed-parser)
-           (message "Syntax coloring elapsed time: %S" timer-elapsed-syntax-coloring)
+           (when phps-mode-lex-analyzer--show-profiling-information
+             (message "Total elapsed time: %S" timer-elapsed)
+             (message "Lexer elapsed time: %S" timer-elapsed-lexer)
+             (message "Parser elapsed time: %S" timer-elapsed-parser)
+             (message "Syntax coloring elapsed time: %S" timer-elapsed-syntax-coloring))
 
        )
 
@@ -578,10 +582,11 @@ ALLOW-CACHE-READ and ALLOW-CACHE-WRITE."
                timer-end
                timer-start)))
 
-           (message "Total elapsed time: %S" timer-elapsed)
-           (message "Lexer elapsed time: %S" timer-elapsed-lexer)
-           (message "Parser elapsed time: %S" timer-elapsed-parser)
-           (message "Syntax coloring elapsed time: %S" timer-elapsed-syntax-coloring)
+           (when phps-mode-lex-analyzer--show-profiling-information
+             (message "Total elapsed time: %S" timer-elapsed)
+             (message "Lexer elapsed time: %S" timer-elapsed-lexer)
+             (message "Parser elapsed time: %S" timer-elapsed-parser)
+             (message "Syntax coloring elapsed time: %S" timer-elapsed-syntax-coloring))
 
        )
 
