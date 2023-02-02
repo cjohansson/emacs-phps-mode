@@ -223,14 +223,30 @@ ALLOW-CACHE-READ and ALLOW-CACHE-WRITE."
         (async (and (boundp 'phps-mode-async-process)
                     phps-mode-async-process))
         (async-by-process (and (boundp 'phps-mode-async-process-using-async-el)
-                               phps-mode-async-process-using-async-el)))
+                               phps-mode-async-process-using-async-el))
+        (timer-start)
+        (timer-elapsed-lexer)
+        (timer-elapsed-parser)
+        (timer-start-syntax-coloring)
+        (timer-finished-syntax-coloring)
+        (timer-elapsed-syntax-coloring)
+        (timer-elapsed)
+        (timer-end))
     (when force-synchronous
       (setq async nil))
+    (let ((current-time (current-time)))
+      (setq
+       timer-start
+       (+
+        (car current-time)
+        (car (cdr current-time))
+        (* (car (cdr (cdr current-time))) 0.000001))))
 
     (phps-mode-serial-commands
 
      buffer-name
 
+     ;; Potentially asynchronous thread
      (lambda()
        (phps-mode-lex-analyzer--lex-string
         buffer-contents
@@ -247,6 +263,7 @@ ALLOW-CACHE-READ and ALLOW-CACHE-WRITE."
         allow-cache-read
         allow-cache-write))
 
+     ;; Main thread - successful operation
      (lambda(lex-result)
        (when (get-buffer buffer-name)
          (with-current-buffer buffer-name
@@ -265,9 +282,19 @@ ALLOW-CACHE-READ and ALLOW-CACHE-WRITE."
            (setq phps-mode-lex-analyzer--bookkeeping (nth 10 lex-result))
            (setq phps-mode-lex-analyzer--imenu (nth 11 lex-result))
            (setq phps-mode-lex-analyzer--symbol-table (nth 12 lex-result))
+           (setq timer-elapsed-lexer (nth 13 lex-result))
+           (setq timer-elapsed-parser (nth 14 lex-result))
 
            (setq phps-mode-lex-analyzer--processed-buffer-p t)
            (phps-mode-lex-analyzer--reset-imenu)
+
+           (let ((current-time (current-time)))
+             (setq
+              timer-start-syntax-coloring
+              (+
+               (car current-time)
+               (car (cdr current-time))
+               (* (car (cdr (cdr current-time))) 0.000001))))
 
            ;; Apply syntax color
            (phps-mode-lex-analyzer--clear-region-syntax-color
@@ -283,6 +310,19 @@ ALLOW-CACHE-READ and ALLOW-CACHE-WRITE."
                       start
                       end
                       (list 'font-lock-face token-syntax-color))))))
+
+           (let ((current-time (current-time)))
+             (setq
+              timer-finished-syntax-coloring
+              (+
+               (car current-time)
+               (car (cdr current-time))
+               (* (car (cdr (cdr current-time))) 0.000001)))
+             (setq
+              timer-elapsed-syntax-coloring
+              (-
+               timer-finished-syntax-coloring
+               timer-start-syntax-coloring)))
 
            ;; Reset buffer changes minimum index
            (phps-mode-lex-analyzer--reset-changes)
@@ -312,8 +352,29 @@ ALLOW-CACHE-READ and ALLOW-CACHE-WRITE."
              ;; Reset error
              (setq phps-mode-lex-analyzer--error-end nil)
              (setq phps-mode-lex-analyzer--error-message nil)
-             (setq phps-mode-lex-analyzer--error-start nil)))))
+             (setq phps-mode-lex-analyzer--error-start nil))))
 
+           (let ((current-time (current-time)))
+             (setq
+              timer-end
+              (+
+               (car current-time)
+               (car (cdr current-time))
+               (* (car (cdr (cdr current-time))) 0.000001)))
+             (setq
+              timer-elapsed
+              (-
+               timer-end
+               timer-start)))
+
+           (message "Total elapsed time: %S" timer-elapsed)
+           (message "Lexer elapsed time: %S" timer-elapsed-lexer)
+           (message "Parser elapsed time: %S" timer-elapsed-parser)
+           (message "Syntax coloring elapsed time: %S" timer-elapsed-syntax-coloring)
+
+       )
+
+     ;; Main thread - error handling
      (lambda(result)
        (when (get-buffer buffer-name)
          (with-current-buffer buffer-name
@@ -364,17 +425,33 @@ ALLOW-CACHE-READ and ALLOW-CACHE-WRITE."
     (buffer-name buffer-contents incremental-start-new-buffer point-max
                  head-states incremental-state incremental-state-stack incremental-heredoc-label incremental-heredoc-label-stack incremental-nest-location-stack head-tokens &optional force-synchronous filename allow-cache-write)
   "Incremental lex region."
-  (let ((async (and (boundp 'phps-mode-async-process)
+  (let* ((async (and (boundp 'phps-mode-async-process)
                     phps-mode-async-process))
         (async-by-process (and (boundp 'phps-mode-async-process-using-async-el)
-                               phps-mode-async-process-using-async-el)))
+                               phps-mode-async-process-using-async-el))
+        (timer-start)
+        (timer-elapsed-lexer)
+        (timer-elapsed-parser)
+        (timer-start-syntax-coloring)
+        (timer-finished-syntax-coloring)
+        (timer-elapsed-syntax-coloring)
+        (timer-elapsed)
+        (timer-end))
     (when force-synchronous
       (setq async nil))
+    (let ((current-time (current-time)))
+      (setq
+       timer-start
+       (+
+        (car current-time)
+        (car (cdr current-time))
+        (* (car (cdr (cdr current-time))) 0.000001))))
 
     (phps-mode-serial-commands
 
      buffer-name
 
+     ;; Potentially asynchronous thread
      (lambda()
        (phps-mode-lex-analyzer--lex-string
         buffer-contents
@@ -391,6 +468,7 @@ ALLOW-CACHE-READ and ALLOW-CACHE-WRITE."
         nil
         allow-cache-write))
 
+     ;; Main thread - successful operation
      (lambda(lex-result)
        (when (get-buffer buffer-name)
          (with-current-buffer buffer-name
@@ -411,6 +489,8 @@ ALLOW-CACHE-READ and ALLOW-CACHE-WRITE."
            (setq phps-mode-lex-analyzer--bookkeeping (nth 10 lex-result))
            (setq phps-mode-lex-analyzer--imenu (nth 11 lex-result))
            (setq phps-mode-lex-analyzer--symbol-table (nth 12 lex-result))
+           (setq timer-elapsed-lexer (nth 13 lex-result))
+           (setq timer-elapsed-parser (nth 14 lex-result))
 
            (phps-mode-debug-message
             (message
@@ -420,6 +500,14 @@ ALLOW-CACHE-READ and ALLOW-CACHE-WRITE."
            ;; Save processed result
            (setq phps-mode-lex-analyzer--processed-buffer-p t)
            (phps-mode-lex-analyzer--reset-imenu)
+
+           (let ((current-time (current-time)))
+             (setq
+              timer-start-syntax-coloring
+              (+
+               (car current-time)
+               (car (cdr current-time))
+               (* (car (cdr (cdr current-time))) 0.000001))))
 
            ;; Apply syntax color on tokens
            (phps-mode-lex-analyzer--clear-region-syntax-color
@@ -433,6 +521,19 @@ ALLOW-CACHE-READ and ALLOW-CACHE-WRITE."
                (let ((token-syntax-color (phps-mode-lex-analyzer--get-token-syntax-color token)))
                  (when token-syntax-color
                      (phps-mode-lex-analyzer--set-region-syntax-color start end (list 'font-lock-face token-syntax-color))))))
+
+           (let ((current-time (current-time)))
+             (setq
+              timer-finished-syntax-coloring
+              (+
+               (car current-time)
+               (car (cdr current-time))
+               (* (car (cdr (cdr current-time))) 0.000001)))
+             (setq
+              timer-elapsed-syntax-coloring
+              (-
+               timer-finished-syntax-coloring
+               timer-start-syntax-coloring)))
 
            ;; Reset buffer changes minimum index
            (phps-mode-lex-analyzer--reset-changes)
@@ -462,8 +563,29 @@ ALLOW-CACHE-READ and ALLOW-CACHE-WRITE."
              ;; Reset error
              (setq phps-mode-lex-analyzer--error-end nil)
              (setq phps-mode-lex-analyzer--error-message nil)
-             (setq phps-mode-lex-analyzer--error-start nil)))))
+             (setq phps-mode-lex-analyzer--error-start nil))))
 
+           (let ((current-time (current-time)))
+             (setq
+              timer-end
+              (+
+               (car current-time)
+               (car (cdr current-time))
+               (* (car (cdr (cdr current-time))) 0.000001)))
+             (setq
+              timer-elapsed
+              (-
+               timer-end
+               timer-start)))
+
+           (message "Total elapsed time: %S" timer-elapsed)
+           (message "Lexer elapsed time: %S" timer-elapsed-lexer)
+           (message "Parser elapsed time: %S" timer-elapsed-parser)
+           (message "Syntax coloring elapsed time: %S" timer-elapsed-syntax-coloring)
+
+       )
+
+     ;; Main thread - error handling
      (lambda(result)
        (when (get-buffer buffer-name)
          (with-current-buffer buffer-name
@@ -1128,8 +1250,24 @@ of performed operations.  Optionally do it FORCE-SYNCHRONOUS."
   ;; to enable nice presentation
   (require 'phps-mode-macros)
 
-  (let ((loaded-from-cache)
-        (cache-key))
+  (let* ((loaded-from-cache)
+         (cache-key)
+         (timer-start-lexer)
+         (timer-finished-lexer)
+         (timer-elapsed-lexer)
+         (timer-start-parser)
+         (timer-finished-parser)
+         (timer-elapsed-parser))
+
+    (let* ((current-time (current-time))
+           (start-time
+            (+
+             (car current-time)
+             (car (cdr current-time))
+             (* (car (cdr (cdr current-time))) 0.000001))))
+      (setq
+       timer-start-lexer
+       start-time))
 
     ;; Build cache key if possible
     (when (and
@@ -1231,6 +1369,22 @@ of performed operations.  Optionally do it FORCE-SYNCHRONOUS."
             (setq heredoc-label-stack phps-mode-lexer--heredoc-label-stack)
             (setq nest-location-stack phps-mode-lexer--nest-location-stack)
 
+            (let* ((current-time (current-time))
+                   (end-time
+                    (+
+                     (car current-time)
+                     (car (cdr current-time))
+                     (* (car (cdr (cdr current-time))) 0.000001))))
+              (setq
+               timer-finished-lexer
+               end-time)
+              (setq
+               timer-start-parser
+               end-time)
+              (setq
+               timer-elapsed-lexer
+               (- timer-finished-lexer timer-start-lexer)))
+
             ;; Error-free parse here
             (condition-case conditions
                 (progn
@@ -1246,6 +1400,20 @@ of performed operations.  Optionally do it FORCE-SYNCHRONOUS."
             (setq bookkeeping phps-mode-parser-sdt-bookkeeping)
             (setq imenu phps-mode-parser-sdt-symbol-imenu)
             (setq symbol-table phps-mode-parser-sdt-symbol-table)
+
+            (let* ((current-time
+                    (current-time))
+                   (end-time
+                    (+
+                     (car current-time)
+                     (car (cdr current-time))
+                     (* (car (cdr (cdr current-time))) 0.000001))))
+              (setq
+               timer-finished-parser
+               end-time)
+              (setq
+               timer-elapsed-parser
+               (- timer-finished-parser timer-start-parser)))
 
             (kill-buffer)))
 
@@ -1263,7 +1431,9 @@ of performed operations.  Optionally do it FORCE-SYNCHRONOUS."
                 ast-tree
                 bookkeeping
                 imenu
-                symbol-table)))
+                symbol-table
+                timer-elapsed-lexer
+                timer-elapsed-parser)))
 
           ;; Save cache if possible and permitted
           (when (and
