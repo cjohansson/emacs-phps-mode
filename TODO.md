@@ -26,8 +26,10 @@
 ## Code intelligence
 
 * Bookkeeping of chained object operators like WC()->cart->subtotal
+* Implement `xref-find-definitions` functionality
+* Implement eldoc support for built-in functions
+* Implement eldoc support for functions in code
 
 ## Other
 
 * Support for mmm-mode or similar?
-* Build in eldoc support like php-eldoc?
