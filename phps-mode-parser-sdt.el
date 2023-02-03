@@ -5393,59 +5393,35 @@
  360
  (lambda(args terminals)
    ;; Save variable declaration in bookkeeping buffer
-   (let ((variable-type1 (plist-get (nth 0 args) 'ast-type))
-         (variable-type2 (plist-get (nth 3 args) 'ast-type)))
+   (let ((variable-type1 (plist-get (nth 0 args) 'ast-type)))
      (cond
-      ((and
-        (equal variable-type1 'variable-callable-variable)
-        (equal variable-type2 'variable-callable-variable))
+      ((equal variable-type1 'variable-callable-variable)
        (let* ((callable-variable1 (plist-get (nth 0 args) 'callable-variable))
-              (callable-variable-type1 (plist-get callable-variable1 'ast-type))
-              (callable-variable2 (plist-get (nth 3 args) 'callable-variable))
-              (callable-variable-type2 (plist-get callable-variable2 'ast-type)))
+              (callable-variable-type1 (plist-get callable-variable1 'ast-type)))
          (cond
-          ((and
-            (equal callable-variable-type1 'callable-variable-simple-variable)
-            (equal callable-variable-type2 'callable-variable-simple-variable))
+          ((equal callable-variable-type1 'callable-variable-simple-variable)
            (let* ((callable-variable-simple-variable1
                    (plist-get callable-variable1 'simple-variable))
                   (callable-variable-simple-variable-type1
                    (plist-get
                     callable-variable-simple-variable1
-                    'ast-type))
-                  (callable-variable-simple-variable2
-                   (plist-get callable-variable2 'simple-variable))
-                  (callable-variable-simple-variable-type2
-                   (plist-get
-                    callable-variable-simple-variable2
                     'ast-type)))
              (cond
-              ((and
-                (equal
-                 callable-variable-simple-variable-type1
-                 'simple-variable-variable)
-                (equal
-                 callable-variable-simple-variable-type2
-                 'simple-variable-variable))
+              ((equal
+                callable-variable-simple-variable-type1
+                'simple-variable-variable)
                (let* ((variable-name1
                        (plist-get
                         callable-variable-simple-variable1
                         'variable))
-                      (variable-name2
-                       (plist-get
-                        callable-variable-simple-variable2
-                        'variable))
                       (symbol-name1
                        variable-name1)
-                      (symbol-name2
-                       variable-name2)
                       (symbol-start
                        (car (cdr (car terminals))))
                       (symbol-end
                        (cdr (cdr (car terminals))))
                       (symbol-scope
                        phps-mode-parser-sdt--bookkeeping-namespace))
-                 (push `(reference ,symbol-name2) symbol-scope)
                  (push
                   (list
                    symbol-name1
@@ -7204,6 +7180,7 @@
      (cond
 
       ((equal constant-name-type 'string-name)
+       ;; BLAHA
        ;; TODO When reading this symbol should check global namespace
        ;; and namespace constants for hit
        (let ((symbol-scope phps-mode-parser-sdt--bookkeeping-namespace))
@@ -7217,10 +7194,12 @@
           phps-mode-parser-sdt--bookkeeping-symbol-stack)))
 
       ((equal constant-name-type 'qualified-name)
+       ;; BLAHA\BLAHA
        ;; TODO Handle this
        )
 
       ((equal constant-name-type 'fully-qualified-name)
+       ;; \BLAHA
        (let* ((constant-namespace)
               (string-pos 0)
               (namespace-pos
@@ -7252,6 +7231,7 @@
           phps-mode-parser-sdt--bookkeeping-symbol-stack)))
 
       ((equal constant-name-type 'relative-name)
+       ;; namespace\A inside namespace X\Y resolves to X\Y\A.
        ;; TODO Handle this
        )
 
