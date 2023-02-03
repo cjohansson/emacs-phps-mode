@@ -2015,16 +2015,56 @@
 (puthash 90 (lambda(args _terminals) args) phps-mode-parser--table-translations)
 
 ;; 91 ((name) (T_STRING))
-(puthash 91 (lambda(args _terminals) args) phps-mode-parser--table-translations)
+(puthash
+ 91
+ (lambda(args _terminals)
+   `(
+     ast-type
+     string-name
+     name
+     ,args
+     )
+   )
+ phps-mode-parser--table-translations)
 
 ;; 92 ((name) (T_NAME_QUALIFIED))
-(puthash 92 (lambda(args _terminals) args) phps-mode-parser--table-translations)
+(puthash
+ 92
+ (lambda(args _terminals)
+   `(
+     ast-type
+     qualified-name
+     name
+     ,args
+     )
+   )
+ phps-mode-parser--table-translations)
 
 ;; 93 ((name) (T_NAME_FULLY_QUALIFIED))
-(puthash 93 (lambda(args _terminals) args) phps-mode-parser--table-translations)
+(puthash
+ 93
+ (lambda(args _terminals)
+   `(
+     ast-type
+     fully-qualified-name
+     name
+     ,args
+     )
+   )
+ phps-mode-parser--table-translations)
 
 ;; 94 ((name) (T_NAME_RELATIVE))
-(puthash 94 (lambda(args _terminals) args) phps-mode-parser--table-translations)
+(puthash
+ 94
+ (lambda(args _terminals)
+   `(
+     ast-type
+     relative-name
+     name
+     ,args
+     )
+   )
+ phps-mode-parser--table-translations)
 
 ;; 95 ((attribute_decl) (class_name))
 (puthash
@@ -6768,7 +6808,9 @@
 (puthash
  454
  (lambda(args terminals)
-   (when (string= (downcase (nth 0 args)) "define")
+   (when (and
+          (equal (plist-get (nth 0 args) 'ast-type) 'string-name)
+          (string= (downcase (plist-get (nth 0 args) 'name)) "define"))
      (let* ((arguments (nth 1 args))
             (key-argument (nth 0 arguments))
             (key-argument-type (plist-get key-argument 'ast-type)))
@@ -6785,7 +6827,7 @@
                      (equal
                       dereferenced-scalar-type
                       'dereferencable-scalar-constant-encapsed-string)
-                   (let ((constant-name
+                   (let* ((constant-name
                           (substring
                            (plist-get
                             dereferenced-scalar
@@ -6795,14 +6837,39 @@
                          (constant-start
                           (1+ (car (cdr (nth 0 (nth 1 (nth 1 terminals)))))))
                          (constant-end
-                          (1- (cdr (cdr (nth 0 (nth 1 (nth 1 terminals))))))))
-                     (push
-                      (list
-                       constant-name
-                       nil
-                       constant-start
-                       constant-end)
-                      phps-mode-parser-sdt--bookkeeping-symbol-assignment-stack))))))))))
+                          (1- (cdr (cdr (nth 0 (nth 1 (nth 1 terminals)))))))
+                         (constant-namespace)
+                         (string-pos 0)
+                         (namespace-pos
+                          (string-search "\\" constant-name string-pos))
+                         (namespace-last-pos namespace-pos))
+
+                     ;; Exclude constants starting with \\ since they are silently invalid
+                     (unless (equal namespace-pos 0)
+
+                       ;; Extract any potential constant namespace here
+                       (when namespace-pos
+                         (setq string-pos (1+ string-pos))
+                         (setq namespace-pos (string-search "\\" constant-name string-pos))
+                         (while namespace-pos
+                           (setq namespace-last-pos namespace-pos)
+                           (setq string-pos (1+ string-pos))
+                           (setq namespace-pos (string-search "\\" constant-name string-pos)))
+                         (setq
+                          constant-namespace
+                          (substring constant-name 0 namespace-last-pos))
+                         (setq
+                          constant-name
+                          (substring constant-name namespace-last-pos)))
+
+                       ;; (message "constant-name: %S %S" constant-name constant-namespace)
+                       (push
+                        (list
+                         constant-name
+                         (if constant-namespace '((namespace constant-namespace)) nil)
+                         constant-start
+                         constant-end)
+                        phps-mode-parser-sdt--bookkeeping-symbol-assignment-stack)))))))))))
    `(
      ast-type
      function-call
@@ -7126,8 +7193,35 @@
 ;; 482 ((constant) (name))
 (puthash
  482
- (lambda(args _terminals)
+ (lambda(args terminals)
    (message "482: %S" args)
+
+   ;; TODO Should bookkeep symbol read here
+   (let ((constant-name-type (plist-get args 'ast-type))
+         (constant-name (plist-get args 'name))
+         (constant-start (car (cdr terminals)))
+         (constant-end (cdr (cdr terminals))))
+     (cond
+      ((equal constant-name-type 'string-name)
+       (push
+        (list
+         constant-name
+         nil
+         constant-start
+         constant-end)
+        phps-mode-parser-sdt--bookkeeping-symbol-stack))
+
+      ((equal constant-name-type 'qualified-name)
+       ;; TODO Handle this
+       )
+      ((equal constant-name-type 'fully-qualified-name)
+       ;; TODO Handle this
+       )
+      ((equal constant-name-type 'relative-name)
+       ;; TODO Handle this
+       )
+      ))
+
    `(
      ast-type
      constant-name
