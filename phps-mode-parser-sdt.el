@@ -6860,13 +6860,13 @@
                           (substring constant-name 0 namespace-last-pos))
                          (setq
                           constant-name
-                          (substring constant-name namespace-last-pos)))
+                          (substring constant-name (1+ namespace-last-pos))))
 
                        ;; (message "constant-name: %S %S" constant-name constant-namespace)
                        (push
                         (list
                          constant-name
-                         (if constant-namespace '((namespace constant-namespace)) nil)
+                         (if constant-namespace `((namespace ,constant-namespace)) nil)
                          constant-start
                          constant-end)
                         phps-mode-parser-sdt--bookkeeping-symbol-assignment-stack)))))))))))
@@ -7202,24 +7202,59 @@
          (constant-start (car (cdr terminals)))
          (constant-end (cdr (cdr terminals))))
      (cond
+
       ((equal constant-name-type 'string-name)
-       (push
-        (list
-         constant-name
-         nil
-         constant-start
-         constant-end)
-        phps-mode-parser-sdt--bookkeeping-symbol-stack))
+       ;; TODO When reading this symbol should check global namespace
+       ;; and namespace constants for hit
+       (let ((symbol-scope phps-mode-parser-sdt--bookkeeping-namespace))
+         (push (list 'constant) symbol-scope)
+         (push
+          (list
+           constant-name
+           symbol-scope
+           constant-start
+           constant-end)
+          phps-mode-parser-sdt--bookkeeping-symbol-stack)))
 
       ((equal constant-name-type 'qualified-name)
        ;; TODO Handle this
        )
+
       ((equal constant-name-type 'fully-qualified-name)
-       ;; TODO Handle this
-       )
+       (let* ((constant-namespace)
+              (string-pos 0)
+              (namespace-pos
+               (string-search "\\" constant-name string-pos))
+              (namespace-last-pos namespace-pos))
+
+         ;; Extract any potential constant namespace here
+         (when namespace-pos
+           (setq string-pos (1+ string-pos))
+           (setq namespace-pos (string-search "\\" constant-name string-pos))
+           (while namespace-pos
+             (setq namespace-last-pos namespace-pos)
+             (setq string-pos (1+ string-pos))
+             (setq namespace-pos (string-search "\\" constant-name string-pos)))
+           (unless (= namespace-last-pos 0)
+             (setq
+              constant-namespace
+              (substring constant-name 1 namespace-last-pos)))
+           (setq
+            constant-name
+            (substring constant-name (1+ namespace-last-pos))))
+
+         (push
+          (list
+           constant-name
+           (if constant-namespace `((namespace ,constant-namespace)) nil)
+           constant-start
+           constant-end)
+          phps-mode-parser-sdt--bookkeeping-symbol-stack)))
+
       ((equal constant-name-type 'relative-name)
        ;; TODO Handle this
        )
+
       ))
 
    `(

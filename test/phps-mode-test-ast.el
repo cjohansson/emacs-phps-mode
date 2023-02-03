@@ -137,7 +137,7 @@
   (phps-mode-test-ast--should-bookkeep
    "<?php\n\nnamespace mySpace\n{\n    define('MY_CONSTANT', 'abc123');\n    const MY_CONSTANT2 = 'def456';\n\n    if (\\MY_CONSTANT) {\n        echo 'hit';\n    }\n    if (MY_CONSTANT) {\n        echo 'hit';\n    }\n    if (MY_CONSTANT2) {\n        echo 'hit';\n    }\n    if (\\mySpace\\MY_CONSTANT2) {\n        echo 'hit';\n    }\n\n    if (\\YOUR_CONSTANT) {\n        echo 'miss';\n    }\n    if (YOUR_CONSTANT) {\n        echo 'miss';\n    }\n    if (\\MY_CONSTANT2) {\n        echo 'miss';\n    }\n    if (\\mySpace\\MY_CONSTANT) {\n        echo 'miss';\n    }\n\n    class myClass\n    {\n        public const MY_CONSTANT3 = 'abc123';\n        function myFunction()\n        {\n            if (self::MY_CONSTANT3) {\n                echo 'hit';\n            }\n        }\n    }\n}\nnamespace {\n    define('THEIR_CONSTANT', 'abc123');\n    if (\\THEIR_CONSTANT) {\n        echo 'hit';\n    }\n    if (THEIR_CONSTANT) {\n        echo 'hit';\n    }\n    if (MY_CONSTANT) {\n        echo 'miss';\n    }\n    if (\\MY_CONSTANT) {\n        echo 'hit';\n    }\n    if (MY_CONSTANT) {\n        echo 'hit';\n    }\n    if (\\mySpace\\MY_CONSTANT2) {\n        echo 'hit';\n    }\n}\n"
    "Constants in all possible scopes"
-   '(("abc"))
+   '(((159 170) 1) ((208 220) 1) ((371 384) 0) ((848 862) 5) ((900 911) 1) ((1000 1011) 1))
    '(("abc")))
 
   (phps-mode-test-ast--should-bookkeep
