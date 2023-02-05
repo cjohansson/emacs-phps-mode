@@ -708,7 +708,7 @@
                         (setq next-scope-is-this-object-operator t))))
                    ((equal next-scope-type 'static-member)
                     (setq scope-static-member t)
-                    (let ((downcased-scope-name (downcase (car (cdr next-scope)))))
+                    (let ((downcased-scope-name (downcase (plist-get (car (cdr next-scope)) 'name))))
                       (when (or
                              (string= downcased-scope-name "self")
                              (string= downcased-scope-name "static"))
@@ -1612,8 +1612,13 @@
                  (and
                   symbol-static-member
                   (not
-                   (or (string= (downcase symbol-static-member) "self")
-                       (string= (downcase symbol-static-member) "static")))))
+                   (or
+                    (and
+                     (listp symbol-static-member)
+                     (string= (downcase (plist-get symbol-static-member 'name)) "self"))
+                    (and
+                     (listp symbol-static-member)
+                     (string= (downcase (plist-get symbol-static-member 'name)) "static"))))))
           (cond
 
            ;; Super-global variable
@@ -7169,73 +7174,73 @@
 ;; 482 ((constant) (name))
 (puthash
  482
- (lambda(args terminals)
-   (message "482: %S" args)
+ (lambda(args _terminals)
 
    ;; TODO Should bookkeep symbol read here
-   (let ((constant-name-type (plist-get args 'ast-type))
-         (constant-name (plist-get args 'name))
-         (constant-start (car (cdr terminals)))
-         (constant-end (cdr (cdr terminals))))
-     (cond
+   ;; (message "482: %S" args)
+   ;; (let ((constant-name-type (plist-get args 'ast-type))
+   ;;       (constant-name (plist-get args 'name))
+   ;;       (constant-start (car (cdr terminals)))
+   ;;       (constant-end (cdr (cdr terminals))))
+   ;;   (cond
 
-      ((equal constant-name-type 'string-name)
-       ;; BLAHA
-       ;; TODO When reading this symbol should check global namespace
-       ;; and namespace constants for hit
-       (let ((symbol-scope phps-mode-parser-sdt--bookkeeping-namespace))
-         (push (list 'constant) symbol-scope)
-         (push
-          (list
-           constant-name
-           symbol-scope
-           constant-start
-           constant-end)
-          phps-mode-parser-sdt--bookkeeping-symbol-stack)))
+   ;;    ((equal constant-name-type 'string-name)
+   ;;     ;; BLAHA
+   ;;     ;; TODO When reading this symbol should check global namespace
+   ;;     ;; and namespace constants for hit
+   ;;     (let ((symbol-scope phps-mode-parser-sdt--bookkeeping-namespace))
+   ;;       (push (list 'constant) symbol-scope)
+   ;;       (push
+   ;;        (list
+   ;;         constant-name
+   ;;         symbol-scope
+   ;;         constant-start
+   ;;         constant-end)
+   ;;        phps-mode-parser-sdt--bookkeeping-symbol-stack)))
 
-      ((equal constant-name-type 'qualified-name)
-       ;; BLAHA\BLAHA
-       ;; TODO Handle this
-       )
+   ;;    ((equal constant-name-type 'qualified-name)
+   ;;     ;; BLAHA\BLAHA
+   ;;     ;; TODO Handle this
+   ;;     )
 
-      ((equal constant-name-type 'fully-qualified-name)
-       ;; \BLAHA
-       (let* ((constant-namespace)
-              (string-pos 0)
-              (namespace-pos
-               (string-search "\\" constant-name string-pos))
-              (namespace-last-pos namespace-pos))
+   ;;    ((equal constant-name-type 'fully-qualified-name)
+   ;;     ;; \BLAHA
+   ;;     (let* ((constant-namespace)
+   ;;            (string-pos 0)
+   ;;            (namespace-pos
+   ;;             (string-search "\\" constant-name string-pos))
+   ;;            (namespace-last-pos namespace-pos))
 
-         ;; Extract any potential constant namespace here
-         (when namespace-pos
-           (setq string-pos (1+ string-pos))
-           (setq namespace-pos (string-search "\\" constant-name string-pos))
-           (while namespace-pos
-             (setq namespace-last-pos namespace-pos)
-             (setq string-pos (1+ string-pos))
-             (setq namespace-pos (string-search "\\" constant-name string-pos)))
-           (unless (= namespace-last-pos 0)
-             (setq
-              constant-namespace
-              (substring constant-name 1 namespace-last-pos)))
-           (setq
-            constant-name
-            (substring constant-name (1+ namespace-last-pos))))
+   ;;       ;; Extract any potential constant namespace here
+   ;;       (when namespace-pos
+   ;;         (setq string-pos (1+ string-pos))
+   ;;         (setq namespace-pos (string-search "\\" constant-name string-pos))
+   ;;         (while namespace-pos
+   ;;           (setq namespace-last-pos namespace-pos)
+   ;;           (setq string-pos (1+ string-pos))
+   ;;           (setq namespace-pos (string-search "\\" constant-name string-pos)))
+   ;;         (unless (= namespace-last-pos 0)
+   ;;           (setq
+   ;;            constant-namespace
+   ;;            (substring constant-name 1 namespace-last-pos)))
+   ;;         (setq
+   ;;          constant-name
+   ;;          (substring constant-name (1+ namespace-last-pos))))
 
-         (push
-          (list
-           constant-name
-           (if constant-namespace `((namespace ,constant-namespace)) nil)
-           constant-start
-           constant-end)
-          phps-mode-parser-sdt--bookkeeping-symbol-stack)))
+   ;;       (push
+   ;;        (list
+   ;;         constant-name
+   ;;         (if constant-namespace `((namespace ,constant-namespace)) nil)
+   ;;         constant-start
+   ;;         constant-end)
+   ;;        phps-mode-parser-sdt--bookkeeping-symbol-stack)))
 
-      ((equal constant-name-type 'relative-name)
-       ;; namespace\A inside namespace X\Y resolves to X\Y\A.
-       ;; TODO Handle this
-       )
+   ;;    ((equal constant-name-type 'relative-name)
+   ;;     ;; namespace\A inside namespace X\Y resolves to X\Y\A.
+   ;;     ;; TODO Handle this
+   ;;     )
 
-      ))
+   ;;    ))
 
    `(
      ast-type
@@ -7749,7 +7754,7 @@
           namespace)))
       ((equal class-name-type 'class-name-static)
        (let ((namespace phps-mode-parser-sdt--bookkeeping-namespace))
-         (push (list 'static-member "static") namespace)
+         (push (list 'static-member (list 'ast-type 'string-name 'name "static")) namespace)
          (setf
           (nth 1 (car phps-mode-parser-sdt--bookkeeping-symbol-stack))
           namespace)))))
