@@ -11,7 +11,7 @@
 
 (defvar
   phps-mode-cache--use-p
-  nil
+  t
   "Whether to use cache or not.")
 
 (defvar
