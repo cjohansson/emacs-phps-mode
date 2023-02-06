@@ -130,6 +130,7 @@
   "Run test for bookkeeping generation."
   (message "-- Running tests for bookkeeping generation... --\n")
 
+  ;; TODO v1 Symbol namespace should be class | interface | trait / symbol
   ;; TODO v2 Should have more delicate handling of isset, !empty condition blocks
   ;; TODO v2 Should properly bookkeep inside potentially endlessly nested anonymous functions / arrow functions / anonymous classes
   ;; TODO v2 bookkeep and include all kind of constants in imenu
@@ -192,6 +193,12 @@
    "Bookkeeping of class properties"
    '(((93 98) 1) ((127 132) 2) ((145 150) 3) ((160 165) 4) ((208 213) 5) ((263 268) 5) ((270 274) 1) ((330 335) 0) ((392 397) 2) ((455 460) 2) ((510 515) 5) ((517 521) 3) ((571 576) 5) ((578 582) 4) ((632 637) 5) ((639 643) 0) ((751 756) 0))
    '(("class myParent" ("declaration" . 35)) ("class myClass" ("declaration" . 54) ("$var1" . 93) ("$var2" . 127) ("$var3" . 145) ("$var4" . 160) ("function __construct" ("declaration" . 180)))))
+
+  (phps-mode-test-ast--should-bookkeep
+   "<?php\nclass myClass\n{\n    private $var = 123, $def = 'acb';\n}"
+   "Multiple class properties assigned on the same line."
+   '(((35 39) 1) ((47 51) 2))
+   '(("class myClass" ("declaration" . 13) ("$var" . 35) ("$def" . 47))))
 
   (phps-mode-test-ast--should-bookkeep
    "<?php\n\ntry {\n    \n} catch (\\Exception $e) {\n    if ($e) {\n        echo 'Hit';\n    }\n}\n\nif ($e) {\n    echo 'Miss';\n}\n"

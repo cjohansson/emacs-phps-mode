@@ -4425,7 +4425,7 @@
 ;; 298 ((attributed_class_statement) (variable_modifiers optional_type_without_static property_list ";"))
 (puthash
  298
- (lambda(args terminals)
+ (lambda(args _terminals)
    `(
      ast-type
      property
@@ -4435,10 +4435,6 @@
      ,(nth 1 args)
      subject
      ,(nth 2 args)
-     ast-start
-     ,(car (cdr (car (nth 2 terminals))))
-     ast-end
-     ,(cdr (cdr (car (nth 2 terminals))))
      ))
  phps-mode-parser--table-translations)
 
@@ -4995,10 +4991,18 @@
 (puthash 336 (lambda(_args _terminals) 'readonly) phps-mode-parser--table-translations)
 
 ;; 337 ((property_list) (property_list "," property))
-(puthash 337 (lambda(args _terminals) (append (nth 0 args) (nth 2 args))) phps-mode-parser--table-translations)
+(puthash
+ 337
+ (lambda(args _terminals)
+   (append (nth 0 args) (list (nth 2 args))))
+ phps-mode-parser--table-translations)
 
 ;; 338 ((property_list) (property))
-(puthash 338 (lambda(args _terminals) (list args)) phps-mode-parser--table-translations)
+(puthash
+ 338
+ (lambda(args _terminals)
+   (list args))
+ phps-mode-parser--table-translations)
 
 ;; 339 ((property) (T_VARIABLE backup_doc_comment))
 (puthash
