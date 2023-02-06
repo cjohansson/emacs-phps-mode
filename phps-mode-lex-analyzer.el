@@ -371,10 +371,18 @@ ALLOW-CACHE-READ and ALLOW-CACHE-WRITE."
                timer-start)))
 
            (when phps-mode-lex-analyzer--show-profiling-information
-             (message "Total elapsed time: %S" timer-elapsed)
-             (message "Lexer elapsed time: %S" timer-elapsed-lexer)
-             (message "Parser elapsed time: %S" timer-elapsed-parser)
-             (message "Syntax coloring elapsed time: %S" timer-elapsed-syntax-coloring))
+             (let ((lexer-percentage
+                    (/ timer-elapsed-lexer timer-elapsed))
+                   (parser-percentage
+                    (/ timer-elapsed-parser timer-elapsed))
+                   (syntax-coloring-percentage
+                    (/ timer-elapsed-syntax-coloring timer-elapsed)))
+               (message
+                "Total: %d.2s (lex: %d.2%%, parse: %d.2%%, color: %d.2%%)"
+                timer-elapsed
+                lexer-percentage
+                parser-percentage
+               syntax-coloring-percentage)))
 
        )
 
@@ -583,10 +591,18 @@ ALLOW-CACHE-READ and ALLOW-CACHE-WRITE."
                timer-start)))
 
            (when phps-mode-lex-analyzer--show-profiling-information
-             (message "Total elapsed time: %S" timer-elapsed)
-             (message "Lexer elapsed time: %S" timer-elapsed-lexer)
-             (message "Parser elapsed time: %S" timer-elapsed-parser)
-             (message "Syntax coloring elapsed time: %S" timer-elapsed-syntax-coloring))
+             (let ((lexer-percentage
+                    (/ timer-elapsed-lexer timer-elapsed))
+                   (parser-percentage
+                    (/ timer-elapsed-parser timer-elapsed))
+                   (syntax-coloring-percentage
+                    (/ timer-elapsed-syntax-coloring timer-elapsed)))
+               (message
+                "Total: %d.2s (lex: %d.2%%, parse: %d.2%%, color: %d.2%%)"
+                timer-elapsed
+                lexer-percentage
+                parser-percentage
+               syntax-coloring-percentage)))
 
        )
 
