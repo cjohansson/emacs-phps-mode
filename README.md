@@ -82,16 +82,10 @@ Enable with:
 (setq phps-mode-async-process-using-async-el nil)
 ```
 
-### Enable / disable cache
+### Enable / disable parser cache
 
 ``` emacs-lisp
-(setq phps-mode-cache--use-p t)
-```
-
-### Show profiling information
-
-``` emacs-lisp
-(setq phps-mode-lex-analyzer--show-profiling-information t)
+(setq phps-mode-cache--use-p nil)
 ```
 
 ## Installation and Configuration examples
