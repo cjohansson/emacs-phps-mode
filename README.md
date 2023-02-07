@@ -82,6 +82,12 @@ Enable with:
 (setq phps-mode-async-process-using-async-el nil)
 ```
 
+### Enable / disable parser cache
+
+``` emacs-lisp
+(setq phps-mode-cache--use-p nil)
+```
+
 ## Installation and Configuration examples
 
 ### Install, load and configure via use-package with flycheck support, asynchronous support via async.el
