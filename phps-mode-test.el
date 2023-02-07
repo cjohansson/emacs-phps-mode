@@ -69,7 +69,9 @@ compare incremental values with initial values."
      (setq incremental-states phps-mode-lex-analyzer--states)
      (setq incremental-tokens phps-mode-lex-analyzer--tokens)
      (setq incremental-imenu phps-mode-lex-analyzer--imenu)
-     (setq incremental-buffer (buffer-substring (point-min) (point-max)))
+     (save-restriction
+       (widen)
+       (setq incremental-buffer (buffer-substring (point-min) (point-max))))
      (setq incremental-bookkeeping (phps-mode-test--hash-to-list phps-mode-lex-analyzer--bookkeeping t))
      (setq incremental-nest-location-stack phps-mode-lex-analyzer--nest-location-stack)
 
