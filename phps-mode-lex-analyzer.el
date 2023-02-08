@@ -241,7 +241,9 @@ ALLOW-CACHE-READ and ALLOW-CACHE-WRITE."
           (timer-finished-syntax-coloring)
           (timer-elapsed-syntax-coloring)
           (timer-elapsed)
-          (timer-end))
+          (timer-end)
+          (narrowed-point-min (point-min))
+          (narrowed-point-max (point-max)))
       (when force-synchronous
         (setq async nil))
       (let ((current-time (current-time)))
@@ -313,13 +315,16 @@ ALLOW-CACHE-READ and ALLOW-CACHE-WRITE."
              (dolist (token phps-mode-lex-analyzer--tokens)
                (let ((start (car (cdr token)))
                      (end (cdr (cdr token))))
-                 (let ((token-syntax-color
-                        (phps-mode-lex-analyzer--get-token-syntax-color token)))
-                   (when token-syntax-color
-                     (phps-mode-lex-analyzer--set-region-syntax-color
-                      start
-                      end
-                      (list 'font-lock-face token-syntax-color))))))
+                 (when (and
+                        (>= start narrowed-point-min)
+                        (<= end narrowed-point-max))
+                   (let ((token-syntax-color
+                          (phps-mode-lex-analyzer--get-token-syntax-color token)))
+                     (when token-syntax-color
+                       (phps-mode-lex-analyzer--set-region-syntax-color
+                        start
+                        end
+                        (list 'font-lock-face token-syntax-color)))))))
 
              (let ((current-time (current-time)))
                (setq
@@ -545,11 +550,17 @@ ALLOW-CACHE-READ and ALLOW-CACHE-WRITE."
            (dolist (token phps-mode-lex-analyzer--tokens)
              (let ((start (car (cdr token)))
                    (end (cdr (cdr token))))
+               (when (and
+                      (>= start incremental-start-new-buffer)
+                      (<= end point-max))
 
                ;; Apply syntax color on token
                (let ((token-syntax-color (phps-mode-lex-analyzer--get-token-syntax-color token)))
                  (when token-syntax-color
-                     (phps-mode-lex-analyzer--set-region-syntax-color start end (list 'font-lock-face token-syntax-color))))))
+                   (phps-mode-lex-analyzer--set-region-syntax-color
+                    start
+                    end
+                    (list 'font-lock-face token-syntax-color)))))))
 
            (let ((current-time (current-time)))
              (setq
