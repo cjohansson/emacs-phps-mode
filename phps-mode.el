@@ -52,7 +52,7 @@
 (require 'phps-mode-syntax-table)
 
 (defvar phps-mode-idle-interval 1
-  "Idle seconds before running the incremental lexer.")
+  "Idle seconds before running the incremental parser.")
 
 (defvar phps-mode-use-psr-2 t
   "Whether to use PSR-2 guidelines for white-space or not.")
@@ -205,6 +205,14 @@
   (setq-local
    imenu-create-index-function
    #'phps-mode-lex-analyzer--imenu-create-index)
+
+  ;; Beginning and ending of defun:s
+  (setq-local
+   beginning-of-defun-function
+   #'phps-mode-lex-analyzer--beginning-of-defun)
+  (setq-local
+   end-of-defun-function
+   #'phps-mode-lex-analyzer--end-of-defun)
 
   ;; Should we follow PSR-2?
   (when phps-mode-use-psr-2
