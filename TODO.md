@@ -33,6 +33,4 @@
 ## Other
 
 * Support for mmm-mode or similar?
-* Make narrow-to-defun work in case character 26 in
-  <?php\nfunction test($a) {\n    return $a + 1;\n}\n"
 

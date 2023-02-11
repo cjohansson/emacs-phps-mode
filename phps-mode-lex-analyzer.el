@@ -1510,6 +1510,33 @@ of performed operations.  Optionally do it FORCE-SYNCHRONOUS."
 
           data)))))
 
+(defun phps-mode-lex-analyzer--beginning-of-defun (&optional arg)
+  "Custom implementation of `beginning-of-defun'."
+  (let ((iterations (if arg arg 1))
+        (index 0)
+        (found-index t))
+    (save-excursion
+      (while (and found-index (< index iterations))
+        (if
+            (search-backward-regexp
+             "\n[\t ]*function[\t\n ]+[A-Za-Z_[:nonascii:]]"
+             nil
+             t)
+            (progn
+              (search-forward-regexp
+               "[\n]+")
+              (setq found-index (point)))
+          (setq found-index nil))
+        (setq index (1+ index))))
+    (when found-index
+      (goto-char found-index))
+    found-index))
+
+(defun phps-mode-lex-analyzer--end-of-defun (&optional arg interactive)
+  "Custom implementation of `end-of-defun'."
+  ;; TODO Implement this
+  )
+
 (provide 'phps-mode-lex-analyzer)
 
 ;;; phps-mode-lex-analyzer.el ends here

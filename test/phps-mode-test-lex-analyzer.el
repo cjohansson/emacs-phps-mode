@@ -152,9 +152,22 @@
 
   )
 
+(defun phps-mode-test-lex-analyzer--narrow-to-defun ()
+  "Test (narrow-to-defun)."
+
+  (phps-mode-test--with-buffer
+   "<?php\nfunction test($a) {\n    return $a + 1;\n}\necho 'here';\n"
+   (goto-char 27)
+   (narrow-to-defun)
+   (should (equal (point-min) 7))
+   (should (equal (point-max) 47)))
+
+  )
+
 (defun phps-mode-test-lex-analyzer ()
   "Run test for functions."
   ;; (setq debug-on-error t)
+  (phps-mode-test-lex-analyzer--narrow-to-defun)
   (phps-mode-test-lex-analyzer--process-changes)
   (phps-mode-test-lex-analyzer--get-moved-imenu)
   (phps-mode-test-lex-analyzer--comment-uncomment-region))
