@@ -1530,11 +1530,14 @@ of performed operations.  Optionally do it FORCE-SYNCHRONOUS."
         (setq index (1+ index))))
     (when found-index
       (goto-char found-index))
-    found-index))
+    (if found-index
+        t
+      nil)))
 
 (defun phps-mode-lex-analyzer--end-of-defun (&optional arg interactive)
   "Custom implementation of `end-of-defun'."
   ;; TODO Implement this
+  ;; TODO should start from beginning-of-defun and scan until balance of brackets
   )
 
 (provide 'phps-mode-lex-analyzer)

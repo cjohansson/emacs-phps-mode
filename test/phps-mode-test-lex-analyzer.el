@@ -158,9 +158,10 @@
   (phps-mode-test--with-buffer
    "<?php\nfunction test($a) {\n    return $a + 1;\n}\necho 'here';\n"
    (goto-char 27)
-   (narrow-to-defun)
-   (should (equal (point-min) 7))
-   (should (equal (point-max) 47)))
+   (should (equal (phps-mode-lex-analyzer--beginning-of-defun) t))
+   (should (equal (point) 7))
+   (should (equal (phps-mode-lex-analyzer--end-of-defun) t))
+   (should (equal (point) 47)))
 
   )
 
