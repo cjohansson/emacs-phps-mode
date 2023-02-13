@@ -181,6 +181,19 @@
    (should (equal (point-min) 7))
    (should (equal (point-max) 108)))
 
+  (phps-mode-test--with-buffer
+   "<?php\necho 'here';\n$var = function() {\n    echo 'here';\n};\necho 'there';"
+   "Test `beginning-of-defun', `end-of-defun' and `narrow-to-defun' for a anonymous function."
+   (goto-char 53)
+   (should (equal (phps-mode-lex-analyzer--beginning-of-defun) t))
+   (should (equal (point) 20))
+   (should (equal (phps-mode-lex-analyzer--end-of-defun) t))
+   (should (equal (point) 58))
+   (goto-char 47)
+   (narrow-to-defun)
+   (should (equal (point-min) 20))
+   (should (equal (point-max) 58)))
+
   )
 
 (defun phps-mode-test-lex-analyzer ()
