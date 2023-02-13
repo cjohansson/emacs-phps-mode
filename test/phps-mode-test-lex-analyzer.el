@@ -194,6 +194,19 @@
    (should (equal (point-min) 20))
    (should (equal (point-max) 58)))
 
+  (phps-mode-test--with-buffer
+   "<?php\nnamespace myNamespace\n{\n    class myClass\n    {\n        function myFunction($arg)\n        {\n            /**\n             * if ($arg) { return true; }\n             */\n            if ($arg) {\n                // }}\n                # }}\n            }\n            return false;\n        }\n    }\n}"
+   "Test `beginning-of-defun', `end-of-defun' and `narrow-to-defun' with commented-out code."
+   (goto-char 148)
+   (should (equal (phps-mode-lex-analyzer--beginning-of-defun) t))
+   (should (equal (point) 55))
+   (should (equal (phps-mode-lex-analyzer--end-of-defun) t))
+   (should (equal (point) 289))
+   (goto-char 253)
+   (narrow-to-defun)
+   (should (equal (point-min) 55))
+   (should (equal (point-max) 290)))
+
   )
 
 (defun phps-mode-test-lex-analyzer ()

@@ -1554,8 +1554,8 @@ of performed operations.  Optionally do it FORCE-SYNCHRONOUS."
                     (or
                      (not found-initial-bracket)
                      (not (= bracket-level 0)))
-                    (search-forward-regexp "[{}\"']" nil t))
-              (let ((match-string (match-string 0)))
+                    (search-forward-regexp "\\(/\\*\\|[{}\"'#]\\|//\\)" nil t))
+              (let ((match-string (match-string-no-properties 0)))
                 (cond
                  ((string= match-string "{")
                   (unless found-initial-bracket
@@ -1610,7 +1610,14 @@ of performed operations.  Optionally do it FORCE-SYNCHRONOUS."
                               (setq quote-ending-at (point)))))))
                     (if quote-ending-at
                         (goto-char quote-ending-at)
-                      (setq failed-to-find-ending-quote t)))))))
+                      (setq failed-to-find-ending-quote t))))
+                 ((or
+                   (string= match-string "#")
+                   (string= match-string "//"))
+                  (forward-line)
+                  )
+                 ((string= match-string "/*")
+                  (search-forward-regexp "\\*/" nil t)))))
             (when (and
                    (= bracket-level 0)
                    found-initial-bracket)
