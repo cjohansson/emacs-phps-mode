@@ -1528,17 +1528,59 @@ of performed operations.  Optionally do it FORCE-SYNCHRONOUS."
               (setq found-index (point)))
           (setq found-index nil))
         (setq index (1+ index))))
-    (when found-index
-      (goto-char found-index))
     (if found-index
-        t
+        (progn
+          (goto-char found-index)
+          t)
       nil)))
 
 (defun phps-mode-lex-analyzer--end-of-defun (&optional arg interactive)
   "Custom implementation of `end-of-defun'."
-  ;; TODO Implement this
-  ;; TODO should start from beginning-of-defun and scan until balance of brackets
-  )
+  (let ((found-index))
+    (save-excursion
+      (when (phps-mode-lex-analyzer--beginning-of-defun)
+        (let ((beginning (point))
+              (bracket-level 0)
+              (found-initial-bracket)
+              (next-bracket (search-forward-regexp "[{}\"']" nil t)))
+          (message "beginning: %S" beginning)
+          (while (and
+                  next-bracket
+                  (or
+                   (not found-initial-bracket)
+                   (not (= bracket-level 0))))
+            (let ((match-string (match-string 0)))
+              (message "match-string: %S" match-string)
+              (cond
+               ((string= match-string "{")
+                (unless found-initial-bracket
+                  (setq found-initial-bracket t))
+                (setq bracket-level (1+ bracket-level)))
+               ((string= match-string "}")
+                (setq bracket-level (1- bracket-level)))
+               ((string= match-string "\"")
+                ;; TODO Handle double quoted string here
+                )
+               ((string= match-string "'")
+                ;; TODO Handle single-quoted string here
+                )))
+            (unless (and
+                     found-initial-bracket
+                     (= bracket-level 0))
+              (setq
+               next-bracket
+               (search-forward-regexp "[{}\"']" nil t))))
+          (when (and
+                 (= bracket-level 0)
+                 found-initial-bracket)
+            (setq
+             found-index
+             (point))))))
+    (if found-index
+        (progn
+          (goto-char found-index)
+          t)
+      nil)))
 
 (provide 'phps-mode-lex-analyzer)
 

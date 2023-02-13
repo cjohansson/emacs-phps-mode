@@ -157,6 +157,7 @@
 
   (phps-mode-test--with-buffer
    "<?php\nfunction test($a) {\n    return $a + 1;\n}\necho 'here';\n"
+   "Test beginning-of-defun and end-of-defun"
    (goto-char 27)
    (should (equal (phps-mode-lex-analyzer--beginning-of-defun) t))
    (should (equal (point) 7))
