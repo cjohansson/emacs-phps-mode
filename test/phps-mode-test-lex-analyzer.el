@@ -157,12 +157,29 @@
 
   (phps-mode-test--with-buffer
    "<?php\nfunction test($a) {\n    return $a + 1;\n}\necho 'here';\n"
-   "Test beginning-of-defun and end-of-defun"
+   "Test `beginning-of-defun', `end-of-defun' and `narrow-to-defun' basic example"
    (goto-char 27)
    (should (equal (phps-mode-lex-analyzer--beginning-of-defun) t))
    (should (equal (point) 7))
    (should (equal (phps-mode-lex-analyzer--end-of-defun) t))
-   (should (equal (point) 47)))
+   (should (equal (point) 47))
+   (goto-char 27)
+   (narrow-to-defun)
+   (should (equal (point-min) 7))
+   (should (equal (point-max) 48)))
+
+  (phps-mode-test--with-buffer
+   "<?php\nfunction test2($a) {\n    echo 'was there }';\n    echo \"was here \\\\\"}\\\\\" or there\";\n    return $a + 1;\n}"
+   "Test `beginning-of-defun', `end-of-defun' and `narrow-to-defun' advanced example"
+   (goto-char 41)
+   (should (equal (phps-mode-lex-analyzer--beginning-of-defun) t))
+   (should (equal (point) 7))
+   (should (equal (phps-mode-lex-analyzer--end-of-defun) t))
+   (should (equal (point) 108))
+   (goto-char 65)
+   (narrow-to-defun)
+   (should (equal (point-min) 7))
+   (should (equal (point-max) 108)))
 
   )
 

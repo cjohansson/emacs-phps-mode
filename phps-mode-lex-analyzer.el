@@ -1516,6 +1516,7 @@ of performed operations.  Optionally do it FORCE-SYNCHRONOUS."
         (index 0)
         (found-index t))
     (save-excursion
+      (move-end-of-line nil)
       (while (and found-index (< index iterations))
         (if
             (search-backward-regexp
@@ -1541,16 +1542,13 @@ of performed operations.  Optionally do it FORCE-SYNCHRONOUS."
       (when (phps-mode-lex-analyzer--beginning-of-defun)
         (let ((beginning (point))
               (bracket-level 0)
-              (found-initial-bracket)
-              (next-bracket (search-forward-regexp "[{}\"']" nil t)))
-          (message "beginning: %S" beginning)
+              (found-initial-bracket))
           (while (and
-                  next-bracket
                   (or
                    (not found-initial-bracket)
-                   (not (= bracket-level 0))))
+                   (not (= bracket-level 0)))
+                  (search-forward-regexp "[{}\"']" nil t))
             (let ((match-string (match-string 0)))
-              (message "match-string: %S" match-string)
               (cond
                ((string= match-string "{")
                 (unless found-initial-bracket
@@ -1559,17 +1557,12 @@ of performed operations.  Optionally do it FORCE-SYNCHRONOUS."
                ((string= match-string "}")
                 (setq bracket-level (1- bracket-level)))
                ((string= match-string "\"")
+                
                 ;; TODO Handle double quoted string here
                 )
                ((string= match-string "'")
                 ;; TODO Handle single-quoted string here
-                )))
-            (unless (and
-                     found-initial-bracket
-                     (= bracket-level 0))
-              (setq
-               next-bracket
-               (search-forward-regexp "[{}\"']" nil t))))
+                ))))
           (when (and
                  (= bracket-level 0)
                  found-initial-bracket)
