@@ -1520,7 +1520,7 @@ of performed operations.  Optionally do it FORCE-SYNCHRONOUS."
       (while (and found-index (< index iterations))
         (if
             (search-backward-regexp
-             "\n[\t ]*function[\t\n ]+[A-Za-Z_[:nonascii:]]"
+             "[\n\t ]+function\\([\t\n ]+\\|(\\)"
              nil
              t)
             (progn
@@ -1542,8 +1542,10 @@ of performed operations.  Optionally do it FORCE-SYNCHRONOUS."
       (when (phps-mode-lex-analyzer--beginning-of-defun)
         (let ((beginning (point))
               (bracket-level 0)
-              (found-initial-bracket))
+              (found-initial-bracket)
+              (failed-to-find-ending-quote))
           (while (and
+                  (not failed-to-find-ending-quote)
                   (or
                    (not found-initial-bracket)
                    (not (= bracket-level 0)))
@@ -1557,12 +1559,53 @@ of performed operations.  Optionally do it FORCE-SYNCHRONOUS."
                ((string= match-string "}")
                 (setq bracket-level (1- bracket-level)))
                ((string= match-string "\"")
-                
-                ;; TODO Handle double quoted string here
-                )
+                (let ((is-escaped)
+                      (quote-ending-at))
+                  (save-excursion
+                    (backward-char 2)
+                    (while (looking-at-p "\\\\")
+                      (setq is-escaped (not is-escaped))
+                      (backward-char)))
+                  (unless is-escaped
+                    (save-excursion
+                      (while (and
+                              (not quote-ending-at)
+                              (search-forward-regexp "\"" nil t))
+                        (let ((is-escaped-ending))
+                          (save-excursion
+                            (backward-char 2)
+                            (while (looking-at-p "\\\\")
+                              (setq is-escaped-ending (not is-escaped-ending))
+                              (backward-char)))
+                          (unless is-escaped-ending
+                            (setq quote-ending-at (point)))))))
+                  (if quote-ending-at
+                      (goto-char quote-ending-at)
+                    (setq failed-to-find-ending-quote t))))
                ((string= match-string "'")
-                ;; TODO Handle single-quoted string here
-                ))))
+                (let ((is-escaped)
+                      (quote-ending-at))
+                  (save-excursion
+                    (backward-char 2)
+                    (while (looking-at-p "\\\\")
+                      (setq is-escaped (not is-escaped))
+                      (backward-char)))
+                  (unless is-escaped
+                    (save-excursion
+                      (while (and
+                              (not quote-ending-at)
+                              (search-forward-regexp "'" nil t))
+                        (let ((is-escaped-ending))
+                          (save-excursion
+                            (backward-char 2)
+                            (while (looking-at-p "\\\\")
+                              (setq is-escaped-ending (not is-escaped-ending))
+                              (backward-char)))
+                          (unless is-escaped-ending
+                            (setq quote-ending-at (point)))))))
+                  (if quote-ending-at
+                      (goto-char quote-ending-at)
+                    (setq failed-to-find-ending-quote t)))))))
           (when (and
                  (= bracket-level 0)
                  found-initial-bracket)
