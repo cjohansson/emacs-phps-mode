@@ -1512,22 +1512,30 @@ of performed operations.  Optionally do it FORCE-SYNCHRONOUS."
 
 (defun phps-mode-lex-analyzer--beginning-of-defun (&optional arg)
   "Custom implementation of `beginning-of-defun'."
-  (let ((iterations (if arg arg 1))
+  (let ((iterations (if arg (abs arg) 1))
+        (forward-p (and arg (< arg 0)))
         (index 0)
         (found-index t))
     (save-excursion
-      (move-end-of-line nil)
       (while (and found-index (< index iterations))
         (setq found-index nil)
         (setq index (1+ index))
-        (when
-            (search-backward-regexp
-             "[\n\t ]+function\\([\t\n ]+\\|(\\)"
-             nil
-             t)
-          (search-forward-regexp "[\n]*")
-          (move-beginning-of-line nil)
-          (setq found-index (point)))))
+        (if forward-p
+            (when
+                (search-forward-regexp
+                 "[\n\t ]+function\\([\t\n ]+\\|(\\)"
+                 nil
+                 t)
+              (move-beginning-of-line nil)
+              (setq found-index (point)))
+            (when
+                (search-backward-regexp
+                 "[\n\t ]+function\\([\t\n ]+\\|(\\)"
+                 nil
+                 t)
+              (search-forward-regexp "[\n]*")
+              (move-beginning-of-line nil)
+              (setq found-index (point))))))
     (if found-index
         (progn
           (goto-char found-index)
@@ -1545,6 +1553,7 @@ of performed operations.  Optionally do it FORCE-SYNCHRONOUS."
               (< index iterations))
         (setq found-index nil)
         (setq index (1+ index))
+        (move-end-of-line nil)
         (when (phps-mode-lex-analyzer--beginning-of-defun)
           (let ((bracket-level 0)
                 (found-initial-bracket)
