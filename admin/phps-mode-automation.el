@@ -26,11 +26,6 @@
   (if (fboundp 'parser-generator-lr-export-to-elisp)
       (progn
 
-        ;; 256 MB before garbage collection, seems to speed up generation
-        (setq
-         gc-cons-threshold
-         (* 1024 1024 256))
-
         (let* ((global-declaration
                 (phps-mode-automation-parser-generator--global-declaration))
                (attributes
