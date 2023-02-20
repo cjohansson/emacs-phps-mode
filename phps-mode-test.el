@@ -188,6 +188,20 @@ Each element is a list: (list key value), optionally UN-SORTED."
                  (< (car a) (car b)))))))
       nil)))
 
+(defun phps-mode-test--output-parse-productions (parse)
+  "Output productions by PARSE trail."
+  (message "Left-to-right with right-most derivation in reverse:\n%S\n" parse)
+  (dolist (production-number parse)
+    (let ((production
+           (phps-mode-parser--get-grammar-production-by-number
+            production-number)))
+      (message
+       "%d: %S -> %S"
+       production-number
+       (car (car production))
+       (car (cdr production)))))
+  (message "\n"))
+
 (transient-mark-mode t)
 (electric-pair-mode t)
 (setq phps-mode-async-process nil)

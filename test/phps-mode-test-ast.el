@@ -24,17 +24,7 @@
    name
    (lambda()
      (let ((parse (phps-mode-parser-parse)))
-       (message "Left-to-right with right-most derivation in reverse:\n%S\n" parse)
-       (dolist (production-number parse)
-         (let ((production
-                (phps-mode-parser--get-grammar-production-by-number
-                 production-number)))
-           (message
-            "%d: %S -> %S"
-            production-number
-            (car (car production))
-            (car (cdr production))))))
-     (message "\n")
+       (phps-mode-test--output-parse-productions parse)
      (phps-mode-ast--generate)
 
      ;; (message "symbol-table: \n%S\n"
