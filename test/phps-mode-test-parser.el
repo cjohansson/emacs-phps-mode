@@ -70,12 +70,102 @@
   (message "-- Running tests for parser basic... --\n")
 
   (phps-mode-test-parser--buffer-contents
+   "<?php\nclass Falsy\n{\n    public function alwaysFalse(): false { /* ... */ }\n\n    public function alwaysTrue(): true { /* ... */ }\n\n    public function alwaysNull(): null { /* ... */ }\n}\n"
+   "PHP 8.2 - allow null, false, and true as stand-alone types"
+   (lambda()
+
+     (let ((parse (phps-mode-parser-parse)))
+       (message "Left-to-right with right-most derivation in reverse:\n%S\n" parse)
+       (dolist (production-number parse)
+         (let ((production
+                (phps-mode-parser--get-grammar-production-by-number
+                 production-number)))
+           (message
+            "%d: %S -> %S"
+            production-number
+            (car (car production))
+            (car (cdr production)))))
+       (message "\n")
+       (should
+        (equal
+         '(84 198 202 443 297 330 328 327 442 446 81 443 243 91 274 262 258 280 444 140 323 444 300 302 296 330 328 327 442 446 81 443 243 91 274 262 258 280 444 140 323 444 300 302 296 330 328 327 442 446 81 443 243 91 274 262 258 280 444 140 323 444 300 302 296 185 103 108 83)
+         parse)))))
+
+  (phps-mode-test-parser--buffer-contents
+   "<?php\ntrait Foo\n{\n    public const CONSTANT = 1;\n}\n\nclass Bar\n{\n    use Foo;\n}\n"
+   "PHP 8.2 - Constants in traits"
+   (lambda()
+
+     (let ((parse (phps-mode-parser-parse)))
+       (message "Left-to-right with right-most derivation in reverse:\n%S\n" parse)
+       (dolist (production-number parse)
+         (let ((production
+                (phps-mode-parser--get-grammar-production-by-number
+                 production-number)))
+           (message
+            "%d: %S -> %S"
+            production-number
+            (car (car production))
+            (car (cdr production)))))
+       (message "\n")
+       (should
+        (equal
+         '(84 443 297 330 328 327 81 474 426 443 343 342 299 302 296 190 104 108 83 198 202 443 297 91 459 305 307 304 296 185 103 108 83)
+         parse)))))
+
+  ;; TODO Make PHP 8.2 tests below pass
+
+  (phps-mode-test-parser--buffer-contents
+   "<?php\nclass Foo {\n    public function bar((A&B)|null $entity) {\n        return $entity;\n    }\n}\n"
+   "PHP 8.2 - disjunctive normal form (DNF) types"
+   (lambda()
+
+     (let ((parse (phps-mode-parser-parse)))
+       (message "Left-to-right with right-most derivation in reverse:\n%S\n" parse)
+       (dolist (production-number parse)
+         (let ((production
+                (phps-mode-parser--get-grammar-production-by-number
+                 production-number)))
+           (message
+            "%d: %S -> %S"
+            production-number
+            (car (car production))
+            (car (cdr production)))))
+       (message "\n")
+       (should
+        (equal
+         '(84 472 479 426 347 346 157 107 83)
+         parse)))))
+
+  (phps-mode-test-parser--buffer-contents
+   "<?php\nreadonly class BlogData\n{\n    public string $title;\n\n    public Status $status;\n\n    public function __construct(string $title, Status $status)\n    {\n        $this->title = $title;\n        $this->status = $status;\n    }\n}\n"
+   "PHP 8.2 - readonly classes"
+   (lambda()
+
+     (let ((parse (phps-mode-parser-parse)))
+       (message "Left-to-right with right-most derivation in reverse:\n%S\n" parse)
+       (dolist (production-number parse)
+         (let ((production
+                (phps-mode-parser--get-grammar-production-by-number
+                 production-number)))
+           (message
+            "%d: %S -> %S"
+            production-number
+            (car (car production))
+            (car (cdr production)))))
+       (message "\n")
+       (should
+        (equal
+         '(84 472 479 426 347 346 157 107 83)
+         parse)))))
+
+  (phps-mode-test-parser--buffer-contents
    "<?php echo 'hello';"
    "Basic echo test"
    (lambda()
 
      (let ((parse (phps-mode-parser-parse)))
-       (message "Left-to-right with right-most derivation:\n%S\n" parse)
+       (message "Left-to-right with right-most derivation in reverse:\n%S\n" parse)
        (dolist (production-number parse)
          (let ((production
                 (phps-mode-parser--get-grammar-production-by-number
@@ -128,7 +218,7 @@
    "Advanced echo test with 2 echo sections"
    (lambda()
      (let ((parse (phps-mode-parser-parse)))
-       (message "Left-to-right with right-most derivation:\n%S\n" parse)
+       (message "Left-to-right with right-most derivation in reverse:\n%S\n" parse)
        (dolist (production-number parse)
          (let ((production
                 (phps-mode-parser--get-grammar-production-by-number
@@ -149,7 +239,7 @@
    "Simple function defintion"
    (lambda()
      (let ((parse (phps-mode-parser-parse)))
-       (message "Left-to-right with right-most derivation:\n%S\n" parse)
+       (message "Left-to-right with right-most derivation in reverse:\n%S\n" parse)
        (dolist (production-number parse)
          (let ((production
                 (phps-mode-parser--get-grammar-production-by-number
@@ -170,7 +260,7 @@
    "Simple function defintion inside un-bracketed namespace"
    (lambda()
      (let ((parse (phps-mode-parser-parse)))
-       (message "Left-to-right with right-most derivation:\n%S\n" parse)
+       (message "Left-to-right with right-most derivation in reverse:\n%S\n" parse)
        (dolist (production-number parse)
          (let ((production
                 (phps-mode-parser--get-grammar-production-by-number
@@ -191,7 +281,7 @@
    "Simple function defintion inside bracketed namespace"
    (lambda()
      (let ((parse (phps-mode-parser-parse)))
-       (message "Left-to-right with right-most derivation:\n%S\n" parse)
+       (message "Left-to-right with right-most derivation in reverse:\n%S\n" parse)
        (dolist (production-number parse)
          (let ((production
                 (phps-mode-parser--get-grammar-production-by-number
@@ -212,7 +302,7 @@
    "Simple function defintion and property inside class inside non-bracketed namespace"
    (lambda()
      (let ((parse (phps-mode-parser-parse)))
-       (message "Left-to-right with right-most derivation:\n%S\n" parse)
+       (message "Left-to-right with right-most derivation in reverse:\n%S\n" parse)
        (dolist (production-number parse)
          (let ((production
                 (phps-mode-parser--get-grammar-production-by-number
