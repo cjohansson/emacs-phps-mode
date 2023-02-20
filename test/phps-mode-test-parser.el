@@ -95,9 +95,10 @@
 
   ;; TODO Make PHP 8.2 tests below pass
 
+
   (phps-mode-test-parser--buffer-contents
-   "<?php\nclass Foo {\n    public function bar((A&B)|null $entity) {\n        return $entity;\n    }\n}\n"
-   "PHP 8.2 - disjunctive normal form (DNF) types"
+   "<?php\nreadonly class BlogData\n{\n    public string $title;\n\n    public Status $status;\n\n    public function __construct(string $title, Status $status)\n    {\n        $this->title = $title;\n        $this->status = $status;\n    }\n}\n"
+   "PHP 8.2 - readonly classes"
    (lambda()
 
      (let ((parse (phps-mode-parser-parse)))
@@ -108,8 +109,8 @@
          parse)))))
 
   (phps-mode-test-parser--buffer-contents
-   "<?php\nreadonly class BlogData\n{\n    public string $title;\n\n    public Status $status;\n\n    public function __construct(string $title, Status $status)\n    {\n        $this->title = $title;\n        $this->status = $status;\n    }\n}\n"
-   "PHP 8.2 - readonly classes"
+   "<?php\nclass Foo {\n    public function bar((A&B)|null $entity) {\n        return $entity;\n    }\n}\n"
+   "PHP 8.2 - disjunctive normal form (DNF) types"
    (lambda()
 
      (let ((parse (phps-mode-parser-parse)))
