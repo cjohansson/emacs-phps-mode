@@ -24,7 +24,7 @@
    name
    (lambda()
      (let ((parse (phps-mode-parser-parse)))
-       (phps-mode-test--output-parse-productions parse)
+       (phps-mode-test--output-parse-productions parse))
      (phps-mode-ast--generate)
 
      ;; (message "symbol-table: \n%S\n"
