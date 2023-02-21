@@ -208,7 +208,7 @@
           (switch-to-buffer "*PHP Parser*")
           (insert export)
           (message ";; export: %s" export)
-          (write-file parser-file-name) ;; NOTE Will cause Debugger entered--Lisp error: (void-variable vc-logentry-check-hook)
+          (write-file parser-file-name)
           (kill-buffer))
 
         (message ";; Automation completed"))
