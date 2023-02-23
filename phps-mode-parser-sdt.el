@@ -3116,7 +3116,9 @@
                       (item-end (nth 3 item)))
                  (when (and
                         (>= item-start class-start)
-                        (<= item-end class-end))
+                        (or
+                         (not item-end)
+                         (<= item-end class-end)))
                    (push
                     (list 'class class-name class-start class-end)
                     (nth imenu-stack-index phps-mode-parser-sdt-symbol-imenu--stack))
