@@ -130,6 +130,13 @@
   "Run test for bookkeeping generation."
   (message "-- Running tests for bookkeeping generation... --\n")
 
+  ;; TODO Make this test pass
+  (phps-mode-test-ast--should-bookkeep
+   "<?php\nabstract class AbstractClass\n{\n    // Force Extending class to define this method\n    abstract protected function getValue();\n    abstract protected function prefixValue($prefix);\n\n    // Common method\n    public function printOut() {\n        print $this->getValue() . \"\\n\";\n    }\n}\n\nclass ConcreteClass1 extends AbstractClass\n{\n    protected function getValue() {\n        return \"ConcreteClass1\";\n    }\n\n    public function prefixValue($prefix) {\n        return \"{$prefix}ConcreteClass1\";\n    }\n}\n\nclass ConcreteClass2 extends AbstractClass\n{\n    public function getValue() {\n        return \"ConcreteClass2\";\n    }\n\n    public function prefixValue($prefix) {\n        return \"{$prefix}ConcreteClass2\";\n    }\n}\n\n$class1 = new ConcreteClass1;\n$class1->printOut();\necho $class1->prefixValue('FOO_') .\"\\n\";\n\n$class2 = new ConcreteClass2;\n$class2->printOut();\necho $class2->prefixValue('FOO_') .\"\\n\";\n?>"
+   "Bookkeeping of abstract class"
+   '((0 1))
+   '((a b)))
+
   ;; TODO v1 Symbol namespace should be class | interface | trait / symbol
   ;; TODO v2 Should have more delicate handling of isset, !empty condition blocks
   ;; TODO v2 Should properly bookkeep inside potentially endlessly nested anonymous functions / arrow functions / anonymous classes
