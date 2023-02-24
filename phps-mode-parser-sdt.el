@@ -3112,13 +3112,10 @@
                   (item-index 0))
              (while (< item-index item-count)
                (let* ((item (nth item-index items))
-                      (item-start (nth 2 item))
-                      (item-end (nth 3 item)))
+                      (item-start (nth 2 item)))
                  (when (and
                         (>= item-start class-start)
-                        (or
-                         (not item-end)
-                         (<= item-end class-end)))
+                        (<= item-start class-end))
                    (push
                     (list 'class class-name class-start class-end)
                     (nth imenu-stack-index phps-mode-parser-sdt-symbol-imenu--stack))
@@ -3233,11 +3230,10 @@
                   (item-index 0))
              (while (< item-index item-count)
                (let* ((item (nth item-index items))
-                      (item-start (nth 2 item))
-                      (item-end (nth 3 item)))
+                      (item-start (nth 2 item)))
                  (when (and
                         (>= item-start class-start)
-                        (<= item-end class-end))
+                        (<= item-start class-end))
                    (push
                     (list 'class class-name class-start class-end)
                     (nth imenu-stack-index phps-mode-parser-sdt-symbol-imenu--stack))
@@ -3361,11 +3357,10 @@
                   (item-index 0))
              (while (< item-index item-count)
                (let* ((item (nth item-index items))
-                      (item-start (nth 2 item))
-                      (item-end (nth 3 item)))
+                      (item-start (nth 2 item)))
                  (when (and
                         (>= item-start class-start)
-                        (<= item-end class-end))
+                        (<= item-start class-end))
                    (push
                     (list 'trait class-name class-start class-end)
                     (nth imenu-stack-index phps-mode-parser-sdt-symbol-imenu--stack))
