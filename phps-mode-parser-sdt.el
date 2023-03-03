@@ -4212,39 +4212,70 @@
 (puthash 266 (lambda(_args _terminals) 'T_STATIC) phps-mode-parser--table-translations)
 
 ;; 267 ((union_type_element) (type))
-(puthash 267 (lambda(args _terminals) (list (nth 0 args) (nth 2 args))) phps-mode-parser--table-translations)
+(puthash
+ 267
+ (lambda(args _terminals)
+   `(
+     ast-type
+     simple-union-type-element
+     type
+     ,args
+     ))
+ phps-mode-parser--table-translations)
+
+;; 268 ((union_type_element) ("(" intersection_type ")"))
+(puthash
+ 268
+ (lambda(args _terminals)
+   `(
+     ast-type
+     intersect-union-type-element
+     type
+     ,(nth 1 args)))
+ phps-mode-parser--table-translations)
+
+;; 269 ((union_type) (union_type_element "|" union_type_element))
+(puthash
+ 269
+ (lambda(args _terminals)
+   (list (nth 0 args) (nth 2 args)))
+ phps-mode-parser--table-translations)
+
+;; 270 ((union_type) (union_type "|" union_type_element))
+(puthash
+ 270
+ (lambda(args _terminals)
+   (append (nth 0 args) (list (nth 2 args))))
+ phps-mode-parser--table-translations)
+
+;; 271 ((intersection_type) (type T_AMPERSAND_NOT_FOLLOWED_BY_VAR_OR_VARARG type))
+(puthash 271 (lambda(args _terminals) (list (nth 0 args) (nth 2 args))) phps-mode-parser--table-translations)
+
+;; 272 ((intersection_type) (intersection_type T_AMPERSAND_NOT_FOLLOWED_BY_VAR_OR_VARARG type))
+(puthash 272 (lambda(args _terminals) (append (nth 0 args) (list (nth 1 args)))) phps-mode-parser--table-translations)
+
+;; 273 ((type_expr_without_static) (type_without_static))
+(puthash 273 (lambda(args _terminals) args) phps-mode-parser--table-translations)
+
+;; 274 ((type_expr_without_static) ("?" type_without_static))
+(puthash 274 (lambda(args _terminals) args) phps-mode-parser--table-translations)
+
+;; 275 ((type_expr_without_static) (union_type_without_static))
+(puthash 275 (lambda(args _terminals) args) phps-mode-parser--table-translations)
+
+;; 276 ((type_expr_without_static) (intersection_type_without_static))
+(puthash 276 (lambda(args _terminals) args) phps-mode-parser--table-translations)
+
+;; 277 ((type_without_static) (T_ARRAY))
+(puthash 277 (lambda(_args _terminals) 'T_ARRAY) phps-mode-parser--table-translations)
+
+;; 278 ((type_without_static) (T_CALLABLE))
+(puthash 278 (lambda(_args _terminals) 'T_CALLABLE) phps-mode-parser--table-translations)
+
+;; 279 ((type_without_static) (name))
+(puthash 279 (lambda(args _terminals) args) phps-mode-parser--table-translations)
 
 ;; TODO Was here
-
-;; 265 ((union_type) (union_type "|" type))
-(puthash 265 (lambda(args _terminals) (append (nth 0 args) (list (nth 2 args)))) phps-mode-parser--table-translations)
-
-;; 266 ((intersection_type) (type T_AMPERSAND_NOT_FOLLOWED_BY_VAR_OR_VARARG type))
-(puthash 266 (lambda(args _terminals) (list (nth 0 args) (nth 2 args))) phps-mode-parser--table-translations)
-
-;; 267 ((intersection_type) (intersection_type T_AMPERSAND_NOT_FOLLOWED_BY_VAR_OR_VARARG type))
-(puthash 267 (lambda(args _terminals) (append (nth 0 args) (list (nth 1 args)))) phps-mode-parser--table-translations)
-
-;; 268 ((type_expr_without_static) (type_without_static))
-(puthash 268 (lambda(args _terminals) args) phps-mode-parser--table-translations)
-
-;; 269 ((type_expr_without_static) ("?" type_without_static))
-(puthash 269 (lambda(args _terminals) args) phps-mode-parser--table-translations)
-
-;; 270 ((type_expr_without_static) (union_type_without_static))
-(puthash 270 (lambda(args _terminals) args) phps-mode-parser--table-translations)
-
-;; 271 ((type_expr_without_static) (intersection_type_without_static))
-(puthash 271 (lambda(args _terminals) args) phps-mode-parser--table-translations)
-
-;; 272 ((type_without_static) (T_ARRAY))
-(puthash 272 (lambda(_args _terminals) 'T_ARRAY) phps-mode-parser--table-translations)
-
-;; 273 ((type_without_static) (T_CALLABLE))
-(puthash 273 (lambda(_args _terminals) 'T_CALLABLE) phps-mode-parser--table-translations)
-
-;; 274 ((type_without_static) (name))
-(puthash 273 (lambda(args _terminals) args) phps-mode-parser--table-translations)
 
 ;; 275 ((union_type_without_static) (type_without_static "|" type_without_static))
 (puthash 275 (lambda(args _terminals) (list (nth 0 args) (nth 2 args))) phps-mode-parser--table-translations)
