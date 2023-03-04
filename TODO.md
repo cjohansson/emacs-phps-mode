@@ -32,3 +32,18 @@
 
 * Support for mmm-mode or similar?
 
+* Failing parse of
+
+<?php
+trait Foo
+{
+    public const CONSTANT = 1;
+}
+
+class Bar
+{
+    use Foo;
+}
+
+var_dump(Bar::CONSTANT); // 1
+var_dump(Foo::CONSTANT); // Error
