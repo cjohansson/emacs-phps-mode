@@ -11,11 +11,12 @@ This mode does not require PHP installed on your computer because it has a built
 
 * GPLv3 license
 * Flycheck support with `(phps-mode-flycheck-setup)`
-* Lexer based on official PHP 8.1 re2c generated lexer
+* Lexer based on official PHP 8.2 re2c generated lexer
+* Canonical LR(1) Parser automatically generated from the official PHP 8.2 LALR(1) YACC grammar
 * Syntax coloring based on lexer tokens, makes it easier to spot invalid code
 * PSR-1, PSR-2 and PSR-12 indentation
 * PSR-1, PSR-2 and PSR-12 supported white-space
-* Support for indentation of HTML and XML
+* Support for indentation of HTML, JavaScript and XML
 * Integration with `(electric-pair)`
 * Incremental lexer and syntax coloring after buffer changes
 * Incremental parser, imenu and bookkeeping generation after buffer changes
@@ -32,7 +33,6 @@ This mode does not require PHP installed on your computer because it has a built
 * Bookkeeping of symbols via syntax-directed translation, showing defined and undefined symbols via syntax coloring (requires a theme that has distinct colors for 'font-lock-warning-face and 'font-lock-variable-name-face)
 * Imenu generation via syntax-directed translation, showing namespaces, classes, functions, traits, interfaces and variables
 * Generation of symbol-table via syntax-directed translation
-* Canonical LR(1) Parser automatically generated from official PHP 8.1 LALR(1) YACC grammar
 
 ## Issues and roadmap
 
