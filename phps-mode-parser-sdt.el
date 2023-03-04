@@ -5045,9 +5045,9 @@
      ,(nth 3 args)))
  phps-mode-parser--table-translations)
 
-;; 344 ((const_decl) (T_STRING "=" expr backup_doc_comment))
+;; 351 ((const_decl) (T_STRING "=" expr backup_doc_comment))
 (puthash
- 344
+ 351
  (lambda(args _terminals)
    `(
      ast-type
@@ -5060,9 +5060,9 @@
      ,(nth 3 args)))
  phps-mode-parser--table-translations)
 
-;; 345 ((echo_expr_list) (echo_expr_list "," echo_expr))
+;; 352 ((echo_expr_list) (echo_expr_list "," echo_expr))
 (puthash
- 345
+ 352
  (lambda(args _terminals)
    `(
      ast-type
@@ -5073,9 +5073,9 @@
      ,(nth 2 args)))
  phps-mode-parser--table-translations)
 
-;; 346 ((echo_expr_list) (echo_expr))
+;; 353 ((echo_expr_list) (echo_expr))
 (puthash
- 346
+ 353
  (lambda(args _terminals)
    `(
      ast-type
@@ -5084,9 +5084,9 @@
      ,args))
  phps-mode-parser--table-translations)
 
-;; 347 ((echo_expr) (expr))
+;; 354 ((echo_expr) (expr))
 (puthash
- 347
+ 354
  (lambda(args _terminals)
    `(
      ast-type
@@ -5095,18 +5095,18 @@
      ,args))
  phps-mode-parser--table-translations)
 
-;; 348 ((for_exprs) (%empty))
+;; 355 ((for_exprs) (%empty))
 (puthash
- 348
+ 355
  (lambda(_args _terminals)
    `(
      ast-type
      empty-for-exprs))
  phps-mode-parser--table-translations)
 
-;; 349 ((for_exprs) (non_empty_for_exprs))
+;; 356 ((for_exprs) (non_empty_for_exprs))
 (puthash
- 349
+ 356
  (lambda(args _terminals)
    `(
      ast-type
@@ -5116,9 +5116,9 @@
      ))
  phps-mode-parser--table-translations)
 
-;; 350 ((non_empty_for_exprs) (non_empty_for_exprs "," expr))
+;; 357 ((non_empty_for_exprs) (non_empty_for_exprs "," expr))
 (puthash
- 350
+ 357
  (lambda(args _terminals)
    `(
      ast-type
@@ -5130,9 +5130,9 @@
      ))
  phps-mode-parser--table-translations)
 
-;; 351 ((non_empty_for_exprs) (expr))
+;; 358 ((non_empty_for_exprs) (expr))
 (puthash
- 351
+ 358
  (lambda(args _terminals)
    `(
      ast-type
@@ -5142,9 +5142,9 @@
      ))
  phps-mode-parser--table-translations)
 
-;; 352 ((anonymous_class) (T_CLASS ctor_arguments extends_from implements_list backup_doc_comment "{" class_statement_list "}"))
+;; 359 ((anonymous_class) (T_CLASS ctor_arguments extends_from implements_list backup_doc_comment "{" class_statement_list "}"))
 (puthash
- 352
+ 359
  (lambda(args _terminals)
    `(
      ast-type
@@ -5162,9 +5162,9 @@
      ))
  phps-mode-parser--table-translations)
 
-;; 353 ((new_expr) (T_NEW class_name_reference ctor_arguments))
+;; 360 ((new_expr) (T_NEW class_name_reference ctor_arguments))
 (puthash
- 353
+ 360
  (lambda(args _terminals)
    `(
      ast-type
@@ -5176,9 +5176,9 @@
      ))
  phps-mode-parser--table-translations)
 
-;; 354 ((new_expr) (T_NEW anonymous_class))
+;; 361 ((new_expr) (T_NEW anonymous_class))
 (puthash
- 354
+ 361
  (lambda(args _terminals)
    `(
      ast-type
@@ -5188,9 +5188,9 @@
      ))
  phps-mode-parser--table-translations)
 
-;; 355 ((new_expr) (T_NEW attributes anonymous_class))
+;; 362 ((new_expr) (T_NEW attributes anonymous_class))
 (puthash
- 355
+ 362
  (lambda(args _terminals)
    `(
      ast-type
@@ -5202,9 +5202,9 @@
      ))
  phps-mode-parser--table-translations)
 
-;; 356 ((expr) (variable))
+;; 363 ((expr) (variable))
 (puthash
- 356
+ 363
  (lambda(args _terminals)
    `(
      ast-type
@@ -5213,9 +5213,9 @@
      ,args))
  phps-mode-parser--table-translations)
 
-;; 357 ((expr) (T_LIST "(" array_pair_list ")" "=" expr))
+;; 364 ((expr) (T_LIST "(" array_pair_list ")" "=" expr))
 (puthash
- 357
+ 364
  (lambda(args _terminals)
    `(
      ast-type
@@ -5226,9 +5226,9 @@
      ))
  phps-mode-parser--table-translations)
 
-;; 358 ((expr) ("[" array_pair_list "]" "=" expr))
+;; 365 ((expr) ("[" array_pair_list "]" "=" expr))
 (puthash
- 358
+ 365
  (lambda(args _terminals)
    (let ((array-pair-list (nth 1 args)))
      (dolist (array-item array-pair-list)
@@ -5272,9 +5272,9 @@
      ))
  phps-mode-parser--table-translations)
 
-;; 359 ((expr) (variable "=" expr))
+;; 366 ((expr) (variable "=" expr))
 (puthash
- 359
+ 366
  (lambda(args terminals)
    ;; Save variable declaration in bookkeeping buffer
    (let ((variable-type (plist-get (nth 0 args) 'ast-type)))
@@ -5330,9 +5330,9 @@
      ,(cdr (cdr (nth 0 terminals)))))
  phps-mode-parser--table-translations)
 
-;; 360 ((expr) (variable "=" ampersand variable))
+;; 367 ((expr) (variable "=" ampersand variable))
 (puthash
- 360
+ 367
  (lambda(args terminals)
    ;; Save variable declaration in bookkeeping buffer
    (let ((variable-type1 (plist-get (nth 0 args) 'ast-type))
@@ -5412,9 +5412,9 @@
      ))
  phps-mode-parser--table-translations)
 
-;; 361 ((expr) (T_CLONE expr))
+;; 368 ((expr) (T_CLONE expr))
 (puthash
- 361
+ 368
  (lambda(args _terminals)
    `(
      ast-type
@@ -5424,9 +5424,9 @@
      ))
  phps-mode-parser--table-translations)
 
-;; 362 ((expr) (variable T_PLUS_EQUAL expr))
+;; 369 ((expr) (variable T_PLUS_EQUAL expr))
 (puthash
- 362
+ 369
  (lambda(args _terminals)
    `(
      ast-type
@@ -5438,9 +5438,9 @@
      ))
  phps-mode-parser--table-translations)
 
-;; 363 ((expr) (variable T_MINUS_EQUAL expr))
+;; 370 ((expr) (variable T_MINUS_EQUAL expr))
 (puthash
- 363
+ 370
  (lambda(args _terminals)
    `(
      ast-type
@@ -5452,9 +5452,9 @@
      ))
  phps-mode-parser--table-translations)
 
-;; 364 ((expr) (variable T_MUL_EQUAL expr))
+;; 371 ((expr) (variable T_MUL_EQUAL expr))
 (puthash
- 364
+ 371
  (lambda(args _terminals)
    `(
      ast-type
@@ -5466,9 +5466,9 @@
      ))
  phps-mode-parser--table-translations)
 
-;; 365 ((expr) (variable T_POW_EQUAL expr))
+;; 372 ((expr) (variable T_POW_EQUAL expr))
 (puthash
- 365
+ 372
  (lambda(args _terminals)
    `(
      ast-type
@@ -5480,9 +5480,9 @@
      ))
  phps-mode-parser--table-translations)
 
-;; 366 ((expr) (variable T_DIV_EQUAL expr))
+;; 373 ((expr) (variable T_DIV_EQUAL expr))
 (puthash
- 366
+ 373
  (lambda(args _terminals)
    `(
      ast-type
@@ -5494,9 +5494,9 @@
      ))
  phps-mode-parser--table-translations)
 
-;; 367 ((expr) (variable T_CONCAT_EQUAL expr))
+;; 374 ((expr) (variable T_CONCAT_EQUAL expr))
 (puthash
- 367
+ 374
  (lambda(args _terminals)
    `(
      ast-type
@@ -5508,9 +5508,9 @@
      ))
  phps-mode-parser--table-translations)
 
-;; 368 ((expr) (variable T_MOD_EQUAL expr))
+;; 375 ((expr) (variable T_MOD_EQUAL expr))
 (puthash
- 368
+ 375
  (lambda(args _terminals)
    `(
      ast-type
@@ -5522,9 +5522,9 @@
      ))
  phps-mode-parser--table-translations)
 
-;; 369 ((expr) (variable T_AND_EQUAL expr))
+;; 376 ((expr) (variable T_AND_EQUAL expr))
 (puthash
- 369
+ 376
  (lambda(args _terminals)
    `(
      ast-type
@@ -5536,9 +5536,9 @@
      ))
  phps-mode-parser--table-translations)
 
-;; 370 ((expr) (variable T_OR_EQUAL expr))
+;; 377 ((expr) (variable T_OR_EQUAL expr))
 (puthash
- 370
+ 377
  (lambda(args _terminals)
    `(
      ast-type
@@ -5550,9 +5550,9 @@
      ))
  phps-mode-parser--table-translations)
 
-;; 371 ((expr) (variable T_XOR_EQUAL expr))
+;; 378 ((expr) (variable T_XOR_EQUAL expr))
 (puthash
- 371
+ 378
  (lambda(args _terminals)
    `(
      ast-type
@@ -5564,9 +5564,9 @@
      ))
  phps-mode-parser--table-translations)
 
-;; 372 ((expr) (variable T_SL_EQUAL expr))
+;; 379 ((expr) (variable T_SL_EQUAL expr))
 (puthash
- 372
+ 379
  (lambda(args _terminals)
    `(
      ast-type
@@ -5578,9 +5578,9 @@
      ))
  phps-mode-parser--table-translations)
 
-;; 373 ((expr) (variable T_SR_EQUAL expr))
+;; 380 ((expr) (variable T_SR_EQUAL expr))
 (puthash
- 373
+ 380
  (lambda(args _terminals)
    `(
      ast-type
@@ -5592,9 +5592,9 @@
      ))
  phps-mode-parser--table-translations)
 
-;; 374 ((expr) (variable T_COALESCE_EQUAL expr))
+;; 381 ((expr) (variable T_COALESCE_EQUAL expr))
 (puthash
- 374
+ 381
  (lambda(args _terminals)
    `(
      ast-type
@@ -5606,9 +5606,9 @@
      ))
  phps-mode-parser--table-translations)
 
-;; 375 ((expr) (variable T_INC))
+;; 382 ((expr) (variable T_INC))
 (puthash
- 375
+ 382
  (lambda(args _terminals)
    `(
      ast-type
@@ -5618,9 +5618,9 @@
      ))
  phps-mode-parser--table-translations)
 
-;; 376 ((expr) (T_INC variable))
+;; 383 ((expr) (T_INC variable))
 (puthash
- 376
+ 383
  (lambda(args _terminals)
    `(
      ast-type
@@ -5630,9 +5630,9 @@
      ))
  phps-mode-parser--table-translations)
 
-;; 377 ((expr) (variable T_DEC))
+;; 384 ((expr) (variable T_DEC))
 (puthash
- 377
+ 384
  (lambda(args _terminals)
    `(
      ast-type
@@ -5642,9 +5642,9 @@
      ))
  phps-mode-parser--table-translations)
 
-;; 378 ((expr) (T_DEC variable))
+;; 385 ((expr) (T_DEC variable))
 (puthash
- 378
+ 385
  (lambda(args _terminals)
    `(
      ast-type
@@ -5654,9 +5654,9 @@
      ))
  phps-mode-parser--table-translations)
 
-;; 379 ((expr) (expr T_BOOLEAN_OR expr))
+;; 386 ((expr) (expr T_BOOLEAN_OR expr))
 (puthash
- 379
+ 386
  (lambda(args _terminals)
    `(
      ast-type
@@ -5668,9 +5668,9 @@
      ))
  phps-mode-parser--table-translations)
 
-;; 380 ((expr) (expr T_BOOLEAN_AND expr))
+;; 387 ((expr) (expr T_BOOLEAN_AND expr))
 (puthash
- 380
+ 387
  (lambda(args _terminals)
    `(
      ast-type
@@ -5682,9 +5682,9 @@
      ))
  phps-mode-parser--table-translations)
 
-;; 381 ((expr) (expr T_LOGICAL_OR expr))
+;; 388 ((expr) (expr T_LOGICAL_OR expr))
 (puthash
- 381
+ 388
  (lambda(args _terminals)
    `(
      ast-type
@@ -5696,9 +5696,9 @@
      ))
  phps-mode-parser--table-translations)
 
-;; 382 ((expr) (expr T_LOGICAL_AND expr))
+;; 389 ((expr) (expr T_LOGICAL_AND expr))
 (puthash
- 382
+ 389
  (lambda(args _terminals)
    `(
      ast-type
@@ -5710,9 +5710,9 @@
      ))
  phps-mode-parser--table-translations)
 
-;; 383 ((expr) (expr T_LOGICAL_XOR expr))
+;; 390 ((expr) (expr T_LOGICAL_XOR expr))
 (puthash
- 383
+ 390
  (lambda(args _terminals)
    `(
      ast-type
@@ -5724,9 +5724,9 @@
      ))
  phps-mode-parser--table-translations)
 
-;; 384 ((expr) (expr "|" expr))
+;; 391 ((expr) (expr "|" expr))
 (puthash
- 384
+ 391
  (lambda(args _terminals)
    `(
      ast-type
@@ -5738,9 +5738,9 @@
      ))
  phps-mode-parser--table-translations)
 
-;; 385 ((expr) (expr T_AMPERSAND_NOT_FOLLOWED_BY_VAR_OR_VARARG expr))
+;; 392 ((expr) (expr T_AMPERSAND_NOT_FOLLOWED_BY_VAR_OR_VARARG expr))
 (puthash
- 385
+ 392
  (lambda(args _terminals)
    `(
      ast-type
@@ -5752,9 +5752,9 @@
      ))
  phps-mode-parser--table-translations)
 
-;; 386 ((expr) (expr T_AMPERSAND_FOLLOWED_BY_VAR_OR_VARARG expr))
+;; 393 ((expr) (expr T_AMPERSAND_FOLLOWED_BY_VAR_OR_VARARG expr))
 (puthash
- 386
+ 393
  (lambda(args _terminals)
    `(
      ast-type
@@ -5766,9 +5766,9 @@
      ))
  phps-mode-parser--table-translations)
 
-;; 387 ((expr) (expr "^" expr))
+;; 394 ((expr) (expr "^" expr))
 (puthash
- 387
+ 394
  (lambda(args _terminals)
    `(
      ast-type
@@ -5780,9 +5780,9 @@
      ))
  phps-mode-parser--table-translations)
 
-;; 388 ((expr) (expr "." expr))
+;; 395 ((expr) (expr "." expr))
 (puthash
- 388
+ 395
  (lambda(args _terminals)
    `(
      ast-type
@@ -5794,9 +5794,9 @@
      ))
  phps-mode-parser--table-translations)
 
-;; 389 ((expr) (expr "+" expr))
+;; 396 ((expr) (expr "+" expr))
 (puthash
- 389
+ 396
  (lambda(args _terminals)
    `(
      ast-type
@@ -5808,9 +5808,9 @@
      ))
  phps-mode-parser--table-translations)
 
-;; 390 ((expr) (expr "-" expr))
+;; 397 ((expr) (expr "-" expr))
 (puthash
- 390
+ 397
  (lambda(args _terminals)
    `(
      ast-type
@@ -5822,9 +5822,9 @@
      ))
  phps-mode-parser--table-translations)
 
-;; 391 ((expr) (expr "*" expr))
+;; 398 ((expr) (expr "*" expr))
 (puthash
- 391
+ 398
  (lambda(args _terminals)
    `(
      ast-type
@@ -5836,9 +5836,9 @@
      ))
  phps-mode-parser--table-translations)
 
-;; 392 ((expr) (expr T_POW expr))
+;; 399 ((expr) (expr T_POW expr))
 (puthash
- 392
+ 399
  (lambda(args _terminals)
    `(
      ast-type
@@ -5850,9 +5850,9 @@
      ))
  phps-mode-parser--table-translations)
 
-;; 393 ((expr) (expr "/" expr))
+;; 400 ((expr) (expr "/" expr))
 (puthash
- 393
+ 400
  (lambda(args _terminals)
    `(
      ast-type
@@ -5864,9 +5864,9 @@
      ))
  phps-mode-parser--table-translations)
 
-;; 394 ((expr) (expr "%" expr))
+;; 401 ((expr) (expr "%" expr))
 (puthash
- 394
+ 401
  (lambda(args _terminals)
    `(
      ast-type
@@ -5878,9 +5878,9 @@
      ))
  phps-mode-parser--table-translations)
 
-;; 395 ((expr) (expr T_SL expr))
+;; 402 ((expr) (expr T_SL expr))
 (puthash
- 395
+ 402
  (lambda(args _terminals)
    `(
      ast-type
@@ -5892,9 +5892,9 @@
      ))
  phps-mode-parser--table-translations)
 
-;; 396 ((expr) (expr T_SR expr))
+;; 403 ((expr) (expr T_SR expr))
 (puthash
- 396
+ 403
  (lambda(args _terminals)
    `(
      ast-type
@@ -5906,9 +5906,9 @@
      ))
  phps-mode-parser--table-translations)
 
-;; 397 ((expr) ("+" expr))
+;; 404 ((expr) ("+" expr))
 (puthash
- 397
+ 404
  (lambda(args _terminals)
    `(
      ast-type
@@ -5918,9 +5918,9 @@
      ))
  phps-mode-parser--table-translations)
 
-;; 398 ((expr) ("-" expr))
+;; 405 ((expr) ("-" expr))
 (puthash
- 398
+ 405
  (lambda(args _terminals)
    `(
      ast-type
@@ -5930,9 +5930,9 @@
      ))
  phps-mode-parser--table-translations)
 
-;; 399 ((expr) ("!" expr))
+;; 406 ((expr) ("!" expr))
 (puthash
- 399
+ 406
  (lambda(args _terminals)
    `(
      ast-type
@@ -5942,9 +5942,9 @@
      ))
  phps-mode-parser--table-translations)
 
-;; 400 ((expr) ("~" expr))
+;; 407 ((expr) ("~" expr))
 (puthash
- 400
+ 407
  (lambda(args _terminals)
    `(
      ast-type
