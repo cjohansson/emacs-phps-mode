@@ -11,7 +11,7 @@
 ;;; Code:
 
 (require 'ert)
-(require 'phps-mode)
+(require 'phps-mode-test)
 (require 'phps-mode-lex-analyzer)
 
 (defun phps-mode-test-parser--buffer-contents (buffer-contents name logic)
@@ -70,25 +70,63 @@
   (message "-- Running tests for parser basic... --\n")
 
   (phps-mode-test-parser--buffer-contents
+   "<?php\nclass Falsy\n{\n    public function alwaysFalse(): false { /* ... */ }\n\n    public function alwaysTrue(): true { /* ... */ }\n\n    public function alwaysNull(): null { /* ... */ }\n}\n"
+   "PHP 8.2 - allow null, false, and true as stand-alone types"
+   (lambda()
+
+     (let ((parse (phps-mode-parser-parse)))
+       (phps-mode-test--output-parse-productions parse)
+       (should
+        (equal
+         '(84 201 205 450 304 337 335 334 449 453 81 450 246 91 279 265 261 287 451 140 330 451 307 309 303 337 335 334 449 453 81 450 246 91 279 265 261 287 451 140 330 451 307 309 303 337 335 334 449 453 81 450 246 91 279 265 261 287 451 140 330 451 307 309 303 187 103 108 83)
+         parse)))))
+
+  (phps-mode-test-parser--buffer-contents
+   "<?php\ntrait Foo\n{\n    public const CONSTANT = 1;\n}\n\nclass Bar\n{\n    use Foo;\n}\n"
+   "PHP 8.2 - Constants in traits"
+   (lambda()
+
+     (let ((parse (phps-mode-parser-parse)))
+       (phps-mode-test--output-parse-productions parse)
+       (should
+        (equal
+         '(84 450 304 337 335 334 81 482 433 450 350 349 306 309 303 193 104 108 83 201 205 450 304 91 467 312 314 311 303 187 103 108 83)
+         parse)))))
+
+  (phps-mode-test-parser--buffer-contents
+   "<?php\nreadonly class BlogData\n{\n    public string $title;\n\n    public Status $status;\n\n    public function __construct(string $title, Status $status)\n    {\n        $this->title = $title;\n        $this->status = $status;\n    }\n}\n"
+   "PHP 8.2 - readonly classes"
+   (lambda()
+
+     (let ((parse (phps-mode-parser-parse)))
+       (phps-mode-test--output-parse-productions parse)
+       (should
+        (equal
+         '(84 192 188 201 205 450 304 337 335 331 91 279 273 260 450 346 345 305 309 303 337 335 331 91 279 273 260 450 346 345 305 309 303 337 335 334 449 453 81 450 251 91 279 273 260 182 184 450 257 250 247 251 91 279 273 260 182 184 450 257 250 248 123 245 286 451 140 523 513 519 504 508 538 521 523 513 519 363 366 159 141 139 523 513 519 504 508 538 521 523 513 519 363 366 159 141 139 330 451 307 309 303 186 103 108 83)
+         parse)))))
+
+  (phps-mode-test-parser--buffer-contents
+   "<?php\nclass Foo {\n    public function bar((A&B)|null $entity) {\n        return $entity;\n    }\n}\n"
+   "PHP 8.2 - disjunctive normal form (DNF) types"
+   (lambda()
+
+     (let ((parse (phps-mode-parser-parse)))
+       (phps-mode-test--output-parse-productions parse)
+       (should
+        (equal
+         '(84 201 205 450 304 337 335 334 449 453 81 450 251 91 279 91 279 284 281 91 279 280 282 275 260 182 184 450 257 250 247 123 245 286 451 140 523 513 519 363 502 154 141 139 330 451 307 309 303 187 103 108 83)
+         parse)))))
+
+  (phps-mode-test-parser--buffer-contents
    "<?php echo 'hello';"
    "Basic echo test"
    (lambda()
 
      (let ((parse (phps-mode-parser-parse)))
-       (message "Left-to-right parse with right-most derivation in reverse:\n%S\n" parse)
-       (dolist (production-number parse)
-         (let ((production
-                (phps-mode-parser--get-grammar-production-by-number
-                 production-number)))
-           (message
-            "%d: %S -> %S"
-            production-number
-            (car (car production))
-            (car (cdr production)))))
-       (message "\n")
+       (phps-mode-test--output-parse-productions parse)
        (should
         (equal
-         '(84 472 479 426 347 346 157 107 83)
+         '(84 480 487 433 354 353 157 107 83)
          parse)))))
 
   (phps-mode-test-parser--buffer-contents
@@ -97,7 +135,7 @@
    (lambda()
      (should
       (equal
-       '(84 472 479 426 347 346 157 107 83 164 107 83)
+       '(84 480 487 433 354 353 157 107 83 164 107 83)
        (phps-mode-parser-parse)))))
 
   (phps-mode-test-parser--buffer-contents
@@ -106,7 +144,7 @@
    (lambda()
      (should
       (equal
-       '(84 472 479 426 347 346 157 107 83)
+       '(84 480 487 433 354 353 157 107 83)
        (phps-mode-parser-parse)))))
 
   (phps-mode-test-parser--buffer-contents
@@ -128,20 +166,10 @@
    "Advanced echo test with 2 echo sections"
    (lambda()
      (let ((parse (phps-mode-parser-parse)))
-       (message "Left-to-right parse with right-most derivation in reverse:\n%S\n" parse)
-       (dolist (production-number parse)
-         (let ((production
-                (phps-mode-parser--get-grammar-production-by-number
-                 production-number)))
-           (message
-            "%d: %S -> %S"
-            production-number
-            (car (car production))
-            (car (cdr production)))))
-       (message "\n")
+       (phps-mode-test--output-parse-productions parse)
        (should
         (equal
-         '(84 472 479 426 347 346 157 107 83 164 107 83 158 107 83 472 479 426 347 346 157 107 83 164 107 83 158 107 83)
+         '(84 480 487 433 354 353 157 107 83 164 107 83 158 107 83 480 487 433 354 353 157 107 83 164 107 83 158 107 83)
          parse)))))
 
   (phps-mode-test-parser--buffer-contents
@@ -149,20 +177,10 @@
    "Simple function defintion"
    (lambda()
      (let ((parse (phps-mode-parser-parse)))
-       (message "Left-to-right parse with right-most derivation in reverse:\n%S\n" parse)
-       (dolist (production-number parse)
-         (let ((production
-                (phps-mode-parser--get-grammar-production-by-number
-                 production-number)))
-           (message
-            "%d: %S -> %S"
-            production-number
-            (car (car production))
-            (car (cdr production)))))
-       (message "\n")
+       (phps-mode-test--output-parse-productions parse)
        (should
         (equal
-         '(84 442 446 443 248 256 180 182 443 254 247 244 123 242 279 444 140 515 505 511 474 426 359 159 141 139 515 505 511 356 494 154 141 139 444 179 102 108 83)
+         '(84 449 453 179 450 251 259 182 184 450 257 250 247 123 245 286 451 140 523 513 519 482 433 366 159 141 139 523 513 519 363 502 154 141 139 451 181 102 108 83)
          parse)))))
 
   (phps-mode-test-parser--buffer-contents
@@ -170,20 +188,10 @@
    "Simple function defintion inside un-bracketed namespace"
    (lambda()
      (let ((parse (phps-mode-parser-parse)))
-       (message "Left-to-right parse with right-most derivation in reverse:\n%S\n" parse)
-       (dolist (production-number parse)
-         (let ((production
-                (phps-mode-parser--get-grammar-production-by-number
-                 production-number)))
-           (message
-            "%d: %S -> %S"
-            production-number
-            (car (car production))
-            (car (cdr production)))))
-       (message "\n")
+       (phps-mode-test--output-parse-productions parse)
        (should
         (equal
-         '(84 81 85 111 83 442 446 443 248 256 180 182 443 254 247 244 123 242 279 444 140 515 505 511 474 426 359 159 141 139 515 505 511 356 494 154 141 139 444 179 102 108 83)
+         '(84 81 85 111 83 449 453 179 450 251 259 182 184 450 257 250 247 123 245 286 451 140 523 513 519 482 433 366 159 141 139 523 513 519 363 502 154 141 139 451 181 102 108 83)
          parse)))))
 
   (phps-mode-test-parser--buffer-contents
@@ -191,20 +199,10 @@
    "Simple function defintion inside bracketed namespace"
    (lambda()
      (let ((parse (phps-mode-parser-parse)))
-       (message "Left-to-right parse with right-most derivation in reverse:\n%S\n" parse)
-       (dolist (production-number parse)
-         (let ((production
-                (phps-mode-parser--get-grammar-production-by-number
-                 production-number)))
-           (message
-            "%d: %S -> %S"
-            production-number
-            (car (car production))
-            (car (cdr production)))))
-       (message "\n")
+       (phps-mode-test--output-parse-productions parse)
        (should
         (equal
-         '(84 81 85 84 442 446 443 248 256 180 182 443 254 247 244 123 242 279 444 140 515 505 511 474 426 359 159 141 139 515 505 511 356 494 154 141 139 444 179 102 108 83 112 83)
+         '(84 81 85 84 449 453 179 450 251 259 182 184 450 257 250 247 123 245 286 451 140 523 513 519 482 433 366 159 141 139 523 513 519 363 502 154 141 139 451 181 102 108 83 112 83)
          parse)))))
 
   (phps-mode-test-parser--buffer-contents
@@ -212,20 +210,10 @@
    "Simple function defintion and property inside class inside non-bracketed namespace"
    (lambda()
      (let ((parse (phps-mode-parser-parse)))
-       (message "Left-to-right parse with right-most derivation in reverse:\n%S\n" parse)
-       (dolist (production-number parse)
-         (let ((production
-                (phps-mode-parser--get-grammar-production-by-number
-                 production-number)))
-           (message
-            "%d: %S -> %S"
-            production-number
-            (car (car production))
-            (car (cdr production)))))
-       (message "\n")
+       (phps-mode-test--output-parse-productions parse)
        (should
         (equal
-         '(84 81 85 111 83 198 202 443 297 332 328 324 256 472 479 426 443 340 338 298 302 296 330 328 327 442 446 81 443 248 256 180 182 443 254 247 244 123 242 279 444 140 515 505 511 474 426 359 159 141 139 515 505 511 356 494 154 141 139 323 444 300 302 296 185 103 108 83)
+         '(84 81 85 111 83 201 205 450 304 339 335 331 259 480 487 433 450 347 345 305 309 303 337 335 334 449 453 81 450 251 259 182 184 450 257 250 247 123 245 286 451 140 523 513 519 482 433 366 159 141 139 523 513 519 363 502 154 141 139 330 451 307 309 303 187 103 108 83)
          parse)))))
 
   (phps-mode-test-parser--buffer-contents

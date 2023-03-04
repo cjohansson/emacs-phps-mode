@@ -6,13 +6,12 @@
 ;;; Commentary:
 
 ;;; Uses a parser-generator library to convert LALR(1) YACC grammar into a Canonical LR(1) Parser
-
-;; This does not work if some variables are byte-compiled therefore we delete byte-compiled files in `make parser' command
-
-;; To resume use command: `make parser &> output.txt'
-;; and to extract Emacs-Lisp data to separate file run `cat output.txt | grep -F "-resume" - > resume.el'
-;; and then to resume parser-generation run
-;; `rm phps-mode-automation-grammar.elc; emacs -Q -batch -L . -L ~/.emacs.d/emacs-parser-generator -l phps-mode-lexer.el -l admin/phps-mode-automation.el -eval "(progn (require 'parser-generator-lr)(require 'parser-generator-lr-export))"  -eval "(phps-mode-automation)"'
+;;
+;; This does not work if some variables are byte-compiled therefore we delete byte-compiled files in `make parser &> output.txt' command, follow progress with `tail -f output.txt'
+;;
+;; If generation fails for some reason, to extract Emacs-Lisp data to a separate file run `cat output.txt | grep -F "-resume" - > resume.el'
+;; you might need to delete to two last lines of resume.el
+;; and then to resume use command: `make parser-resumed &> output.txt'
 
 
 ;;; Code:
@@ -25,11 +24,6 @@
   "Generate parser."
   (if (fboundp 'parser-generator-lr-export-to-elisp)
       (progn
-
-        ;; 256 MB before garbage collection, seems to speed up generation
-        (setq
-         gc-cons-threshold
-         (* 1024 1024 256))
 
         (let* ((global-declaration
                 (phps-mode-automation-parser-generator--global-declaration))
@@ -213,7 +207,7 @@
           (switch-to-buffer "*PHP Parser*")
           (insert export)
           (message ";; export: %s" export)
-          (write-file parser-file-name) ;; NOTE Will cause Debugger entered--Lisp error: (void-variable vc-logentry-check-hook)
+          (write-file parser-file-name)
           (kill-buffer))
 
         (message ";; Automation completed"))
