@@ -993,7 +993,7 @@
                         imenu-nail
                         phps-mode-parser-sdt-symbol-imenu--table))
                     (let ((imenu-object (make-hash-table :test 'equal)))
-                      (puthash 'declaration (nth 1 imenu-class) imenu-object)
+                      (puthash 'declaration (nth 1 imenu-trait) imenu-object)
                       (puthash
                        imenu-nail2
                        imenu-object
@@ -1094,7 +1094,7 @@
                    imenu-nail
                    phps-mode-parser-sdt-symbol-imenu--table)
                 (let ((imenu-object (make-hash-table :test 'equal)))
-                  (puthash 'declaration (nth 1 imenu-class) imenu-object)
+                  (puthash 'declaration (nth 1 imenu-trait) imenu-object)
                   (puthash
                    imenu-nail
                    imenu-object
