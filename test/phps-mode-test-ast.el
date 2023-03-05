@@ -132,6 +132,12 @@
   ;;  '(("abc")))
 
   (phps-mode-test-ast--should-bookkeep
+   "<?php\ntrait Foo\n{\n    public const CONSTANT = 1;\n}\n\nclass Bar\n{\n    use Foo;\n}\n\nvar_dump(Bar::CONSTANT); // 1\nvar_dump(Foo::CONSTANT); // Error"
+   "PHP 8.2 trait constants"
+   nil
+   '(("trait Foo" ("declaration" . 13) ("CONSTANT" . 36)) ("class Bar" ("declaration" . 59))))
+
+  (phps-mode-test-ast--should-bookkeep
    "<?php\n\n$var = 'abc';\n\nif ($var2) {\n    echo 'This never happens';\n}\nif ($var) {\n    echo 'This happens';\n}"
    "Bookkeeping in root level variable assignments #1"
    '(((8 12) 1) ((27 32) 0) ((73 77) 1))
@@ -356,7 +362,7 @@
    "<?php\ntrait MyTrait {\n    private $var = 'abc';\n    public function sayHello() {\n        if ($this->var) {\n            echo 'Hit';\n        }\n    }\n}\n"
    "A basic trait class"
    '(((35 39) 1) ((94 99) 2) ((101 104) 1))
-   '(("trait MyTrait" ("declaration") ("$var" . 35) ("function sayHello" ("declaration" . 69)))))
+   '(("trait MyTrait" ("declaration" . 13) ("$var" . 35) ("function sayHello" ("declaration" . 69)))))
 
   (phps-mode-test-ast--should-bookkeep
    "<?php\nclass Person {\n    public function __construct(\n        private string $name,\n        private int $age,\n        public $address\n    ) {}\n}"
