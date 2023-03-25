@@ -176,6 +176,15 @@
    (execute-kbd-macro (kbd "<return>"))
    (insert "echo 'was here';"))
 
+  (phps-mode-test--incremental-vs-intial-buffer
+   "<?php\nnamespace myNamespace\n{\n    class myClass\n    {\n        public function myFunction()\n        {\n            echo 'my statement';\n        }\n        public function mySecondFunction()\n        {\n            echo 'there';\n        }\n    }\n}\n"
+   "Integration-test 18 for regular PHP with namespaces, classes and functions using narrow-to-defun"
+   (goto-char 126)
+   (narrow-to-defun)
+   (execute-kbd-macro (kbd "<return>"))
+   (insert "echo 'was here';"))
+
+
   )
 
 (defun phps-mode-test-integration ()
