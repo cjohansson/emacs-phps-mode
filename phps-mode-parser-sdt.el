@@ -1370,6 +1370,8 @@
                  ;; Symbol is inside function inside namespace
                  (symbol-function
                   (let ((imenu-nail2 (format "function %s" symbol-function)))
+                    (message "imenu-nail: %S" imenu-nail)
+                    (message "imenu-nail2: %S" imenu-nail2)
                     (unless
                         (gethash
                          symbol-name
