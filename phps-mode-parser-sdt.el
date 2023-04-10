@@ -937,7 +937,6 @@
           ;; (message "imenu-interface: %S" imenu-interface)
           ;; (message "imenu-function: %S" imenu-function)
 
-
           (cond
 
            (imenu-namespace
@@ -947,6 +946,7 @@
                   (puthash 'declaration (nth 1 imenu-namespace) imenu-object)
                   (puthash imenu-nail imenu-object phps-mode-parser-sdt-symbol-imenu--table)))
               (cond
+
                (imenu-class
                 (let ((imenu-nail2 (format "class %s" (nth 0 imenu-class))))
                   (unless
@@ -957,6 +957,43 @@
                         phps-mode-parser-sdt-symbol-imenu--table))
                     (let ((imenu-object (make-hash-table :test 'equal)))
                       (puthash 'declaration (nth 1 imenu-class) imenu-object)
+                      (puthash
+                       imenu-nail2
+                       imenu-object
+                       (gethash
+                        imenu-nail
+                        phps-mode-parser-sdt-symbol-imenu--table))))
+                  (when imenu-function
+                    (let ((imenu-nail3 (format "function %s" (nth 0 imenu-function))))
+                      (unless
+                          (gethash
+                           imenu-nail3
+                           (gethash
+                            imenu-nail2
+                            (gethash
+                             imenu-nail
+                             phps-mode-parser-sdt-symbol-imenu--table)))
+                        (let ((imenu-object (make-hash-table :test 'equal)))
+                          (puthash 'declaration (nth 1 imenu-function) imenu-object)
+                          (puthash
+                           imenu-nail3
+                           imenu-object
+                           (gethash
+                            imenu-nail2
+                            (gethash
+                             imenu-nail
+                             phps-mode-parser-sdt-symbol-imenu--table)))))))))
+
+               (imenu-function
+                (let ((imenu-nail2 (format "function %s" (nth 0 imenu-function))))
+                  (unless
+                      (gethash
+                       imenu-nail2
+                       (gethash
+                        imenu-nail
+                        phps-mode-parser-sdt-symbol-imenu--table))
+                    (let ((imenu-object (make-hash-table :test 'equal)))
+                      (puthash 'declaration (nth 1 imenu-function) imenu-object)
                       (puthash
                        imenu-nail2
                        imenu-object
@@ -1370,8 +1407,6 @@
                  ;; Symbol is inside function inside namespace
                  (symbol-function
                   (let ((imenu-nail2 (format "function %s" symbol-function)))
-                    (message "imenu-nail: %S" imenu-nail)
-                    (message "imenu-nail2: %S" imenu-nail2)
                     (unless
                         (gethash
                          symbol-name
