@@ -415,11 +415,11 @@ ALLOW-CACHE-READ and ALLOW-CACHE-WRITE."
                    (when error-start
                      (if error-end
                          (phps-mode-lex-analyzer--set-region-syntax-color
-                          error-start
-                          error-end
+                          (max error-start (point-min))
+                          (min error-end (point-max))
                           (list 'font-lock-face 'font-lock-warning-face))
                        (phps-mode-lex-analyzer--set-region-syntax-color
-                        error-start
+                        (max error-start (point-min))
                         (point-max)
                         (list 'font-lock-face 'font-lock-warning-face)))
 
