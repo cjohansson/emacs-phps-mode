@@ -396,6 +396,12 @@
    '(((60 64) 1) ((82 86) 1))
    '(("namespace myNamespace" ("declaration" . 18) ("function myFunction" ("declaration" . 41) ("function myFunction" ("declaration" . 41)) ("$var" . 60)))))
 
+  (phps-mode-test-ast--should-bookkeep
+   "<?php\n\nnamespace myNamespace;\n\ntrait myTrait\n{\n    public function myFunction($arg): string {\n        if ($arg) {\n            echo 'hit';\n        }\n    }\n}"
+   "Bookkeeping of namespaced trait"
+   '(((79 83) 2) ((107 111) 2))
+   '(("namespace myNamespace" ("declaration" . 18) ("trait myTrait" ("declaration" . 38) ("function myFunction" ("declaration" . 68) ("$arg" . 79))))))
+
   (message "\n-- Ran tests for bookkeeping generation. --"))
 
 (defun phps-mode-test-ast ()

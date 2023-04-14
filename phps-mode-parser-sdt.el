@@ -984,43 +984,6 @@
                              imenu-nail
                              phps-mode-parser-sdt-symbol-imenu--table)))))))))
 
-               (imenu-function
-                (let ((imenu-nail2 (format "function %s" (nth 0 imenu-function))))
-                  (unless
-                      (gethash
-                       imenu-nail2
-                       (gethash
-                        imenu-nail
-                        phps-mode-parser-sdt-symbol-imenu--table))
-                    (let ((imenu-object (make-hash-table :test 'equal)))
-                      (puthash 'declaration (nth 1 imenu-function) imenu-object)
-                      (puthash
-                       imenu-nail2
-                       imenu-object
-                       (gethash
-                        imenu-nail
-                        phps-mode-parser-sdt-symbol-imenu--table))))
-                  (when imenu-function
-                    (let ((imenu-nail3 (format "function %s" (nth 0 imenu-function))))
-                      (unless
-                          (gethash
-                           imenu-nail3
-                           (gethash
-                            imenu-nail2
-                            (gethash
-                             imenu-nail
-                             phps-mode-parser-sdt-symbol-imenu--table)))
-                        (let ((imenu-object (make-hash-table :test 'equal)))
-                          (puthash 'declaration (nth 1 imenu-function) imenu-object)
-                          (puthash
-                           imenu-nail3
-                           imenu-object
-                           (gethash
-                            imenu-nail2
-                            (gethash
-                             imenu-nail
-                             phps-mode-parser-sdt-symbol-imenu--table)))))))))
-
                (imenu-trait
                 (let ((imenu-nail2 (format "trait %s" (nth 0 imenu-trait))))
                   (unless
@@ -1093,7 +1056,46 @@
                             imenu-nail2
                             (gethash
                              imenu-nail
-                             phps-mode-parser-sdt-symbol-imenu--table))))))))))))
+                             phps-mode-parser-sdt-symbol-imenu--table)))))))))
+
+               (imenu-function
+                (let ((imenu-nail2 (format "function %s" (nth 0 imenu-function))))
+                  (unless
+                      (gethash
+                       imenu-nail2
+                       (gethash
+                        imenu-nail
+                        phps-mode-parser-sdt-symbol-imenu--table))
+                    (let ((imenu-object (make-hash-table :test 'equal)))
+                      (puthash 'declaration (nth 1 imenu-function) imenu-object)
+                      (puthash
+                       imenu-nail2
+                       imenu-object
+                       (gethash
+                        imenu-nail
+                        phps-mode-parser-sdt-symbol-imenu--table))))
+                  (when imenu-function
+                    (let ((imenu-nail3 (format "function %s" (nth 0 imenu-function))))
+                      (unless
+                          (gethash
+                           imenu-nail3
+                           (gethash
+                            imenu-nail2
+                            (gethash
+                             imenu-nail
+                             phps-mode-parser-sdt-symbol-imenu--table)))
+                        (let ((imenu-object (make-hash-table :test 'equal)))
+                          (puthash 'declaration (nth 1 imenu-function) imenu-object)
+                          (puthash
+                           imenu-nail3
+                           imenu-object
+                           (gethash
+                            imenu-nail2
+                            (gethash
+                             imenu-nail
+                             phps-mode-parser-sdt-symbol-imenu--table)))))))))
+
+               )))
 
            (imenu-class
             (let ((imenu-nail (format "class %s" (nth 0 imenu-class))))
