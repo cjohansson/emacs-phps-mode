@@ -521,13 +521,14 @@
                         (setq
                          phps-mode-lexer--match-length matching-length)
                         (setq
-                         phps-mode-lexer--match-body (nth 1 lambd))
+                         phps-mode-lexer--match-body (car (nth 1 lambd)))
                         (setq
                          phps-mode-lexer--match-data (match-data))
+
                         ;; Debug new matches
                         (phps-mode-debug-message
                          (message
-                          "Found new match (%d) %s"
+                          "Found new best match, with length: %d, and body: %s"
                           phps-mode-lexer--match-length
                           phps-mode-lexer--match-body))))))))
 
