@@ -23,12 +23,15 @@
   (execute-kbd-macro (kbd "TAB"))
   (while (search-forward "\n" nil t nil)
     ;; Go to random point on line
-    (let ((line-min-position (line-beginning-position))
-          (line-max-position (line-end-position)))
-      (goto-char
-       (+
-        line-min-position
-        (random (- line-max-position line-min-position)))))
+    (let* ((line-min-position (line-beginning-position))
+           (line-max-position (line-end-position))
+           (line-diff (- line-max-position line-min-position)))
+      (if (> line-diff 0)
+        (goto-char
+         (+
+          line-min-position
+          (random line-diff)))
+        (goto-char line-min-position)))
     (execute-kbd-macro (kbd "TAB"))))
 
 (defun phps-mode-test-indent--should-equal (string name &optional new-string)
