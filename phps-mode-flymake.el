@@ -18,14 +18,16 @@
 This is an alternative function of `flymake-php-init'.
 Look at the `php-executable' variable instead of the constant \"php\" command."
 
-  (add-to-list 'flymake-allowed-file-name-masks
-               '("\\.php[345s]?\\'"
-                 phps-mode--flymake-init
-                 flymake-simple-cleanup
-                 flymake-get-real-file-name))
+  (when (boundp 'flymake-allowed-file-name-masks)
+    (add-to-list 'flymake-allowed-file-name-masks
+                 '("\\.php[345s]?\\'"
+                   phps-mode--flymake-init
+                   flymake-simple-cleanup
+                   flymake-get-real-file-name)))
 
-  (add-to-list 'flymake-err-line-patterns
-               '("\\(Parse\\|Fatal\\) error: \\(.*?\\) in \\(.*?\\) on line \\([0-9]+\\)" 3 4 nil 2))
+  (when (boundp 'flymake-err-line-patterns)
+    (add-to-list 'flymake-err-line-patterns
+                 '("\\(Parse\\|Fatal\\) error: \\(.*?\\) in \\(.*?\\) on line \\([0-9]+\\)" 3 4 nil 2)))
 
   (if (boundp 'php-executable)
       (let* ((temp-file

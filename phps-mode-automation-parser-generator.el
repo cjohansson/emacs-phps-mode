@@ -350,15 +350,6 @@
 
               ))
 
-           (when token
-             ;; (message
-             ;;  "token: %S from %S"
-             ;;  token
-             ;;  (buffer-substring-no-properties
-             ;;   (car (cdr token))
-             ;;   (cdr (cdr token))))
-             )
-
            token)))))
 
   (when (boundp 'parser-generator-lex-analyzer--get-function)
