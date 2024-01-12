@@ -391,10 +391,11 @@ Optionally start FROM-END-OF-LINE."
             (and
              not-found-bracket-start
              (search-backward-regexp
-              "\\([][{}()=\n;]\\|->\\|^[\ t]*\\.\\|\\.[\t ]*$\\)"
+              "\\(=>\\|[][{}()=\n;]\\|->\\|^[\ t]*\\.\\|\\.[\t ]*$\\)"
               nil
               t))
           (let ((match (match-string-no-properties 0)))
+            ;; (message "match: %S" match)
             (cond
 
              ((string-match-p
@@ -404,7 +405,13 @@ Optionally start FROM-END-OF-LINE."
                not-found-bracket-start
                nil))
 
+             ((string= "=>" match))
+
              ((string= "\n" match)
+              (when (and
+                     same-line-p
+                     (> parenthesis-level 0))
+                (setq parenthesis-level 0))
               (setq
                same-line-p
                nil)
@@ -424,19 +431,7 @@ Optionally start FROM-END-OF-LINE."
                      nil)
                     (setq
                      reference-line-delta
-                     line-delta))
-                (setq
-                 reference-line
-                 nil)
-                (setq
-                 reference-line-delta
-                 nil)
-                (setq
-                 reference-line-previous
-                 nil)
-                (setq
-                 reference-line-previous-delta
-                 nil))
+                     line-delta)))
               (setq
                line-delta
                (1- line-delta)))
@@ -464,7 +459,9 @@ Optionally start FROM-END-OF-LINE."
               (setq
                parenthesis-level
                (1+ parenthesis-level))
-              (when (= parenthesis-level 1)
+              (when (and
+                     (not same-line-p)
+                     (= parenthesis-level 1))
                 (setq
                  rewind-reference-line
                  t)
