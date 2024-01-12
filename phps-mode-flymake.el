@@ -35,7 +35,8 @@ Look at the `php-executable' variable instead of the constant \"php\" command."
                (eval-when-compile
                  (if (fboundp 'flymake-proc-init-create-temp-buffer-copy)
                      'flymake-proc-init-create-temp-buffer-copy
-                   'flymake-init-create-temp-buffer-copy))
+                   (if (fboundp 'flymake-init-create-temp-buffer-copy)
+                   'flymake-init-create-temp-buffer-copy)))
                'flymake-create-temp-inplace))
              (local-file (file-relative-name
                           temp-file

@@ -230,9 +230,10 @@
   (when (boundp 'parser-generator-lex-analyzer--function)
     (setq
      parser-generator-lex-analyzer--function
-     (lambda (index)
+     (lambda (index _state)
        (with-current-buffer "*buffer*"
-         (let ((token))
+         (let ((token)
+               (move-to-index-flag))
            (when
                (<
                 index
@@ -245,10 +246,7 @@
                (when
                    (search-forward-regexp "[^\t\n; ]" nil t)
                  (forward-char -1)
-                 (when (boundp 'parser-generator-lex-analyzer--move-to-index-flag)
-                   (setq-local
-                    parser-generator-lex-analyzer--move-to-index-flag
-                    (point)))))
+                 (setq move-to-index-flag (point))))
 
              (cond
 
@@ -260,10 +258,7 @@
                    (error
                     "Failed to find end of comment started at %S (1)"
                     comment-start))
-                 (when (boundp 'parser-generator-lex-analyzer--move-to-index-flag)
-                   (setq-local
-                    parser-generator-lex-analyzer--move-to-index-flag
-                    comment-end))))
+                 (setq move-to-index-flag comment-end)))
 
               ((looking-at "\\({\\)")
                (let ((nesting-stack 1)
@@ -350,7 +345,7 @@
 
               ))
 
-           token)))))
+           (list token move-to-index-flag))))))
 
   (when (boundp 'parser-generator-lex-analyzer--get-function)
     (setq
@@ -519,9 +514,10 @@
   (when (boundp 'parser-generator-lex-analyzer--function)
     (setq
      parser-generator-lex-analyzer--function
-     (lambda (index)
+     (lambda (index _state)
        (with-current-buffer "*buffer*"
-         (let ((token))
+         (let ((token)
+               (move-to-index-flag))
            (when
                (<
                 index
@@ -531,13 +527,9 @@
 
              ;; Skip white-space(s)
              (when (looking-at-p "[\t\n ]+")
-               (when
-                   (search-forward-regexp "[^\t\n ]" nil t)
+               (when (search-forward-regexp "[^\t\n ]" nil t)
                  (forward-char -1)
-                 (when (boundp 'parser-generator-lex-analyzer--move-to-index-flag)
-                   (setq-local
-                    parser-generator-lex-analyzer--move-to-index-flag
-                    (point)))))
+                 (setq move-to-index-flag (point))))
 
              (cond
 
@@ -570,7 +562,7 @@
 
               ))
 
-           token)))))
+           (list token move-to-index-flag))))))
 
   (when (boundp 'parser-generator-lex-analyzer--get-function)
     (setq
