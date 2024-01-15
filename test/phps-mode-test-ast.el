@@ -1,6 +1,6 @@
 ;;; phps-mode-test-ast.el --- Tests for AST -*- lexical-binding: t -*-
 
-;; Copyright (C) 2018-2023  Free Software Foundation, Inc.
+;; Copyright (C) 2018-2024  Free Software Foundation, Inc.
 
 
 ;;; Commentary:
