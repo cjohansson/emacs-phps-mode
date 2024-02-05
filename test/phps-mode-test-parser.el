@@ -22,44 +22,6 @@
      "Testing buffer %S with buffer-contents:\n%S\n"
      name
      (buffer-substring-no-properties (point-min) (point-max)))
-    
-    ;; Setup lexer
-    (setq-local
-     phps-mode-lexer--generated-tokens
-     nil)
-    (setq-local
-     phps-mode-lexer--state
-     'ST_INITIAL)
-    (setq-local
-     phps-mode-lexer--states
-     nil)
-    (setq-local
-     phps-mode-lexer--state-stack
-     nil)
-    (setq-local
-     phps-mode-lexer--heredoc-label
-     nil)
-    (setq-local
-     phps-mode-lexer--heredoc-label-stack
-     nil)
-    (setq-local
-     phps-mode-lexer--nest-location-stack
-     nil)
-
-    ;; Run lexer
-    (setq-local
-     phps-mode-lex-analyzer--lexer-index
-     (point-min))
-    (setq-local
-     phps-mode-lex-analyzer--lexer-max-index
-     (point-max))
-    (phps-mode-lex-analyzer--re2c-lex-analyzer)
-    (setq-local
-     phps-mode-parser-tokens
-     (phps-mode-lex-analyzer--generate-parser-tokens
-      phps-mode-lexer--generated-tokens))
-    ;; (message "Lexer tokens:\n%S\n" phps-mode-lexer--generated-tokens)
-    ;; (message "Parser tokens:\n%S\n" phps-mode-parser-tokens)
 
     ;; Run test
     (funcall logic)
@@ -78,7 +40,7 @@
        (phps-mode-test--output-parse-productions parse)
        (should
         (equal
-         '(84 201 205 450 304 337 335 334 449 453 81 450 246 91 279 265 261 287 451 140 330 451 307 309 303 337 335 334 449 453 81 450 246 91 279 265 261 287 451 140 330 451 307 309 303 337 335 334 449 453 81 450 246 91 279 265 261 287 451 140 330 451 307 309 303 187 103 108 83)
+         '(84 205 209 454 304 340 338 335 453 457 81 454 250 91 279 265 261 287 455 140 331 455 308 310 303 340 338 335 453 457 81 454 250 91 279 265 261 287 455 140 331 455 308 310 303 340 338 335 453 457 81 454 250 91 279 265 261 287 455 140 331 455 308 310 303 187 103 108 83)
          parse)))))
 
   (phps-mode-test-parser--buffer-contents
