@@ -98,9 +98,6 @@
 (defvar-local phps-mode-lex-analyzer--lexer-index nil
   "Index of lex-analyzer.")
 
-(defvar-local phps-mode-lex-analyzer--lexer-max-index nil
-  "Max-index of lex-analyzer.")
-
 (defvar phps-mode-lex-analyzer--show-profiling-information nil
   "Show profiling information.")
 
@@ -1060,6 +1057,12 @@ of performed operations.  Optionally do it FORCE-SYNCHRONOUS."
 
   ;; Iterate tokens from beginning to end and comment out all PHP code
   (when-let ((tokens phps-mode-lex-analyzer--tokens))
+
+    (phps-mode-debug-message
+     (message
+      "Tokens to comment: %s"
+      tokens))
+
     (let ((token-comment-start nil)
           (token-comment-end nil)
           (in-token-comment nil)
@@ -1286,11 +1289,6 @@ of performed operations.  Optionally do it FORCE-SYNCHRONOUS."
         (when (get-buffer buffer)
           (with-current-buffer buffer
             (insert contents)
-
-            (unless end
-              (setq end (point-max)))
-            (unless start
-              (setq start (point-min)))
 
             (let* ((current-time (current-time))
                    (end-time
