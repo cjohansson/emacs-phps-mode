@@ -186,34 +186,6 @@
 ;; LEXERS
 
 
-;; If multiple rules match, re2c prefers the longest match.
-;; If rules match the same string, the earlier rule has priority.
-;; @see http://re2c.org/manual/syntax/syntax.html
-(defun phps-mode-lex-analyzer--re2c-lex-analyzer ()
-  "Run the Elisp port of original Zend re2c lexer."
-  (save-excursion
-    (while
-        (<
-         phps-mode-lex-analyzer--lexer-index
-         phps-mode-lex-analyzer--lexer-max-index)
-      (goto-char phps-mode-lex-analyzer--lexer-index)
-      (let ((old-index phps-mode-lex-analyzer--lexer-index))
-        (phps-mode-lexer--re2c)
-
-        (unless (or
-                 phps-mode-lexer--generated-new-tokens
-                 (> phps-mode-lex-analyzer--lexer-index old-index))
-          (signal
-           'phps-lexer-error
-           '(format
-             "Failed to lex buffer at position %S"
-             phps-mode-lex-analyzer--lexer-index)))
-
-        (when phps-mode-lexer--generated-new-tokens
-          (setq-local
-           phps-mode-lex-analyzer--lexer-index
-           (cdr (cdr (car phps-mode-lexer--generated-new-tokens)))))))))
-
 (defun phps-mode-lex-analyzer--re2c-run (&optional force-synchronous allow-cache-read allow-cache-write)
   "Run lexer, optionally FORCE-SYNCHRONOUS mode,
 ALLOW-CACHE-READ and ALLOW-CACHE-WRITE."
@@ -354,8 +326,12 @@ ALLOW-CACHE-READ and ALLOW-CACHE-WRITE."
 
                    ;; Set error
                    (setq phps-mode-lex-analyzer--error-end nil)
-                   (setq phps-mode-lex-analyzer--error-message (nth 1 phps-mode-lex-analyzer--parse-error))
-                   (setq phps-mode-lex-analyzer--error-start (nth 4 phps-mode-lex-analyzer--parse-error))
+                   (setq
+                    phps-mode-lex-analyzer--error-message
+                    (nth 1 phps-mode-lex-analyzer--parse-error))
+                   (setq
+                    phps-mode-lex-analyzer--error-start
+                    (nth 4 phps-mode-lex-analyzer--parse-error))
 
                    ;; Signal that causes updated mode-line status
                    (signal
@@ -1264,50 +1240,7 @@ of performed operations.  Optionally do it FORCE-SYNCHRONOUS."
   (unless phps-mode-lex-analyzer--state
     (setq phps-mode-lex-analyzer--state 'ST_INITIAL)))
 
-(defun phps-mode-lex-analyzer--generate-parser-tokens (lexer-tokens)
-  "Generate parser-tokens from LEXER-TOKENS which are in reversed order."
-  (let ((parser-tokens (make-hash-table :test 'equal))
-        (previous-start))
-    (dolist (token lexer-tokens)
-      (let ((token-type (car token))
-            (token-start (car (cdr token)))
-            (token-end (cdr (cdr token))))
-        (if (or
-             (equal token-type 'T_OPEN_TAG)
-             (equal token-type 'T_DOC_COMMENT)
-             (equal token-type 'T_COMMENT))
-            (when previous-start
-              (puthash
-               token-start
-               previous-start
-               parser-tokens))
-          (cond
-           ((equal token-type 'T_CLOSE_TAG)
-            (setq
-             token
-             `(";" ,token-start . ,token-end)))
-           ((equal token-type 'T_OPEN_TAG_WITH_ECHO)
-            (setq
-             token
-             `(T_ECHO ,token-start . ,token-end))))
-          (puthash
-           token-start
-           token
-           parser-tokens))
-
-        (when (and
-               previous-start
-               (not
-                (= previous-start token-end)))
-          (puthash
-           token-end
-           previous-start
-           parser-tokens))
-        (setq
-         previous-start
-         token-start)))
-    parser-tokens))
-
+;; TODO Is it possible to have a incremental parser?
 (defun phps-mode-lex-analyzer--lex-string (contents &optional start end states state state-stack heredoc-label heredoc-label-stack nest-location-stack tokens filename allow-cache-read allow-cache-write)
   "Run lexer on CONTENTS."
   ;; Create a separate buffer, run lexer inside of it, catch errors and return them
@@ -1316,22 +1249,9 @@ of performed operations.  Optionally do it FORCE-SYNCHRONOUS."
 
   (let* ((loaded-from-cache)
          (cache-key)
-         (timer-start-lexer)
-         (timer-finished-lexer)
-         (timer-elapsed-lexer)
          (timer-start-parser)
          (timer-finished-parser)
          (timer-elapsed-parser))
-
-    (let* ((current-time (current-time))
-           (start-time
-            (+
-             (car current-time)
-             (car (cdr current-time))
-             (* (car (cdr (cdr current-time))) 0.000001))))
-      (setq
-       timer-start-lexer
-       start-time))
 
     ;; Build cache key if possible
     (when (and
@@ -1354,8 +1274,7 @@ of performed operations.  Optionally do it FORCE-SYNCHRONOUS."
 
     (if loaded-from-cache
         loaded-from-cache
-      (let* ((buffer
-              (generate-new-buffer "*PHPs Lexer*"))
+      (let* ((buffer (generate-new-buffer "*PHPs Parser*"))
              (parse-error)
              (parse-trail)
              (ast-tree)
@@ -1368,70 +1287,10 @@ of performed operations.  Optionally do it FORCE-SYNCHRONOUS."
           (with-current-buffer buffer
             (insert contents)
 
-            (if tokens
-                (setq
-                 phps-mode-lexer--generated-tokens
-                 (nreverse tokens))
-              (setq
-               phps-mode-lexer--generated-tokens
-               nil))
-            (if state
-                (setq
-                 phps-mode-lexer--state state)
-              (setq
-               phps-mode-lexer--state
-               'ST_INITIAL))
-
-            (setq
-             phps-mode-lexer--states
-             states)
-            (setq
-             phps-mode-lexer--state-stack
-             state-stack)
-            (setq
-             phps-mode-lexer--heredoc-label
-             heredoc-label)
-            (setq
-             phps-mode-lexer--heredoc-label-stack
-             heredoc-label-stack)
-            (setq
-             phps-mode-lexer--nest-location-stack
-             nest-location-stack)
             (unless end
               (setq end (point-max)))
             (unless start
               (setq start (point-min)))
-            (setq-local
-             phps-mode-lex-analyzer--lexer-index
-             start)
-            (setq-local
-             phps-mode-lex-analyzer--lexer-max-index
-             end)
-
-            ;; Catch errors to kill generated buffer
-            (let ((got-error t))
-              (unwind-protect
-                  ;; Run lexer or incremental lexer
-                  (progn
-                    (phps-mode-lex-analyzer--re2c-lex-analyzer)
-                    (setq got-error nil))
-                (when got-error
-                  (kill-buffer))))
-
-            ;; Copy variables outside of buffer
-            (setq state phps-mode-lexer--state)
-            (setq state-stack phps-mode-lexer--state-stack)
-            (setq states phps-mode-lexer--states)
-
-            ;; NOTE Generate parser tokens here before nreverse destructs list
-            (setq
-             phps-mode-parser-tokens
-             (phps-mode-lex-analyzer--generate-parser-tokens
-              phps-mode-lexer--generated-tokens))
-            (setq tokens (nreverse phps-mode-lexer--generated-tokens))
-            (setq heredoc-label phps-mode-lexer--heredoc-label)
-            (setq heredoc-label-stack phps-mode-lexer--heredoc-label-stack)
-            (setq nest-location-stack phps-mode-lexer--nest-location-stack)
 
             (let* ((current-time (current-time))
                    (end-time
@@ -1440,18 +1299,13 @@ of performed operations.  Optionally do it FORCE-SYNCHRONOUS."
                      (car (cdr current-time))
                      (* (car (cdr (cdr current-time))) 0.000001))))
               (setq
-               timer-finished-lexer
-               end-time)
-              (setq
                timer-start-parser
-               end-time)
-              (setq
-               timer-elapsed-lexer
-               (- timer-finished-lexer timer-start-lexer)))
+               end-time))
 
             ;; Error-free parse here
             (condition-case conditions
                 (progn
+                  ;; This will implicitly run the parser as well
                   (phps-mode-ast--generate))
               (error
                (setq
@@ -1459,6 +1313,15 @@ of performed operations.  Optionally do it FORCE-SYNCHRONOUS."
                 conditions)))
 
             ;; Need to copy buffer-local values before killing buffer
+
+            ;; Copy variables outside of buffer
+            (setq state phps-mode-lexer--state)
+            (setq state-stack phps-mode-lexer--state-stack)
+            (setq states phps-mode-lexer--states)
+            (setq tokens (nreverse phps-mode-lexer--generated-tokens))
+            (setq heredoc-label phps-mode-lexer--heredoc-label)
+            (setq heredoc-label-stack phps-mode-lexer--heredoc-label-stack)
+            (setq nest-location-stack phps-mode-lexer--nest-location-stack)
             (setq parse-trail phps-mode-ast--parse-trail)
             (setq ast-tree phps-mode-ast--tree)
             (setq bookkeeping phps-mode-parser-sdt-bookkeeping)
@@ -1496,7 +1359,7 @@ of performed operations.  Optionally do it FORCE-SYNCHRONOUS."
                 bookkeeping
                 imenu
                 symbol-table
-                timer-elapsed-lexer
+                nil
                 timer-elapsed-parser)))
 
           ;; Save cache if possible and permitted
