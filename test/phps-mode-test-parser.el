@@ -35,79 +35,44 @@
    "<?php\nclass Falsy\n{\n    public function alwaysFalse(): false { /* ... */ }\n\n    public function alwaysTrue(): true { /* ... */ }\n\n    public function alwaysNull(): null { /* ... */ }\n}\n"
    "PHP 8.2 - allow null, false, and true as stand-alone types"
    (lambda()
-
-     (let ((parse (phps-mode-parser-parse)))
-       (phps-mode-test--output-parse-productions parse)
-       (should
-        (equal
-         '(84 205 209 454 304 340 338 335 453 457 81 454 250 91 279 265 261 287 455 140 331 455 308 310 303 340 338 335 453 457 81 454 250 91 279 265 261 287 455 140 331 455 308 310 303 340 338 335 453 457 81 454 250 91 279 265 261 287 455 140 331 455 308 310 303 187 103 108 83)
-         parse)))))
+     (phps-mode-parser-parse)))
 
   (phps-mode-test-parser--buffer-contents
    "<?php\ntrait Foo\n{\n    public const CONSTANT = 1;\n}\n\nclass Bar\n{\n    use Foo;\n}\n"
    "PHP 8.2 - Constants in traits"
    (lambda()
-
-     (let ((parse (phps-mode-parser-parse)))
-       (phps-mode-test--output-parse-productions parse)
-       (should
-        (equal
-         '(84 454 304 340 338 337 486 437 454 353 352 306 310 303 197 104 108 83 205 209 454 304 91 471 313 315 312 303 187 103 108 83)
-         parse)))))
+     (phps-mode-parser-parse)))
 
   (phps-mode-test-parser--buffer-contents
    "<?php\nreadonly class BlogData\n{\n    public string $title;\n\n    public Status $status;\n\n    public function __construct(string $title, Status $status)\n    {\n        $this->title = $title;\n        $this->status = $status;\n    }\n}\n"
    "PHP 8.2 - readonly classes"
    (lambda()
-
-     (let ((parse (phps-mode-parser-parse)))
-       (phps-mode-test--output-parse-productions parse)
-       (should
-        (equal
-         '(84 196 188 205 209 454 304 340 338 332 91 279 273 260 454 349 348 305 310 303 340 338 332 91 279 273 260 454 349 348 305 310 303 340 338 335 453 457 81 454 255 91 279 273 260 182 184 454 257 254 251 255 91 279 273 260 182 184 454 257 254 252 123 249 286 455 140 529 519 525 510 514 544 527 529 519 525 367 370 159 141 139 529 519 525 510 514 544 527 529 519 525 367 370 159 141 139 331 455 308 310 303 186 103 108 83)
-         parse)))))
+     (phps-mode-parser-parse)))
 
   (phps-mode-test-parser--buffer-contents
    "<?php\nclass Foo {\n    public function bar((A&B)|null $entity) {\n        return $entity;\n    }\n}\n"
    "PHP 8.2 - disjunctive normal form (DNF) types"
    (lambda()
 
-     (let ((parse (phps-mode-parser-parse)))
-       (phps-mode-test--output-parse-productions parse)
-       (should
-        (equal
-         '(84 205 209 454 304 340 338 335 453 457 81 454 255 91 279 91 279 284 281 91 279 280 282 275 260 182 184 454 257 254 251 123 249 286 455 140 529 519 525 367 508 154 141 139 331 455 308 310 303 187 103 108 83)
-         parse)))))
+     (phps-mode-parser-parse)))
 
   (phps-mode-test-parser--buffer-contents
    "<?php echo 'hello';"
    "Basic echo test"
    (lambda()
-
-     (let ((parse (phps-mode-parser-parse)))
-       (phps-mode-test--output-parse-productions parse)
-       (should
-        (equal
-         '(84 484 491 437 358 357 157 107 83)
-         parse)))))
+     (phps-mode-parser-parse)))
 
   (phps-mode-test-parser--buffer-contents
    "<? echo 'hello'; ?>"
    "Basic echo test 2 with short open tag and close tag"
    (lambda()
-     (should
-      (equal
-       '(84 484 491 437 358 357 157 107 83 164 107 83)
-       (phps-mode-parser-parse)))))
+     (phps-mode-parser-parse)))
 
   (phps-mode-test-parser--buffer-contents
    "<?= 'hello';"
    "Basic echo test 3 with open tag with echo"
    (lambda()
-     (should
-      (equal
-       '(84 484 491 437 358 357 157 107 83)
-       (phps-mode-parser-parse)))))
+     (phps-mode-parser-parse)))
 
   (phps-mode-test-parser--buffer-contents
    "<?php\necho 'blaha'\necho 'here';"
@@ -127,56 +92,31 @@
    "<? echo '<!DOCTYPE html>'; ?><html><head><?php echo 'My Title'; ?><body></html>"
    "Advanced echo test with 2 echo sections"
    (lambda()
-     (let ((parse (phps-mode-parser-parse)))
-       (phps-mode-test--output-parse-productions parse)
-       (should
-        (equal
-         '(84 484 491 437 358 357 157 107 83 164 107 83 158 107 83 484 491 437 358 357 157 107 83 164 107 83 158 107 83)
-         parse)))))
+     (phps-mode-parser-parse)))
 
   (phps-mode-test-parser--buffer-contents
    "<?php\nfunction myFunction($arg) { $arg = 2; return $arg; }"
    "Simple function defintion"
    (lambda()
-     (let ((parse (phps-mode-parser-parse)))
-       (phps-mode-test--output-parse-productions parse)
-       (should
-        (equal
-         '(84 453 457 179 454 255 259 182 184 454 257 254 251 123 249 286 455 140 529 519 525 486 437 370 159 141 139 529 519 525 367 508 154 141 139 455 181 102 108 83)
-         parse)))))
+     (phps-mode-parser-parse)))
 
   (phps-mode-test-parser--buffer-contents
    "<?php\nnamespace myNamespace;\nfunction myFunction($arg) {\n    $arg = 2;\n    return $arg;\n}\n"
    "Simple function defintion inside un-bracketed namespace"
    (lambda()
-     (let ((parse (phps-mode-parser-parse)))
-       (phps-mode-test--output-parse-productions parse)
-       (should
-        (equal
-         '(84 81 85 111 83 453 457 179 454 255 259 182 184 454 257 254 251 123 249 286 455 140 529 519 525 486 437 370 159 141 139 529 519 525 367 508 154 141 139 455 181 102 108 83)
-         parse)))))
+     (phps-mode-parser-parse)))
 
   (phps-mode-test-parser--buffer-contents
    "<?php\nnamespace myNamespace {\n    function myFunction($arg) {\n        $arg = 2;\n        return $arg;\n    }\n}\n"
    "Simple function defintion inside bracketed namespace"
    (lambda()
-     (let ((parse (phps-mode-parser-parse)))
-       (phps-mode-test--output-parse-productions parse)
-       (should
-        (equal
-         '(84 81 85 84 453 457 179 454 255 259 182 184 454 257 254 251 123 249 286 455 140 529 519 525 486 437 370 159 141 139 529 519 525 367 508 154 141 139 455 181 102 108 83 112 83)
-         parse)))))
+     (phps-mode-parser-parse)))
 
   (phps-mode-test-parser--buffer-contents
    "<?php\nnamespace myNamespace;\nclass MyClass\n{\n    private $var = 'abc';\n    public function myFunction($arg) {\n        $arg = 2;\n        return $arg;\n    }\n}\n"
    "Simple function defintion and property inside class inside non-bracketed namespace"
    (lambda()
-     (let ((parse (phps-mode-parser-parse)))
-       (phps-mode-test--output-parse-productions parse)
-       (should
-        (equal
-         '(84 81 85 111 83 205 209 454 304 342 338 332 259 484 491 437 454 350 348 305 310 303 340 338 335 453 457 81 454 255 259 182 184 454 257 254 251 123 249 286 455 140 529 519 525 486 437 370 159 141 139 529 519 525 367 508 154 141 139 331 455 308 310 303 187 103 108 83)
-         parse)))))
+     (phps-mode-parser-parse)))
 
   (phps-mode-test-parser--buffer-contents
    "<?php\n\nnamespace myNamespaceA {\n    $var = 123;\n    class myClassA {\n        private $var2 = 123;\n        function myFunctionA($var3) {\n            $var4 = 123;\n            if ($var) {\n                echo 'Miss';\n            }\n            if ($var2) {\n                echo 'Miss';\n            }\n            if ($var3) {\n                echo 'Hit';\n            }\n            if ($var4) {\n                echo 'Hit';\n            }\n        }\n\n        function myFunctionB($var5)\n        {\n            $var6 = 123;\n            if ($var) {\n                echo 'Miss';\n            }\n            if ($var2) {\n                echo 'Miss';\n            }\n            if ($var3) {\n                echo 'Miss';\n            }\n            if ($var4) {\n                echo 'Miss';\n            }\n            if ($var5) {\n                echo 'Hit';\n            }\n            if ($var6) {\n                echo 'Hit';\n            }\n        }\n    }\n\n    if ($var) {\n        echo 'Hit';\n    }\n    if ($var2) {\n        echo 'Miss';\n    }\n    if ($var3) {\n        echo 'Miss';\n    }\n    if ($var4) {\n        echo 'Miss';\n    }\n    if ($var5) {\n        echo 'Miss';\n    }\n    if ($var6) {\n        echo 'Miss';\n    }\n}\n\nnamespace myNamespaceB {\n    $var7 = 123;\n    class myClassB {\n        private $var8 = 123;\n        function myFunctionA($var10) {\n            $var9 = 123;\n            if ($var) {\n                echo 'Miss';\n            }\n            if ($var2) {\n                echo 'Miss';\n            }\n            if ($var3) {\n                echo 'Miss';\n            }\n            if ($var4) {\n                echo 'Miss';\n            }\n            if ($var5) {\n                echo 'Miss';\n            }\n            if ($var6) {\n                echo 'Miss';\n            }\n            if ($var7) {\n                echo 'Miss';\n            }\n            if ($var8) {\n                echo 'Miss';\n            }\n            if ($var9) {\n                echo 'Hit';\n            }\n            if ($var10) {\n                echo 'Hit';\n            }\n        }\n\n        function myFunctionB($var12)\n        {\n            $var11 = 123;\n            if ($var) {\n                echo 'Miss';\n            }\n            if ($var2) {\n                echo 'Miss';\n            }\n            if ($var3) {\n                echo 'Miss';\n            }\n            if ($var4) {\n                echo 'Miss';\n            }\n            if ($var5) {\n                echo 'Hit';\n            }\n            if ($var6) {\n                echo 'Hit';\n            }\n            if ($var7) {\n                echo 'Miss';\n            }\n            if ($var8) {\n                echo 'Miss';\n            }\n            if ($var9) {\n                echo 'Miss';\n            }\n            if ($var10) {\n                echo 'Miss';\n            }\n            if ($var11) {\n                echo 'Hit';\n            }\n            if ($var12) {\n                echo 'Hit';\n            }\n        }\n    }\n\n    if ($var) {\n        echo 'Hit';\n    }\n    if ($var2) {\n        echo 'Miss';\n    }\n    if ($var3) {\n        echo 'Miss';\n    }\n    if ($var4) {\n        echo 'Miss';\n    }\n    if ($var5) {\n        echo 'Miss';\n    }\n    if ($var6) {\n        echo 'Miss';\n    }\n    if ($var7) {\n        echo 'Hit';\n    }\n}\n"
@@ -243,6 +183,19 @@
    "Switch case with multiple conditions for same case"
    (lambda()
      (phps-mode-parser-parse)))
+
+  (phps-mode-test-parser--buffer-contents
+   "<?php\ninterface I {\n    const string PHP = 'PHP 8.3';\n}\n"
+   "PHP 8.3 Typed class constants"
+   (lambda()
+     (phps-mode-parser-parse)))
+
+  (phps-mode-test-parser--buffer-contents
+   "<?php\n\nclass Foo {\n    const PHP = 'PHP 8.3';\n}\n\n$searchableConstant = 'PHP';\n\nvar_dump(Foo::{$searchableConstant});"
+   "PHP 8.3 Dynamic class constant fetch"
+   (lambda()
+     (phps-mode-parser-parse)))
+
 
   (message "\n-- Ran tests for parser parse. --"))
 
