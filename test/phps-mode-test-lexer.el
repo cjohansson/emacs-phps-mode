@@ -268,12 +268,12 @@
      '((T_OPEN_TAG 1 . 7) (T_VARIABLE 8 . 16) ("=" 17 . 18) (T_VARIABLE 19 . 27) (T_NULLSAFE_OBJECT_OPERATOR 27 . 30) (T_STRING 30 . 34) (T_NULLSAFE_OBJECT_OPERATOR 34 . 37) (T_STRING 37 . 47) ("(" 47 . 48) (")" 48 . 49) (T_NULLSAFE_OBJECT_OPERATOR 49 . 52) (T_STRING 52 . 59) (";" 59 . 60)))))
 
   (phps-mode-test--with-buffer
-   "<?php\n\n0 == 'foobar' // false\n"
+   "<?php\n\n0 == 'foobar'; // false\n"
    "PHP 8.0 Saner string to number comparisons"
    (should
     (equal
      phps-mode-lex-analyzer--tokens
-     '((T_OPEN_TAG 1 . 7) (T_LNUMBER 8 . 9) (T_IS_EQUAL 10 . 12) (T_CONSTANT_ENCAPSED_STRING 13 . 21) (T_COMMENT 22 . 30)))))
+     '((T_OPEN_TAG 1 . 7) (T_LNUMBER 8 . 9) (T_IS_EQUAL 10 . 12) (T_CONSTANT_ENCAPSED_STRING 13 . 21) (";" 21 . 22) (T_COMMENT 23 . 31)))))
 
   (phps-mode-test--with-buffer
    "<?php\n\nstrlen([]); // TypeError: strlen(): Argument #1 ($str) must be of type string, array given\n\narray_chunk([], -1); // ValueError: array_chunk(): Argument #2 ($length) must be greater than 0\n"
@@ -299,14 +299,13 @@
      phps-mode-lex-analyzer--tokens
      '((T_OPEN_TAG 1 . 7) (T_ENUM 7 . 11) (T_STRING 12 . 16) ("{" 17 . 18) (T_CASE 23 . 27) (T_STRING 28 . 34) (";" 34 . 35) (T_CASE 40 . 44) (T_STRING 45 . 53) (";" 53 . 54) (T_CASE 59 . 63) (T_STRING 64 . 69) (";" 69 . 70) (T_CASE 75 . 79) (T_STRING 80 . 86) (";" 86 . 87) ("}" 88 . 89)))))
 
-
   (phps-mode-test--with-buffer
-   "<?php\n\n\nclass MyClass\n{\n    public function __construct(private readonly type propertyName)\n    {\n    }\n}"
+   "<?php\n\n\nclass MyClass\n{\n    public function __construct(private readonly type $propertyName)\n    {\n    }\n}"
    "Read-only auto-injected properties"
    (should
     (equal
      phps-mode-lex-analyzer--tokens
-     '((T_OPEN_TAG 1 . 7) (T_CLASS 9 . 14) (T_STRING 15 . 22) ("{" 23 . 24) (T_PUBLIC 29 . 35) (T_FUNCTION 36 . 44) (T_STRING 45 . 56) ("(" 56 . 57) (T_PRIVATE 57 . 64) (T_READONLY 65 . 73) (T_STRING 74 . 78) (T_STRING 79 . 91) (")" 91 . 92) ("{" 97 . 98) ("}" 103 . 104) ("}" 105 . 106)))))
+     '((T_OPEN_TAG 1 . 7) (T_CLASS 9 . 14) (T_STRING 15 . 22) ("{" 23 . 24) (T_PUBLIC 29 . 35) (T_FUNCTION 36 . 44) (T_STRING 45 . 56) ("(" 56 . 57) (T_PRIVATE 57 . 64) (T_READONLY 65 . 73) (T_STRING 74 . 78) (T_VARIABLE 79 . 92) (")" 92 . 93) ("{" 98 . 99) ("}" 104 . 105) ("}" 106 . 107)))))
 
   (phps-mode-test--with-buffer
    "<?php\nclass User {\n    public readonly int $uid;\n\n    public function __construct(int $uid) {\n        $this->uid = $uid;\n    }\n}"
@@ -396,13 +395,11 @@
      phps-mode-lex-analyzer--tokens
      '((T_OPEN_TAG 1 . 7) (T_ECHO 7 . 11) (T_START_HEREDOC 12 . 19) (T_ENCAPSED_AND_WHITESPACE 19 . 31) (T_END_HEREDOC 31 . 34) (";" 34 . 35)))))
 
-  (phps-mode-test--with-buffer
-   "<?php\n// All the following code do not work.\n\n// different indentation for body (spaces) ending marker (tabs)\n{\n    echo <<<END\n     a\n        END;\n\n\n// mixing spaces and tabs in body\n{\n    echo <<<END\n        a\n     END;\n\n\n// mixing spaces and tabs in ending marker\n{\n    echo <<<END\n          a\n         END;\n\n"
-   "Example #3 Different indentation for body (spaces) closing identifier"
-   (should
-    (equal
-     phps-mode-lex-analyzer--tokens
-     '((T_OPEN_TAG 1 . 7) (T_COMMENT 7 . 45) (T_COMMENT 47 . 110) ("{" 111 . 112) (T_ECHO 117 . 121) (T_START_HEREDOC 122 . 129) (T_ENCAPSED_AND_WHITESPACE 129 . 144) (T_END_HEREDOC 144 . 147) (";" 147 . 148) (T_COMMENT 151 . 184) ("{" 185 . 186) (T_ECHO 191 . 195) (T_START_HEREDOC 196 . 203) (T_ENCAPSED_AND_WHITESPACE 203 . 218) (T_END_HEREDOC 218 . 221) (";" 221 . 222) (T_COMMENT 225 . 267) ("{" 268 . 269) (T_ECHO 274 . 278) (T_START_HEREDOC 279 . 286) (T_ENCAPSED_AND_WHITESPACE 286 . 307) (T_END_HEREDOC 307 . 310) (";" 310 . 311)))))
+  (should-error
+   (phps-mode-test--with-buffer
+    "<?php\n// All the following code do not work.\n\n// different indentation for body (spaces) ending marker (tabs)\n{\n    echo <<<END\n     a\n        END;\n\n\n// mixing spaces and tabs in body\n{\n    echo <<<END\n        a\n     END;\n\n\n// mixing spaces and tabs in ending marker\n{\n    echo <<<END\n          a\n         END;\n\n"
+    "Example #3 Different indentation for body (spaces) closing identifier"))
+  (message "Passed tests for 'Example #3 Different indentation for body (spaces) closing identifier'\n")
 
   (phps-mode-test--with-buffer
    "<?php\n$values = [<<<END\na\n  b\n    c\nEND, 'd e f'];\nvar_dump($values);\n"
@@ -412,13 +409,11 @@
      phps-mode-lex-analyzer--tokens
      '((T_OPEN_TAG 1 . 7) (T_VARIABLE 7 . 14) ("=" 15 . 16) ("[" 17 . 18) (T_START_HEREDOC 18 . 25) (T_ENCAPSED_AND_WHITESPACE 25 . 37) (T_END_HEREDOC 37 . 40) ("," 40 . 41) (T_CONSTANT_ENCAPSED_STRING 42 . 49) ("]" 49 . 50) (";" 50 . 51) (T_STRING 52 . 60) ("(" 60 . 61) (T_VARIABLE 61 . 68) (")" 68 . 69) (";" 69 . 70)))))
 
-  (phps-mode-test--with-buffer
-   "<?php\n$values = [<<<END\na\nb\nEND ING\nEND, 'd e f'];\n"
-   "Example #5 Closing identifier in body of the string tends to cause ParseError"
-   (should
-    (equal
-     phps-mode-lex-analyzer--tokens
-     '((T_OPEN_TAG 1 . 7) (T_VARIABLE 7 . 14) ("=" 15 . 16) ("[" 17 . 18) (T_START_HEREDOC 18 . 25) (T_ENCAPSED_AND_WHITESPACE 25 . 29) (T_END_HEREDOC 29 . 32) (T_STRING 33 . 36) (T_STRING 37 . 40) ("," 40 . 41) (T_CONSTANT_ENCAPSED_STRING 42 . 49) ("]" 49 . 50) (";" 50 . 51)))))
+  (should-error
+   (phps-mode-test--with-buffer
+    "<?php\n$values = [<<<END\na\nb\nEND ING\nEND, 'd e f'];\n"
+    "Example #5 Closing identifier in body of the string tends to cause ParseError"))
+  (message "Passed tests for 'Example #5 Closing identifier in body of the string tends to cause ParseError'\n")
 
   (phps-mode-test--with-buffer
    "<?php\nclass foo {\n    public $bar = <<<EOT\nbar\n    EOT;\n}\n// Identifier must not be indented\n?>\n"
@@ -634,29 +629,23 @@
 (defun phps-mode-test-lexer--errors ()
   "Run test for errors."
 
-  (phps-mode-test--with-buffer
-   "<?php\necho \"My neverending double quotation\n"
-   "Neverending double quotation"
-   (should
-    (equal
-     phps-mode-lex-analyzer--tokens
-     nil)))
+  (should-error
+   (phps-mode-test--with-buffer
+    "<?php\necho \"My neverending double quotation\n"
+    "Neverending double quotation"))
+  (message "Passed tests for 'Neverending double quotation'")
 
-  (phps-mode-test--with-buffer
-   "<?php\n`My neverending backquotes\n"
-   "Neverending backquotes"
-   (should
-    (equal
-     phps-mode-lex-analyzer--tokens
-     nil)))
+  (should-error
+   (phps-mode-test--with-buffer
+    "<?php\n`My neverending backquotes\n"
+    "Neverending backquotes"))
+  (message "Passed tests for 'Neverending backquotes'")
 
-  (phps-mode-test--with-buffer
-   "<?php\n<<<LABEL\nMy neverending heredoc\ngoes on forever\n"
-   "Neverending heredoc"
-   (should
-    (equal
-     phps-mode-lex-analyzer--tokens
-     nil)))
+  (should-error
+   (phps-mode-test--with-buffer
+    "<?php\n<<<LABEL\nMy neverending heredoc\ngoes on forever\n"
+    "Neverending heredoc"))
+  (message "Passed tests for 'Neverending heredoc'")
 
   )
 

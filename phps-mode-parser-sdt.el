@@ -4184,7 +4184,8 @@
 (puthash 255 (lambda(_args _terminals) nil) phps-mode-parser--table-translations)
 
 ;; 256 ((optional_cpp_modifiers) (non_empty_member_modifiers))
-(puthash 256 (lambda(args _terminals) (append (nth 0 args) (list (nth 1 args)))) phps-mode-parser--table-translations)
+(puthash 256 (lambda(args _terminals) args) phps-mode-parser--table-translations)
+
 ;; 257 ((parameter) (optional_property_modifiers optional_type_without_static is_reference is_variadic T_VARIABLE backup_doc_comment))
 (puthash
  257

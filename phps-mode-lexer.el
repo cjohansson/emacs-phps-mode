@@ -69,6 +69,7 @@
 (defun phps-mode-lexer--re2c ()
   "Elisp port of original Zend re2c lexer."
 
+  (goto-char phps-mode-lex-analyzer--lexer-index)
   (setq phps-mode-lexer--generated-new-tokens nil)
   (setq phps-mode-lexer--restart-flag nil)
   (let ((old-start (point)))
