@@ -132,7 +132,7 @@ compare incremental values with initial values."
        (buffer-substring-no-properties (point-min) (point-max))))
      (phps-mode)
      (when phps-mode-lex-analyzer--parse-error
-       (error "PHP Parse Error: " phps-mode-lex-analyzer--parse-error))
+       (error "PHP Parse Error: %s" phps-mode-lex-analyzer--parse-error))
      ,@body
      (kill-buffer test-buffer)
      (when ,title

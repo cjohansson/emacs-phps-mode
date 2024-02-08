@@ -3389,7 +3389,7 @@
 (puthash 191 (lambda(args _terminals) `(append ,(nth 0 args) (,(nth 1 args)))) phps-mode-parser--table-translations)
 
 ;; 192 ((anonymous_class_modifiers_optional) (%empty))
-(puthash 192 (lambda(args _terminals) nil) phps-mode-parser--table-translations)
+(puthash 192 (lambda(_args _terminals) nil) phps-mode-parser--table-translations)
 
 ;; 193 ((anonymous_class_modifiers_optional) (anonymous_class_modifiers))
 (puthash 193 (lambda(args _terminals) args) phps-mode-parser--table-translations)
