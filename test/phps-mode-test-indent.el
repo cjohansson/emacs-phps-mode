@@ -622,11 +622,11 @@ STRING with NAME with optional NEW-STRING."
    "Mutiline define statement")
 
   (phps-mode-test-indent--should-equal
-   "<?php\nif ($useRuntimeCache\n    && self::isWritingnabled()\n    && \\Aomebo\\Cache\\System::cacheExists(\n        $cacheParameters,\n        $cacheKey,\n        \\Aomebo\\Cache\\System::CACHE_STORAGE_LOCATION_FILESYSTEM)\n) {    "
+   "<?php\nif ($useRuntimeCache\n    && self::isWritingnabled()\n    && \\Aomebo\\Cache\\System::cacheExists(\n        $cacheParameters,\n        $cacheKey,\n        \\Aomebo\\Cache\\System::CACHE_STORAGE_LOCATION_FILESYSTEM)\n) {    \n}"
    "Multiline if condition")
 
   (phps-mode-test-indent--should-equal
-   "<?php\nif ($data = \\Aomebo\\Cache\\System::loadCache(\n    $cacheParameters,\n    $cacheKey,\n    \\Aomebo\\Cache\\System::FORMAT_SERIALIZE,\n    \\Aomebo\\Cache\\System::CACHE_STORAGE_LOCATION_FILESYSTEM)\n) {    "
+   "<?php\nif ($data = \\Aomebo\\Cache\\System::loadCache(\n    $cacheParameters,\n    $cacheKey,\n    \\Aomebo\\Cache\\System::FORMAT_SERIALIZE,\n    \\Aomebo\\Cache\\System::CACHE_STORAGE_LOCATION_FILESYSTEM)\n) {    \n}"
    "Multiline if-condition with assignment")
 
   (phps-mode-test-indent--should-equal
@@ -646,7 +646,7 @@ STRING with NAME with optional NEW-STRING."
    "Comment after assignment from method call on same line")
 
   (phps-mode-test-indent--should-equal
-   "<?php\nif (true) {\n    // My comment\n    $cacheKey = sprintf(\n        'key_%s',\n        md5(json_encode($key))\n    );\n    $cache =\n        Cache::getInstance();\n    "
+   "<?php\nif (true) {\n    // My comment\n    $cacheKey = sprintf(\n        'key_%s',\n        md5(json_encode($key))\n    );\n    $cache =\n        Cache::getInstance();\n}"
    "Line after assignment from multi-line function-call")
 
   (phps-mode-test-indent--should-equal
@@ -658,11 +658,11 @@ STRING with NAME with optional NEW-STRING."
    "Closing bracket on new line after ending statement / expression with closing bracket")
 
   (phps-mode-test-indent--should-equal
-   "<?php\nclass MyClass\n{\n    public function log(\n        $message,\n        $level = _INFO_\n    ) {\n    }"
+   "<?php\nclass MyClass\n{\n    public function log(\n        $message,\n        $level = _INFO_\n    ) {\n    }\n}"
    "Opening method body after argument with default value")
 
   (phps-mode-test-indent--should-equal
-   "<?php\nclass MyClass\n{\n    public function log(\n        $message,\n        $level = _INFO_,\n        $rate = _BASE_RATE_\n    ) {\n    }"
+   "<?php\nclass MyClass\n{\n    public function log(\n        $message,\n        $level = _INFO_,\n        $rate = _BASE_RATE_\n    ) {\n    }\n}"
    "Opening method body after 2 arguments with default values")
 
   (phps-mode-test-indent--should-equal
@@ -752,10 +752,10 @@ STRING with NAME with optional NEW-STRING."
 
   (phps-mode-test-indent--should-equal
    "<?php\nif (true) {\n    $html .= '<dt>'\n        . __(\n            'Text',\n            'namespace'\n        )\n        . ':</dt><dd>'\n        . '<input type=\"hidden\" name=\"my_name['\n        . $variable . ']\" value=\"' . esc($myName) . '\" />'\n        . '<select class=\"my-class\" name=\"my_name['\n        . $variable2 . ']\">';\n    echo 'here';\n}\n"
-   "Multi-line echo statement with HTML 1")
+   "Multi-line echo statement with HTML markup 1")
 
   (phps-mode-test-indent--should-equal
-   "<?php\nif (true) {\n    echo '<script type=\"text/javascript\">'\n        . 'jQuery(document).ready(function() {'\n        . 'jQuery(\"<option>\").val(\"my_value\").text(\"'\n        . __(\"Was here\", 'namespace')\n        . '\").appendTo(\"select[name='key']\");'\n        . 'jQuery(\"<option>\").val(\"action\").text(\"'\n        . __(\"My action\", 'namespace')\n        . '\").appendTo(\"select[name='anotherAction']\");'\n        . 'jQuery(\"<option>\").val(\"my_value2\").text(\"'\n        . __(\"My other action\", 'namespace')\n        . '\").appendTo(\"select[name='anotherAction2']\");'\n        . 'jQuery(\"<option>\").val(\"my_value3\").text(\"'\n        . __(\"My third action\", 'namespace')\n        . '\").appendTo(\"select[name='anotherAction3']\");'\n        . '\"\"});</script>';\n    echo 'here';\n}"
+   "<?php\nif (true) {\n    echo '<script type=\"text/javascript\">'\n        . 'jQuery(document).ready(function() {'\n        . 'jQuery(\"<option>\").val(\"my_value\").text(\"'\n        . __(\"Was here\", 'namespace')\n        . '\").appendTo(\"select[name=\\'key\\']\");'\n        . 'jQuery(\"<option>\").val(\"action\").text(\"'\n        . __(\"My action\", 'namespace')\n        . '\").appendTo(\"select[name=\\'anotherAction\\']\");'\n        . 'jQuery(\"<option>\").val(\"my_value2\").text(\"'\n        . __(\"My other action\", 'namespace')\n        . '\").appendTo(\"select[name=\\'anotherAction2\\']\");'\n        . 'jQuery(\"<option>\").val(\"my_value3\").text(\"'\n        . __(\"My third action\", 'namespace')\n        . '\").appendTo(\"select[name=\\'anotherAction3\\']\");'\n        . '\"\"});</script>';\n    echo 'here';\n}"
    "Multi-line echo statement with HTML markup 2")
 
   (phps-mode-test-indent--should-equal
@@ -799,7 +799,7 @@ STRING with NAME with optional NEW-STRING."
    "Variable assignment with chained method calls on multiple lines #1")
 
   (phps-mode-test-indent--should-equal
-   "<?php\nif (true) {\n    $criteria = $this->searchCriteriaBuilder\n        ->addFilter('status', $status)\n        ->addFilter(method', 'my_method_' . $object->getId())\n        ->create();\n}\n"
+   "<?php\nif (true) {\n    $criteria = $this->searchCriteriaBuilder\n        ->addFilter('status', $status)\n        ->addFilter('method', 'my_method_' . $object->getId())\n        ->create();\n}\n"
    "Variable assignment with chained method calls on multiple lines #2")
 
   (phps-mode-test-indent--should-equal
@@ -1085,7 +1085,7 @@ STRING with NAME with optional NEW-STRING."
    "Nested if expression spanning multiple lines 6")
 
   (phps-mode-test-indent--should-equal
-   "<html><head><title><?php if ($myCondition) {\n    if ($mySeconCondition) {\n        echo $title2;\n        \n    } ?></title><body>Bla bla</body></html>"
+   "<html><head><title><?php if ($myCondition) {\n    if ($mySeconCondition) {\n        echo $title2;\n        \n    }\n} ?></title><body>Bla bla</body></html>"
    "Mixed HTML/PHP with if expression and token-less lines")
 
   (phps-mode-test-indent--should-equal

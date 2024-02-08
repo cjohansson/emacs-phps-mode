@@ -126,7 +126,10 @@ compare incremental values with initial values."
      (insert ,source)
      (goto-char 0)
      (phps-mode-debug-message
-      (message "\nTesting buffer '%s':\n'%s'\n" ,title ,source))
+      (message
+       "\nTesting buffer '%s':\n'%s'\n"
+       ,title
+       (buffer-substring-no-properties (point-min) (point-max))))
      (phps-mode)
      (when phps-mode-lex-analyzer--parse-error
        (error "PHP Parse Error: " phps-mode-lex-analyzer--parse-error))
