@@ -1949,7 +1949,7 @@
   (phps-mode-debug-message
    (message "Signal move forward to %S" phps-mode-lexer--move-flag)))
 
-(defun phps-mode-lexer--yyless (points)
+(defun phps-mode-lexer--yyless (_points)
   "Move lexer back POINTS."
   ;; (setq-local
   ;;  phps-mode-lexer--move-flag

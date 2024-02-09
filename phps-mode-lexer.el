@@ -86,130 +86,129 @@
          phps-mode-lexer--nest-location-stack
          old-state-nest-location-stack))
 
-      (let ((old-start (point)))
-        ;; Reset generated tokens
-        (goto-char index)
-        (setq
-         phps-mode-lexer--generated-new-tokens
-         nil)
-        (setq
-         phps-mode-lexer--generated-new-tokens-index
-         index)
+      ;; Reset generated tokens
+      (goto-char index)
+      (setq
+       phps-mode-lexer--generated-new-tokens
+       nil)
+      (setq
+       phps-mode-lexer--generated-new-tokens-index
+       index)
 
-        (let ((tokens)
-              (new-state)
-              (move-to-index)
-              (continue-lexer t))
+      (let ((tokens)
+            (new-state)
+            (move-to-index)
+            (continue-lexer t))
 
-          (while continue-lexer
-            (phps-mode-debug-message
-             (let ((start (point))
-                   (end (+ (point) 5))
-                   (lookahead))
-               (when (> end (point-max))
-                 (setq end (point-max)))
-               (setq
-                lookahead
-                (buffer-substring-no-properties
-                 start
-                 end))
-               (message
-                "\nRunning lexer from point %s, state: %s, lookahead: '%s'.."
-                (point)
-                phps-mode-lexer--state
-                lookahead)))
-            (setq phps-mode-lexer--move-flag nil)
-            (setq phps-mode-lexer--restart-flag nil)
-            (setq continue-lexer nil)
-
-            ;; Run rules based on state
-            (phps-mode-lexer--reset-match-data)
-            (when-let ((lambdas
-                        (gethash
-                         phps-mode-lexer--state
-                         phps-mode-lexer--lambdas-by-state)))
-              (let ((lambda-i 0)
-                    (lambda-length (length lambdas)))
-                (phps-mode-debug-message
-                 (message
-                  "Found %d lexer rules in state"
-                  lambda-length))
-
-                (while (< lambda-i lambda-length)
-                  (let ((lambd (nth lambda-i lambdas)))
-
-                    (let ((lambda-result
-                           (funcall (nth 0 lambd))))
-                      (when lambda-result
-                        (let ((match-end (match-end 0))
-                              (match-beginning (match-beginning 0)))
-                          (let ((matching-length (- match-end match-beginning)))
-                            (when (> matching-length 0)
-                              (when (or
-                                     (not phps-mode-lexer--match-length)
-                                     (> matching-length phps-mode-lexer--match-length))
-                                (setq
-                                 phps-mode-lexer--match-length matching-length)
-                                (setq
-                                 phps-mode-lexer--match-body (nth 1 lambd))
-                                (setq
-                                 phps-mode-lexer--match-data (match-data))
-
-                                ;; Debug new matches
-                                (phps-mode-debug-message
-                                 (message
-                                  "Found new best match, with length: %d, and body: %s"
-                                  phps-mode-lexer--match-length
-                                  phps-mode-lexer--match-body))))))))
-
-                    (when (fboundp 'thread-yield)
-                      (thread-yield)))
-                  (setq lambda-i (1+ lambda-i)))))
-
-            (unless phps-mode-lexer--match-length
-              (error "Failed to lex at %S" index))
-
-            (phps-mode-debug-message
+        (while continue-lexer
+          (phps-mode-debug-message
+           (let ((start (point))
+                 (end (+ (point) 5))
+                 (lookahead))
+             (when (> end (point-max))
+               (setq end (point-max)))
+             (setq
+              lookahead
+              (buffer-substring-no-properties
+               start
+               end))
              (message
-              "Found final match %s"
-              phps-mode-lexer--match-body))
-            (phps-mode-lexer--re2c-execute)
+              "\nRunning lexer from point %s, state: %s, lookahead: '%s'.."
+              (point)
+              phps-mode-lexer--state
+              lookahead)))
+          (setq phps-mode-lexer--move-flag nil)
+          (setq phps-mode-lexer--restart-flag nil)
+          (setq continue-lexer nil)
 
-            (cond
-
-             (phps-mode-lexer--move-flag
+          ;; Run rules based on state
+          (phps-mode-lexer--reset-match-data)
+          (when-let ((lambdas
+                      (gethash
+                       phps-mode-lexer--state
+                       phps-mode-lexer--lambdas-by-state)))
+            (let ((lambda-i 0)
+                  (lambda-length (length lambdas)))
               (phps-mode-debug-message
                (message
-                "Found move signal to %s"
-                phps-mode-lexer--move-flag))
-              (setq
-               move-to-index
-               phps-mode-lexer--move-flag))
+                "Found %d lexer rules in state"
+                lambda-length))
 
-             (t
-              (when phps-mode-lexer--restart-flag
-                (phps-mode-debug-message
-                 (message "Found signal to restart lexer"))
-                (setq continue-lexer t)))
+              (while (< lambda-i lambda-length)
+                (let ((lambd (nth lambda-i lambdas)))
 
-             )
+                  (let ((lambda-result
+                         (funcall (nth 0 lambd))))
+                    (when lambda-result
+                      (let ((match-end (match-end 0))
+                            (match-beginning (match-beginning 0)))
+                        (let ((matching-length (- match-end match-beginning)))
+                          (when (> matching-length 0)
+                            (when (or
+                                   (not phps-mode-lexer--match-length)
+                                   (> matching-length phps-mode-lexer--match-length))
+                              (setq
+                               phps-mode-lexer--match-length matching-length)
+                              (setq
+                               phps-mode-lexer--match-body (nth 1 lambd))
+                              (setq
+                               phps-mode-lexer--match-data (match-data))
 
-            )
+                              ;; Debug new matches
+                              (phps-mode-debug-message
+                               (message
+                                "Found new best match, with length: %d, and body: %s"
+                                phps-mode-lexer--match-length
+                                phps-mode-lexer--match-body))))))))
 
-          (setq
-           tokens
-           phps-mode-lexer--generated-new-tokens)
-          (setq
-           new-state
-           (list
-            phps-mode-lexer--state
-            phps-mode-lexer--state-stack
-            phps-mode-lexer--states
-            phps-mode-lexer--heredoc-label
-            phps-mode-lexer--heredoc-label-stack
-            phps-mode-lexer--nest-location-stack))
+                  (when (fboundp 'thread-yield)
+                    (thread-yield)))
+                (setq lambda-i (1+ lambda-i)))))
 
-          (list tokens move-to-index new-state))))))
+          (unless phps-mode-lexer--match-length
+            (error "Failed to lex at %S" index))
+
+          (phps-mode-debug-message
+           (message
+            "Found final match %s"
+            phps-mode-lexer--match-body))
+          (phps-mode-lexer--re2c-execute)
+
+          (cond
+
+           (phps-mode-lexer--move-flag
+            (phps-mode-debug-message
+             (message
+              "Found move signal to %s"
+              phps-mode-lexer--move-flag))
+            (setq
+             move-to-index
+             phps-mode-lexer--move-flag))
+
+           (t
+            (when phps-mode-lexer--restart-flag
+              (phps-mode-debug-message
+               (message "Found signal to restart lexer"))
+              (setq continue-lexer t)))
+
+           )
+
+          )
+
+        (setq
+         tokens
+         phps-mode-lexer--generated-new-tokens)
+        (setq
+         new-state
+         (list
+          phps-mode-lexer--state
+          phps-mode-lexer--state-stack
+          phps-mode-lexer--states
+          phps-mode-lexer--heredoc-label
+          phps-mode-lexer--heredoc-label-stack
+          phps-mode-lexer--nest-location-stack))
+
+        (list tokens move-to-index new-state)))))
 
 (defun phps-mode-lexer--re2c-execute ()
   "Execute matching body (if any)."
