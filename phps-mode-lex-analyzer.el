@@ -17,7 +17,6 @@
 
 
 (require 'phps-mode-cache)
-(require 'phps-mode-lexer)
 (require 'phps-mode-macros)
 (require 'phps-mode-parser)
 (require 'phps-mode-parser-sdt)
@@ -94,9 +93,6 @@
 
 (defvar-local phps-mode-lex-analyzer--parse-error nil
   "Non-nil means an error.")
-
-(defvar-local phps-mode-lex-analyzer--lexer-index nil
-  "Index of lex-analyzer.")
 
 (defvar phps-mode-lex-analyzer--show-profiling-information nil
   "Show profiling information.")

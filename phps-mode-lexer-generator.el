@@ -55,6 +55,9 @@
 (defvar-local phps-mode-lexer--restart-flag nil
   "Non-nil means restart.")
 
+(defvar-local phps-mode-lexer--move-flag nil
+  "Non nil means move.")
+
 ;; @see https://secure.php.net/manual/en/language.types.integer.php
 (defconst phps-mode-lexer--long-limit
   2147483648
@@ -1942,17 +1945,13 @@
 
 (defun phps-mode-lexer--move-forward (position)
   "Move forward to POSITION."
-  (when (boundp 'phps-mode-lex-analyzer--lexer-index)
-    (setq-local
-     phps-mode-lex-analyzer--lexer-index
-     position)))
+  (setq-local phps-mode-lexer--move-flag position))
 
 (defun phps-mode-lexer--yyless (points)
   "Move lexer back POINTS."
-  (when (boundp 'phps-mode-lex-analyzer--lexer-index)
-    (setq-local
-     phps-mode-lex-analyzer--lexer-index
-     (- phps-mode-lex-analyzer--lexer-index points)))
+  (setq-local
+   phps-mode-lexer--move-flag
+   (- (point) points))
   (forward-char (- points)))
 
 (defun phps-mode-lexer--inline-char-handler ()
@@ -2079,10 +2078,9 @@
     (setq start (match-beginning 0)))
   (unless end
     (setq end (match-end 0)))
-  (when (boundp 'phps-mode-lex-analyzer--lexer-index)
-    (setq-local
-     phps-mode-lex-analyzer--lexer-index
-     end)))
+  (setq-local
+   phps-mode-lexer--move-flag
+   end))
 
 (defun phps-mode-lexer--return-token (&optional token start end)
   "Return TOKEN with START and END."

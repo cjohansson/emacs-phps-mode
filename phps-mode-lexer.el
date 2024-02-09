@@ -45,33 +45,50 @@
 ;; LEXER FUNCTIONS BELOW
 
 
-(defun phps-mode-lexer--re2c-execute ()
-  "Execute matching body (if any)."
-  (if phps-mode-lexer--match-body
-      (progn
-        (set-match-data phps-mode-lexer--match-data)
-        (funcall phps-mode-lexer--match-body))
-    (signal
-     'phps-lexer-error
-     (list
-      (format "Found no matching lexer rule to execute at %d" (point))
-      (point)))))
-
-(defun phps-mode-lexer--reset-match-data ()
-  "Reset match data."
-  (setq phps-mode-lexer--match-length 0)
-  (setq phps-mode-lexer--match-data nil)
-  (setq phps-mode-lexer--match-body nil))
-
 ;; If multiple rules match, re2c prefers the longest match.
 ;; If rules match the same string, the earlier rule has priority.
 ;; @see http://re2c.org/manual/syntax/syntax.html
-(defun phps-mode-lexer--re2c ()
+(defun phps-mode-lexer--re2c (index old-state)
   "Elisp port of original Zend re2c lexer."
 
-  (goto-char phps-mode-lex-analyzer--lexer-index)
+  ;; TODO Support pre-populated lex responses here for incremental lexer
+
+  ;; Check if lexing is within bounds here
+  (unless (< index (point-max))
+    (list nil nil state))
+
+  ;; Set state here
+  (let ((old-state-state (nth 0 old-state))
+        (old-state-stack (nth 1 old-state))
+        (old-state-states (nth 2 old-state))
+        (old-state-heredoc-label (nth 3 old-state))
+        (old-state-heredoc-label-stack (nth 4 old-state))
+        (old-state-nest-location-stack (nth 5 old-state)))
+    (setq
+     phps-mode-lexer--state
+     old-state-state)
+    (setq
+     phps-mode-lexer--state-stack
+     old-state-stack)
+    (setq
+     phps-mode-lexer--states
+     old-state-states)
+    (setq
+     phps-mode-lexer--heredoc-label
+     old-state-heredoc-label)
+    (setq
+     phps-mode-lexer--heredoc-label-stack
+     old-state-heredoc-label-stack)
+    (setq
+     phps-mode-lexer--nest-location-stack
+     old-state-nest-location-stack))
+
+  ;; Reset lexer
+  (goto-char index)
+  (setq phps-mode-lexer--move-flag nil)
   (setq phps-mode-lexer--generated-new-tokens nil)
   (setq phps-mode-lexer--restart-flag nil)
+
   (let ((old-start (point)))
     (setq
      phps-mode-lexer--generated-new-tokens-index
@@ -92,64 +109,120 @@
         old-start
         phps-mode-lexer--state
         lookahead)))
-    (phps-mode-lexer--reset-match-data)
 
-    ;; Run rules based on state
-    (when-let ((lambdas
-                (gethash
-                 phps-mode-lexer--state
-                 phps-mode-lexer--lambdas-by-state)))
-      (let ((lambda-i 0)
-            (lambda-length (length lambdas)))
-        (phps-mode-debug-message
-         (message "Found %d lexer rules in state" lambda-length))
+    (let ((tokens)
+          (new-state)
+          (move-to-index)
+          (continue-lexer t))
 
-        (while (< lambda-i lambda-length)
-          (let ((lambd (nth lambda-i lambdas)))
+      (while continue-lexer
+        (setq continue-lexer nil)
 
-            (let ((lambda-result
-                   (funcall (nth 0 lambd))))
-              (when lambda-result
-                (let ((match-end (match-end 0))
-                      (match-beginning (match-beginning 0)))
-                  (let ((matching-length (- match-end match-beginning)))
-                    (when (> matching-length 0)
-                      (when (or
-                             (not phps-mode-lexer--match-length)
-                             (> matching-length phps-mode-lexer--match-length))
-                        (setq
-                         phps-mode-lexer--match-length matching-length)
-                        (setq
-                         phps-mode-lexer--match-body (nth 1 lambd))
-                        (setq
-                         phps-mode-lexer--match-data (match-data))
+        ;; Run rules based on state
+        (phps-mode-lexer--reset-match-data)
+        (when-let ((lambdas
+                    (gethash
+                     phps-mode-lexer--state
+                     phps-mode-lexer--lambdas-by-state)))
+          (let ((lambda-i 0)
+                (lambda-length (length lambdas)))
+            (phps-mode-debug-message
+             (message
+              "Found %d lexer rules in state"
+              lambda-length))
 
-                        ;; Debug new matches
-                        (phps-mode-debug-message
-                         (message
-                          "Found new best match, with length: %d, and body: %s"
-                          phps-mode-lexer--match-length
-                          phps-mode-lexer--match-body))))))))
+            (while (< lambda-i lambda-length)
+              (let ((lambd (nth lambda-i lambdas)))
 
-            (when (fboundp 'thread-yield)
-              (thread-yield)))
-          (setq lambda-i (1+ lambda-i)))))
+                (let ((lambda-result
+                       (funcall (nth 0 lambd))))
+                  (when lambda-result
+                    (let ((match-end (match-end 0))
+                          (match-beginning (match-beginning 0)))
+                      (let ((matching-length (- match-end match-beginning)))
+                        (when (> matching-length 0)
+                          (when (or
+                                 (not phps-mode-lexer--match-length)
+                                 (> matching-length phps-mode-lexer--match-length))
+                            (setq
+                             phps-mode-lexer--match-length matching-length)
+                            (setq
+                             phps-mode-lexer--match-body (nth 1 lambd))
+                            (setq
+                             phps-mode-lexer--match-data (match-data))
 
-    ;; Did we find a match?
-    (if phps-mode-lexer--match-length
-        (progn
+                            ;; Debug new matches
+                            (phps-mode-debug-message
+                             (message
+                              "Found new best match, with length: %d, and body: %s"
+                              phps-mode-lexer--match-length
+                              phps-mode-lexer--match-body))))))))
+
+                (when (fboundp 'thread-yield)
+                  (thread-yield)))
+              (setq lambda-i (1+ lambda-i)))))
+
+        (cond
+
+         (phps-mode-lexer--move-flag
+          (phps-mode-debug-message
+           (message
+            "Found move signal to %s"
+            phps-mode-lexer--move-flag))
+          (setq
+           move-to-index
+           phps-mode-lexer--move-flag))
+
+         (phps-mode-lexer--match-length
           (phps-mode-debug-message
            (message
             "Found final match %s"
             phps-mode-lexer--match-body))
           (phps-mode-lexer--re2c-execute)
-
           (when phps-mode-lexer--restart-flag
             (phps-mode-debug-message
-             (message "Restarting lexer"))
-            (phps-mode-lexer--re2c)))
-      (phps-mode-debug-message
-       (message "Found nothing at %d" (point))))))
+             (message "Found signal to restart lexer"))
+            (setq continue-lexer t)))
+
+         (t
+          (phps-mode-debug-message
+           (message
+            "Found nothing at %d"
+            (point)))))
+
+        )
+      (setq
+       tokens
+       phps-mode-lexer--generated-new-tokens)
+      (setq
+       new-state
+       (list
+        phps-mode-lexer--state
+        phps-mode-lexer--state-stack
+        phps-mode-lexer--states
+        phps-mode-lexer--heredoc-label
+        phps-mode-lexer--heredoc-label-stack
+        phps-mode-lexer--nest-location-stack))
+
+    (list tokens move-to-index new-state))))
+
+(defun phps-mode-lexer--re2c-execute ()
+  "Execute matching body (if any)."
+  (if phps-mode-lexer--match-body
+      (progn
+        (set-match-data phps-mode-lexer--match-data)
+        (funcall phps-mode-lexer--match-body))
+    (signal
+     'phps-lexer-error
+     (list
+      (format "Found no matching lexer rule to execute at %d" (point))
+      (point)))))
+
+(defun phps-mode-lexer--reset-match-data ()
+  "Reset match data."
+  (setq phps-mode-lexer--match-length 0)
+  (setq phps-mode-lexer--match-data nil)
+  (setq phps-mode-lexer--match-body nil))
 
 
 (provide 'phps-mode-lexer)
