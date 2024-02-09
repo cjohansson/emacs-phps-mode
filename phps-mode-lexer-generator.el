@@ -1945,14 +1945,18 @@
 
 (defun phps-mode-lexer--move-forward (position)
   "Move forward to POSITION."
-  (setq-local phps-mode-lexer--move-flag position))
+  (setq-local phps-mode-lexer--move-flag position)
+  (phps-mode-debug-message
+   (message "Signal move forward to %S" phps-mode-lexer--move-flag)))
 
 (defun phps-mode-lexer--yyless (points)
   "Move lexer back POINTS."
-  (setq-local
-   phps-mode-lexer--move-flag
-   (- (point) points))
-  (forward-char (- points)))
+  ;; (setq-local
+  ;;  phps-mode-lexer--move-flag
+  ;;  (- phps-mode-lexer--generated-new-tokens-index points))
+  ;; (phps-mode-debug-message
+  ;;  (message "Signal move backward to %S" phps-mode-lexer--move-flag))
+  )
 
 (defun phps-mode-lexer--inline-char-handler ()
   "Mimic inline_char_handler."
@@ -2080,7 +2084,9 @@
     (setq end (match-end 0)))
   (setq-local
    phps-mode-lexer--move-flag
-   end))
+   end)
+  (phps-mode-debug-message
+   (message "Signal move skip forward to %S" phps-mode-lexer--move-flag)))
 
 (defun phps-mode-lexer--return-token (&optional token start end)
   "Return TOKEN with START and END."
