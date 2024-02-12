@@ -23,10 +23,11 @@
    buffer-contents
    name
    (lambda()
+     (setq phps-mode-lexer--cached nil)
      (let ((parse (phps-mode-parser-parse)))
        (phps-mode-test--output-parse-productions parse))
      (phps-mode-ast--generate)
-
+     
      (unless (equal
               (phps-mode-test--hash-to-list
                phps-mode-parser-sdt-bookkeeping)

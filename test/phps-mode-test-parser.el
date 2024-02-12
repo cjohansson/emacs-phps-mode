@@ -22,6 +22,7 @@
      "Testing buffer %S with buffer-contents:\n%S\n"
      name
      (buffer-substring-no-properties (point-min) (point-max)))
+    (setq phps-mode-lexer--cached nil)
 
     ;; Run test
     (funcall logic)

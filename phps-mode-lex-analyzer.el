@@ -559,9 +559,15 @@ ALLOW-CACHE-READ and ALLOW-CACHE-WRITE."
                     (list 'font-lock-face 'font-lock-warning-face))
 
                    ;; Set error
-                   (setq phps-mode-lex-analyzer--error-end nil)
-                   (setq phps-mode-lex-analyzer--error-message (nth 1 phps-mode-lex-analyzer--parse-error))
-                   (setq phps-mode-lex-analyzer--error-start (nth 4 phps-mode-lex-analyzer--parse-error))
+                   (setq
+                    phps-mode-lex-analyzer--error-end
+                    nil)
+                   (setq
+                    phps-mode-lex-analyzer--error-message
+                    (nth 1 phps-mode-lex-analyzer--parse-error))
+                   (setq
+                    phps-mode-lex-analyzer--error-start
+                    (nth 4 phps-mode-lex-analyzer--parse-error))
 
                    ;; Signal that causes updated mode-line status
                    (signal
@@ -1245,6 +1251,9 @@ of performed operations.  Optionally do it FORCE-SYNCHRONOUS."
   ;; Create a separate buffer, run lexer inside of it, catch errors and return them
   ;; to enable nice presentation
   (require 'phps-mode-macros)
+
+  ;; TODO Should use pre-populated cache here for incremental lexing
+  (setq phps-mode-lexer--cached nil)
 
   (let* ((loaded-from-cache)
          (cache-key)
