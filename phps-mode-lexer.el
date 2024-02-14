@@ -92,19 +92,15 @@
           ;; Set state here
           (let ((old-state-state (nth 0 old-state))
                 (old-state-stack (nth 1 old-state))
-                (old-state-states (nth 2 old-state))
-                (old-state-heredoc-label (nth 3 old-state))
-                (old-state-heredoc-label-stack (nth 4 old-state))
-                (old-state-nest-location-stack (nth 5 old-state)))
+                (old-state-heredoc-label (nth 2 old-state))
+                (old-state-heredoc-label-stack (nth 3 old-state))
+                (old-state-nest-location-stack (nth 4 old-state)))
             (setq
              phps-mode-lexer--state
              old-state-state)
             (setq
              phps-mode-lexer--state-stack
              old-state-stack)
-            (setq
-             phps-mode-lexer--states
-             old-state-states)
             (setq
              phps-mode-lexer--heredoc-label
              old-state-heredoc-label)
@@ -232,7 +228,6 @@
              (list
               phps-mode-lexer--state
               phps-mode-lexer--state-stack
-              phps-mode-lexer--states
               phps-mode-lexer--heredoc-label
               phps-mode-lexer--heredoc-label-stack
               phps-mode-lexer--nest-location-stack))

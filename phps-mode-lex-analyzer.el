@@ -257,7 +257,8 @@ ALLOW-CACHE-READ and ALLOW-CACHE-WRITE."
                        (phps-mode-lex-analyzer--set-region-syntax-color
                         start
                         end
-                        (list 'font-lock-face token-syntax-color)))))))
+                        (list 'font-lock-face token-syntax-color))))))
+               (thread-yield))
 
              (let ((current-time (current-time)))
                (setq
@@ -993,7 +994,12 @@ of performed operations.  Optionally do it FORCE-SYNCHRONOUS."
              cache-value)))))
 
     (if loaded-from-cache
-        loaded-from-cache
+        (progn
+          (phps-mode-debug-message
+           (message
+            "Loaded from file-system cache: %S"
+            loaded-from-cache))
+          loaded-from-cache)
       (let* ((buffer (generate-new-buffer "*PHPs Parser*"))
              (cache)
              (tokens)
@@ -1003,6 +1009,10 @@ of performed operations.  Optionally do it FORCE-SYNCHRONOUS."
              (bookkeeping)
              (imenu)
              (symbol-table))
+        (phps-mode-debug-message
+         (message
+          "Did not load from file-system cache-key: %S"
+          cache-key))
 
         ;; Create temporary buffer and run lexer in it
         (when (get-buffer buffer)
@@ -1075,10 +1085,12 @@ of performed operations.  Optionally do it FORCE-SYNCHRONOUS."
                  allow-cache-write
                  cache-key)
             (phps-mode-debug-message
-             (message "Saved to cache"))
+             (message "Saving cache..."))
             (phps-mode-cache-save
              data
-             cache-key))
+             cache-key)
+            (phps-mode-debug-message
+             (message "Saved to cache")))
 
           data)))))
 

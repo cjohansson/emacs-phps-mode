@@ -28,9 +28,6 @@
 (defvar-local phps-mode-lexer--state-stack nil
   "Current state-stack of lexer.")
 
-(defvar-local phps-mode-lexer--states nil
-  "History of state and state-stack.")
-
 (defvar-local phps-mode-lexer--heredoc-label nil
   "Current heredoc label.")
 
@@ -2044,19 +2041,7 @@
     (buffer-substring-no-properties
      start
      end)
-    `(,token ,start . ,end)))
-  
-  ;; Push token start, end, lexer state and state stack to variable
-  (push
-   (list
-    start
-    end
-    phps-mode-lexer--state
-    phps-mode-lexer--state-stack
-    phps-mode-lexer--heredoc-label
-    phps-mode-lexer--heredoc-label-stack
-    phps-mode-lexer--nest-location-stack)
-   phps-mode-lexer--states))
+    `(,token ,start . ,end))))
 
 (defun phps-mode-lexer--get-next-unescaped (character)
   "Find where next un-escaped CHARACTER comes, if none is found return nil."
