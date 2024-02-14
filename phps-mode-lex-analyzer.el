@@ -475,8 +475,10 @@ ALLOW-CACHE-READ and ALLOW-CACHE-WRITE."
                (let ((start (car (cdr token)))
                      (end (cdr (cdr token))))
                  (when (and
-                        (>= start incremental-start-new-buffer)
-                        (<= end buffer-point-max))
+                        (<= end buffer-point-max)
+                        (or
+                         (>= start incremental-start-new-buffer)
+                         (>= end incremental-start-new-buffer)))
 
                    ;; Apply syntax color on token
                    (let ((token-syntax-color (phps-mode-lex-analyzer--get-token-syntax-color token)))
