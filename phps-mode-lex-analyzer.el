@@ -258,7 +258,8 @@ ALLOW-CACHE-READ and ALLOW-CACHE-WRITE."
                         start
                         end
                         (list 'font-lock-face token-syntax-color))))))
-               (thread-yield))
+               (when (fboundp 'thread-yield)
+                 (thread-yield)))
 
              (let ((current-time (current-time)))
                (setq
