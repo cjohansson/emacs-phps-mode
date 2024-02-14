@@ -41,8 +41,11 @@
   (eval-when-compile (phps-mode-lexer-generator--lambdas))
   "Hash-table of lex-analyzer rules organized by state.")
 
-(defvar phps-mode-lexer--cached nil
+(defvar-local phps-mode-lexer--cached nil
   "Hash-table of performed lexes to enable incremental lexing for the parser.")
+
+(defvar-local phps-mode-lexer--cached-point nil
+  "The point up to where the cache should be used.")
 
 
 ;; LEXER FUNCTIONS BELOW
@@ -54,17 +57,30 @@
 (defun phps-mode-lexer--re2c (index old-state)
   "Elisp port of original Zend re2c lexer."
 
-  (let ((cache-key index))
+  (let ((cache-key index)
+        (cache))
+    ;; So if we have a cached lex, and we should use the cache for this point in the stream
+    ;; make sure that it does not use a move operation or that the move operation is below
+    ;; the valid point of the cache
+    (when (and
+           phps-mode-lexer--cached-point
+           (<= index phps-mode-lexer--cached-point)
+           phps-mode-lexer--cached)
+      (setq
+       cache
+       (gethash cache-key phps-mode-lexer--cached)))
     (if (and
-         phps-mode-lexer--cached
-         (gethash cache-key phps-mode-lexer--cached))
+         cache
+         (or
+          (equal (nth 1 cache) nil)
+          (<= (nth 1 cache) phps-mode-lexer--cached-point)))
         (progn
           (phps-mode-debug-message
            (message
-            "Returning cached lex for key %S: %S"
+            "\nReturning cached lex for key %S: %S"
             cache-key
-            (gethash cache-key phps-mode-lexer--cached)))
-          (gethash cache-key phps-mode-lexer--cached))
+            cache))
+          cache)
 
       (let ((eof (>= index (point-max))))
         (if eof
@@ -126,9 +142,9 @@
                    start
                    end))
                  (message
-                  "\nRunning lexer from point %s, state: %s, lookahead: '%s'.."
+                  "\nRunning lexer from point %s, state: %S, lookahead: '%s'.."
                   (point)
-                  phps-mode-lexer--state
+                  old-state
                   lookahead)))
               (setq phps-mode-lexer--move-flag nil)
               (setq phps-mode-lexer--restart-flag nil)
@@ -228,6 +244,11 @@
 
             (let ((lexer-response
                    (list tokens move-to-index new-state)))
+              (phps-mode-debug-message
+               (message
+                "\nStored cached lex for key %S: %S"
+                cache-key
+                lexer-response))
               (puthash
                cache-key
                lexer-response

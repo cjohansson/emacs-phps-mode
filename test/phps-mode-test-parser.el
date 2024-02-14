@@ -23,6 +23,7 @@
      name
      (buffer-substring-no-properties (point-min) (point-max)))
     (setq phps-mode-lexer--cached nil)
+    (setq phps-mode-lexer--cached-point nil)
 
     ;; Run test
     (funcall logic)

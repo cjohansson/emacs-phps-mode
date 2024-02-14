@@ -150,7 +150,6 @@
    "<?php\n$str = <<<EOD\nExample of string\nspanning multiple lines\nusing heredoc syntax.\nEOD;\n\n/* More complex example, with variables. */\nclass foo\n{\n    var $foo;\n    var $bar;\n\n    function __construct()\n    {\n        $this->foo = 'Foo';\n        $this->bar = array('Bar1', 'Bar2', 'Bar3');\n    }\n}\n\n$foo = new foo();\n$name = 'MyName';\n\necho <<<EOT\nMy name is \"$name\". I am printing some $foo->foo.\nNow, I am printing some {$foo->bar[1]}.\nThis should print a capital 'A': \x41\nEOT;\n?>\n"
    "Integration-test 14 complex HEREDOC with removed heredoc delimiter semicolon"
    ;; (message "\nTokens: %s" phps-mode-lex-analyzer--tokens)
-   ;; (message "States: %s\n" phps-mode-lex-analyzer--states)
    (goto-char 88)
    (delete-char 1))
 

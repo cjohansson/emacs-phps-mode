@@ -24,6 +24,7 @@
    name
    (lambda()
      (setq phps-mode-lexer--cached nil)
+     (setq phps-mode-lexer--cached-point nil)
      (let ((parse (phps-mode-parser-parse)))
        (phps-mode-test--output-parse-productions parse))
      (phps-mode-ast--generate)
