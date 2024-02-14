@@ -1,5 +1,8 @@
 # TODO
 
+* Perform buffer changes in the middle of a token will make cache reuse lex over point and this will distort the lex at point but not at points further down
+* *PHPs Parser* buffer are not closed
+
 ## Indentation
 
             'language' =>
