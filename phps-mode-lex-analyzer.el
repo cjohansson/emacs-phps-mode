@@ -1001,8 +1001,7 @@ of performed operations.  Optionally do it FORCE-SYNCHRONOUS."
             "Loaded from file-system cache: %S"
             loaded-from-cache))
           loaded-from-cache)
-      (let* ((buffer (generate-new-buffer "*PHPs Parser*"))
-             (cache)
+      (let* ((cache)
              (tokens)
              (parse-error)
              (parse-trail)
@@ -1016,56 +1015,53 @@ of performed operations.  Optionally do it FORCE-SYNCHRONOUS."
           cache-key))
 
         ;; Create temporary buffer and run lexer in it
-        (when (get-buffer buffer)
-          (with-current-buffer buffer
-            (insert contents)
+        (with-temp-buffer
+          (insert contents)
 
-            (let* ((current-time (current-time))
-                   (end-time
-                    (+
-                     (car current-time)
-                     (car (cdr current-time))
-                     (* (car (cdr (cdr current-time))) 0.000001))))
-              (setq
-               timer-start-parser
-               end-time))
+          (let* ((current-time (current-time))
+                 (end-time
+                  (+
+                   (car current-time)
+                   (car (cdr current-time))
+                   (* (car (cdr (cdr current-time))) 0.000001))))
+            (setq
+             timer-start-parser
+             end-time))
 
-            ;; Error-free parse here
-            (condition-case conditions
-                (progn
-                  ;; This will implicitly run the parser as well
-                  (phps-mode-ast--generate))
-              (error
-               (setq
-                parse-error
-                conditions)))
+          ;; Error-free parse here
+          (condition-case conditions
+              (progn
+                ;; This will implicitly run the parser as well
+                (phps-mode-ast--generate))
+            (error
+             (setq
+              parse-error
+              conditions)))
 
-            ;; Need to copy buffer-local values before killing buffer
+          ;; Need to copy buffer-local values before killing buffer
 
-            ;; Copy variables outside of buffer
-            (setq cache phps-mode-lexer--cached)
-            (setq tokens (nreverse phps-mode-lexer--generated-tokens))
-            (setq parse-trail phps-mode-ast--parse-trail)
-            (setq ast-tree phps-mode-ast--tree)
-            (setq bookkeeping phps-mode-parser-sdt-bookkeeping)
-            (setq imenu phps-mode-parser-sdt-symbol-imenu)
-            (setq symbol-table phps-mode-parser-sdt-symbol-table)
+          ;; Copy variables outside of buffer
+          (setq cache phps-mode-lexer--cached)
+          (setq tokens (nreverse phps-mode-lexer--generated-tokens))
+          (setq parse-trail phps-mode-ast--parse-trail)
+          (setq ast-tree phps-mode-ast--tree)
+          (setq bookkeeping phps-mode-parser-sdt-bookkeeping)
+          (setq imenu phps-mode-parser-sdt-symbol-imenu)
+          (setq symbol-table phps-mode-parser-sdt-symbol-table)
 
-            (let* ((current-time
-                    (current-time))
-                   (end-time
-                    (+
-                     (car current-time)
-                     (car (cdr current-time))
-                     (* (car (cdr (cdr current-time))) 0.000001))))
-              (setq
-               timer-finished-parser
-               end-time)
-              (setq
-               timer-elapsed-parser
-               (- timer-finished-parser timer-start-parser)))
-
-            (kill-buffer)))
+          (let* ((current-time
+                  (current-time))
+                 (end-time
+                  (+
+                   (car current-time)
+                   (car (cdr current-time))
+                   (* (car (cdr (cdr current-time))) 0.000001))))
+            (setq
+             timer-finished-parser
+             end-time)
+            (setq
+             timer-elapsed-parser
+             (- timer-finished-parser timer-start-parser))))
 
         (let ((data
                (list
