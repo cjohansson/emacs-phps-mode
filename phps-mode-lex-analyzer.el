@@ -983,10 +983,14 @@ of performed operations.  Optionally do it FORCE-SYNCHRONOUS."
              (phps-mode-cache-test-p
               cache-key
               filename))
-        (setq
-         loaded-from-cache
-         (phps-mode-cache-load
-          cache-key))))
+        ;; Breaking change in cache structure, check that we have the new structure
+        (let ((cache-value (phps-mode-cache-load cache-key)))
+          (when (and
+                 (listp cache-value)
+                 (hash-table-p (nth 1 cache-value)))
+            (setq
+             loaded-from-cache
+             cache-value)))))
 
     (if loaded-from-cache
         loaded-from-cache
