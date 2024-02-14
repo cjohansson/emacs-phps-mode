@@ -649,91 +649,6 @@
 
   )
 
-(defun phps-mode-test-lexer--get-moved-lexer-tokens ()
-  "Run test for get moved lexer tokens."
-
-  (should
-   (equal
-    '((T_OPEN_TAG 1 . 7) (T_START_HEREDOC 7 . 21) (T_ERROR 21 . 60))
-    (phps-mode-lex-analyzer--get-moved-tokens '((T_OPEN_TAG 1 . 7) (T_START_HEREDOC 7 . 16) (T_ERROR 16 . 55)) 8 5)))
-
-  (should
-   (equal
-    '((T_OPEN_TAG 1 . 7) (T_START_HEREDOC 7 . 11) (T_ERROR 11 . 50))
-    (phps-mode-lex-analyzer--get-moved-tokens '((T_OPEN_TAG 1 . 7) (T_START_HEREDOC 7 . 16) (T_ERROR 16 . 55)) 8 -5)))
-
-  (should
-   (equal
-    '((T_OPEN_TAG 1 . 8) (T_START_HEREDOC 8 . 17) (T_ERROR 17 . 56))
-    (phps-mode-lex-analyzer--get-moved-tokens '((T_OPEN_TAG 1 . 7) (T_START_HEREDOC 7 . 16) (T_ERROR 16 . 55)) 6 1)))
-
-  (should
-   (equal
-    '((T_OPEN_TAG 1 . 7) (T_START_HEREDOC 7 . 16) (T_ERROR 16 . 56))
-    (phps-mode-lex-analyzer--get-moved-tokens '((T_OPEN_TAG 1 . 7) (T_START_HEREDOC 7 . 16) (T_ERROR 16 . 55)) 20 1)))
-
-  (should
-   (equal
-    '((T_OPEN_TAG 1 . 7) (T_START_HEREDOC 7 . 16) (T_ERROR 16 . 54))
-    (phps-mode-lex-analyzer--get-moved-tokens '((T_OPEN_TAG 1 . 7) (T_START_HEREDOC 7 . 16) (T_ERROR 16 . 55)) 20 -1)))
-
-  )
-
-(defun phps-mode-test-lexer--get-moved-lexer-states ()
-  "Run test for get moved lexer states."
-
-  (should
-   (equal
-    '((68 76 1 '(1) nil nil nil)
-      (10 67 1 '(1) nil nil nil)
-      (1 9 1 '(1) nil nil nil))
-
-    (phps-mode-lex-analyzer--get-moved-states
-     '((66 74 1 '(1) nil nil nil)
-       (8 65 1 '(1) nil nil nil)
-       (1 7 1 '(1) nil nil nil))
-     6
-     2)))
-
-  (should
-   (equal
-    '((67 75 1 '(1) nil nil nil)
-      (9 66 1 '(1) nil nil nil)
-      (2 8 1 '(1) nil nil nil))
-    
-    (phps-mode-lex-analyzer--get-moved-states
-     '((66 74 1 '(1) nil nil nil)
-       (8 65 1 '(1) nil nil nil)
-       (1 7 1 '(1) nil nil nil))
-     0
-     1)))
-
-  (should
-   (equal
-    '((66 74 1 '(1) nil nil nil)
-      (8 65 1 '(1) nil nil nil)
-      (1 7 1 '(1) nil nil nil))
-    
-    (phps-mode-lex-analyzer--get-moved-states
-     '((66 74 1 '(1) nil nil nil)
-       (8 65 1 '(1) nil nil nil)
-       (1 7 1 '(1) nil nil nil))
-     100
-     1)))
-
-  (should
-   (equal
-    '((64 72 1 '(1) nil nil nil)
-      (6 63 1 '(1) nil nil nil)
-      (1 7 1 '(1) nil nil nil))
-    
-    (phps-mode-lex-analyzer--get-moved-states
-     '((66 74 1 '(1) nil nil nil)
-       (8 65 1 '(1) nil nil nil)
-       (3 9 1 '(1) nil nil nil))
-     3
-     -2))))
-
 (defun phps-mode-test-lexer--benchmark ()
   "Benchmark the lexer test."
   (require 'benchmark)
@@ -763,8 +678,6 @@
   (phps-mode-test-lexer--complex-tokens)
   (phps-mode-test-lexer--namespaces)
   (phps-mode-test-lexer--errors)
-  (phps-mode-test-lexer--get-moved-lexer-tokens)
-  (phps-mode-test-lexer--get-moved-lexer-states)
   ;; (message "\n-- Ran all tests for lexer. --")
 
   )

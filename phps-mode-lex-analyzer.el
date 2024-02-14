@@ -643,18 +643,14 @@ of performed operations.  Optionally do it FORCE-SYNCHRONOUS."
 
               ;; Do partial lex from previous-token-end to change-stop
 
-              (let ((buffer-contents)
-                    (buffer-max))
+              (let ((buffer-contents))
                 (save-restriction
                   (widen)
                   (setq
                    buffer-contents
                    (buffer-substring-no-properties
                     (point-min)
-                    (point-max)))
-                  (setq
-                   buffer-max
-                   (point-max)))
+                    (point-max))))
 
                 (phps-mode-lex-analyzer--incremental-lex-string
                  (buffer-name)
@@ -996,6 +992,7 @@ of performed operations.  Optionally do it FORCE-SYNCHRONOUS."
         loaded-from-cache
       (let* ((buffer (generate-new-buffer "*PHPs Parser*"))
              (cache)
+             (tokens)
              (parse-error)
              (parse-trail)
              (ast-tree)

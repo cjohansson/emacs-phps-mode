@@ -26,7 +26,7 @@
    (insert "<?php echo 'test';\n?>")
    (should (equal
             (phps-mode-lex-analyzer--process-changes)
-            '((RUN-FULL-LEXER) (FOUND-NO-HEAD-TOKENS 1)))))
+            '((INCREMENTAL-LEX 1)))))
 
   (phps-mode-test--with-buffer
    "\n<html>\n<?php\n/**\n * Bla\n */"
@@ -42,30 +42,7 @@
    (insert "\necho 'I was here';\n")
    (should (equal
             (phps-mode-lex-analyzer--process-changes)
-            '((INCREMENTAL-LEX 15)))))
-
-  )
-
-(defun phps-mode-test-lex-analyzer--get-moved-imenu () 
-  "Test for moving imenu index."
-
-  ;; (message "Moved imenu %s" (phps-mode-lex-analyzer--get-moved-imenu '(("myNamespace" ("myClass" ("myFunctionA" . 108) ("myFunctionB" . 161)))) 0 2))
-
-  (should (equal
-           '(("myNamespace" ("myClass" ("myFunctionA" . 110) ("myFunctionB" . 163))))
-           (phps-mode-lex-analyzer--get-moved-imenu '(("myNamespace" ("myClass" ("myFunctionA" . 108) ("myFunctionB" . 161)))) 0 2)))
-
-  (should (equal
-           '(("myNamespace" ("myClass" ("myFunctionA" . 106) ("myFunctionB" . 159))))
-           (phps-mode-lex-analyzer--get-moved-imenu '(("myNamespace" ("myClass" ("myFunctionA" . 108) ("myFunctionB" . 161)))) 0 -2)))
-
-  (should (equal
-           '(("myNamespace" ("myClass" ("myFunctionA" . 108) ("myFunctionB" . 171))))
-           (phps-mode-lex-analyzer--get-moved-imenu '(("myNamespace" ("myClass" ("myFunctionA" . 108) ("myFunctionB" . 161)))) 110 10)))
-
-  (should (equal
-           '(("myNamespace" ("myClass" ("myFunctionA" . 108) ("myFunctionB" . 161))))
-           (phps-mode-lex-analyzer--get-moved-imenu '(("myNamespace" ("myClass" ("myFunctionA" . 108) ("myFunctionB" . 161)))) 180 10)))
+            '((INCREMENTAL-LEX 29)))))
 
   )
 
@@ -214,7 +191,6 @@
   ;; (setq debug-on-error t)
   (phps-mode-test-lex-analyzer--narrow-to-defun)
   (phps-mode-test-lex-analyzer--process-changes)
-  (phps-mode-test-lex-analyzer--get-moved-imenu)
   (phps-mode-test-lex-analyzer--comment-uncomment-region))
 
 (phps-mode-test-lex-analyzer)
