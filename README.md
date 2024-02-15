@@ -11,8 +11,8 @@ This mode does not require PHP installed on your computer because it has a built
 
 * GPLv3 license
 * Flycheck support with `(phps-mode-flycheck-setup)`
-* Lexer based on official PHP 8.2 re2c generated lexer
-* Canonical LR(1) Parser automatically generated from the official PHP 8.2 LALR(1) YACC grammar
+* Lexer based on official PHP 8.3 re2c generated lexer
+* Canonical LR(1) Parser automatically generated from the official PHP 8.3 LALR(1) YACC grammar
 * Syntax coloring based on lexer tokens, makes it easier to spot invalid code
 * PSR-1, PSR-2 and PSR-12 indentation
 * PSR-1, PSR-2 and PSR-12 supported white-space
