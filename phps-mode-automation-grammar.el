@@ -9,6 +9,8 @@
 ;;; Code:
 
 
+(autoload 'phps-mode-lexer--re2c "phps-mode-lexer")
+
 (defvar
   phps-mode-automation-grammar--lr--allow-default-conflict-resolution
   t
@@ -31,7 +33,7 @@
 
 (defvar
   phps-mode-automation-grammar--header
-  "\n(require 'phps-mode-lexer)\n\n"
+  "\n(require 'phps-mode-lexer)\n\n(define-error\n 'phps-parser-error\n \"PHPs Parser Error\")\n\n"
   "Header contents for parser.")
 
 (defvar
