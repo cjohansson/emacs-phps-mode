@@ -852,13 +852,13 @@
   (phps-mode-lexer-generator--add-rule
    phps-mode-lexer-generator--table
    'ST_IN_SCRIPTING
-   (lambda() (looking-at "\\*\\\\\\*"))
+   (lambda() (looking-at "\\*\\*"))
    (lambda() (phps-mode-lexer--return-token 'T_POW)))
 
   (phps-mode-lexer-generator--add-rule
    phps-mode-lexer-generator--table
    'ST_IN_SCRIPTING
-   (lambda() (looking-at "\\*\\\\\\*="))
+   (lambda() (looking-at "\\*\\*="))
    (lambda() (phps-mode-lexer--return-token 'T_POW_EQUAL)))
 
   (phps-mode-lexer-generator--add-rule

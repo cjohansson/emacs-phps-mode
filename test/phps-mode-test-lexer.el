@@ -332,6 +332,15 @@
      '((T_OPEN_TAG 1 . 7) (T_VARIABLE 8 . 10) ("=" 11 . 12) (T_DNUMBER 13 . 16) (";" 16 . 17) (T_VARIABLE 19 . 21) ("=" 22 . 23) (T_DNUMBER 24 . 26) (";" 26 . 27))
      )))
 
+  (phps-mode-test--with-buffer
+   "<?php\n\n$a = 3 ** 2;\n$a **= 2;"
+   "Exponentiation and assignment exponentiation"
+   (should
+    (equal
+     phps-mode-lex-analyzer--tokens
+     '((T_OPEN_TAG 1 . 7) (T_VARIABLE 8 . 10) ("=" 11 . 12) (T_LNUMBER 13 . 14) (T_POW 15 . 17) (T_LNUMBER 18 . 19) (";" 19 . 20) (T_VARIABLE 21 . 23) (T_POW_EQUAL 24 . 27) (T_LNUMBER 28 . 29) (";" 29 . 30))
+     )))
+
   )
 
 (defun phps-mode-test-lexer--complex-tokens ()

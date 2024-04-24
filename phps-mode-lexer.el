@@ -9,8 +9,8 @@
 ;; any higher order meta-lexer logic goes into `phps-mode-lex-analyzer.el'.
 ;;
 ;; Features:
-;; * Defines the lexer for this grammar based on the Zend PHP 8.2 Lexer at
-;; https://raw.githubusercontent.com/php/php-src/PHP-8.2/Zend/zend_language_scanner.l
+;; * Defines the lexer for this grammar based on the Zend PHP 8.3 Lexer at
+;; https://raw.githubusercontent.com/php/php-src/PHP-8.3/Zend/zend_language_scanner.l
 ;; which is using re2c.
 
 ;;; Code:
