@@ -1,6 +1,6 @@
 ;;; phps-mode-automation-parser-generator --- Generate a parser for PHP YACC grammar -*- lexical-binding: t -*-
 
-;; Copyright (C) 2018-2024  Free Software Foundation, Inc.
+;; Copyright (C) 2018-2025  Free Software Foundation, Inc.
 
 
 ;;; Commentary:

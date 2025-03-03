@@ -1,6 +1,6 @@
 ;;; phps-mode-cache.el -- Cache for phps-mode -*- lexical-binding: t -*-
 
-;; Copyright (C) 2018-2024  Free Software Foundation, Inc.
+;; Copyright (C) 2018-2025  Free Software Foundation, Inc.
 
 
 ;;; Commentary:

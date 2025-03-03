@@ -1,6 +1,6 @@
 ;;; phps-mode-syntax-color-generator.el --- Data generation for syntax color -*- lexical-binding: t -*-
 
-;; Copyright (C) 2018-2024  Free Software Foundation, Inc.
+;; Copyright (C) 2018-2025  Free Software Foundation, Inc.
 
 
 ;;; Commentary:

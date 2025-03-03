@@ -1,6 +1,6 @@
 ;;; phps-mode-automation-grammar --- Grammar -*- lexical-binding: t -*-
 
-;; Copyright (C) 2018-2024  Free Software Foundation, Inc.
+;; Copyright (C) 2018-2025  Free Software Foundation, Inc.
 
 
 ;;; Commentary:
@@ -28,7 +28,7 @@
 
 (defvar
   phps-mode-automation-grammar--copyright
-  ";; Copyright (C) 2018-2024  Free Software Foundation, Inc.\n\n;; This file is not part of GNU Emacs.\n\n\n"
+  ";; Copyright (C) 2018-2025  Free Software Foundation, Inc.\n\n;; This file is not part of GNU Emacs.\n\n\n"
   "Copyright contents for parser.")
 
 (defvar
