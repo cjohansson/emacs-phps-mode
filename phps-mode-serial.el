@@ -194,6 +194,7 @@ for synchronicity."
 
                   (lambda()
                     (let ((quitted t)
+                          (inhibit-quit t)
                           (start-return))
                       (unwind-protect
                           (progn
@@ -243,7 +244,8 @@ for synchronicity."
             (make-thread
 
              (lambda()
-               (let ((quitted t))
+               (let ((quitted t)
+                     (inhibit-quit t))
                  (unwind-protect
                      (let ((start-return (thread-join async-thread))
                            (end-return))
